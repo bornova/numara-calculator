@@ -21,7 +21,7 @@ module.exports = () => {
         upperExp: 12
     };
     var digits = {
-        maximumFractionDigits: digits
+        maximumFractionDigits: settings.precision
     };
 
     scope.now = moment().format(settings.dateFormat + ' LT');
