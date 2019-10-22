@@ -1,0 +1,78 @@
+/**
+ * @copyright 2019 Timur Atalay 
+ * @Homepage https://github.com/bornova/numpad
+ * @license MIT https://github.com/bornova/numpad/blob/master/LICENSE
+ */
+
+/* Print style */
+.printArea {
+    display: none;
+}
+
+@media print {
+    .wrapper {
+        display: none;
+    }
+
+    .print-icon {
+        float: left;
+        margin: 0px 0 15px 0px;
+    }
+
+    .print-icon img {
+        height: 16px;
+        width: 16px;
+    }
+
+    .print-title {
+        float: left;
+        margin: 0px 0 15px 8px;
+        font-size: 13px;
+        color: #222222;
+    }
+
+    .printArea {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+    }
+
+    .printBoxes {
+        font-family: "Menlo", "Consolas";
+        font-size: 14px;
+        display: flex;
+        display: -webkit-flex;
+        flex: auto;
+        -webkit-flex: auto;
+        line-height: 1.8em;
+        margin-top: 10px;
+    }
+
+    .printBoxes>div {
+        margin-right: 15px;
+    }
+
+    .printLines {
+        color: rgb(234, 234, 234);
+        text-align: right;
+    }
+
+    .printInput {
+        border-right-width: 1px;
+        border-right-style: solid;
+        border-right-color: rgb(234, 234, 234);
+        padding-right: 30px;
+        margin-right: 15px;
+        width: 55%;
+        min-width: 160px;
+        white-space: pre-wrap;
+    }
+
+    .printOutput {
+        color: rgb(84, 130, 53);
+        flex: 1;
+        min-width: 160px;
+    }
+}

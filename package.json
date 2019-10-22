@@ -1,0 +1,47 @@
+{
+    "name": "numpad",
+    "productName": "Numpad",
+    "version": "1.0.0",
+    "description": "Numpad Calculator",
+    "main": "./js/main.js",
+    "scripts": {
+        "start": "electron .",
+        "dist": "electron-builder"
+    },
+    "author": "Timur Atalay",
+    "license": "MIT",
+    "devDependencies": {
+        "electron": "^7.0.0",
+        "electron-builder": "^21.2.0"
+    },
+    "dependencies": {
+        "electron-context-menu": "^0.15.0",
+        "fs-extra": "^8.1.0",
+        "mathjs": "^6.2.3",
+        "moment": "^2.24.0",
+        "mousetrap": "^1.6.3",
+        "plotly.js-basic-dist": "^1.50.1",
+        "uikit": "^3.2.1"
+    },
+    "build": {
+        "nsis": {
+            "oneClick": false,
+            "deleteAppDataOnUninstall": true
+        },
+        "mac": {
+            "target": "dmg",
+            "electronLanguages": [
+                "en"
+            ]
+        },
+        "directories": {
+            "buildResources": "assets"
+        },
+        "files": [
+            "assets",
+            "css",
+            "js",
+            "numpad.html"
+        ]
+    }
+}

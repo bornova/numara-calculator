@@ -1,0 +1,119 @@
+/**
+ * @copyright 2019 Timur Atalay 
+ * @Homepage https://github.com/bornova/numpad
+ * @license MIT https://github.com/bornova/numpad/blob/master/LICENSE
+ */
+
+/* UIkit Overrides */
+html {
+    font-size: 12px !important;
+}
+
+h2 {
+    margin: 0 0 15px 0;
+}
+
+.uk-modal {
+    background: rgba(0, 0, 0, .4) !important;
+}
+
+.uk-modal-dialog {
+    transition: 0s linear !important;
+    border-radius: 3px;
+}
+
+.uk-modal-body {
+    padding: 12px 15px !important;
+}
+
+.uk-modal-title {
+    font-size: 1.1em !important;
+    font-weight: 500 !important;
+    color: rgb(23, 88, 107) !important;
+}
+
+.uk-modal-footer {
+    padding: 15px !important;
+}
+
+.uk-modal-full {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.uk-grid+.uk-grid {
+    margin-top: 10px !important;
+}
+
+.uk-grid-small {
+    margin: 0 25px 0 0;
+}
+
+.uk-select:not([multiple]):not([size]) {
+    height: auto !important;
+    border-width: 0 0 1px 0 !important;
+}
+
+.uk-button {
+    padding: 0 10px !important;
+    line-height: 28px !important;
+    font-size: .875rem !important;
+    border-radius: 3px;
+}
+
+.uk-button-default {
+    background: #f5f5f5 !important;
+}
+
+.uk-button-default:hover {
+    border-color: #c4c4c4 !important;
+}
+
+.uk-button-default:active {
+    background: #eeeeee !important;
+}
+
+.uk-button-danger {
+    background-color: rgb(214, 49, 49, 0.65);
+}
+
+.uk-button-danger:hover {
+    background-color: rgb(214, 49, 49, 0.8);
+}
+
+.uk-button-danger:disabled:hover {
+    background-color: transparent !important;
+}
+
+.uk-input {
+    height: 24px;
+}
+
+.uk-label {
+    padding: 0 5px !important;
+}
+
+.uk-width-small {
+    width: 250px !important;
+}
+
+.uk-width-medium {
+    width: 300px !important;
+}
+
+.uk-width-large {
+    width: 370px !important;
+}
+
+.uk-overflow-auto {
+    max-height: calc(100vh - 250px);
+}
+
+.uk-range {
+    min-height: 1.6em;
+}
+
+/* Plotly */
+.modebar-container {
+    height: 24px !important;
+}
