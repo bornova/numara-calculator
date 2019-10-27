@@ -34,19 +34,15 @@ const appDefaults = {
 const appSettings = () => db.get('settings') || (db.set('settings', appDefaults), appDefaults);
 
 (() => {
-    const {
-        remote,
-        ipcRenderer
-    } = require('electron');
-    const win = remote.getCurrentWindow();
-    const appName = remote.app.getName();
-    const appVersion = remote.app.getVersion();
+    const ipc = require('electron').ipcRenderer;
+    const appName = ipc.sendSync('getName');
+    const appVersion = ipc.sendSync('getVersion');
     const calculate = require('./js/calculate');
 
     var settings;
 
     // Set headers
-    if (navigator.appVersion.indexOf('Win') !== -1) {
+    if (navigator.appVersion.indexOf('Win') == -1) {
         $('header-mac').remove();
         $('header-win').style.display = 'block';
         $('header-win-title').innerHTML = appName;
@@ -56,26 +52,26 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
             elements[i].style.fontSize = '14px';
         }
 
-        if (win.isNormal()) $('unmax').style.display = 'none';
-        if (win.isMaximized()) $('max').style.display = 'none';
+        if (ipc.sendSync('isNormal')) $('unmax').style.display = 'none';
+        if (ipc.sendSync('isMaximized')) $('max').style.display = 'none';
 
         $('winButtons').addEventListener('click', (e) => {
             switch (e.target.id) {
                 case 'min':
-                    win.minimize();
+                    ipc.send('minimize');
                     break;
                 case 'max':
-                    win.maximize();
+                    ipc.send('maximize');
                     $('unmax').style.display = 'block';
                     $('max').style.display = 'none';
                     break;
                 case 'unmax':
-                    win.unmaximize();
+                    ipc.send('unmaximize');
                     $('unmax').style.display = 'none';
                     $('max').style.display = 'block';
                     break;
                 case 'close':
-                    win.close();
+                    ipc.send('close');
                     break;
             }
             e.stopPropagation();
@@ -184,8 +180,8 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
                         $('printLines').innerHTML = $('lineNo').innerHTML;
                         $('printInput').innerHTML = $('input').value;
                         $('printOutput').innerHTML = $('output').innerHTML;
-                        ipcRenderer.once('actionReply', (event, response) => showMsg(response));
-                        ipcRenderer.send('print');
+                        ipc.send('print');
+                        ipc.once('printReply', (event, response) => showMsg(response));
                     }
                     break;
                 case 'saveButton': // Save calcualtions
@@ -283,7 +279,7 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
                     });
                     break;
                 case 'dialog-settings-reset': // Reset app
-                    confirm('All user settings and data will be lost.', () => ipcRenderer.send('resetApp'));
+                    confirm('All user settings and data will be lost.', () => ipc.send('resetApp'));
                     break;
                 case 'updateRatesButton': // Update exchange rates
                     getRates();
@@ -496,7 +492,7 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
 
         // Show confirmation dialog
         function confirm(msg, action) {
-            UIkit.util.on("#dialog-confirm", 'beforeshow', () => $('confirmMsg').innerHTML = msg);
+            $('confirmMsg').innerHTML = msg;
             UIkit.modal('#dialog-confirm').show();
             var yesAction = (e) => {
                 action();
@@ -505,6 +501,7 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
                 $('confirm-yes').removeEventListener('click', yesAction);
             };
             $('confirm-yes').addEventListener('click', yesAction);
+            UIkit.util.on("#dialog-confirm", 'hidden', () => $('confirm-yes').removeEventListener('click', yesAction));
         }
 
         // Show error dialog
@@ -520,12 +517,8 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
         function showMsg(msg) {
             $('msg').innerHTML = msg;
             $('msg').style.opacity = '1';
-            setTimeout(() => {
-                $('msg').style.opacity = '0';
-            }, 2000);
-            setTimeout(() => {
-                $('msg').innerHTML = '';
-            }, 2300);
+            setTimeout(() => $('msg').style.opacity = '0', 2000);
+            setTimeout(() => $('msg').innerHTML = '', 2300);
         }
 
         /**
