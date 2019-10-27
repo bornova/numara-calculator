@@ -42,7 +42,7 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
     var settings;
 
     // Set headers
-    if (navigator.appVersion.indexOf('Win') !== -1) {
+    if (navigator.appVersion.indexOf('Win') == -1) {
         $('header-mac').remove();
         $('header-win').style.display = 'block';
         $('header-win-title').innerHTML = appName;
