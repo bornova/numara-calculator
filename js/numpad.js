@@ -47,9 +47,9 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
         $('header-win').style.display = 'block';
         $('header-win-title').innerHTML = appName;
 
-        var elements = document.getElementsByClassName('syncscroll');
-        for (i = 0; i < elements.length; i++) {
-            elements[i].style.fontSize = '14px';
+        var elements = document.getElementsByName('sync');
+        for (var el of elements) {
+            el.style.fontSize = '1.2em';
         }
 
         if (ipc.sendSync('isNormal')) $('unmax').style.display = 'none';
@@ -92,8 +92,8 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
         settings = appSettings();
         $('lineNo').style.display = settings.lineNumbers ? 'block' : 'none';
         $('handle').style.display = settings.resizable ? 'block' : 'none';
-        $('inputCol').style.width = settings.resizable ? settings.inputWidth : '50%';
-        $('inputCol').style.marginLeft = settings.lineNumbers ? '0px' : '18px';
+        $('inputPane').style.width = settings.resizable ? settings.inputWidth : '50%';
+        $('inputPane').style.marginLeft = settings.lineNumbers ? '0px' : '18px';
         $('output').style.textAlign = settings.resizable ? 'left' : 'right';
 
         $("wrapper").style.visibility = 'visible';
@@ -535,7 +535,7 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
         (() => {
             var names = {};
             var scroll = () => {
-                var elems = document.getElementsByClassName('syncscroll');
+                var elems = document.getElementsByName('sync');
                 var i, j, el, found, name;
                 var scrollSync = (el, name) => {
                     el.addEventListener('scroll', el.syn = () => {
