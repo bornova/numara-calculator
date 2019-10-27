@@ -25,6 +25,7 @@ function appWindow() {
         minWidth: 480,
         minHeight: 320,
         frame: false,
+        transparent: true,
         titleBarStyle: 'hiddenInset',
         webPreferences: {
             nodeIntegration: true
@@ -45,15 +46,24 @@ function appWindow() {
 app.on('ready', () => appWindow());
 app.on('window-all-closed', () => app.quit());
 
+ipcMain.on('isNormal', (event) => event.returnValue = win.isNormal());
+ipcMain.on('isMaximized', (event) => event.returnValue = win.isMaximized());
+
+ipcMain.on('close', () => win.close());
+ipcMain.on('minimize', () => win.minimize());
+ipcMain.on('maximize', () => win.maximize());
+ipcMain.on('unmaximize', () => win.unmaximize());
+
+ipcMain.on('getName', (event) => event.returnValue = app.name);
+ipcMain.on('getVersion', (event) => event.returnValue = app.getVersion());
+ipcMain.on('print', (event) => {
+    win.webContents.print({}, (success) => {
+        var result = success ? 'Sent to printer' : 'Print cancelled';
+        event.sender.send('printReply', result);
+    });
+});
 ipcMain.on('resetApp', () => {
     fs.remove(app.getPath('userData'));
     app.relaunch();
     app.exit();
-});
-
-ipcMain.on('print', (event, data) => {
-    win.webContents.print({}, (success) => {
-        var result = success ? 'Sent to printer' : 'Print cancelled';
-        event.sender.send('actionReply', result);
-    });
 });

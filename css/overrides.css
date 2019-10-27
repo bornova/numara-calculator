@@ -74,7 +74,8 @@ h2 {
 }
 
 .uk-button-danger {
-    background-color: rgb(214, 49, 49, 0.65);
+    color: rgb(214, 49, 49, 0.8);
+    background-color: #fff;
 }
 
 .uk-button-danger:hover {
