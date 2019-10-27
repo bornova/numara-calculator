@@ -6,34 +6,30 @@
 
 /* UIkit Overrides */
 html {
-    font-size: 12px !important;
+    font-size: 12px;
 }
 
 h2 {
     margin: 0 0 15px 0;
 }
 
-.uk-modal {
-    background: rgba(0, 0, 0, .4) !important;
-}
-
 .uk-modal-dialog {
-    transition: 0s linear !important;
+    transition: 0s linear;
     border-radius: 3px;
 }
 
 .uk-modal-body {
-    padding: 12px 15px !important;
+    padding: 12px 15px;
 }
 
 .uk-modal-title {
-    font-size: 1.1em !important;
-    font-weight: 500 !important;
-    color: rgb(23, 88, 107) !important;
+    font-size: 1.1em;
+    font-weight: 500;
+    color: rgb(23, 88, 107);
 }
 
 .uk-modal-footer {
-    padding: 15px !important;
+    padding: 15px;
 }
 
 .uk-modal-full {
@@ -42,7 +38,7 @@ h2 {
 }
 
 .uk-grid+.uk-grid {
-    margin-top: 10px !important;
+    margin-top: 10px;
 }
 
 .uk-grid-small {
@@ -50,39 +46,48 @@ h2 {
 }
 
 .uk-select:not([multiple]):not([size]) {
-    height: auto !important;
-    border-width: 0 0 1px 0 !important;
+    height: auto;
+    border-width: 0 0 1px 0;
 }
 
 .uk-button {
-    padding: 0 10px !important;
-    line-height: 28px !important;
-    font-size: .875rem !important;
+    padding: 0 10px;
+    line-height: 28px;
+    font-size: .875rem;
     border-radius: 3px;
 }
 
 .uk-button-default {
-    background: #f5f5f5 !important;
+    background: #f5f5f5;
 }
 
 .uk-button-default:hover {
-    border-color: #c4c4c4 !important;
+    border-color: rgba(0, 66, 99, 0.2);
+    background-color: #f5f5f5;
 }
 
 .uk-button-default:active {
-    background: #eeeeee !important;
+    background: #eeeeee;
 }
 
 .uk-button-danger {
-    background-color: rgba(189, 46, 46, 0.6);
+    background-color: #f5f5f5;
+    color: rgba(189, 46, 46, 0.9);
+    border-color: #e5e5e5;
 }
 
 .uk-button-danger:hover {
-    background-color: rgba(189, 46, 46, 0.8);
+    color: rgba(189, 46, 46, 0.9);
+    border-color: rgba(189, 46, 46, 0.2);
+    background-color: #f5f5f5;
+}
+
+.uk-button-danger:active {
+    background: #eeeeee;
 }
 
 .uk-button-danger:disabled:hover {
-    background-color: transparent !important;
+    background-color: transparent;
 }
 
 .uk-input {
@@ -90,19 +95,19 @@ h2 {
 }
 
 .uk-label {
-    padding: 0 5px !important;
+    padding: 0 5px;
 }
 
 .uk-width-small {
-    width: 250px !important;
+    width: 250px;
 }
 
 .uk-width-medium {
-    width: 300px !important;
+    width: 300px;
 }
 
 .uk-width-large {
-    width: 370px !important;
+    width: 370px;
 }
 
 .uk-overflow-auto {
@@ -115,5 +120,5 @@ h2 {
 
 /* Plotly */
 .modebar-container {
-    height: 24px !important;
+    height: 24px;
 }

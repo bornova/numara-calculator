@@ -49,11 +49,13 @@ textarea {
 
 /* Windows Header */
 .header-win {
+    -webkit-app-region: drag !important;
     display: none;
+    position: fixed;
+    top: 5px;
+    right: 0;
+    left: 0;
     height: 30px;
-    min-height: 30px;
-    -webkit-app-region: drag;
-    margin: 5px 0 0 0;
 }
 
 .header-win-icon {
@@ -125,11 +127,14 @@ textarea {
 
 /* Mac Header */
 .header-mac {
+    -webkit-app-region: drag !important;
     display: none;
-    -webkit-app-region: drag;
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
     font-size: 12px;
     height: 50px;
-    min-height: 50px;
 }
 
 .header-mac-title {
@@ -143,7 +148,6 @@ textarea {
 
 /* Content */
 .wrapper {
-    height: 100%;
     visibility: hidden;
 }
 
@@ -178,8 +182,8 @@ textarea {
 .lineError,
 .lineError:hover,
 .lineErrorNo {
-    color: rgb(126, 24, 24) !important;
-    text-decoration: none !important;
+    color: rgb(126, 24, 24);
+    text-decoration: none;
 }
 
 .lineNo {
@@ -298,7 +302,7 @@ textarea {
 }
 
 .noAction:hover {
-    background-color: rgb(124, 144, 156, 0.5) !important;
+    background-color: rgb(124, 144, 156, 0.5);
 }
 
 :root {
@@ -495,21 +499,21 @@ textarea {
 }
 
 .errTitle {
-    color: rgb(126, 24, 24) !important;
+    color: rgb(126, 24, 24);
 }
 
 /* Settings menu items */
 .precision {
-    width: 24px !important;
-    text-align: center !important;
-    padding: 1px 0 0 0 !important;
-    background: transparent !important;
-    border: 1px solid #e5e5e5 !important;
-    color: #333333 !important;
+    width: 24px;
+    text-align: center;
+    padding: 1px 0 0 0;
+    background: transparent;
+    border: 1px solid #e5e5e5;
+    color: #333333;
 }
 
 .range {
-    padding-left: 10px !important;
+    padding-left: 10px;
 }
 
 .pr-lh {
@@ -524,13 +528,12 @@ textarea {
 }
 
 .textBox {
-    display: inline-block;
-    font-family: inherit;
     padding: 5px;
     border: 1px solid #ccc;
     border-radius: 3px;
     width: 100%;
     max-width: 250px;
+    box-sizing: border-box;
 }
 
 .textBox::placeholder {
@@ -560,8 +563,8 @@ textarea {
     right: 0;
     bottom: 0;
     background-color: rgb(204, 204, 204);
-    -webkit-transition: .0s;
-    transition: .0s;
+    -webkit-transition: .2s;
+    transition: .2s;
 }
 
 .slider:before {
@@ -572,8 +575,8 @@ textarea {
     left: 2px;
     bottom: 2px;
     background-color: white;
-    -webkit-transition: .0s;
-    transition: .0s;
+    -webkit-transition: .2s;
+    transition: .2s;
 }
 
 .slider.round {
