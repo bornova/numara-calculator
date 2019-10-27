@@ -357,14 +357,15 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
             if (savedItems.length > 0) {
                 $('dialog-open-deleteAll').disabled = false;
                 savedItems.map(id => {
-                    $('dialog-open-body').innerHTML +=
+                    $('dialog-open-body').innerHTML += (
                         '<div class="dialog-open-wrapper" id="' + id + '">' +
                         '<div data-action="load">' +
                         '<div class="dialog-open-title">' + obj[id][0] + '</div>' +
                         '<div class="dialog-open-date">' + moment(Number(id)).format('lll') + '</div>' +
                         '</div>' +
                         '<div class="dialog-open-delete" data-action="delete">&#10005;</div>' +
-                        '</div>';
+                        '</div>'
+                    );
                 });
             } else {
                 $('dialog-open-deleteAll').disabled = true;
