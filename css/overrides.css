@@ -90,6 +90,8 @@ h2 {
 
 .uk-button-danger:disabled:hover {
     background-color: transparent;
+    border-color: #e5e5e5;
+    color: #999;
 }
 
 .uk-input {
