@@ -25,7 +25,6 @@ function appWindow() {
         minWidth: 480,
         minHeight: 320,
         frame: false,
-        transparent: true,
         titleBarStyle: 'hiddenInset',
         webPreferences: {
             nodeIntegration: true
