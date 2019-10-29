@@ -183,7 +183,10 @@ textarea {
 .lineError:hover,
 .lineErrorNo {
     color: rgb(126, 24, 24);
-    text-decoration: none;
+}
+
+.lineError:hover {
+    text-decoration: underline;
 }
 
 .lineNo {

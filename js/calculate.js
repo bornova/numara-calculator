@@ -78,7 +78,7 @@ module.exports = () => {
             } catch (e) {
                 var errStr = String(e).replace(/'|"/g, '`');
                 if (settings.lineErrors) {
-                    answer = '<a title="' + errStr + '" class="lineError" data-line="' + lineNo + '" data-error="' + errStr + '" uk-tooltip>err</a>';
+                    answer = '<a title="' + errStr + '" class="lineError" data-line="' + lineNo + '" data-error="' + errStr + '" uk-tooltip>Err</a>';
                     lineNo = '<span class="lineErrorNo">' + lineNo + '</span>';
                 }
             }
