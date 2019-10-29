@@ -35,6 +35,7 @@ h2 {
 .uk-modal-full {
     padding-left: 20px;
     padding-right: 20px;
+    background: rgba(0, 0, 0, .6);
 }
 
 .uk-grid+.uk-grid {
