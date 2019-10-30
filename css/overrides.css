@@ -73,7 +73,7 @@ h2 {
     background: #eeeeee;
 }
 
-.uk-button-danger {
+.uk-button-danger, .uk-button-danger:focus {
     background-color: #f5f5f5;
     color: rgba(189, 46, 46, 0.9);
     border-color: #e5e5e5;
