@@ -71,8 +71,9 @@ textarea {
 .header-win-title {
     float: left;
     font-size: 12px;
+    font-weight: 600;
     margin: 5px 0 0 8px;
-    color: #222222;
+    color: rgb(34, 53, 65);
 }
 
 .winButtons {
