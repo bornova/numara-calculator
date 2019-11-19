@@ -48,9 +48,7 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
         $('header-win-title').innerHTML = appName;
 
         var elements = document.getElementsByName('sync');
-        for (var el of elements) {
-            el.style.fontSize = '1.2em';
-        }
+        for (var el of elements) el.style.fontSize = '1.2em';
 
         if (ipc.sendSync('isNormal')) $('unmax').style.display = 'none';
         if (ipc.sendSync('isMaximized')) $('max').style.display = 'none';
@@ -562,9 +560,7 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
                     if (!(name = el.getAttribute('name'))) continue;
 
                     el = el.scroller || el;
-                    for (j in (names[name] = names[name] || [])) {
-                        found |= names[name][j++] == el;
-                    }
+                    for (j in (names[name] = names[name] || [])) found |= names[name][j++] == el;
 
                     if (!found) names[name].push(el);
 
