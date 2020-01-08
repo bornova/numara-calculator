@@ -20,11 +20,12 @@ let win;
 
 function appWindow() {
     win = new BrowserWindow({
-        width: 600,
-        height: 480,
-        minWidth: 480,
+        width: 800,
+        height: 600,
+        minWidth: 800,
         minHeight: 320,
         frame: false,
+        show: false,
         titleBarStyle: 'hiddenInset',
         webPreferences: {
             nodeIntegration: true

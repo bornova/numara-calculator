@@ -17,7 +17,7 @@
     "dependencies": {
         "electron-context-menu": "^0.15.2",
         "fs-extra": "^8.1.0",
-        "mathjs": "^6.4.0",
+        "mathjs": "^6.5.0",
         "moment": "^2.24.0",
         "mousetrap": "^1.6.3",
         "plotly.js-basic-dist": "^1.51.3",
