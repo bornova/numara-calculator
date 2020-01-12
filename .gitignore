@@ -4,4 +4,3 @@ node_modules
 
 # Hidden
 .DS_Store
-package-lock.json
