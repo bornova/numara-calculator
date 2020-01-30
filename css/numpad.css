@@ -534,7 +534,6 @@ textarea {
 .textBox {
     padding: 5px;
     border: 1px solid #ccc;
-    border-radius: 3px;
     width: 100%;
     max-width: 250px;
     box-sizing: border-box;

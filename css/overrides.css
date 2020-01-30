@@ -15,7 +15,6 @@ h2 {
 
 .uk-modal-dialog {
     transition: 0s linear;
-    border-radius: 3px;
 }
 
 .uk-modal-body {
@@ -55,7 +54,6 @@ h2 {
     padding: 0 10px;
     line-height: 28px;
     font-size: .875rem;
-    border-radius: 3px;
 }
 
 .uk-button-default {
