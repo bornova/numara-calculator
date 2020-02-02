@@ -15,7 +15,7 @@
         "electron-builder": "^22.3.2"
     },
     "dependencies": {
-        "electron-context-menu": "^0.15.2",
+        "electron-context-menu": "^0.16.0",
         "fs-extra": "^8.1.0",
         "mathjs": "^6.6.0",
         "moment": "^2.24.0",
