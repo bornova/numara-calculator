@@ -1,7 +1,7 @@
 {
     "name": "numpad",
     "productName": "Numpad",
-    "version": "1.2.27",
+    "version": "1.2.28",
     "description": "Numpad Calculator",
     "main": "./js/main.js",
     "scripts": {
@@ -11,7 +11,7 @@
     "author": "Timur Atalay",
     "license": "MIT",
     "devDependencies": {
-        "electron": "^7.1.11",
+        "electron": "^8.0.0",
         "electron-builder": "^22.3.2"
     },
     "dependencies": {
@@ -20,8 +20,8 @@
         "mathjs": "^6.6.0",
         "moment": "^2.24.0",
         "mousetrap": "^1.6.5",
-        "plotly.js-basic-dist": "^1.52.1",
-        "uikit": "^3.3.0"
+        "plotly.js-basic-dist": "^1.52.2",
+        "uikit": "^3.3.1"
     },
     "build": {
         "nsis": {
