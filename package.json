@@ -11,7 +11,7 @@
     "author": "Timur Atalay",
     "license": "MIT",
     "devDependencies": {
-        "electron": "^8.0.0",
+        "electron": "^8.0.1",
         "electron-builder": "^22.3.2"
     },
     "dependencies": {
