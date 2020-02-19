@@ -476,6 +476,8 @@ textarea {
     display: flex;
     flex-wrap: wrap;
     min-height: 100px;
+    max-height: calc(100vh - 190px);
+    overflow: scroll;
 }
 
 .searchResults>div {

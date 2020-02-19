@@ -114,6 +114,7 @@ h2 {
 }
 
 .uk-overflow-auto {
+    min-height: 175px;
     max-height: calc(100vh - 250px);
 }
 
