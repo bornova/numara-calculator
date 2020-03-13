@@ -1,7 +1,7 @@
 {
     "name": "numpad",
     "productName": "Numpad",
-    "version": "1.3.8",
+    "version": "1.3.9",
     "description": "Numpad Calculator",
     "main": "./js/main.js",
     "scripts": {
@@ -21,7 +21,7 @@
         "moment": "^2.24.0",
         "mousetrap": "^1.6.5",
         "plotly.js-basic-dist": "^1.52.3",
-        "uikit": "^3.3.3"
+        "uikit": "^3.3.6"
     },
     "build": {
         "nsis": {
