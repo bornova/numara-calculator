@@ -1,5 +1,5 @@
 /**
- * @copyright 2019 Timur Atalay 
+ * @copyright 2020 Timur Atalay 
  * @Homepage https://github.com/bornova/numpad
  * @license MIT https://github.com/bornova/numpad/blob/master/LICENSE
  */
@@ -45,6 +45,10 @@ textarea {
     width: 100%;
     height: 100%;
     box-sizing: border-box;
+}
+
+text {
+    font-size: 10px;
 }
 
 /* Windows Header */
@@ -152,7 +156,7 @@ textarea {
     visibility: hidden;
 }
 
-.content {
+.panel {
     position: fixed;
     top: 50px;
     bottom: 40px;
@@ -367,7 +371,7 @@ textarea {
 
 .dialog-buttons {
     display: block;
-    margin-top:20px;
+    margin-top: 20px;
 }
 
 .dialog-open-wrapper {
@@ -402,6 +406,10 @@ textarea {
 .dialog-open-delete:hover {
     background: rgb(179, 49, 49);
     color: #ffffff;
+}
+
+.dialog-confirm {
+    z-index: 10010;
 }
 
 /* About dialog items */
@@ -463,6 +471,11 @@ textarea {
 
 .dialog-open-wrapper:hover {
     background: #f4f4f4;
+}
+
+.plotOptions {
+    margin: 0 10px 0 10px;
+    line-height: 30px;
 }
 
 /* Help dialog Items */

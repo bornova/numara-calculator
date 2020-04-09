@@ -25,7 +25,7 @@
             <div id="header-mac-title" class="header-mac-title"></div>
         </div>
 
-        <div id="content" class="content">
+        <div id="panel" class="panel">
             <div id="lineNo" class="lineNo syncscroll" name="sync"></div>
             <div id="inputPane" class="inputPane resize">
                 <textarea id="input" class="input syncscroll mousetrap" name="sync" wrap="off"></textarea>
@@ -54,7 +54,7 @@
         </div>
     </div>
 
-    <div id="dialog-save" class="uk-modal">
+    <div id="dialog-save" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
             <h2 class="uk-modal-title">Save Calculation</h2>
             <div><input id="saveTitle" class="textBox" type="text" maxlength="20" placeholder="Title (Optional)"></div>
@@ -65,7 +65,7 @@
         </div>
     </div>
 
-    <div id="dialog-open" class="uk-modal">
+    <div id="dialog-open" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
             <h2 class="uk-modal-title">Open Calculation</h2>
             <div id="dialog-open-body" class="dialog-open-body uk-overflow-auto"></div>
@@ -76,7 +76,7 @@
         </div>
     </div>
 
-    <div id="dialog-settings" class="uk-modal">
+    <div id="dialog-settings" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-large">
             <div id="dialog-settings-body">
                 <h2 class="uk-modal-title">Settings</h2>
@@ -151,7 +151,7 @@
         </div>
     </div>
 
-    <div id="dialog-help" class="uk-modal">
+    <div id="dialog-help" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical">
             <h2 class="uk-modal-title">Help</h2>
             <div class="helpBox"><input id="searchBox" class="textBox" type="text" maxlength="100" placeholder="Start typing to search..."></div>
@@ -162,7 +162,7 @@
         </div>
     </div>
 
-    <div id="dialog-about" class="dialog-about uk-modal">
+    <div id="dialog-about" class="dialog-about" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
             <div class=dialog-about-header>
                 <span class="dialog-about-icon"><img src="./assets/icon.ico"></span>
@@ -170,7 +170,7 @@
             </div>
             <div>
                 <span id="dialog-about-appVersion" class="dialog-about-appVersion"></span>
-                <span class="dialog-about-copyright">Copyright ©️ 2019 Timur Atalay</span>
+                <span class="dialog-about-copyright">Copyright ©️ 2020 Timur Atalay</span>
             </div>
             <div uk-grid>
                 <div class="dialog-buttons uk-width-3-5">
@@ -190,76 +190,25 @@
         </div>
     </div>
 
-    <div id="dialog-plot" class="uk-modal uk-modal-full">
+    <div id="dialog-plot" class="uk-modal-full" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical">
             <h2 id="plotTitle" class="uk-modal-title"></h2>
             <div id="plot"></div>
-            <div class="dialog-buttons uk-text-right">
-                <button id="plotRangeButton" class="uk-button uk-button-default uk-button-small">Plot Settings</button>
-                <button class="uk-button uk-button-default uk-modal-close uk-button-small">Close</button>
+
+            <div uk-grid>
+                <div class="dialog-buttons uk-width-3-4 uk-text-left">
+                    <label class="plotOptions"><input id="plotGridLines" class="uk-checkbox" type="checkbox" checked> Grid Lines</label>
+                    <label class="plotOptions"><input id="plotTipLines" class="uk-checkbox" type="checkbox" checked> Tip Lines</label>
+                    <label class="plotOptions"><input id="plotClosed" class="uk-checkbox" type="checkbox" checked> Closed</label>
+                </div>
+                <div class="dialog-buttons uk-width-1-4 uk-text-right">
+                    <button class="uk-button uk-button-default uk-modal-close uk-button-small">Close</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="dialog-plotRange" class="uk-modal">
-        <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
-            <h2 class="uk-modal-title">Plot Settings</h2>
-            <div class="uk-grid-small uk-child-width-expand uk-text-center" uk-grid>
-                <div>
-                    <div></div>
-                </div>
-                <div>
-                    <div>Min:</div>
-                </div>
-                <div>
-                    <div>Max:</div>
-                </div>
-            </div>
-
-            <div class="uk-grid-small uk-child-width-expand uk-text-center" uk-grid>
-                <div>
-                    <div class="pr-lh uk-text-right">X-Axis:</div>
-                </div>
-                <div>
-                    <div><input id="xMin" class="uk-input" max="-1"></div>
-                </div>
-                <div>
-                    <div><input id="xMax" class="uk-input" min="1"></div>
-                </div>
-            </div>
-
-            <div class="uk-grid-small uk-child-width-expand uk-text-center" uk-grid>
-                <div>
-                    <div class="pr-lh uk-text-right">Y-Axis:</div>
-                </div>
-                <div>
-                    <div><input id="yMin" class="uk-input" max="-1"></div>
-                </div>
-                <div>
-                    <div><input id="yMax" class="uk-input" min="1"></div>
-                </div>
-            </div>
-
-            <div class="uk-grid-small uk-child-width-expand uk-text-center" uk-grid>
-                <div>
-                    <div class="pr-lh uk-text-right">Step:</div>
-                </div>
-                <div>
-                    <div><input id="step" class="uk-input" min="0.1" step="0.1"></div>
-                </div>
-                <div>
-                    <div></div>
-                </div>
-            </div>
-            <div class="dialog-buttons uk-text-right">
-                <button id="set-plotRange" class="uk-button uk-button-default uk-button-small">Set</button>
-                <button id="reset-plotRange" class="uk-button uk-button-default uk-button-small">Reset</button>
-                <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="dialog-error" class="uk-modal">
+    <div id="dialog-error" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-large">
             <h2 id="errTitle" class="errTitle uk-modal-title"></h2>
             <span id="errMsg"></span>
@@ -269,7 +218,7 @@
         </div>
     </div>
 
-    <div id="dialog-confirm" class="uk-modal">
+    <div id="dialog-confirm" class="dialog-confirm" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
             <h2 class="uk-modal-title">Are you sure?</h2>
             <span id="confirmMsg"></span>
@@ -296,7 +245,7 @@
     <script src="./node_modules/mathjs/dist/math.min.js"></script>
     <script src="./node_modules/moment/min/moment.min.js"></script>
     <script src="./js/numpad.js"></script>
-    <script src="./node_modules/plotly.js-basic-dist/plotly-basic.js"></script>
+    <script src="./js/function-plot.js"></script>
     <script src="./node_modules/mousetrap/mousetrap.min.js"></script>
 </body>
 
