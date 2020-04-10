@@ -48,7 +48,8 @@ textarea {
 }
 
 text {
-    font-size: 10px;
+    font-size: 11px;
+    fill: #444;
 }
 
 /* Windows Header */

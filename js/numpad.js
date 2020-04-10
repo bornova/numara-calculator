@@ -15,7 +15,7 @@ const db = {
 
 // App Settings
 const appDefaults = {
-    'precision': '4',
+    'precision': '3',
     'dateFormat': 'l',
     'inputWidth': '50%',
     'autoRates': true,
@@ -410,7 +410,7 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
 
         function plot(plotResize = false) {
             $('plotTitle').innerHTML = func;
-            
+
             var f = func.split("=")[1];
             var domain = math.abs(math.evaluate(f, {
                 x: 0
@@ -434,6 +434,7 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
                 tip: {
                     xLine: settings.plotTipLines,
                     yLine: settings.plotTipLines,
+                    renderer: (x, y, index) => {}
                 },
                 grid: settings.plotGridLines,
                 data: [{

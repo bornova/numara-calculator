@@ -132,7 +132,7 @@ h2 {
     z-index: 1000000;
 }
 
-/* Plotly */
-.modebar-container {
-    height: 24px;
+/* Function Plot */
+.top-right-legend {
+    fill: #4682b4;
 }
