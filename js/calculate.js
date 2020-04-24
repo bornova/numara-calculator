@@ -111,8 +111,8 @@ module.exports = () => {
 
     // Solver
     function solver(line) {
-        var subtotal = subtotals.length > 0 ? subtotals.join('+') : 0;
-        var total = totals.length > 0 ? totals.join('+') : 0;
+        var subtotal = subtotals.length > 0 ? solve(subtotals.join('+')) : 0;
+        var total = totals.length > 0 ? solve(totals.join('+')) : 0;
 
         line = line.replace(/\bans\b/g, scope.ans)
             .replace(/\bnow\b/g, scope.now)
