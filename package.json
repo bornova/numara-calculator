@@ -21,7 +21,6 @@
         "mathjs": "^6.6.4",
         "moment": "^2.24.0",
         "mousetrap": "^1.6.5",
-        "plotly.js-basic-dist": "^1.53.0",
         "uikit": "^3.4.2"
     },
     "build": {
