@@ -1,7 +1,7 @@
 {
     "name": "numpad",
     "productName": "Numpad",
-    "version": "1.5.6",
+    "version": "1.5.7",
     "description": "Numpad Calculator",
     "main": "./js/main.js",
     "scripts": {
@@ -16,7 +16,7 @@
     },
     "dependencies": {
         "d3": "^3.5.17",
-        "electron-context-menu": "^1.0.0",
+        "electron-context-menu": "^2.0.0",
         "fs-extra": "^9.0.0",
         "mathjs": "^6.6.4",
         "moment": "^2.24.0",
