@@ -57,12 +57,13 @@ module.exports = () => {
                     answer = solver(line);
                 }
 
-                if (answer !== undefined) {   
+                if (answer !== undefined) {
                     totals.push(answer);
-                    subtotals.push(answer)
+                    subtotals.push(answer);
+                    
                     scope.ans = scope['line' + lineNo] = answer;
-                    answer = math.format(answer, expLim);
 
+                    answer = math.format(answer, expLim);
                     var a = answer.trim().split(' ')[0];
                     var b = answer.replace(a, '');
                     answer = !a.includes('e') && !isNaN(a) ? Number(a).toLocaleString(undefined, digits) + b : strip(answer);
@@ -111,8 +112,8 @@ module.exports = () => {
 
     // Solver
     function solver(line) {
-        var subtotal = subtotals.length > 0 ? solve(subtotals.join('+')) : 0;
-        var total = totals.length > 0 ? solve(totals.join('+')) : 0;
+        var subtotal = subtotals.length > 0 ? '(' + subtotals.join('+') + ')' : 0;
+        var total = totals.length > 0 ? '(' + totals.join('+') + ')' : 0;
 
         line = line.replace(/\bans\b/g, scope.ans)
             .replace(/\bnow\b/g, scope.now)
