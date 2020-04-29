@@ -60,7 +60,7 @@ module.exports = () => {
                 if (answer !== undefined) {
                     totals.push(answer);
                     subtotals.push(answer);
-                    
+
                     scope.ans = scope['line' + lineNo] = answer;
 
                     answer = math.format(answer, expLim);
@@ -84,7 +84,7 @@ module.exports = () => {
                 }
             }
         } else {
-            subtotals=[];
+            subtotals = [];
         }
 
         answers += answer + '<br>';

@@ -27,8 +27,8 @@ function appWindow() {
         frame: false,
         titleBarStyle: 'hiddenInset',
         webPreferences: {
-            nodeIntegration: true
-            //devTools: false
+            nodeIntegration: true,
+            devTools: false
         }
     });
 
