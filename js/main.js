@@ -18,6 +18,17 @@ require('electron-context-menu')({
 
 let win;
 
+if (!app.requestSingleInstanceLock()) {
+  app.quit()
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    if (win) {
+      if (win.isMinimized()) win.restore()
+      win.focus()
+    }
+  })
+}
+
 function appWindow() {
     win = new BrowserWindow({
         width: 600,
