@@ -14,7 +14,13 @@ h2 {
 }
 
 .uk-modal {
-    background: rgba(0, 0, 0, .5);
+    background: rgba(0, 0, 0, .6);
+}
+
+@media (min-width: 640px) {
+    .uk-modal {
+        padding: 0;
+    }
 }
 
 .uk-modal-full {
@@ -34,8 +40,7 @@ h2 {
 
 .uk-modal-title {
     font-size: 1.1em;
-    font-weight: 500;
-    color: rgb(23, 88, 107);
+    font-weight: 600;
 }
 
 .uk-modal-footer {

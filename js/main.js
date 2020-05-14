@@ -62,13 +62,15 @@ function appWindow() {
         shell.openExternal(url);
     });
 
-    win.on('focus', (event) => {
-        globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {})
-    })
-
-    win.on('blur', (event) => {
-        globalShortcut.unregisterAll()
-    })
+    if (!is.development) {
+        win.on('focus', (event) => {
+            globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {})
+        })
+    
+        win.on('blur', (event) => {
+            globalShortcut.unregisterAll()
+        })
+    }
 }
 
 app.allowRendererProcessReuse = true;

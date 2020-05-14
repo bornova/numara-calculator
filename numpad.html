@@ -154,8 +154,10 @@
     <div id="dialog-help" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical">
             <h2 class="uk-modal-title">Help</h2>
-            <div class="helpBox"><input id="searchBox" class="textBox" type="text" maxlength="100" placeholder="Start typing to search..."></div>
-            <div id="searchResults" class="searchResults">Start typing above to search...</div>
+            <div class="searchWrapper">
+                <div class="helpBox"><input id="searchBox" class="textBox" type="text" maxlength="100" placeholder="Start typing to search..."></div>
+                <div id="searchResults" class="searchResults">Start typing above to search...</div>
+            </div>
             <div class="dialog-buttons uk-text-right">
                 <button class="uk-button uk-button-default uk-modal-close uk-button-small">OK</button>
             </div>
@@ -194,12 +196,25 @@
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical">
             <h2 id="plotTitle" class="uk-modal-title"></h2>
             <div id="plot"></div>
-
             <div uk-grid>
                 <div class="dialog-buttons uk-width-3-4 uk-text-left">
-                    <label class="plotOptions"><input id="plotGridLines" class="uk-checkbox" type="checkbox" checked> Grid Lines</label>
-                    <label class="plotOptions"><input id="plotTipLines" class="uk-checkbox" type="checkbox" checked> Tip Lines</label>
-                    <label class="plotOptions"><input id="plotClosed" class="uk-checkbox" type="checkbox" checked> Closed</label>
+                    <div class="plotSwitches">
+                        <label class="switch">
+                            <input id="plotGridLines" type="checkbox">
+                            <span class="slider round"></span>
+                        </label>
+                        <span class="switchText">Grid Lines</span>
+                        <label class="switch">
+                            <input id="plotTipLines" type="checkbox">
+                            <span class="slider round"></span>
+                        </label>
+                        <span class="switchText">Tip Lines</span>
+                        <label class="switch">
+                            <input id="plotClosed" type="checkbox">
+                            <span class="slider round"></span>
+                        </label>
+                        <span class="switchText">Closed Area</span>
+                    </div>
                 </div>
                 <div class="dialog-buttons uk-width-1-4 uk-text-right">
                     <button class="uk-button uk-button-default uk-modal-close uk-button-small">Close</button>

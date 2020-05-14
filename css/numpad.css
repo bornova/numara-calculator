@@ -40,6 +40,33 @@ body {
     background: rgb(204, 204, 204);
 }
 
+input[type=range]::-webkit-slider-runnable-track {
+    width: 300px;
+    height: 2px;
+    background: #dddddd;
+    border: none;
+    border-radius: 3px;
+    margin-top: 1px;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    border: 0px solid rgb(70, 136, 223);
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    background: rgb(70, 136, 223);
+    margin-top: -7px;
+}
+
+input[type=range]:focus {
+    outline: none;
+}
+
+input[type=range]:focus::-webkit-slider-runnable-track {
+    background: #dddddd;
+}
+
 textarea {
     width: 100%;
     height: 100%;
@@ -486,11 +513,15 @@ text {
     padding-bottom: 10px;
 }
 
+.searchWrapper {
+    height: calc(100vh - 200px);
+    max-height: 600px;
+    overflow: scroll;
+}
+
 .searchResults {
     display: flex;
     flex-wrap: wrap;
-    min-height: 100px;
-    max-height: calc(100vh - 190px);
     overflow: scroll;
 }
 
@@ -525,6 +556,7 @@ text {
 /* Settings menu items */
 .precision {
     width: 24px;
+    font-size: 1rem;
     text-align: center;
     padding: 1px 0 0 0;
     background: transparent;
@@ -571,6 +603,15 @@ text {
     opacity: 0;
     width: 0;
     height: 0;
+}
+
+.switchText {
+    display: inline-block;
+    width: 70px;
+}
+
+.plotSwitches {
+    margin-top: 7px;
 }
 
 .slider {
