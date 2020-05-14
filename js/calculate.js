@@ -6,8 +6,8 @@
 
 // Calculate answers
 module.exports = () => {
-    var settings = appSettings();
     var solve = math.evaluate;
+    var settings = db.store;
     var input = $('input').value;
     var lines = input.split('\n');
     var lineIndex = 1;

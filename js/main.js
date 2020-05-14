@@ -7,9 +7,19 @@
 const {
     app,
     BrowserWindow,
+    globalShortcut,
     ipcMain,
     shell
 } = require('electron');
+
+const {
+    is
+} = require('electron-util');
+
+const store = require('electron-store');
+const schema = require('../js/schema');
+const db = new store(schema);
+
 const fs = require('fs-extra');
 
 require('electron-context-menu')({
@@ -19,27 +29,27 @@ require('electron-context-menu')({
 let win;
 
 if (!app.requestSingleInstanceLock()) {
-  app.quit()
+    app.quit()
 } else {
-  app.on('second-instance', (event, commandLine, workingDirectory) => {
-    if (win) {
-      if (win.isMinimized()) win.restore()
-      win.focus()
-    }
-  })
+    app.on('second-instance', (event, commandLine, workingDirectory) => {
+        if (win) {
+            if (win.isMinimized()) win.restore()
+            win.focus()
+        }
+    })
 }
 
 function appWindow() {
     win = new BrowserWindow({
-        width: 600,
-        height: 480,
+        width: db.get('appWidth'),
+        height: db.get('appHeight'),
         minWidth: 400,
         minHeight: 320,
         frame: false,
         titleBarStyle: 'hiddenInset',
         webPreferences: {
             nodeIntegration: true,
-            devTools: false
+            devTools: is.development
         }
     });
 
@@ -51,6 +61,14 @@ function appWindow() {
         event.preventDefault();
         shell.openExternal(url);
     });
+
+    win.on('focus', (event) => {
+        globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {})
+    })
+
+    win.on('blur', (event) => {
+        globalShortcut.unregisterAll()
+    })
 }
 
 app.allowRendererProcessReuse = true;

@@ -25,6 +25,7 @@ h2 {
 
 .uk-modal-dialog {
     transition: 0s linear;
+    border-radius: 3px;
 }
 
 .uk-modal-body {
@@ -42,7 +43,7 @@ h2 {
 }
 
 .uk-grid+.uk-grid {
-    margin-top: 10px;
+    margin-top: 12px;
 }
 
 .uk-grid-small {
@@ -58,21 +59,27 @@ h2 {
     padding: 0 10px;
     line-height: 28px;
     font-size: .875rem;
+    border-radius: 3px;
 }
 
 .uk-button-default {
-    background-color: #f5f5f5;
-    color: rgb(0, 45, 68);
+    background-color: rgb(53, 125, 219);
+    border-color: rgb(53, 125, 219);
+    color: #fff;
+    margin-left: 3px;
 }
 
 .uk-button-default:hover {
-    border-color: rgba(0, 66, 99, 0.3);
-    background-color: #f5f5f5;
-    color: rgb(0, 45, 68);
+    background-color: rgba(71, 138, 224, 1);
+    border-color: rgba(71, 138, 224, 1);
+    color: #fff;
 }
 
-.uk-button-default:active {
-    background: #eeeeee;
+.uk-button-default:active, .uk-button-default:focus {
+    background-color: rgba(71, 138, 224, 1);
+    border-color: rgba(71, 138, 224, 1);
+    color: #fff;
+    box-shadow: 0 1px 5px rgba(66, 133, 244, .8);
 }
 
 .uk-button-danger,

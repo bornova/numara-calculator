@@ -7,27 +7,14 @@
 // Get element by id
 const $ = (id) => document.getElementById(id);
 
-// localStorage
-const db = {
-    get: (key) => JSON.parse(localStorage.getItem(key)),
-    set: (key, value) => localStorage.setItem(key, JSON.stringify(value))
-};
+// App Storage
+const store = require('electron-store');
+const schema = require('./js/schema');
 
-// App Settings
-const appDefaults = {
-    'precision': '3',
-    'dateFormat': 'l',
-    'inputWidth': '50%',
-    'autoRates': true,
-    'resizable': true,
-    'lineErrors': true,
-    'lineNumbers': true,
-    'plotGridLines': false,
-    'plotTipLines': false,
-    'plotClosed': false,
-};
-
-const appSettings = () => db.get('settings') || (db.set('settings', appDefaults), appDefaults);
+const db = new store(schema);
+const rates = new store({
+    name: 'rates'
+});
 
 (() => {
     const calculate = require('./js/calculate');
@@ -36,8 +23,6 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
     const appVersion = ipc.sendSync('getVersion');
 
     window.d3 = require('d3');
-
-    var settings;
 
     // Set headers
     if (navigator.appVersion.indexOf('Win') !== -1) {
@@ -79,25 +64,27 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
     }
 
     // Load last calculations
-    $('input').value = db.get('input');
+    $('input').value = db.get('input') || '';
 
-    // Apply settings
+    // App Settings
+    var settings;
     applySettings();
 
     function applySettings() {
-        settings = appSettings();
+        settings = db.store;
         $('lineNo').style.display = settings.lineNumbers ? 'block' : 'none';
         $('handle').style.display = settings.resizable ? 'block' : 'none';
         $('inputPane').style.width = settings.resizable ? settings.inputWidth : '50%';
         $('inputPane').style.marginLeft = settings.lineNumbers ? '0px' : '18px';
         $('output').style.textAlign = settings.resizable ? 'left' : 'right';
-
         $("wrapper").style.visibility = 'visible';
         calculate();
     }
 
     document.addEventListener("DOMContentLoaded", () => {
+        $('input').focus();
         $('input').addEventListener('input', calculate);
+        $('input').dispatchEvent(new CustomEvent('scroll'));
 
         // Panel resizer
         var handle = document.querySelector('.handle');
@@ -114,15 +101,14 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
             var inputWidth = iWidth < 0 ? '0%' : iWidth > 100 ? '100%' : iWidth + '%';
             if (isResizing) {
                 resize.style.width = inputWidth;
-                settings.inputWidth = inputWidth;
-                db.set('settings', settings);
+                db.set('inputWidth', inputWidth);
             }
         });
 
         // Exchange rates
         math.createUnit('USD');
-        if (db.get('rates')) createRateUnits();
-        if (!db.get('rates') || settings.autoRates) getRates();
+        if (rates.get('rates')) createRateUnits();
+        if (!rates.get('rates') || settings.autoRates) getRates();
 
         function getRates() {
             if (navigator.onLine) {
@@ -130,7 +116,7 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
                     return fetch('https://www.floatrates.com/widget/00000576/690c690b362ec255080e5f7b3c63bba0/usd.json')
                         .then(response => response.json())
                         .then(data => {
-                            db.set('rates', data);
+                            rates.set('rates', data);
                             createRateUnits();
                             showMsg('Updated exchange rates');
                         });
@@ -143,7 +129,7 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
         }
 
         function createRateUnits() {
-            var data = db.get('rates');
+            var data = rates.get('rates');
             Object.keys(data).map(currency => math.createUnit(data[currency].code, math.unit(data[currency].inverseRate, 'USD'), {
                 override: true
             }));
@@ -258,25 +244,36 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
                     break;
                 case 'dialog-open-deleteAll': // Delete all saved calculations
                     confirm('All saved calculations will be deleted.', () => {
-                        localStorage.removeItem('saved');
+                        db.delete('saved');
                         populateSaved();
                     });
                     break;
                 case 'dialog-settings-save': // Save settings
-                    settings.precision = $('precisionRange').value;
+                    settings.precision = Number($('precisionRange').value);
                     settings.dateFormat = $('dateFormat').value;
                     settings.lineErrors = $('lineErrorButton').checked;
                     settings.lineNumbers = $('lineNoButton').checked;
                     settings.resizable = $('resizeButton').checked;
                     settings.autoRates = $('autoRatesButton').checked;
-                    db.set('settings', settings);
+                    db.set(settings);
                     applySettings();
                     UIkit.modal('#dialog-settings').hide();
                     showMsg('Settings saved');
                     break;
                 case 'dialog-settings-defaults': // Revert back to default settings
                     confirm('All settings will revert back to defaults.', () => {
-                        db.set('settings', appDefaults);
+                        db.reset(
+                            'precision',
+                            'dateFormat',
+                            'inputWidth',
+                            'autoRates',
+                            'resizable',
+                            'lineErrors',
+                            'lineNumbers',
+                            'plotGridLines',
+                            'plotTipLines',
+                            'plotClosed'
+                        );
                         applySettings();
                         showMsg('Default settings applied');
                         UIkit.modal('#dialog-settings').hide();
@@ -291,17 +288,17 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
                     // Plot settings
                 case 'plotGridLines':
                     settings.plotGridLines = $('plotGridLines').checked;
-                    db.set('settings', settings);
+                    db.set(settings);
                     plot(true);
                     break
                 case 'plotTipLines':
                     settings.plotTipLines = $('plotTipLines').checked;
-                    db.set('settings', settings);
+                    db.set(settings);
                     plot(true);
                     break
                 case 'plotClosed':
                     settings.plotClosed = $('plotClosed').checked;
-                    db.set('settings', settings);
+                    db.set(settings);
                     plot(true);
                     break
             }
@@ -454,6 +451,9 @@ const appSettings = () => db.get('settings') || (db.set('settings', appDefaults)
                 plotResize = true;
                 plot(true);
             }
+
+            db.set('appWidth', window.outerWidth);
+            db.set('appHeight', window.outerHeight);
         });
 
         // Show confirmation dialog

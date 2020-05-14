@@ -7,7 +7,6 @@
 * {
     margin: 0;
     padding: 0;
-    overflow: hidden;
     outline: none;
     user-select: none;
     border: none;
@@ -254,7 +253,7 @@ text {
     right: 15px;
     display: flex;
     font-size: 12px;
-    color: rgb(153, 153, 153);
+    color: rgb(223, 63, 63);
     height: 16px;
     min-height: 16px;
 }
@@ -298,7 +297,7 @@ text {
     background-size: 14px 14px;
     background-position: center;
     background-repeat: no-repeat;
-    background-color: rgb(124, 144, 156);
+    background-color: rgb(112, 135, 150);
 }
 
 .action:hover {
@@ -307,11 +306,11 @@ text {
 
 .noAction {
     cursor: default;
-    background-color: rgb(124, 144, 156, 0.5);
+    background-color: rgb(124, 144, 156, 0.6);
 }
 
 .noAction:hover {
-    background-color: rgb(124, 144, 156, 0.5);
+    background-color: rgb(124, 144, 156, 0.6);
 }
 
 :root {
@@ -419,6 +418,7 @@ text {
 }
 
 .dialog-about-header {
+    display: inline-block;
     width: 140px;
     margin: 10px auto 10px auto;
     font-weight: 600;
@@ -556,7 +556,6 @@ text {
 }
 
 .textBox::placeholder {
-    font-size: 11px;
     color: rgba(148, 156, 160, 0.6);
 }
 
@@ -607,7 +606,7 @@ text {
 }
 
 input:checked+.slider {
-    background-color: rgb(33, 150, 243);
+    background-color: rgb(70, 136, 223);
 }
 
 input:checked+.slider:before {
