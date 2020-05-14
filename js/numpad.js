@@ -11,7 +11,7 @@ const $ = (id) => document.getElementById(id);
 const store = require('electron-store');
 const schema = require('./js/schema');
 
-const db = new store(schema);
+const settings = new store(schema);
 const rates = new store({
     name: 'rates'
 });
@@ -64,19 +64,17 @@ const rates = new store({
     }
 
     // Load last calculations
-    $('input').value = db.get('input') || '';
+    $('input').value = settings.get('input') || '';
 
     // App Settings
-    var settings;
     applySettings();
 
     function applySettings() {
-        settings = db.store;
-        $('lineNo').style.display = settings.lineNumbers ? 'block' : 'none';
-        $('handle').style.display = settings.resizable ? 'block' : 'none';
-        $('inputPane').style.width = settings.resizable ? settings.inputWidth : '50%';
-        $('inputPane').style.marginLeft = settings.lineNumbers ? '0px' : '18px';
-        $('output').style.textAlign = settings.resizable ? 'left' : 'right';
+        $('lineNo').style.display = settings.get('lineNumbers') ? 'block' : 'none';
+        $('handle').style.display = settings.get('resizable') ? 'block' : 'none';
+        $('inputPane').style.width = settings.get('resizable') ? settings.get('inputWidth') + '%' : '50%';
+        $('inputPane').style.marginLeft = settings.get('lineNumbers') ? '0px' : '18px';
+        $('output').style.textAlign = settings.get('resizable') ? 'left' : 'right';
         $("wrapper").style.visibility = 'visible';
         calculate();
     }
@@ -98,17 +96,17 @@ const rates = new store({
             var offset = $('lineNo').style.display == 'block' ? 54 : 30;
             var pointerRelativeXpos = e.clientX - panel.offsetLeft - offset;
             var iWidth = pointerRelativeXpos / panel.clientWidth * 100;
-            var inputWidth = iWidth < 0 ? '0%' : iWidth > 100 ? '100%' : iWidth + '%';
+            var inputWidth = iWidth < 0 ? 0 : iWidth > 100 ? 100 : iWidth;
             if (isResizing) {
-                resize.style.width = inputWidth;
-                db.set('inputWidth', inputWidth);
+                resize.style.width = inputWidth + '%';
+                settings.set('inputWidth', inputWidth);
             }
         });
 
         // Exchange rates
         math.createUnit('USD');
         if (rates.get('rates')) createRateUnits();
-        if (!rates.get('rates') || settings.autoRates) getRates();
+        if (!rates.get('rates') || settings.get('autoRates')) getRates();
 
         function getRates() {
             if (navigator.onLine) {
@@ -149,7 +147,7 @@ const rates = new store({
             switch (e.target.id) {
                 case 'clearButton': // Clear board
                     if ($('input').value != '') {
-                        db.set('undoData', $('input').value);
+                        settings.set('undoData', $('input').value);
                         $('input').value = '';
                         $('input').focus();
                         calculate();
@@ -160,11 +158,11 @@ const rates = new store({
                 case 'printButton': // Print calculations
                     UIkit.tooltip('#printButton').hide();
                     if ($('input').value != '') {
-                        $('printLines').style.display = settings.lineNumbers ? 'block' : 'none';
-                        $('printInput').style.width = settings.resizable ? settings.inputWidth : '50%';
-                        $('printInput').style.marginLeft = settings.lineNumbers ? '0px' : '18px';
-                        $('printInput').style.borderRightWidth = settings.resizable ? '1px' : '0';
-                        $('printOutput').style.textAlign = settings.resizable ? 'left' : 'right';
+                        $('printLines').style.display = settings.get('lineNumbers') ? 'block' : 'none';
+                        $('printInput').style.width = settings.get('resizable') ? settings.get('inputWidth') + '%' : '50%';
+                        $('printInput').style.marginLeft = settings.get('lineNumbers') ? '0px' : '18px';
+                        $('printInput').style.borderRightWidth = settings.get('resizable') ? '1px' : '0';
+                        $('printOutput').style.textAlign = settings.get('resizable') ? 'left' : 'right';
 
                         $('print-title').innerHTML = appName;
                         $('printLines').innerHTML = $('lineNo').innerHTML;
@@ -185,7 +183,7 @@ const rates = new store({
                     showModal('#dialog-open');
                     break;
                 case 'undoButton': // Undo action
-                    $('input').value = db.get('undoData');
+                    $('input').value = settings.get('undoData');
                     $('undoButton').style.visibility = 'hidden';
                     calculate();
                     break;
@@ -210,9 +208,9 @@ const rates = new store({
                 case 'plotButton': // Plot function
                     func = e.target.getAttribute('data-func');
                     try {
-                        $('plotGridLines').checked = settings.plotGridLines;
-                        $('plotTipLines').checked = settings.plotTipLines;
-                        $('plotClosed').checked = settings.plotClosed;
+                        $('plotGridLines').checked = settings.get('plotGridLines');
+                        $('plotTipLines').checked = settings.get('plotTipLines');
+                        $('plotClosed').checked = settings.get('plotClosed');
                         plot();
                         showModal('#dialog-plot');
                     } catch (error) {
@@ -232,37 +230,37 @@ const rates = new store({
         document.addEventListener('click', (e) => {
             switch (e.target.id) {
                 case 'dialog-save-save': // Save calculation
-                    var obj = db.get('saved') || {};
+                    var obj = settings.get('saved') || {};
                     var id = moment().format('x');
                     var title = $('saveTitle').value || 'No title';
                     var data = $('input').value;
 
                     obj[id] = [title, data];
-                    db.set('saved', obj);
+                    settings.set('saved', obj);
                     UIkit.modal('#dialog-save').hide();
                     showMsg('Saved');
                     break;
                 case 'dialog-open-deleteAll': // Delete all saved calculations
                     confirm('All saved calculations will be deleted.', () => {
-                        db.delete('saved');
-                        populateSaved();
+                        settings.delete('saved');
+                        UIkit.modal('#dialog-open').hide();
+                        showMsg('Deleted all saved calculations');
                     });
                     break;
                 case 'dialog-settings-save': // Save settings
-                    settings.precision = Number($('precisionRange').value);
-                    settings.dateFormat = $('dateFormat').value;
-                    settings.lineErrors = $('lineErrorButton').checked;
-                    settings.lineNumbers = $('lineNoButton').checked;
-                    settings.resizable = $('resizeButton').checked;
-                    settings.autoRates = $('autoRatesButton').checked;
-                    db.set(settings);
+                    settings.set('precision', Number($('precisionRange').value));
+                    settings.set('dateFormat', $('dateFormat').value);
+                    settings.set('lineErrors', $('lineErrorButton').checked);
+                    settings.set('lineNumbers', $('lineNoButton').checked);
+                    settings.set('resizable', $('resizeButton').checked);
+                    settings.set('autoRates', $('autoRatesButton').checked);
                     applySettings();
                     UIkit.modal('#dialog-settings').hide();
                     showMsg('Settings saved');
                     break;
                 case 'dialog-settings-defaults': // Revert back to default settings
                     confirm('All settings will revert back to defaults.', () => {
-                        db.reset(
+                        settings.reset(
                             'precision',
                             'dateFormat',
                             'inputWidth',
@@ -287,18 +285,15 @@ const rates = new store({
                     break;
                     // Plot settings
                 case 'plotGridLines':
-                    settings.plotGridLines = $('plotGridLines').checked;
-                    db.set(settings);
+                    settings.set('plotGridLines', $('plotGridLines').checked);
                     plot(true);
                     break
                 case 'plotTipLines':
-                    settings.plotTipLines = $('plotTipLines').checked;
-                    db.set(settings);
+                    settings.set('plotTipLines', $('plotTipLines').checked);
                     plot(true);
                     break
                 case 'plotClosed':
-                    settings.plotClosed = $('plotClosed').checked;
-                    db.set(settings);
+                    settings.set('plotClosed', $('plotClosed').checked);
                     plot(true);
                     break
             }
@@ -307,10 +302,10 @@ const rates = new store({
         // Open saved calculations dialog actions
         $('dialog-open').addEventListener('click', (e) => {
             var pid;
-            var saved = db.get('saved');
+            var saved = settings.get('saved');
             if (e.target.parentNode.getAttribute('data-action') == 'load') {
                 pid = e.target.parentNode.parentNode.id;
-                db.set('undoData', $('input').value);
+                settings.set('undoData', $('input').value);
                 $('input').value = saved[pid][1];
                 calculate();
                 $('undoButton').style.visibility = 'visible';
@@ -320,7 +315,7 @@ const rates = new store({
                 pid = e.target.parentNode.id;
                 confirm('Calculation "' + saved[pid][0] + '" will be deleted.', () => {
                     delete saved[pid];
-                    db.set('saved', saved);
+                    settings.set('saved', saved);
                     populateSaved();
                 });
             }
@@ -330,7 +325,7 @@ const rates = new store({
         UIkit.util.on('#dialog-open', 'beforeshow', () => populateSaved());
 
         function populateSaved() {
-            var obj = db.get('saved') || {};
+            var obj = settings.get('saved') || {};
             var savedItems = Object.keys(obj);
             $('dialog-open-body').innerHTML = '';
             if (savedItems.length > 0) {
@@ -354,8 +349,8 @@ const rates = new store({
 
         // Initiate settings dialog
         UIkit.util.on('#dialog-settings', 'beforeshow', () => {
-            $('precisionRange').value = settings.precision;
-            $('precision-label').innerHTML = settings.precision;
+            $('precisionRange').value = settings.get('precision');
+            $('precision-label').innerHTML = settings.get('precision');
             $('dateFormat').innerHTML = (
                 '<option value="l">' + moment().format('l') + '</option>' +
                 '<option value="L">' + moment().format('L') + '</option>' +
@@ -364,11 +359,11 @@ const rates = new store({
                 '<option value="ddd, L">' + moment().format('ddd, L') + '</option>' +
                 '<option value="ddd, MMM DD, YYYY">' + moment().format('ddd, MMM DD, YYYY') + '</option>'
             );
-            $('dateFormat').value = settings.dateFormat;
-            $('resizeButton').checked = settings.resizable;
-            $('lineNoButton').checked = settings.lineNumbers;
-            $('lineErrorButton').checked = settings.lineErrors;
-            $('autoRatesButton').checked = settings.autoRates;
+            $('dateFormat').value = settings.get('dateFormat');
+            $('resizeButton').checked = settings.get('resizable');
+            $('lineNoButton').checked = settings.get('lineNumbers');
+            $('lineErrorButton').checked = settings.get('lineErrors');
+            $('autoRatesButton').checked = settings.get('autoRates');
         });
 
         $('precisionRange').addEventListener('input', () => $('precision-label').innerHTML = $('precisionRange').value);
@@ -429,15 +424,15 @@ const rates = new store({
                     domain: yDomain
                 },
                 tip: {
-                    xLine: settings.plotTipLines,
-                    yLine: settings.plotTipLines,
+                    xLine: settings.get('plotTipLines'),
+                    yLine: settings.get('plotTipLines'),
                     renderer: (x, y, index) => {}
                 },
-                grid: settings.plotGridLines,
+                grid: settings.get('plotGridLines'),
                 data: [{
                     fn: f,
                     graphType: 'polyline',
-                    closed: settings.plotClosed
+                    closed: settings.get('plotClosed')
                 }],
                 plugins: [
                     functionPlot.plugins.zoomBox()
@@ -452,8 +447,7 @@ const rates = new store({
                 plot(true);
             }
 
-            db.set('appWidth', window.outerWidth);
-            db.set('appHeight', window.outerHeight);
+            ipc.send('setDims', window.outerWidth, window.outerHeight);
         });
 
         // Show confirmation dialog

@@ -16,11 +16,24 @@ const {
     is
 } = require('electron-util');
 
-const store = require('electron-store');
-const schema = require('../js/schema');
-const db = new store(schema);
-
 const fs = require('fs-extra');
+
+const store = require('electron-store');
+const dims = {
+    appWidth: {
+        default: 600,
+        minimum: 480
+    },
+    appHeight: {
+        default: 480,
+        minimum: 320
+    }
+}
+const db = new store({
+    dims,
+    name: 'dims',
+    fileExtension: ''
+});
 
 require('electron-context-menu')({
     prepend: (params, browserWindow) => []
@@ -43,8 +56,8 @@ function appWindow() {
     win = new BrowserWindow({
         width: db.get('appWidth'),
         height: db.get('appHeight'),
-        minWidth: 400,
-        minHeight: 320,
+        minWidth: dims.appWidth.minimum,
+        minHeight: dims.appHeight.minimum,
         frame: false,
         titleBarStyle: 'hiddenInset',
         webPreferences: {
@@ -66,7 +79,7 @@ function appWindow() {
         win.on('focus', (event) => {
             globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {})
         })
-    
+
         win.on('blur', (event) => {
             globalShortcut.unregisterAll()
         })
@@ -98,4 +111,9 @@ ipcMain.on('resetApp', () => {
     fs.remove(app.getPath('userData'));
     app.relaunch();
     app.exit();
+});
+
+ipcMain.on('setDims', (event, w, h) => {
+    db.set('appWidth', Number(w));
+    db.set('appHeight', Number(h));
 });

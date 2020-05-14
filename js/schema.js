@@ -5,14 +5,6 @@
  */
 
 const schema = {
-    appWidth: {
-        type: 'number',
-        default: 600
-    },
-    appHeight: {
-        type: 'number',
-        default: 480
-    },
     precision: {
         type: 'number',
         default: 4,
@@ -21,11 +13,14 @@ const schema = {
     },
     dateFormat: {
         type: 'string',
-        default: 'l'
+        default: 'l',
+        enum: ['l', 'L', 'MMM DD, YYYY', 'ddd, l', 'ddd, L', 'ddd, MMM DD, YYYY']
     },
     inputWidth: {
-        type: 'string',
-        default: '50%'
+        type: 'number',
+        default: 50,
+        minimum: 0,
+        maximum: 100
     },
     autoRates: {
         type: 'boolean',
