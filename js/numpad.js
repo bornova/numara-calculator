@@ -14,7 +14,8 @@ const ls = {
 };
 
 // App Settings
-const appDefaults = {
+var settings;
+const defaultSettings = {
     'precision': '4',
     'dateFormat': 'l',
     'inputWidth': '50%',
@@ -27,7 +28,7 @@ const appDefaults = {
     'plotClosed': false,
 };
 
-const appSettings = () => ls.get('settings') || (ls.set('settings', appDefaults), appDefaults);
+const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSettings), defaultSettings);
 
 (() => {
     const calculate = require('./js/calculate');
@@ -36,8 +37,6 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', appDefaults)
     const appVersion = ipc.sendSync('getVersion');
 
     window.d3 = require('d3');
-
-    var settings;
 
     // Set headers
     if (navigator.appVersion.indexOf('Win') !== -1) {
@@ -278,7 +277,7 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', appDefaults)
                     break;
                 case 'dialog-settings-defaults': // Revert back to default settings
                     confirm('All settings will revert back to defaults.', () => {
-                        ls.set('settings', appDefaults);
+                        ls.set('settings', defaultSettings);
                         applySettings();
                         showMsg('Default settings applied');
                         UIkit.modal('#dialog-settings').hide();

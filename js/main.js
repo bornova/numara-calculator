@@ -82,7 +82,7 @@ function appWindow() {
     }
 }
 
-//app.allowRendererProcessReuse = true;
+app.allowRendererProcessReuse = true;
 
 app.on('ready', () => appWindow());
 app.on('window-all-closed', () => app.quit());
