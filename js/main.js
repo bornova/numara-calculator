@@ -19,19 +19,20 @@ const {
 const fs = require('fs-extra');
 
 const store = require('electron-store');
-const dims = {
+const schema = {
     appWidth: {
+        type: 'number',
         default: 600,
         minimum: 480
     },
     appHeight: {
+        type: 'number',
         default: 480,
         minimum: 320
     }
 }
-const db = new store({
-    dims,
-    name: 'dims',
+const dims = new store({
+    schema,
     fileExtension: ''
 });
 
@@ -54,10 +55,10 @@ if (!app.requestSingleInstanceLock()) {
 
 function appWindow() {
     win = new BrowserWindow({
-        width: db.get('appWidth'),
-        height: db.get('appHeight'),
-        minWidth: dims.appWidth.minimum,
-        minHeight: dims.appHeight.minimum,
+        width: dims.get('appWidth'),
+        height: dims.get('appHeight'),
+        minWidth: schema.appWidth.minimum,
+        minHeight: schema.appHeight.minimum,
         frame: false,
         titleBarStyle: 'hiddenInset',
         webPreferences: {
@@ -76,17 +77,12 @@ function appWindow() {
     });
 
     if (!is.development) {
-        win.on('focus', (event) => {
-            globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {})
-        })
-
-        win.on('blur', (event) => {
-            globalShortcut.unregisterAll()
-        })
+        win.on('focus', (event) => globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {}))
+        win.on('blur', (event) => globalShortcut.unregisterAll())
     }
 }
 
-app.allowRendererProcessReuse = true;
+//app.allowRendererProcessReuse = true;
 
 app.on('ready', () => appWindow());
 app.on('window-all-closed', () => app.quit());
@@ -114,6 +110,6 @@ ipcMain.on('resetApp', () => {
 });
 
 ipcMain.on('setDims', (event, w, h) => {
-    db.set('appWidth', Number(w));
-    db.set('appHeight', Number(h));
+    dims.set('appWidth', Number(w));
+    dims.set('appHeight', Number(h));
 });

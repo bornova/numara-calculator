@@ -7,6 +7,7 @@
 // Calculate answers
 module.exports = () => {
     var solve = math.evaluate;
+    var settings = appSettings();
     var input = $('input').value;
     var lines = input.split('\n');
     var lineIndex = 1;
@@ -21,11 +22,11 @@ module.exports = () => {
         upperExp: 12
     };
     var digits = {
-        maximumFractionDigits: settings.get('precision')
+        maximumFractionDigits: settings.precision
     };
 
-    scope.now = moment().format(settings.get('dateFormat') + ' LT');
-    scope.today = moment().format(settings.get('dateFormat'));
+    scope.now = moment().format(settings.dateFormat + ' LT');
+    scope.today = moment().format(settings.dateFormat);
 
     for (var i in lines) {
         var line = lines[i].trim();
@@ -77,7 +78,7 @@ module.exports = () => {
                 }
             } catch (e) {
                 var errStr = String(e).replace(/'|"/g, '`');
-                if (settings.get('lineErrors')) {
+                if (settings.lineErrors) {
                     answer = '<a title="' + errStr + '" class="lineError" data-line="' + lineNo + '" data-error="' + errStr + '" uk-tooltip>Err</a>';
                     lineNo = '<span class="lineErrorNo">' + lineNo + '</span>';
                 }
@@ -99,7 +100,7 @@ module.exports = () => {
     $('printButton').className = input === '' ? 'noAction' : 'action';
     $('saveButton').className = input === '' ? 'noAction' : 'action';
 
-    settings.set('input', $('input').value);
+    ls.set('input', $('input').value);
     $('undoButton').style.visibility = 'hidden';
 
     function strip(s) {
@@ -132,7 +133,7 @@ module.exports = () => {
             var rightOfDate = String(solve(line.replace(lineDate, ''), scope));
             var dwmy = rightOfDate.match(new RegExp(dateReg));
             var dateNum = rightOfDate.split(dwmy)[0];
-            var timeFormat = line.match(new RegExp(timeReg)) ? settings.get('dateFormat') + ' LT' : settings.get('dateFormat');
+            var timeFormat = line.match(new RegExp(timeReg)) ? settings.dateFormat + ' LT' : settings.dateFormat;
 
             line = '"' + moment(new Date(lineDate)).add(dateNum, dwmy).format(timeFormat) + '"';
         }
