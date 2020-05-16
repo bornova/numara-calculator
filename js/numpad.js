@@ -293,17 +293,17 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
                 case 'plotGridLines':
                     settings.plotGridLines = $('plotGridLines').checked;
                     ls.set('settings', settings);
-                    plot(true);
+                    plot();
                     break
                 case 'plotTipLines':
                     settings.plotTipLines = $('plotTipLines').checked;
                     ls.set('settings', settings);
-                    plot(true);
+                    plot();
                     break
                 case 'plotClosed':
                     settings.plotClosed = $('plotClosed').checked;
                     ls.set('settings', settings);
-                    plot(true);
+                    plot();
                     break
             }
         });
@@ -409,9 +409,9 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
         var func;
         var activePlot;
 
-        function plot(plotResize = false) {
+        function plot() {
             $('plotTitle').innerHTML = func;
-            
+
             var f = func.split("=")[1];
             var domain = math.abs(math.evaluate(f, {
                 x: 0
@@ -419,8 +419,8 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
 
             if (domain == Infinity || domain == 0) domain = 10;
 
-            var xDomain = plotResize ? activePlot.meta.xScale.domain() : [-domain, domain]
-            var yDomain = plotResize ? activePlot.meta.yScale.domain() : [-domain, domain]
+            var xDomain = activePlot ? activePlot.meta.xScale.domain() : [-domain, domain]
+            var yDomain = activePlot ? activePlot.meta.yScale.domain() : [-domain, domain]
 
             activePlot = functionPlot({
                 target: '#plot',
@@ -448,14 +448,13 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
             });
         }
 
+        UIkit.util.on('#dialog-plot', 'hide', () => activePlot = false);
+
         // Relayout plot on window resize
         window.addEventListener('resize', () => {
             if (activePlot && document.querySelector("#dialog-plot").classList.contains("uk-open")) {
-                plotResize = true;
-                plot(true);
+                plot();
             }
-
-            ipc.send('setDims', window.outerWidth, window.outerHeight);
         });
 
         // Show confirmation dialog

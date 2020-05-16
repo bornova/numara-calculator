@@ -7,6 +7,7 @@
 const {
     app,
     BrowserWindow,
+    electron,
     globalShortcut,
     ipcMain,
     shell
@@ -86,6 +87,11 @@ app.allowRendererProcessReuse = true;
 
 app.on('ready', () => appWindow());
 app.on('window-all-closed', () => app.quit());
+app.on('before-quit', () => {
+    var d = win.getSize();
+    dims.set('appWidth', d[0]);
+    dims.set('appHeight', d[1]);
+});
 
 ipcMain.on('isNormal', (event) => event.returnValue = win.isNormal());
 ipcMain.on('isMaximized', (event) => event.returnValue = win.isMaximized());
@@ -107,9 +113,4 @@ ipcMain.on('resetApp', () => {
     fs.remove(app.getPath('userData'));
     app.relaunch();
     app.exit();
-});
-
-ipcMain.on('setDims', (event, w, h) => {
-    dims.set('appWidth', Number(w));
-    dims.set('appHeight', Number(h));
 });
