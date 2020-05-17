@@ -34,6 +34,7 @@ const schema = {
 }
 const dims = new store({
     schema,
+    name: 'Preferences',
     fileExtension: ''
 });
 
