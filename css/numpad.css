@@ -52,11 +52,11 @@ input[type=range]::-webkit-slider-runnable-track {
 input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
     border: 0px solid rgb(70, 136, 223);
-    height: 16px;
-    width: 16px;
+    height: 14px;
+    width: 14px;
     border-radius: 50%;
     background: rgb(70, 136, 223);
-    margin-top: -7px;
+    margin-top: -6px;
 }
 
 input[type=range]:focus {

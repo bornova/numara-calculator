@@ -46,12 +46,7 @@ let win;
 if (!app.requestSingleInstanceLock()) {
     app.quit()
 } else {
-    app.on('second-instance', (event, commandLine, workingDirectory) => {
-        if (win) {
-            if (win.isMinimized()) win.restore()
-            win.focus()
-        }
-    })
+    app.on('second-instance', () => win.focus())
 }
 
 function appWindow() {
