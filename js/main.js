@@ -7,7 +7,6 @@
 const {
     app,
     BrowserWindow,
-    electron,
     globalShortcut,
     ipcMain,
     shell
@@ -34,6 +33,7 @@ const schema = {
 }
 const dims = new store({
     schema,
+    name: 'Preferences',
     fileExtension: ''
 });
 
@@ -70,6 +70,11 @@ function appWindow() {
 
     win.loadFile('numpad.html');
     win.once('ready-to-show', () => win.show());
+    win.on('close', () => {
+        var d = win.getSize();
+        dims.set('appWidth', d[0]);
+        dims.set('appHeight', d[1]);
+    })
     win.on('closed', () => win = null);
 
     win.webContents.on('new-window', (event, url) => {
@@ -87,11 +92,6 @@ app.allowRendererProcessReuse = true;
 
 app.on('ready', () => appWindow());
 app.on('window-all-closed', () => app.quit());
-app.on('before-quit', () => {
-    var d = win.getSize();
-    dims.set('appWidth', d[0]);
-    dims.set('appHeight', d[1]);
-});
 
 ipcMain.on('isNormal', (event) => event.returnValue = win.isNormal());
 ipcMain.on('isMaximized', (event) => event.returnValue = win.isMaximized());
