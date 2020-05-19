@@ -39,7 +39,7 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
     window.d3 = require('d3');
 
     // Set headers
-    if (navigator.appVersion.indexOf('Win') !== -1) {
+    if (ipc.sendSync('isWindows')) {
         $('header-mac').remove();
         $('header-win').style.display = 'block';
         $('header-win-title').innerHTML = appName;
@@ -294,17 +294,17 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
                     settings.plotGridLines = $('plotGridLines').checked;
                     ls.set('settings', settings);
                     plot();
-                    break
+                    break;
                 case 'plotTipLines':
                     settings.plotTipLines = $('plotTipLines').checked;
                     ls.set('settings', settings);
                     plot();
-                    break
+                    break;
                 case 'plotClosed':
                     settings.plotClosed = $('plotClosed').checked;
                     ls.set('settings', settings);
                     plot();
-                    break
+                    break;
             }
         });
 
@@ -419,8 +419,8 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
 
             if (domain == Infinity || domain == 0) domain = 10;
 
-            var xDomain = activePlot ? activePlot.meta.xScale.domain() : [-domain, domain]
-            var yDomain = activePlot ? activePlot.meta.yScale.domain() : [-domain, domain]
+            var xDomain = activePlot ? activePlot.meta.xScale.domain() : [-domain, domain];
+            var yDomain = activePlot ? activePlot.meta.yScale.domain() : [-domain, domain];
 
             activePlot = functionPlot({
                 target: '#plot',
@@ -452,9 +452,7 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
 
         // Relayout plot on window resize
         window.addEventListener('resize', () => {
-            if (activePlot && document.querySelector("#dialog-plot").classList.contains("uk-open")) {
-                plot();
-            }
+            if (activePlot && document.querySelector("#dialog-plot").classList.contains("uk-open")) plot();
         });
 
         // Show confirmation dialog
