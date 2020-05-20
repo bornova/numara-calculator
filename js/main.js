@@ -9,6 +9,7 @@ const {
     BrowserWindow,
     globalShortcut,
     ipcMain,
+    Menu,
     shell
 } = require('electron');
 
@@ -80,7 +81,7 @@ function appWindow() {
         shell.openExternal(url);
     });
 
-    if (dims.get('fullSize')) win.maximize();
+    if (dims.get('fullSize') & is.windows) win.maximize();
 
     if (!is.development) {
         win.on('focus', (event) => globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {}));
@@ -116,3 +117,139 @@ ipcMain.on('resetApp', () => {
     app.relaunch();
     app.quit();
 });
+
+if (is.macos) {
+    const template = [{
+            label: app.name,
+            submenu: [{
+                    role: 'about'
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    role: 'hide'
+                },
+                {
+                    role: 'hideothers'
+                },
+                {
+                    role: 'unhide'
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    role: 'quit'
+                }
+            ]
+        },
+        {
+            label: 'File',
+            submenu: [{
+                role: 'close'
+            }]
+        },
+        {
+            label: 'Edit',
+            submenu: [{
+                    role: 'undo'
+                },
+                {
+                    role: 'redo'
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    role: 'cut'
+                },
+                {
+                    role: 'copy'
+                },
+                {
+                    role: 'paste'
+                },
+                {
+                    role: 'pasteAndMatchStyle'
+                },
+                {
+                    role: 'delete'
+                },
+                {
+                    role: 'selectAll'
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    label: 'Speech',
+                    submenu: [{
+                            role: 'startspeaking'
+                        },
+                        {
+                            role: 'stopspeaking'
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            label: 'View',
+            submenu: [{
+                    role: 'reload'
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    role: 'resetzoom'
+                },
+                {
+                    role: 'zoomin'
+                },
+                {
+                    role: 'zoomout'
+                },
+                {
+                    type: 'separator'
+                }
+            ]
+        },
+        {
+            label: 'Window',
+            submenu: [{
+                    role: 'minimize'
+                },
+                {
+                    role: 'zoom'
+                },
+                {
+                    role: 'togglefullscreen'
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    role: 'front'
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    role: 'window'
+                }
+            ]
+        },
+        {
+            role: 'help',
+            submenu: [{
+                label: 'Learn More',
+                click: async () => await shell.openExternal('https://github.com/bornova/numpad')
+            }]
+        }
+    ];
+
+    const menu = Menu.buildFromTemplate(template);
+    Menu.setApplicationMenu(menu);
+}
