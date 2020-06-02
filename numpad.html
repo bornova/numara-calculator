@@ -28,7 +28,7 @@
         <div id="panel" class="panel">
             <div id="lineNo" class="lineNo syncscroll" name="sync"></div>
             <div id="inputPane" class="inputPane resize">
-                <textarea id="input" class="input syncscroll mousetrap" name="sync" wrap="off" spellcheck="false"></textarea>
+                <textarea id="input" class="input syncscroll mousetrap" name="sync" wrap="off"></textarea>
             </div>
             <div id="handle" class="handle"></div>
             <div id="output" class="output syncscroll" name="sync"></div>
@@ -126,6 +126,16 @@
                         </label>
                     </div>
                 </div>
+                <span class="divider"></span>
+                <h2 class="uk-modal-title">Exchange Rates</h2>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div>
+                        <span id="ratesURLstr" class="ratesURLstr"></span>
+                    </div>
+                    <div class="uk-text-right">
+                        <a id="ratesURLbutton" class="ratesURLbutton">Edit</a>
+                    </div>
+                </div>
                 <div class="uk-child-width-expand" uk-grid>
                     <div class="uk-width-4-5">
                         Update exchange rates on start <a id="updateRatesButton" class="updateRatesLink">Update Now</a>
@@ -147,6 +157,20 @@
                     <button id="dialog-settings-defaults" class="uk-button uk-button-default uk-button-small">Defaults</button>
                     <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dialog-rates" uk-modal>
+        <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical">
+            <h2 id="jsonURLTitle" class="uk-modal-title">Exchange rates JSON</h2>
+            <div>
+                <input id="ratesURL" class="textBox" type="text" placeholder="Enter JSON url from floatrates.com">
+            </div>
+            <div class="dialog-buttons uk-text-right">
+                <span id="checkURL" class="checkURL"></span>
+                <button id="dialog-save-ratesURL" class="uk-button uk-button-default uk-button-small">Save</button>
+                <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
             </div>
         </div>
     </div>
@@ -224,7 +248,7 @@
     </div>
 
     <div id="dialog-error" uk-modal>
-        <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-large">
+        <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
             <h2 id="errTitle" class="errTitle uk-modal-title"></h2>
             <span id="errMsg"></span>
             <div class="dialog-buttons uk-text-right">
@@ -239,6 +263,17 @@
             <span id="confirmMsg"></span>
             <div class="dialog-buttons uk-text-right">
                 <button id="confirm-yes" class="uk-button uk-button-default uk-button-small">Yes</button>
+                <button class="uk-button uk-button-default uk-modal-close uk-button-small">No</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dialog-yesno" class="dialog-yesno" uk-modal>
+        <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
+            <h2 id="yesnoTitle" class="uk-modal-title"></h2>
+            <span id="yesnoMsg"></span>
+            <div class="dialog-buttons uk-text-right">
+                <button id="yesno-yes" class="uk-button uk-button-default uk-button-small">Yes</button>
                 <button class="uk-button uk-button-default uk-modal-close uk-button-small">No</button>
             </div>
         </div>

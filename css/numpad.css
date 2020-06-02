@@ -435,7 +435,7 @@ text {
     color: #ffffff;
 }
 
-.dialog-confirm {
+.dialog-confirm, .dialog-yesno {
     z-index: 10010;
 }
 
@@ -583,12 +583,32 @@ text {
     padding: 5px;
     border: 1px solid #ccc;
     width: 100%;
-    max-width: 250px;
     box-sizing: border-box;
+    color: #666;
 }
 
 .textBox::placeholder {
     color: rgba(148, 156, 160, 0.6);
+}
+
+.divider {
+    display: block;
+    margin-top: 20px;
+}
+
+.ratesURLbutton {
+    margin-right: 5px;
+}
+
+.checkURL {
+    vertical-align: middle;
+    color: rgb(53, 125, 219);
+    margin-right: 5px;
+}
+
+.jsonError {
+    color: rgba(189, 46, 46, 0.9);
+    border-color: rgba(189, 46, 46, 0.9);
 }
 
 /* Toggle buttons */

@@ -54,10 +54,11 @@ function appWindow() {
         frame: false,
         show: false,
         useContentSize: true,
-        backgroundColor: '#ffffff',
+        hasShadow: true,
         titleBarStyle: 'hiddenInset',
         webPreferences: {
             nodeIntegration: true,
+            spellcheck: false,
             devTools: is.development
         }
     });
@@ -113,6 +114,7 @@ ipcMain.on('print', (event) => {
     });
 });
 ipcMain.on('resetApp', () => {
+    win.close();
     fs.remove(app.getPath('userData'));
     app.relaunch();
     app.quit();

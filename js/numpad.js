@@ -91,11 +91,11 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
         $('inputPane').style.marginLeft = settings.lineNumbers ? '0px' : '18px';
         $('output').style.textAlign = settings.resizable ? 'left' : 'right';
 
-        $("wrapper").style.visibility = 'visible';
+        $('wrapper').style.visibility = 'visible';
         calculate();
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener('DOMContentLoaded', () => {
         $('input').focus();
         $('input').addEventListener('input', calculate);
         $('input').dispatchEvent(new CustomEvent('scroll'));
@@ -126,17 +126,23 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
         if (!ls.get('rates') || settings.autoRates) getRates();
 
         function getRates() {
+            var url = ls.get('ratesURL');
             if (navigator.onLine) {
-                try {
-                    return fetch('https://www.floatrates.com/widget/00000576/690c690b362ec255080e5f7b3c63bba0/usd.json')
+                if (url) {
+                    fetch(url)
                         .then(response => response.json())
                         .then(data => {
                             ls.set('rates', data);
                             createRateUnits();
                             showMsg('Updated exchange rates');
+                            $('ratesURL').classList.remove('jsonError');
+                        }).catch((error) => {
+                            showMsg('Failed to get exchange rates');
+                            $('ratesURL').classList.add('jsonError');
+                            showModal('#dialog-settings');
+                            showModal('#dialog-rates');
+                            $('ratesURL').focus();
                         });
-                } catch (error) {
-                    showMsg('Failed to get exchange rates');
                 }
             } else {
                 showMsg('No internet connection');
@@ -270,10 +276,55 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
                     settings.lineNumbers = $('lineNoButton').checked;
                     settings.resizable = $('resizeButton').checked;
                     settings.autoRates = $('autoRatesButton').checked;
+
                     ls.set('settings', settings);
                     applySettings();
+
                     UIkit.modal('#dialog-settings').hide();
                     showMsg('Settings saved');
+
+                    var newRatesURL = $('ratesURL').value.trim();
+                    var oldRatesURL = ls.get('ratesURL');
+                    if (newRatesURL != oldRatesURL  || !ls.get('rates')) {
+                        ls.set('ratesURL', newRatesURL);
+                        getRates();
+                    }
+                    break;
+                case 'ratesURLbutton': // Show rates JSON url dialog
+                    $('checkURL').innerHTML = '';
+                    showModal('#dialog-rates');
+                    $('ratesURL').focus();
+                    break;
+                case 'dialog-save-ratesURL': // Check rates JSON
+                    var ratesURL = $('ratesURL').value.trim();
+                    if (ratesURL) {
+                        $('checkURL').innerHTML = 'Verifying JSON...';
+                        fetch(ratesURL)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data) {
+                                    $('ratesURL').classList.remove('jsonError');
+                                    $('ratesURLstr').innerHTML = '...' + ratesURL.substr(ratesURL.length - 40);
+                                    UIkit.modal('#dialog-rates').hide();
+                                } else {
+                                    $('ratesURL').classList.add('jsonError');
+                                    $('checkURL').innerHTML = '';
+                                    showError('Failed to get exchange rates.  Please check your JSON url.', 'JSON Error');
+                                }
+                            }).catch((error) => {
+                                $('ratesURL').classList.add('jsonError');
+                                $('checkURL').innerHTML = '';
+                                showError('Failed to get exchange rates.  Please check your JSON url.', 'JSON Error');
+                            });
+                    } else {
+                        $('ratesURL').classList.remove('jsonError');
+                        $('ratesURLstr').innerHTML = '...';
+                        UIkit.modal('#dialog-rates').hide();
+
+                        if (ls.get('ratesURL') != '' && ls.get('rates') && ratesURL == '') {
+                            yesno('Empty JSON url', 'Remove existing exchange rates on next launch?', () => localStorage.removeItem('rates'));
+                        }
+                    }
                     break;
                 case 'dialog-settings-defaults': // Revert back to default settings
                     confirm('All settings will revert back to defaults.', () => {
@@ -373,6 +424,11 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
             $('lineNoButton').checked = settings.lineNumbers;
             $('lineErrorButton').checked = settings.lineErrors;
             $('autoRatesButton').checked = settings.autoRates;
+
+            $('ratesURL').classList.remove('jsonError');
+            var ratesURL = ls.get('ratesURL') || '';
+            $('ratesURLstr').innerHTML = '...' + ratesURL.substring(ratesURL.length - 40);
+            $('ratesURL').value = ratesURL;
         });
 
         $('precisionRange').addEventListener('input', () => $('precision-label').innerHTML = $('precisionRange').value);
@@ -412,7 +468,7 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
         function plot() {
             $('plotTitle').innerHTML = func;
 
-            var f = func.split("=")[1];
+            var f = func.split('=')[1];
             var domain = math.abs(math.evaluate(f, {
                 x: 0
             })) * 2;
@@ -452,7 +508,7 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
 
         // Relayout plot on window resize
         window.addEventListener('resize', () => {
-            if (activePlot && document.querySelector("#dialog-plot").classList.contains("uk-open")) plot();
+            if (activePlot && document.querySelector('#dialog-plot').classList.contains('uk-open')) plot();
         });
 
         // Show confirmation dialog
@@ -466,12 +522,27 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
                 $('confirm-yes').removeEventListener('click', yesAction);
             };
             $('confirm-yes').addEventListener('click', yesAction);
-            UIkit.util.on("#dialog-confirm", 'hidden', () => $('confirm-yes').removeEventListener('click', yesAction));
+            UIkit.util.on('#dialog-confirm', 'hidden', () => $('confirm-yes').removeEventListener('click', yesAction));
+        }
+
+        // Show confirmation dialog
+        function yesno(title, msg, action) {
+            $('yesnoTitle').innerHTML = title;
+            $('yesnoMsg').innerHTML = msg;
+            showModal('#dialog-yesno');
+            var yesAction = (e) => {
+                action();
+                e.stopPropagation();
+                UIkit.modal('#dialog-yesno').hide();
+                $('confirm-yes').removeEventListener('click', yesAction);
+            };
+            $('yesno-yes').addEventListener('click', yesAction);
+            UIkit.util.on('#dialog-yesno', 'hidden', () => $('yesno-yes').removeEventListener('click', yesAction));
         }
 
         // Show error dialog
         function showError(e, title) {
-            UIkit.util.on("#dialog-error", 'beforeshow', () => {
+            UIkit.util.on('#dialog-error', 'beforeshow', () => {
                 $('errTitle').innerHTML = title || 'Error';
                 $('errMsg').innerHTML = e;
             });
