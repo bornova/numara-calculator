@@ -289,9 +289,12 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
                         ls.set('ratesURL', newRatesURL);
                         getRates();
                     }
+                    ls.set('tempURL', '');
                     break;
                 case 'ratesURLbutton': // Show rates JSON url dialog
                     $('checkURL').innerHTML = '';
+                    $('ratesURL').value = ls.get('tempURL');
+                    $('ratesURL').classList.remove('jsonError');
                     showModal('#dialog-rates');
                     $('ratesURL').focus();
                     break;
@@ -305,6 +308,7 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
                                 if (data) {
                                     $('ratesURL').classList.remove('jsonError');
                                     $('ratesURLstr').innerHTML = '...' + ratesURL.substr(ratesURL.length - 40);
+                                    ls.set('tempURL', ratesURL);
                                     UIkit.modal('#dialog-rates').hide();
                                 } else {
                                     $('ratesURL').classList.add('jsonError');
@@ -427,6 +431,7 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
 
             $('ratesURL').classList.remove('jsonError');
             var ratesURL = ls.get('ratesURL') || '';
+            ls.set('tempURL', ratesURL);
             $('ratesURLstr').innerHTML = '...' + ratesURL.substring(ratesURL.length - 40);
             $('ratesURL').value = ratesURL;
         });

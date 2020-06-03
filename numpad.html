@@ -163,9 +163,9 @@
 
     <div id="dialog-rates" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical">
-            <h2 id="jsonURLTitle" class="uk-modal-title">Exchange rates JSON</h2>
+            <h2 id="jsonURLTitle" class="uk-modal-title">Exchange rates JSON url:</h2>
             <div>
-                <input id="ratesURL" class="textBox" type="text" placeholder="Enter JSON url from floatrates.com">
+                <input id="ratesURL" class="textBox" type="search" placeholder="Enter JSON url from floatrates.com">
             </div>
             <div class="dialog-buttons uk-text-right">
                 <span id="checkURL" class="checkURL"></span>
@@ -179,7 +179,9 @@
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical">
             <h2 class="uk-modal-title">Help</h2>
             <div class="searchWrapper">
-                <div class="helpBox"><input id="searchBox" class="textBox" type="text" maxlength="100" placeholder="Start typing to search..."></div>
+                <div class="helpBox">
+                    <input id="searchBox" class="textBox" type="search" maxlength="100" placeholder="Start typing to search...">
+                </div>
                 <div id="searchResults" class="searchResults">Start typing above to search...</div>
             </div>
             <div class="dialog-buttons uk-text-right">

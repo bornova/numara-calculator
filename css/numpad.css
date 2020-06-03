@@ -602,8 +602,9 @@ text {
 
 .checkURL {
     vertical-align: middle;
-    color: rgb(53, 125, 219);
+    color: #666;
     margin-right: 5px;
+    font-size: 11px;
 }
 
 .jsonError {
