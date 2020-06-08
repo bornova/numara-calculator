@@ -290,6 +290,12 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
                 case 'updateRatesButton': // Update exchange rates
                     getRates();
                     break;
+                case 'demoButton': // Load demo
+                    $('input').value = demo;
+                    calculate();
+                    showMsg('Demo loaded');
+                    $('undoButton').style.visibility = 'visible';
+                    break;
                     // Plot settings
                 case 'plotGridLines':
                     settings.plotGridLines = $('plotGridLines').checked;
@@ -401,6 +407,8 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
                 $('searchResults').innerHTML = 'Start typing above to search...';
             }
         });
+
+        var demo = '# Demo:\n# Subtotal all numbers in a block\n3+5\n8*2\nsubtotal\n\n# Total everything up to this point\ntotal\n\n# Dates & Times\ntoday\ntoday + 1 day + 2 weeks\ntoday + 3 days\ntoday - 2 weeks\ntoday + 5 years\n5/8/2019 + 1 week\nMay 8, 2019 - 2 months\n\nnow\nnow + 2 hours\nnow + 48 hours\nans + 30 minutes\n\n# ans token\nans + 5 days\n2+2\nans * 5\n\n# line# token\nline27 * 5 / 2\nline12 + 10 days\n\n# Percentages\n5% of 100\n100 + 5%\n100 + 25%%4 + 1\n100 + 20% of 100 + 10%3 - 10%\n(100 + 20%)% of 80 + 10%3 - 10%\n120% of 80 + (10%3 - 10%)\nline26% of 80\nline34 - ans%\nline35 + line26%\n\n#Currencies (from floatrates.com)\n1 USD to EUR\n25 EUR to CAD\n\n# Plot functions\nf(x) = sin(x)\nf(x) = 2x^2 + 3x -5\n';
 
         // About info content
         $('dialog-about-title').innerHTML = appName + ' Calculator';

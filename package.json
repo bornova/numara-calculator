@@ -1,7 +1,7 @@
 {
     "name": "numpad",
     "productName": "Numpad",
-    "version": "2.4.1",
+    "version": "2.4.2",
     "description": "Numpad Calculator",
     "main": "./js/main.js",
     "scripts": {
