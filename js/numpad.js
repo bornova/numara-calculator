@@ -389,6 +389,7 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
             $('resizeButton').checked = settings.resizable;
             $('lineNoButton').checked = settings.lineNumbers;
             $('lineErrorButton').checked = settings.lineErrors;
+            $('lineWrapButton').checked = settings.lineWrap;
             $('autoRatesButton').checked = settings.autoRates;
         });
 
