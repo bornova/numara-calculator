@@ -28,7 +28,8 @@
         <div id="panel" class="panel">
             <div id="lineNo" class="lineNo syncscroll" name="sync"></div>
             <div id="inputPane" class="inputPane resize">
-                <textarea id="input" class="input syncscroll mousetrap" name="sync" wrap="off"></textarea>
+                <textarea id="input" class="input syncscroll mousetrap" name="sync" wrap="on"></textarea>
+                <span id="mirror" class="mirror"></span>
             </div>
             <div id="handle" class="handle"></div>
             <div id="output" class="output syncscroll" name="sync"></div>
@@ -95,7 +96,7 @@
                 </div>
                 <div class="uk-child-width-expand" uk-grid>
                     <div>Date output format</div>
-                    <div class="uk-text-right">
+                    <div class="uk-text-right dateFormat">
                         <select id="dateFormat" class="uk-select"></select>
                     </div>
                 </div>
@@ -118,6 +119,15 @@
                     </div>
                 </div>
                 <div class="uk-child-width-expand" uk-grid>
+                    <div>Enable line wrap</div>
+                    <div class="uk-text-right">
+                        <label class="switch">
+                            <input id="lineWrapButton" type="checkbox" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="uk-child-width-expand" uk-grid>
                     <div>Enable resizable panes</div>
                     <div class="uk-text-right">
                         <label class="switch">
@@ -128,7 +138,7 @@
                 </div>
                 <div class="uk-child-width-expand" uk-grid>
                     <div class="uk-width-4-5">
-                        Update exchange rates on start <a id="updateRatesButton" class="updateRatesLink">Update Now</a>
+                        Update currency rates on start <a id="updateRatesButton" class="updateRatesLink">Update Now</a>
                     </div>
                     <div class="uk-text-right uk-width-1-5">
                         <label class="switch">
@@ -229,7 +239,7 @@
     <div id="dialog-error" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
             <h2 id="errTitle" class="errTitle uk-modal-title"></h2>
-            <span id="errMsg"></span>
+            <span id="errMsg" class="errMsg"></span>
             <div class="dialog-buttons uk-text-right">
                 <button class="uk-button uk-button-default uk-modal-close uk-button-small">OK</button>
             </div>
@@ -242,17 +252,6 @@
             <span id="confirmMsg"></span>
             <div class="dialog-buttons uk-text-right">
                 <button id="confirm-yes" class="uk-button uk-button-default uk-button-small">Yes</button>
-                <button class="uk-button uk-button-default uk-modal-close uk-button-small">No</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="dialog-yesno" class="dialog-yesno" uk-modal>
-        <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
-            <h2 id="yesnoTitle" class="uk-modal-title"></h2>
-            <span id="yesnoMsg"></span>
-            <div class="dialog-buttons uk-text-right">
-                <button id="yesno-yes" class="uk-button uk-button-default uk-button-small">Yes</button>
                 <button class="uk-button uk-button-default uk-modal-close uk-button-small">No</button>
             </div>
         </div>

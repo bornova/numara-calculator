@@ -86,9 +86,16 @@ module.exports = () => {
             subtotals = [];
         }
 
-        answers += answer + '<br>';
-        lineNos += lineNo + '<br>';
-        scrolls += '<br>';
+        var br = '';
+        if (settings.lineWrap) {
+            $('mirror').innerHTML = lines[i];
+            var h = $('mirror').offsetHeight;
+            br = h > 28 ? '<br>'.repeat((h/28)-1) : '';
+        }
+
+        answers += answer + '<br>' + br;
+        lineNos += lineNo + '<br>' + br;
+        scrolls += '<br>' + br;
     }
 
     $('lineNo').innerHTML = lineNos;

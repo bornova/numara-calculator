@@ -21,7 +21,7 @@ body {
 }
 
 ::-webkit-scrollbar {
-    width: 14px;
+    width: 8px;
     height: 0px;
 }
 
@@ -31,9 +31,7 @@ body {
 
 ::-webkit-scrollbar-thumb {
     background: rgb(238, 238, 238);
-    border-radius: 5px;
-    border-left: 3px solid #fff;
-    border-right: 3px solid #fff;
+    border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -69,7 +67,6 @@ input[type=range]:focus::-webkit-slider-runnable-track {
 
 textarea {
     width: 100%;
-    height: 100%;
     box-sizing: border-box;
 }
 
@@ -206,7 +203,7 @@ text {
     display: block;
     height: 100%;
     font-family: 'Menlo', 'Consolas';
-    line-height: 2em;
+    line-height: 28px;
     overflow: scroll;
     font-size: 1.1em;
 }
@@ -219,6 +216,10 @@ text {
 
 .lineError:hover {
     text-decoration: underline;
+}
+
+.errMsg {
+    word-break: break-word;
 }
 
 .lineNo {
@@ -237,6 +238,16 @@ text {
 .input {
     color: #444444;
     user-select: text;
+}
+
+.mirror {
+    visibility: hidden;
+    display: inline-block;
+    font-family: 'Menlo', 'Consolas';
+    line-height: 28px;
+    font-size: 1.2em;
+    width: 100%;
+    overflow-wrap: break-word;
 }
 
 .resize {
@@ -401,11 +412,15 @@ text {
     margin-top: 20px;
 }
 
+.dialog-open-body {
+    margin-right: -5px;
+}
+
 .dialog-open-wrapper {
     position: relative;
     background: rgba(244, 244, 244, 0.3);
     border: 1px solid #eaeaea;
-    margin-bottom: 5px;
+    margin: 0 5px 5px 0;
     cursor: pointer;
 }
 
@@ -435,7 +450,7 @@ text {
     color: #ffffff;
 }
 
-.dialog-confirm, .dialog-yesno {
+.dialog-confirm {
     z-index: 10010;
 }
 
@@ -566,6 +581,10 @@ text {
 
 .range {
     padding-left: 10px;
+}
+
+.dateFormat {
+    padding-left: 20px;
 }
 
 .pr-lh {

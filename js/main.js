@@ -10,6 +10,7 @@ const {
     globalShortcut,
     ipcMain,
     Menu,
+    session,
     shell
 } = require('electron');
 
@@ -113,10 +114,11 @@ ipcMain.on('print', (event) => {
     });
 });
 ipcMain.on('resetApp', () => {
-    win.close();
-    fs.remove(app.getPath('userData'));
-    app.relaunch();
-    app.quit();
+    session.defaultSession.clearStorageData()
+        .then(() => {
+            app.relaunch();
+            app.quit();
+        }).then(() => fs.remove(app.getPath('userData')));
 });
 
 if (is.macos) {

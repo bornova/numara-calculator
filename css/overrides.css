@@ -140,6 +140,7 @@ h2 {
 }
 
 .uk-tooltip {
+    word-break: break-word;
     background: #535353;
     z-index: 1000000;
 }

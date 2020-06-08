@@ -21,6 +21,7 @@ const defaultSettings = {
     'inputWidth': '50%',
     'autoRates': true,
     'resizable': true,
+    'lineWrap': true,
     'lineErrors': true,
     'lineNumbers': true,
     'plotGridLines': false,
@@ -91,6 +92,9 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
         $('inputPane').style.marginLeft = settings.lineNumbers ? '0px' : '18px';
         $('output').style.textAlign = settings.resizable ? 'left' : 'right';
 
+        var lineWrap = settings.lineWrap ? 'on' : 'off';
+        $('input').setAttribute("wrap", lineWrap);
+
         $('wrapper').style.visibility = 'visible';
         calculate();
     }
@@ -105,9 +109,12 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
         var panel = handle.closest('.panel');
         var resize = panel.querySelector('.resize');
         var isResizing = false;
+        var resizeDelay;
 
+        $('handle').addEventListener('mousedown', (e) => isResizing = e.target === handle);
         $('panel').addEventListener('mouseup', (e) => isResizing = false);
-        $('panel').addEventListener('mousedown', (e) => isResizing = e.target === handle);
+
+        
         $('panel').addEventListener('mousemove', (e) => {
             var offset = $('lineNo').style.display == 'block' ? 54 : 30;
             var pointerRelativeXpos = e.clientX - panel.offsetLeft - offset;
@@ -117,6 +124,8 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
                 resize.style.width = inputWidth;
                 settings.inputWidth = inputWidth;
                 ls.set('settings', settings);
+                clearTimeout(resizeDelay);
+                resizeDelay = setTimeout(calculate, 100);
             }
         });
 
@@ -267,6 +276,7 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
                     settings.dateFormat = $('dateFormat').value;
                     settings.lineErrors = $('lineErrorButton').checked;
                     settings.lineNumbers = $('lineNoButton').checked;
+                    settings.lineWrap = $('lineWrapButton').checked;
                     settings.resizable = $('resizeButton').checked;
                     settings.autoRates = $('autoRatesButton').checked;
 
@@ -460,8 +470,11 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
         UIkit.util.on('#dialog-plot', 'hide', () => activePlot = false);
 
         // Relayout plot on window resize
+        var windowResizeDelay;
         window.addEventListener('resize', () => {
             if (activePlot && document.querySelector('#dialog-plot').classList.contains('uk-open')) plot();
+            clearTimeout(windowResizeDelay);
+            windowResizeDelay = setTimeout(calculate, 100);
         });
 
         // Show confirmation dialog
@@ -476,21 +489,6 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
             };
             $('confirm-yes').addEventListener('click', yesAction);
             UIkit.util.on('#dialog-confirm', 'hidden', () => $('confirm-yes').removeEventListener('click', yesAction));
-        }
-
-        // Show confirmation dialog
-        function yesno(title, msg, action) {
-            $('yesnoTitle').innerHTML = title;
-            $('yesnoMsg').innerHTML = msg;
-            showModal('#dialog-yesno');
-            var yesAction = (e) => {
-                action();
-                e.stopPropagation();
-                UIkit.modal('#dialog-yesno').hide();
-                $('confirm-yes').removeEventListener('click', yesAction);
-            };
-            $('yesno-yes').addEventListener('click', yesAction);
-            UIkit.util.on('#dialog-yesno', 'hidden', () => $('yesno-yes').removeEventListener('click', yesAction));
         }
 
         // Show error dialog
