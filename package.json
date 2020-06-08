@@ -17,7 +17,7 @@
     "dependencies": {
         "d3": "^3.5.17",
         "electron-context-menu": "^2.0.1",
-        "electron-store": "^5.1.1",
+        "electron-store": "^5.2.0",
         "electron-util": "^0.14.1",
         "fs-extra": "^9.0.1",
         "mathjs": "^7.0.1",

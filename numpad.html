@@ -37,7 +37,7 @@
 
         <div id="actions" class="actions">
             <div id="leftActions" class="leftActions">
-                <a id="clearButton" title="Clear Board" uk-tooltip></a>
+                <a id="clearButton" title="Clear" uk-tooltip></a>
                 <a id="printButton" title="Print" uk-tooltip></a>
                 <a id="saveButton" title="Save" uk-tooltip></a>
                 <a id="openButton" class="action" title="Open" uk-tooltip></a>
@@ -126,16 +126,6 @@
                         </label>
                     </div>
                 </div>
-                <span class="divider"></span>
-                <h2 class="uk-modal-title">Exchange Rates</h2>
-                <div class="uk-child-width-expand" uk-grid>
-                    <div>
-                        <span id="ratesURLstr" class="ratesURLstr"></span>
-                    </div>
-                    <div class="uk-text-right">
-                        <a id="ratesURLbutton" class="ratesURLbutton">Edit</a>
-                    </div>
-                </div>
                 <div class="uk-child-width-expand" uk-grid>
                     <div class="uk-width-4-5">
                         Update exchange rates on start <a id="updateRatesButton" class="updateRatesLink">Update Now</a>
@@ -157,20 +147,6 @@
                     <button id="dialog-settings-defaults" class="uk-button uk-button-default uk-button-small">Defaults</button>
                     <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="dialog-rates" uk-modal>
-        <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical">
-            <h2 id="jsonURLTitle" class="uk-modal-title">Exchange rates JSON url:</h2>
-            <div>
-                <input id="ratesURL" class="textBox" type="search" placeholder="Enter JSON url from floatrates.com">
-            </div>
-            <div class="dialog-buttons uk-text-right">
-                <span id="checkURL" class="checkURL"></span>
-                <button id="dialog-save-ratesURL" class="uk-button uk-button-default uk-button-small">Save</button>
-                <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
             </div>
         </div>
     </div>

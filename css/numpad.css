@@ -591,27 +591,6 @@ text {
     color: rgba(148, 156, 160, 0.6);
 }
 
-.divider {
-    display: block;
-    margin-top: 20px;
-}
-
-.ratesURLbutton {
-    margin-right: 5px;
-}
-
-.checkURL {
-    vertical-align: middle;
-    color: #666;
-    margin-right: 5px;
-    font-size: 11px;
-}
-
-.jsonError {
-    color: rgba(189, 46, 46, 0.9);
-    border-color: rgba(189, 46, 46, 0.9);
-}
-
 /* Toggle buttons */
 .switch {
     position: relative;

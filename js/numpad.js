@@ -126,24 +126,17 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
         if (!ls.get('rates') || settings.autoRates) getRates();
 
         function getRates() {
-            var url = ls.get('ratesURL');
+            var url = 'http://www.floatrates.com/daily/usd.json';
             if (navigator.onLine) {
-                if (url) {
-                    fetch(url)
-                        .then(response => response.json())
-                        .then(data => {
-                            ls.set('rates', data);
-                            createRateUnits();
-                            showMsg('Updated exchange rates');
-                            $('ratesURL').classList.remove('jsonError');
-                        }).catch((error) => {
-                            showMsg('Failed to get exchange rates');
-                            $('ratesURL').classList.add('jsonError');
-                            showModal('#dialog-settings');
-                            showModal('#dialog-rates');
-                            $('ratesURL').focus();
-                        });
-                }
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        ls.set('rates', data);
+                        createRateUnits();
+                        showMsg('Updated exchange rates');
+                    }).catch((error) => {
+                        showMsg('Failed to get exchange rates');
+                    });
             } else {
                 showMsg('No internet connection');
             }
@@ -282,53 +275,6 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
 
                     UIkit.modal('#dialog-settings').hide();
                     showMsg('Settings saved');
-
-                    var newRatesURL = $('ratesURL').value.trim();
-                    var oldRatesURL = ls.get('ratesURL');
-                    if (newRatesURL != oldRatesURL  || !ls.get('rates')) {
-                        ls.set('ratesURL', newRatesURL);
-                        getRates();
-                    }
-                    ls.set('tempURL', '');
-                    break;
-                case 'ratesURLbutton': // Show rates JSON url dialog
-                    $('checkURL').innerHTML = '';
-                    $('ratesURL').value = ls.get('tempURL');
-                    $('ratesURL').classList.remove('jsonError');
-                    showModal('#dialog-rates');
-                    $('ratesURL').focus();
-                    break;
-                case 'dialog-save-ratesURL': // Check rates JSON
-                    var ratesURL = $('ratesURL').value.trim();
-                    if (ratesURL) {
-                        $('checkURL').innerHTML = 'Verifying JSON...';
-                        fetch(ratesURL)
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data) {
-                                    $('ratesURL').classList.remove('jsonError');
-                                    $('ratesURLstr').innerHTML = '...' + ratesURL.substr(ratesURL.length - 40);
-                                    ls.set('tempURL', ratesURL);
-                                    UIkit.modal('#dialog-rates').hide();
-                                } else {
-                                    $('ratesURL').classList.add('jsonError');
-                                    $('checkURL').innerHTML = '';
-                                    showError('Failed to get exchange rates.  Please check your JSON url.', 'JSON Error');
-                                }
-                            }).catch((error) => {
-                                $('ratesURL').classList.add('jsonError');
-                                $('checkURL').innerHTML = '';
-                                showError('Failed to get exchange rates.  Please check your JSON url.', 'JSON Error');
-                            });
-                    } else {
-                        $('ratesURL').classList.remove('jsonError');
-                        $('ratesURLstr').innerHTML = '...';
-                        UIkit.modal('#dialog-rates').hide();
-
-                        if (ls.get('ratesURL') != '' && ls.get('rates') && ratesURL == '') {
-                            yesno('Empty JSON url', 'Remove existing exchange rates on next launch?', () => localStorage.removeItem('rates'));
-                        }
-                    }
                     break;
                 case 'dialog-settings-defaults': // Revert back to default settings
                     confirm('All settings will revert back to defaults.', () => {
@@ -428,12 +374,6 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
             $('lineNoButton').checked = settings.lineNumbers;
             $('lineErrorButton').checked = settings.lineErrors;
             $('autoRatesButton').checked = settings.autoRates;
-
-            $('ratesURL').classList.remove('jsonError');
-            var ratesURL = ls.get('ratesURL') || '';
-            ls.set('tempURL', ratesURL);
-            $('ratesURLstr').innerHTML = '...' + ratesURL.substring(ratesURL.length - 40);
-            $('ratesURL').value = ratesURL;
         });
 
         $('precisionRange').addEventListener('input', () => $('precision-label').innerHTML = $('precisionRange').value);

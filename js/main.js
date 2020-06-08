@@ -53,7 +53,6 @@ function appWindow() {
         minHeight: schema.appHeight.default,
         frame: false,
         show: false,
-        useContentSize: true,
         hasShadow: true,
         titleBarStyle: 'hiddenInset',
         webPreferences: {
