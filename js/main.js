@@ -23,11 +23,11 @@ const store = require('electron-store');
 const schema = {
     appWidth: {
         type: 'number',
-        default: 500
+        default: 600
     },
     appHeight: {
         type: 'number',
-        default: 420
+        default: 480
     },
     fullSize: {
         type: 'boolean',
@@ -49,8 +49,8 @@ function appWindow() {
     win = new BrowserWindow({
         width: parseInt(dims.get('appWidth')),
         height: parseInt(dims.get('appHeight')),
-        minWidth: schema.appWidth.default,
-        minHeight: schema.appHeight.default,
+        minWidth: 420,
+        minHeight: 360,
         frame: false,
         show: false,
         useContentSize: true,
