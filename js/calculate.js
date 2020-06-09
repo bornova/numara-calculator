@@ -90,7 +90,8 @@ module.exports = () => {
         if (settings.lineWrap) {
             $('mirror').innerHTML = lines[i];
             var h = $('mirror').offsetHeight;
-            br = h > 28 ? '<br>'.repeat((h/28)-1) : '';
+            var lh = getComputedStyle($('mirror')).lineHeight.split('px')[0];
+            br = h > lh ? '<br>'.repeat((h/lh)-1) : '';
         }
 
         answers += answer + '<br>' + br;
