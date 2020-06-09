@@ -28,6 +28,7 @@ const defaultSettings = {
     'plotTipLines': false,
     'plotClosed': false
 };
+Object.freeze(defaultSettings);
 
 const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSettings), defaultSettings);
 
@@ -282,19 +283,18 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
 
                     ls.set('settings', settings);
                     applySettings();
+
                     UIkit.modal('#dialog-settings').hide();
                     showMsg('Settings saved');
                     break;
                 case 'dialog-settings-defaults': // Revert back to default settings
-                    $('confirmDefaultstMsg').innerHTML = 'All settings will revert back to defaults.';
-                    showModal('#dialog-confirm-defaults');
-                    break;
-                case 'confirm-defaults-yes': // Confirm default settings
-                    ls.set('settings', defaultSettings);
-                    applySettings();
-                    UIkit.modal('#dialog-confirm-defaults').hide();
-                    UIkit.modal('#dialog-settings').hide();
-                    showMsg('Default settings applied');
+                    confirm('All settings will revert back to defaults.', () => {
+                        ls.set('settings', defaultSettings);
+                        applySettings();
+
+                        UIkit.modal('#dialog-settings').hide();
+                        showMsg('Default settings applied');
+                    });
                     break;
                 case 'dialog-settings-reset': // Reset app
                     confirm('All user settings and data will be lost.', () => ipc.send('resetApp'));
