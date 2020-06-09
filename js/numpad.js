@@ -26,7 +26,7 @@ const defaultSettings = {
     'lineNumbers': true,
     'plotGridLines': false,
     'plotTipLines': false,
-    'plotClosed': false,
+    'plotClosed': false
 };
 
 const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSettings), defaultSettings);
@@ -114,7 +114,7 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
         $('handle').addEventListener('mousedown', (e) => isResizing = e.target === handle);
         $('panel').addEventListener('mouseup', (e) => isResizing = false);
 
-        
+
         $('panel').addEventListener('mousemove', (e) => {
             var offset = $('lineNo').style.display == 'block' ? 54 : 30;
             var pointerRelativeXpos = e.clientX - panel.offsetLeft - offset;
@@ -282,17 +282,19 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
 
                     ls.set('settings', settings);
                     applySettings();
-
                     UIkit.modal('#dialog-settings').hide();
                     showMsg('Settings saved');
                     break;
                 case 'dialog-settings-defaults': // Revert back to default settings
-                    confirm('All settings will revert back to defaults.', () => {
-                        ls.set('settings', defaultSettings);
-                        applySettings();
-                        showMsg('Default settings applied');
-                        UIkit.modal('#dialog-settings').hide();
-                    });
+                    $('confirmDefaultstMsg').innerHTML = 'All settings will revert back to defaults.';
+                    showModal('#dialog-confirm-defaults');
+                    break;
+                case 'confirm-defaults-yes': // Confirm default settings
+                    ls.set('settings', defaultSettings);
+                    applySettings();
+                    UIkit.modal('#dialog-confirm-defaults').hide();
+                    UIkit.modal('#dialog-settings').hide();
+                    showMsg('Default settings applied');
                     break;
                 case 'dialog-settings-reset': // Reset app
                     confirm('All user settings and data will be lost.', () => ipc.send('resetApp'));
