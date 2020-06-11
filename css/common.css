@@ -696,6 +696,10 @@ input:checked+.slider:before {
     margin: 0 25px 0 0;
 }
 
+.uk-select {
+    transition: 0s ease-in-out;
+}
+
 .uk-select:not([multiple]):not([size]) {
     height: auto;
     border-width: 0 0 1px 0;
