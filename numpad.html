@@ -80,7 +80,7 @@
     <div id="dialog-settings" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-large">
             <div id="dialog-settings-body">
-                <h2 class="uk-modal-title">Settings</h2>
+                <h2 class="uk-modal-title">Theme</h2>
                 <div class="uk-child-width-expand" uk-grid>
                     <div>Dark Mode</div>
                     <div class="uk-text-right">
@@ -90,6 +90,8 @@
                         </label>
                     </div>
                 </div>
+                <div class="divider"></div>
+                <h2 class="uk-modal-title">Settings <a id="defaultSettingsButton" class="action" title="Defaults" uk-tooltip></a></h2>
                 <div class="uk-child-width-expand" uk-grid>
                     <div class="uk-width-2-5">Answer precision</div>
                     <div class="uk-text-right uk-width-3-5">
@@ -163,7 +165,6 @@
                 </div>
                 <div class="dialog-buttons uk-width-3-4 uk-text-right">
                     <button id="dialog-settings-save" class="uk-button uk-button-default uk-button-small">Save</button>
-                    <button id="dialog-settings-defaults" class="uk-button uk-button-default uk-button-small">Defaults</button>
                     <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
                 </div>
             </div>
@@ -180,7 +181,6 @@
                 <div id="searchResults" class="searchResults">Start typing above to search...</div>
             </div>
             <div class="dialog-buttons uk-text-right">
-                <button id="demoButton" class="uk-button uk-button-default uk-modal-close uk-button-small">Demo</button>
                 <button class="uk-button uk-button-default uk-modal-close uk-button-small">OK</button>
             </div>
         </div>

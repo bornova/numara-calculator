@@ -105,6 +105,10 @@ body {
     background-color: white;
 }
 
+.slider.round:before {
+    background: #fff;
+}
+
 /* UIkit Overrides */
 .uk-modal {
     background: rgba(0, 0, 0, .6);

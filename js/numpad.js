@@ -16,7 +16,6 @@ const ls = {
 // App default settings
 const defaultSettings = {
     autoRates: true,
-    darkMode: false,
     dateFormat: 'l',
     inputWidth: '50%',
     lineErrors: true,
@@ -33,6 +32,7 @@ Object.freeze(defaultSettings);
 // Initiate app settings
 var settings;
 if (!ls.get('settings')) ls.set('settings', defaultSettings);
+if (!ls.get('theme')) ls.set('theme', 'light');
 
 // Check settings for property changes
 let initSettings = ls.get('settings');
@@ -93,12 +93,17 @@ for (var [p, v] of Object.entries(defaultSettings)) {
     $('input').value = ls.get('input');
 
     // Apply settings
+    applyTheme();
     applySettings();
+
+    function applyTheme() {
+        var theme = ls.get('theme');
+        $('style').setAttribute("href", theme == 'dark' ? './css/dark.css' : './css/light.css');
+    }
 
     function applySettings() {
         settings = ls.get('settings');
 
-        $('style').setAttribute("href", settings.darkMode ? './css/dark.css' : './css/light.css');
         $('input').setAttribute("wrap", settings.lineWrap ? 'on' : 'off');
 
         $('lineNo').style.display = settings.lineNumbers ? 'block' : 'none';
@@ -281,8 +286,12 @@ for (var [p, v] of Object.entries(defaultSettings)) {
                         populateSaved();
                     });
                     break;
+                case 'darkModeButton':
+                    ls.set('theme', $('darkModeButton').checked ? 'dark' : 'light');
+                    ipc.send('darkMode', $('darkModeButton').checked);
+                    applyTheme();
+                    break;
                 case 'dialog-settings-save': // Save settings
-                    settings.darkMode = $('darkModeButton').checked;
                     settings.precision = $('precisionRange').value;
                     settings.dateFormat = $('dateFormat').value;
                     settings.lineErrors = $('lineErrorButton').checked;
@@ -292,16 +301,14 @@ for (var [p, v] of Object.entries(defaultSettings)) {
                     settings.autoRates = $('autoRatesButton').checked;
 
                     ls.set('settings', settings);
-                    //ipc.send('darkMode', settings.darkMode);
                     applySettings();
 
                     UIkit.modal('#dialog-settings').hide();
                     showMsg('Settings saved');
                     break;
-                case 'dialog-settings-defaults': // Revert back to default settings
+                case 'defaultSettingsButton': // Revert back to default settings
                     confirm('All settings will revert back to defaults.', () => {
                         ls.set('settings', defaultSettings);
-                        ipc.send('darkMode', false);
                         applySettings();
 
                         UIkit.modal('#dialog-settings').hide();
@@ -313,12 +320,6 @@ for (var [p, v] of Object.entries(defaultSettings)) {
                     break;
                 case 'updateRatesButton': // Update exchange rates
                     getRates();
-                    break;
-                case 'demoButton': // Load demo
-                    $('input').value = demo;
-                    calculate();
-                    showMsg('Demo loaded');
-                    $('undoButton').style.visibility = 'visible';
                     break;
                     // Plot settings
                 case 'plotGridLines':
@@ -389,7 +390,7 @@ for (var [p, v] of Object.entries(defaultSettings)) {
 
         // Initiate settings dialog
         UIkit.util.on('#dialog-settings', 'beforeshow', () => {
-            $('darkModeButton').checked = settings.darkMode;
+            $('darkModeButton').checked = ls.get('theme') == 'dark' ? true : false;
             $('precisionRange').value = settings.precision;
             $('precision-label').innerHTML = settings.precision;
             $('dateFormat').innerHTML = (
@@ -406,6 +407,8 @@ for (var [p, v] of Object.entries(defaultSettings)) {
             $('lineErrorButton').checked = settings.lineErrors;
             $('lineWrapButton').checked = settings.lineWrap;
             $('autoRatesButton').checked = settings.autoRates;
+
+            $('defaultSettingsButton').style.visibility = JSON.stringify(settings) == JSON.stringify(defaultSettings) ? 'hidden' : "visible";
         });
 
         $('precisionRange').addEventListener('input', () => $('precision-label').innerHTML = $('precisionRange').value);
@@ -433,8 +436,6 @@ for (var [p, v] of Object.entries(defaultSettings)) {
                 $('searchResults').innerHTML = 'Start typing above to search...';
             }
         });
-
-        var demo = '# Demo:\n# Subtotal all numbers in a block\n3+5\n8*2\nsubtotal\n\n# Total everything up to this point\ntotal\n\n# Dates & Times\ntoday\ntoday + 1 day + 2 weeks\ntoday + 3 days\ntoday - 2 weeks\ntoday + 5 years\n5/8/2019 + 1 week\nMay 8, 2019 - 2 months\n\nnow\nnow + 2 hours\nnow + 48 hours\nans + 30 minutes\n\n# ans token\nans + 5 days\n2+2\nans * 5\n\n# line# token\nline27 * 5 / 2\nline12 + 10 days\n\n# Percentages\n5% of 100\n100 + 5%\n100 + 25%%4 + 1\n100 + 20% of 100 + 10%3 - 10%\n(100 + 20%)% of 80 + 10%3 - 10%\n120% of 80 + (10%3 - 10%)\nline26% of 80\nline34 - ans%\nline35 + line26%\n\n#Currencies (from floatrates.com)\n1 USD to EUR\n25 EUR to CAD\n\n# Plot functions\nf(x) = sin(x)\nf(x) = 2x^2 + 3x -5\n';
 
         // About info content
         $('dialog-about-title').innerHTML = appName + ' Calculator';

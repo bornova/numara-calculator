@@ -23,7 +23,7 @@ body {
 }
 
 .header-win-title {
-    color: rgb(201, 201, 201);
+    color: rgb(230, 230, 230);
 }
 
 .min-btn-win:hover,
@@ -50,7 +50,7 @@ body {
 
 /* Mac Header */
 .header-mac-title {
-    color: rgb(201, 201, 201);
+    color: rgb(230, 230, 230);
 }
 
 .lineNo {
@@ -58,7 +58,7 @@ body {
 }
 
 .input {
-    color: rgb(201, 201, 201);
+    color: rgb(230, 230, 230);
 }
 
 .handle::before {
@@ -66,7 +66,7 @@ body {
 }
 
 .output {
-    color: rgb(94, 144, 160);
+    color: rgb(30, 181, 240);
 }
 
 .action:hover {
@@ -76,7 +76,7 @@ body {
 .dialog-open-wrapper {
     background: #333;
     border: 1px solid #222;
-    color: rgb(201, 201, 201);
+    color: rgb(230, 230, 230);
 }
 
 .dialog-open-wrapper:hover {
@@ -88,13 +88,13 @@ body {
 }
 
 .dialog-about-title {
-    color: rgb(201, 201, 201);
+    color: rgb(230, 230, 230);
 }
 
 /* Settings menu items */
 .precision {
     border: 1px solid #333;
-    color: rgb(201, 201, 201);
+    color: rgb(230, 230, 230);
 }
 
 .textBox {
@@ -110,8 +110,12 @@ body {
     stroke: #f9f9f9;
 }
 
+text {
+    fill: rgb(230, 230, 230)
+}
+
 line {
-    opacity: 0.3;
+    opacity: 0.5;
 }
 
 .zoom-and-drag {
@@ -131,25 +135,25 @@ line {
 
 .uk-modal-body {
     padding: 12px 15px;
-    color: rgb(201, 201, 201);
+    color: rgb(230, 230, 230);
 }
 
 .uk-modal-title {
     font-size: 1.1em;
     font-weight: 600;
-    color: rgb(201, 201, 201);
+    color: rgb(230, 230, 230);
 }
 
 .uk-select:not([multiple]):not([size]) {
     height: auto;
     border-width: 0 0 1px 0;
     background-color: #1f1f1f;
-    color: rgb(201, 201, 201);
+    color: rgb(230, 230, 230);
     border-color: #333;
 }
 
 .uk-select:not([multiple]):not([size]) option {
-    color: rgb(201, 201, 201);
+    color: rgb(230, 230, 230);
 }
 
 .uk-button-danger,

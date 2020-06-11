@@ -359,6 +359,13 @@ text {
     -webkit-mask: var(--settingsButton);
 }
 
+#defaultSettingsButton {
+    mask: var(--undoButton);
+    -webkit-mask: var(--undoButton);
+    margin-bottom: -2px;
+    margin-left: 5px;
+}
+
 #helpButton {
     mask: var(--helpButton);
     -webkit-mask: var(--helpButton);
@@ -425,6 +432,11 @@ text {
     text-align: center;
     padding: 1px 0 0 0;
     background: transparent;
+}
+
+.divider {
+    display: block;
+    height: 20px;
 }
 
 /* About dialog items */
@@ -544,7 +556,7 @@ text {
 }
 
 .dateFormat {
-    padding-left: 20px;
+    padding-left: 0px;
 }
 
 .pr-lh {

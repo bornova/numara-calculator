@@ -93,6 +93,8 @@ module.exports = () => {
             var lh = getComputedStyle($('mirror')).lineHeight.split('px')[0];
             br = h > lh ? '<br>'.repeat((h / lh) - 1) : '';
         }
+        console.log(h);
+        console.log(lh);
 
         answers += answer + '<br>' + br;
         lineNos += lineNo + '<br>' + br;

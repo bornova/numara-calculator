@@ -54,8 +54,8 @@ function appWindow() {
     win = new BrowserWindow({
         width: parseInt(dims.get('appWidth')),
         height: parseInt(dims.get('appHeight')),
-        minWidth: 420,
-        minHeight: 360,
+        minWidth: 500,
+        minHeight: 400,
         frame: false,
         show: false,
         backgroundColor: dims.get('darkMode') ? '#1f1f1f' : '#ffffff',
