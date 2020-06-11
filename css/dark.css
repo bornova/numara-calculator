@@ -64,11 +64,11 @@ body {
 .lineError,
 .lineError:hover,
 .lineErrorNo {
-    color: rgb(146, 54, 54);
+    color: rgba(189, 46, 46, 1);
 }
 
 .errTitle {
-    color: rgb(146, 54, 54);
+    color: rgba(189, 46, 46, 1);
 }
 
 .msgBox {
@@ -98,7 +98,7 @@ body {
 }
 
 .dialog-open-delete {
-    color: rgb(153, 56, 56);
+    color: rgba(189, 46, 46, 1);
 }
 
 .dialog-about-title {
@@ -171,12 +171,12 @@ line {
 .uk-button-danger,
 .uk-button-danger:focus {
     background-color: #333;
-    color: rgba(189, 46, 46, 0.9);
+    color: rgba(189, 46, 46, 1);
     border-color: #333;
 }
 
 .uk-button-danger:hover {
-    color: rgba(189, 46, 46, 0.9);
+    color: rgba(189, 46, 46, 1);
     border-color: rgba(189, 46, 46, 0.3);
     background-color: #444;
 }

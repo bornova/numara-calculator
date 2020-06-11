@@ -68,7 +68,6 @@ function appWindow() {
             devTools: is.development
         }
     });
-
     win.loadFile('numpad.html');
     win.on('close', () => {
         if (win.isMaximized()) {
@@ -80,17 +79,15 @@ function appWindow() {
             dims.set('fullSize', false);
         }
     });
-
     win.webContents.on('did-finish-load', () => {
-        win.show();
+        if (dims.get('fullSize') & is.windows) win.maximize();
         win.setHasShadow(true);
+        win.show();
     });
     win.webContents.on('new-window', (event, url) => {
         event.preventDefault();
         shell.openExternal(url);
     });
-
-    if (dims.get('fullSize') & is.windows) win.maximize();
 
     if (!is.development) {
         win.on('focus', (event) => globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {}));

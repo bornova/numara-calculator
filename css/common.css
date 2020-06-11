@@ -12,6 +12,8 @@
     border: none;
     resize: none;
     background: none;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
 
 /* UI defaults */
@@ -697,6 +699,7 @@ input:checked+.slider:before {
     line-height: 28px;
     font-size: .875rem;
     border-radius: 3px;
+    transition: 0s ease-in-out;
 }
 
 .uk-button-default {
