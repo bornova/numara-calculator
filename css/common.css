@@ -202,12 +202,6 @@ text {
     font-size: 1.1em;
 }
 
-.lineError,
-.lineError:hover,
-.lineErrorNo {
-    color: rgb(126, 24, 24);
-}
-
 .lineError:hover {
     text-decoration: underline;
 }
@@ -263,7 +257,6 @@ text {
     right: 15px;
     display: flex;
     font-size: 12px;
-    color: rgb(223, 63, 63);
     height: 16px;
     min-height: 16px;
 }
@@ -538,17 +531,12 @@ text {
 .msgBox {
     font-size: 11px;
     text-align: center;
-    color: rgb(0, 102, 153);
     min-width: 100px;
 }
 
 .msg {
     opacity: 0;
     transition: visibility 0.3s linear, opacity 0.3s linear;
-}
-
-.errTitle {
-    color: rgb(126, 24, 24);
 }
 
 .range {
@@ -678,10 +666,9 @@ input:checked+.slider:before {
 
 }
 
-.uk-modal-title {
+.uk-modal-title, .errTitle {
     font-size: 1.1em;
     font-weight: 600;
-
 }
 
 .uk-modal-footer {

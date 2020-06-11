@@ -61,6 +61,20 @@ body {
     color: rgb(230, 230, 230);
 }
 
+.lineError,
+.lineError:hover,
+.lineErrorNo {
+    color: rgb(146, 54, 54);
+}
+
+.errTitle {
+    color: rgb(146, 54, 54);
+}
+
+.msgBox {
+    color: rgb(88, 161, 197);
+}
+
 .handle::before {
     background: #333;
 }
@@ -139,8 +153,6 @@ line {
 }
 
 .uk-modal-title {
-    font-size: 1.1em;
-    font-weight: 600;
     color: rgb(230, 230, 230);
 }
 

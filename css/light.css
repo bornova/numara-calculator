@@ -59,7 +59,20 @@ body {
 
 .input {
     color: #444444;
+}
 
+.lineError,
+.lineError:hover,
+.lineErrorNo {
+    color: rgb(126, 24, 24);
+}
+
+.errTitle {
+    color: rgb(126, 24, 24);
+}
+
+.msgBox {
+    color: rgb(0, 102, 153);
 }
 
 .handle::before {
