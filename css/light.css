@@ -1,0 +1,134 @@
+/**
+ * @copyright 2020 Timur Atalay 
+ * @Homepage https://github.com/bornova/numpad
+ * @license MIT https://github.com/bornova/numpad/blob/master/LICENSE
+ */
+
+/* UI defaults */
+html,
+body {
+    background: #fff;
+}
+
+::-webkit-scrollbar-track {
+    background: rgb(255, 255, 255);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgb(220, 220, 220);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgb(204, 204, 204);
+}
+
+.header-win-title {
+    color: rgb(34, 53, 65);
+}
+
+.min-btn-win:hover,
+.max-btn-win:hover,
+.unmax-btn-win:hover {
+    background-color: #f4f4f4;
+}
+
+.min-btn-win {
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTIgMTAiIGZpbGw9InJnYig2OCwgNjgsIDY4KSIgc2hhcGUtcmVuZGVyaW5nPSJjcmlzcEVkZ2VzIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0xMSA0LjM5OVY1LjVIMFY0LjM5OWgxMXoiIC8+PC9zdmc+');
+}
+
+.max-btn-win {
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTIgMTIiIGZpbGw9InJnYig2OCwgNjgsIDY4KSIgc2hhcGUtcmVuZGVyaW5nPSJjcmlzcEVkZ2VzIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0xMSAwdjExSDBWMGgxMXpNOS44OTkgMS4xMDFIMS4xVjkuOWg4LjhWMS4xeiIgLz48L3N2Zz4=');
+}
+
+.unmax-btn-win {
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTIgMTIiIGZpbGw9InJnYig2OCwgNjgsIDY4KSIgc2hhcGUtcmVuZGVyaW5nPSJjcmlzcEVkZ2VzIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0xMSA4Ljc5OEg4Ljc5OFYxMUgwVjIuMjAyaDIuMjAyVjBIMTF2OC43OTh6bS0zLjI5OC01LjVoLTYuNnY2LjZoNi42di02LjZ6TTkuOSAxLjFIMy4yOTh2MS4xMDFoNS41djUuNWgxLjF2LTYuNnoiIC8+PC9zdmc+');
+}
+
+.close-btn-win {
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTIgMTIiIGZpbGw9InJnYig2OCwgNjgsIDY4KSIgc2hhcGUtcmVuZGVyaW5nPSJjcmlzcEVkZ2VzIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik02LjI3OSA1LjVMMTEgMTAuMjIxbC0uNzc5Ljc3OUw1LjUgNi4yNzkuNzc5IDExIDAgMTAuMjIxIDQuNzIxIDUuNSAwIC43NzkuNzc5IDAgNS41IDQuNzIxIDEwLjIyMSAwIDExIC43NzkgNi4yNzkgNS41eiIgLz48L3N2Zz4=');
+}
+
+/* Mac Header */
+.header-mac-title {
+    color: #f9f9f9;
+}
+
+.lineNo {
+    color: rgb(200, 200, 200);
+}
+
+.input {
+    color: #444444;
+
+}
+
+.handle::before {
+    background: #eaeaea;
+}
+
+.output {
+    color: rgb(23, 88, 107);
+}
+
+.action:hover {
+    background-color: rgb(0, 66, 99);
+}
+
+.dialog-open-wrapper {
+    background: rgba(244, 244, 244, 0.3);
+    border: 1px solid #eaeaea;
+}
+
+.dialog-open-wrapper:hover {
+    background: #f4f4f4;
+}
+
+.dialog-open-delete {
+    color: rgb(126, 24, 24);
+}
+
+.dialog-about-title {
+    color: #162e44;
+}
+
+/* Settings menu items */
+.precision {
+    border: 1px solid #e5e5e5;
+    color: #333333;
+}
+
+.textBox {
+    color: #666;
+}
+
+.slider:before {
+    background-color: white;
+}
+
+/* UIkit Overrides */
+.uk-modal {
+    background: rgba(0, 0, 0, .6);
+}
+
+.uk-button-danger,
+.uk-button-danger:focus {
+    background-color: #f5f5f5;
+    color: rgba(189, 46, 46, 0.9);
+    border-color: #e5e5e5;
+}
+
+.uk-button-danger:hover {
+    color: rgba(189, 46, 46, 0.9);
+    border-color: rgba(189, 46, 46, 0.3);
+    background-color: #f5f5f5;
+}
+
+.uk-button-danger:active {
+    background: #eeeeee;
+}
+
+.uk-button-danger:disabled:hover {
+    background-color: transparent;
+    border-color: #e5e5e5;
+    color: #999;
+}

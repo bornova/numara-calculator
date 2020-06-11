@@ -13,24 +13,34 @@ const ls = {
     set: (key, value) => localStorage.setItem(key, JSON.stringify(value))
 };
 
-// App Settings
-var settings;
+// App default settings
 const defaultSettings = {
-    'precision': '4',
-    'dateFormat': 'l',
-    'inputWidth': '50%',
-    'autoRates': true,
-    'resizable': true,
-    'lineWrap': true,
-    'lineErrors': true,
-    'lineNumbers': true,
-    'plotGridLines': false,
-    'plotTipLines': false,
-    'plotClosed': false
+    autoRates: true,
+    darkMode: false,
+    dateFormat: 'l',
+    inputWidth: '50%',
+    lineErrors: true,
+    lineNumbers: true,
+    lineWrap: true,
+    plotClosed: false,
+    plotGridLines: false,
+    plotTipLines: false,
+    precision: '4',
+    resizable: true
 };
 Object.freeze(defaultSettings);
 
-const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSettings), defaultSettings);
+// Initiate app settings
+var settings;
+if (!ls.get('settings')) ls.set('settings', defaultSettings);
+
+// Check settings for property changes
+let initSettings = ls.get('settings');
+var newSettings = {};
+for (var [p, v] of Object.entries(defaultSettings)) {
+    newSettings[p] = p in initSettings ? initSettings[p] : defaultSettings[p];
+    ls.set('settings', newSettings);
+}
 
 (() => {
     const calculate = require('./js/calculate');
@@ -86,17 +96,18 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
     applySettings();
 
     function applySettings() {
-        settings = appSettings();
+        settings = ls.get('settings');
+
+        $('style').setAttribute("href", settings.darkMode ? './css/dark.css' : './css/light.css');
+        $('input').setAttribute("wrap", settings.lineWrap ? 'on' : 'off');
+
         $('lineNo').style.display = settings.lineNumbers ? 'block' : 'none';
         $('handle').style.display = settings.resizable ? 'block' : 'none';
         $('inputPane').style.width = settings.resizable ? settings.inputWidth : '50%';
         $('inputPane').style.marginLeft = settings.lineNumbers ? '0px' : '18px';
         $('output').style.textAlign = settings.resizable ? 'left' : 'right';
-
-        var lineWrap = settings.lineWrap ? 'on' : 'off';
-        $('input').setAttribute("wrap", lineWrap);
-
         $('wrapper').style.visibility = 'visible';
+
         calculate();
     }
 
@@ -114,8 +125,6 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
 
         $('handle').addEventListener('mousedown', (e) => isResizing = e.target === handle);
         $('panel').addEventListener('mouseup', (e) => isResizing = false);
-
-
         $('panel').addEventListener('mousemove', (e) => {
             var offset = $('lineNo').style.display == 'block' ? 54 : 30;
             var pointerRelativeXpos = e.clientX - panel.offsetLeft - offset;
@@ -273,6 +282,7 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
                     });
                     break;
                 case 'dialog-settings-save': // Save settings
+                    settings.darkMode = $('darkModeButton').checked;
                     settings.precision = $('precisionRange').value;
                     settings.dateFormat = $('dateFormat').value;
                     settings.lineErrors = $('lineErrorButton').checked;
@@ -282,6 +292,7 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
                     settings.autoRates = $('autoRatesButton').checked;
 
                     ls.set('settings', settings);
+                    //ipc.send('darkMode', settings.darkMode);
                     applySettings();
 
                     UIkit.modal('#dialog-settings').hide();
@@ -290,6 +301,7 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
                 case 'dialog-settings-defaults': // Revert back to default settings
                     confirm('All settings will revert back to defaults.', () => {
                         ls.set('settings', defaultSettings);
+                        ipc.send('darkMode', false);
                         applySettings();
 
                         UIkit.modal('#dialog-settings').hide();
@@ -377,6 +389,7 @@ const appSettings = () => ls.get('settings') || (ls.set('settings', defaultSetti
 
         // Initiate settings dialog
         UIkit.util.on('#dialog-settings', 'beforeshow', () => {
+            $('darkModeButton').checked = settings.darkMode;
             $('precisionRange').value = settings.precision;
             $('precision-label').innerHTML = settings.precision;
             $('dateFormat').innerHTML = (

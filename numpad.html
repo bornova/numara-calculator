@@ -3,8 +3,8 @@
 
 <head>
     <link rel="stylesheet" href="./node_modules/uikit/dist/css/uikit.min.css">
-    <link rel="stylesheet" href="./css/overrides.css">
-    <link rel="stylesheet" href="./css/numpad.css">
+    <link rel="stylesheet" href="./css/common.css">
+    <link id="style" rel="stylesheet" href="">
     <link rel="stylesheet" href="./css/print.css">
 </head>
 
@@ -81,6 +81,15 @@
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-large">
             <div id="dialog-settings-body">
                 <h2 class="uk-modal-title">Settings</h2>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div>Dark Mode</div>
+                    <div class="uk-text-right">
+                        <label class="switch">
+                            <input id="darkModeButton" type="checkbox" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
                 <div class="uk-child-width-expand" uk-grid>
                     <div class="uk-width-2-5">Answer precision</div>
                     <div class="uk-text-right uk-width-3-5">
@@ -268,6 +277,8 @@
             <div id="printOutput" class="printOutput"></div>
         </div>
     </div>
+
+    <div id="cover" class="cover"></div>
 
     <script src="./node_modules/uikit/dist/js/uikit.min.js"></script>
     <script src="./node_modules/mathjs/dist/math.min.js"></script>

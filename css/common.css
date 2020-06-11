@@ -15,6 +15,10 @@
 }
 
 /* UI defaults */
+html {
+    font-size: 12px;
+}
+
 body {
     height: 100%;
     font-family: 'Open Sans', 'Helvetica Neue';
@@ -25,17 +29,12 @@ body {
     height: 0px;
 }
 
-::-webkit-scrollbar-track {
-    background: rgb(255, 255, 255);
-}
-
 ::-webkit-scrollbar-thumb {
-    background: rgb(238, 238, 238);
     border-radius: 8px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: rgb(204, 204, 204);
+h2 {
+    margin: 0 0 15px 0;
 }
 
 input[type=range]::-webkit-slider-runnable-track {
@@ -86,6 +85,13 @@ text {
     height: 30px;
 }
 
+.header-win-title {
+    float: left;
+    font-size: 12px;
+    font-weight: 600;
+    margin: 5px 0 0 8px;
+}
+
 .header-win-icon {
     float: left;
     margin: 3px 0 0 10px;
@@ -94,14 +100,6 @@ text {
 .header-win-icon img {
     height: 16px;
     width: 16px;
-}
-
-.header-win-title {
-    float: left;
-    font-size: 12px;
-    font-weight: 600;
-    margin: 5px 0 0 8px;
-    color: rgb(34, 53, 65);
 }
 
 .winButtons {
@@ -127,28 +125,6 @@ text {
     -webkit-app-region: no-drag;
 }
 
-.min-btn-win:hover,
-.max-btn-win:hover,
-.unmax-btn-win:hover {
-    background-color: #f4f4f4;
-}
-
-.min-btn-win {
-    background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTIgMTAiIGZpbGw9InJnYig2OCwgNjgsIDY4KSIgc2hhcGUtcmVuZGVyaW5nPSJjcmlzcEVkZ2VzIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0xMSA0LjM5OVY1LjVIMFY0LjM5OWgxMXoiIC8+PC9zdmc+');
-}
-
-.max-btn-win {
-    background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTIgMTIiIGZpbGw9InJnYig2OCwgNjgsIDY4KSIgc2hhcGUtcmVuZGVyaW5nPSJjcmlzcEVkZ2VzIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0xMSAwdjExSDBWMGgxMXpNOS44OTkgMS4xMDFIMS4xVjkuOWg4LjhWMS4xeiIgLz48L3N2Zz4=');
-}
-
-.unmax-btn-win {
-    background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTIgMTIiIGZpbGw9InJnYig2OCwgNjgsIDY4KSIgc2hhcGUtcmVuZGVyaW5nPSJjcmlzcEVkZ2VzIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0xMSA4Ljc5OEg4Ljc5OFYxMUgwVjIuMjAyaDIuMjAyVjBIMTF2OC43OTh6bS0zLjI5OC01LjVoLTYuNnY2LjZoNi42di02LjZ6TTkuOSAxLjFIMy4yOTh2MS4xMDFoNS41djUuNWgxLjF2LTYuNnoiIC8+PC9zdmc+');
-}
-
-.close-btn-win {
-    background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTIgMTIiIGZpbGw9InJnYig2OCwgNjgsIDY4KSIgc2hhcGUtcmVuZGVyaW5nPSJjcmlzcEVkZ2VzIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik02LjI3OSA1LjVMMTEgMTAuMjIxbC0uNzc5Ljc3OUw1LjUgNi4yNzkuNzc5IDExIDAgMTAuMjIxIDQuNzIxIDUuNSAwIC43NzkuNzc5IDAgNS41IDQuNzIxIDEwLjIyMSAwIDExIC43NzkgNi4yNzkgNS41eiIgLz48L3N2Zz4=');
-}
-
 .close-btn-win:hover {
     background-color: rgb(238, 17, 17);
     background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTIgMTIiIGZpbGw9InJnYigyNTUsIDI1NSwgMjU1KSIgc2hhcGUtcmVuZGVyaW5nPSJjcmlzcEVkZ2VzIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik02LjI3OSA1LjVMMTEgMTAuMjIxbC0uNzc5Ljc3OUw1LjUgNi4yNzkuNzc5IDExIDAgMTAuMjIxIDQuNzIxIDUuNSAwIC43NzkuNzc5IDAgNS41IDQuNzIxIDEwLjIyMSAwIDExIC43NzkgNi4yNzkgNS41eiIgLz48L3N2Zz4=');
@@ -172,7 +148,6 @@ text {
     font-size: 13px;
     font-weight: 500;
     padding-top: 10px;
-    color: #333333;
 }
 
 /* Content */
@@ -194,6 +169,25 @@ text {
 .output::-webkit-scrollbar {
     width: 0px;
     height: 8px;
+}
+
+.lineNo {
+    width: 30px;
+    min-width: 30px;
+    margin-right: 12px;
+    text-align: right;
+}
+
+.input {
+    user-select: text;
+}
+
+.output {
+    flex: 1;
+    min-width: 100px;
+    font-weight: 400;
+    white-space: nowrap;
+    user-select: text;
 }
 
 .lineNo,
@@ -222,22 +216,9 @@ text {
     word-break: break-word;
 }
 
-.lineNo {
-    width: 30px;
-    min-width: 30px;
-    margin-right: 12px;
-    color: rgb(200, 200, 200);
-    text-align: right;
-}
-
 .inputPane {
     min-width: 100px;
     margin-right: 10px;
-}
-
-.input {
-    color: #444444;
-    user-select: text;
 }
 
 .mirror {
@@ -266,17 +247,7 @@ text {
     display: block;
     width: 1px;
     height: 100%;
-    background: #eaeaea;
     margin: 0 auto;
-}
-
-.output {
-    flex: 1;
-    min-width: 100px;
-    font-weight: 400;
-    white-space: nowrap;
-    color: rgb(23, 88, 107);
-    user-select: text;
 }
 
 .scroll {
@@ -284,6 +255,7 @@ text {
     min-width: 25px;
 }
 
+/* Action item buttons */
 .actions {
     position: fixed;
     bottom: 10px;
@@ -300,7 +272,6 @@ text {
     flex: auto;
 }
 
-/* Action item buttons */
 .undoButton {
     visibility: hidden;
 }
@@ -336,10 +307,6 @@ text {
     background-position: center;
     background-repeat: no-repeat;
     background-color: rgb(112, 135, 150);
-}
-
-.action:hover {
-    background-color: rgb(0, 66, 99);
 }
 
 .noAction {
@@ -412,16 +379,14 @@ text {
     margin-top: 20px;
 }
 
-.dialog-open-body {
-    margin-right: -5px;
-}
-
 .dialog-open-wrapper {
     position: relative;
-    background: rgba(244, 244, 244, 0.3);
-    border: 1px solid #eaeaea;
     margin: 0 5px 5px 0;
     cursor: pointer;
+}
+
+.dialog-open-body {
+    margin-right: -5px;
 }
 
 .dialog-open-title {
@@ -441,7 +406,6 @@ text {
     font-weight: 600;
     font-size: 11px;
     cursor: pointer;
-    color: rgb(126, 24, 24);
     padding: 2px 5px;
 }
 
@@ -452,6 +416,15 @@ text {
 
 .dialog-confirm {
     z-index: 10010;
+}
+
+/* Settings */
+.precision {
+    width: 24px;
+    font-size: 1rem;
+    text-align: center;
+    padding: 1px 0 0 0;
+    background: transparent;
 }
 
 /* About dialog items */
@@ -466,6 +439,13 @@ text {
     font-weight: 600;
 }
 
+.dialog-about-title {
+    float: left;
+    font-size: 12px;
+    line-height: 18px;
+    padding: 1px 0 0 8px;
+}
+
 .dialog-about p {
     clear: both;
     margin-top: 5px;
@@ -478,14 +458,6 @@ text {
 .dialog-about-icon img {
     height: 16px;
     width: 16px;
-}
-
-.dialog-about-title {
-    float: left;
-    font-size: 12px;
-    line-height: 18px;
-    padding: 1px 0 0 8px;
-    color: #162e44;
 }
 
 .dialog-about-links {
@@ -524,7 +496,6 @@ text {
 /* Help dialog Items */
 .helpBox {
     margin-bottom: 10px;
-    border-bottom: 1px solid #eaeaea;
     padding-bottom: 10px;
 }
 
@@ -568,17 +539,6 @@ text {
     color: rgb(126, 24, 24);
 }
 
-/* Settings menu items */
-.precision {
-    width: 24px;
-    font-size: 1rem;
-    text-align: center;
-    padding: 1px 0 0 0;
-    background: transparent;
-    border: 1px solid #e5e5e5;
-    color: #333333;
-}
-
 .range {
     padding-left: 10px;
 }
@@ -603,11 +563,15 @@ text {
     border: 1px solid #ccc;
     width: 100%;
     box-sizing: border-box;
-    color: #666;
 }
 
 .textBox::placeholder {
     color: rgba(148, 156, 160, 0.6);
+}
+
+/* Function Plot */
+.top-right-legend {
+    fill: #4682b4;
 }
 
 /* Toggle buttons */
@@ -652,7 +616,6 @@ text {
     width: 12px;
     left: 2px;
     bottom: 2px;
-    background-color: white;
     -webkit-transition: .2s;
     transition: .2s;
 }
@@ -673,4 +636,118 @@ input:checked+.slider:before {
     -webkit-transform: translateX(12px);
     -ms-transform: translateX(12px);
     transform: translateX(12px);
+}
+
+/* UIkit Overrides */
+.uk-modal {
+    background: rgba(0, 0, 0, .6);
+}
+
+@media (min-width: 640px) {
+    .uk-modal {
+        padding: 0;
+    }
+}
+
+.uk-modal-full {
+    padding-left: 20px;
+    padding-right: 20px;
+    background: rgba(0, 0, 0, .5);
+}
+
+.uk-modal-dialog {
+    transition: 0s linear;
+    border-radius: 3px;
+
+}
+
+.uk-modal-body {
+    padding: 12px 15px;
+
+}
+
+.uk-modal-title {
+    font-size: 1.1em;
+    font-weight: 600;
+
+}
+
+.uk-modal-footer {
+    padding: 15px;
+}
+
+.uk-grid+.uk-grid {
+    margin-top: 12px;
+}
+
+.uk-grid-small {
+    margin: 0 25px 0 0;
+}
+
+.uk-select:not([multiple]):not([size]) {
+    height: auto;
+    border-width: 0 0 1px 0;
+}
+
+.uk-button {
+    padding: 0 10px;
+    line-height: 28px;
+    font-size: .875rem;
+    border-radius: 3px;
+}
+
+.uk-button-default {
+    background-color: rgb(53, 125, 219);
+    border-color: rgb(53, 125, 219);
+    color: #fff;
+    margin-left: 3px;
+}
+
+.uk-button-default:hover {
+    background-color: rgba(71, 138, 224, 1);
+    border-color: rgba(71, 138, 224, 1);
+    color: #fff;
+}
+
+.uk-button-default:active,
+.uk-button-default:focus {
+    background-color: rgba(71, 138, 224, 1);
+    border-color: rgba(71, 138, 224, 1);
+    color: #fff;
+    box-shadow: 0 1px 5px rgba(66, 133, 244, .8);
+}
+
+.uk-input {
+    height: 24px;
+}
+
+.uk-label {
+    padding: 0 5px;
+}
+
+.uk-width-small {
+    width: 250px;
+}
+
+.uk-width-medium {
+    width: 300px;
+}
+
+.uk-width-large {
+    width: 370px;
+}
+
+.uk-overflow-auto {
+    min-height: 175px;
+    max-height: calc(100vh - 250px);
+}
+
+.uk-range {
+    min-height: 1.6em;
+}
+
+.uk-tooltip {
+    word-break: break-word;
+    background: #535353;
+    z-index: 1000000;
 }

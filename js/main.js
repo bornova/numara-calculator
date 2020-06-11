@@ -30,6 +30,10 @@ const schema = {
         type: 'number',
         default: 480
     },
+    darkMode: {
+        type: 'boolean',
+        default: false
+    },
     fullSize: {
         type: 'boolean',
         default: false
@@ -54,6 +58,7 @@ function appWindow() {
         minHeight: 360,
         frame: false,
         show: false,
+        backgroundColor: dims.get('darkMode') ? '#1f1f1f' : '#ffffff',
         useContentSize: true,
         titleBarStyle: 'hiddenInset',
         webPreferences: {
@@ -64,8 +69,6 @@ function appWindow() {
     });
 
     win.loadFile('numpad.html');
-
-    win.on('ready-to-show', () => win.show());
     win.on('close', () => {
         if (win.isMaximized()) {
             dims.set('fullSize', true);
@@ -77,6 +80,7 @@ function appWindow() {
         }
     });
 
+    win.webContents.on('did-finish-load', () => win.show());
     win.webContents.on('new-window', (event, url) => {
         event.preventDefault();
         shell.openExternal(url);
@@ -96,7 +100,7 @@ if (!app.requestSingleInstanceLock()) {
     app.on('second-instance', () => win.focus());
 }
 
-app.on('ready', () => appWindow());
+app.whenReady().then(appWindow);
 
 ipcMain.on('close', () => app.quit());
 ipcMain.on('minimize', () => win.minimize());
@@ -120,6 +124,7 @@ ipcMain.on('resetApp', () => {
             app.quit();
         }).then(() => fs.remove(app.getPath('userData')));
 });
+ipcMain.on('darkMode', (event, mode) => dims.set('darkMode', mode));
 
 if (is.macos) {
     const template = [{

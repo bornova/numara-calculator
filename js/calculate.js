@@ -91,7 +91,7 @@ module.exports = () => {
             $('mirror').innerHTML = lines[i];
             var h = $('mirror').offsetHeight;
             var lh = getComputedStyle($('mirror')).lineHeight.split('px')[0];
-            br = h > lh ? '<br>'.repeat((h/lh)-1) : '';
+            br = h > lh ? '<br>'.repeat((h / lh) - 1) : '';
         }
 
         answers += answer + '<br>' + br;
