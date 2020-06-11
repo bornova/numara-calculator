@@ -58,6 +58,7 @@ function appWindow() {
         minHeight: 400,
         frame: false,
         show: false,
+        hasShadow: true,
         backgroundColor: dims.get('darkMode') ? '#1f1f1f' : '#ffffff',
         useContentSize: true,
         titleBarStyle: 'hiddenInset',
@@ -80,7 +81,10 @@ function appWindow() {
         }
     });
 
-    win.webContents.on('did-finish-load', () => win.show());
+    win.webContents.on('did-finish-load', () => {
+        win.show();
+        win.setHasShadow(true);
+    });
     win.webContents.on('new-window', (event, url) => {
         event.preventDefault();
         shell.openExternal(url);
