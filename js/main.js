@@ -81,6 +81,7 @@ function appWindow() {
         }
     });
     win.webContents.on('did-finish-load', () => {
+        if (dims.get('fullSize') & is.windows) win.webContents.send('fullscreen' , true);
         win.setHasShadow(true);
         win.show();
     });
@@ -93,8 +94,6 @@ function appWindow() {
         win.on('focus', (event) => globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {}));
         win.on('blur', (event) => globalShortcut.unregisterAll());
     }
-
-    if (dims.get('fullSize') & is.windows) win.maximize();
 }
 
 if (!app.requestSingleInstanceLock()) {

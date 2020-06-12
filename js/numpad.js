@@ -61,6 +61,9 @@ for (var [p, v] of Object.entries(defaultSettings)) {
 
         if (ipc.sendSync('isNormal')) $('unmax').style.display = 'none';
         if (ipc.sendSync('isMaximized')) $('max').style.display = 'none';
+        ipc.on('fullscreen', (event, isFullscreen) => {
+            if (isFullscreen) $('max').click();
+        });
 
         $('winButtons').addEventListener('click', (e) => {
             switch (e.target.id) {
