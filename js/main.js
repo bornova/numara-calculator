@@ -58,6 +58,7 @@ function appWindow() {
         minHeight: 400,
         frame: false,
         show: false,
+        paintWhenInitiallyHidden: false,
         hasShadow: true,
         backgroundColor: dims.get('darkMode') ? '#1f1f1f' : '#ffffff',
         useContentSize: true,
@@ -80,7 +81,6 @@ function appWindow() {
         }
     });
     win.webContents.on('did-finish-load', () => {
-        if (dims.get('fullSize') & is.windows) win.maximize();
         win.setHasShadow(true);
         win.show();
     });
@@ -93,6 +93,8 @@ function appWindow() {
         win.on('focus', (event) => globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {}));
         win.on('blur', (event) => globalShortcut.unregisterAll());
     }
+
+    if (dims.get('fullSize') & is.windows) win.maximize();
 }
 
 if (!app.requestSingleInstanceLock()) {

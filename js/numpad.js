@@ -92,7 +92,7 @@ for (var [p, v] of Object.entries(defaultSettings)) {
     // Load last calculations
     $('input').value = ls.get('input');
 
-    // Apply settings
+    // Apply theme and settings
     applyTheme();
     applySettings();
 
@@ -105,7 +105,6 @@ for (var [p, v] of Object.entries(defaultSettings)) {
         settings = ls.get('settings');
 
         $('input').setAttribute("wrap", settings.lineWrap ? 'on' : 'off');
-
         $('lineNo').style.display = settings.lineNumbers ? 'block' : 'none';
         $('handle').style.display = settings.resizable ? 'block' : 'none';
         $('inputPane').style.width = settings.resizable ? settings.inputWidth : '50%';
