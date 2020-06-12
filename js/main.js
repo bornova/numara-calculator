@@ -54,8 +54,8 @@ function appWindow() {
     win = new BrowserWindow({
         width: parseInt(dims.get('appWidth')),
         height: parseInt(dims.get('appHeight')),
-        minWidth: 500,
-        minHeight: 400,
+        minWidth: 600,
+        minHeight: 480,
         frame: false,
         show: false,
         paintWhenInitiallyHidden: false,
