@@ -5,8 +5,8 @@
     "description": "Numpad Calculator",
     "main": "./js/main.js",
     "scripts": {
-        "start": "electron .",
-        "dist": "electron-builder"
+        "dev": "electron .",
+        "build": "electron-builder"
     },
     "author": "Timur Atalay",
     "license": "MIT",
