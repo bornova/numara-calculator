@@ -1,7 +1,7 @@
 {
     "name": "numpad",
     "productName": "Numpad",
-    "version": "2.6.5",
+    "version": "2.7.0",
     "description": "Numpad Calculator",
     "main": "./js/main.js",
     "scripts": {
@@ -11,7 +11,7 @@
     "author": "Timur Atalay",
     "license": "MIT",
     "devDependencies": {
-        "electron": "^9.0.3",
+        "electron": "^9.0.4",
         "electron-builder": "^22.7.0"
     },
     "dependencies": {
@@ -19,6 +19,7 @@
         "electron-context-menu": "^2.0.1",
         "electron-store": "^5.2.0",
         "electron-util": "^0.14.1",
+        "feather-icons": "^4.28.0",
         "fs-extra": "^9.0.1",
         "mathjs": "^7.0.1",
         "moment": "^2.26.0",
@@ -43,7 +44,7 @@
             "assets",
             "css",
             "js",
-            "numpad.html"
+            "app.html"
         ]
     }
 }

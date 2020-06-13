@@ -83,10 +83,6 @@ body {
     color: rgb(23, 88, 107);
 }
 
-.action:hover {
-    background-color: rgb(0, 66, 99);
-}
-
 .dialog-open-wrapper {
     background: rgba(244, 244, 244, 0.3);
     border: 1px solid #eaeaea;
@@ -102,6 +98,10 @@ body {
 
 .dialog-about-title {
     color: #162e44;
+}
+
+.dialog-about-links {
+    border-top: 1px solid #eaeaea;
 }
 
 /* Settings menu items */

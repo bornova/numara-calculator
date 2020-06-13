@@ -83,10 +83,6 @@ body {
     color: rgb(30, 181, 240);
 }
 
-.action:hover {
-    background-color: rgb(50, 81, 97);
-}
-
 .dialog-open-wrapper {
     background: #333;
     border: 1px solid #222;
@@ -105,6 +101,10 @@ body {
     color: rgb(230, 230, 230);
 }
 
+.dialog-about-links {
+    border-top: 1px solid #333333;
+}
+
 /* Settings menu items */
 .precision {
     border: 1px solid #333;
@@ -113,6 +113,7 @@ body {
 
 .textBox {
     color: #eaeaea;
+    border: 1px solid #666666;
 }
 
 .slider:before {
@@ -132,8 +133,9 @@ line {
     opacity: 0.5;
 }
 
-.zoom-and-drag {
+.domain {
     stroke: #333;
+    opacity: 1;
 }
 
 /* UIkit Overrides */
@@ -153,7 +155,7 @@ line {
 }
 
 .uk-modal-title {
-    color: rgb(230, 230, 230);
+    color: rgb(178, 207, 221);
 }
 
 .uk-select:not([multiple]):not([size]) {

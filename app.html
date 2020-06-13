@@ -3,7 +3,7 @@
 
 <head>
     <link rel="stylesheet" href="./node_modules/uikit/dist/css/uikit.min.css">
-    <link rel="stylesheet" href="./css/common.css">
+    <link rel="stylesheet" href="./css/app.css">
     <link id="style" rel="stylesheet" href="">
     <link rel="stylesheet" href="./css/print.css">
 </head>
@@ -38,19 +38,19 @@
 
         <div id="actions" class="actions">
             <div id="leftActions" class="leftActions">
-                <a id="clearButton" title="Clear" uk-tooltip></a>
-                <a id="printButton" title="Print" uk-tooltip></a>
-                <a id="saveButton" title="Save" uk-tooltip></a>
-                <a id="openButton" class="action" title="Open" uk-tooltip></a>
-                <a id="undoButton" class="action" title="Undo" uk-tooltip></a>
+                <a id="clearButton" class="action clearButton" title="Clear" uk-tooltip><i data-feather="skip-back"></i></a>
+                <a id="printButton" class="action" title="Print" uk-tooltip><i data-feather="printer"></i></a>
+                <a id="saveButton" class="action" title="Save" uk-tooltip><i data-feather="save"></i></a>
+                <a id="openButton" class="action" title="Open" uk-tooltip><i data-feather="folder"></i></a>
+                <a id="undoButton" class="action" title="Undo" uk-tooltip><i data-feather="rotate-ccw"></i></a>
             </div>
             <div id="msgBox" class="msgBox">
                 <span id="msg" class="msg"></span>
             </div>
             <div id="rightActions" class="rightActions">
-                <a id="settingsButton" class="action" title="Settings" uk-tooltip></a>
-                <a id="helpButton" class="action" title="Help" uk-tooltip></a>
-                <a id="aboutButton" class="action" title="Info" uk-tooltip></a>
+                <a id="settingsButton" class="action" title="Settings" uk-tooltip><i data-feather="settings"></i></a>
+                <a id="helpButton" class="action" title="Help" uk-tooltip><i data-feather="help-circle"></i></a>
+                <a id="aboutButton" class="action" title="Info" uk-tooltip><i data-feather="info"></i></a>
             </div>
         </div>
     </div>
@@ -91,7 +91,7 @@
                     </div>
                 </div>
                 <div class="divider"></div>
-                <h2 class="uk-modal-title">Settings <a id="defaultSettingsButton" class="action" title="Defaults" uk-tooltip></a></h2>
+                <h2 class="uk-modal-title">Settings<a id="defaultSettingsButton" class="action defButton" title="Defaults" uk-tooltip><i data-feather="rotate-ccw"></i></a></h2>
                 <div class="uk-child-width-expand" uk-grid>
                     <div class="uk-width-2-5">Answer precision</div>
                     <div class="uk-text-right uk-width-3-5">
@@ -279,10 +279,11 @@
     </div>
 
     <script src="./node_modules/uikit/dist/js/uikit.min.js"></script>
+    <script src="./node_modules/feather-icons/dist/feather.min.js"></script>
     <script src="./node_modules/mathjs/dist/math.min.js"></script>
     <script src="./node_modules/moment/min/moment.min.js"></script>
-    <script src="./js/numpad.js"></script>
-    <script src="./js/function-plot.min.js"></script>
+    <script src="./js/app.js"></script>
+    <script src="./js/plot.js"></script>
     <script src="./node_modules/mousetrap/mousetrap.min.js"></script>
 </body>
 

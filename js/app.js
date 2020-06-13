@@ -96,18 +96,19 @@ for (var [p, v] of Object.entries(defaultSettings)) {
     $('input').value = ls.get('input');
 
     // Apply theme and settings
+    feather.replace();
     applyTheme();
     applySettings();
 
     function applyTheme() {
         var theme = ls.get('theme');
-        $('style').setAttribute("href", theme == 'dark' ? './css/dark.css' : './css/light.css');
+        $('style').setAttribute('href', theme == 'dark' ? './css/dark.css' : './css/light.css');
     }
 
     function applySettings() {
         settings = ls.get('settings');
 
-        $('input').setAttribute("wrap", settings.lineWrap ? 'on' : 'off');
+        $('input').setAttribute('wrap', settings.lineWrap ? 'on' : 'off');
         $('lineNo').style.display = settings.lineNumbers ? 'block' : 'none';
         $('handle').style.display = settings.resizable ? 'block' : 'none';
         $('inputPane').style.width = settings.resizable ? settings.inputWidth : '50%';
@@ -410,7 +411,7 @@ for (var [p, v] of Object.entries(defaultSettings)) {
             $('lineWrapButton').checked = settings.lineWrap;
             $('autoRatesButton').checked = settings.autoRates;
 
-            $('defaultSettingsButton').style.visibility = JSON.stringify(settings) == JSON.stringify(defaultSettings) ? 'hidden' : "visible";
+            $('defaultSettingsButton').style.visibility = JSON.stringify(settings) == JSON.stringify(defaultSettings) ? 'hidden' : 'visible';
         });
 
         $('precisionRange').addEventListener('input', () => $('precision-label').innerHTML = $('precisionRange').value);
