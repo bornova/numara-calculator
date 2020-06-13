@@ -153,7 +153,7 @@ for (var [p, v] of Object.entries(defaultSettings)) {
         if (!ls.get('rates') || settings.autoRates) getRates();
 
         function getRates() {
-            var url = 'http://www.floatrates.com/daily/usd.json';
+            var url = 'https://www.floatrates.com/daily/usd.json';
             if (navigator.onLine) {
                 fetch(url)
                     .then(response => response.json())
