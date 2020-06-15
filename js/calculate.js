@@ -68,7 +68,7 @@ module.exports = () => {
                     answer = !a.includes('e') && !isNaN(a) ? Number(a).toLocaleString(undefined, digits) + b : strip(answer);
 
                     if (answer.match(/\w\(x\)/)) {
-                        answer = '<a title="Plot ' + line + '" class="plotButton" data-func="' + line + '" uk-tooltip>Plot</a>';
+                        answer = '<a title="Plot ' + line + '" class="plotButton" data-func="' + line + '">Plot</a>';
                         scope.ans = scope['line' + lineNo] = line.split('=')[1].trim();
                     }
                 } else {
@@ -78,7 +78,7 @@ module.exports = () => {
             } catch (e) {
                 var errStr = String(e).replace(/'|"/g, '`');
                 if (settings.lineErrors) {
-                    answer = '<a title="' + errStr + '" class="lineError" data-line="' + lineNo + '" data-error="' + errStr + '" uk-tooltip>Err</a>';
+                    answer = '<a title="' + errStr + '" class="lineError" data-line="' + lineNo + '" data-error="' + errStr + '">Err</a>';
                     lineNo = '<span class="lineErrorNo">' + lineNo + '</span>';
                 }
             }

@@ -28,7 +28,7 @@ body {
 
 ::-webkit-scrollbar {
     width: 8px;
-    height: 0px;
+    height: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -315,7 +315,7 @@ text {
     width: 14px;
     height: 14px;
     pointer-events: none;
-    margin-left: 8px;
+    margin: -2px 0 0 8px;
 }
 
 /* Dialogs */

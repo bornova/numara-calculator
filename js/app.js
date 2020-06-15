@@ -4,6 +4,8 @@
  * @license MIT https://github.com/bornova/numpad/blob/master/LICENSE
  */
 
+window.d3 = require('d3');
+
 // Get element by id
 const $ = (id) => document.getElementById(id);
 
@@ -48,7 +50,7 @@ for (var [p, v] of Object.entries(defaultSettings)) {
     const appName = ipc.sendSync('getName');
     const appVersion = ipc.sendSync('getVersion');
 
-    window.d3 = require('d3');
+    document.title = appName;
 
     // Set headers
     if (ipc.sendSync('isWindows')) {
