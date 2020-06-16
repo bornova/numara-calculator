@@ -1,0 +1,53 @@
+@font-face {
+    font-family: 'Inconsolata';
+    src: url('Inconsolata-Light.woff2') format('woff2'),
+        url('Inconsolata-Light.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Inconsolata';
+    src: url('Inconsolata-Regular.woff2') format('woff2'),
+        url('Inconsolata-Regular.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Inconsolata';
+    src: url('Inconsolata-Medium.woff2') format('woff2'),
+        url('Inconsolata-Medium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Inconsolata';
+    src: url('Inconsolata-SemiBold.woff2') format('woff2'),
+        url('Inconsolata-SemiBold.woff') format('woff');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Inconsolata';
+    src: url('Inconsolata-Bold.woff2') format('woff2'),
+        url('Inconsolata-Bold.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Inconsolata';
+    src: url('Inconsolata-ExtraBold.woff2') format('woff2'),
+        url('Inconsolata-ExtraBold.woff') format('woff');
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
