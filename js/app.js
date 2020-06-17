@@ -28,7 +28,7 @@ const defaultSettings = {
     plotTipLines: false,
     precision: '4',
     resizable: true,
-    fontSize: '1.2rem',
+    fontSize: '1.25rem',
     fontWeight: '500',
     thouSep: true
 };

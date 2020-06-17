@@ -453,7 +453,7 @@ text {
 }
 
 .searchWrapper {
-    height: calc(100vh - 200px);
+    height: calc(100vh - 250px);
     max-height: 600px;
     overflow: auto;
 }
@@ -609,12 +609,10 @@ input:checked+.slider:before {
 .uk-modal-dialog {
     transition: 0s linear;
     border-radius: 3px;
-
 }
 
 .uk-modal-body {
     padding: 12px 15px;
-
 }
 
 .uk-modal-title,

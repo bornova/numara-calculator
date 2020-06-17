@@ -42,12 +42,3 @@
     font-style: normal;
     font-display: swap;
 }
-
-@font-face {
-    font-family: 'Inconsolata';
-    src: url('Inconsolata-ExtraBold.woff2') format('woff2'),
-        url('Inconsolata-ExtraBold.woff') format('woff');
-    font-weight: 800;
-    font-style: normal;
-    font-display: swap;
-}
