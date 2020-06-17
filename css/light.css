@@ -8,6 +8,7 @@
 html,
 body {
     background: #fff;
+    color: #333;
 }
 
 ::-webkit-scrollbar-track {

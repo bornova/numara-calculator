@@ -142,7 +142,7 @@ text {
 
 .header-mac-title {
     text-align: center;
-    font-weight: 500;
+    font-weight: 600;
     padding-top: 10px;
 }
 
@@ -619,7 +619,7 @@ input:checked+.slider:before {
 
 .uk-modal-title,
 .errTitle {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 600;
 }
 
@@ -651,7 +651,7 @@ input:checked+.slider:before {
 
 .uk-tab>*>a {
     display: inline-block;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 600;
     text-transform: none;
     padding: 0 10px 5px 10px;
