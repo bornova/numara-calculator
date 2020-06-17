@@ -35,6 +35,7 @@ module.exports = () => {
 
         if (line) {
             try {
+                line = line.split('//')[0];
                 line = lineNo > 1 && line.charAt(0).match(/[\+\-\*\/]/) && lines[i - 1].length > 0 ? scope.ans + line : line;
                 try {
                     answer = solve(line, scope);
