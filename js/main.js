@@ -54,8 +54,8 @@ function appWindow() {
     win = new BrowserWindow({
         width: parseInt(dims.get('appWidth')),
         height: parseInt(dims.get('appHeight')),
-        minWidth: 600,
-        minHeight: 480,
+        minWidth: 500,
+        minHeight: 400,
         frame: false,
         show: false,
         paintWhenInitiallyHidden: false,
@@ -81,7 +81,7 @@ function appWindow() {
         }
     });
     win.webContents.on('did-finish-load', () => {
-        if (dims.get('fullSize') & is.windows) win.webContents.send('fullscreen' , true);
+        if (dims.get('fullSize') & is.windows) win.webContents.send('fullscreen', true);
         win.setHasShadow(true);
         win.show();
     });

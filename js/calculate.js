@@ -15,6 +15,7 @@ module.exports = () => {
     var answers = [];
     var totals = [];
     var subtotals = [];
+    var avgs = [];
     var scope = {};
     var expLim = {
         lowerExp: -12,
@@ -59,13 +60,14 @@ module.exports = () => {
                 if (answer !== undefined) {
                     totals.push(answer);
                     subtotals.push(answer);
+                    avgs.push(answer);
 
                     scope.ans = scope['line' + lineNo] = answer;
 
                     answer = math.format(answer, expLim);
                     var a = answer.trim().split(' ')[0];
                     var b = answer.replace(a, '');
-                    answer = !a.includes('e') && !isNaN(a) ? Number(a).toLocaleString(undefined, digits) + b : strip(answer);
+                    answer = !a.includes('e') && !isNaN(a) ? settings.thouSep ? Number(a).toLocaleString(undefined, digits) + b : parseFloat(Number(a).toFixed(settings.precision)) + b : strip(answer);
 
                     if (answer.match(/\w\(x\)/)) {
                         answer = '<a title="Plot ' + line + '" class="plotButton" data-func="' + line + '">Plot</a>';
@@ -121,12 +123,14 @@ module.exports = () => {
     function solver(line) {
         var subtotal = subtotals.length > 0 ? '(' + subtotals.join('+') + ')' : 0;
         var total = totals.length > 0 ? '(' + totals.join('+') + ')' : 0;
+        var avg = avgs.length > 0 ? '(' + math.mean(avgs) + ')' : 0;
 
         line = line.replace(/\bans\b/g, scope.ans)
             .replace(/\bnow\b/g, scope.now)
             .replace(/\btoday\b/g, scope.today)
             .replace(/\bsubtotal\b/g, subtotal)
-            .replace(/\btotal\b/g, total);
+            .replace(/\btotal\b/g, total)
+            .replace(/\bavg\b/g, avg);
 
         var lineNoReg = line.match(/\bline\d+\b/g);
         if (lineNoReg) lineNoReg.map(n => line = line.replace(n, scope[n]));

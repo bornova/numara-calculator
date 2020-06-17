@@ -2,6 +2,8 @@
 <html>
 
 <head>
+    <link rel="stylesheet" href="./assets/fonts/Inconsolata/stylesheet.css">
+    <link rel="stylesheet" href="./assets/fonts/Open Sans/stylesheet.css">
     <link rel="stylesheet" href="./node_modules/uikit/dist/css/uikit.min.css">
     <link rel="stylesheet" href="./css/app.css">
     <link rel="stylesheet" href="./css/print.css">
@@ -58,7 +60,7 @@
     <div id="dialog-save" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
             <h2 class="uk-modal-title">Save Calculation</h2>
-            <div><input id="saveTitle" class="textBox" type="text" maxlength="20" placeholder="Title (Optional)"></div>
+            <div><input id="saveTitle" class="textBox" type="text" maxlength="36" placeholder="Title (Optional)"></div>
             <div class="dialog-buttons uk-text-right">
                 <button id="dialog-save-save" class="uk-button uk-button-default uk-button-small">Save</button>
                 <button class="uk-button uk-button-default uk-modal-close uk-button-small">Close</button>
@@ -80,84 +82,134 @@
     <div id="dialog-settings" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-large">
             <div id="dialog-settings-body">
-                <h2 class="uk-modal-title">Theme</h2>
-                <div class="uk-child-width-expand" uk-grid>
-                    <div>Dark Mode</div>
-                    <div class="uk-text-right">
-                        <label class="switch">
-                            <input id="darkModeButton" type="checkbox" checked>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-                </div>
-                <div class="divider"></div>
-                <h2 class="uk-modal-title">Settings<a id="defaultSettingsButton" class="action defButton" title="Defaults" uk-tooltip><i data-feather="rotate-ccw"></i></a></h2>
-                <div class="uk-child-width-expand" uk-grid>
-                    <div class="uk-width-2-5">Answer precision</div>
-                    <div class="uk-text-right uk-width-3-5">
+                <ul uk-tab>
+                    <li><a href="#">Appearance</a></li>
+                    <li><a href="#">Settings</a></li>
+                    <a id="defaultSettingsButton" class="defButton" title="Restore default settings" uk-tooltip><i data-feather="rotate-ccw"></i></a>
+                </ul>
+                <ul id="setswitch" class="uk-switcher uk-margin">
+                    <li>
                         <div class="uk-child-width-expand" uk-grid>
-                            <div class="uk-text-right uk-width-2-5">
-                                <span id="precision-label" class="uk-label precision">1</span>
-                            </div>
-                            <div class="uk-text-right range uk-width-3-5">
-                                <input id="precisionRange" class="uk-range" type="range" min="0" max="16" step="1">
+                            <div>Dark mode</div>
+                            <div class="uk-text-right">
+                                <label class="switch">
+                                    <input id="darkModeButton" type="checkbox" checked>
+                                    <span class="slider round"></span>
+                                </label>
                             </div>
                         </div>
-                    </div>
-                </div>
-                <div class="uk-child-width-expand" uk-grid>
-                    <div>Date output format</div>
-                    <div class="uk-text-right dateFormat">
-                        <select id="dateFormat" class="uk-select"></select>
-                    </div>
-                </div>
-                <div class="uk-child-width-expand" uk-grid>
-                    <div>Show line numbers</div>
-                    <div class="uk-text-right">
-                        <label class="switch">
-                            <input id="lineNoButton" type="checkbox" checked>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-                </div>
-                <div class="uk-child-width-expand" uk-grid>
-                    <div>Show line errors</div>
-                    <div class="uk-text-right">
-                        <label class="switch">
-                            <input id="lineErrorButton" type="checkbox" checked>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-                </div>
-                <div class="uk-child-width-expand" uk-grid>
-                    <div>Enable line wrap</div>
-                    <div class="uk-text-right">
-                        <label class="switch">
-                            <input id="lineWrapButton" type="checkbox" checked>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-                </div>
-                <div class="uk-child-width-expand" uk-grid>
-                    <div>Enable resizable panes</div>
-                    <div class="uk-text-right">
-                        <label class="switch">
-                            <input id="resizeButton" type="checkbox" checked>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-                </div>
-                <div class="uk-child-width-expand" uk-grid>
-                    <div class="uk-width-4-5">
-                        Update currency rates on start <a id="updateRatesButton" class="updateRatesLink">Update Now</a>
-                    </div>
-                    <div class="uk-text-right uk-width-1-5">
-                        <label class="switch">
-                            <input id="autoRatesButton" type="checkbox" checked>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-                </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div class="padTop1 uk-width-3-5">Font size</div>
+                            <div class="uk-text-right uk-width-2-5 dateFormat">
+                                <select id="fontSize" class="uk-select">
+                                    <option value="1rem">Tiny</option>
+                                    <option value="1.1rem">Small</option>
+                                    <option value="1.2rem">Medium</option>
+                                    <option value="1.3rem">Large</option>
+                                    <option value="1.5rem">X-Large</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div class="padTop1 uk-width-3-5">Font weight</div>
+                            <div class="uk-text-right uk-width-2-5 dateFormat">
+                                <select id="fontWeight" class="uk-select">
+                                    <option value="300">Light</option>
+                                    <option value="400">Regular</option>
+                                    <option value="500">Medium</option>
+                                    <option value="600">Semi Bold</option>
+                                    <option value="700">Bold</option>
+                                    <option value="800">Extra Bold</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div>Line numbers</div>
+                            <div class="uk-text-right">
+                                <label class="switch">
+                                    <input id="lineNoButton" type="checkbox" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div>Line wrap (input only)</div>
+                            <div class="uk-text-right">
+                                <label class="switch">
+                                    <input id="lineWrapButton" type="checkbox" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div>Line errors</div>
+                            <div class="uk-text-right">
+                                <label class="switch">
+                                    <input id="lineErrorButton" type="checkbox" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div>
+                                Resizable panes
+                                <a id="sizeReset" class="sizeReset" title="Panel was resized by user. Click to reset." title="" uk-tooltip>
+                                    <i data-feather="sidebar"></i>
+                                </a>
+                            </div>
+                            <div class="uk-text-right">
+                                <label class="switch">
+                                    <input id="resizeButton" type="checkbox" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div class="uk-width-2-5 pr-lh">Precision</div>
+                            <div class="uk-text-right uk-width-3-5">
+                                <div class="uk-child-width-expand" uk-grid>
+                                    <div class="uk-text-right uk-width-2-5">
+                                        <span id="precision-label" class="uk-label precision">1</span>
+                                    </div>
+                                    <div class="uk-text-right range uk-width-3-5">
+                                        <input id="precisionRange" class="uk-range" type="range" min="0" max="16" step="1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div class="padTop1">Date output format</div>
+                            <div class="uk-text-right dateFormat">
+                                <select id="dateFormat" class="uk-select"></select>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div>Thousands Seperator</div>
+                            <div class="uk-text-right">
+                                <label class="switch">
+                                    <input id="thouSepButton" type="checkbox" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div class="uk-width-4-5">
+                                <div>Update exchange rates on start</div>
+                                <div>
+                                    <a id="updateRatesButton" class="updateRatesLink">Update Now</a>
+                                </div>
+                            </div>
+                            <div class="uk-text-right uk-width-1-5">
+                                <label class="switch">
+                                    <input id="autoRatesButton" type="checkbox" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
             </div>
             <div uk-grid>
                 <div class="dialog-buttons uk-width-1-4 uk-text-left">
@@ -174,10 +226,10 @@
     <div id="dialog-help" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical">
             <h2 class="uk-modal-title">Help</h2>
+            <div class="helpBox">
+                <input id="searchBox" class="textBox" type="search" maxlength="100" placeholder="Start typing to search...">
+            </div>
             <div class="searchWrapper">
-                <div class="helpBox">
-                    <input id="searchBox" class="textBox" type="search" maxlength="100" placeholder="Start typing to search...">
-                </div>
                 <div id="searchResults" class="searchResults">Start typing above to search...</div>
             </div>
             <div class="dialog-buttons uk-text-right">

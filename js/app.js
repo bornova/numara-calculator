@@ -19,7 +19,7 @@ const ls = {
 const defaultSettings = {
     autoRates: true,
     dateFormat: 'l',
-    inputWidth: '50%',
+    inputWidth: 50,
     lineErrors: true,
     lineNumbers: true,
     lineWrap: true,
@@ -27,8 +27,12 @@ const defaultSettings = {
     plotGridLines: false,
     plotTipLines: false,
     precision: '4',
-    resizable: true
+    resizable: true,
+    fontSize: '1.2rem',
+    fontWeight: '500',
+    thouSep: true
 };
+
 Object.freeze(defaultSettings);
 
 // Initiate app settings
@@ -57,9 +61,6 @@ for (var [p, v] of Object.entries(defaultSettings)) {
         $('header-mac').remove();
         $('header-win').style.display = 'block';
         $('header-win-title').innerHTML = appName;
-
-        var elements = document.getElementsByName('sync');
-        for (var el of elements) el.style.fontSize = '1.2em';
 
         if (ipc.sendSync('isNormal')) $('unmax').style.display = 'none';
         if (ipc.sendSync('isMaximized')) $('max').style.display = 'none';
@@ -109,13 +110,21 @@ for (var [p, v] of Object.entries(defaultSettings)) {
 
     function applySettings() {
         settings = ls.get('settings');
+        var theme = ls.get('theme');
+        var elements = document.getElementsByName('sync');
 
+        $('style').setAttribute('href', theme == 'dark' ? './css/dark.css' : './css/light.css');
         $('input').setAttribute('wrap', settings.lineWrap ? 'on' : 'off');
+
+        for (var el of elements) {
+            el.style.fontSize = settings.fontSize;
+            el.style.fontWeight = settings.fontWeight;
+        }
         $('lineNo').style.display = settings.lineNumbers ? 'block' : 'none';
-        $('handle').style.display = settings.resizable ? 'block' : 'none';
-        $('inputPane').style.width = settings.resizable ? settings.inputWidth : '50%';
+        $('inputPane').style.width = settings.resizable ? settings.inputWidth + '%' : defaultSettings.inputWidth;
         $('inputPane').style.marginLeft = settings.lineNumbers ? '0px' : '18px';
         $('output').style.textAlign = settings.resizable ? 'left' : 'right';
+        $('handle').style.display = settings.resizable ? 'block' : 'none';
         $('wrapper').style.visibility = 'visible';
 
         calculate();
@@ -139,13 +148,13 @@ for (var [p, v] of Object.entries(defaultSettings)) {
             var offset = $('lineNo').style.display == 'block' ? 54 : 30;
             var pointerRelativeXpos = e.clientX - panel.offsetLeft - offset;
             var iWidth = pointerRelativeXpos / panel.clientWidth * 100;
-            var inputWidth = iWidth < 0 ? '0%' : iWidth > 100 ? '100%' : iWidth + '%';
+            var inputWidth = iWidth < 0 ? 0 : iWidth > 100 ? 100 : iWidth;
             if (isResizing) {
-                resize.style.width = inputWidth;
+                resize.style.width = inputWidth + '%';
                 settings.inputWidth = inputWidth;
                 ls.set('settings', settings);
                 clearTimeout(resizeDelay);
-                resizeDelay = setTimeout(calculate, 100);
+                resizeDelay = setTimeout(calculate, 20);
             }
         });
 
@@ -277,7 +286,7 @@ for (var [p, v] of Object.entries(defaultSettings)) {
                 case 'dialog-save-save': // Save calculation
                     var obj = ls.get('saved') || {};
                     var id = moment().format('x');
-                    var title = $('saveTitle').value || 'No title';
+                    var title = $('saveTitle').value.replace(/<|>/g, '') || 'No title';
                     var data = $('input').value;
 
                     obj[id] = [title, data];
@@ -297,12 +306,19 @@ for (var [p, v] of Object.entries(defaultSettings)) {
                     applyTheme();
                     break;
                 case 'dialog-settings-save': // Save settings
-                    settings.precision = $('precisionRange').value;
-                    settings.dateFormat = $('dateFormat').value;
-                    settings.lineErrors = $('lineErrorButton').checked;
+                    ls.set('theme', $('darkModeButton').checked ? 'dark' : 'light');
+                    ipc.send('darkMode', $('darkModeButton').checked);
+
+                    settings.fontSize = $('fontSize').value;
+                    settings.fontWeight = $('fontWeight').value;
                     settings.lineNumbers = $('lineNoButton').checked;
                     settings.lineWrap = $('lineWrapButton').checked;
+                    settings.lineErrors = $('lineErrorButton').checked;
                     settings.resizable = $('resizeButton').checked;
+
+                    settings.precision = $('precisionRange').value;
+                    settings.dateFormat = $('dateFormat').value;
+                    settings.thouSep = $('thouSepButton').checked;
                     settings.autoRates = $('autoRatesButton').checked;
 
                     ls.set('settings', settings);
@@ -315,13 +331,19 @@ for (var [p, v] of Object.entries(defaultSettings)) {
                     confirm('All settings will revert back to defaults.', () => {
                         ls.set('settings', defaultSettings);
                         applySettings();
-
                         UIkit.modal('#dialog-settings').hide();
                         showMsg('Default settings applied');
                     });
                     break;
                 case 'dialog-settings-reset': // Reset app
                     confirm('All user settings and data will be lost.', () => ipc.send('resetApp'));
+                    break;
+                case 'sizeReset':
+                    settings.inputWidth = defaultSettings.inputWidth;
+                    $('sizeReset').style.display = 'none';
+                    ls.set('settings', settings);
+                    applySettings();
+                    $('defaultSettingsButton').style.display = JSON.stringify(settings) == JSON.stringify(defaultSettings) ? 'none' : 'block';
                     break;
                 case 'updateRatesButton': // Update exchange rates
                     getRates();
@@ -394,8 +416,16 @@ for (var [p, v] of Object.entries(defaultSettings)) {
         }
 
         // Initiate settings dialog
+        UIkit.util.on('#setswitch', 'beforeshow', (e) => e.stopPropagation());
         UIkit.util.on('#dialog-settings', 'beforeshow', () => {
             $('darkModeButton').checked = ls.get('theme') == 'dark' ? true : false;
+            $('fontSize').value = settings.fontSize;
+            $('fontWeight').value = settings.fontWeight;
+            $('lineNoButton').checked = settings.lineNumbers;
+            $('lineWrapButton').checked = settings.lineWrap;
+            $('lineErrorButton').checked = settings.lineErrors;
+            $('resizeButton').checked = settings.resizable;
+            $('sizeReset').style.display = settings.inputWidth == defaultSettings.inputWidth ? 'none' : 'inline-block';
             $('precisionRange').value = settings.precision;
             $('precision-label').innerHTML = settings.precision;
             $('dateFormat').innerHTML = (
@@ -407,13 +437,9 @@ for (var [p, v] of Object.entries(defaultSettings)) {
                 '<option value="ddd, MMM DD, YYYY">' + moment().format('ddd, MMM DD, YYYY') + '</option>'
             );
             $('dateFormat').value = settings.dateFormat;
-            $('resizeButton').checked = settings.resizable;
-            $('lineNoButton').checked = settings.lineNumbers;
-            $('lineErrorButton').checked = settings.lineErrors;
-            $('lineWrapButton').checked = settings.lineWrap;
+            $('thouSepButton').checked = settings.thouSep;
             $('autoRatesButton').checked = settings.autoRates;
-
-            $('defaultSettingsButton').style.visibility = JSON.stringify(settings) == JSON.stringify(defaultSettings) ? 'hidden' : 'visible';
+            $('defaultSettingsButton').style.display = JSON.stringify(settings) == JSON.stringify(defaultSettings) ? 'none' : 'block';
         });
 
         $('precisionRange').addEventListener('input', () => $('precision-label').innerHTML = $('precisionRange').value);

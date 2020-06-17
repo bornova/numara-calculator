@@ -17,13 +17,11 @@
 }
 
 /* UI defaults */
-html {
-    font-size: 12px;
-}
-
+html,
 body {
     height: 100%;
-    font-family: 'Open Sans', 'Helvetica Neue';
+    font-family: 'Open Sans', sans-serif;
+    font-size: 12px;
 }
 
 ::-webkit-scrollbar {
@@ -39,13 +37,18 @@ h2 {
     margin: 0 0 15px 0;
 }
 
+input {
+    font-family: inherit;
+    font-size: inherit;
+}
+
 input[type=range]::-webkit-slider-runnable-track {
     width: 300px;
-    height: 2px;
-    background: #dddddd;
+    height: 1px;
+    background: #999;
     border: none;
     border-radius: 3px;
-    margin-top: 1px;
+    margin-top: 2px;
 }
 
 input[type=range]::-webkit-slider-thumb {
@@ -55,11 +58,11 @@ input[type=range]::-webkit-slider-thumb {
     width: 14px;
     border-radius: 50%;
     background: rgb(70, 136, 223);
-    margin-top: -6px;
+    margin-top: -7px;
 }
 
 input[type=range]:focus::-webkit-slider-runnable-track {
-    background: #dddddd;
+    background: #999;
 }
 
 textarea {
@@ -68,8 +71,7 @@ textarea {
 }
 
 text {
-    font-size: 11px;
-    fill: #444;
+    font-size: 0.9rem;
 }
 
 /* Windows Header */
@@ -85,7 +87,6 @@ text {
 
 .header-win-title {
     float: left;
-    font-size: 12px;
     font-weight: 600;
     margin: 5px 0 0 8px;
 }
@@ -136,14 +137,11 @@ text {
     top: 0;
     right: 0;
     left: 0;
-    font-size: 12px;
     height: 50px;
 }
 
 .header-mac-title {
     text-align: center;
-    font-family: 'Helvetica Neue';
-    font-size: 13px;
     font-weight: 500;
     padding-top: 10px;
 }
@@ -161,7 +159,7 @@ text {
 .panel {
     position: fixed;
     top: 50px;
-    bottom: 40px;
+    bottom: 50px;
     left: 12px;
     right: 5px;
     display: flex;
@@ -199,10 +197,9 @@ text {
 .scroll {
     display: block;
     height: 100%;
-    font-family: 'Menlo', 'Consolas';
+    font-family: 'Inconsolata', monospace;
     line-height: 28px;
-    overflow: scroll;
-    font-size: 1.1em;
+    overflow: auto;
 }
 
 .lineError:hover {
@@ -221,9 +218,8 @@ text {
 .mirror {
     visibility: hidden;
     display: inline-block;
-    font-family: 'Menlo', 'Consolas';
+    font-family: 'Inconsolata', monospace;
     line-height: 28px;
-    font-size: 1.1em;
     width: 100%;
     overflow-wrap: break-word;
 }
@@ -311,13 +307,6 @@ text {
     color: rgb(124, 144, 156, 0.6);
 }
 
-.defButton svg {
-    width: 14px;
-    height: 14px;
-    pointer-events: none;
-    margin: -2px 0 0 8px;
-}
-
 /* Dialogs */
 .dialogs {
     display: none;
@@ -340,12 +329,13 @@ text {
 
 .dialog-open-title {
     padding: 5px 5px 2px 5px;
+    font-weight: 600;
 }
 
 .dialog-open-date {
     color: #999999;
-    font-size: 11px;
     padding: 0 5px 5px 5px;
+    font-size: 0.9rem;
 }
 
 .dialog-open-delete {
@@ -353,7 +343,6 @@ text {
     top: 0;
     right: 0;
     font-weight: 600;
-    font-size: 11px;
     cursor: pointer;
     padding: 2px 5px;
 }
@@ -370,7 +359,6 @@ text {
 /* Settings */
 .precision {
     width: 24px;
-    font-size: 1rem;
     text-align: center;
     padding: 1px 0 0 0;
     background: transparent;
@@ -379,6 +367,18 @@ text {
 .divider {
     display: block;
     height: 20px;
+}
+
+.sizeReset {
+    display: inline-block;
+    margin-left: 5px;
+}
+
+.sizeReset svg {
+    width: 14px;
+    height: 14px;
+    stroke: rgb(206, 108, 73);
+    pointer-events: none;
 }
 
 /* About dialog items */
@@ -395,7 +395,6 @@ text {
 
 .dialog-about-title {
     float: left;
-    font-size: 12px;
     line-height: 18px;
     padding: 1px 0 0 8px;
 }
@@ -407,6 +406,7 @@ text {
 
 .dialog-about-icon {
     float: left;
+    margin-top: -1px;
 }
 
 .dialog-about-icon img {
@@ -455,13 +455,13 @@ text {
 .searchWrapper {
     height: calc(100vh - 200px);
     max-height: 600px;
-    overflow: scroll;
+    overflow: auto;
 }
 
 .searchResults {
     display: flex;
     flex-wrap: wrap;
-    overflow: scroll;
+    overflow: auto;
 }
 
 .searchResults>div {
@@ -477,7 +477,6 @@ text {
 
 /* Messages */
 .msgBox {
-    font-size: 11px;
     text-align: center;
     min-width: 100px;
 }
@@ -492,18 +491,19 @@ text {
 }
 
 .dateFormat {
-    padding-left: 0px;
+    padding-left: 8px;
 }
 
 .pr-lh {
-    line-height: 24px;
+    line-height: 22px;
 }
 
-.updateRatesLink {
-    font-size: 11px;
-    border-left: 1px solid #eaeaea;
-    padding-left: 8px;
-    margin-left: 5px;
+.pdt-lh {
+    line-height: 20px;
+}
+
+.padTop1 {
+    padding-top: 1px;
 }
 
 .textBox {
@@ -539,6 +539,9 @@ text {
 .switchText {
     display: inline-block;
     width: 70px;
+    vertical-align: text-bottom;
+    margin-left: 1px;
+    line-height: 17px;
 }
 
 .plotSwitches {
@@ -616,7 +619,7 @@ input:checked+.slider:before {
 
 .uk-modal-title,
 .errTitle {
-    font-size: 1.1em;
+    font-size: 1.1rem;
     font-weight: 600;
 }
 
@@ -625,7 +628,7 @@ input:checked+.slider:before {
 }
 
 .uk-grid+.uk-grid {
-    margin-top: 12px;
+    margin-top: 14px;
 }
 
 .uk-grid-small {
@@ -641,10 +644,39 @@ input:checked+.slider:before {
     border-width: 0 0 1px 0;
 }
 
+.uk-switcher {
+    min-height: 220px;
+    margin-bottom: 0;
+}
+
+.uk-tab>*>a {
+    display: inline-block;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-transform: none;
+    padding: 0 10px 5px 10px;
+}
+
+.defButton {
+    position: absolute;
+    right: 0;
+}
+
+.defButton:hover {
+    color: #1e87f0 !important;
+}
+
+.defButton svg {
+    width: 14px;
+    height: 14px;
+    pointer-events: none;
+    margin: -2px 0 0 0;
+    stroke: rgb(206, 108, 73);
+}
+
 .uk-button {
     padding: 0 10px;
     line-height: 28px;
-    font-size: .875rem;
     border-radius: 3px;
     transition: 0s ease-in-out;
 }
@@ -675,7 +707,7 @@ input:checked+.slider:before {
 }
 
 .uk-label {
-    padding: 0 5px;
+    font-size: 1rem;
 }
 
 .uk-width-small {
@@ -687,7 +719,7 @@ input:checked+.slider:before {
 }
 
 .uk-width-large {
-    width: 370px;
+    width: 350px;
 }
 
 .uk-overflow-auto {

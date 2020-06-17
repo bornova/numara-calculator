@@ -122,6 +122,11 @@ body {
     background: #fff;
 }
 
+/* Plot */
+text {
+    fill: #444;
+}
+
 /* UIkit Overrides */
 .uk-modal {
     background: rgba(0, 0, 0, .6);

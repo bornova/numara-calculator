@@ -196,3 +196,19 @@ line {
     border-color: #333;
     color: #999;
 }
+
+.uk-tab>*>a {
+    color: #666;
+}
+
+.uk-tab>*>a:hover {
+    color: #777;
+}
+
+.uk-tab>.uk-active>a {
+    color: rgb(178, 207, 221);
+}
+
+.uk-tab::before {
+    border-bottom: 1px solid #333;
+}
