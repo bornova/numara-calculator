@@ -1,30 +1,33 @@
 {
     "name": "numpad",
     "productName": "Numpad",
-    "version": "3.0.0",
+    "version": "3.1.0",
     "description": "Numpad Calculator",
-    "main": "./js/main.js",
+    "main": "main.js",
     "scripts": {
-        "dev": "electron .",
-        "dist": "electron-builder"
+        "dev": "npm run build && electron .",
+        "dist": "npm run build && electron-builder",
+        "build": "cpy src/numpad.html build && terser node_modules/uikit/dist/js/uikit.min.js node_modules/feather-icons/dist/feather.min.js node_modules/mathjs/dist/math.min.js node_modules/moment/min/moment.min.js src/js/d3.js src/js/plot.js src/js/calculate.js src/js/app.js node_modules/mousetrap/mousetrap.min.js -c -m -o build/numpad.js && cleancss -o build/numpad.css node_modules/uikit/dist/css/uikit.min.css src/css/app.css src/css/print.css && cleancss -o build/light.css src/css/light.css && cleancss -o build/dark.css src/css/dark.css"
     },
     "author": "Timur Atalay",
     "license": "MIT",
     "devDependencies": {
+        "clean-css-cli": "^4.3.0",
+        "cpy-cli": "^3.1.1",
         "electron": "^9.0.4",
-        "electron-builder": "^22.7.0"
+        "electron-builder": "^22.7.0",
+        "feather-icons": "^4.28.0",
+        "mathjs": "^7.0.1",
+        "moment": "^2.27.0",
+        "mousetrap": "^1.6.5",
+        "terser": "^4.8.0",
+        "uikit": "^3.5.4"
     },
     "dependencies": {
-        "d3": "^3.5.17",
         "electron-context-menu": "^2.0.1",
         "electron-store": "^5.2.0",
         "electron-util": "^0.14.1",
-        "feather-icons": "^4.28.0",
-        "fs-extra": "^9.0.1",
-        "mathjs": "^7.0.1",
-        "moment": "^2.26.0",
-        "mousetrap": "^1.6.5",
-        "uikit": "^3.5.4"
+        "fs-extra": "^9.0.1"
     },
     "build": {
         "nsis": {
@@ -42,9 +45,8 @@
         },
         "files": [
             "assets",
-            "css",
-            "js",
-            "app.html"
+            "build",
+            "main.js"
         ]
     }
 }

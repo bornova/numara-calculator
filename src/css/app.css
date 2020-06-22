@@ -453,7 +453,7 @@ text {
 }
 
 .searchWrapper {
-    height: calc(100vh - 250px);
+    height: calc(100vh - 240px);
     max-height: 600px;
     overflow: auto;
 }

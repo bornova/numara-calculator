@@ -5,8 +5,9 @@
  */
 
 // Calculate answers
-module.exports = () => {
+function calculate() {
     var solve = math.evaluate;
+    var settings = JSON.parse(localStorage.getItem('settings'));
     var input = $('input').value;
     var lines = input.split('\n');
     var lineIndex = 1;
@@ -110,7 +111,7 @@ module.exports = () => {
     $('printButton').className = input === '' ? 'noAction' : 'action';
     $('saveButton').className = input === '' ? 'noAction' : 'action';
 
-    ls.set('input', $('input').value);
+    localStorage.setItem('input', JSON.stringify($('input').value));
     $('undoButton').style.visibility = 'hidden';
 
     function strip(s) {
@@ -171,4 +172,4 @@ module.exports = () => {
 
         return solve(line, scope);
     }
-};
+}

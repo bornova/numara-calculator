@@ -4,91 +4,102 @@
  * @license MIT https://github.com/bornova/numpad/blob/master/LICENSE
  */
 
-window.d3 = require('d3');
-
 // Get element by id
 const $ = (id) => document.getElementById(id);
 
-// localStorage
-const ls = {
-    get: (key) => JSON.parse(localStorage.getItem(key)),
-    set: (key, value) => localStorage.setItem(key, JSON.stringify(value))
-};
-
-// App default settings
-const defaultSettings = {
-    autoRates: true,
-    dateFormat: 'l',
-    inputWidth: 50,
-    lineErrors: true,
-    lineNumbers: true,
-    lineWrap: true,
-    plotClosed: false,
-    plotGridLines: false,
-    plotTipLines: false,
-    precision: '4',
-    resizable: true,
-    fontSize: '1.35rem',
-    fontWeight: '500',
-    thouSep: true
-};
-
-Object.freeze(defaultSettings);
-
-// Initiate app settings
-var settings;
-if (!ls.get('settings')) ls.set('settings', defaultSettings);
-if (!ls.get('theme')) ls.set('theme', 'light');
-
-// Check settings for property changes
-let initSettings = ls.get('settings');
-var newSettings = {};
-for (var [p, v] of Object.entries(defaultSettings)) {
-    newSettings[p] = p in initSettings ? initSettings[p] : defaultSettings[p];
-    ls.set('settings', newSettings);
-}
-
 (() => {
-    const calculate = require('./js/calculate');
-    const ipc = require('electron').ipcRenderer;
-    const appName = ipc.sendSync('getName');
-    const appVersion = ipc.sendSync('getVersion');
+    var isNode = typeof window === 'undefined';
+    var appName;
+    var appVersion;
+
+    if (isNode) {
+        const ipc = require('electron').ipcRenderer;
+        appName = ipc.sendSync('getName');
+        appVersion = ipc.sendSync('getVersion');
+    } else {
+        appName = 'Numpad';
+        appVersion = 'Web Demo';
+    }
+
+    // localStorage
+    const ls = {
+        get: (key) => JSON.parse(localStorage.getItem(key)),
+        set: (key, value) => localStorage.setItem(key, JSON.stringify(value))
+    };
 
     document.title = appName;
 
+    // App default settings
+    const defaultSettings = {
+        autoRates: true,
+        dateFormat: 'l',
+        inputWidth: 50,
+        lineErrors: true,
+        lineNumbers: true,
+        lineWrap: true,
+        plotClosed: false,
+        plotGridLines: false,
+        plotTipLines: false,
+        precision: '4',
+        resizable: true,
+        fontSize: '1.35rem',
+        fontWeight: '500',
+        thouSep: true
+    };
+
+    Object.freeze(defaultSettings);
+
+    // Initiate app settings
+    if (!ls.get('settings')) ls.set('settings', defaultSettings);
+    if (!ls.get('theme')) ls.set('theme', 'light');
+
+    // Check settings for property changes
+    let initSettings = ls.get('settings');
+    var newSettings = {};
+    for (var [p, v] of Object.entries(defaultSettings)) {
+        newSettings[p] = p in initSettings ? initSettings[p] : defaultSettings[p];
+        ls.set('settings', newSettings);
+    }
+
     // Set headers
-    if (ipc.sendSync('isWindows')) {
-        $('header-mac').remove();
-        $('header-win').style.display = 'block';
-        $('header-win-title').innerHTML = appName;
-
-        if (ipc.sendSync('isNormal')) $('unmax').style.display = 'none';
-        if (ipc.sendSync('isMaximized')) $('max').style.display = 'none';
-        ipc.on('fullscreen', (event, isFullscreen) => {
-            if (isFullscreen) $('max').click();
-        });
-
-        $('winButtons').addEventListener('click', (e) => {
-            switch (e.target.id) {
-                case 'min':
-                    ipc.send('minimize');
-                    break;
-                case 'max':
-                    ipc.send('maximize');
-                    $('unmax').style.display = 'block';
-                    $('max').style.display = 'none';
-                    break;
-                case 'unmax':
-                    ipc.send('unmaximize');
-                    $('unmax').style.display = 'none';
-                    $('max').style.display = 'block';
-                    break;
-                case 'close':
-                    ipc.send('close');
-                    break;
-            }
-            e.stopPropagation();
-        });
+    if (isNode) {
+        if (ipc.sendSync('isWindows')) {
+            $('header-mac').remove();
+            $('header-win').style.display = 'block';
+            $('header-win-title').innerHTML = appName;
+    
+            if (ipc.sendSync('isNormal')) $('unmax').style.display = 'none';
+            if (ipc.sendSync('isMaximized')) $('max').style.display = 'none';
+            ipc.on('fullscreen', (event, isFullscreen) => {
+                if (isFullscreen) $('max').click();
+            });
+    
+            $('winButtons').addEventListener('click', (e) => {
+                switch (e.target.id) {
+                    case 'min':
+                        ipc.send('minimize');
+                        break;
+                    case 'max':
+                        ipc.send('maximize');
+                        $('unmax').style.display = 'block';
+                        $('max').style.display = 'none';
+                        break;
+                    case 'unmax':
+                        ipc.send('unmaximize');
+                        $('unmax').style.display = 'none';
+                        $('max').style.display = 'block';
+                        break;
+                    case 'close':
+                        ipc.send('close');
+                        break;
+                }
+                e.stopPropagation();
+            });
+        } else {
+            $('header-win').remove();
+            $('header-mac').style.display = 'block';
+            $('header-mac-title').innerHTML = appName;
+        }
     } else {
         $('header-win').remove();
         $('header-mac').style.display = 'block';
@@ -105,15 +116,17 @@ for (var [p, v] of Object.entries(defaultSettings)) {
 
     function applyTheme() {
         var theme = ls.get('theme');
-        $('style').setAttribute('href', theme == 'dark' ? './css/dark.css' : './css/light.css');
+        $('style').setAttribute('href', theme == 'dark' ? 'dark.css' : 'light.css');
     }
+
+    var settings;
 
     function applySettings() {
         settings = ls.get('settings');
         var theme = ls.get('theme');
         var elements = document.getElementsByName('sync');
 
-        $('style').setAttribute('href', theme == 'dark' ? './css/dark.css' : './css/light.css');
+        $('style').setAttribute('href', theme == 'dark' ? 'dark.css' : 'light.css');
         $('input').setAttribute('wrap', settings.lineWrap ? 'on' : 'off');
 
         for (var el of elements) {
@@ -222,8 +235,12 @@ for (var [p, v] of Object.entries(defaultSettings)) {
                         $('printLines').innerHTML = $('lineNo').innerHTML;
                         $('printInput').innerHTML = $('input').value;
                         $('printOutput').innerHTML = $('output').innerHTML;
-                        ipc.send('print');
-                        ipc.once('printReply', (event, response) => showMsg(response));
+                        if (isNode) {
+                            ipc.send('print');
+                            ipc.once('printReply', (event, response) => showMsg(response));
+                        } else {
+                            window.print();
+                        }
                     }
                     break;
                 case 'saveButton': // Save calcualtions
@@ -302,12 +319,12 @@ for (var [p, v] of Object.entries(defaultSettings)) {
                     break;
                 case 'darkModeButton':
                     ls.set('theme', $('darkModeButton').checked ? 'dark' : 'light');
-                    ipc.send('darkMode', $('darkModeButton').checked);
+                    if (isNode) ipc.send('darkMode', $('darkModeButton').checked);
                     applyTheme();
                     break;
                 case 'dialog-settings-save': // Save settings
                     ls.set('theme', $('darkModeButton').checked ? 'dark' : 'light');
-                    ipc.send('darkMode', $('darkModeButton').checked);
+                    if (isNode) ipc.send('darkMode', $('darkModeButton').checked);
 
                     settings.fontSize = $('fontSize').value;
                     settings.fontWeight = $('fontWeight').value;
@@ -336,7 +353,7 @@ for (var [p, v] of Object.entries(defaultSettings)) {
                     });
                     break;
                 case 'dialog-settings-reset': // Reset app
-                    confirm('All user settings and data will be lost.', () => ipc.send('resetApp'));
+                    if (isNode) confirm('All user settings and data will be lost.', () => ipc.send('resetApp'));
                     break;
                 case 'sizeReset':
                     settings.inputWidth = defaultSettings.inputWidth;
@@ -475,6 +492,7 @@ for (var [p, v] of Object.entries(defaultSettings)) {
         // Plot
         var func;
         var activePlot;
+        var functionPlot = window.functionPlot;
 
         function plot() {
             $('plotTitle').innerHTML = func;
