@@ -67,13 +67,13 @@ const $ = (id) => document.getElementById(id);
             $('header-mac').remove();
             $('header-win').style.display = 'block';
             $('header-win-title').innerHTML = appName;
-    
+
             if (ipc.sendSync('isNormal')) $('unmax').style.display = 'none';
             if (ipc.sendSync('isMaximized')) $('max').style.display = 'none';
             ipc.on('fullscreen', (event, isFullscreen) => {
                 if (isFullscreen) $('max').click();
             });
-    
+
             $('winButtons').addEventListener('click', (e) => {
                 switch (e.target.id) {
                     case 'min':
