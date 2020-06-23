@@ -42,10 +42,9 @@
             ]
         },
         "directories": {
-            "buildResources": "assets"
+            "buildResources": "docs/assets"
         },
         "files": [
-            "assets",
             "docs",
             "main.js"
         ]

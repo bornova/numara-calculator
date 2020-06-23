@@ -179,6 +179,11 @@ text {
     text-align: right;
 }
 
+.inputPane {
+    min-width: 100px;
+    margin-right: 10px;
+}
+
 .input {
     user-select: text;
 }
@@ -197,9 +202,19 @@ text {
 .scroll {
     display: block;
     height: 100%;
+    overflow: auto;
+}
+
+.mirror {
+    visibility: hidden;
+    display: inline-block;
+    width: 100%;
+    overflow-wrap: break-word;
+}
+
+.syncscroll {
     font-family: 'Inconsolata', monospace;
     line-height: 28px;
-    overflow: auto;
 }
 
 .lineError:hover {
@@ -208,20 +223,6 @@ text {
 
 .errMsg {
     word-break: break-word;
-}
-
-.inputPane {
-    min-width: 100px;
-    margin-right: 10px;
-}
-
-.mirror {
-    visibility: hidden;
-    display: inline-block;
-    font-family: 'Inconsolata', monospace;
-    line-height: 28px;
-    width: 100%;
-    overflow-wrap: break-word;
 }
 
 .resize {
@@ -379,6 +380,7 @@ text {
     height: 14px;
     stroke: rgb(206, 108, 73);
     pointer-events: none;
+    margin-top: -1px;
 }
 
 /* About dialog items */
@@ -640,6 +642,7 @@ input:checked+.slider:before {
 .uk-select:not([multiple]):not([size]) {
     height: auto;
     border-width: 0 0 1px 0;
+    margin-top: 1px;
 }
 
 .uk-switcher {
