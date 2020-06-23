@@ -436,15 +436,15 @@ const $ = (id) => document.getElementById(id);
             if (savedItems.length > 0) {
                 $('dialog-open-deleteAll').disabled = false;
                 savedItems.map(id => {
-                    $('dialog-open-body').innerHTML += (
-                        '<div class="dialog-open-wrapper" id="' + id + '">' +
-                        '<div data-action="load">' +
-                        '<div class="dialog-open-title">' + obj[id][0] + '</div>' +
-                        '<div class="dialog-open-date">' + moment(Number(id)).format('lll') + '</div>' +
-                        '</div>' +
-                        '<div class="dialog-open-delete" data-action="delete">&#10005;</div>' +
-                        '</div>'
-                    );
+                    $('dialog-open-body').innerHTML += `
+                        <div class="dialog-open-wrapper" id="${id}">
+                            <div data-action="load">
+                                <div class="dialog-open-title">${obj[id][0]}</div>
+                                <div class="dialog-open-date">${moment(Number(id)).format('lll')}</div>
+                            </div>
+                            <div class="dialog-open-delete" data-action="delete">&#10005;</div>
+                        </div>
+                    `;
                 });
             } else {
                 $('dialog-open-deleteAll').disabled = true;
@@ -465,17 +465,18 @@ const $ = (id) => document.getElementById(id);
             $('sizeReset').style.display = settings.inputWidth == defaultSettings.inputWidth ? 'none' : 'inline-block';
             $('precisionRange').value = settings.precision;
             $('precision-label').innerHTML = settings.precision;
-            $('dateFormat').innerHTML = (
-                '<option value="l">' + moment().format('l') + '</option>' +
-                '<option value="L">' + moment().format('L') + '</option>' +
-                '<option value="MMM DD, YYYY">' + moment().format('MMM DD, YYYY') + '</option>' +
-                '<option value="ddd, l">' + moment().format('ddd, l') + '</option>' +
-                '<option value="ddd, L">' + moment().format('ddd, L') + '</option>' +
-                '<option value="ddd, MMM DD, YYYY">' + moment().format('ddd, MMM DD, YYYY') + '</option>'
-            );
+            $('dateFormat').innerHTML = `
+                <option value="l">${moment().format('l')}</option>
+                <option value="L">${moment().format('L')}</option>
+                <option value="MMM DD, YYYY">${moment().format('MMM DD, YYYY')}</option>
+                <option value="ddd, l">${moment().format('ddd, l')}</option>
+                <option value="ddd, L">${moment().format('ddd, L')}</option>
+                <option value="ddd, MMM DD, YYYY">${moment().format('ddd, MMM DD, YYYY')}</option>
+            `;
             $('dateFormat').value = settings.dateFormat;
             $('thouSepButton').checked = settings.thouSep;
             $('autoRatesButton').checked = settings.autoRates;
+            $('lastUpdated').innerHTML = 'Rates as of ' + ls.get('lastUpdate');
             $('defaultSettingsButton').style.display = JSON.stringify(settings) == JSON.stringify(defaultSettings) ? 'none' : 'block';
         });
 
@@ -489,16 +490,16 @@ const $ = (id) => document.getElementById(id);
                     $('searchResults').innerHTML = '';
                     var res = JSON.stringify(math.help(str).toJSON());
                     var obj = JSON.parse(res);
-                    $('searchResults').innerHTML = (
-                        '<div>Name:</div><div>' + obj.name + '</div>' +
-                        '<div>Description:</div><div>' + obj.description + '</div>' +
-                        '<div>Category:</div><div>' + obj.category + '</div>' +
-                        '<div>Syntax:</div><div>' + String(obj.syntax).split(',').join(', ') + '</div>' +
-                        '<div>Examples:</div><div>' + String(obj.examples).split(',').join(', ') + '</div>' +
-                        '<div>Also see:</div><div>' + String(obj.seealso).split(',').join(', ') + '</div>'
-                    );
+                    $('searchResults').innerHTML = `
+                        <div>Name:</div><div>${obj.name}</div>
+                        <div>Description:</div><div>${obj.description}</div>
+                        <div>Category:</div><div>${obj.category}</div>
+                        <div>Syntax:</div><div>${String(obj.syntax).split(',').join(', ')}</div>
+                        <div>Examples:</div><div>${String(obj.examples).split(',').join(', ')}</div>
+                        <div>Also see:</div><div>${String(obj.seealso).split(',').join(', ')}</div>
+                    `;
                 } catch (error) {
-                    $('searchResults').innerHTML = 'No results for "' + str + '"';
+                    $('searchResults').innerHTML = `No results for "${str}"`;
                 }
             } else {
                 $('searchResults').innerHTML = 'Start typing above to search...';

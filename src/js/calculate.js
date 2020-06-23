@@ -60,20 +60,24 @@ function calculate() {
                 }
 
                 if (answer !== undefined) {
+                    scope.ans = answer;
+                    scope['line' + lineNo] = answer;
+
                     if (!isNaN(answer)) {
+                        avgs.push(answer);
                         totals.push(answer);
                         subtotals.push(answer);
-                        avgs.push(answer);
                     }
-                    scope.ans = scope['line' + lineNo] = answer;
 
                     answer = math.format(answer, expLim);
                     var a = answer.trim().split(' ')[0];
                     var b = answer.replace(a, '');
-                    answer = !a.includes('e') && !isNaN(a) ? settings.thouSep ? Number(a).toLocaleString(undefined, digits) + b : parseFloat(Number(a).toFixed(settings.precision)) + b : strip(answer);
+                    answer = !a.includes('e') && !isNaN(a) ?
+                        settings.thouSep ? Number(a).toLocaleString(undefined, digits) + b : parseFloat(Number(a).toFixed(settings.precision)) + b :
+                        strip(answer);
 
                     if (answer.match(/\w\(x\)/)) {
-                        answer = '<a title="Plot ' + line + '" class="plotButton" data-func="' + line + '">Plot</a>';
+                        answer = `<a title="Plot ${line}" class="plotButton" data-func="${line}">Plot</a>`;
                         scope.ans = scope['line' + lineNo] = line.split('=')[1].trim();
                     }
                 } else {
@@ -83,8 +87,8 @@ function calculate() {
             } catch (e) {
                 var errStr = String(e).replace(/'|"/g, '`');
                 if (settings.lineErrors) {
-                    answer = '<a title="' + errStr + '" class="lineError" data-line="' + lineNo + '" data-error="' + errStr + '">Err</a>';
-                    lineNo = '<span class="lineErrorNo">' + lineNo + '</span>';
+                    answer = `<a title="${errStr}" class="lineError" data-line="${lineNo}" data-error="${errStr}">Err</a>`;
+                    lineNo = `<span class="lineErrorNo">${lineNo}</span>`;
                 }
             }
         } else {
