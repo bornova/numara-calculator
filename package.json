@@ -7,14 +7,14 @@
     "scripts": {
         "dev": "npm run build && electron .",
         "dist": "npm run build && electron-builder",
-        "build": "cpy src/index.html docs && ncp assets docs/assets && terser node_modules/uikit/dist/js/uikit.min.js node_modules/feather-icons/dist/feather.min.js node_modules/mathjs/dist/math.min.js node_modules/moment/min/moment.min.js src/js/d3.js src/js/plot.js src/js/calculate.js src/js/app.js node_modules/mousetrap/mousetrap.min.js -c -m -o docs/numpad.js && cleancss -o docs/numpad.css node_modules/uikit/dist/css/uikit.min.css src/css/app.css src/css/print.css && cleancss -o docs/light.css src/css/light.css && cleancss -o docs/dark.css src/css/dark.css"
+        "build": "cpy src/index.html docs && ncp src/assets docs/assets && terser node_modules/uikit/dist/js/uikit.min.js node_modules/feather-icons/dist/feather.min.js node_modules/mathjs/dist/math.min.js node_modules/moment/min/moment.min.js src/js/d3.js src/js/plot.js src/js/calculate.js src/js/app.js node_modules/mousetrap/mousetrap.min.js -c -m -o docs/numpad.js && cleancss -o docs/numpad.css node_modules/uikit/dist/css/uikit.min.css src/css/app.css src/css/print.css && cleancss -o docs/light.css src/css/light.css && cleancss -o docs/dark.css src/css/dark.css"
     },
     "author": "Timur Atalay",
     "license": "MIT",
     "devDependencies": {
         "clean-css-cli": "^4.3.0",
         "cpy-cli": "^3.1.1",
-        "electron": "^9.0.4",
+        "electron": "^9.0.5",
         "electron-builder": "^22.7.0",
         "feather-icons": "^4.28.0",
         "mathjs": "^7.0.1",
@@ -42,10 +42,9 @@
             ]
         },
         "directories": {
-            "buildResources": "assets"
+            "buildResources": "docs/assets"
         },
         "files": [
-            "assets",
             "docs",
             "main.js"
         ]
