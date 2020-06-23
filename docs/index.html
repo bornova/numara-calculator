@@ -195,7 +195,10 @@
                             <div class="uk-width-4-5">
                                 <div>Update exchange rates on start</div>
                                 <div>
-                                    <a id="updateRatesButton" class="updateRatesLink">Update Now</a>
+                                    <span id="lastUpdated" class="lastUpdated"></span>
+                                </div>
+                                <div>
+                                    <a id="updateRatesButton" class="updateRatesLink">Fetch latest rates</a>
                                 </div>
                             </div>
                             <div class="uk-text-right uk-width-1-5">
@@ -230,6 +233,7 @@
                 <div id="searchResults" class="searchResults">Start typing above to search...</div>
             </div>
             <div class="dialog-buttons uk-text-right">
+                <button id="demoButton" class="uk-button uk-button-default uk-modal-close uk-button-small">Demo</button>
                 <button class="uk-button uk-button-default uk-modal-close uk-button-small">Close</button>
             </div>
         </div>
@@ -274,17 +278,17 @@
                             <input id="plotGridLines" type="checkbox">
                             <span class="slider round"></span>
                         </label>
-                        <span class="switchText">Grid Lines</span>
+                        <span class="switchText">Grid</span>
                         <label class="switch">
                             <input id="plotTipLines" type="checkbox">
                             <span class="slider round"></span>
                         </label>
-                        <span class="switchText">Tip Lines</span>
+                        <span class="switchText">Tip</span>
                         <label class="switch">
                             <input id="plotClosed" type="checkbox">
                             <span class="slider round"></span>
                         </label>
-                        <span class="switchText">Closed Area</span>
+                        <span class="switchText">Closed</span>
                     </div>
                 </div>
                 <div class="dialog-buttons uk-width-1-4 uk-text-right">

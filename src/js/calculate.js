@@ -60,10 +60,11 @@ function calculate() {
                 }
 
                 if (answer !== undefined) {
-                    totals.push(answer);
-                    subtotals.push(answer);
-                    avgs.push(answer);
-
+                    if (!isNaN(answer)) {
+                        totals.push(answer);
+                        subtotals.push(answer);
+                        avgs.push(answer);
+                    }
                     scope.ans = scope['line' + lineNo] = answer;
 
                     answer = math.format(answer, expLim);

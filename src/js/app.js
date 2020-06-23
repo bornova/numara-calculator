@@ -179,13 +179,14 @@ const $ = (id) => document.getElementById(id);
         if (!ls.get('rates') || settings.autoRates) getRates();
 
         function getRates() {
-            var url = 'https://www.floatrates.com/daily/usd.json';
+            var url = 'http://www.floatrates.com/widget/00001030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json';
             if (navigator.onLine) {
                 fetch(url)
                     .then(response => response.json())
                     .then(data => {
                         ls.set('rates', data);
                         createRateUnits();
+                        $('lastUpdated').innerHTML = 'Rates as of ' + ls.get('lastUpdate');
                         showMsg('Updated exchange rates');
                     }).catch((error) => {
                         showMsg('Failed to get exchange rates');
@@ -197,9 +198,12 @@ const $ = (id) => document.getElementById(id);
 
         function createRateUnits() {
             var data = ls.get('rates');
-            Object.keys(data).map(currency => math.createUnit(data[currency].code, math.unit(data[currency].inverseRate, 'USD'), {
-                override: true
-            }));
+            Object.keys(data).map(currency => {
+                math.createUnit(data[currency].code, math.unit(data[currency].inverseRate, 'USD'), {
+                    override: true
+                });
+                ls.set('lastUpdate', data[currency].date);
+            });
             calculate();
         }
 
@@ -389,6 +393,13 @@ const $ = (id) => document.getElementById(id);
                     settings.plotClosed = $('plotClosed').checked;
                     ls.set('settings', settings);
                     plot();
+                    break;
+                case 'demoButton':
+                    ls.set('undoData', $('input').value);
+                    $('input').value = demo;
+                    calculate();
+                    $('undoButton').style.visibility = 'visible';
+                    UIkit.modal('#dialog-help').hide();
                     break;
             }
         });

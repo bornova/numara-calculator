@@ -123,6 +123,10 @@ body {
     background: #fff;
 }
 
+.lastUpdated {
+    color: #999;
+}
+
 /* Plot */
 text {
     fill: #444;

@@ -120,6 +120,10 @@ body {
     background-color: #222;
 }
 
+.lastUpdated {
+    color: #999;
+}
+
 /* Plot */
 .origin {
     stroke: #f9f9f9;

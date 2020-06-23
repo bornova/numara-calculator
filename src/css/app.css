@@ -383,6 +383,11 @@ text {
     margin-top: -1px;
 }
 
+.lastUpdated,
+.updateRatesLink {
+    font-size: 0.9rem;
+}
+
 /* About dialog items */
 .dialog-about {
     text-align: center;
@@ -540,9 +545,8 @@ text {
 
 .switchText {
     display: inline-block;
-    width: 70px;
     vertical-align: text-bottom;
-    margin-left: 1px;
+    margin: 0 20px 0 2px;
     line-height: 17px;
 }
 
