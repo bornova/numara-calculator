@@ -8,12 +8,14 @@
 const $ = (id) => document.getElementById(id);
 
 (() => {
-    var isNode = typeof window === 'undefined';
+    var userAgent = navigator.userAgent.toLowerCase();
+    var isNode = userAgent.indexOf(' electron/') > -1;
+    var ipc;
     var appName;
     var appVersion;
 
     if (isNode) {
-        const ipc = require('electron').ipcRenderer;
+        ipc = require('electron').ipcRenderer;
         appName = ipc.sendSync('getName');
         appVersion = ipc.sendSync('getVersion');
     } else {

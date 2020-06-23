@@ -69,7 +69,7 @@ function appWindow() {
             devTools: is.development
         }
     });
-    win.loadFile('build/numpad.html');
+    win.loadFile('docs/index.html');
     win.on('close', () => {
         if (win.isMaximized()) {
             dims.set('fullSize', true);

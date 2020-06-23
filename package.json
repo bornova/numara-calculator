@@ -1,13 +1,13 @@
 {
     "name": "numpad",
     "productName": "Numpad",
-    "version": "3.1.0",
+    "version": "3.1.1",
     "description": "Numpad Calculator",
     "main": "main.js",
     "scripts": {
         "dev": "npm run build && electron .",
         "dist": "npm run build && electron-builder",
-        "build": "cpy src/index.html docs && terser node_modules/uikit/dist/js/uikit.min.js node_modules/feather-icons/dist/feather.min.js node_modules/mathjs/dist/math.min.js node_modules/moment/min/moment.min.js src/js/d3.js src/js/plot.js src/js/calculate.js src/js/app.js node_modules/mousetrap/mousetrap.min.js -c -m -o docs/numpad.js && cleancss -o docs/numpad.css node_modules/uikit/dist/css/uikit.min.css src/css/app.css src/css/print.css && cleancss -o docs/light.css src/css/light.css && cleancss -o docs/dark.css src/css/dark.css"
+        "build": "cpy src/index.html docs && ncp assets docs/assets && terser node_modules/uikit/dist/js/uikit.min.js node_modules/feather-icons/dist/feather.min.js node_modules/mathjs/dist/math.min.js node_modules/moment/min/moment.min.js src/js/d3.js src/js/plot.js src/js/calculate.js src/js/app.js node_modules/mousetrap/mousetrap.min.js -c -m -o docs/numpad.js && cleancss -o docs/numpad.css node_modules/uikit/dist/css/uikit.min.css src/css/app.css src/css/print.css && cleancss -o docs/light.css src/css/light.css && cleancss -o docs/dark.css src/css/dark.css"
     },
     "author": "Timur Atalay",
     "license": "MIT",
@@ -20,6 +20,7 @@
         "mathjs": "^7.0.1",
         "moment": "^2.27.0",
         "mousetrap": "^1.6.5",
+        "ncp": "^2.0.0",
         "terser": "^4.8.0",
         "uikit": "^3.5.4"
     },
