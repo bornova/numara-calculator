@@ -179,7 +179,7 @@ const $ = (id) => document.getElementById(id);
         if (!ls.get('rates') || settings.autoRates) getRates();
 
         function getRates() {
-            var url = 'http://www.floatrates.com/widget/00001030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json';
+            var url = 'https://www.floatrates.com/widget/00001030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json';
             if (navigator.onLine) {
                 fetch(url)
                     .then(response => response.json())
