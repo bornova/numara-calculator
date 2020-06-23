@@ -44,8 +44,8 @@ const $ = (id) => document.getElementById(id);
         plotTipLines: false,
         precision: '4',
         resizable: true,
-        fontSize: '1.35rem',
-        fontWeight: '500',
+        fontSize: '1.1rem',
+        fontWeight: '400',
         thouSep: true
     };
 
@@ -355,7 +355,14 @@ const $ = (id) => document.getElementById(id);
                     });
                     break;
                 case 'dialog-settings-reset': // Reset app
-                    if (isNode) confirm('All user settings and data will be lost.', () => ipc.send('resetApp'));
+                    confirm('All user settings and data will be lost.', () => {
+                        if (isNode) {
+                            ipc.send('resetApp');
+                        } else {
+                            localStorage.clear();
+                            location.reload();
+                        }
+                    });
                     break;
                 case 'sizeReset':
                     settings.inputWidth = defaultSettings.inputWidth;
