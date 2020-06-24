@@ -183,10 +183,7 @@ const $ = (id) => document.getElementById(id);
                     createRateUnits();
                     $('lastUpdated').innerHTML = ls.get('rateDate');
                     showMsg('Updated exchange rates');
-                }).catch((error) => {
-                    console.log(error);
-                    showMsg('Failed to get exchange rates');
-                });
+                }).catch((error) => showMsg('Failed to get exchange rates'));
         } else {
             showMsg('No internet connection');
         }
