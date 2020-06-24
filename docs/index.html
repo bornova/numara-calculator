@@ -193,17 +193,15 @@
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
                             <div class="uk-width-4-5">
-                                <div>Update exchange rates on start</div>
-                                <div>
+                                <div>Currency conversion</div>
+                                <div id="currencyUpdate">
+                                    <span class="lastUpdated">Exchange rates are as of:</span>
                                     <span id="lastUpdated" class="lastUpdated"></span>
-                                </div>
-                                <div>
-                                    <a id="updateRatesButton" class="updateRatesLink">Fetch latest rates</a>
                                 </div>
                             </div>
                             <div class="uk-text-right uk-width-1-5">
                                 <label class="switch">
-                                    <input id="autoRatesButton" type="checkbox" checked>
+                                    <input id="currencyButton" type="checkbox" checked>
                                     <span class="slider round"></span>
                                 </label>
                             </div>

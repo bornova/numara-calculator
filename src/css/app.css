@@ -365,6 +365,10 @@ text {
     background: transparent;
 }
 
+.dateFormat {
+    padding-left: 8px;
+}
+
 .divider {
     display: block;
     height: 20px;
@@ -383,9 +387,14 @@ text {
     margin-top: -1px;
 }
 
-.lastUpdated,
-.updateRatesLink {
+.lastUpdated {
+    display: block;
     font-size: 0.9rem;
+    margin-right: 3px
+}
+
+.updateRatesLink {
+    margin-left: 6px;
 }
 
 /* About dialog items */
@@ -495,10 +504,6 @@ text {
 
 .range {
     padding-left: 10px;
-}
-
-.dateFormat {
-    padding-left: 8px;
 }
 
 .pr-lh {

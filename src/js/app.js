@@ -33,7 +33,7 @@ const $ = (id) => document.getElementById(id);
 
     // App default settings
     const defaultSettings = {
-        autoRates: true,
+        currencies: true,
         dateFormat: 'l',
         inputWidth: 50,
         lineErrors: true,
@@ -175,8 +175,7 @@ const $ = (id) => document.getElementById(id);
 
         // Exchange rates
         math.createUnit('USD');
-        if (ls.get('rates')) createRateUnits();
-        if (!ls.get('rates') || settings.autoRates) getRates();
+        if (settings.currencies) getRates();
 
         function getRates() {
             var url = 'https://www.floatrates.com/widget/00001030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json';
@@ -186,7 +185,7 @@ const $ = (id) => document.getElementById(id);
                     .then(data => {
                         ls.set('rates', data);
                         createRateUnits();
-                        $('lastUpdated').innerHTML = 'Rates as of ' + ls.get('lastUpdate');
+                        $('lastUpdated').innerHTML = ls.get('rateDate');
                         showMsg('Updated exchange rates');
                     }).catch((error) => {
                         showMsg('Failed to get exchange rates');
@@ -202,7 +201,7 @@ const $ = (id) => document.getElementById(id);
                 math.createUnit(data[currency].code, math.unit(data[currency].inverseRate, 'USD'), {
                     override: true
                 });
-                ls.set('lastUpdate', data[currency].date);
+                ls.set('rateDate', data[currency].date);
             });
             calculate();
         }
@@ -328,32 +327,11 @@ const $ = (id) => document.getElementById(id);
                     if (isNode) ipc.send('darkMode', $('darkModeButton').checked);
                     applyTheme();
                     break;
-                case 'dialog-settings-save': // Save settings
-                    ls.set('theme', $('darkModeButton').checked ? 'dark' : 'light');
-                    if (isNode) ipc.send('darkMode', $('darkModeButton').checked);
-
-                    settings.fontSize = $('fontSize').value;
-                    settings.fontWeight = $('fontWeight').value;
-                    settings.lineNumbers = $('lineNoButton').checked;
-                    settings.lineWrap = $('lineWrapButton').checked;
-                    settings.lineErrors = $('lineErrorButton').checked;
-                    settings.resizable = $('resizeButton').checked;
-
-                    settings.precision = $('precisionRange').value;
-                    settings.dateFormat = $('dateFormat').value;
-                    settings.thouSep = $('thouSepButton').checked;
-                    settings.autoRates = $('autoRatesButton').checked;
-
-                    ls.set('settings', settings);
-                    applySettings();
-
-                    UIkit.modal('#dialog-settings').hide();
-                    showMsg('Settings saved');
-                    break;
                 case 'defaultSettingsButton': // Revert back to default settings
                     confirm('All settings will revert back to defaults.', () => {
                         ls.set('settings', defaultSettings);
                         applySettings();
+                        if (!$('currencyButton').checked) getRates();
                         UIkit.modal('#dialog-settings').hide();
                         showMsg('Default settings applied');
                     });
@@ -375,9 +353,41 @@ const $ = (id) => document.getElementById(id);
                     applySettings();
                     $('defaultSettingsButton').style.display = JSON.stringify(settings) == JSON.stringify(defaultSettings) ? 'none' : 'block';
                     break;
-                case 'updateRatesButton': // Update exchange rates
-                    getRates();
+                case 'currencyButton': // Update exchange rates
+                    if (settings.currencies) {
+                        $('currencyUpdate').style.display = $('currencyButton').checked ? "block" : "none";
+                    }
                     break;
+                case 'dialog-settings-save': // Save settings
+                    ls.set('theme', $('darkModeButton').checked ? 'dark' : 'light');
+                    if (isNode) ipc.send('darkMode', $('darkModeButton').checked);
+
+                    settings.fontSize = $('fontSize').value;
+                    settings.fontWeight = $('fontWeight').value;
+                    settings.lineNumbers = $('lineNoButton').checked;
+                    settings.lineWrap = $('lineWrapButton').checked;
+                    settings.lineErrors = $('lineErrorButton').checked;
+                    settings.resizable = $('resizeButton').checked;
+
+                    settings.precision = $('precisionRange').value;
+                    settings.dateFormat = $('dateFormat').value;
+                    settings.thouSep = $('thouSepButton').checked;
+                    
+                    if (!settings.currencies & $('currencyButton').checked) {
+                        getRates();
+                    } else if (!$('currencyButton').checked) {
+                        localStorage.removeItem('rates');
+                        localStorage.removeItem('rateDate');
+                    }
+                    settings.currencies = $('currencyButton').checked;
+
+                    ls.set('settings', settings);
+                    applySettings();
+
+                    UIkit.modal('#dialog-settings').hide();
+                    showMsg('Settings saved');
+                    break;
+
                     // Plot settings
                 case 'plotGridLines':
                     settings.plotGridLines = $('plotGridLines').checked;
@@ -475,8 +485,9 @@ const $ = (id) => document.getElementById(id);
             `;
             $('dateFormat').value = settings.dateFormat;
             $('thouSepButton').checked = settings.thouSep;
-            $('autoRatesButton').checked = settings.autoRates;
-            $('lastUpdated').innerHTML = 'Rates as of ' + ls.get('lastUpdate');
+            $('currencyButton').checked = settings.currencies;
+            $('lastUpdated').innerHTML = settings.currencies ? ls.get('rateDate') : '';
+            $('currencyUpdate').style.display = settings.currencies ? "block" : "none";
             $('defaultSettingsButton').style.display = JSON.stringify(settings) == JSON.stringify(defaultSettings) ? 'none' : 'block';
         });
 
