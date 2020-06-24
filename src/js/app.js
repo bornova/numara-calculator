@@ -8,60 +8,20 @@
 const $ = (id) => document.getElementById(id);
 
 (() => {
-    var userAgent = navigator.userAgent.toLowerCase();
-    var isNode = userAgent.indexOf(' electron/') > -1;
-    var ipc;
-    var appName;
-    var appVersion;
-
-    if (isNode) {
-        ipc = require('electron').ipcRenderer;
-        appName = ipc.sendSync('getName');
-        appVersion = ipc.sendSync('getVersion');
-    } else {
-        appName = 'Numpad';
-        appVersion = 'Web Demo';
-    }
-
     // localStorage
     const ls = {
         get: (key) => JSON.parse(localStorage.getItem(key)),
         set: (key, value) => localStorage.setItem(key, JSON.stringify(value))
     };
 
+    var userAgent = navigator.userAgent.toLowerCase();
+    var isNode = userAgent.indexOf(' electron/') > -1;
+
+    var ipc = isNode ? require('electron').ipcRenderer : null;
+    var appName = isNode ? ipc.sendSync('getName') : 'Numpad';
+    var appVersion = isNode ? ipc.sendSync('getVersion') : 'Web';
+
     document.title = appName;
-
-    // App default settings
-    const defaultSettings = {
-        currencies: true,
-        dateFormat: 'l',
-        inputWidth: 50,
-        lineErrors: true,
-        lineNumbers: true,
-        lineWrap: true,
-        plotClosed: false,
-        plotGridLines: false,
-        plotTipLines: false,
-        precision: '4',
-        resizable: true,
-        fontSize: '1.1rem',
-        fontWeight: '400',
-        thouSep: true
-    };
-
-    Object.freeze(defaultSettings);
-
-    // Initiate app settings
-    if (!ls.get('settings')) ls.set('settings', defaultSettings);
-    if (!ls.get('theme')) ls.set('theme', 'light');
-
-    // Check settings for property changes
-    let initSettings = ls.get('settings');
-    var newSettings = {};
-    for (var [p, v] of Object.entries(defaultSettings)) {
-        newSettings[p] = p in initSettings ? initSettings[p] : defaultSettings[p];
-        ls.set('settings', newSettings);
-    }
 
     // Set headers
     if (isNode) {
@@ -69,13 +29,13 @@ const $ = (id) => document.getElementById(id);
             $('header-mac').remove();
             $('header-win').style.display = 'block';
             $('header-win-title').innerHTML = appName;
-
+    
             if (ipc.sendSync('isNormal')) $('unmax').style.display = 'none';
             if (ipc.sendSync('isMaximized')) $('max').style.display = 'none';
             ipc.on('fullscreen', (event, isFullscreen) => {
                 if (isFullscreen) $('max').click();
             });
-
+    
             $('winButtons').addEventListener('click', (e) => {
                 switch (e.target.id) {
                     case 'min':
@@ -108,20 +68,43 @@ const $ = (id) => document.getElementById(id);
         $('header-mac-title').innerHTML = appName;
     }
 
-    // Load last calculations
-    $('input').value = ls.get('input');
+    // App default settings
+    const defaultSettings = {
+        currencies: true,
+        dateFormat: 'l',
+        fontSize: '1.1rem',
+        fontWeight: '400',
+        inputWidth: 50,
+        lineErrors: true,
+        lineNumbers: true,
+        lineWrap: true,
+        plotClosed: false,
+        plotGridLines: false,
+        plotTipLines: false,
+        precision: '4',
+        resizable: true,
+        thouSep: true
+    };
 
-    // Apply theme and settings
-    feather.replace();
-    applyTheme();
-    applySettings();
+    Object.freeze(defaultSettings);
+
+    // Initiate app settings
+    if (!ls.get('settings')) ls.set('settings', defaultSettings);
+    if (!ls.get('theme')) ls.set('theme', 'light');
+
+    // Check settings for property changes
+    var settings;
+    var initSettings = ls.get('settings');
+    var newSettings = {};
+    for (var [p, v] of Object.entries(defaultSettings)) {
+        newSettings[p] = p in initSettings ? initSettings[p] : defaultSettings[p];
+        ls.set('settings', newSettings);
+    }
 
     function applyTheme() {
         var theme = ls.get('theme');
         $('style').setAttribute('href', theme == 'dark' ? 'dark.css' : 'light.css');
     }
-
-    var settings;
 
     function applySettings() {
         settings = ls.get('settings');
@@ -144,6 +127,14 @@ const $ = (id) => document.getElementById(id);
 
         calculate();
     }
+
+    // Load last calculations
+    $('input').value = ls.get('input');
+
+    // Apply theme and settings
+    feather.replace();
+    applyTheme();
+    applySettings();
 
     document.addEventListener('DOMContentLoaded', () => {
         $('input').focus();
@@ -174,7 +165,6 @@ const $ = (id) => document.getElementById(id);
         });
 
         // Exchange rates
-        math.createUnit('USD');
         if (settings.currencies) getRates();
 
         function getRates() {
@@ -187,9 +177,7 @@ const $ = (id) => document.getElementById(id);
                         createRateUnits();
                         $('lastUpdated').innerHTML = ls.get('rateDate');
                         showMsg('Updated exchange rates');
-                    }).catch((error) => {
-                        showMsg('Failed to get exchange rates');
-                    });
+                    }).catch((error) => showMsg('Failed to get exchange rates'));
             } else {
                 showMsg('No internet connection');
             }
@@ -197,8 +185,14 @@ const $ = (id) => document.getElementById(id);
 
         function createRateUnits() {
             var data = ls.get('rates');
+            var dups = ['cup'];
+            math.createUnit('USD', {
+                aliases: ['usd']
+            });
             Object.keys(data).map(currency => {
-                math.createUnit(data[currency].code, math.unit(data[currency].inverseRate, 'USD'), {
+                math.createUnit(data[currency].code, {
+                    definition: math.unit(data[currency].inverseRate + 'USD'),
+                    aliases: [dups.includes(data[currency].code.toLowerCase()) ? '' : data[currency].code.toLowerCase()],
                     override: true
                 });
                 ls.set('rateDate', data[currency].date);
@@ -372,7 +366,7 @@ const $ = (id) => document.getElementById(id);
                     settings.precision = $('precisionRange').value;
                     settings.dateFormat = $('dateFormat').value;
                     settings.thouSep = $('thouSepButton').checked;
-                    
+
                     if (!settings.currencies & $('currencyButton').checked) {
                         getRates();
                     } else if (!$('currencyButton').checked) {
@@ -677,4 +671,58 @@ const $ = (id) => document.getElementById(id);
             if (!iso()) $('openButton').click();
         });
     });
+
+    var demo = '# In addition to all math.js features you can do:\n' +
+    '# Subtotal all numbers in a block\n' +
+    '3+5\n' +
+    '8*2\n' +
+    'subtotal\n' +
+    '\n' +
+    '# Total everything up to this point\n' +
+    'total\n' +
+    '\n' +
+    '# Average everything up to this point\n' +
+    'avg\n' +
+    '\n' +
+    '# Dates & Times\n' +
+    'today\n' +
+    'today + 1 day + 2 weeks\n' +
+    'today + 3 days\n' +
+    'today - 2 weeks\n' +
+    'today + 5 years\n' +
+    '5/8/2019 + 1 week\n' +
+    'May 8, 2019 - 2 months\n' +
+    '\n' +
+    'now\n' +
+    'now + 2 hours\n' +
+    'now + 48 hours\n' +
+    'ans + 30 minutes\n' +
+    '\n' +
+    '# ans token\n' +
+    'ans + 5 days\n' +
+    '2+2\n' +
+    'ans * 5\n' +
+    '\n' +
+    '# line# token\n' +
+    'line30 * 5 / 2\n' +
+    'line28 + 10 days\n' +
+    '\n' +
+    '# Percentages\n' +
+    '5% of 100\n' +
+    '100 + 5%\n' +
+    '100 + 25%%4 + 1\n' +
+    '100 + 20% of 100 + 10%3 - 10%\n' +
+    '(100 + 20%)% of 80 + 10%3 - 10%\n' +
+    '120% of 80 + (10%3 - 10%)\n' +
+    'line29% of 80\n' +
+    'line30 - ans%\n' +
+    'line39 + line38%\n' +
+    '\n' +
+    '# Currencies (data from floatrates.com)\n' +
+    '1 USD to EUR\n' +
+    '25 EUR to CAD\n' +
+    '\n' +
+    '# Plot functions\n' +
+    'f(x) = sin(x)\n' +
+    'f(x) = 2x^2 + 3x -5\n';
 })();
