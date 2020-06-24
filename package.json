@@ -14,10 +14,10 @@
     "devDependencies": {
         "clean-css-cli": "^4.3.0",
         "cpy-cli": "^3.1.1",
-        "electron": "^9.0.4",
+        "electron": "^9.0.5",
         "electron-builder": "^22.7.0",
         "feather-icons": "^4.28.0",
-        "mathjs": "^7.0.1",
+        "mathjs": "^7.0.2",
         "moment": "^2.27.0",
         "mousetrap": "^1.6.5",
         "ncp": "^2.0.0",
