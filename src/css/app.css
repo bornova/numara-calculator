@@ -366,7 +366,7 @@ text {
 }
 
 .dateFormat {
-    padding-left: 8px;
+    padding-left: 18px;
 }
 
 .divider {
@@ -388,7 +388,7 @@ text {
 }
 
 .lastUpdated {
-    display: block;
+    display: inline-block;
     font-size: 0.9rem;
     margin-right: 3px
 }

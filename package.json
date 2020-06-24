@@ -1,9 +1,9 @@
 {
     "name": "numpad",
     "productName": "Numpad",
-    "version": "3.1.5",
+    "version": "3.1.4",
     "description": "Numpad Calculator",
-    "main": "main.js",
+    "main": "src/js/main.js",
     "scripts": {
         "dev": "npm run build && electron .",
         "dist": "npm run build && electron-builder",
@@ -14,10 +14,10 @@
     "devDependencies": {
         "clean-css-cli": "^4.3.0",
         "cpy-cli": "^3.1.1",
-        "electron": "^9.0.5",
+        "electron": "^9.0.4",
         "electron-builder": "^22.7.0",
         "feather-icons": "^4.28.0",
-        "mathjs": "^7.0.2",
+        "mathjs": "^7.0.1",
         "moment": "^2.27.0",
         "mousetrap": "^1.6.5",
         "ncp": "^2.0.0",
@@ -47,7 +47,7 @@
         },
         "files": [
             "docs",
-            "main.js"
+            "src/js/main.js"
         ]
     }
 }
