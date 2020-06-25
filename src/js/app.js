@@ -212,6 +212,13 @@ const $ = (id) => document.getElementById(id);
         }).show();
     }
 
+    var savedCount = () => Object.keys(ls.get('saved') || {}).length;
+    var updateSavedCount = () => UIkit.tooltip('#openButton', {
+        title: 'Open (' + savedCount() + ')'
+    });
+    updateSavedCount();
+    $('openButton').className = savedCount() > 0 ? 'action' : 'noAction';
+
     // App button actions
     $('actions').addEventListener('click', (e) => {
         switch (e.target.id) {
@@ -254,7 +261,7 @@ const $ = (id) => document.getElementById(id);
                 }
                 break;
             case 'openButton': // Open saved calculations
-                showModal('#dialog-open');
+                if (Object.keys(ls.get('saved') || {}).length > 0) showModal('#dialog-open');
                 break;
             case 'undoButton': // Undo action
                 $('input').value = ls.get('undoData');
@@ -312,6 +319,8 @@ const $ = (id) => document.getElementById(id);
                 obj[id] = [title, data];
                 ls.set('saved', obj);
                 UIkit.modal('#dialog-save').hide();
+                $('openButton').className = 'action';
+                updateSavedCount();
                 showMsg('Saved');
                 break;
             case 'dialog-open-deleteAll': // Delete all saved calculations
@@ -460,7 +469,9 @@ const $ = (id) => document.getElementById(id);
         } else {
             $('dialog-open-deleteAll').disabled = true;
             $('dialog-open-body').innerHTML = 'No saved calculations.';
+            $('openButton').className = 'noAction';
         }
+        updateSavedCount();
     }
 
     // Initiate settings dialog
