@@ -624,51 +624,49 @@ const $ = (id) => document.getElementById(id);
      * Modified by Timur Atalay
      */
 
-    (() => {
-        var names = {};
-        var scroll = () => {
-            var elems = document.getElementsByName('sync');
-            var i, j, el, found, name;
-            var scrollSync = (el, name) => {
-                el.addEventListener('scroll', el.syn = () => {
-                    var elems = names[name];
-                    var scrollY = el.scrollTop;
-                    var yRate = scrollY / (el.scrollHeight - el.clientHeight);
-                    var updateY = scrollY != el.eY;
+    var names = {};
+    var scroll = () => {
+        var elems = document.getElementsByName('sync');
+        var i, j, el, found, name;
+        var scrollSync = (el, name) => {
+            el.addEventListener('scroll', el.syn = () => {
+                var elems = names[name];
+                var scrollY = el.scrollTop;
+                var yRate = scrollY / (el.scrollHeight - el.clientHeight);
+                var updateY = scrollY != el.eY;
 
-                    el.eY = scrollY;
-                    for (i in elems) {
-                        var otherEl = elems[i++];
-                        if (otherEl != el) {
-                            if (updateY && Math.round(otherEl.scrollTop - (scrollY = otherEl.eY = Math.round(yRate * (otherEl.scrollHeight - otherEl.clientHeight))))) {
-                                otherEl.scrollTop = scrollY;
-                            }
+                el.eY = scrollY;
+                for (i in elems) {
+                    var otherEl = elems[i++];
+                    if (otherEl != el) {
+                        if (updateY && Math.round(otherEl.scrollTop - (scrollY = otherEl.eY = Math.round(yRate * (otherEl.scrollHeight - otherEl.clientHeight))))) {
+                            otherEl.scrollTop = scrollY;
                         }
                     }
-                }, 0);
-            };
-
-            for (i = 0; i < elems.length;) {
-                found = j = 0;
-                el = elems[i++];
-                if (!(name = el.getAttribute('name'))) continue;
-
-                el = el.scroller || el;
-                for (j in (names[name] = names[name] || [])) found |= names[name][j++] == el;
-
-                if (!found) names[name].push(el);
-
-                el.eX = el.eY = 0;
-                scrollSync(el, name);
-            }
+                }
+            }, 0);
         };
 
-        if (document.readyState == 'complete') {
-            scroll();
-        } else {
-            window.addEventListener('load', scroll, 0);
+        for (i = 0; i < elems.length;) {
+            found = j = 0;
+            el = elems[i++];
+            if (!(name = el.getAttribute('name'))) continue;
+
+            el = el.scroller || el;
+            for (j in (names[name] = names[name] || [])) found |= names[name][j++] == el;
+
+            if (!found) names[name].push(el);
+
+            el.eX = el.eY = 0;
+            scrollSync(el, name);
         }
-    })();
+    };
+
+    if (document.readyState == 'complete') {
+        scroll();
+    } else {
+        window.addEventListener('load', scroll, 0);
+    }
 
     // Mousetrap
     var iso = () => document.getElementsByClassName('uk-open').length > 0;
