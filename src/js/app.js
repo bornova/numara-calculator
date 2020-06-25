@@ -96,10 +96,10 @@ const $ = (id) => document.getElementById(id);
     var settings;
     var initSettings = ls.get('settings');
     var newSettings = {};
-    for (var [p, v] of Object.entries(defaultSettings)) {
+    Object.entries(defaultSettings).map(([p, v]) => {
         newSettings[p] = p in initSettings ? initSettings[p] : defaultSettings[p];
         ls.set('settings', newSettings);
-    }
+    });
 
     function applyTheme() {
         var theme = ls.get('theme');
@@ -144,7 +144,7 @@ const $ = (id) => document.getElementById(id);
     var panel = handle.closest('.panel');
     var resize = panel.querySelector('.resize');
 
-    $('handle').addEventListener('mousedown', (e) => isResizing = e.target === handle);
+    $('handle').addEventListener('mousedown', (e) => isResizing = e.target == handle);
     $('panel').addEventListener('mouseup', (e) => isResizing = false);
     $('panel').addEventListener('mousemove', (e) => {
         var offset = $('lineNo').style.display == 'block' ? 54 : 30;
@@ -250,7 +250,7 @@ const $ = (id) => document.getElementById(id);
                 }
                 break;
             case 'saveButton': // Save calcualtions
-                if ($('input').value !== '') {
+                if ($('input').value != '') {
                     $('saveTitle').value = '';
                     showModal('#dialog-save');
                     $('saveTitle').focus();
@@ -308,7 +308,7 @@ const $ = (id) => document.getElementById(id);
             case 'dialog-save-save': // Save calculation
                 var obj = ls.get('saved') || {};
                 var id = moment().format('x');
-                var title = $('saveTitle').value.replace(/<|>/g, '') || 'No title';
+                var title = $('saveTitle').value.replace(/<|>/g, '').trim() || 'No title';
                 var data = $('input').value;
 
                 obj[id] = [title, data];
@@ -322,6 +322,7 @@ const $ = (id) => document.getElementById(id);
                 confirm('All saved calculations will be deleted.', () => {
                     localStorage.removeItem('saved');
                     populateSaved();
+                    UIkit.modal('#dialog-open').hide();
                 });
                 break;
             case 'darkModeButton': // Set theme
@@ -444,15 +445,15 @@ const $ = (id) => document.getElementById(id);
 
     function populateSaved() {
         var obj = ls.get('saved') || {};
-        var savedItems = Object.keys(obj);
+        var savedItems = Object.entries(obj);
         $('dialog-open-body').innerHTML = '';
         if (savedItems.length > 0) {
             $('dialog-open-deleteAll').disabled = false;
-            savedItems.map(id => {
+            savedItems.map(([id, val]) => {
                 $('dialog-open-body').innerHTML += `
                         <div class="dialog-open-wrapper" id="${id}">
                             <div data-action="load">
-                                <div class="dialog-open-title">${obj[id][0]}</div>
+                                <div class="dialog-open-title">${val[0]}</div>
                                 <div class="dialog-open-date">${moment(Number(id)).format('lll')}</div>
                             </div>
                             <div class="dialog-open-delete" data-action="delete">&#10005;</div>
@@ -500,7 +501,7 @@ const $ = (id) => document.getElementById(id);
 
     // Help dialog content
     $('searchBox').addEventListener('input', (e) => {
-        var str = $('searchBox').value;
+        var str = $('searchBox').value.trim();
         if (str.trim()) {
             try {
                 $('searchResults').innerHTML = '';
@@ -650,18 +651,16 @@ const $ = (id) => document.getElementById(id);
     })();
 
     // Mousetrap
-    var iso = () => document.getElementsByClassName('uk-open').length > 0;
-    Mousetrap.bind(['command+d', 'ctrl+d'], () => {
-        if (!iso()) $('clearButton').click();
-    });
-    Mousetrap.bind(['command+p', 'ctrl+p'], () => {
-        if (!iso()) $('printButton').click();
-    });
-    Mousetrap.bind(['command+s', 'ctrl+s'], () => {
-        if (!iso()) $('saveButton').click();
-    });
-    Mousetrap.bind(['command+o', 'ctrl+o'], () => {
-        if (!iso()) $('openButton').click();
+    var traps = {
+        'clearButton': ['command+d', 'ctrl+d'],
+        'printButton': ['command+p', 'ctrl+p'],
+        'saveButton': ['command+s', 'ctrl+s'],
+        'openButton': ['command+o', 'ctrl+o']
+    };
+    Object.entries(traps).map(([b, c]) => {
+        Mousetrap.bind(c, () => {
+            if (document.getElementsByClassName('uk-open').length === 0) $(b).click();
+        });
     });
 
     // Demo input
