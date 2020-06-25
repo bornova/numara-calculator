@@ -112,7 +112,6 @@ ipcMain.on('isNormal', (event) => event.returnValue = win.isNormal());
 ipcMain.on('isMaximized', (event) => event.returnValue = win.isMaximized());
 ipcMain.on('getName', (event) => event.returnValue = app.name);
 ipcMain.on('getVersion', (event) => event.returnValue = app.getVersion());
-ipcMain.on('isWindows', (event) => event.returnValue = is.windows);
 ipcMain.on('print', (event) => {
     win.webContents.print({}, (success) => {
         var result = success ? 'Sent to printer' : 'Print cancelled';

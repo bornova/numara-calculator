@@ -14,9 +14,10 @@ const $ = (id) => document.getElementById(id);
         set: (key, value) => localStorage.setItem(key, JSON.stringify(value))
     };
 
-    // Is Node?
+    // User agent
     var userAgent = navigator.userAgent.toLowerCase();
-    var isNode = userAgent.indexOf(' electron/') > -1;
+    var isNode = userAgent.includes('electron');
+    var isWin = userAgent.includes('win');
 
     var ipc = isNode ? require('electron').ipcRenderer : null;
     var appName = isNode ? ipc.sendSync('getName') : 'Numpad';
@@ -27,44 +28,38 @@ const $ = (id) => document.getElementById(id);
     $('dialog-about-appVersion').innerHTML = 'Version ' + appVersion;
 
     // Set headers
-    if (isNode) {
-        if (ipc.sendSync('isWindows')) {
-            $('header-mac').remove();
-            $('header-win').style.display = 'block';
-            $('header-win-title').innerHTML = appName;
+    if (isNode && isWin) {
+        $('header-mac').remove();
+        $('header-win').style.display = 'block';
+        $('header-win-title').innerHTML = appName;
 
-            if (ipc.sendSync('isNormal')) $('unmax').style.display = 'none';
-            if (ipc.sendSync('isMaximized')) $('max').style.display = 'none';
-            ipc.on('fullscreen', (event, isFullscreen) => {
-                if (isFullscreen) $('max').click();
-            });
+        if (ipc.sendSync('isNormal')) $('unmax').style.display = 'none';
+        if (ipc.sendSync('isMaximized')) $('max').style.display = 'none';
+        ipc.on('fullscreen', (event, isFullscreen) => {
+            if (isFullscreen) $('max').click();
+        });
 
-            $('winButtons').addEventListener('click', (e) => {
-                switch (e.target.id) {
-                    case 'min':
-                        ipc.send('minimize');
-                        break;
-                    case 'max':
-                        ipc.send('maximize');
-                        $('unmax').style.display = 'block';
-                        $('max').style.display = 'none';
-                        break;
-                    case 'unmax':
-                        ipc.send('unmaximize');
-                        $('unmax').style.display = 'none';
-                        $('max').style.display = 'block';
-                        break;
-                    case 'close':
-                        ipc.send('close');
-                        break;
-                }
-                e.stopPropagation();
-            });
-        } else {
-            $('header-win').remove();
-            $('header-mac').style.display = 'block';
-            $('header-mac-title').innerHTML = appName;
-        }
+        $('winButtons').addEventListener('click', (e) => {
+            switch (e.target.id) {
+                case 'min':
+                    ipc.send('minimize');
+                    break;
+                case 'max':
+                    ipc.send('maximize');
+                    $('unmax').style.display = 'block';
+                    $('max').style.display = 'none';
+                    break;
+                case 'unmax':
+                    ipc.send('unmaximize');
+                    $('unmax').style.display = 'none';
+                    $('max').style.display = 'block';
+                    break;
+                case 'close':
+                    ipc.send('close');
+                    break;
+            }
+            e.stopPropagation();
+        });
     } else {
         $('header-win').remove();
         $('header-mac').style.display = 'block';
@@ -143,11 +138,11 @@ const $ = (id) => document.getElementById(id);
     $('input').dispatchEvent(new CustomEvent('scroll'));
 
     // Panel resizer
+    var resizeDelay;
+    var isResizing = false;
     var handle = document.querySelector('.handle');
     var panel = handle.closest('.panel');
     var resize = panel.querySelector('.resize');
-    var isResizing = false;
-    var resizeDelay;
 
     $('handle').addEventListener('mousedown', (e) => isResizing = e.target === handle);
     $('panel').addEventListener('mouseup', (e) => isResizing = false);
@@ -268,7 +263,6 @@ const $ = (id) => document.getElementById(id);
                 $('undoButton').style.visibility = 'hidden';
                 calculate();
                 break;
-
             case 'settingsButton': // Open settings dialog
                 showModal('#dialog-settings');
                 break;
@@ -329,7 +323,6 @@ const $ = (id) => document.getElementById(id);
                     populateSaved();
                 });
                 break;
-
             case 'darkModeButton': // Set theme
                 ls.set('theme', $('darkModeButton').checked ? 'dark' : 'light');
                 if (isNode) ipc.send('darkMode', $('darkModeButton').checked);
@@ -376,7 +369,6 @@ const $ = (id) => document.getElementById(id);
                 settings.lineWrap = $('lineWrapButton').checked;
                 settings.lineErrors = $('lineErrorButton').checked;
                 settings.resizable = $('resizeButton').checked;
-
                 settings.precision = $('precisionRange').value;
                 settings.dateFormat = $('dateFormat').value;
                 settings.thouSep = $('thouSepButton').checked;
@@ -567,9 +559,7 @@ const $ = (id) => document.getElementById(id);
                 graphType: 'polyline',
                 closed: settings.plotClosed
             }],
-            plugins: [
-                functionPlot.plugins.zoomBox()
-            ]
+            plugins: [functionPlot.plugins.zoomBox()]
         });
     }
 
