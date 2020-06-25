@@ -658,7 +658,8 @@ const $ = (id) => document.getElementById(id);
         'openButton': ['command+o', 'ctrl+o']
     };
     Object.entries(traps).map(([b, c]) => {
-        Mousetrap.bind(c, () => {
+        Mousetrap.bind(c, (e) => {
+            e.preventDefault();
             if (document.getElementsByClassName('uk-open').length === 0) $(b).click();
         });
     });
