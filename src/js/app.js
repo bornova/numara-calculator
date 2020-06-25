@@ -15,13 +15,12 @@ const $ = (id) => document.getElementById(id);
     };
 
     // User agent
-    var userAgent = navigator.userAgent.toLowerCase();
-    var isNode = userAgent.includes('electron');
-    var isWin = userAgent.includes('win');
+    var isWin = navigator.userAgent.toLowerCase().includes('win');
+    var isNode = navigator.userAgent.toLowerCase().includes('electron');
 
     var ipc = isNode ? require('electron').ipcRenderer : null;
     var appName = isNode ? ipc.sendSync('getName') : 'Numpad';
-    var appVersion = isNode ? ipc.sendSync('getVersion') : 'Web';
+    var appVersion = isNode ? ipc.sendSync('getVersion') : ' - Web';
 
     document.title = appName;
     $('dialog-about-title').innerHTML = appName + ' Calculator';
@@ -69,7 +68,7 @@ const $ = (id) => document.getElementById(id);
     // Load last calculations
     $('input').value = ls.get('input');
 
-    // App default settings
+    // App settings
     const defaultSettings = {
         currencies: true,
         dateFormat: 'l',
