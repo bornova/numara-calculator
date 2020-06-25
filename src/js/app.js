@@ -22,6 +22,7 @@ const $ = (id) => document.getElementById(id);
     var appName = isNode ? ipc.sendSync('getName') : 'Numpad';
     var appVersion = isNode ? ipc.sendSync('getVersion') : ' - Web';
 
+    // Set app info
     document.title = appName;
     $('dialog-about-title').innerHTML = appName + ' Calculator';
     $('dialog-about-appVersion').innerHTML = 'Version ' + appVersion;
@@ -87,7 +88,7 @@ const $ = (id) => document.getElementById(id);
     };
     Object.freeze(defaultSettings);
 
-    // Initiate app settings
+    // Initiate app settings and theme
     if (!ls.get('settings')) ls.set('settings', defaultSettings);
     if (!ls.get('theme')) ls.set('theme', 'light');
 
@@ -132,9 +133,9 @@ const $ = (id) => document.getElementById(id);
     applyTheme();
     applySettings();
 
+    // Prep input
     $('input').focus();
     $('input').addEventListener('input', calculate);
-    $('input').dispatchEvent(new CustomEvent('scroll'));
 
     // Panel resizer
     var resizeDelay;
@@ -168,16 +169,16 @@ const $ = (id) => document.getElementById(id);
     }
 
     function getRates() {
-        var url = 'https://www.floatrates.com/widget/00001030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json';
+        var url = 'https://www.floatrates.com/widget/1030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json';
         if (navigator.onLine) {
             fetch(url)
-                .then(response => response.json())
+                .then(rates => rates.json())
                 .then(data => {
                     ls.set('rates', data);
                     createRateUnits();
                     $('lastUpdated').innerHTML = ls.get('rateDate');
                     showMsg('Updated exchange rates');
-                }).catch((error) => showMsg('Failed to get exchange rates'));
+                }).catch((e) => showMsg('Failed to get exchange rates'));
         } else {
             showMsg('No internet connection');
         }
@@ -206,6 +207,7 @@ const $ = (id) => document.getElementById(id);
         }).show();
     }
 
+    // Update open button count
     var savedCount = () => Object.keys(ls.get('saved') || {}).length;
     var updateSavedCount = () => UIkit.tooltip('#openButton', {
         title: 'Open (' + savedCount() + ')'
@@ -372,7 +374,7 @@ const $ = (id) => document.getElementById(id);
                 settings.dateFormat = $('dateFormat').value;
                 settings.thouSep = $('thouSepButton').checked;
 
-                if (!settings.currencies & $('currencyButton').checked) {
+                if (!settings.currencies && $('currencyButton').checked) {
                     getRates();
                 } else if (!$('currencyButton').checked) {
                     localStorage.removeItem('rates');
@@ -612,9 +614,8 @@ const $ = (id) => document.getElementById(id);
      * 
      * Modified by Timur Atalay
      */
-
-    var names = {};
-    var scroll = () => {
+    (() => {
+        var names = {};
         var elems = document.getElementsByName('sync');
         var i, j, el, found, name;
         var scrollSync = (el, name) => {
@@ -640,22 +641,13 @@ const $ = (id) => document.getElementById(id);
             found = j = 0;
             el = elems[i++];
             if (!(name = el.getAttribute('name'))) continue;
-
             el = el.scroller || el;
             for (j in (names[name] = names[name] || [])) found |= names[name][j++] == el;
-
             if (!found) names[name].push(el);
-
             el.eX = el.eY = 0;
             scrollSync(el, name);
         }
-    };
-
-    if (document.readyState == 'complete') {
-        scroll();
-    } else {
-        window.addEventListener('load', scroll, 0);
-    }
+    })();
 
     // Mousetrap
     var iso = () => document.getElementsByClassName('uk-open').length > 0;
@@ -672,6 +664,7 @@ const $ = (id) => document.getElementById(id);
         if (!iso()) $('openButton').click();
     });
 
+    // Demo input
     var demo = '# In addition to all math.js features you can do:\n' +
         '# Subtotal all numbers in a block\n' +
         '3+5\n' +
@@ -684,18 +677,16 @@ const $ = (id) => document.getElementById(id);
         '# Average everything up to this point\n' +
         'avg\n' +
         '\n' +
+        'lineErrors\n' +
         '# Dates & Times\n' +
         'today\n' +
         'today + 1 day + 2 weeks\n' +
-        'today + 3 days\n' +
-        'today - 2 weeks\n' +
         'today + 5 years\n' +
         '5/8/2019 + 1 week\n' +
         'May 8, 2019 - 2 months\n' +
         '\n' +
         'now\n' +
         'now + 2 hours\n' +
-        'now + 48 hours\n' +
         'ans + 30 minutes\n' +
         '\n' +
         '# ans token\n' +
@@ -704,8 +695,7 @@ const $ = (id) => document.getElementById(id);
         'ans * 5\n' +
         '\n' +
         '# line# token\n' +
-        'line30 * 5 / 2\n' +
-        'line28 + 10 days\n' +
+        'line28 * 5 / 2\n' +
         '\n' +
         '# Percentages\n' +
         '5% of 100\n' +
@@ -714,9 +704,8 @@ const $ = (id) => document.getElementById(id);
         '100 + 20% of 100 + 10%3 - 10%\n' +
         '(100 + 20%)% of 80 + 10%3 - 10%\n' +
         '120% of 80 + (10%3 - 10%)\n' +
-        'line29% of 80\n' +
-        'line30 - ans%\n' +
-        'line39 + line38%\n' +
+        'line31% of 80\n' +
+        'line31 - ans%\n' +
         '\n' +
         '# Currencies (data from floatrates.com)\n' +
         '1 USD to EUR\n' +

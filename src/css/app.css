@@ -180,7 +180,7 @@ text {
 
 .inputPane {
     min-width: 100px;
-    margin-right: 10px;
+    padding-right: 10px;
 }
 
 .input {
@@ -189,10 +189,11 @@ text {
 
 .output {
     flex: 1;
-    min-width: 100px;
     font-weight: 400;
-    white-space: nowrap;
+    padding-left: 12px;
+    min-width: 100px;
     user-select: text;
+    white-space: nowrap;
 }
 
 .lineNo,
@@ -211,7 +212,7 @@ text {
     overflow-wrap: break-word;
 }
 
-.syncscroll {
+.panelFont {
     font-family: 'Roboto Mono', monospace;
     line-height: 28px;
 }
@@ -229,8 +230,7 @@ text {
 }
 
 .handle {
-    width: 4px;
-    margin-right: 12px;
+    width: 5px;
     cursor: ew-resize;
     flex: 0 0 auto;
 }
