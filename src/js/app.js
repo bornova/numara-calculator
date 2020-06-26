@@ -361,6 +361,9 @@ const $ = (id) => document.getElementById(id);
                     $('currencyUpdate').style.display = settings.currencies ? $('currencyButton').checked ? "block" : "none" : null;
                 }
                 break;
+            case 'resizeButton': // Enable currency rates
+                $('sizeReset').style.visibility = $('resizeButton').checked ? "visible" : "hidden";
+                break;
             case 'dialog-settings-save': // Save settings
                 ls.set('theme', $('darkModeButton').checked ? 'dark' : 'light');
                 if (isNode) ipc.send('darkMode', $('darkModeButton').checked);
@@ -479,6 +482,7 @@ const $ = (id) => document.getElementById(id);
         $('lineErrorButton').checked = settings.lineErrors;
         $('resizeButton').checked = settings.resizable;
         $('sizeReset').style.display = settings.inputWidth == defaultSettings.inputWidth ? 'none' : 'inline-block';
+        $('sizeReset').style.visibility = settings.resizable ? 'visible' : 'hidden';
         $('precisionRange').value = settings.precision;
         $('precision-label').innerHTML = settings.precision;
         $('dateFormat').innerHTML = `

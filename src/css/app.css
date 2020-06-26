@@ -375,7 +375,7 @@ text {
 
 .sizeReset {
     display: inline-block;
-    margin-left: 5px;
+    margin-right: 5px;
 }
 
 .sizeReset svg {
@@ -383,7 +383,7 @@ text {
     height: 14px;
     stroke: rgb(206, 108, 73);
     pointer-events: none;
-    margin-top: -2px;
+    margin-top: -4px;
 }
 
 .lastUpdated {
