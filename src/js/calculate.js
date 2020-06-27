@@ -28,6 +28,8 @@ function calculate() {
 
     scope.now = moment().format(settings.dateFormat + ' LT');
     scope.today = moment().format(settings.dateFormat);
+    scope.userAgent = navigator.userAgent;
+    scope.appVersion = navigator.appVersion;
 
     for (var i in lines) {
         var line = lines[i].trim();

@@ -180,7 +180,7 @@ const $ = (id) => document.getElementById(id);
                     showMsg('Updated exchange rates');
                 }).catch((e) => showMsg('Failed to get exchange rates'));
         } else {
-            showMsg('No internet connection');
+            showMsg('No internet connection.');
         }
     }
 
@@ -323,6 +323,7 @@ const $ = (id) => document.getElementById(id);
                     localStorage.removeItem('saved');
                     populateSaved();
                     UIkit.modal('#dialog-open').hide();
+                    showMsg('Deleted all saved calculations');
                 });
                 break;
             case 'darkModeButton': // Set theme
@@ -454,13 +455,13 @@ const $ = (id) => document.getElementById(id);
             $('dialog-open-deleteAll').disabled = false;
             savedItems.map(([id, val]) => {
                 $('dialog-open-body').innerHTML += `
-                        <div class="dialog-open-wrapper" id="${id}">
-                            <div data-action="load">
-                                <div class="dialog-open-title">${val[0]}</div>
-                                <div class="dialog-open-date">${moment(Number(id)).format('lll')}</div>
-                            </div>
-                            <div class="dialog-open-delete" data-action="delete">&#10005;</div>
+                    <div class="dialog-open-wrapper" id="${id}">
+                        <div data-action="load">
+                            <div class="dialog-open-title">${val[0]}</div>
+                            <div class="dialog-open-date">${moment(Number(id)).format('lll')}</div>
                         </div>
+                        <div class="dialog-open-delete" data-action="delete">&#10005;</div>
+                    </div>
                     `;
             });
         } else {
@@ -486,12 +487,12 @@ const $ = (id) => document.getElementById(id);
         $('precisionRange').value = settings.precision;
         $('precision-label').innerHTML = settings.precision;
         $('dateFormat').innerHTML = `
-                <option value="l">${moment().format('l')}</option>
-                <option value="L">${moment().format('L')}</option>
-                <option value="MMM DD, YYYY">${moment().format('MMM DD, YYYY')}</option>
-                <option value="ddd, l">${moment().format('ddd, l')}</option>
-                <option value="ddd, L">${moment().format('ddd, L')}</option>
-                <option value="ddd, MMM DD, YYYY">${moment().format('ddd, MMM DD, YYYY')}</option>
+            <option value="l">${moment().format('l')}</option>
+            <option value="L">${moment().format('L')}</option>
+            <option value="MMM DD, YYYY">${moment().format('MMM DD, YYYY')}</option>
+            <option value="ddd, l">${moment().format('ddd, l')}</option>
+            <option value="ddd, L">${moment().format('ddd, L')}</option>
+            <option value="ddd, MMM DD, YYYY">${moment().format('ddd, MMM DD, YYYY')}</option>
             `;
         $('dateFormat').value = settings.dateFormat;
         $('thouSepButton').checked = settings.thouSep;
@@ -506,18 +507,18 @@ const $ = (id) => document.getElementById(id);
     // Help dialog content
     $('searchBox').addEventListener('input', (e) => {
         var str = $('searchBox').value.trim();
-        if (str.trim()) {
+        if (str) {
             try {
                 $('searchResults').innerHTML = '';
                 var res = JSON.stringify(math.help(str).toJSON());
                 var obj = JSON.parse(res);
                 $('searchResults').innerHTML = `
-                        <div>Name:</div><div>${obj.name}</div>
-                        <div>Description:</div><div>${obj.description}</div>
-                        <div>Category:</div><div>${obj.category}</div>
-                        <div>Syntax:</div><div>${String(obj.syntax).split(',').join(', ')}</div>
-                        <div>Examples:</div><div>${String(obj.examples).split(',').join(', ')}</div>
-                        <div>Also see:</div><div>${String(obj.seealso).split(',').join(', ')}</div>
+                    <div>Name:</div><div>${obj.name}</div>
+                    <div>Description:</div><div>${obj.description}</div>
+                    <div>Category:</div><div>${obj.category}</div>
+                    <div>Syntax:</div><div>${String(obj.syntax).split(',').join(', ')}</div>
+                    <div>Examples:</div><div>${String(obj.examples).split(',').join(', ')}</div>
+                    <div>Also see:</div><div>${String(obj.seealso).split(',').join(', ')}</div>
                     `;
             } catch (error) {
                 $('searchResults').innerHTML = `No results for "${str}"`;
@@ -606,8 +607,8 @@ const $ = (id) => document.getElementById(id);
     function showMsg(msg) {
         $('msg').innerHTML = msg;
         $('msg').style.opacity = '1';
-        setTimeout(() => $('msg').style.opacity = '0', 2000);
-        setTimeout(() => $('msg').innerHTML = '', 2300);
+        setTimeout(() => $('msg').style.opacity = '0', 3000);
+        setTimeout(() => $('msg').innerHTML = '', 3500);
     }
 
     /**
@@ -656,10 +657,10 @@ const $ = (id) => document.getElementById(id);
 
     // Mousetrap
     var traps = {
-        'clearButton': ['command+d', 'ctrl+d'],
-        'printButton': ['command+p', 'ctrl+p'],
-        'saveButton': ['command+s', 'ctrl+s'],
-        'openButton': ['command+o', 'ctrl+o']
+        clearButton: ['command+d', 'ctrl+d'],
+        printButton: ['command+p', 'ctrl+p'],
+        saveButton: ['command+s', 'ctrl+s'],
+        openButton: ['command+o', 'ctrl+o']
     };
     Object.entries(traps).map(([b, c]) => {
         Mousetrap.bind(c, (e) => {
