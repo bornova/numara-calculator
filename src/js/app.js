@@ -7,6 +7,39 @@
 // Get element by id
 const $ = (id) => document.getElementById(id);
 
+// Codemirror
+CodeMirror.defineMode("numpad", () => {
+    return {
+        token: (stream, state) => {
+            if (stream.match(/\/\/.*/) || stream.match(/#.*/)) return "comment";
+            if (stream.match(/\d/)) return "number";
+            if (stream.match(/(?:\+|\-|\*|\/|,|;|\.|:|@|~|=|>|<|&|\||_|`|'|\^|\?|!|%)/)) return 'operator';
+
+            stream.eatWhile(/\w/);
+            try {
+                if (math.unit(stream.current()).units.length > 0) return "unit";
+            } catch (e) {}
+            try {
+                if (Object.getOwnPropertyNames(math[stream.current()]).includes('signatures')) return "function";
+            } catch (e) {}
+            if (stream.current().match(/\b(?:ans|total|subtotal|avg|today|now|line\d+)\b/)) return "scope";
+            stream.next();
+            return "text";
+        }
+    };
+});
+
+CodeMirror.defineMode("plain", () => {
+    return {
+        token: (stream, state) => {
+            stream.next();
+            return "text";
+        }
+    };
+});
+
+var cm = CodeMirror.fromTextArea($('input'));
+
 (() => {
     // localStorage
     const ls = {
@@ -66,11 +99,14 @@ const $ = (id) => document.getElementById(id);
         $('header-mac-title').innerHTML = appName;
     }
 
+    document.getElementsByClassName('CodeMirror-scroll')[0].setAttribute('name', 'sync');
+
     // Load last calculations
-    $('input').value = ls.get('input');
+    cm.setValue(ls.get('input') || '');
 
     // App settings
     const defaultSettings = {
+        bigNumber: false,
         currencies: true,
         dateFormat: 'l',
         fontSize: '1.1rem',
@@ -84,13 +120,14 @@ const $ = (id) => document.getElementById(id);
         plotTipLines: false,
         precision: '4',
         resizable: true,
+        syntax: true,
+        theme: 'light',
         thouSep: true
     };
     Object.freeze(defaultSettings);
 
     // Initiate app settings and theme
     if (!ls.get('settings')) ls.set('settings', defaultSettings);
-    if (!ls.get('theme')) ls.set('theme', 'light');
 
     // Check settings for property changes
     var settings;
@@ -101,41 +138,40 @@ const $ = (id) => document.getElementById(id);
         ls.set('settings', newSettings);
     });
 
-    function applyTheme() {
-        var theme = ls.get('theme');
-        $('style').setAttribute('href', theme == 'dark' ? 'dark.css' : 'light.css');
-    }
-
     function applySettings() {
         settings = ls.get('settings');
+        $('style').setAttribute('href', settings.theme == 'light' ? 'light.css' : 'dark.css');
 
-        var theme = ls.get('theme');
-        $('style').setAttribute('href', theme == 'dark' ? 'dark.css' : 'light.css');
-        $('input').setAttribute('wrap', settings.lineWrap ? 'on' : 'off');
-
-        var elements = document.getElementsByName('sync');
+        var elements = document.getElementsByClassName('panelFont');
         for (var el of elements) {
             el.style.fontSize = settings.fontSize;
             el.style.fontWeight = settings.fontWeight;
         }
 
+        math.config({
+            number: settings.bigNumber ? 'BigNumber' : 'number'
+        });
+
         $('lineNo').style.display = settings.lineNumbers ? 'block' : 'none';
-        $('inputPane').style.width = settings.resizable ? settings.inputWidth + '%' : defaultSettings.inputWidth;
+        $('inputPane').style.width = (settings.resizable ? settings.inputWidth : defaultSettings.inputWidth) + '%';
         $('inputPane').style.marginLeft = settings.lineNumbers ? '0px' : '18px';
         $('output').style.textAlign = settings.resizable ? 'left' : 'right';
         $('handle').style.display = settings.resizable ? 'block' : 'none';
 
+        cm.setOption('mode', settings.syntax ? 'numpad' : 'plain');
+        cm.setOption('lineWrapping', settings.lineWrap);
+        cm.refresh();
         calculate();
     }
 
     // Apply theme and settings
     feather.replace();
-    applyTheme();
     applySettings();
 
     // Prep input
-    $('input').focus();
-    $('input').addEventListener('input', calculate);
+    cm.focus();
+    cm.setCursor(cm.lineCount(), 0);
+    cm.on('change', calculate);
 
     // Panel resizer
     var resizeDelay;
@@ -147,7 +183,7 @@ const $ = (id) => document.getElementById(id);
     $('handle').addEventListener('mousedown', (e) => isResizing = e.target == handle);
     $('panel').addEventListener('mouseup', (e) => isResizing = false);
     $('panel').addEventListener('mousemove', (e) => {
-        var offset = $('lineNo').style.display == 'block' ? 54 : 30;
+        var offset = $('lineNo').style.display == 'block' ? 44 : 20;
         var pointerRelativeXpos = e.clientX - panel.offsetLeft - offset;
         var iWidth = pointerRelativeXpos / panel.clientWidth * 100;
         var inputWidth = iWidth < 0 ? 0 : iWidth > 100 ? 100 : iWidth;
@@ -156,7 +192,10 @@ const $ = (id) => document.getElementById(id);
             settings.inputWidth = inputWidth;
             ls.set('settings', settings);
             clearTimeout(resizeDelay);
-            resizeDelay = setTimeout(calculate, 20);
+            resizeDelay = setTimeout(() => {
+                calculate();
+                cm.refresh();
+            }, 10);
         }
     });
 
@@ -219,10 +258,10 @@ const $ = (id) => document.getElementById(id);
     $('actions').addEventListener('click', (e) => {
         switch (e.target.id) {
             case 'clearButton': // Clear board
-                if ($('input').value != '') {
-                    ls.set('undoData', $('input').value);
-                    $('input').value = '';
-                    $('input').focus();
+                if (cm.getValue() != '') {
+                    ls.set('undoData', cm.getValue());
+                    cm.setValue('');
+                    cm.focus();
                     calculate();
                     showMsg('Board cleared');
                     $('undoButton').style.visibility = 'visible';
@@ -230,7 +269,7 @@ const $ = (id) => document.getElementById(id);
                 break;
             case 'printButton': // Print calculations
                 UIkit.tooltip('#printButton').hide();
-                if ($('input').value != '') {
+                if (cm.getValue() != '') {
                     $('printLines').style.display = settings.lineNumbers ? 'block' : 'none';
                     $('printInput').style.width = settings.resizable ? settings.inputWidth : '50%';
                     $('printInput').style.marginLeft = settings.lineNumbers ? '0px' : '18px';
@@ -239,7 +278,7 @@ const $ = (id) => document.getElementById(id);
 
                     $('print-title').innerHTML = appName;
                     $('printLines').innerHTML = $('lineNo').innerHTML;
-                    $('printInput').innerHTML = $('input').value;
+                    $('printInput').innerHTML = cm.getValue();
                     $('printOutput').innerHTML = $('output').innerHTML;
                     if (isNode) {
                         ipc.send('print');
@@ -250,7 +289,7 @@ const $ = (id) => document.getElementById(id);
                 }
                 break;
             case 'saveButton': // Save calcualtions
-                if ($('input').value != '') {
+                if (cm.getValue() != '') {
                     $('saveTitle').value = '';
                     showModal('#dialog-save');
                     $('saveTitle').focus();
@@ -260,7 +299,7 @@ const $ = (id) => document.getElementById(id);
                 if (Object.keys(ls.get('saved') || {}).length > 0) showModal('#dialog-open');
                 break;
             case 'undoButton': // Undo action
-                $('input').value = ls.get('undoData');
+                cm.setValue(ls.get('undoData'));
                 $('undoButton').style.visibility = 'hidden';
                 calculate();
                 break;
@@ -309,7 +348,7 @@ const $ = (id) => document.getElementById(id);
                 var obj = ls.get('saved') || {};
                 var id = moment().format('x');
                 var title = $('saveTitle').value.replace(/<|>/g, '').trim() || 'No title';
-                var data = $('input').value;
+                var data = cm.getValue();
 
                 obj[id] = [title, data];
                 ls.set('saved', obj);
@@ -325,11 +364,6 @@ const $ = (id) => document.getElementById(id);
                     UIkit.modal('#dialog-open').hide();
                     showMsg('Deleted all saved calculations');
                 });
-                break;
-            case 'darkModeButton': // Set theme
-                ls.set('theme', $('darkModeButton').checked ? 'dark' : 'light');
-                if (isNode) ipc.send('darkMode', $('darkModeButton').checked);
-                applyTheme();
                 break;
             case 'defaultSettingsButton': // Revert back to default settings
                 confirm('All settings will revert back to defaults.', () => {
@@ -350,6 +384,9 @@ const $ = (id) => document.getElementById(id);
                     }
                 });
                 break;
+            case 'bigNumWarn':
+                showError('Using the BigNumber option will disable Plot functionality.<br><br><a target="_blank" href="https://mathjs.org/docs/datatypes/bignumbers.html">More information on BigNumbers</a>', 'BigNumber Limitations');
+                break;
             case 'sizeReset': // Reset panel size
                 settings.inputWidth = defaultSettings.inputWidth;
                 $('sizeReset').style.display = 'none';
@@ -366,9 +403,9 @@ const $ = (id) => document.getElementById(id);
                 $('sizeReset').style.visibility = $('resizeButton').checked ? "visible" : "hidden";
                 break;
             case 'dialog-settings-save': // Save settings
-                ls.set('theme', $('darkModeButton').checked ? 'dark' : 'light');
                 if (isNode) ipc.send('darkMode', $('darkModeButton').checked);
-
+                settings.theme = $('darkModeButton').checked ? 'dark' : 'light';
+                settings.syntax = $('syntaxButton').checked;
                 settings.fontSize = $('fontSize').value;
                 settings.fontWeight = $('fontWeight').value;
                 settings.lineNumbers = $('lineNoButton').checked;
@@ -376,6 +413,7 @@ const $ = (id) => document.getElementById(id);
                 settings.lineErrors = $('lineErrorButton').checked;
                 settings.resizable = $('resizeButton').checked;
                 settings.precision = $('precisionRange').value;
+                settings.bigNumber = $('bigNumberButton').checked;
                 settings.dateFormat = $('dateFormat').value;
                 settings.thouSep = $('thouSepButton').checked;
 
@@ -413,8 +451,8 @@ const $ = (id) => document.getElementById(id);
 
                 // Load demo
             case 'demoButton':
-                ls.set('undoData', $('input').value);
-                $('input').value = demo;
+                ls.set('undoData', cm.getValue());
+                cm.setValue(demo);
                 calculate();
                 $('undoButton').style.visibility = 'visible';
                 UIkit.modal('#dialog-help').hide();
@@ -428,8 +466,8 @@ const $ = (id) => document.getElementById(id);
         var saved = ls.get('saved');
         if (e.target.parentNode.getAttribute('data-action') == 'load') {
             pid = e.target.parentNode.parentNode.id;
-            ls.set('undoData', $('input').value);
-            $('input').value = saved[pid][1];
+            ls.set('undoData', cm.getValue());
+            cm.setValue(saved[pid][1]);
             calculate();
             $('undoButton').style.visibility = 'visible';
             UIkit.modal('#dialog-open').hide();
@@ -475,7 +513,8 @@ const $ = (id) => document.getElementById(id);
     // Initiate settings dialog
     UIkit.util.on('#setswitch', 'beforeshow', (e) => e.stopPropagation());
     UIkit.util.on('#dialog-settings', 'beforeshow', () => {
-        $('darkModeButton').checked = ls.get('theme') == 'dark' ? true : false;
+        $('darkModeButton').checked = settings.theme == 'dark' ? true : false;
+        $('syntaxButton').checked = settings.syntax;
         $('fontSize').value = settings.fontSize;
         $('fontWeight').value = settings.fontWeight;
         $('lineNoButton').checked = settings.lineNumbers;
@@ -486,6 +525,7 @@ const $ = (id) => document.getElementById(id);
         $('sizeReset').style.visibility = settings.resizable ? 'visible' : 'hidden';
         $('precisionRange').value = settings.precision;
         $('precision-label').innerHTML = settings.precision;
+        $('bigNumberButton').checked = settings.bigNumber;
         $('dateFormat').innerHTML = `
             <option value="l">${moment().format('l')}</option>
             <option value="L">${moment().format('L')}</option>
@@ -577,7 +617,10 @@ const $ = (id) => document.getElementById(id);
     window.addEventListener('resize', () => {
         if (activePlot && document.querySelector('#dialog-plot').classList.contains('uk-open')) plot();
         clearTimeout(windowResizeDelay);
-        windowResizeDelay = setTimeout(calculate, 100);
+        windowResizeDelay = setTimeout(() => {
+            calculate();
+            cm.refresh();
+        }, 10);
     });
 
     // Show confirmation dialog
@@ -663,7 +706,7 @@ const $ = (id) => document.getElementById(id);
         openButton: ['command+o', 'ctrl+o']
     };
     Object.entries(traps).map(([b, c]) => {
-        Mousetrap.bind(c, (e) => {
+        Mousetrap.bindGlobal(c, (e) => {
             e.preventDefault();
             if (document.getElementsByClassName('uk-open').length === 0) $(b).click();
         });

@@ -159,3 +159,31 @@ text {
     border-color: #e5e5e5;
     color: #999;
 }
+
+.cm-unit {
+    color: #005cc5 !important;
+}
+
+.cm-scope {
+    color: #be6317 !important;
+}
+
+.cm-number {
+    color: #333 !important;
+}
+
+.cm-operator {
+    color: #888888 !important;
+}
+
+.cm-comment {
+    color: #57805a !important;
+}
+
+.cm-function {
+    color: #6f42c1 !important;
+}
+
+.cm-text {
+    color: #333333 !important;
+}

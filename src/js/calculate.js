@@ -8,7 +8,7 @@
 function calculate() {
     var solve = math.evaluate;
     var settings = JSON.parse(localStorage.getItem('settings'));
-    var input = $('input').value;
+    var input = cm.getValue();
     var lines = input.split('\n');
     var lineIndex = 1;
     var lineNos = [];
@@ -28,8 +28,6 @@ function calculate() {
 
     scope.now = moment().format(settings.dateFormat + ' LT');
     scope.today = moment().format(settings.dateFormat);
-    scope.userAgent = navigator.userAgent;
-    scope.appVersion = navigator.appVersion;
 
     for (var i in lines) {
         var line = lines[i].trim();
@@ -76,6 +74,7 @@ function calculate() {
                     var b = answer.replace(a, '');
                     answer = !a.includes('e') && !isNaN(a) ?
                         settings.thouSep ? Number(a).toLocaleString(undefined, digits) + b : parseFloat(Number(a).toFixed(settings.precision)) + b :
+                        a.includes('e') ? parseFloat(Number(a.split('e')[0]).toFixed(settings.precision)) + 'e' + answer.split('e')[1] + b :
                         strip(answer);
 
                     if (answer.match(/\w\(x\)/)) {
@@ -118,7 +117,7 @@ function calculate() {
     $('printButton').className = input === '' ? 'noAction' : 'action';
     $('saveButton').className = input === '' ? 'noAction' : 'action';
 
-    localStorage.setItem('input', JSON.stringify($('input').value));
+    localStorage.setItem('input', JSON.stringify(cm.getValue()));
     $('undoButton').style.visibility = 'hidden';
 
     function strip(s) {

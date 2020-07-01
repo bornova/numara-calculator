@@ -1,11 +1,11 @@
 {
     "name": "numpad",
     "productName": "Numpad",
-    "version": "3.1.8",
+    "version": "4.0.0",
     "description": "Numpad Calculator",
     "main": "src/js/main.js",
     "scripts": {
-        "build": "del-cli docs && cpy src/index.html docs && ncp src/assets docs/assets && terser node_modules/uikit/dist/js/uikit.min.js node_modules/feather-icons/dist/feather.min.js node_modules/mathjs/dist/math.min.js node_modules/moment/min/moment.min.js node_modules/mousetrap/mousetrap.min.js src/js/d3.js src/js/plot.js src/js/calculate.js src/js/app.js -c -m -o docs/numpad.js && cleancss -o docs/numpad.css node_modules/uikit/dist/css/uikit.min.css src/css/app.css src/css/print.css && cleancss -o docs/light.css src/css/light.css && cleancss -o docs/dark.css src/css/dark.css",
+        "build": "del-cli docs && cpy src/index.html docs && ncp src/assets docs/assets && terser node_modules/uikit/dist/js/uikit.min.js node_modules/feather-icons/dist/feather.min.js node_modules/mathjs/dist/math.min.js node_modules/moment/min/moment.min.js node_modules/mousetrap/mousetrap.min.js node_modules/mousetrap-global-bind/mousetrap-global-bind.min.js node_modules/codemirror/lib/codemirror.js src/js/d3.js src/js/plot.js src/js/calculate.js src/js/app.js -c -m -o docs/numpad.js && cleancss -o docs/numpad.css node_modules/uikit/dist/css/uikit.min.css node_modules/codemirror/lib/codemirror.css src/css/app.css src/css/print.css && cleancss -o docs/light.css src/css/light.css && cleancss -o docs/dark.css src/css/dark.css",
         "dev": "npm run build && electron .",
         "dist": "npm run build && electron-builder"
     },
@@ -13,6 +13,7 @@
     "license": "MIT",
     "devDependencies": {
         "clean-css-cli": "^4.3.0",
+        "codemirror": "^5.55.0",
         "cpy-cli": "^3.1.1",
         "del-cli": "^3.0.1",
         "electron": "^9.0.5",
@@ -21,6 +22,7 @@
         "mathjs": "^7.0.2",
         "moment": "^2.27.0",
         "mousetrap": "^1.6.5",
+        "mousetrap-global-bind": "^1.1.0",
         "ncp": "^2.0.0",
         "terser": "^4.8.0",
         "uikit": "^3.5.4"
@@ -28,7 +30,7 @@
     "dependencies": {
         "electron-context-menu": "^2.0.1",
         "electron-store": "^5.2.0",
-        "electron-util": "^0.14.1",
+        "electron-util": "^0.14.2",
         "fs-extra": "^9.0.1"
     },
     "build": {

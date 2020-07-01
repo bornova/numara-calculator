@@ -208,8 +208,7 @@ text {
 .mirror {
     visibility: hidden;
     display: inline-block;
-    width: 100%;
-    overflow-wrap: break-word;
+    width: calc(100% - 16px);
 }
 
 .panelFont {
@@ -376,6 +375,19 @@ text {
 .sizeReset {
     display: inline-block;
     margin-right: 5px;
+}
+
+.warn-icon {
+    display: inline-block;
+    margin-left: 3px;
+}
+
+.warn-icon svg {
+    width: 14px;
+    height: 14px;
+    stroke: #888888;
+    pointer-events: none;
+    margin-top: -4px;
 }
 
 .sizeReset svg {
@@ -654,7 +666,7 @@ input:checked+.slider:before {
 }
 
 .uk-switcher {
-    min-height: 220px;
+    min-height: 250px;
     margin-bottom: 0;
 }
 
@@ -744,4 +756,34 @@ input:checked+.slider:before {
     word-break: break-word;
     background: #535353;
     z-index: 1000000;
+}
+
+pre {
+    font: inherit !important;
+}
+
+.CodeMirror {
+    background: none !important;
+    height: 100% !important;
+    font-family: 'Roboto Mono' !important;
+    font-size: 1.1rem !important;
+}
+
+.CodeMirror-gutters {
+    background: none !important;
+    border: none !important;
+}
+
+.CodeMirror-lines {
+    padding: 0 !important;
+    line-height: 28px !important;
+}
+
+.CodeMirror-cursor {
+    height: 14px !important;
+    margin-top: 8px;
+}
+
+.CodeMirror-vscrollbar {
+    display: none !important;
 }

@@ -27,10 +27,10 @@
         <div id="panel" class="panel">
             <div id="lineNo" class="lineNo panelFont" name="sync"></div>
             <div id="inputPane" class="inputPane resize">
-                <textarea id="input" class="input panelFont mousetrap" name="sync" wrap="on" spellcheck="false" tabindex="-1"></textarea>
-                <span id="mirror" class="mirror panelFont" name="sync"></span>
+                <textarea id="input" class="input panelFont" name="sync" wrap="on" spellcheck="false" tabindex="-1"></textarea>
+                <span id="mirror" class="mirror panelFont"></span>
             </div>
-            <div id="handle" class="handle" name="sync"></div>
+            <div id="handle" class="handle"></div>
             <div id="output" class="output panelFont" name="sync"></div>
             <div id="scroll" class="scroll panelFont" name="sync"></div>
         </div>
@@ -91,6 +91,15 @@
                             <div class="uk-text-right">
                                 <label class="switch">
                                     <input id="darkModeButton" type="checkbox" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div>Syntax highligting</div>
+                            <div class="uk-text-right">
+                                <label class="switch">
+                                    <input id="syntaxButton" type="checkbox" checked>
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -176,9 +185,12 @@
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
-                            <div class="padTop1">Date output format</div>
-                            <div class="uk-text-right dateFormat">
-                                <select id="dateFormat" class="uk-select"></select>
+                            <div>BigNumber<a id="bigNumWarn" class="warn-icon"><i data-feather="alert-circle"></i></a></div>
+                            <div class="uk-text-right">
+                                <label class="switch">
+                                    <input id="bigNumberButton" type="checkbox" checked>
+                                    <span class="slider round"></span>
+                                </label>
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
@@ -188,6 +200,12 @@
                                     <input id="thouSepButton" type="checkbox" checked>
                                     <span class="slider round"></span>
                                 </label>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div class="padTop1">Date output format</div>
+                            <div class="uk-text-right dateFormat">
+                                <select id="dateFormat" class="uk-select"></select>
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>

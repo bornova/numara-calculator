@@ -214,3 +214,43 @@ line {
 .uk-tab::before {
     border-bottom: 1px solid #333;
 }
+
+.CodeMirror {
+    color: #e6e6e6 !important;
+}
+
+.CodeMirror-cursor {
+    border-left: 1px solid rgb(230, 230, 230) !important;
+}
+
+.CodeMirror-selected {
+    background: rgba(0, 0, 0, 0.5) !important;
+}
+
+.cm-unit {
+    color: #4d87c9 !important;
+}
+
+.cm-scope {
+    color: #be6317 !important;
+}
+
+.cm-number {
+    color: #e6e6e6 !important;
+}
+
+.cm-operator {
+    color: #bbbbbb !important;
+}
+
+.cm-comment {
+    color: #57805a !important;
+}
+
+.cm-function {
+    color: #af64db !important;
+}
+
+.cm-text {
+    color: #e6e6e6 !important;
+}
