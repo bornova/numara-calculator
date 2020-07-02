@@ -666,8 +666,16 @@ input:checked+.slider:before {
 }
 
 .uk-switcher {
-    min-height: 220px;
+    min-height: 180px;
     margin-bottom: 0;
+}
+
+.uk-tab>* {
+    padding-left: 10px;
+}
+
+.uk-tab>*:first-child {
+    padding-left: 20px;
 }
 
 .uk-tab>*>a {

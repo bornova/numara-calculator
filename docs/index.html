@@ -55,7 +55,7 @@
         </div>
     </div>
 
-    <div id="dialog-save" uk-modal>
+    <div id="dialog-save" class="modal" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
             <h2 class="uk-modal-title">Save Calculation</h2>
             <div><input id="saveTitle" class="textBox" type="text" maxlength="36" placeholder="Title (Optional)"></div>
@@ -66,7 +66,7 @@
         </div>
     </div>
 
-    <div id="dialog-open" uk-modal>
+    <div id="dialog-open" class="modal" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
             <h2 class="uk-modal-title">Open Calculation</h2>
             <div id="dialog-open-body" class="dialog-open-body uk-overflow-auto"></div>
@@ -77,11 +77,12 @@
         </div>
     </div>
 
-    <div id="dialog-settings" uk-modal>
+    <div id="dialog-settings" class="modal" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-large">
             <div id="dialog-settings-body">
                 <ul uk-tab>
                     <li><a href="#">Appearance</a></li>
+                    <li><a href="#">Panel UI</a></li>
                     <li><a href="#">Settings</a></li>
                     <a id="defaultSettingsButton" class="defButton" title="Restore default settings" uk-tooltip><i data-feather="rotate-ccw"></i></a>
                 </ul>
@@ -120,6 +121,8 @@
                                 </label>
                             </div>
                         </div>
+                    </li>
+                    <li>
                         <div class="uk-child-width-expand" uk-grid>
                             <div>Line numbers</div>
                             <div class="uk-text-right">
@@ -143,6 +146,15 @@
                             <div class="uk-text-right">
                                 <label class="switch">
                                     <input id="lineErrorButton" type="checkbox" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div>Function tooltips</div>
+                            <div class="uk-text-right">
+                                <label class="switch">
+                                    <input id="tooltipsButton" type="checkbox" checked>
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -219,10 +231,10 @@
                 </ul>
             </div>
             <div uk-grid>
-                <div class="dialog-buttons uk-width-1-4 uk-text-left">
-                    <button id="dialog-settings-reset" class="uk-button uk-button-danger uk-button-small">Reset</button>
+                <div class="dialog-buttons uk-width-2-5 uk-text-left">
+                    <button id="dialog-settings-reset" class="uk-button uk-button-danger uk-button-small">Reset App</button>
                 </div>
-                <div class="dialog-buttons uk-width-3-4 uk-text-right">
+                <div class="dialog-buttons uk-width-3-5 uk-text-right">
                     <button id="dialog-settings-save" class="uk-button uk-button-default uk-button-small">Save</button>
                     <button class="uk-button uk-button-default uk-modal-close uk-button-small">Close</button>
                 </div>
@@ -230,7 +242,7 @@
         </div>
     </div>
 
-    <div id="dialog-help" uk-modal>
+    <div id="dialog-help" class="modal" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical">
             <h2 class="uk-modal-title">Help</h2>
             <div class="helpBox">
@@ -246,7 +258,7 @@
         </div>
     </div>
 
-    <div id="dialog-about" class="dialog-about" uk-modal>
+    <div id="dialog-about" class="dialog-about modal" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
             <div class=dialog-about-header>
                 <span class="dialog-about-icon"><img src="assets/icon.ico"></span>
@@ -274,7 +286,7 @@
         </div>
     </div>
 
-    <div id="dialog-plot" class="uk-modal-full" uk-modal>
+    <div id="dialog-plot" class="uk-modal-full modal" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical">
             <h2 id="plotTitle" class="uk-modal-title"></h2>
             <div id="plot"></div>
@@ -305,7 +317,7 @@
         </div>
     </div>
 
-    <div id="dialog-error" uk-modal>
+    <div id="dialog-error" class="modal" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
             <h2 id="errTitle" class="errTitle"></h2>
             <span id="errMsg" class="errMsg"></span>

@@ -160,6 +160,10 @@ text {
     color: #999;
 }
 
+.CodeMirror-selected {
+    background: rgba(192, 213, 231, 0.5) !important;
+}
+
 .cm-unit {
     color: #005cc5 !important;
 }

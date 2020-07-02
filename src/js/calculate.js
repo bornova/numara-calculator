@@ -7,7 +7,7 @@
 // Calculate answers
 function calculate() {
     var solve = math.evaluate;
-    var settings = JSON.parse(localStorage.getItem('settings'));
+    var settings = ls.get('settings');
     var input = cm.getValue();
     var lines = input.split('\n');
     var lineIndex = 1;
@@ -96,7 +96,7 @@ function calculate() {
             subtotals = [];
         }
 
-        var br = '';
+        var br;
         if (settings.lineWrap) {
             $('mirror').innerHTML = lines[i];
             var h = $('mirror').offsetHeight;
@@ -117,7 +117,7 @@ function calculate() {
     $('printButton').className = input === '' ? 'noAction' : 'action';
     $('saveButton').className = input === '' ? 'noAction' : 'action';
 
-    localStorage.setItem('input', JSON.stringify(cm.getValue()));
+    ls.set('input', cm.getValue());
     $('undoButton').style.visibility = 'hidden';
 
     function strip(s) {

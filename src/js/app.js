@@ -7,33 +7,39 @@
 // Get element by id
 const $ = (id) => document.getElementById(id);
 
+// localStorage
+const ls = {
+    get: (key) => JSON.parse(localStorage.getItem(key)),
+    set: (key, value) => localStorage.setItem(key, JSON.stringify(value))
+};
+
 // Codemirror
-CodeMirror.defineMode("numpad", () => {
+CodeMirror.defineMode('numpad', () => {
     return {
         token: (stream, state) => {
-            if (stream.match(/\/\/.*/) || stream.match(/#.*/)) return "comment";
-            if (stream.match(/\d/)) return "number";
+            if (stream.match(/\/\/.*/) || stream.match(/#.*/)) return 'comment';
+            if (stream.match(/\d/)) return 'number';
             if (stream.match(/(?:\+|\-|\*|\/|,|;|\.|:|@|~|=|>|<|&|\||_|`|'|\^|\?|!|%)/)) return 'operator';
 
             stream.eatWhile(/\w/);
+            var str = stream.current();
             try {
-                if (math.unit(stream.current()).units.length > 0) return "unit";
+                if (math.unit(str).units.length > 0) return 'unit';
             } catch (e) {}
-            try {
-                if (Object.getOwnPropertyNames(math[stream.current()]).includes('signatures')) return "function";
-            } catch (e) {}
-            if (stream.current().match(/\b(?:ans|total|subtotal|avg|today|now|line\d+)\b/)) return "scope";
+
+            if (typeof math[str] === 'function' && Object.getOwnPropertyNames(math[str]).includes('signatures')) return 'function';
+            if (str.match(/\b(?:ans|total|subtotal|avg|today|now|line\d+)\b/)) return 'scope';
             stream.next();
-            return "text";
+            return 'text';
         }
     };
 });
 
-CodeMirror.defineMode("plain", () => {
+CodeMirror.defineMode('plain', () => {
     return {
         token: (stream, state) => {
             stream.next();
-            return "text";
+            return 'text';
         }
     };
 });
@@ -41,12 +47,6 @@ CodeMirror.defineMode("plain", () => {
 var cm = CodeMirror.fromTextArea($('input'));
 
 (() => {
-    // localStorage
-    const ls = {
-        get: (key) => JSON.parse(localStorage.getItem(key)),
-        set: (key, value) => localStorage.setItem(key, JSON.stringify(value))
-    };
-
     // User agent
     var isWin = navigator.userAgent.toLowerCase().includes('win');
     var isNode = navigator.userAgent.toLowerCase().includes('electron');
@@ -101,9 +101,6 @@ var cm = CodeMirror.fromTextArea($('input'));
 
     document.getElementsByClassName('CodeMirror-scroll')[0].setAttribute('name', 'sync');
 
-    // Load last calculations
-    cm.setValue(ls.get('input') || '');
-
     // App settings
     const defaultSettings = {
         bigNumber: false,
@@ -111,6 +108,7 @@ var cm = CodeMirror.fromTextArea($('input'));
         dateFormat: 'l',
         fontSize: '1.1rem',
         fontWeight: '400',
+        functionTips: true,
         inputWidth: 50,
         lineErrors: true,
         lineNumbers: true,
@@ -126,9 +124,11 @@ var cm = CodeMirror.fromTextArea($('input'));
     Object.freeze(defaultSettings);
 
     // Initiate app settings and theme
+    if (!ls.get('theme')) ls.set('theme', 'light');
     if (!ls.get('settings')) ls.set('settings', defaultSettings);
 
     // Check settings for property changes
+    var theme;
     var settings;
     var initSettings = ls.get('settings');
     var newSettings = {};
@@ -138,7 +138,7 @@ var cm = CodeMirror.fromTextArea($('input'));
     });
 
     function applyTheme() {
-        var theme = ls.get('theme') || 'light';
+        theme = ls.get('theme') || 'light';
         $('style').setAttribute('href', theme == 'light' ? 'light.css' : 'dark.css');
         $('themeIcon').setAttribute('data-feather', theme == 'light' ? 'moon' : 'sun');
         feather.replace();
@@ -146,20 +146,21 @@ var cm = CodeMirror.fromTextArea($('input'));
             title: theme == 'light' ? 'Dark Mode' : 'Light Mode'
         });
         if (isNode) ipc.send('darkMode', theme == 'dark');
+        cm.focus();
     }
 
     function applySettings() {
         settings = ls.get('settings');
+
+        math.config({
+            number: settings.bigNumber ? 'BigNumber' : 'number'
+        });
 
         var elements = document.getElementsByClassName('panelFont');
         for (var el of elements) {
             el.style.fontSize = settings.fontSize;
             el.style.fontWeight = settings.fontWeight;
         }
-
-        math.config({
-            number: settings.bigNumber ? 'BigNumber' : 'number'
-        });
 
         $('lineNo').style.display = settings.lineNumbers ? 'block' : 'none';
         $('inputPane').style.width = (settings.resizable ? settings.inputWidth : defaultSettings.inputWidth) + '%';
@@ -170,17 +171,32 @@ var cm = CodeMirror.fromTextArea($('input'));
         cm.setOption('mode', settings.syntax ? 'numpad' : 'plain');
         cm.setOption('lineWrapping', settings.lineWrap);
         cm.refresh();
+        cm.focus();
         calculate();
     }
+
+    // Prep input
+    cm.setValue(ls.get('input') || '');
+    cm.setCursor(cm.lineCount(), 0);
+    cm.on('change', calculate);
+    cm.on('update', () => {
+        var funcs = document.getElementsByClassName('cm-function');
+        if (funcs.length > 0 && settings.functionTips) {
+            for (var e of funcs) {
+                var res = JSON.stringify(math.help(e.innerHTML).toJSON());
+                var obj = JSON.parse(res);
+                UIkit.tooltip(e, {
+                    title: obj.description,
+                    pos: 'top-left',
+                    delay: 300
+                });
+            }
+        }
+    });
 
     // Apply theme and settings
     applyTheme();
     applySettings();
-
-    // Prep input
-    cm.focus();
-    cm.setCursor(cm.lineCount(), 0);
-    cm.on('change', calculate);
 
     // Panel resizer
     var resizeDelay;
@@ -209,12 +225,10 @@ var cm = CodeMirror.fromTextArea($('input'));
     });
 
     // Exchange rates
-    if (settings.currencies) {
-        math.createUnit('USD', {
-            aliases: ['usd']
-        });
-        getRates();
-    }
+    math.createUnit('USD', {
+        aliases: ['usd']
+    });
+    if (settings.currencies) getRates();
 
     function getRates() {
         var url = 'https://www.floatrates.com/widget/1030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json';
@@ -225,8 +239,10 @@ var cm = CodeMirror.fromTextArea($('input'));
                     ls.set('rates', data);
                     createRateUnits();
                     $('lastUpdated').innerHTML = ls.get('rateDate');
+                    cm.setOption('mode', settings.syntax ? 'numpad' : 'plain');
+                    cm.focus();
                     showMsg('Updated exchange rates');
-                }).catch((e) => showMsg('Failed to get exchange rates'));
+                }).catch((e) => showMsg('Failed to get exchange rates (' + e + ')'));
         } else {
             showMsg('No internet connection.');
         }
@@ -254,6 +270,8 @@ var cm = CodeMirror.fromTextArea($('input'));
             stack: true
         }).show();
     }
+
+    UIkit.util.on('.modal', 'hidden', () => cm.focus());
 
     // Update open button count
     var savedCount = () => Object.keys(ls.get('saved') || {}).length;
@@ -312,8 +330,7 @@ var cm = CodeMirror.fromTextArea($('input'));
                 $('undoButton').style.visibility = 'hidden';
                 calculate();
                 break;
-            case 'themeButton': // Open settings dialog
-                var theme = ls.get('theme');
+            case 'themeButton': // Toggle theme
                 theme = theme == 'light' ? 'dark' : 'light';
                 ls.set('theme', theme);
                 applyTheme();
@@ -399,8 +416,11 @@ var cm = CodeMirror.fromTextArea($('input'));
                     }
                 });
                 break;
-            case 'bigNumWarn':
-                showError('Using the BigNumber option will disable Plot functionality.<br><br><a target="_blank" href="https://mathjs.org/docs/datatypes/bignumbers.html">More information on BigNumbers</a>', 'BigNumber Limitations');
+            case 'bigNumWarn': // BigNumber warning
+                showError(`Using the BigNumber option will disable function plotting and is not compatible with some math functions. 
+                    It may also cause unexpected behavior and affect overall performance.<br><br>
+                    <a target="_blank" href="https://mathjs.org/docs/datatypes/bignumbers.html">Read more on BigNumbers</a>`,
+                    'Caution: BigNumber Limitations');
                 break;
             case 'sizeReset': // Reset panel size
                 settings.inputWidth = defaultSettings.inputWidth;
@@ -411,16 +431,17 @@ var cm = CodeMirror.fromTextArea($('input'));
                 break;
             case 'currencyButton': // Enable currency rates
                 if (settings.currencies) {
-                    $('currencyUpdate').style.display = settings.currencies ? $('currencyButton').checked ? "block" : "none" : null;
+                    $('currencyUpdate').style.display = settings.currencies ? $('currencyButton').checked ? 'block' : 'none' : null;
                 }
                 break;
             case 'resizeButton': // Enable currency rates
-                $('sizeReset').style.visibility = $('resizeButton').checked ? "visible" : "hidden";
+                $('sizeReset').style.visibility = $('resizeButton').checked ? 'visible' : 'hidden';
                 break;
             case 'dialog-settings-save': // Save settings
                 settings.syntax = $('syntaxButton').checked;
                 settings.fontSize = $('fontSize').value;
                 settings.fontWeight = $('fontWeight').value;
+                settings.functionTips = $('tooltipsButton').checked;
                 settings.lineNumbers = $('lineNoButton').checked;
                 settings.lineWrap = $('lineWrapButton').checked;
                 settings.lineErrors = $('lineErrorButton').checked;
@@ -429,7 +450,6 @@ var cm = CodeMirror.fromTextArea($('input'));
                 settings.bigNumber = $('bigNumberButton').checked;
                 settings.dateFormat = $('dateFormat').value;
                 settings.thouSep = $('thouSepButton').checked;
-
                 if (!settings.currencies && $('currencyButton').checked) {
                     getRates();
                 } else if (!$('currencyButton').checked) {
@@ -526,18 +546,18 @@ var cm = CodeMirror.fromTextArea($('input'));
     // Initiate settings dialog
     UIkit.util.on('#setswitch', 'beforeshow', (e) => e.stopPropagation());
     UIkit.util.on('#dialog-settings', 'beforeshow', () => {
-        $('syntaxButton').checked = settings.syntax;
         $('fontSize').value = settings.fontSize;
         $('fontWeight').value = settings.fontWeight;
+        $('syntaxButton').checked = settings.syntax;
         $('lineNoButton').checked = settings.lineNumbers;
         $('lineWrapButton').checked = settings.lineWrap;
         $('lineErrorButton').checked = settings.lineErrors;
+        $('tooltipsButton').checked = settings.functionTips;
         $('resizeButton').checked = settings.resizable;
         $('sizeReset').style.display = settings.inputWidth == defaultSettings.inputWidth ? 'none' : 'inline-block';
         $('sizeReset').style.visibility = settings.resizable ? 'visible' : 'hidden';
         $('precisionRange').value = settings.precision;
         $('precision-label').innerHTML = settings.precision;
-        $('bigNumberButton').checked = settings.bigNumber;
         $('dateFormat').innerHTML = `
             <option value="l">${moment().format('l')}</option>
             <option value="L">${moment().format('L')}</option>
@@ -547,10 +567,11 @@ var cm = CodeMirror.fromTextArea($('input'));
             <option value="ddd, MMM DD, YYYY">${moment().format('ddd, MMM DD, YYYY')}</option>
             `;
         $('dateFormat').value = settings.dateFormat;
+        $('bigNumberButton').checked = settings.bigNumber;
         $('thouSepButton').checked = settings.thouSep;
         $('currencyButton').checked = settings.currencies;
         $('lastUpdated').innerHTML = settings.currencies ? ls.get('rateDate') : '';
-        $('currencyUpdate').style.display = settings.currencies ? "block" : "none";
+        $('currencyUpdate').style.display = settings.currencies ? 'block' : 'none';
         $('defaultSettingsButton').style.display = JSON.stringify(settings) == JSON.stringify(defaultSettings) ? 'none' : 'block';
     });
 
