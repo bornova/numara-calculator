@@ -666,7 +666,7 @@ input:checked+.slider:before {
 }
 
 .uk-switcher {
-    min-height: 250px;
+    min-height: 220px;
     margin-bottom: 0;
 }
 

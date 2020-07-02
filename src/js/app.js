@@ -121,7 +121,6 @@ var cm = CodeMirror.fromTextArea($('input'));
         precision: '4',
         resizable: true,
         syntax: true,
-        theme: 'light',
         thouSep: true
     };
     Object.freeze(defaultSettings);
@@ -138,9 +137,19 @@ var cm = CodeMirror.fromTextArea($('input'));
         ls.set('settings', newSettings);
     });
 
+    function applyTheme() {
+        var theme = ls.get('theme') || 'light';
+        $('style').setAttribute('href', theme == 'light' ? 'light.css' : 'dark.css');
+        $('themeIcon').setAttribute('data-feather', theme == 'light' ? 'moon' : 'sun');
+        feather.replace();
+        UIkit.tooltip('#themeButton', {
+            title: theme == 'light' ? 'Dark Mode' : 'Light Mode'
+        });
+        if (isNode) ipc.send('darkMode', theme == 'dark');
+    }
+
     function applySettings() {
         settings = ls.get('settings');
-        $('style').setAttribute('href', settings.theme == 'light' ? 'light.css' : 'dark.css');
 
         var elements = document.getElementsByClassName('panelFont');
         for (var el of elements) {
@@ -165,7 +174,7 @@ var cm = CodeMirror.fromTextArea($('input'));
     }
 
     // Apply theme and settings
-    feather.replace();
+    applyTheme();
     applySettings();
 
     // Prep input
@@ -303,6 +312,12 @@ var cm = CodeMirror.fromTextArea($('input'));
                 $('undoButton').style.visibility = 'hidden';
                 calculate();
                 break;
+            case 'themeButton': // Open settings dialog
+                var theme = ls.get('theme');
+                theme = theme == 'light' ? 'dark' : 'light';
+                ls.set('theme', theme);
+                applyTheme();
+                break;
             case 'settingsButton': // Open settings dialog
                 showModal('#dialog-settings');
                 break;
@@ -403,8 +418,6 @@ var cm = CodeMirror.fromTextArea($('input'));
                 $('sizeReset').style.visibility = $('resizeButton').checked ? "visible" : "hidden";
                 break;
             case 'dialog-settings-save': // Save settings
-                if (isNode) ipc.send('darkMode', $('darkModeButton').checked);
-                settings.theme = $('darkModeButton').checked ? 'dark' : 'light';
                 settings.syntax = $('syntaxButton').checked;
                 settings.fontSize = $('fontSize').value;
                 settings.fontWeight = $('fontWeight').value;
@@ -513,7 +526,6 @@ var cm = CodeMirror.fromTextArea($('input'));
     // Initiate settings dialog
     UIkit.util.on('#setswitch', 'beforeshow', (e) => e.stopPropagation());
     UIkit.util.on('#dialog-settings', 'beforeshow', () => {
-        $('darkModeButton').checked = settings.theme == 'dark' ? true : false;
         $('syntaxButton').checked = settings.syntax;
         $('fontSize').value = settings.fontSize;
         $('fontWeight').value = settings.fontWeight;
