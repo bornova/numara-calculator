@@ -139,9 +139,7 @@ ipcMain.on('resetApp', () => {
 ipcMain.on('setTheme', (event, mode) => dims.set('theme', mode));
 ipcMain.on('isDark', (event) => event.returnValue = nativeTheme.shouldUseDarkColors);
 
-nativeTheme.on('updated', (event) => {
-    win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors);
-});
+nativeTheme.on('updated', () => win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors));
 
 if (is.macos) {
     const template = [{

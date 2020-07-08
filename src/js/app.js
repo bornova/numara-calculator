@@ -211,12 +211,7 @@ var cm = CodeMirror.fromTextArea($('input'), {
 
     // Apply settings
     applySettings();
-
-    if (isNode) {
-        ipc.on('themeUpdate', (event, response) => {
-            applySettings();
-        });
-    }
+    if (isNode) ipc.on('themeUpdate', (event, response) => applySettings());
 
     // Panel resizer
     var resizeDelay;
