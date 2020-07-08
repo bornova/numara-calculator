@@ -44,7 +44,9 @@ CodeMirror.defineMode('plain', () => {
     };
 });
 
-var cm = CodeMirror.fromTextArea($('input'));
+var cm = CodeMirror.fromTextArea($('input'), {
+    viewportMargin: Infinity
+});
 
 (() => {
     // User agent
@@ -119,6 +121,7 @@ var cm = CodeMirror.fromTextArea($('input'));
         precision: '4',
         resizable: true,
         syntax: true,
+        theme: 'system',
         thouSep: true
     };
     Object.freeze(defaultSettings);
@@ -128,7 +131,6 @@ var cm = CodeMirror.fromTextArea($('input'));
     if (!ls.get('settings')) ls.set('settings', defaultSettings);
 
     // Check settings for property changes
-    var theme;
     var settings;
     var initSettings = ls.get('settings');
     var newSettings = {};
@@ -137,20 +139,16 @@ var cm = CodeMirror.fromTextArea($('input'));
         ls.set('settings', newSettings);
     });
 
-    function applyTheme() {
-        theme = ls.get('theme') || 'light';
-        $('style').setAttribute('href', theme == 'light' ? 'light.css' : 'dark.css');
-        $('themeIcon').setAttribute('data-feather', theme == 'light' ? 'moon' : 'sun');
-        feather.replace();
-        UIkit.tooltip('#themeButton', {
-            title: theme == 'light' ? 'Dark Mode' : 'Light Mode'
-        });
-        if (isNode) ipc.send('darkMode', theme == 'dark');
-        cm.focus();
-    }
+    feather.replace();
 
     function applySettings() {
         settings = ls.get('settings');
+
+        $('style').setAttribute('href',
+            settings.theme == 'system' ? (isNode ? (ipc.sendSync('isDark') ? 'dark.css' : 'light.css') : 'light.css') :
+            settings.theme == 'light' ? 'light.css' : 'dark.css');
+
+        if (isNode) ipc.send('setTheme', settings.theme);
 
         math.config({
             number: settings.bigNumber ? 'BigNumber' : 'number'
@@ -170,7 +168,6 @@ var cm = CodeMirror.fromTextArea($('input'));
         cm.setOption('mode', settings.syntax ? 'numpad' : 'plain');
         cm.setOption('lineNumbers', settings.lineNumbers);
         cm.setOption('lineWrapping', settings.lineWrap);
-        cm.setOption('viewportMargin', Infinity);
         cm.refresh();
         cm.focus();
 
@@ -212,9 +209,14 @@ var cm = CodeMirror.fromTextArea($('input'));
         }
     });
 
-    // Apply theme and settings
-    applyTheme();
+    // Apply settings
     applySettings();
+
+    if (isNode) {
+        ipc.on('themeUpdate', (event, response) => {
+            applySettings();
+        });
+    }
 
     // Panel resizer
     var resizeDelay;
@@ -343,11 +345,6 @@ var cm = CodeMirror.fromTextArea($('input'));
                 $('undoButton').style.visibility = 'hidden';
                 calculate();
                 break;
-            case 'themeButton': // Toggle theme
-                theme = theme == 'light' ? 'dark' : 'light';
-                ls.set('theme', theme);
-                applyTheme();
-                break;
             case 'settingsButton': // Open settings dialog
                 showModal('#dialog-settings');
                 break;
@@ -451,6 +448,7 @@ var cm = CodeMirror.fromTextArea($('input'));
                 $('sizeReset').style.visibility = $('resizeButton').checked ? 'visible' : 'hidden';
                 break;
             case 'dialog-settings-save': // Save settings
+                settings.theme = $('themeList').value;
                 settings.syntax = $('syntaxButton').checked;
                 settings.fontSize = $('fontSize').value;
                 settings.fontWeight = $('fontWeight').value;
@@ -559,6 +557,7 @@ var cm = CodeMirror.fromTextArea($('input'));
     // Initiate settings dialog
     UIkit.util.on('#setswitch', 'beforeshow', (e) => e.stopPropagation());
     UIkit.util.on('#dialog-settings', 'beforeshow', () => {
+        $('themeList').value = settings.theme;
         $('fontSize').value = settings.fontSize;
         $('fontWeight').value = settings.fontWeight;
         $('syntaxButton').checked = settings.syntax;

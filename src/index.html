@@ -46,7 +46,6 @@
                 <span id="msg" class="msg"></span>
             </div>
             <div id="rightActions" class="rightActions">
-                <a id="themeButton" class="action" uk-tooltip><i id="themeIcon" data-feather=""></i></a>
                 <a id="settingsButton" class="action" title="Settings" uk-tooltip><i data-feather="settings"></i></a>
                 <a id="helpButton" class="action" title="Help" uk-tooltip><i data-feather="help-circle"></i></a>
                 <a id="aboutButton" class="action" title="Info" uk-tooltip><i data-feather="info"></i></a>
@@ -88,12 +87,13 @@
                 <ul id="setswitch" class="uk-switcher uk-margin">
                     <li>
                         <div class="uk-child-width-expand" uk-grid>
-                            <div>Syntax highligting</div>
-                            <div class="uk-text-right">
-                                <label class="switch">
-                                    <input id="syntaxButton" type="checkbox" checked>
-                                    <span class="slider round"></span>
-                                </label>
+                            <div class="padTop1 uk-width-3-5">Theme</div>
+                            <div class="uk-text-right uk-width-2-5 dateFormat">
+                                <select id="themeList" class="uk-select">
+                                    <option value="system">System</option>
+                                    <option value="light">Light</option>
+                                    <option value="dark">Dark</option>
+                                </select>
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
@@ -118,6 +118,15 @@
                                     <option value="500">Semi Bold</option>
                                     <option value="700">Bold</option>
                                 </select>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div>Syntax highligting</div>
+                            <div class="uk-text-right">
+                                <label class="switch">
+                                    <input id="syntaxButton" type="checkbox" checked>
+                                    <span class="slider round"></span>
+                                </label>
                             </div>
                         </div>
                     </li>

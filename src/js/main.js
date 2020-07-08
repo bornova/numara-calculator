@@ -10,6 +10,7 @@ const {
     globalShortcut,
     ipcMain,
     Menu,
+    nativeTheme,
     session,
     shell
 } = require('electron');
@@ -30,9 +31,9 @@ const schema = {
         type: 'number',
         default: 480
     },
-    darkMode: {
-        type: 'boolean',
-        default: false
+    theme: {
+        type: 'string',
+        default: 'system'
     },
     fullSize: {
         type: 'boolean',
@@ -50,6 +51,16 @@ require('electron-context-menu')({
 
 let win;
 
+var bg;
+var theme = dims.get('theme')
+if (theme == 'system') {
+    bg = nativeTheme.shouldUseDarkColors ? '#1f1f1f' : '#ffffff';
+} else if (theme == 'dark') {
+    bg = '#1f1f1f';
+} else {
+    bg = '#ffffff';
+}
+
 function appWindow() {
     win = new BrowserWindow({
         width: parseInt(dims.get('appWidth')),
@@ -60,7 +71,7 @@ function appWindow() {
         show: false,
         paintWhenInitiallyHidden: false,
         hasShadow: true,
-        backgroundColor: dims.get('darkMode') ? '#1f1f1f' : '#ffffff',
+        backgroundColor: bg,
         useContentSize: true,
         titleBarStyle: 'hiddenInset',
         webPreferences: {
@@ -125,7 +136,12 @@ ipcMain.on('resetApp', () => {
             app.quit();
         }).then(() => fs.remove(app.getPath('userData')));
 });
-ipcMain.on('darkMode', (event, mode) => dims.set('darkMode', mode));
+ipcMain.on('setTheme', (event, mode) => dims.set('theme', mode));
+ipcMain.on('isDark', (event) => event.returnValue = nativeTheme.shouldUseDarkColors);
+
+nativeTheme.on('updated', (event) => {
+    win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors);
+});
 
 if (is.macos) {
     const template = [{
