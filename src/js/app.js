@@ -109,7 +109,7 @@ var cm = CodeMirror.fromTextArea($('input'));
         fontSize: '1.1rem',
         fontWeight: '400',
         functionTips: true,
-        inputWidth: 50,
+        inputWidth: 60,
         lineErrors: true,
         lineNumbers: true,
         lineWrap: true,
@@ -156,24 +156,33 @@ var cm = CodeMirror.fromTextArea($('input'));
             number: settings.bigNumber ? 'BigNumber' : 'number'
         });
 
-        var elements = document.getElementsByClassName('panelFont');
+        var elements = document.querySelectorAll('.panelFont, .CodeMirror');
         for (var el of elements) {
             el.style.fontSize = settings.fontSize;
             el.style.fontWeight = settings.fontWeight;
         }
 
-        $('lineNo').style.display = settings.lineNumbers ? 'block' : 'none';
         $('inputPane').style.width = (settings.resizable ? settings.inputWidth : defaultSettings.inputWidth) + '%';
-        $('inputPane').style.marginLeft = settings.lineNumbers ? '0px' : '18px';
+        $('inputPane').style.marginLeft = settings.lineNumbers ? '0px' : '15px';
         $('output').style.textAlign = settings.resizable ? 'left' : 'right';
         $('handle').style.display = settings.resizable ? 'block' : 'none';
 
         cm.setOption('mode', settings.syntax ? 'numpad' : 'plain');
+        cm.setOption('lineNumbers', settings.lineNumbers);
         cm.setOption('lineWrapping', settings.lineWrap);
+        cm.setOption('viewportMargin', Infinity);
         cm.refresh();
         cm.focus();
+
         calculate();
     }
+
+    UIkit.mixin({
+        data: {
+            delay: 300,
+            offset: 8
+        }
+    }, 'tooltip');
 
     // Prep input
     cm.setValue(ls.get('input') || '');
@@ -187,8 +196,17 @@ var cm = CodeMirror.fromTextArea($('input'));
                 var obj = JSON.parse(res);
                 UIkit.tooltip(e, {
                     title: obj.description,
-                    pos: 'top-left',
-                    delay: 300
+                    pos: 'top-left'
+                });
+            }
+        }
+
+        var scps = document.getElementsByClassName('cm-scope');
+        if (scps.length > 0 && settings.functionTips) {
+            for (i = 0; i < scps.length; i++) {
+                UIkit.tooltip(scps[i], {
+                    title: scopelist[i],
+                    pos: 'top-left'
                 });
             }
         }
@@ -208,7 +226,7 @@ var cm = CodeMirror.fromTextArea($('input'));
     $('handle').addEventListener('mousedown', (e) => isResizing = e.target == handle);
     $('panel').addEventListener('mouseup', (e) => isResizing = false);
     $('panel').addEventListener('mousemove', (e) => {
-        var offset = $('lineNo').style.display == 'block' ? 44 : 20;
+        var offset = settings.lineNumbers ? 2 : 17;
         var pointerRelativeXpos = e.clientX - panel.offsetLeft - offset;
         var iWidth = pointerRelativeXpos / panel.clientWidth * 100;
         var inputWidth = iWidth < 0 ? 0 : iWidth > 100 ? 100 : iWidth;
@@ -297,19 +315,14 @@ var cm = CodeMirror.fromTextArea($('input'));
             case 'printButton': // Print calculations
                 UIkit.tooltip('#printButton').hide();
                 if (cm.getValue() != '') {
-                    $('printLines').style.display = settings.lineNumbers ? 'block' : 'none';
-                    $('printInput').style.width = settings.resizable ? settings.inputWidth : '50%';
-                    $('printInput').style.marginLeft = settings.lineNumbers ? '0px' : '18px';
-                    $('printInput').style.borderRightWidth = settings.resizable ? '1px' : '0';
-                    $('printOutput').style.textAlign = settings.resizable ? 'left' : 'right';
-
                     $('print-title').innerHTML = appName;
-                    $('printLines').innerHTML = $('lineNo').innerHTML;
-                    $('printInput').innerHTML = cm.getValue();
-                    $('printOutput').innerHTML = $('output').innerHTML;
+                    $('printBox').innerHTML = $('panel').innerHTML;
                     if (isNode) {
                         ipc.send('print');
-                        ipc.once('printReply', (event, response) => showMsg(response));
+                        ipc.once('printReply', (event, response) => {
+                            showMsg(response);
+                            $('printBox').innerHTML = '';
+                        });
                     } else {
                         window.print();
                     }

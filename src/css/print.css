@@ -27,7 +27,8 @@
     .print-title {
         float: left;
         margin: 0px 0 0px 8px;
-        font-size: 13px;
+        font-size: 12px;
+        font-weight: bold;
         color: #222222;
     }
 
@@ -44,42 +45,16 @@
         margin-bottom: 20px;
     }
 
-    .printBoxes {
+    .printBox {
+        display: flex;
         font-family: "Menlo", "Consolas";
         font-size: 14px;
-        display: flex;
-        display: -webkit-flex;
-        flex: auto;
-        -webkit-flex: auto;
         line-height: 1.8em;
         margin-top: 20px;
         padding-top: 20px;
     }
 
-    .printBoxes>div {
-        margin-right: 15px;
-    }
-
-    .printLines {
-        color: rgb(234, 234, 234);
-        text-align: right;
-        width: 50px;
-    }
-
-    .printInput {
-        border-right-width: 1px;
-        border-right-style: solid;
-        border-right-color: rgb(234, 234, 234);
-        padding-right: 30px;
-        margin-right: 15px;
-        width: 55%;
-        min-width: 160px;
-        white-space: pre-wrap;
-    }
-
-    .printOutput {
-        color: rgb(84, 130, 53);
-        flex: 1;
-        min-width: 160px;
+    .handle {
+        border-left: 1px solid #e9e9e9;
     }
 }

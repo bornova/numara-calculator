@@ -4,20 +4,21 @@
  * @license MIT https://github.com/bornova/numpad/blob/master/LICENSE
  */
 
+var scopelist = [];
+
 // Calculate answers
 function calculate() {
     var solve = math.evaluate;
     var settings = ls.get('settings');
-    var input = cm.getValue();
-    var lines = input.split('\n');
     var lineIndex = 1;
     var lineNos = [];
-    var scrolls = [];
     var answers = [];
+    var scrolls = [];
+    var avgs = [];
     var totals = [];
     var subtotals = [];
-    var avgs = [];
     var scope = {};
+    var solverScope = {};
     var expLim = {
         lowerExp: -12,
         upperExp: 12
@@ -26,18 +27,26 @@ function calculate() {
         maximumFractionDigits: settings.precision
     };
 
+    $('mirror').style.width = document.getElementsByClassName('CodeMirror-line')[0].clientWidth - 8 + 'px';
+
+    scopelist.length = 0;
+
     scope.now = moment().format(settings.dateFormat + ' LT');
     scope.today = moment().format(settings.dateFormat);
 
-    for (var i in lines) {
-        var line = lines[i].trim();
-        var lineNo = lineIndex++;
+    cm.eachLine((line) => {
         var answer = '';
+        var lineNo = lineIndex++;
+        var mirrorLine = line.text;
+
+        line = line.text.trim().split('//')[0].split('#')[0];
+        var cline = line;
 
         if (line) {
             try {
-                line = line.split('//')[0];
-                line = lineNo > 1 && line.charAt(0).match(/[\+\-\*\/]/) && lines[i - 1].length > 0 ? scope.ans + line : line;
+                line = lineNo > 1 && line.charAt(0).match(/[\+\-\*\/]/) && cm.getLineHandle(lineNo - 1).text.length > 0 ? scope.ans + line : line;
+
+                scopeCheck(line, 0);
                 try {
                     answer = solve(line, scope);
                 } catch (e) {
@@ -58,10 +67,10 @@ function calculate() {
                     }
                     answer = solver(line);
                 }
+                scopeCheck(cline);
 
                 if (answer !== undefined) {
-                    scope.ans = answer;
-                    scope['line' + lineNo] = answer;
+                    scope.ans = scope['line' + lineNo] = answer;
 
                     if (!isNaN(answer)) {
                         avgs.push(answer);
@@ -69,76 +78,58 @@ function calculate() {
                         subtotals.push(answer);
                     }
 
-                    answer = math.format(answer, expLim);
-                    var a = answer.trim().split(' ')[0];
-                    var b = answer.replace(a, '');
-                    answer = !a.includes('e') && !isNaN(a) ?
-                        settings.thouSep ? Number(a).toLocaleString(undefined, digits) + b : parseFloat(Number(a).toFixed(settings.precision)) + b :
-                        a.includes('e') ? parseFloat(Number(a.split('e')[0]).toFixed(settings.precision)) + 'e' + answer.split('e')[1] + b :
-                        strip(answer);
+                    answer = format(math.format(answer, expLim));
 
                     if (answer.match(/\w\(x\)/)) {
-                        answer = `<a title="Plot ${line}" class="plotButton" data-func="${line}">Plot</a>`;
+                        answer = `<a class="plotButton" data-func="${line}">Plot</a>`;
                         scope.ans = scope['line' + lineNo] = line.split('=')[1].trim();
                     }
                 } else {
-                    answer = '';
-                    subtotals = [];
+                    subtotals.length = 0;
                 }
             } catch (e) {
                 var errStr = String(e).replace(/'|"/g, '`');
-                if (settings.lineErrors) {
-                    answer = `<a title="${errStr}" class="lineError" data-line="${lineNo}" data-error="${errStr}">Err</a>`;
-                    lineNo = `<span class="lineErrorNo">${lineNo}</span>`;
-                }
+                answer = settings.lineErrors ? `<a class="lineError" data-line="${lineNo}" data-error="${errStr}">Err</a>` : '';
             }
         } else {
-            subtotals = [];
+            subtotals.length = 0;
         }
 
         var br;
         if (settings.lineWrap) {
-            $('mirror').innerHTML = lines[i];
+            $('mirror').innerHTML = mirrorLine;
             var h = $('mirror').offsetHeight;
             var lh = getComputedStyle($('mirror')).lineHeight.split('px')[0];
-            br = h > lh ? '<br>'.repeat((h / lh) - 1) : '';
+            br = h > lh ? '<span class="answer"></span>'.repeat((h / lh) - 1) : '';
         }
 
-        answers += answer + '<br>' + br;
         lineNos += lineNo + '<br>' + br;
-        scrolls += '<br>' + br;
-    }
+        answers += '<span class="answer">' +  answer + '</span>' + br;
+        scrolls += '<span class="answer"></span>' + br;
+    });
 
-    $('lineNo').innerHTML = lineNos;
     $('output').innerHTML = answers;
     $('scroll').innerHTML = scrolls;
 
-    $('clearButton').className = input === '' ? 'noAction' : 'action';
-    $('printButton').className = input === '' ? 'noAction' : 'action';
-    $('saveButton').className = input === '' ? 'noAction' : 'action';
+    $('clearButton').className = cm.getValue() == '' ? 'noAction' : 'action';
+    $('printButton').className = cm.getValue() == '' ? 'noAction' : 'action';
+    $('saveButton').className = cm.getValue() == '' ? 'noAction' : 'action';
 
     ls.set('input', cm.getValue());
     $('undoButton').style.visibility = 'hidden';
 
-    function strip(s) {
-        var t = s.length;
-        if (s.charAt(0) === '"') s = s.substring(1, t--);
-        if (s.charAt(--t) === '"') s = s.substring(0, t);
-        return s;
-    }
-
     // Solver
     function solver(line) {
-        var subtotal = subtotals.length > 0 ? '(' + subtotals.join('+') + ')' : 0;
-        var total = totals.length > 0 ? '(' + totals.join('+') + ')' : 0;
-        var avg = avgs.length > 0 ? '(' + math.mean(avgs) + ')' : 0;
+        solverScope.avg = solve(avgs.length > 0 ? '(' + math.mean(avgs) + ')' : 0);
+        solverScope.total = solve(totals.length > 0 ? '(' + totals.join('+') + ')' : 0);
+        solverScope.subtotal = solve(subtotals.length > 0 ? '(' + subtotals.join('+') + ')' : 0);
 
         line = line.replace(/\bans\b/g, scope.ans)
             .replace(/\bnow\b/g, scope.now)
             .replace(/\btoday\b/g, scope.today)
-            .replace(/\bsubtotal\b/g, subtotal)
-            .replace(/\btotal\b/g, total)
-            .replace(/\bavg\b/g, avg);
+            .replace(/\bavg\b/g, solverScope.avg)
+            .replace(/\btotal\b/g, solverScope.total)
+            .replace(/\bsubtotal\b/g, solverScope.subtotal);
 
         var lineNoReg = line.match(/\bline\d+\b/g);
         if (lineNoReg) lineNoReg.map(n => line = line.replace(n, scope[n]));
@@ -177,5 +168,32 @@ function calculate() {
         }
 
         return solve(line, scope);
+    }
+
+    function format(answer) {
+        answer = String(answer);
+        var a = answer.trim().split(' ')[0];
+        var b = answer.replace(a, '');
+        formattedAnswer = !a.includes('e') && !isNaN(a) ?
+            settings.thouSep ? Number(a).toLocaleString(undefined, digits) + b : parseFloat(Number(a).toFixed(settings.precision)) + b :
+            a.includes('e') ? parseFloat(Number(a.split('e')[0]).toFixed(settings.precision)) + 'e' + answer.split('e')[1] + b :
+            strip(answer);
+        return formattedAnswer;
+    }
+
+    function strip(s) {
+        var t = s.length;
+        if (s.charAt(0) === '"') s = s.substring(1, t--);
+        if (s.charAt(--t) === '"') s = s.substring(0, t);
+        return s;
+    }
+
+    function scopeCheck(line, order) {
+        var reg = order == 0 ? /\b(?:ans|today|now|line\d+)\b/g : /\b(?:total|subtotal|avg)\b/g;
+        var result;
+        while ((result = reg.exec(line)) !== null) {
+            var val = result[0];
+            scopelist.push(order == 0 ? (scope[val] !== undefined ? format(scope[val]) : 'n/a') : format(solverScope[result[0]]));
+        }
     }
 }

@@ -25,7 +25,6 @@
         </div>
 
         <div id="panel" class="panel">
-            <div id="lineNo" class="lineNo panelFont" name="sync"></div>
             <div id="inputPane" class="inputPane resize">
                 <textarea id="input" class="input panelFont" name="sync" wrap="on" spellcheck="false" tabindex="-1"></textarea>
                 <span id="mirror" class="mirror panelFont"></span>
@@ -89,6 +88,15 @@
                 <ul id="setswitch" class="uk-switcher uk-margin">
                     <li>
                         <div class="uk-child-width-expand" uk-grid>
+                            <div>Syntax highligting</div>
+                            <div class="uk-text-right">
+                                <label class="switch">
+                                    <input id="syntaxButton" type="checkbox" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
                             <div class="padTop1 uk-width-3-5">Font size</div>
                             <div class="uk-text-right uk-width-2-5 dateFormat">
                                 <select id="fontSize" class="uk-select">
@@ -110,15 +118,6 @@
                                     <option value="500">Semi Bold</option>
                                     <option value="700">Bold</option>
                                 </select>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div>Syntax highligting</div>
-                            <div class="uk-text-right">
-                                <label class="switch">
-                                    <input id="syntaxButton" type="checkbox" checked>
-                                    <span class="slider round"></span>
-                                </label>
                             </div>
                         </div>
                     </li>
@@ -151,7 +150,7 @@
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
-                            <div>Function tooltips</div>
+                            <div>Keyword tooltips</div>
                             <div class="uk-text-right">
                                 <label class="switch">
                                     <input id="tooltipsButton" type="checkbox" checked>
@@ -160,9 +159,7 @@
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
-                            <div>
-                                Resizable panes
-                            </div>
+                            <div>Resizable panes</div>
                             <div class="uk-text-right">
                                 <a id="sizeReset" class="sizeReset" title="Panel was resized by user. Click to reset." title="" uk-tooltip>
                                     <i data-feather="sidebar"></i>
@@ -343,11 +340,7 @@
             <span class="print-icon"><img src="assets/icon.ico"></span>
             <span id="print-title" class="print-title"></span>
         </div>
-        <div class="printBoxes">
-            <div id="printLines" class="printLines"></div>
-            <div id="printInput" class="printInput"></div>
-            <div id="printOutput" class="printOutput"></div>
-        </div>
+        <div id="printBox" class="printBox"></div>
     </div>
 
     <script src="numpad.js"></script>
