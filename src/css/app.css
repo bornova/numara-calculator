@@ -5,28 +5,28 @@
  */
 
 * {
-    margin: 0;
-    padding: 0;
-    outline: none;
-    user-select: none;
-    border: none;
-    resize: none;
-    background: none;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
+    background: none;
+    border: none;
+    margin: 0;
+    outline: none;
+    padding: 0;
+    resize: none;
+    user-select: none;
 }
 
 /* UI defaults */
 html,
 body {
-    height: 100%;
     font-family: 'Open Sans', sans-serif;
     font-size: 12px;
+    height: 100%;
 }
 
 ::-webkit-scrollbar {
-    width: 8px;
     height: 8px;
+    width: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -43,22 +43,22 @@ input {
 }
 
 input[type=range]::-webkit-slider-runnable-track {
-    width: 300px;
-    height: 1px;
     background: #999;
     border: none;
     border-radius: 3px;
+    height: 1px;
     margin-top: 2px;
+    width: 300px;
 }
 
 input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    border: 0px solid rgb(70, 136, 223);
-    height: 14px;
-    width: 14px;
-    border-radius: 50%;
     background: rgb(70, 136, 223);
+    border: 0px solid rgb(70, 136, 223);
+    border-radius: 50%;
+    height: 14px;
     margin-top: -7px;
+    width: 14px;
 }
 
 input[type=range]:focus::-webkit-slider-runnable-track {
@@ -66,8 +66,8 @@ input[type=range]:focus::-webkit-slider-runnable-track {
 }
 
 textarea {
-    width: 100%;
     box-sizing: border-box;
+    width: 100%;
 }
 
 text {
@@ -78,11 +78,11 @@ text {
 .header-win {
     -webkit-app-region: drag !important;
     display: none;
+    height: 30px;
     position: fixed;
     top: 5px;
     right: 0;
     left: 0;
-    height: 30px;
 }
 
 .header-win-title {
@@ -158,51 +158,46 @@ text {
 .panel {
     position: fixed;
     top: 50px;
-    bottom: 50px;
+    bottom: 45px;
     left: 12px;
-    right: 5px;
+    right: 8px;
     display: flex;
 }
 
-.lineNo::-webkit-scrollbar,
-.input::-webkit-scrollbar,
-.output::-webkit-scrollbar {
+.inputArea::-webkit-scrollbar {
     width: 0px;
     height: 8px;
 }
 
-.lineNo {
-    width: 30px;
-    min-width: 30px;
-    margin-right: 12px;
-    text-align: right;
-}
-
-.inputPane {
+.input {
     min-width: 100px;
     padding-right: 10px;
 }
 
-.input {
+.inputArea {
     user-select: text;
 }
 
 .output {
     flex: 1;
     font-weight: 400;
-    padding-left: 12px;
+    margin-left: 12px;
+    padding-right: 15px;
     min-width: 100px;
     user-select: text;
     white-space: nowrap;
 }
 
-.lineNo,
-.input,
-.output,
-.scroll {
+.inputArea {
     display: block;
     height: 100%;
-    overflow: auto;
+    overflow: scroll;
+}
+
+.output {
+    display: block;
+    height: 100%;
+    overflow: scroll;
 }
 
 .answer {
@@ -234,6 +229,7 @@ text {
 }
 
 .handle {
+    height: calc(100% - 8px);
     width: 5px;
     cursor: ew-resize;
     flex: 0 0 auto;
@@ -247,9 +243,12 @@ text {
     margin: 0 auto;
 }
 
-.scroll {
-    width: 25px;
-    min-width: 25px;
+.gutterBlock {
+    position: fixed;
+    height: 8px;
+    bottom: 50px;
+    left: 0;
+    z-index: 5;
 }
 
 /* Action item buttons */
@@ -358,6 +357,10 @@ text {
 
 .dialog-confirm {
     z-index: 10010;
+}
+
+.infoOK {
+    margin-left: -20px !important;
 }
 
 /* Settings */
@@ -765,6 +768,7 @@ input:checked+.slider:before {
 
 .uk-range {
     min-height: 1.6em;
+    padding-top: 1px;
 }
 
 .uk-tooltip {
@@ -802,6 +806,21 @@ pre {
     display: none !important;
 }
 
+.CodeMirror-hscrollbar,
+.CodeMirror-gutter-filler {
+    display: block !important;
+    height: 8px !important;
+    width: auto;
+}
+
+.CodeMirror-hscrollbar {
+    right: 8px !important;
+}
+
 .CodeMirror-linenumber {
     padding: 0 10px 0 5px !important;
+}
+
+.CodeMirror-sizer {
+    padding-bottom: 8px !important;
 }

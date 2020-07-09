@@ -10,10 +10,7 @@ var scopelist = [];
 function calculate() {
     var solve = math.evaluate;
     var settings = ls.get('settings');
-    var lineIndex = 1;
-    var lineNos = [];
     var answers = [];
-    var scrolls = [];
     var avgs = [];
     var totals = [];
     var subtotals = [];
@@ -36,15 +33,13 @@ function calculate() {
 
     cm.eachLine((line) => {
         var answer = '';
-        var lineNo = lineIndex++;
+        var lineNo = cm.getLineNumber(line) + 1;
         var mirrorLine = line.text;
-
-        line = line.text.trim().split('//')[0].split('#')[0];
-        var cline = line;
+        var cline = line = line.text.trim().split('//')[0].split('#')[0];
 
         if (line) {
             try {
-                line = lineNo > 1 && line.charAt(0).match(/[\+\-\*\/]/) && cm.getLineHandle(lineNo - 1).text.length > 0 ? scope.ans + line : line;
+                line = lineNo > 1 && line.charAt(0).match(/[\+\-\*\/]/) && cm.getLine(lineNo - 2).length > 0 ? scope.ans + line : line;
 
                 scopeCheck(line, 0);
                 try {
@@ -95,7 +90,7 @@ function calculate() {
             subtotals.length = 0;
         }
 
-        var br;
+        var br = '';
         if (settings.lineWrap) {
             $('mirror').innerHTML = mirrorLine;
             var h = $('mirror').offsetHeight;
@@ -103,20 +98,17 @@ function calculate() {
             br = h > lh ? '<span class="answer"></span>'.repeat((h / lh) - 1) : '';
         }
 
-        lineNos += lineNo + '<br>' + br;
-        answers += '<span class="answer">' +  answer + '</span>' + br;
-        scrolls += '<span class="answer"></span>' + br;
+        answers += '<span class="answer">' + answer + '</span>' + br;
     });
 
     $('output').innerHTML = answers;
-    $('scroll').innerHTML = scrolls;
 
     $('clearButton').className = cm.getValue() == '' ? 'noAction' : 'action';
     $('printButton').className = cm.getValue() == '' ? 'noAction' : 'action';
     $('saveButton').className = cm.getValue() == '' ? 'noAction' : 'action';
+    $('undoButton').style.visibility = 'hidden';
 
     ls.set('input', cm.getValue());
-    $('undoButton').style.visibility = 'hidden';
 
     // Solver
     function solver(line) {

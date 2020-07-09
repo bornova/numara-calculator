@@ -44,8 +44,9 @@ CodeMirror.defineMode('plain', () => {
     };
 });
 
-var cm = CodeMirror.fromTextArea($('input'), {
-    viewportMargin: Infinity
+var cm = CodeMirror.fromTextArea($('inputArea'), {
+    viewportMargin: Infinity,
+    coverGutterNextToScrollbar: true
 });
 
 (() => {
@@ -101,6 +102,7 @@ var cm = CodeMirror.fromTextArea($('input'), {
         $('header-mac-title').innerHTML = appName;
     }
 
+    feather.replace();
     document.getElementsByClassName('CodeMirror-scroll')[0].setAttribute('name', 'sync');
 
     // App settings
@@ -139,8 +141,6 @@ var cm = CodeMirror.fromTextArea($('input'), {
         ls.set('settings', newSettings);
     });
 
-    feather.replace();
-
     function applySettings() {
         settings = ls.get('settings');
 
@@ -150,30 +150,30 @@ var cm = CodeMirror.fromTextArea($('input'), {
 
         if (isNode) ipc.send('setTheme', settings.theme);
 
-        math.config({
-            number: settings.bigNumber ? 'BigNumber' : 'number'
-        });
-
         var elements = document.querySelectorAll('.panelFont, .CodeMirror');
         for (var el of elements) {
             el.style.fontSize = settings.fontSize;
             el.style.fontWeight = settings.fontWeight;
         }
 
-        $('inputPane').style.width = (settings.resizable ? settings.inputWidth : defaultSettings.inputWidth) + '%';
-        $('inputPane').style.marginLeft = settings.lineNumbers ? '0px' : '15px';
+        $('input').style.width = (settings.resizable ? settings.inputWidth : defaultSettings.inputWidth) + '%';
+        $('input').style.marginLeft = settings.lineNumbers ? '0px' : '15px';
         $('output').style.textAlign = settings.resizable ? 'left' : 'right';
         $('handle').style.display = settings.resizable ? 'block' : 'none';
 
         cm.setOption('mode', settings.syntax ? 'numpad' : 'plain');
         cm.setOption('lineNumbers', settings.lineNumbers);
         cm.setOption('lineWrapping', settings.lineWrap);
-        cm.refresh();
         cm.focus();
+
+        math.config({
+            number: settings.bigNumber ? 'BigNumber' : 'number'
+        });
 
         calculate();
     }
 
+    // Tooltip defaults
     UIkit.mixin({
         data: {
             delay: 300,
@@ -211,7 +211,7 @@ var cm = CodeMirror.fromTextArea($('input'), {
 
     // Apply settings
     applySettings();
-    if (isNode) ipc.on('themeUpdate', (event, response) => applySettings());
+    if (isNode) ipc.on('themeUpdate', () => applySettings());
 
     // Panel resizer
     var resizeDelay;

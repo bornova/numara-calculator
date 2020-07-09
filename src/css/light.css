@@ -11,7 +11,8 @@ body {
     color: #333;
 }
 
-::-webkit-scrollbar-track {
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
     background: rgb(255, 255, 255);
 }
 
@@ -162,6 +163,10 @@ text {
 
 .CodeMirror-selected {
     background: rgba(192, 213, 231, 0.5) !important;
+}
+
+.CodeMirror-linenumber {
+    background: #ffffff !important;
 }
 
 .cm-unit {

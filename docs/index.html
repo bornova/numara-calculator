@@ -25,13 +25,12 @@
         </div>
 
         <div id="panel" class="panel">
-            <div id="inputPane" class="inputPane resize">
-                <textarea id="input" class="input panelFont" name="sync" wrap="on" spellcheck="false" tabindex="-1"></textarea>
+            <div id="input" class="input resize">
+                <textarea id="inputArea" class="inputArea panelFont" name="sync" wrap="on" spellcheck="false" tabindex="-1"></textarea>
                 <span id="mirror" class="mirror panelFont"></span>
             </div>
             <div id="handle" class="handle"></div>
             <div id="output" class="output panelFont" name="sync"></div>
-            <div id="scroll" class="scroll panelFont" name="sync"></div>
         </div>
 
         <div id="actions" class="actions">
@@ -81,7 +80,7 @@
                 <ul uk-tab>
                     <li><a href="#">Appearance</a></li>
                     <li><a href="#">Panel UI</a></li>
-                    <li><a href="#">Settings</a></li>
+                    <li><a href="#">Calculator</a></li>
                     <a id="defaultSettingsButton" class="defButton" title="Restore default settings" uk-tooltip><i data-feather="rotate-ccw"></i></a>
                 </ul>
                 <ul id="setswitch" class="uk-switcher uk-margin">
@@ -133,7 +132,7 @@
                     <li>
                         <div class="uk-child-width-expand" uk-grid>
                             <div>Line numbers</div>
-                            <div class="uk-text-right">
+                            <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
                                     <input id="lineNoButton" type="checkbox" checked>
                                     <span class="slider round"></span>
@@ -141,8 +140,8 @@
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
-                            <div>Line wrap (input only)</div>
-                            <div class="uk-text-right">
+                            <div>Line wrapping (input only)</div>
+                            <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
                                     <input id="lineWrapButton" type="checkbox" checked>
                                     <span class="slider round"></span>
@@ -150,8 +149,8 @@
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
-                            <div>Line errors</div>
-                            <div class="uk-text-right">
+                            <div>Output errors</div>
+                            <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
                                     <input id="lineErrorButton" type="checkbox" checked>
                                     <span class="slider round"></span>
@@ -160,7 +159,7 @@
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
                             <div>Keyword tooltips</div>
-                            <div class="uk-text-right">
+                            <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
                                     <input id="tooltipsButton" type="checkbox" checked>
                                     <span class="slider round"></span>
@@ -169,7 +168,7 @@
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
                             <div>Resizable panes</div>
-                            <div class="uk-text-right">
+                            <div class="uk-text-right uk-width-2-5">
                                 <a id="sizeReset" class="sizeReset" title="Panel was resized by user. Click to reset." title="" uk-tooltip>
                                     <i data-feather="sidebar"></i>
                                 </a>
@@ -275,18 +274,21 @@
                 <span class="dialog-about-copyright">Copyright ©️ 2020 Timur Atalay</span>
             </div>
             <div uk-grid>
-                <div class="dialog-buttons uk-width-3-5">
+                <div class="dialog-buttons uk-width-3-4">
                     <div class="dialog-about-links">
                         <div>
                             <a href="https://github.com/bornova/numpad" id="openUrl" target="_blank">GitHub</a>
+                        </div>
+                        <div>
+                            <a href="https://bornova.github.io/numpad/" id="openUrl" target="_blank">Web</a>
                         </div>
                         <div>
                             <a href="https://github.com/bornova/numpad/blob/master/LICENSE" id="openUrl" target="_blank">Licence</a>
                         </div>
                     </div>
                 </div>
-                <div class="dialog-buttons uk-width-2-5 uk-text-right">
-                    <button class="uk-button uk-button-default uk-modal-close uk-button-small">OK</button>
+                <div class="dialog-buttons uk-width-1-4 uk-text-right">
+                    <button class="uk-button uk-button-default uk-modal-close uk-button-small infoOK">OK</button>
                 </div>
             </div>
         </div>

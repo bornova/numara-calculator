@@ -51,15 +51,10 @@ require('electron-context-menu')({
 
 let win;
 
-var bg;
-var theme = dims.get('theme')
-if (theme == 'system') {
-    bg = nativeTheme.shouldUseDarkColors ? '#1f1f1f' : '#ffffff';
-} else if (theme == 'dark') {
-    bg = '#1f1f1f';
-} else {
-    bg = '#ffffff';
-}
+var theme = dims.get('theme');
+var light = '#ffffff';
+var dark = '#1f1f1f';
+var bg = theme == 'system' ? (nativeTheme.shouldUseDarkColors ? dark : light) : (theme == 'dark' ? dark : light);
 
 function appWindow() {
     win = new BrowserWindow({
@@ -124,10 +119,7 @@ ipcMain.on('isMaximized', (event) => event.returnValue = win.isMaximized());
 ipcMain.on('getName', (event) => event.returnValue = app.name);
 ipcMain.on('getVersion', (event) => event.returnValue = app.getVersion());
 ipcMain.on('print', (event) => {
-    win.webContents.print({}, (success) => {
-        var result = success ? 'Sent to printer' : 'Print cancelled';
-        event.sender.send('printReply', result);
-    });
+    win.webContents.print({}, (success) => event.sender.send('printReply', success ? 'Sent to printer' : 'Print cancelled'));
 });
 ipcMain.on('resetApp', () => {
     session.defaultSession.clearStorageData()
