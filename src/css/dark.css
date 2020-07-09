@@ -149,13 +149,10 @@ line {
 }
 
 .uk-modal-dialog {
-    transition: 0s linear;
-    border-radius: 3px;
     background: #1f1f1f;
 }
 
 .uk-modal-body {
-    padding: 12px 15px;
     color: rgb(230, 230, 230);
 }
 
@@ -165,8 +162,8 @@ line {
 
 .uk-select:not([multiple]):not([size]) {
     background-color: #1f1f1f;
-    color: rgb(230, 230, 230);
     border-color: #333;
+    color: rgb(230, 230, 230);
 }
 
 .uk-select:not([multiple]):not([size]) option {
@@ -176,14 +173,14 @@ line {
 .uk-button-danger,
 .uk-button-danger:focus {
     background-color: #333;
-    color: rgba(189, 46, 46, 1);
     border-color: #333;
+    color: rgba(189, 46, 46, 1);
 }
 
 .uk-button-danger:hover {
-    color: rgba(189, 46, 46, 1);
-    border-color: rgba(189, 46, 46, 0.3);
     background-color: #444;
+    border-color: rgba(189, 46, 46, 0.3);
+    color: rgba(189, 46, 46, 1);
 }
 
 .uk-button-danger:active {

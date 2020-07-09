@@ -80,9 +80,9 @@ text {
     display: none;
     height: 30px;
     position: fixed;
-    top: 5px;
-    right: 0;
     left: 0;
+    right: 0;
+    top: 5px;
 }
 
 .header-win-title {
@@ -103,8 +103,8 @@ text {
 
 .winButtons {
     position: fixed;
-    top: 0;
     right: 0;
+    top: 0;
 }
 
 .unmax {
@@ -115,13 +115,13 @@ text {
 .max-btn-win,
 .unmax-btn-win,
 .close-btn-win {
-    float: right;
-    width: 46px;
-    height: 30px;
-    background-size: 11px 11px;
+    -webkit-app-region: no-drag;
     background-position: center;
     background-repeat: no-repeat;
-    -webkit-app-region: no-drag;
+    background-size: 11px 11px;
+    float: right;
+    height: 30px;
+    width: 46px;
 }
 
 .close-btn-win:hover {
@@ -133,40 +133,40 @@ text {
 .header-mac {
     -webkit-app-region: drag !important;
     display: none;
-    position: fixed;
-    top: 0;
-    right: 0;
-    left: 0;
     height: 50px;
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
 }
 
 .header-mac-title {
-    text-align: center;
     font-weight: 600;
     padding-top: 10px;
+    text-align: center;
 }
 
 /* Content */
 .wrapper {
     position: fixed;
-    top: 0;
-    right: 0;
     bottom: 0;
     left: 0;
+    right: 0;
+    top: 0;
 }
 
 .panel {
+    display: flex;
     position: fixed;
-    top: 50px;
     bottom: 45px;
     left: 12px;
     right: 8px;
-    display: flex;
+    top: 50px;
 }
 
 .inputArea::-webkit-scrollbar {
-    width: 0px;
     height: 8px;
+    width: 0px;
 }
 
 .input {
@@ -182,19 +182,13 @@ text {
     flex: 1;
     font-weight: 400;
     margin-left: 12px;
-    padding-right: 15px;
     min-width: 100px;
+    padding-right: 15px;
     user-select: text;
     white-space: nowrap;
 }
 
-.inputArea {
-    display: block;
-    height: 100%;
-    overflow: scroll;
-}
-
-.output {
+.inputArea, .output {
     display: block;
     height: 100%;
     overflow: scroll;
@@ -207,8 +201,8 @@ text {
 }
 
 .mirror {
-    visibility: hidden;
     display: inline-block;
+    visibility: hidden;
 }
 
 .panelFont {
@@ -229,23 +223,23 @@ text {
 }
 
 .handle {
-    height: calc(100% - 8px);
-    width: 5px;
     cursor: ew-resize;
     flex: 0 0 auto;
+    height: calc(100% - 8px);
+    width: 5px;
 }
 
 .handle::before {
     content: '';
     display: block;
-    width: 1px;
     height: 100%;
     margin: 0 auto;
+    width: 1px;
 }
 
 .gutterBlock {
-    position: fixed;
     height: 8px;
+    position: fixed;
     bottom: 50px;
     left: 0;
     z-index: 5;
@@ -253,11 +247,11 @@ text {
 
 /* Action item buttons */
 .actions {
+    display: flex;
     position: fixed;
     bottom: 12px;
     left: 15px;
     right: 15px;
-    display: flex;
 }
 
 .actions>div {
@@ -289,21 +283,21 @@ text {
 
 .leftActions a svg,
 .rightActions a svg {
+    height: 14px;
     pointer-events: none;
     width: 14px;
-    height: 14px;
 }
 
 .action,
 .noAction {
-    cursor: pointer;
     color: rgb(112, 135, 150);
+    cursor: pointer;
     padding-bottom: 2px;
 }
 
 .noAction {
-    cursor: default;
     color: rgb(124, 144, 156, 0.6);
+    cursor: default;
 }
 
 .noAction:hover {
@@ -321,9 +315,9 @@ text {
 }
 
 .dialog-open-wrapper {
-    position: relative;
-    margin: 0 5px 5px 0;
     cursor: pointer;
+    margin: 0 5px 5px 0;
+    position: relative;
 }
 
 .dialog-open-body {
@@ -331,23 +325,23 @@ text {
 }
 
 .dialog-open-title {
-    padding: 5px 5px 2px 5px;
     font-weight: 600;
+    padding: 5px 5px 2px 5px;
 }
 
 .dialog-open-date {
     color: #999999;
-    padding: 0 5px 5px 5px;
     font-size: 0.9rem;
+    padding: 0 5px 5px 5px;
 }
 
 .dialog-open-delete {
-    position: absolute;
-    top: 0;
-    right: 0;
-    font-weight: 600;
     cursor: pointer;
+    font-weight: 600;
     padding: 2px 5px;
+    position: absolute;
+    right: 0;
+    top: 0;
 }
 
 .dialog-open-delete:hover {
@@ -365,14 +359,14 @@ text {
 
 /* Settings */
 .precision {
-    width: 24px;
-    text-align: center;
-    padding: 1px 0 0 0;
     background: transparent;
+    padding: 1px 0 0 0;
+    text-align: center;
+    width: 24px;
 }
 
 .dateFormat {
-    padding-left: 18px;
+    padding-left: 17px;
 }
 
 .divider {
@@ -392,19 +386,19 @@ text {
 }
 
 .warn-icon svg {
-    width: 14px;
     height: 14px;
-    stroke: #888888;
-    pointer-events: none;
     margin-top: -4px;
+    pointer-events: none;
+    stroke: #888888;
+    width: 14px;
 }
 
 .sizeReset svg {
-    width: 14px;
     height: 14px;
-    stroke: rgb(206, 108, 73);
-    pointer-events: none;
     margin-top: -4px;
+    pointer-events: none;
+    stroke: rgb(206, 108, 73);
+    width: 14px;
 }
 
 .lastUpdated {
@@ -424,9 +418,9 @@ text {
 
 .dialog-about-header {
     display: inline-block;
-    width: 140px;
-    margin: 10px auto 10px auto;
     font-weight: 600;
+    margin: 10px auto 10px auto;
+    width: 140px;
 }
 
 .dialog-about-title {
@@ -451,16 +445,16 @@ text {
 }
 
 .dialog-about-links {
-    width: 100%;
     display: flex;
     flex: auto;
     margin: 0 0 10px 0;
+    width: 100%;
 }
 
 .dialog-about-links>div {
-    width: 50%;
-    text-align: center;
     margin: 10px 0 0 0;
+    text-align: center;
+    width: 50%;
 }
 
 .dialog-about-appVersion {
@@ -478,8 +472,8 @@ text {
 }
 
 .plotOptions {
-    margin: 0 10px 0 10px;
     line-height: 30px;
+    margin: 0 10px 0 10px;
 }
 
 /* Help dialog Items */
@@ -507,14 +501,14 @@ text {
 }
 
 .searchResults>div:nth-child(odd) {
-    font-weight: 600;
     flex: 0 0 80px;
+    font-weight: 600;
 }
 
 /* Messages */
 .msgBox {
-    text-align: center;
     min-width: 100px;
+    text-align: center;
 }
 
 .msg {
@@ -539,10 +533,10 @@ text {
 }
 
 .textBox {
-    padding: 5px;
     border: 1px solid #ccc;
-    width: 100%;
     box-sizing: border-box;
+    padding: 5px;
+    width: 100%;
 }
 
 .textBox::placeholder {
@@ -556,23 +550,23 @@ text {
 
 /* Toggle buttons */
 .switch {
-    position: relative;
     display: inline-block;
-    width: 28px;
     height: 16px;
+    position: relative;
+    width: 28px;
 }
 
 .switch input {
+    height: 0;
     opacity: 0;
     width: 0;
-    height: 0;
 }
 
 .switchText {
     display: inline-block;
-    vertical-align: text-bottom;
-    margin: 0 20px 0 2px;
     line-height: 17px;
+    margin: 0 20px 0 2px;
+    vertical-align: text-bottom;
 }
 
 .plotSwitches {
@@ -580,26 +574,26 @@ text {
 }
 
 .slider {
-    position: absolute;
+    background-color: rgb(204, 204, 204);
     cursor: pointer;
-    top: 0;
+    position: absolute;
+    bottom: 0;
     left: 0;
     right: 0;
-    bottom: 0;
-    background-color: rgb(204, 204, 204);
-    -webkit-transition: .2s;
+    top: 0;
     transition: .2s;
+    -webkit-transition: .2s;
 }
 
 .slider:before {
-    position: absolute;
     content: "";
     height: 12px;
-    width: 12px;
-    left: 2px;
+    position: absolute;
     bottom: 2px;
-    -webkit-transition: .2s;
+    left: 2px;
     transition: .2s;
+    -webkit-transition: .2s;
+    width: 12px;
 }
 
 .slider.round {
@@ -615,9 +609,8 @@ input:checked+.slider {
 }
 
 input:checked+.slider:before {
-    -webkit-transform: translateX(12px);
-    -ms-transform: translateX(12px);
     transform: translateX(12px);
+    -webkit-transform: translateX(12px);
 }
 
 /* UIkit Overrides */
@@ -632,14 +625,14 @@ input:checked+.slider:before {
 }
 
 .uk-modal-full {
+    background: rgba(0, 0, 0, .5);
     padding-left: 20px;
     padding-right: 20px;
-    background: rgba(0, 0, 0, .5);
 }
 
 .uk-modal-dialog {
-    transition: 0s linear;
     border-radius: 3px;
+    transition: 0s linear;
 }
 
 .uk-modal-body {
@@ -669,14 +662,14 @@ input:checked+.slider:before {
 }
 
 .uk-select:not([multiple]):not([size]) {
-    height: auto;
     border-width: 0 0 1px 0;
+    height: auto;
     margin-top: 1px;
 }
 
 .uk-switcher {
-    min-height: 180px;
     margin-bottom: 0;
+    min-height: 180px;
 }
 
 .uk-tab>* {
@@ -691,9 +684,9 @@ input:checked+.slider:before {
     display: inline-block;
     font-size: 1rem;
     font-weight: 600;
-    text-transform: none;
-    padding: 0 0 5px 0;
     margin-right: 15px;
+    padding: 0 0 5px 0;
+    text-transform: none;
 }
 
 .defButton {
@@ -706,17 +699,17 @@ input:checked+.slider:before {
 }
 
 .defButton svg {
-    width: 14px;
     height: 14px;
-    pointer-events: none;
     margin: -2px 0 0 0;
+    pointer-events: none;
     stroke: rgb(206, 108, 73);
+    width: 14px;
 }
 
 .uk-button {
-    padding: 0 10px;
-    line-height: 28px;
     border-radius: 3px;
+    line-height: 28px;
+    padding: 0 10px;
     transition: 0s ease-in-out;
 }
 
@@ -737,8 +730,8 @@ input:checked+.slider:before {
 .uk-button-default:focus {
     background-color: rgba(71, 138, 224, 1);
     border-color: rgba(71, 138, 224, 1);
-    color: #fff;
     box-shadow: 0 1px 5px rgba(66, 133, 244, .8);
+    color: #fff;
 }
 
 .uk-input {
@@ -762,8 +755,8 @@ input:checked+.slider:before {
 }
 
 .uk-overflow-auto {
-    min-height: 175px;
     max-height: calc(100vh - 250px);
+    min-height: 175px;
 }
 
 .uk-range {
@@ -772,8 +765,8 @@ input:checked+.slider:before {
 }
 
 .uk-tooltip {
-    word-break: break-word;
     background: #535353;
+    word-break: break-word;
     z-index: 1000000;
 }
 
@@ -783,8 +776,8 @@ pre {
 
 .CodeMirror {
     background: none !important;
-    height: 100% !important;
     font-family: 'Roboto Mono' !important;
+    height: 100% !important;
 }
 
 .CodeMirror-gutters {
@@ -793,12 +786,12 @@ pre {
 }
 
 .CodeMirror-lines {
-    padding: 0 !important;
     line-height: 28px !important;
+    padding: 0 !important;
 }
 
 .CodeMirror-cursor {
-    height: 14px !important;
+    height: 13px !important;
     margin-top: 8px;
 }
 
