@@ -16,15 +16,15 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgb(87, 87, 87);
+    background: #575757;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgb(148, 148, 148);
+    background: #949494;
 }
 
 .header-win-title {
-    color: rgb(230, 230, 230);
+    color: #e6e6e6;
 }
 
 .min-btn-win:hover,
@@ -51,15 +51,15 @@ body {
 
 /* Mac Header */
 .header-mac-title {
-    color: rgb(230, 230, 230);
+    color: #e6e6e6;
 }
 
 .lineNo {
-    color: rgb(97, 97, 97);
+    color: #616161;
 }
 
 .input {
-    color: rgb(230, 230, 230);
+    color: #e6e6e6;
 }
 
 .lineError,
@@ -73,7 +73,7 @@ body {
 }
 
 .msgBox {
-    color: rgb(88, 161, 197);
+    color: #58a1c5;
 }
 
 .handle::before {
@@ -81,13 +81,13 @@ body {
 }
 
 .output {
-    color: rgb(30, 181, 240);
+    color: #1eb5f0;
 }
 
 .dialog-open-wrapper {
     background: #333;
     border: 1px solid #222;
-    color: rgb(230, 230, 230);
+    color: #e6e6e6;
 }
 
 .dialog-open-wrapper:hover {
@@ -99,7 +99,7 @@ body {
 }
 
 .dialog-about-title {
-    color: rgb(230, 230, 230);
+    color: #e6e6e6;
 }
 
 .dialog-about-links {
@@ -109,7 +109,7 @@ body {
 /* Settings menu items */
 .precision {
     border: 1px solid #333;
-    color: rgb(230, 230, 230);
+    color: #e6e6e6;
 }
 
 .textBox {
@@ -131,7 +131,7 @@ body {
 }
 
 text {
-    fill: rgb(230, 230, 230)
+    fill: #e6e6e6
 }
 
 line {
@@ -153,21 +153,21 @@ line {
 }
 
 .uk-modal-body {
-    color: rgb(230, 230, 230);
+    color: #e6e6e6;
 }
 
 .uk-modal-title {
-    color: rgb(178, 207, 221);
+    color: #b2cfdd;
 }
 
 .uk-select:not([multiple]):not([size]) {
     background-color: #1f1f1f;
     border-color: #333;
-    color: rgb(230, 230, 230);
+    color: #e6e6e6;
 }
 
 .uk-select:not([multiple]):not([size]) option {
-    color: rgb(230, 230, 230);
+    color: #e6e6e6;
 }
 
 .uk-button-danger,
@@ -206,7 +206,7 @@ line {
 }
 
 .uk-tab>.uk-active>a {
-    color: rgb(178, 207, 221);
+    color: #b2cfdd;
 }
 
 .uk-tab::before {
@@ -218,11 +218,11 @@ line {
 }
 
 .CodeMirror-cursor {
-    border-left: 1px solid rgb(230, 230, 230) !important;
+    border-left: 1px solid #e6e6e6 !important;
 }
 
 .CodeMirror-selected {
-    background: rgba(0, 0, 0, 0.5) !important;
+    background: #151515 !important;
 }
 
 .CodeMirror-linenumber {

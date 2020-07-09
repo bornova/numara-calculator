@@ -53,8 +53,8 @@ input[type=range]::-webkit-slider-runnable-track {
 
 input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    background: rgb(70, 136, 223);
-    border: 0px solid rgb(70, 136, 223);
+    background: #4688df;
+    border: 0px solid #4688df;
     border-radius: 50%;
     height: 14px;
     margin-top: -7px;
@@ -125,7 +125,7 @@ text {
 }
 
 .close-btn-win:hover {
-    background-color: rgb(238, 17, 17);
+    background-color: #ee1111;
     background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTIgMTIiIGZpbGw9InJnYigyNTUsIDI1NSwgMjU1KSIgc2hhcGUtcmVuZGVyaW5nPSJjcmlzcEVkZ2VzIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik02LjI3OSA1LjVMMTEgMTAuMjIxbC0uNzc5Ljc3OUw1LjUgNi4yNzkuNzc5IDExIDAgMTAuMjIxIDQuNzIxIDUuNSAwIC43NzkuNzc5IDAgNS41IDQuNzIxIDEwLjIyMSAwIDExIC43NzkgNi4yNzkgNS41eiIgLz48L3N2Zz4=');
 }
 
@@ -194,7 +194,7 @@ text {
     overflow: scroll;
 }
 
-.answer {
+.output > span{
     display: block;
     height: 28px;
     user-select: text;
@@ -290,18 +290,18 @@ text {
 
 .action,
 .noAction {
-    color: rgb(112, 135, 150);
+    color: #708796;
     cursor: pointer;
     padding-bottom: 2px;
 }
 
 .noAction {
-    color: rgb(124, 144, 156, 0.6);
+    color: rgba(124, 144, 156, 0.6);
     cursor: default;
 }
 
 .noAction:hover {
-    color: rgb(124, 144, 156, 0.6);
+    color: rgba(124, 144, 156, 0.6);
 }
 
 /* Dialogs */
@@ -345,7 +345,7 @@ text {
 }
 
 .dialog-open-delete:hover {
-    background: rgb(179, 49, 49);
+    background: #b33131;
     color: #ffffff;
 }
 
@@ -363,10 +363,6 @@ text {
     padding: 1px 0 0 0;
     text-align: center;
     width: 24px;
-}
-
-.dateFormat {
-    padding-left: 17px;
 }
 
 .divider {
@@ -397,7 +393,7 @@ text {
     height: 14px;
     margin-top: -4px;
     pointer-events: none;
-    stroke: rgb(206, 108, 73);
+    stroke: #ce6c49;
     width: 14px;
 }
 
@@ -420,13 +416,10 @@ text {
     display: inline-block;
     font-weight: 600;
     margin: 10px auto 10px auto;
-    width: 140px;
 }
 
 .dialog-about-title {
-    float: left;
-    line-height: 18px;
-    padding: 1px 0 0 8px;
+    margin-left: 5px;
 }
 
 .dialog-about p {
@@ -446,15 +439,11 @@ text {
 
 .dialog-about-links {
     display: flex;
-    flex: auto;
-    margin: 0 0 10px 0;
-    width: 100%;
 }
 
 .dialog-about-links>div {
-    margin: 10px 0 0 0;
-    text-align: center;
-    width: 50%;
+    line-height: 30px;
+    width: 100%;
 }
 
 .dialog-about-appVersion {
@@ -503,6 +492,12 @@ text {
 .searchResults>div:nth-child(odd) {
     flex: 0 0 80px;
     font-weight: 600;
+}
+
+.demoButton {
+    float: left;
+    line-height: 30px;
+    vertical-align: middle;
 }
 
 /* Messages */
@@ -574,7 +569,7 @@ text {
 }
 
 .slider {
-    background-color: rgb(204, 204, 204);
+    background-color: #cccccc;
     cursor: pointer;
     position: absolute;
     bottom: 0;
@@ -605,7 +600,7 @@ text {
 }
 
 input:checked+.slider {
-    background-color: rgb(70, 136, 223);
+    background-color: #4688df;
 }
 
 input:checked+.slider:before {
@@ -702,7 +697,7 @@ input:checked+.slider:before {
     height: 14px;
     margin: -2px 0 0 0;
     pointer-events: none;
-    stroke: rgb(206, 108, 73);
+    stroke: #ce6c49;
     width: 14px;
 }
 
@@ -714,8 +709,8 @@ input:checked+.slider:before {
 }
 
 .uk-button-default {
-    background-color: rgb(53, 125, 219);
-    border-color: rgb(53, 125, 219);
+    background-color: #357ddb;
+    border-color: #357ddb;
     color: #fff;
     margin-left: 3px;
 }
@@ -791,8 +786,8 @@ pre {
 }
 
 .CodeMirror-cursor {
-    height: 13px !important;
-    margin-top: 8px;
+    height: 14px !important;
+    margin: 7px 0;
 }
 
 .CodeMirror-vscrollbar {

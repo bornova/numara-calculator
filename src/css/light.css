@@ -13,19 +13,19 @@ body {
 
 ::-webkit-scrollbar-track,
 ::-webkit-scrollbar-corner {
-    background: rgb(255, 255, 255);
+    background: #ffffff;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgb(220, 220, 220);
+    background: #dcdcdc;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgb(204, 204, 204);
+    background: #cccccc;
 }
 
 .header-win-title {
-    color: rgb(34, 53, 65);
+    color: #223541;
 }
 
 .min-btn-win:hover,
@@ -56,7 +56,7 @@ body {
 }
 
 .lineNo {
-    color: rgb(200, 200, 200);
+    color: #c8c8c8;
 }
 
 .input {
@@ -66,15 +66,15 @@ body {
 .lineError,
 .lineError:hover,
 .lineErrorNo {
-    color: rgb(126, 24, 24);
+    color: #7e1818;
 }
 
 .errTitle {
-    color: rgb(126, 24, 24);
+    color: #7e1818;
 }
 
 .msgBox {
-    color: rgb(0, 102, 153);
+    color: #006699;
 }
 
 .handle::before {
@@ -82,7 +82,7 @@ body {
 }
 
 .output {
-    color: rgb(23, 88, 107);
+    color: #17586b;
 }
 
 .dialog-open-wrapper {
@@ -95,7 +95,7 @@ body {
 }
 
 .dialog-open-delete {
-    color: rgb(126, 24, 24);
+    color: #7e1818;
 }
 
 .dialog-about-title {
@@ -162,7 +162,7 @@ text {
 }
 
 .CodeMirror-selected {
-    background: rgba(192, 213, 231, 0.5) !important;
+    background: #e8f4ff !important;
 }
 
 .CodeMirror-linenumber {

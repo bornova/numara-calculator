@@ -95,10 +95,10 @@ function calculate() {
             $('mirror').innerHTML = mirrorLine;
             var h = $('mirror').offsetHeight;
             var lh = getComputedStyle($('mirror')).lineHeight.split('px')[0];
-            br = h > lh ? '<span class="answer"></span>'.repeat((h / lh) - 1) : '';
+            br = h > lh ? '<span></span>'.repeat((h / lh) - 1) : '';
         }
 
-        answers += '<span class="answer">' + answer + '</span>' + br;
+        answers += '<span>' + answer + '</span>' + br;
     });
 
     $('output').innerHTML = answers;
