@@ -188,13 +188,14 @@ text {
     white-space: nowrap;
 }
 
-.inputArea, .output {
+.inputArea,
+.output {
     display: block;
     height: 100%;
     overflow: scroll;
 }
 
-.output > span{
+.output>span {
     display: block;
     height: 28px;
     user-select: text;
