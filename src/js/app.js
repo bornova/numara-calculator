@@ -239,6 +239,10 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
         }
     });
 
+    $('output').addEventListener('click', () => {
+        cm.execCommand('undoSelection');
+    });
+
     // Exchange rates
     math.createUnit('USD', {
         aliases: ['usd']

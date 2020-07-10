@@ -84,6 +84,10 @@ body {
     color: #1eb5f0;
 }
 
+.output > span::selection {
+    background: rgba(21, 21, 21, 0.98) !important;
+}
+
 .dialog-open-wrapper {
     background: #333;
     border: 1px solid #222;

@@ -85,6 +85,11 @@ body {
     color: #17586b;
 }
 
+.output > span::selection {
+    background: rgba(231, 243, 255, 0.98) !important;
+    color: inherit;
+}
+
 .dialog-open-wrapper {
     background: rgba(244, 244, 244, 0.3);
     border: 1px solid #eaeaea;
@@ -162,7 +167,7 @@ text {
 }
 
 .CodeMirror-selected {
-    background: #e8f4ff !important;
+    background: #e7f3ff !important;
 }
 
 .CodeMirror-linenumber {
