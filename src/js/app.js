@@ -173,17 +173,8 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
         calculate();
     }
 
-    // Tooltip defaults
-    UIkit.mixin({
-        data: {
-            delay: 300,
-            offset: 8
-        }
-    }, 'tooltip');
-
     // Prep input
     cm.setValue(ls.get('input') || '');
-    cm.setCursor(cm.lineCount(), 0);
     cm.on('change', calculate);
     cm.on('update', () => {
         var funcs = document.getElementsByClassName('cm-function');
@@ -212,36 +203,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
     // Apply settings
     applySettings();
     if (isNode) ipc.on('themeUpdate', () => applySettings());
-
-    // Panel resizer
-    var resizeDelay;
-    var isResizing = false;
-    var handle = document.querySelector('.handle');
-    var panel = handle.closest('.panel');
-    var resize = panel.querySelector('.resize');
-
-    $('handle').addEventListener('mousedown', (e) => isResizing = e.target == handle);
-    $('panel').addEventListener('mouseup', (e) => isResizing = false);
-    $('panel').addEventListener('mousemove', (e) => {
-        var offset = settings.lineNumbers ? 2 : 17;
-        var pointerRelativeXpos = e.clientX - panel.offsetLeft - offset;
-        var iWidth = pointerRelativeXpos / panel.clientWidth * 100;
-        var inputWidth = iWidth < 0 ? 0 : iWidth > 100 ? 100 : iWidth;
-        if (isResizing) {
-            resize.style.width = inputWidth + '%';
-            settings.inputWidth = inputWidth;
-            ls.set('settings', settings);
-            clearTimeout(resizeDelay);
-            resizeDelay = setTimeout(() => {
-                calculate();
-                cm.refresh();
-            }, 10);
-        }
-    });
-
-    $('output').addEventListener('click', () => {
-        cm.execCommand('undoSelection');
-    });
+    cm.execCommand('goDocEnd');
 
     // Exchange rates
     math.createUnit('USD', {
@@ -281,6 +243,14 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
         });
         calculate();
     }
+
+    // Tooltip defaults
+    UIkit.mixin({
+        data: {
+            delay: 300,
+            offset: 8
+        }
+    }, 'tooltip');
 
     // Show modal dialog
     function showModal(id) {
@@ -609,6 +579,32 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
             }
         } else {
             $('searchResults').innerHTML = 'Start typing above to search...';
+        }
+    });
+
+    // Panel resizer
+    var resizeDelay;
+    var isResizing = false;
+    var handle = document.querySelector('.handle');
+    var panel = handle.closest('.panel');
+    var resize = panel.querySelector('.resize');
+
+    $('handle').addEventListener('mousedown', (e) => isResizing = e.target == handle);
+    $('panel').addEventListener('mouseup', (e) => isResizing = false);
+    $('panel').addEventListener('mousemove', (e) => {
+        var offset = settings.lineNumbers ? 2 : 17;
+        var pointerRelativeXpos = e.clientX - panel.offsetLeft - offset;
+        var iWidth = pointerRelativeXpos / panel.clientWidth * 100;
+        var inputWidth = iWidth < 0 ? 0 : iWidth > 100 ? 100 : iWidth;
+        if (isResizing) {
+            resize.style.width = inputWidth + '%';
+            settings.inputWidth = inputWidth;
+            ls.set('settings', settings);
+            clearTimeout(resizeDelay);
+            resizeDelay = setTimeout(() => {
+                calculate();
+                cm.refresh();
+            }, 10);
         }
     });
 

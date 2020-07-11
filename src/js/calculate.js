@@ -39,6 +39,7 @@ function calculate() {
 
         if (line) {
             try {
+                setLineNo(lineNo);
                 line = lineNo > 1 && line.charAt(0).match(/[\+\-\*\/]/) && cm.getLine(lineNo - 2).length > 0 ? scope.ans + line : line;
 
                 scopeCheck(line, 0);
@@ -51,7 +52,6 @@ function calculate() {
 
                         s = s.substring(0, s.indexOf(')'));
                         sp = sp.substring(0, sp.indexOf(')') + 1);
-
                         if (sp.length === 0) break;
 
                         try {
@@ -85,6 +85,7 @@ function calculate() {
             } catch (e) {
                 var errStr = String(e).replace(/'|"/g, '`');
                 answer = settings.lineErrors ? `<a class="lineError" data-line="${lineNo}" data-error="${errStr}">Err</a>` : '';
+                setLineNo(lineNo, true);
             }
         } else {
             subtotals.length = 0;
@@ -160,6 +161,14 @@ function calculate() {
         }
 
         return solve(line, scope);
+    }
+
+    function setLineNo(lineNo, isErr) {
+        var ln = document.createElement("div");
+        ln.classList.add('CodeMirror-linenumber');
+        ln.classList.add(isErr ? 'lineErrorNo' : null);
+        ln.innerHTML = lineNo;
+        cm.setGutterMarker(lineNo - 1, 'CodeMirror-linenumbers', ln);
     }
 
     function format(answer) {
