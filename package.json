@@ -1,7 +1,7 @@
 {
     "name": "numpad",
     "productName": "Numpad",
-    "version": "4.2.2",
+    "version": "4.2.3",
     "description": "Numpad Calculator",
     "main": "src/js/main.js",
     "scripts": {
@@ -28,7 +28,7 @@
         "uikit": "^3.5.4"
     },
     "dependencies": {
-        "electron-context-menu": "^2.1.0",
+        "electron-context-menu": "^2.2.0",
         "electron-store": "^5.2.0",
         "electron-util": "^0.14.2",
         "fs-extra": "^9.0.1"
