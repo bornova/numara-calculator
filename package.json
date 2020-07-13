@@ -1,7 +1,7 @@
 {
     "name": "numpad",
     "productName": "Numpad",
-    "version": "4.2.3",
+    "version": "4.2.5",
     "description": "Numpad Calculator",
     "main": "src/js/main.js",
     "scripts": {
@@ -19,7 +19,7 @@
         "electron": "^9.1.0",
         "electron-builder": "^22.7.0",
         "feather-icons": "^4.28.0",
-        "mathjs": "^7.0.2",
+        "mathjs": "^7.1.0",
         "moment": "^2.27.0",
         "mousetrap": "^1.6.5",
         "mousetrap-global-bind": "^1.1.0",
