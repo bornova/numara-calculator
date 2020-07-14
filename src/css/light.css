@@ -167,7 +167,7 @@ text {
 }
 
 .CodeMirror-selected {
-    background: #e7f3ff !important;
+    background: #c9e0f7 !important;
 }
 
 .CodeMirror-linenumber {
@@ -200,4 +200,8 @@ text {
 
 .cm-text {
     color: #333333 !important;
+}
+
+.CodeMirror-dialog-top {
+    background: #ffffff !important;
 }

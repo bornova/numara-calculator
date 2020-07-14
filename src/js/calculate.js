@@ -37,9 +37,10 @@ function calculate() {
         var mirrorLine = line.text;
         var cline = line = line.text.trim().split('//')[0].split('#')[0];
 
+        setLineNo(lineNo);
+
         if (line) {
             try {
-                setLineNo(lineNo);
                 line = lineNo > 1 && line.charAt(0).match(/[\+\-\*\/]/) && cm.getLine(lineNo - 2).length > 0 ? scope.ans + line : line;
 
                 scopeCheck(line, 0);
@@ -164,11 +165,13 @@ function calculate() {
     }
 
     function setLineNo(lineNo, isErr) {
-        var ln = document.createElement("div");
-        ln.classList.add('CodeMirror-linenumber');
-        ln.classList.add(isErr ? 'lineErrorNo' : null);
-        ln.innerHTML = lineNo;
-        cm.setGutterMarker(lineNo - 1, 'CodeMirror-linenumbers', ln);
+        if (settings.lineNumbers) {
+            var ln = document.createElement("div");
+            ln.classList.add('CodeMirror-linenumber');
+            ln.classList.add(isErr ? 'lineErrorNo' : null);
+            ln.innerHTML = lineNo;
+            cm.setGutterMarker(lineNo - 1, 'CodeMirror-linenumbers', ln);
+        }
     }
 
     function format(answer) {

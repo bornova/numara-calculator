@@ -45,7 +45,6 @@ CodeMirror.defineMode('plain', () => {
 });
 
 var cm = CodeMirror.fromTextArea($('inputArea'), {
-    viewportMargin: Infinity,
     coverGutterNextToScrollbar: true
 });
 
@@ -178,13 +177,13 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
         }
 
         $('input').style.width = (settings.resizable ? settings.inputWidth : defaultSettings.inputWidth) + '%';
-        $('input').style.marginLeft = settings.lineNumbers ? '0px' : '15px';
         $('output').style.textAlign = settings.resizable ? 'left' : 'right';
         $('handle').style.display = settings.resizable ? 'block' : 'none';
 
         cm.setOption('mode', settings.syntax ? 'numpad' : 'plain');
         cm.setOption('lineNumbers', settings.lineNumbers);
         cm.setOption('lineWrapping', settings.lineWrap);
+        cm.setOption('viewportMargin', settings.functionTips ? Infinity : null);
         cm.focus();
 
         math.config({
@@ -482,15 +481,6 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                 ls.set('settings', settings);
                 plot();
                 break;
-
-                // Load demo
-            case 'demoButton':
-                ls.set('undoData', cm.getValue());
-                cm.setValue(demo);
-                calculate();
-                $('undoButton').style.visibility = 'visible';
-                UIkit.modal('#dialog-help').hide();
-                break;
         }
     });
 
@@ -605,20 +595,19 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
 
     // Panel resizer
     var resizeDelay;
+    var panel = $('panel');
+    var handle = $('handle');
     var isResizing = false;
-    var handle = document.querySelector('.handle');
-    var panel = handle.closest('.panel');
-    var resize = panel.querySelector('.resize');
 
     $('handle').addEventListener('mousedown', (e) => isResizing = e.target == handle);
-    $('panel').addEventListener('mouseup', (e) => isResizing = false);
+    $('panel').addEventListener('mouseup', () => isResizing = false);
     $('panel').addEventListener('mousemove', (e) => {
-        var offset = settings.lineNumbers ? 2 : 17;
+        var offset = settings.lineNumbers ? 12 : 27;
         var pointerRelativeXpos = e.clientX - panel.offsetLeft - offset;
         var iWidth = pointerRelativeXpos / panel.clientWidth * 100;
         var inputWidth = iWidth < 0 ? 0 : iWidth > 100 ? 100 : iWidth;
         if (isResizing) {
-            resize.style.width = inputWidth + '%';
+            $('input').style.width = inputWidth + '%';
             settings.inputWidth = inputWidth;
             ls.set('settings', settings);
             clearTimeout(resizeDelay);
@@ -728,55 +717,4 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
             if (document.getElementsByClassName('uk-open').length === 0) $(b).click();
         });
     });
-
-    // Demo input
-    var demo = '# In addition to all math.js features you can do:\n' +
-        '# Subtotal all numbers in a block\n' +
-        '3+5\n' +
-        '8*2\n' +
-        'subtotal\n' +
-        '\n' +
-        '# Total everything up to this point\n' +
-        'total\n' +
-        '\n' +
-        '# Average everything up to this point\n' +
-        'avg\n' +
-        '\n' +
-        'lineErrors\n' +
-        '# Dates & Times\n' +
-        'today\n' +
-        'today + 1 day + 2 weeks\n' +
-        'today + 5 years\n' +
-        '5/8/2019 + 1 week\n' +
-        'May 8, 2019 - 2 months\n' +
-        '\n' +
-        'now\n' +
-        'now + 2 hours\n' +
-        'ans + 30 minutes\n' +
-        '\n' +
-        '# ans token\n' +
-        'ans + 5 days\n' +
-        '2+2\n' +
-        'ans * 5\n' +
-        '\n' +
-        '# line# token\n' +
-        'line28 * 5 / 2\n' +
-        '\n' +
-        '# Percentages\n' +
-        '5% of 100\n' +
-        '100 + 5%\n' +
-        '100 + 25%%4 + 1\n' +
-        '100 + 20% of 100 + 10%3 - 10%\n' +
-        '(100 + 20%)% of 80 + 10%3 - 10%\n' +
-        '120% of 80 + (10%3 - 10%)\n' +
-        'line31% of 80\n' +
-        'line31 - ans%\n' +
-        '\n' +
-        '# Currencies (data from floatrates.com)\n' +
-        '1 USD to EUR\n' +
-        '25 EUR to CAD\n' +
-        '\n' +
-        '# Plot functions\n' +
-        'f(x) = sin(x)\n' +
-        'f(x) = 2x^2 + 3x -5\n';
 })();
