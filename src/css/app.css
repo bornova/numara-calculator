@@ -54,7 +54,7 @@ input[type=range]::-webkit-slider-runnable-track {
 input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
     background: #4688df;
-    border: 0px solid #4688df;
+    border: none;
     border-radius: 50%;
     height: 14px;
     margin-top: -7px;
@@ -823,16 +823,20 @@ pre {
 }
 
 .CodeMirror button {
-    font-size: inherit !important;
     color: #1e87f0 !important;
+    font-size: inherit !important;
 }
 
 .CodeMirror button:hover {
-    font-size: inherit !important;
     color: #5286b9 !important;
     cursor: pointer !important;
+    font-size: inherit !important;
 }
 
 .cm-searching {
     background-color: rgba(255, 250, 82, 0.5) !important;
+}
+
+.CodeMirror-search-label {
+    font-size: 1rem !important;
 }

@@ -16,7 +16,7 @@
 
     .print-icon {
         float: left;
-        margin: 0px 0 15px 0px;
+        margin: 0 0 15px 0;
     }
 
     .print-icon img {
@@ -25,19 +25,19 @@
     }
 
     .print-title {
+        color: #222222;
         float: left;
-        margin: 0px 0 0px 8px;
         font-size: 12px;
         font-weight: bold;
-        color: #222222;
+        margin: 0 0 0 8px;
     }
 
     .printArea {
         display: block;
         position: absolute;
         top: 0px;
-        left: 0px;
         right: 0px;
+        left: 0px;
     }
 
     .printHeader {
@@ -52,7 +52,7 @@
     }
 
     .output {
-        padding-left: 10px;
         border-left: 1px solid #e9e9e9;
+        padding-left: 10px;
     }
 }

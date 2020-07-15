@@ -154,8 +154,8 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
 
     // Check settings for property changes
     var settings;
-    var initSettings = ls.get('settings');
     var newSettings = {};
+    var initSettings = ls.get('settings');
     Object.entries(defaultSettings).map(([p, v]) => {
         newSettings[p] = p in initSettings ? initSettings[p] : defaultSettings[p];
         ls.set('settings', newSettings);
@@ -376,10 +376,10 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
     document.addEventListener('click', (e) => {
         switch (e.target.id) {
             case 'dialog-save-save': // Save calculation
-                var obj = ls.get('saved') || {};
                 var id = moment().format('x');
-                var title = $('saveTitle').value.replace(/<|>/g, '').trim() || 'No title';
+                var obj = ls.get('saved') || {};
                 var data = cm.getValue();
+                var title = $('saveTitle').value.replace(/<|>/g, '').trim() || 'No title';
 
                 obj[id] = [title, data];
                 ls.set('saved', obj);

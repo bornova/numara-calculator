@@ -268,8 +268,8 @@ line {
 
 .CodeMirror-dialog-top {
     background: #1f1f1f !important;
-    color: #e6e6e6 !important;
     border-color: #666666;
+    color: #e6e6e6 !important;
 }
 
 .CodeMirror button {
