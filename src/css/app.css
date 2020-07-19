@@ -204,6 +204,7 @@ text {
 .mirror {
     display: inline-block;
     visibility: hidden;
+    word-break: break-all;
 }
 
 .panelFont {
