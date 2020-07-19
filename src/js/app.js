@@ -184,7 +184,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
         cm.setOption('mode', settings.syntax ? 'numpad' : 'plain');
         cm.setOption('lineNumbers', settings.lineNumbers);
         cm.setOption('lineWrapping', settings.lineWrap);
-        cm.setOption('viewportMargin', settings.functionTips && settings.syntax ? Infinity : null);
+        cm.setOption('viewportMargin', settings.syntax && settings.keywordTips ? Infinity : null);
         cm.focus();
 
         math.config({
