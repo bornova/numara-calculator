@@ -433,7 +433,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                 $('sizeReset').style.display = 'none';
                 ls.set('settings', settings);
                 applySettings();
-                $('defaultSettingsButton').style.display = JSON.stringify(settings) == JSON.stringify(defaultSettings) ? 'none' : 'block';
+                $('defaultSettingsButton').style.display = JSON.stringify(settings) == JSON.stringify(defaultSettings) ? 'none' : 'inline-block';
                 break;
             case 'currencyButton': // Enable currency rates
                 if (settings.currencies) {
@@ -577,7 +577,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
         $('currencyButton').checked = settings.currencies;
         $('lastUpdated').innerHTML = settings.currencies ? ls.get('rateDate') : '';
         $('currencyUpdate').style.display = settings.currencies ? 'block' : 'none';
-        $('defaultSettingsButton').style.display = JSON.stringify(settings) == JSON.stringify(defaultSettings) ? 'none' : 'block';
+        $('defaultSettingsButton').style.display = JSON.stringify(settings) == JSON.stringify(defaultSettings) ? 'none' : 'inline-block';
     });
 
     $('precisionRange').addEventListener('input', () => $('precision-label').innerHTML = $('precisionRange').value);

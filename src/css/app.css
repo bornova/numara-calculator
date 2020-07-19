@@ -204,7 +204,7 @@ text {
 .mirror {
     display: inline-block;
     visibility: hidden;
-    word-break: break-all;
+    word-break: break-word;
 }
 
 .panelFont {
@@ -691,8 +691,7 @@ input:checked+.slider:before {
 }
 
 .defButton {
-    position: absolute;
-    right: 0;
+    vertical-align: middle;
 }
 
 .defButton:hover {
