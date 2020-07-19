@@ -552,6 +552,10 @@ text {
     width: 28px;
 }
 
+.switch:disabled {
+    opacity: 0.5;
+}
+
 .switch input {
     height: 0;
     opacity: 0;
@@ -665,7 +669,7 @@ input:checked+.slider:before {
 
 .uk-switcher {
     margin-bottom: 0;
-    min-height: 180px;
+    min-height: 200px;
 }
 
 .uk-tab>* {

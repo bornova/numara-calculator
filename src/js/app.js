@@ -134,6 +134,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
         fontWeight: '400',
         functionTips: true,
         inputWidth: 60,
+        keywordTips: true,
         lineErrors: true,
         lineNumbers: true,
         lineWrap: true,
@@ -183,7 +184,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
         cm.setOption('mode', settings.syntax ? 'numpad' : 'plain');
         cm.setOption('lineNumbers', settings.lineNumbers);
         cm.setOption('lineWrapping', settings.lineWrap);
-        cm.setOption('viewportMargin', settings.functionTips ? Infinity : null);
+        cm.setOption('viewportMargin', settings.functionTips && settings.syntax ? Infinity : null);
         cm.focus();
 
         math.config({
@@ -210,7 +211,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
         }
 
         var scps = document.getElementsByClassName('cm-scope');
-        if (scps.length > 0 && settings.functionTips) {
+        if (scps.length > 0 && settings.keywordTips) {
             for (i = 0; i < scps.length; i++) {
                 UIkit.tooltip(scps[i], {
                     title: scopelist[i],
@@ -415,6 +416,12 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                     }
                 });
                 break;
+            case 'syntaxButton':
+                $('functionTipsButton').disabled = $('syntaxButton').checked ? false : true;
+                $('functionTipsButton').parentNode.style.opacity = $('syntaxButton').checked ? '1' : '0.5';
+                $('keywordTipsButton').disabled = $('syntaxButton').checked ? false : true;
+                $('keywordTipsButton').parentNode.style.opacity = $('syntaxButton').checked ? '1' : '0.5';
+                break;
             case 'bigNumWarn': // BigNumber warning
                 showError(`Using the BigNumber option will disable function plotting and is not compatible with some math functions. 
                     It may also cause unexpected behavior and affect overall performance.<br><br>
@@ -441,7 +448,8 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                 settings.syntax = $('syntaxButton').checked;
                 settings.fontSize = $('fontSize').value;
                 settings.fontWeight = $('fontWeight').value;
-                settings.functionTips = $('tooltipsButton').checked;
+                settings.functionTips = $('functionTipsButton').checked;
+                settings.keywordTips = $('keywordTipsButton').checked;
                 settings.lineNumbers = $('lineNoButton').checked;
                 settings.lineWrap = $('lineWrapButton').checked;
                 settings.lineErrors = $('lineErrorButton').checked;
@@ -544,7 +552,12 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
         $('lineNoButton').checked = settings.lineNumbers;
         $('lineWrapButton').checked = settings.lineWrap;
         $('lineErrorButton').checked = settings.lineErrors;
-        $('tooltipsButton').checked = settings.functionTips;
+        $('functionTipsButton').checked = settings.functionTips;
+        $('functionTipsButton').disabled = settings.syntax ? false : true;
+        $('functionTipsButton').parentNode.style.opacity = settings.syntax ? '1' : '0.5';
+        $('keywordTipsButton').checked = settings.keywordTips;
+        $('keywordTipsButton').disabled = settings.syntax ? false : true;
+        $('keywordTipsButton').parentNode.style.opacity = settings.syntax ? '1' : '0.5';
         $('resizeButton').checked = settings.resizable;
         $('sizeReset').style.display = settings.inputWidth == defaultSettings.inputWidth ? 'none' : 'inline-block';
         $('sizeReset').style.visibility = settings.resizable ? 'visible' : 'hidden';
