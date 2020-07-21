@@ -243,10 +243,10 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                     $('lastUpdated').innerHTML = ls.get('rateDate');
                     cm.setOption('mode', settings.syntax ? 'numpad' : 'plain');
                     cm.focus();
-                    showMsg('Updated exchange rates');
-                }).catch((e) => showMsg('Failed to get exchange rates (' + e + ')'));
+                    notify('Updated exchange rates');
+                }).catch((e) => notify('Failed to get exchange rates (' + e + ')', 'warning'));
         } else {
-            showMsg('No internet connection.');
+            notify('No internet connection.', 'warning');
         }
     }
 
@@ -300,7 +300,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                     cm.setValue('');
                     cm.focus();
                     calculate();
-                    showMsg('Board cleared');
+                    notify('Board cleared');
                     $('undoButton').style.visibility = 'visible';
                 }
                 break;
@@ -312,7 +312,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                     if (isNode) {
                         ipc.send('print');
                         ipc.once('printReply', (event, response) => {
-                            showMsg(response);
+                            notify(response);
                             $('printBox').innerHTML = '';
                         });
                     } else {
@@ -387,14 +387,14 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                 UIkit.modal('#dialog-save').hide();
                 $('openButton').className = 'action';
                 updateSavedCount();
-                showMsg('Saved');
+                notify('Saved');
                 break;
             case 'dialog-open-deleteAll': // Delete all saved calculations
                 confirm('All saved calculations will be deleted.', () => {
                     localStorage.removeItem('saved');
                     populateSaved();
                     UIkit.modal('#dialog-open').hide();
-                    showMsg('Deleted all saved calculations');
+                    notify('Deleted all saved calculations');
                 });
                 break;
             case 'defaultSettingsButton': // Revert back to default settings
@@ -403,7 +403,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                     applySettings();
                     if (!$('currencyButton').checked) getRates();
                     UIkit.modal('#dialog-settings').hide();
-                    showMsg('Default settings applied');
+                    notify('Default settings applied');
                 });
                 break;
             case 'dialog-settings-reset': // Reset app
@@ -470,7 +470,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                 applySettings();
 
                 UIkit.modal('#dialog-settings').hide();
-                showMsg('Settings saved');
+                notify('Settings saved');
                 break;
 
                 // Plot settings
@@ -710,11 +710,13 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
     }
 
     // Show app messages
-    function showMsg(msg) {
-        $('msg').innerHTML = msg;
-        $('msg').style.opacity = '1';
-        setTimeout(() => $('msg').style.opacity = '0', 3000);
-        setTimeout(() => $('msg').innerHTML = '', 3500);
+    function notify(msg, stat) {
+        UIkit.notification({
+            message: msg,
+            status: stat || 'primary',
+            pos: 'bottom-center',
+            timeout: 3000
+        });
     }
 
     // Mousetrap

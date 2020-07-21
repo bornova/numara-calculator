@@ -713,27 +713,6 @@ input:checked+.slider:before {
     transition: 0s ease-in-out;
 }
 
-.uk-button-default {
-    background-color: #357ddb;
-    border-color: #357ddb;
-    color: #fff;
-    margin-left: 3px;
-}
-
-.uk-button-default:hover {
-    background-color: rgba(71, 138, 224, 1);
-    border-color: rgba(71, 138, 224, 1);
-    color: #fff;
-}
-
-.uk-button-default:active,
-.uk-button-default:focus {
-    background-color: rgba(71, 138, 224, 1);
-    border-color: rgba(71, 138, 224, 1);
-    box-shadow: 0 1px 5px rgba(66, 133, 244, .8);
-    color: #fff;
-}
-
 .uk-input {
     height: 24px;
 }
@@ -768,6 +747,38 @@ input:checked+.slider:before {
     background: #535353;
     word-break: break-word;
     z-index: 1000000;
+}
+
+.uk-notification-message {
+    font-size: 1rem;
+    padding: 10px 35px 10px 10px;
+}
+
+.uk-notification-close {
+    display: block;
+    top: 13px;
+    right: 10px;
+}
+
+.uk-notification-close svg {
+    height: 10px;
+    width: 10px;
+}
+
+.uk-notification {
+    width: 50vw;
+}
+
+.uk-notification-bottom-center {
+    margin-left: calc(-50vw / 2);
+}
+
+@media (max-width: 639px) {
+    .uk-notification {
+        left: 50%;
+        margin-left: calc(-50vw / 2);
+        width: 50vw;
+    }
 }
 
 pre {

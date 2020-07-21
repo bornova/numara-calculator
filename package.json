@@ -1,7 +1,7 @@
 {
     "name": "numpad",
     "productName": "Numpad",
-    "version": "4.2.8",
+    "version": "4.2.9",
     "description": "Numpad Calculator",
     "main": "src/js/main.js",
     "scripts": {
@@ -13,10 +13,10 @@
     "license": "MIT",
     "devDependencies": {
         "clean-css-cli": "^4.3.0",
-        "codemirror": "^5.55.0",
+        "codemirror": "^5.56.0",
         "cpy-cli": "^3.1.1",
         "del-cli": "^3.0.1",
-        "electron": "^9.1.0",
+        "electron": "^9.1.1",
         "electron-builder": "^22.7.0",
         "feather-icons": "^4.28.0",
         "mathjs": "^7.1.0",

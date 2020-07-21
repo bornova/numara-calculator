@@ -25,6 +25,7 @@ function calculate() {
     };
 
     $('mirror').style.width = document.getElementsByClassName('CodeMirror-line')[0].clientWidth - 8 + 'px';
+    cm.setOption('viewportMargin', settings.syntax && settings.keywordTips ? cm.lineCount() : null);
 
     scopelist.length = 0;
 
@@ -112,7 +113,36 @@ function calculate() {
 
     ls.set('input', cm.getValue());
 
-    // Solver
+    function format(answer) {
+        answer = String(answer);
+        var a = answer.trim().split(' ')[0];
+        var b = answer.replace(a, '');
+        formattedAnswer = !a.includes('e') && !isNaN(a) ?
+            settings.thouSep ? Number(a).toLocaleString(undefined, digits) + b : parseFloat(Number(a).toFixed(settings.precision)) + b :
+            a.includes('e') ? parseFloat(Number(a.split('e')[0]).toFixed(settings.precision)) + 'e' + answer.split('e')[1] + b :
+            strip(answer);
+        return formattedAnswer;
+    }
+
+    function scopeCheck(line, order) {
+        var reg = order == 0 ? /\b(?:ans|today|now|line\d+)\b/g : /\b(?:total|subtotal|avg)\b/g;
+        var result;
+        while ((result = reg.exec(line)) !== null) {
+            var val = result[0];
+            scopelist.push(order == 0 ? (scope[val] !== undefined ? format(scope[val]) : 'n/a') : format(solverScope[result[0]]));
+        }
+    }
+
+    function setLineNo(lineNo, isErr) {
+        if (settings.lineNumbers) {
+            var ln = document.createElement("div");
+            ln.classList.add('CodeMirror-linenumber');
+            ln.classList.add(isErr ? 'lineErrorNo' : null);
+            ln.innerHTML = lineNo;
+            cm.setGutterMarker(lineNo - 1, 'CodeMirror-linenumbers', ln);
+        }
+    }
+
     function solver(line) {
         solverScope.avg = solve(avgs.length > 0 ? '(' + math.mean(avgs) + ')' : 0);
         solverScope.total = solve(totals.length > 0 ? '(' + totals.join('+') + ')' : 0);
@@ -164,40 +194,10 @@ function calculate() {
         return solve(line, scope);
     }
 
-    function setLineNo(lineNo, isErr) {
-        if (settings.lineNumbers) {
-            var ln = document.createElement("div");
-            ln.classList.add('CodeMirror-linenumber');
-            ln.classList.add(isErr ? 'lineErrorNo' : null);
-            ln.innerHTML = lineNo;
-            cm.setGutterMarker(lineNo - 1, 'CodeMirror-linenumbers', ln);
-        }
-    }
-
-    function format(answer) {
-        answer = String(answer);
-        var a = answer.trim().split(' ')[0];
-        var b = answer.replace(a, '');
-        formattedAnswer = !a.includes('e') && !isNaN(a) ?
-            settings.thouSep ? Number(a).toLocaleString(undefined, digits) + b : parseFloat(Number(a).toFixed(settings.precision)) + b :
-            a.includes('e') ? parseFloat(Number(a.split('e')[0]).toFixed(settings.precision)) + 'e' + answer.split('e')[1] + b :
-            strip(answer);
-        return formattedAnswer;
-    }
-
     function strip(s) {
         var t = s.length;
         if (s.charAt(0) === '"') s = s.substring(1, t--);
         if (s.charAt(--t) === '"') s = s.substring(0, t);
         return s;
-    }
-
-    function scopeCheck(line, order) {
-        var reg = order == 0 ? /\b(?:ans|today|now|line\d+)\b/g : /\b(?:total|subtotal|avg)\b/g;
-        var result;
-        while ((result = reg.exec(line)) !== null) {
-            var val = result[0];
-            scopelist.push(order == 0 ? (scope[val] !== undefined ? format(scope[val]) : 'n/a') : format(solverScope[result[0]]));
-        }
     }
 }
