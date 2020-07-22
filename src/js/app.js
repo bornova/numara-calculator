@@ -296,12 +296,9 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
         switch (e.target.id) {
             case 'clearButton': // Clear board
                 if (cm.getValue() != '') {
-                    ls.set('undoData', cm.getValue());
                     cm.setValue('');
                     cm.focus();
                     calculate();
-                    notify('Board cleared');
-                    $('undoButton').style.visibility = 'visible';
                 }
                 break;
             case 'printButton': // Print calculations
@@ -329,11 +326,6 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                 break;
             case 'openButton': // Open saved calculations
                 if (Object.keys(ls.get('saved') || {}).length > 0) showModal('#dialog-open');
-                break;
-            case 'undoButton': // Undo action
-                cm.setValue(ls.get('undoData'));
-                $('undoButton').style.visibility = 'hidden';
-                calculate();
                 break;
             case 'settingsButton': // Open settings dialog
                 showModal('#dialog-settings');
@@ -498,10 +490,8 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
         var saved = ls.get('saved');
         if (e.target.parentNode.getAttribute('data-action') == 'load') {
             pid = e.target.parentNode.parentNode.id;
-            ls.set('undoData', cm.getValue());
             cm.setValue(saved[pid][1]);
             calculate();
-            $('undoButton').style.visibility = 'visible';
             UIkit.modal('#dialog-open').hide();
         }
         if (e.target.getAttribute('data-action') == 'delete') {

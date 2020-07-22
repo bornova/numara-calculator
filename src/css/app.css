@@ -53,7 +53,7 @@ input[type=range]::-webkit-slider-runnable-track {
 
 input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    background: #4688df;
+    background: #1e87f0;
     border: none;
     border-radius: 50%;
     height: 14px;
@@ -258,10 +258,6 @@ text {
 
 .actions>div {
     flex: auto;
-}
-
-.undoButton {
-    visibility: hidden;
 }
 
 .leftActions {
@@ -606,7 +602,7 @@ text {
 }
 
 input:checked+.slider {
-    background-color: #4688df;
+    background-color: #1e87f0;
 }
 
 input:checked+.slider:before {
@@ -751,12 +747,12 @@ input:checked+.slider:before {
 
 .uk-notification-message {
     font-size: 1rem;
-    padding: 10px 35px 10px 10px;
+    padding: 8px 35px 8px 10px;
 }
 
 .uk-notification-close {
     display: block;
-    top: 13px;
+    top: 11px;
     right: 10px;
 }
 

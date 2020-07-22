@@ -26,8 +26,7 @@
 
         <div id="panel" class="panel">
             <div id="input" class="input">
-                <textarea id="inputArea" class="inputArea panelFont" name="sync" spellcheck="false"
-                    tabindex="-1"></textarea>
+                <textarea id="inputArea" class="inputArea panelFont" name="sync" spellcheck="false" tabindex="-1"></textarea>
                 <span id="mirror" class="mirror panelFont"></span>
             </div>
             <div id="handle" class="handle"></div>
@@ -36,12 +35,10 @@
 
         <div id="actions" class="actions">
             <div id="leftActions" class="leftActions">
-                <a id="clearButton" class="action clearButton" title="Clear" uk-tooltip><i
-                        data-feather="skip-back"></i></a>
+                <a id="clearButton" class="action clearButton" title="Clear" uk-tooltip><i data-feather="skip-back"></i></a>
                 <a id="printButton" class="action" title="Print" uk-tooltip><i data-feather="printer"></i></a>
                 <a id="saveButton" class="action" title="Save" uk-tooltip><i data-feather="save"></i></a>
                 <a id="openButton" class="action" uk-tooltip><i data-feather="folder"></i></a>
-                <a id="undoButton" class="action" title="Undo" uk-tooltip><i data-feather="rotate-ccw"></i></a>
             </div>
             <div id="msgBox" class="msgBox">
                 <span id="msg" class="msg"></span>
@@ -60,7 +57,7 @@
             <div><input id="saveTitle" class="textBox" type="text" maxlength="36" placeholder="Title (Optional)"></div>
             <div class="dialog-buttons uk-text-right">
                 <button id="dialog-save-save" class="uk-button uk-button-primary uk-button-small">Save</button>
-                <button class="uk-button uk-button-primary uk-modal-close uk-button-small">Close</button>
+                <button class="uk-button uk-button-primary uk-modal-close uk-button-small">Cancel</button>
             </div>
         </div>
     </div>
@@ -70,9 +67,8 @@
             <h2 class="uk-modal-title">Open Calculation</h2>
             <div id="dialog-open-body" class="dialog-open-body uk-overflow-auto"></div>
             <div class="dialog-buttons uk-text-right">
-                <button id="dialog-open-deleteAll" class="uk-button uk-button-danger uk-button-small">Delete
-                    All</button>
-                <button class="uk-button uk-button-primary uk-modal-close uk-button-small">Close</button>
+                <button id="dialog-open-deleteAll" class="uk-button uk-button-danger uk-button-small">DeleteAll</button>
+                <button class="uk-button uk-button-primary uk-modal-close uk-button-small">Cancel</button>
             </div>
         </div>
     </div>
@@ -158,8 +154,7 @@
                                         <span id="precision-label" class="uk-label precision">1</span>
                                     </div>
                                     <div class="uk-text-right range uk-width-3-5">
-                                        <input id="precisionRange" class="uk-range" type="range" min="0" max="16"
-                                            step="1">
+                                        <input id="precisionRange" class="uk-range" type="range" min="0" max="16" step="1">
                                     </div>
                                 </div>
                             </div>
@@ -236,8 +231,7 @@
                         <div class="uk-child-width-expand" uk-grid>
                             <div>Resizable panes</div>
                             <div class="uk-text-right uk-width-2-5">
-                                <a id="sizeReset" class="sizeReset" title="Panel was resized by user. Click to reset."
-                                    title="" uk-tooltip>
+                                <a id="sizeReset" class="sizeReset" title="Panel was resized by user. Click to reset." title="" uk-tooltip>
                                     <i data-feather="sidebar"></i>
                                 </a>
                                 <label class="switch">
@@ -255,10 +249,10 @@
                 </div>
                 <div class="dialog-buttons uk-width-3-5 uk-text-right">
                     <button id="defaultSettingsButton" class="uk-button uk-button-default uk-button-small defButton" title="Restore default settings" uk-tooltip>
-                        <i data-feather="crosshair"></i>
+                        <i data-feather="rotate-ccw"></i>
                     </button>
                     <button id="dialog-settings-save" class="uk-button uk-button-primary uk-button-small">Save</button>
-                    <button class="uk-button uk-button-primary uk-modal-close uk-button-small">Close</button>
+                    <button class="uk-button uk-button-primary uk-modal-close uk-button-small">Cancel</button>
                 </div>
             </div>
         </div>
@@ -268,8 +262,7 @@
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical">
             <h2 class="uk-modal-title">Help</h2>
             <div class="helpBox">
-                <input id="searchBox" class="textBox" type="search" maxlength="100"
-                    placeholder="Start typing to search...">
+                <input id="searchBox" class="textBox" type="search" maxlength="100" placeholder="Start typing to search...">
             </div>
             <div class="searchWrapper">
                 <div id="searchResults" class="searchResults">Start typing above to search...</div>
@@ -300,8 +293,7 @@
                             <a href="https://bornova.github.io/numpad/" id="openUrl" target="_blank">Web</a>
                         </div>
                         <div>
-                            <a href="https://github.com/bornova/numpad/blob/master/LICENSE" id="openUrl"
-                                target="_blank">Licence</a>
+                            <a href="https://github.com/bornova/numpad/blob/master/LICENSE" id="openUrl" target="_blank">Licence</a>
                         </div>
                     </div>
                 </div>

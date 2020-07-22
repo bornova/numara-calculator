@@ -109,7 +109,6 @@ function calculate() {
     $('clearButton').className = cm.getValue() == '' ? 'noAction' : 'action';
     $('printButton').className = cm.getValue() == '' ? 'noAction' : 'action';
     $('saveButton').className = cm.getValue() == '' ? 'noAction' : 'action';
-    $('undoButton').style.visibility = 'hidden';
 
     ls.set('input', cm.getValue());
 
