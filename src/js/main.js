@@ -1,7 +1,7 @@
 /**
  * @copyright 2020 Timur Atalay 
- * @Homepage https://github.com/bornova/numpad
- * @license MIT https://github.com/bornova/numpad/blob/master/LICENSE
+ * @Homepage https://github.com/bornova/numara
+ * @license MIT https://github.com/bornova/numara/blob/master/LICENSE
  */
 
 const {
@@ -119,7 +119,7 @@ ipcMain.on('isMaximized', (event) => event.returnValue = win.isMaximized());
 ipcMain.on('getName', (event) => event.returnValue = app.name);
 ipcMain.on('getVersion', (event) => event.returnValue = app.getVersion());
 ipcMain.on('print', (event) => {
-    win.webContents.print({}, (success) => event.sender.send('printReply', success ? 'Sent to printer' : 'Print cancelled'));
+    win.webContents.print({}, (success) => event.sender.send('printReply', success ? 'Sent to printer' : false));
 });
 ipcMain.on('resetApp', () => {
     session.defaultSession.clearStorageData()
@@ -260,7 +260,7 @@ if (is.macos) {
             role: 'help',
             submenu: [{
                 label: 'Learn More',
-                click: async () => await shell.openExternal('https://github.com/bornova/numpad')
+                click: async () => await shell.openExternal('https://github.com/bornova/numara')
             }]
         }
     ];

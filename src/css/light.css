@@ -1,7 +1,7 @@
 /**
  * @copyright 2020 Timur Atalay 
- * @Homepage https://github.com/bornova/numpad
- * @license MIT https://github.com/bornova/numpad/blob/master/LICENSE
+ * @Homepage https://github.com/bornova/numara
+ * @license MIT https://github.com/bornova/numara/blob/master/LICENSE
  */
 
 /* UI defaults */
@@ -141,6 +141,15 @@ text {
 /* UIkit Overrides */
 .uk-modal {
     background: rgba(0, 0, 0, .6);
+}
+
+
+.uk-button-default {
+    border-color: #e7eff7;
+}
+
+.uk-button-default:focus, .uk-button-default:hover {
+    border-color: #c9dcef;
 }
 
 .uk-button-danger,

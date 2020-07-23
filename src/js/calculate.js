@@ -1,7 +1,7 @@
 /**
  * @copyright 2020 Timur Atalay 
- * @homepage https://github.com/bornova/numpad
- * @license MIT https://github.com/bornova/numpad/blob/master/LICENSE
+ * @homepage https://github.com/bornova/numara
+ * @license MIT https://github.com/bornova/numara/blob/master/LICENSE
  */
 
 var scopelist = [];

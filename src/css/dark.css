@@ -1,7 +1,7 @@
 /**
  * @copyright 2020 Timur Atalay 
- * @Homepage https://github.com/bornova/numpad
- * @license MIT https://github.com/bornova/numpad/blob/master/LICENSE
+ * @Homepage https://github.com/bornova/numara
+ * @license MIT https://github.com/bornova/numara/blob/master/LICENSE
  */
 
 /* UI defaults */
@@ -179,9 +179,9 @@ line {
     border-color: #333333;
 }
 
-.uk-button-default:hover {
+.uk-button-default:focus, .uk-button-default:hover {
     background-color: #333333;
-    border-color: #444444;
+    border-color: #393e44;
 }
 
 .uk-button-danger,

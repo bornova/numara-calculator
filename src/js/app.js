@@ -1,7 +1,7 @@
 /**
  * @copyright 2020 Timur Atalay 
- * @homepage https://github.com/bornova/numpad
- * @license MIT https://github.com/bornova/numpad/blob/master/LICENSE
+ * @homepage https://github.com/bornova/numara
+ * @license MIT https://github.com/bornova/numara/blob/master/LICENSE
  */
 
 // Get element by id
@@ -14,7 +14,7 @@ const ls = {
 };
 
 // Codemirror
-CodeMirror.defineMode('numpad', () => {
+CodeMirror.defineMode('numara', () => {
     return {
         token: (stream, state) => {
             if (stream.match(/\/\/.*/) || stream.match(/#.*/)) return 'comment';
@@ -54,7 +54,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
     var isNode = navigator.userAgent.toLowerCase().includes('electron');
 
     var ipc = isNode ? require('electron').ipcRenderer : null;
-    var appName = isNode ? ipc.sendSync('getName') : 'Numpad';
+    var appName = isNode ? ipc.sendSync('getName') : 'Numara';
     var appVersion = isNode ? ipc.sendSync('getVersion') : ' - Web';
 
     // Set app info
@@ -142,7 +142,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
         plotGridLines: false,
         plotTipLines: false,
         precision: '4',
-        resizable: true,
+        divider: true,
         syntax: true,
         theme: 'system',
         thouSep: true
@@ -152,6 +152,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
     // Initiate app settings and theme
     if (!ls.get('theme')) ls.set('theme', 'light');
     if (!ls.get('settings')) ls.set('settings', defaultSettings);
+    if (!ls.get('inputWidth')) ls.set('inputWidth', defaultSettings.inputWidth);
 
     // Check settings for property changes
     var settings;
@@ -177,11 +178,11 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
             el.style.fontWeight = settings.fontWeight;
         }
 
-        $('input').style.width = (settings.resizable ? settings.inputWidth : defaultSettings.inputWidth) + '%';
-        $('output').style.textAlign = settings.resizable ? 'left' : 'right';
-        $('handle').style.display = settings.resizable ? 'block' : 'none';
+        $('input').style.width = (settings.divider ? ls.get('inputWidth') : defaultSettings.inputWidth) + '%';
+        $('output').style.textAlign = settings.divider ? 'left' : 'right';
+        $('handle').style.display = settings.divider ? 'block' : 'none';
 
-        cm.setOption('mode', settings.syntax ? 'numpad' : 'plain');
+        cm.setOption('mode', settings.syntax ? 'numara' : 'plain');
         cm.setOption('lineNumbers', settings.lineNumbers);
         cm.setOption('lineWrapping', settings.lineWrap);
         cm.setOption('viewportMargin', settings.syntax && settings.keywordTips ? Infinity : null);
@@ -241,12 +242,11 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                     ls.set('rates', data);
                     createRateUnits();
                     $('lastUpdated').innerHTML = ls.get('rateDate');
-                    cm.setOption('mode', settings.syntax ? 'numpad' : 'plain');
+                    cm.setOption('mode', settings.syntax ? 'numara' : 'plain');
                     cm.focus();
-                    notify('Updated exchange rates');
                 }).catch((e) => notify('Failed to get exchange rates (' + e + ')', 'warning'));
         } else {
-            notify('No internet connection.', 'warning');
+            notify('No internet connection. Could not update exchange rates.', 'warning');
         }
     }
 
@@ -309,7 +309,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                     if (isNode) {
                         ipc.send('print');
                         ipc.once('printReply', (event, response) => {
-                            notify(response);
+                            if (response) notify(response);
                             $('printBox').innerHTML = '';
                         });
                     } else {
@@ -420,20 +420,10 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                     <a target="_blank" href="https://mathjs.org/docs/datatypes/bignumbers.html">Read more on BigNumbers</a>`,
                     'Caution: BigNumber Limitations');
                 break;
-            case 'sizeReset': // Reset panel size
-                settings.inputWidth = defaultSettings.inputWidth;
-                $('sizeReset').style.display = 'none';
-                ls.set('settings', settings);
-                applySettings();
-                $('defaultSettingsButton').style.display = JSON.stringify(settings) == JSON.stringify(defaultSettings) ? 'none' : 'inline-block';
-                break;
             case 'currencyButton': // Enable currency rates
                 if (settings.currencies) {
                     $('currencyUpdate').style.display = settings.currencies ? $('currencyButton').checked ? 'block' : 'none' : null;
                 }
-                break;
-            case 'resizeButton': // Enable currency rates
-                $('sizeReset').style.visibility = $('resizeButton').checked ? 'visible' : 'hidden';
                 break;
             case 'dialog-settings-save': // Save settings
                 settings.theme = $('themeList').value;
@@ -445,7 +435,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                 settings.lineNumbers = $('lineNoButton').checked;
                 settings.lineWrap = $('lineWrapButton').checked;
                 settings.lineErrors = $('lineErrorButton').checked;
-                settings.resizable = $('resizeButton').checked;
+                settings.divider = $('dividerButton').checked;
                 settings.precision = $('precisionRange').value;
                 settings.bigNumber = $('bigNumberButton').checked;
                 settings.dateFormat = $('dateFormat').value;
@@ -548,9 +538,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
         $('keywordTipsButton').checked = settings.keywordTips;
         $('keywordTipsButton').disabled = settings.syntax ? false : true;
         $('keywordTipsButton').parentNode.style.opacity = settings.syntax ? '1' : '0.5';
-        $('resizeButton').checked = settings.resizable;
-        $('sizeReset').style.display = settings.inputWidth == defaultSettings.inputWidth ? 'none' : 'inline-block';
-        $('sizeReset').style.visibility = settings.resizable ? 'visible' : 'hidden';
+        $('dividerButton').checked = settings.divider;
         $('precisionRange').value = settings.precision;
         $('precision-label').innerHTML = settings.precision;
         $('dateFormat').innerHTML = `
@@ -602,6 +590,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
     var handle = $('handle');
     var isResizing = false;
 
+    $('handle').addEventListener('dblclick', resetHandle);
     $('handle').addEventListener('mousedown', (e) => isResizing = e.target == handle);
     $('panel').addEventListener('mouseup', () => isResizing = false);
     $('panel').addEventListener('mousemove', (e) => {
@@ -611,8 +600,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
         var inputWidth = iWidth < 0 ? 0 : iWidth > 100 ? 100 : iWidth;
         if (isResizing) {
             $('input').style.width = inputWidth + '%';
-            settings.inputWidth = inputWidth;
-            ls.set('settings', settings);
+            ls.set('inputWidth', inputWidth);
             clearTimeout(resizeDelay);
             resizeDelay = setTimeout(() => {
                 calculate();
@@ -620,6 +608,11 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
             }, 10);
         }
     });
+
+    function resetHandle() {
+        ls.set('inputWidth', defaultSettings.inputWidth);
+        applySettings();
+    }
 
     // Plot
     var func;

@@ -3,7 +3,7 @@
 
 <head>
     <link rel="stylesheet" href="assets/fonts/fonts.css">
-    <link rel="stylesheet" href="numpad.css">
+    <link rel="stylesheet" href="numara.css">
     <link id="style" rel="stylesheet" href="">
 </head>
 
@@ -211,15 +211,6 @@
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
-                            <div>Line wrapping (input only)</div>
-                            <div class="uk-text-right uk-width-2-5">
-                                <label class="switch">
-                                    <input id="lineWrapButton" type="checkbox">
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
                             <div>Line errors</div>
                             <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
@@ -229,13 +220,19 @@
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
-                            <div>Resizable panes</div>
+                            <div>Panel divider</div>
                             <div class="uk-text-right uk-width-2-5">
-                                <a id="sizeReset" class="sizeReset" title="Panel was resized by user. Click to reset." title="" uk-tooltip>
-                                    <i data-feather="sidebar"></i>
-                                </a>
                                 <label class="switch">
-                                    <input id="resizeButton" type="checkbox">
+                                    <input id="dividerButton" type="checkbox">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div>Wrap lines (input only)</div>
+                            <div class="uk-text-right uk-width-2-5">
+                                <label class="switch">
+                                    <input id="lineWrapButton" type="checkbox">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -287,13 +284,13 @@
                 <div class="dialog-buttons uk-width-3-4">
                     <div class="dialog-about-links">
                         <div>
-                            <a href="https://github.com/bornova/numpad" id="openUrl" target="_blank">GitHub</a>
+                            <a href="https://github.com/bornova/numara" id="openUrl" target="_blank">GitHub</a>
                         </div>
                         <div>
-                            <a href="https://bornova.github.io/numpad/" id="openUrl" target="_blank">Web</a>
+                            <a href="https://bornova.github.io/numara/" id="openUrl" target="_blank">Web</a>
                         </div>
                         <div>
-                            <a href="https://github.com/bornova/numpad/blob/master/LICENSE" id="openUrl" target="_blank">Licence</a>
+                            <a href="https://github.com/bornova/numara/blob/master/LICENSE" id="openUrl" target="_blank">Licence</a>
                         </div>
                     </div>
                 </div>
@@ -364,7 +361,7 @@
         <div id="printBox" class="printBox"></div>
     </div>
 
-    <script src="numpad.js"></script>
+    <script src="numara.js"></script>
 </body>
 
 </html>

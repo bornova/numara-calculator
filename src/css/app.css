@@ -1,7 +1,7 @@
 /**
  * @copyright 2020 Timur Atalay 
- * @Homepage https://github.com/bornova/numpad
- * @license MIT https://github.com/bornova/numpad/blob/master/LICENSE
+ * @Homepage https://github.com/bornova/numara
+ * @license MIT https://github.com/bornova/numara/blob/master/LICENSE
  */
 
 * {
@@ -220,10 +220,6 @@ text {
     word-break: break-word;
 }
 
-.resize {
-    box-sizing: border-box;
-}
-
 .handle {
     cursor: ew-resize;
     flex: 0 0 auto;
@@ -368,11 +364,6 @@ text {
     height: 20px;
 }
 
-.sizeReset {
-    display: inline-block;
-    margin-right: 5px;
-}
-
 .warn-icon {
     display: inline-block;
     margin-left: 3px;
@@ -384,14 +375,6 @@ text {
     margin-top: -4px;
     pointer-events: none;
     stroke: #888888;
-    width: 14px;
-}
-
-.sizeReset svg {
-    height: 14px;
-    margin-top: -4px;
-    pointer-events: none;
-    stroke: #ce6c49;
     width: 14px;
 }
 
