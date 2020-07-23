@@ -46,7 +46,8 @@ const dims = new store({
 });
 
 require('electron-context-menu')({
-    prepend: (params, browserWindow) => []
+    prepend: (params, browserWindow) => [],
+    showSearchWithGoogle: false
 });
 
 let win;
