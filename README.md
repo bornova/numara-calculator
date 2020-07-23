@@ -1,4 +1,4 @@
-# Numpad
+# Numara Calculator
 
 Simple calculator app built on Electron, powered by [Math.js](https://github.com/josdejong/mathjs)
 
