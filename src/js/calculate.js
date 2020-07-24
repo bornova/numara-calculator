@@ -111,6 +111,7 @@ function calculate() {
     $('saveButton').className = cm.getValue() == '' ? 'noAction' : 'action';
 
     ls.set('input', cm.getValue());
+    cm.scrollIntoView(cm.getCursor());
 
     function format(answer) {
         answer = String(answer);
