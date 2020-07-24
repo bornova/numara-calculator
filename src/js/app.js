@@ -197,7 +197,10 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
 
     // Prep input
     cm.setValue(ls.get('input') || '');
-    cm.on('change', calculate);
+    cm.on('change', () => {
+        calculate();
+        cm.scrollIntoView(cm.getCursor());
+    });
     cm.on('update', () => {
         var funcs = document.getElementsByClassName('cm-function');
         if (funcs.length > 0 && settings.functionTips) {
