@@ -21,16 +21,15 @@ function calculate() {
         upperExp: 12
     };
     var digits = {
-        maximumFractionDigits: settings.precision
+        maximumFractionDigits: settings.app.precision
     };
 
     $('mirror').style.width = document.getElementsByClassName('CodeMirror-line')[0].clientWidth - 8 + 'px';
-    cm.setOption('viewportMargin', settings.syntax && settings.keywordTips ? cm.lineCount() : null);
 
     scopelist.length = 0;
 
-    scope.now = moment().format(settings.dateFormat + ' LT');
-    scope.today = moment().format(settings.dateFormat);
+    scope.now = moment().format(settings.app.dateFormat + ' LT');
+    scope.today = moment().format(settings.app.dateFormat);
 
     cm.eachLine((line) => {
         var answer = '';
@@ -86,7 +85,7 @@ function calculate() {
                 }
             } catch (e) {
                 var errStr = String(e).replace(/'|"/g, '`');
-                answer = settings.lineErrors ? `<a class="lineError" data-line="${lineNo}" data-error="${errStr}">Err</a>` : '';
+                answer = settings.app.lineErrors ? `<a class="lineError" data-line="${lineNo}" data-error="${errStr}">Err</a>` : '';
                 setLineNo(lineNo, true);
             }
         } else {
@@ -94,7 +93,7 @@ function calculate() {
         }
 
         var br = '';
-        if (settings.lineWrap) {
+        if (settings.app.lineWrap) {
             $('mirror').innerHTML = mirrorLine;
             var h = $('mirror').offsetHeight;
             var lh = getComputedStyle($('mirror')).lineHeight.split('px')[0];
@@ -117,8 +116,8 @@ function calculate() {
         var a = answer.trim().split(' ')[0];
         var b = answer.replace(a, '');
         formattedAnswer = !a.includes('e') && !isNaN(a) ?
-            settings.thouSep ? Number(a).toLocaleString(undefined, digits) + b : parseFloat(Number(a).toFixed(settings.precision)) + b :
-            a.includes('e') ? parseFloat(Number(a.split('e')[0]).toFixed(settings.precision)) + 'e' + answer.split('e')[1] + b :
+            settings.app.thouSep ? Number(a).toLocaleString(undefined, digits) + b : parseFloat(Number(a).toFixed(settings.app.precision)) + b :
+            a.includes('e') ? parseFloat(Number(a.split('e')[0]).toFixed(settings.app.precision)) + 'e' + answer.split('e')[1] + b :
             strip(answer);
         return formattedAnswer;
     }
@@ -133,7 +132,7 @@ function calculate() {
     }
 
     function setLineNo(lineNo, isErr) {
-        if (settings.lineNumbers) {
+        if (settings.app.lineNumbers) {
             var ln = document.createElement("div");
             ln.classList.add('CodeMirror-linenumber');
             ln.classList.add(isErr ? 'lineErrorNo' : null);
@@ -166,7 +165,7 @@ function calculate() {
             var rightOfDate = String(solve(line.replace(lineDate, ''), scope));
             var dwmy = rightOfDate.match(new RegExp(dateReg));
             var dateNum = rightOfDate.split(dwmy)[0];
-            var timeFormat = line.match(new RegExp(timeReg)) ? settings.dateFormat + ' LT' : settings.dateFormat;
+            var timeFormat = line.match(new RegExp(timeReg)) ? settings.app.dateFormat + ' LT' : settings.app.dateFormat;
 
             line = '"' + moment(new Date(lineDate)).add(dateNum, dwmy).format(timeFormat) + '"';
         }

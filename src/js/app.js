@@ -127,69 +127,62 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
 
     // App settings
     const defaultSettings = {
-        bigNumber: false,
-        currencies: true,
-        dateFormat: 'l',
-        fontSize: '1.1rem',
-        fontWeight: '400',
-        functionTips: true,
+        app: {
+            bigNumber: false,
+            currencies: true,
+            dateFormat: 'l',
+            divider: true,
+            fontSize: '1.1rem',
+            fontWeight: '400',
+            functionTips: true,
+            lineErrors: true,
+            lineNumbers: true,
+            lineWrap: true,
+            precision: '4',
+            syntax: true,
+            theme: 'system',
+            thouSep: true
+        },
         inputWidth: 60,
-        keywordTips: true,
-        lineErrors: true,
-        lineNumbers: true,
-        lineWrap: true,
-        plotClosed: false,
-        plotGridLines: false,
-        plotTipLines: false,
-        precision: '4',
-        divider: true,
-        syntax: true,
-        theme: 'system',
-        thouSep: true
+        plot: {
+            plotArea: false,
+            plotGrid: false,
+            plotCross: false
+        },
+        version: '1.0'
     };
     Object.freeze(defaultSettings);
 
     // Initiate app settings and theme
-    if (!ls.get('theme')) ls.set('theme', 'light');
-    if (!ls.get('settings')) ls.set('settings', defaultSettings);
-    if (!ls.get('inputWidth')) ls.set('inputWidth', defaultSettings.inputWidth);
-
-    // Check settings for property changes
     var settings;
-    var newSettings = {};
-    var initSettings = ls.get('settings');
-    Object.entries(defaultSettings).map(([p, v]) => {
-        newSettings[p] = p in initSettings ? initSettings[p] : defaultSettings[p];
-        ls.set('settings', newSettings);
-    });
+    if (!ls.get('settings') || ls.get('settings').version !== defaultSettings.version) ls.set('settings', defaultSettings);
 
     function applySettings() {
         settings = ls.get('settings');
 
         $('style').setAttribute('href',
-            settings.theme == 'system' ? (isNode ? (ipc.sendSync('isDark') ? 'dark.css' : 'light.css') : 'light.css') :
-            settings.theme == 'light' ? 'light.css' : 'dark.css');
+            settings.app.theme == 'system' ? (isNode ? (ipc.sendSync('isDark') ? 'dark.css' : 'light.css') : 'light.css') :
+            settings.app.theme == 'light' ? 'light.css' : 'dark.css');
 
-        if (isNode) ipc.send('setTheme', settings.theme);
+        if (isNode) ipc.send('setTheme', settings.app.theme);
 
         var elements = document.querySelectorAll('.panelFont, .CodeMirror');
         for (var el of elements) {
-            el.style.fontSize = settings.fontSize;
-            el.style.fontWeight = settings.fontWeight;
+            el.style.fontSize = settings.app.fontSize;
+            el.style.fontWeight = settings.app.fontWeight;
         }
 
-        $('input').style.width = (settings.divider ? ls.get('inputWidth') : defaultSettings.inputWidth) + '%';
-        $('output').style.textAlign = settings.divider ? 'left' : 'right';
-        $('handle').style.display = settings.divider ? 'block' : 'none';
+        $('input').style.width = (settings.app.divider ? settings.inputWidth : defaultSettings.inputWidth) + '%';
+        $('handle').style.display = settings.app.divider ? 'block' : 'none';
+        $('output').style.textAlign = settings.app.divider ? 'left' : 'right';
 
-        cm.setOption('mode', settings.syntax ? 'numara' : 'plain');
-        cm.setOption('lineNumbers', settings.lineNumbers);
-        cm.setOption('lineWrapping', settings.lineWrap);
-        cm.setOption('viewportMargin', settings.syntax && settings.keywordTips ? Infinity : null);
+        cm.setOption('mode', settings.app.syntax ? 'numara' : 'plain');
+        cm.setOption('lineNumbers', settings.app.lineNumbers);
+        cm.setOption('lineWrapping', settings.app.lineWrap);
         cm.focus();
 
         math.config({
-            number: settings.bigNumber ? 'BigNumber' : 'number'
+            number: settings.app.bigNumber ? 'BigNumber' : 'number'
         });
 
         calculate();
@@ -203,22 +196,12 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
     });
     cm.on('update', () => {
         var funcs = document.getElementsByClassName('cm-function');
-        if (funcs.length > 0 && settings.functionTips) {
+        if (funcs.length > 0 && settings.app.functionTips) {
             for (var e of funcs) {
                 var res = JSON.stringify(math.help(e.innerHTML).toJSON());
                 var obj = JSON.parse(res);
                 UIkit.tooltip(e, {
                     title: obj.description,
-                    pos: 'top-left'
-                });
-            }
-        }
-
-        var scps = document.getElementsByClassName('cm-scope');
-        if (scps.length > 0 && settings.keywordTips) {
-            for (i = 0; i < scps.length; i++) {
-                UIkit.tooltip(scps[i], {
-                    title: scopelist[i],
                     pos: 'top-left'
                 });
             }
@@ -234,7 +217,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
     math.createUnit('USD', {
         aliases: ['usd']
     });
-    if (settings.currencies) getRates();
+    if (settings.app.currencies) getRates();
 
     function getRates() {
         var url = 'https://www.floatrates.com/widget/1030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json';
@@ -245,7 +228,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                     ls.set('rates', data);
                     createRateUnits();
                     $('lastUpdated').innerHTML = ls.get('rateDate');
-                    cm.setOption('mode', settings.syntax ? 'numara' : 'plain');
+                    cm.setOption('mode', settings.app.syntax ? 'numara' : 'plain');
                     cm.focus();
                 }).catch((e) => notify('Failed to get exchange rates (' + e + ')', 'warning'));
         } else {
@@ -350,9 +333,9 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
             case 'plotButton': // Plot function
                 func = e.target.getAttribute('data-func');
                 try {
-                    $('plotGridLines').checked = settings.plotGridLines;
-                    $('plotTipLines').checked = settings.plotTipLines;
-                    $('plotClosed').checked = settings.plotClosed;
+                    $('plotGrid').checked = settings.plot.plotGrid;
+                    $('plotCross').checked = settings.plot.plotCross;
+                    $('plotArea').checked = settings.plot.plotArea;
                     plot();
                     showModal('#dialog-plot');
                 } catch (error) {
@@ -394,7 +377,8 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                 break;
             case 'defaultSettingsButton': // Revert back to default settings
                 confirm('All settings will revert back to defaults.', () => {
-                    ls.set('settings', defaultSettings);
+                    settings.app = defaultSettings.app;
+                    ls.set('settings', settings);
                     applySettings();
                     if (!$('currencyButton').checked) getRates();
                     UIkit.modal('#dialog-settings').hide();
@@ -414,8 +398,6 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
             case 'syntaxButton':
                 $('functionTipsButton').disabled = $('syntaxButton').checked ? false : true;
                 $('functionTipsButton').parentNode.style.opacity = $('syntaxButton').checked ? '1' : '0.5';
-                $('keywordTipsButton').disabled = $('syntaxButton').checked ? false : true;
-                $('keywordTipsButton').parentNode.style.opacity = $('syntaxButton').checked ? '1' : '0.5';
                 break;
             case 'bigNumWarn': // BigNumber warning
                 showError(`Using the BigNumber option will disable function plotting and is not compatible with some math functions. 
@@ -424,32 +406,31 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                     'Caution: BigNumber Limitations');
                 break;
             case 'currencyButton': // Enable currency rates
-                if (settings.currencies) {
-                    $('currencyUpdate').style.display = settings.currencies ? $('currencyButton').checked ? 'block' : 'none' : null;
+                if (settings.app.currencies) {
+                    $('currencyUpdate').style.display = settings.app.currencies ? $('currencyButton').checked ? 'block' : 'none' : null;
                 }
                 break;
             case 'dialog-settings-save': // Save settings
-                settings.theme = $('themeList').value;
-                settings.syntax = $('syntaxButton').checked;
-                settings.fontSize = $('fontSize').value;
-                settings.fontWeight = $('fontWeight').value;
-                settings.functionTips = $('functionTipsButton').checked;
-                settings.keywordTips = $('keywordTipsButton').checked;
-                settings.lineNumbers = $('lineNoButton').checked;
-                settings.lineWrap = $('lineWrapButton').checked;
-                settings.lineErrors = $('lineErrorButton').checked;
-                settings.divider = $('dividerButton').checked;
-                settings.precision = $('precisionRange').value;
-                settings.bigNumber = $('bigNumberButton').checked;
-                settings.dateFormat = $('dateFormat').value;
-                settings.thouSep = $('thouSepButton').checked;
-                if (!settings.currencies && $('currencyButton').checked) {
+                settings.app.theme = $('themeList').value;
+                settings.app.syntax = $('syntaxButton').checked;
+                settings.app.fontSize = $('fontSize').value;
+                settings.app.fontWeight = $('fontWeight').value;
+                settings.app.functionTips = $('functionTipsButton').checked;
+                settings.app.lineNumbers = $('lineNoButton').checked;
+                settings.app.lineWrap = $('lineWrapButton').checked;
+                settings.app.lineErrors = $('lineErrorButton').checked;
+                settings.app.divider = $('dividerButton').checked;
+                settings.app.precision = $('precisionRange').value;
+                settings.app.bigNumber = $('bigNumberButton').checked;
+                settings.app.dateFormat = $('dateFormat').value;
+                settings.app.thouSep = $('thouSepButton').checked;
+                if (!settings.app.currencies && $('currencyButton').checked) {
                     getRates();
                 } else if (!$('currencyButton').checked) {
                     localStorage.removeItem('rates');
                     localStorage.removeItem('rateDate');
                 }
-                settings.currencies = $('currencyButton').checked;
+                settings.app.currencies = $('currencyButton').checked;
 
                 ls.set('settings', settings);
                 applySettings();
@@ -459,18 +440,18 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                 break;
 
                 // Plot settings
-            case 'plotGridLines':
-                settings.plotGridLines = $('plotGridLines').checked;
+            case 'plotGrid':
+                settings.plot.plotGrid = $('plotGrid').checked;
                 ls.set('settings', settings);
                 plot();
                 break;
-            case 'plotTipLines':
-                settings.plotTipLines = $('plotTipLines').checked;
+            case 'plotCross':
+                settings.plot.plotCross = $('plotCross').checked;
                 ls.set('settings', settings);
                 plot();
                 break;
-            case 'plotClosed':
-                settings.plotClosed = $('plotClosed').checked;
+            case 'plotArea':
+                settings.plot.plotArea = $('plotArea').checked;
                 ls.set('settings', settings);
                 plot();
                 break;
@@ -528,22 +509,19 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
     // Initiate settings dialog
     UIkit.util.on('#setswitch', 'beforeshow', (e) => e.stopPropagation());
     UIkit.util.on('#dialog-settings', 'beforeshow', () => {
-        $('themeList').value = settings.theme;
-        $('fontSize').value = settings.fontSize;
-        $('fontWeight').value = settings.fontWeight;
-        $('syntaxButton').checked = settings.syntax;
-        $('lineNoButton').checked = settings.lineNumbers;
-        $('lineWrapButton').checked = settings.lineWrap;
-        $('lineErrorButton').checked = settings.lineErrors;
-        $('functionTipsButton').checked = settings.functionTips;
-        $('functionTipsButton').disabled = settings.syntax ? false : true;
-        $('functionTipsButton').parentNode.style.opacity = settings.syntax ? '1' : '0.5';
-        $('keywordTipsButton').checked = settings.keywordTips;
-        $('keywordTipsButton').disabled = settings.syntax ? false : true;
-        $('keywordTipsButton').parentNode.style.opacity = settings.syntax ? '1' : '0.5';
-        $('dividerButton').checked = settings.divider;
-        $('precisionRange').value = settings.precision;
-        $('precision-label').innerHTML = settings.precision;
+        $('themeList').value = settings.app.theme;
+        $('fontSize').value = settings.app.fontSize;
+        $('fontWeight').value = settings.app.fontWeight;
+        $('syntaxButton').checked = settings.app.syntax;
+        $('lineNoButton').checked = settings.app.lineNumbers;
+        $('lineWrapButton').checked = settings.app.lineWrap;
+        $('lineErrorButton').checked = settings.app.lineErrors;
+        $('functionTipsButton').checked = settings.app.functionTips;
+        $('functionTipsButton').disabled = settings.app.syntax ? false : true;
+        $('functionTipsButton').parentNode.style.opacity = settings.app.syntax ? '1' : '0.5';
+        $('dividerButton').checked = settings.app.divider;
+        $('precisionRange').value = settings.app.precision;
+        $('precision-label').innerHTML = settings.app.precision;
         $('dateFormat').innerHTML = `
             <option value="l">${moment().format('l')}</option>
             <option value="L">${moment().format('L')}</option>
@@ -552,13 +530,13 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
             <option value="ddd, L">${moment().format('ddd, L')}</option>
             <option value="ddd, MMM DD, YYYY">${moment().format('ddd, MMM DD, YYYY')}</option>
             `;
-        $('dateFormat').value = settings.dateFormat;
-        $('bigNumberButton').checked = settings.bigNumber;
-        $('thouSepButton').checked = settings.thouSep;
-        $('currencyButton').checked = settings.currencies;
-        $('lastUpdated').innerHTML = settings.currencies ? ls.get('rateDate') : '';
-        $('currencyUpdate').style.display = settings.currencies ? 'block' : 'none';
-        $('defaultSettingsButton').style.display = JSON.stringify(settings) == JSON.stringify(defaultSettings) ? 'none' : 'inline-block';
+        $('dateFormat').value = settings.app.dateFormat;
+        $('bigNumberButton').checked = settings.app.bigNumber;
+        $('thouSepButton').checked = settings.app.thouSep;
+        $('currencyButton').checked = settings.app.currencies;
+        $('lastUpdated').innerHTML = settings.app.currencies ? ls.get('rateDate') : '';
+        $('currencyUpdate').style.display = settings.app.currencies ? 'block' : 'none';
+        $('defaultSettingsButton').style.display = JSON.stringify(settings.app) === JSON.stringify(defaultSettings.app) ? 'none' : 'inline-block';
     });
 
     $('precisionRange').addEventListener('input', () => $('precision-label').innerHTML = $('precisionRange').value);
@@ -589,21 +567,22 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
 
     // Panel resizer
     var resizeDelay;
+    var isResizing = false;
     var panel = $('panel');
     var handle = $('handle');
-    var isResizing = false;
 
     $('handle').addEventListener('dblclick', resetHandle);
     $('handle').addEventListener('mousedown', (e) => isResizing = e.target == handle);
     $('panel').addEventListener('mouseup', () => isResizing = false);
     $('panel').addEventListener('mousemove', (e) => {
-        var offset = settings.lineNumbers ? 12 : 27;
+        var offset = settings.app.lineNumbers ? 12 : 27;
         var pointerRelativeXpos = e.clientX - panel.offsetLeft - offset;
         var iWidth = pointerRelativeXpos / panel.clientWidth * 100;
         var inputWidth = iWidth < 0 ? 0 : iWidth > 100 ? 100 : iWidth;
         if (isResizing) {
             $('input').style.width = inputWidth + '%';
-            ls.set('inputWidth', inputWidth);
+            settings.inputWidth = inputWidth;
+            ls.set('settings', settings);
             clearTimeout(resizeDelay);
             resizeDelay = setTimeout(() => {
                 calculate();
@@ -613,7 +592,8 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
     });
 
     function resetHandle() {
-        ls.set('inputWidth', defaultSettings.inputWidth);
+        settings.inputWidth = defaultSettings.inputWidth;
+        ls.set('settings', settings);
         applySettings();
     }
 
@@ -646,14 +626,14 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                 domain: yDomain
             },
             tip: {
-                xLine: settings.plotTipLines,
-                yLine: settings.plotTipLines,
+                xLine: settings.plot.plotCross,
+                yLine: settings.plot.plotCross,
             },
-            grid: settings.plotGridLines,
+            grid: settings.plot.plotGrid,
             data: [{
                 fn: f,
                 graphType: 'polyline',
-                closed: settings.plotClosed
+                closed: settings.plot.plotArea
             }],
             plugins: [functionPlot.plugins.zoomBox()]
         });

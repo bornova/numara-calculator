@@ -1,7 +1,7 @@
 {
     "name": "numara",
     "productName": "Numara",
-    "version": "1.0.3",
+    "version": "1.1.0",
     "description": "Numara Calculator",
     "main": "src/js/main.js",
     "scripts": {
@@ -17,7 +17,7 @@
         "cpy-cli": "^3.1.1",
         "del-cli": "^3.0.1",
         "electron": "^9.1.1",
-        "electron-builder": "^22.7.0",
+        "electron-builder": "^22.8.0",
         "feather-icons": "^4.28.0",
         "mathjs": "^7.1.0",
         "moment": "^2.27.0",

@@ -67,7 +67,7 @@
             <h2 class="uk-modal-title">Open Calculation</h2>
             <div id="dialog-open-body" class="dialog-open-body uk-overflow-auto"></div>
             <div class="dialog-buttons uk-text-right">
-                <button id="dialog-open-deleteAll" class="uk-button uk-button-danger uk-button-small">DeleteAll</button>
+                <button id="dialog-open-deleteAll" class="uk-button uk-button-danger uk-button-small">Delete All</button>
                 <button class="uk-button uk-button-primary uk-modal-close uk-button-small">Cancel</button>
             </div>
         </div>
@@ -131,15 +131,6 @@
                             <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
                                     <input id="functionTipsButton" type="checkbox">
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div>Keyword tooltips</div>
-                            <div class="uk-text-right uk-width-2-5">
-                                <label class="switch">
-                                    <input id="keywordTipsButton" type="checkbox">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -243,11 +234,11 @@
             <div uk-grid>
                 <div class="dialog-buttons uk-width-2-5 uk-text-left">
                     <button id="dialog-settings-reset" class="uk-button uk-button-danger uk-button-small">Reset</button>
-                </div>
-                <div class="dialog-buttons uk-width-3-5 uk-text-right">
                     <button id="defaultSettingsButton" class="uk-button uk-button-default uk-button-small defButton" title="Restore default settings" uk-tooltip>
                         <i data-feather="rotate-ccw"></i>
                     </button>
+                </div>
+                <div class="dialog-buttons uk-width-3-5 uk-text-right">
                     <button id="dialog-settings-save" class="uk-button uk-button-primary uk-button-small">Save</button>
                     <button class="uk-button uk-button-primary uk-modal-close uk-button-small">Cancel</button>
                 </div>
@@ -309,20 +300,20 @@
                 <div class="dialog-buttons uk-width-3-4 uk-text-left">
                     <div class="plotSwitches">
                         <label class="switch">
-                            <input id="plotGridLines" type="checkbox">
+                            <input id="plotGrid" type="checkbox">
                             <span class="slider round"></span>
                         </label>
                         <span class="switchText">Grid</span>
                         <label class="switch">
-                            <input id="plotTipLines" type="checkbox">
+                            <input id="plotCross" type="checkbox">
                             <span class="slider round"></span>
                         </label>
-                        <span class="switchText">Tip</span>
+                        <span class="switchText">Cross</span>
                         <label class="switch">
-                            <input id="plotClosed" type="checkbox">
+                            <input id="plotArea" type="checkbox">
                             <span class="slider round"></span>
                         </label>
-                        <span class="switchText">Closed</span>
+                        <span class="switchText">Area</span>
                     </div>
                 </div>
                 <div class="dialog-buttons uk-width-1-4 uk-text-right">
