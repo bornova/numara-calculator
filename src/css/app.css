@@ -43,7 +43,7 @@ input {
 }
 
 input[type=range]::-webkit-slider-runnable-track {
-    background: #999;
+    background-color: #999;
     border: none;
     border-radius: 3px;
     height: 1px;
@@ -53,7 +53,7 @@ input[type=range]::-webkit-slider-runnable-track {
 
 input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    background: #1e87f0;
+    background-color: #1e87f0;
     border: none;
     border-radius: 50%;
     height: 14px;
@@ -62,7 +62,7 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 input[type=range]:focus::-webkit-slider-runnable-track {
-    background: #999;
+    background-color: #999;
 }
 
 textarea {
@@ -339,7 +339,7 @@ text {
 }
 
 .dialog-open-delete:hover {
-    background: #b33131;
+    background-color: #b33131;
     color: #ffffff;
 }
 
@@ -353,7 +353,7 @@ text {
 
 /* Settings */
 .precision {
-    background: transparent;
+    background-color: transparent;
     padding: 1px 0 0 0;
     text-align: center;
     width: 24px;
@@ -438,7 +438,7 @@ text {
 }
 
 .dialog-open-wrapper:hover {
-    background: #f4f4f4;
+    background-color: #f4f4f4;
 }
 
 .plotOptions {
@@ -595,7 +595,7 @@ input:checked+.slider:before {
 
 /* UIkit Overrides */
 .uk-modal {
-    background: rgba(0, 0, 0, .6);
+    background-color: rgba(0, 0, 0, .6);
 }
 
 @media (min-width: 640px) {
@@ -605,7 +605,7 @@ input:checked+.slider:before {
 }
 
 .uk-modal-full {
-    background: rgba(0, 0, 0, .5);
+    background-color: rgba(0, 0, 0, .5);
     padding-left: 20px;
     padding-right: 20px;
 }
@@ -723,7 +723,7 @@ input:checked+.slider:before {
 }
 
 .uk-tooltip {
-    background: #535353;
+    background-color: #535353;
     word-break: break-word;
     z-index: 1000000;
 }

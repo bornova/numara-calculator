@@ -7,21 +7,22 @@
 /* UI defaults */
 html,
 body {
-    background: #fff;
+    background-color: #fff;
     color: #333;
 }
 
+::-webkit-scrollbar,
 ::-webkit-scrollbar-track,
 ::-webkit-scrollbar-corner {
-    background: #ffffff;
+    background-color: #ffffff;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #dcdcdc;
+    background-color: #dcdcdc;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #cccccc;
+    background-color: #cccccc;
 }
 
 .header-win-title {
@@ -78,7 +79,7 @@ body {
 }
 
 .handle::before {
-    background: #eaeaea;
+    background-color: #eaeaea;
 }
 
 .output {
@@ -86,17 +87,17 @@ body {
 }
 
 .output > span::selection {
-    background: rgba(231, 243, 255, 0.98) !important;
+    background-color: rgba(231, 243, 255, 0.98) !important;
     color: inherit;
 }
 
 .dialog-open-wrapper {
-    background: rgba(244, 244, 244, 0.3);
+    background-color: rgba(244, 244, 244, 0.3);
     border: 1px solid #eaeaea;
 }
 
 .dialog-open-wrapper:hover {
-    background: #f4f4f4;
+    background-color: #f4f4f4;
 }
 
 .dialog-open-delete {
@@ -126,7 +127,7 @@ body {
 }
 
 .slider.round:before {
-    background: #fff;
+    background-color: #fff;
 }
 
 .lastUpdated {
@@ -140,7 +141,7 @@ text {
 
 /* UIkit Overrides */
 .uk-modal {
-    background: rgba(0, 0, 0, .6);
+    background-color: rgba(0, 0, 0, .6);
 }
 
 
@@ -166,7 +167,7 @@ text {
 }
 
 .uk-button-danger:active {
-    background: #eeeeee;
+    background-color: #eeeeee;
 }
 
 .uk-button-danger:disabled:hover {
@@ -176,11 +177,11 @@ text {
 }
 
 .CodeMirror-selected {
-    background: #c9e0f7 !important;
+    background-color: #c9e0f7 !important;
 }
 
 .CodeMirror-linenumber {
-    background: #ffffff !important;
+    background-color: #ffffff !important;
 }
 
 .cm-unit {
@@ -212,5 +213,5 @@ text {
 }
 
 .CodeMirror-dialog-top {
-    background: #ffffff !important;
+    background-color: #ffffff !important;
 }

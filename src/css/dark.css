@@ -7,20 +7,21 @@
 /* UI defaults */
 html,
 body {
-    background: #1f1f1f;
+    background-color: #1f1f1f;
 }
 
+::-webkit-scrollbar,
 ::-webkit-scrollbar-track,
 ::-webkit-scrollbar-corner {
-    background: #1f1f1f;
+    background-color: #1f1f1f;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #575757;
+    background-color: #575757;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #949494;
+    background-color: #949494;
 }
 
 .header-win-title {
@@ -77,7 +78,7 @@ body {
 }
 
 .handle::before {
-    background: #333;
+    background-color: #333;
 }
 
 .output {
@@ -85,17 +86,17 @@ body {
 }
 
 .output > span::selection {
-    background: rgba(21, 21, 21, 0.98) !important;
+    background-color: rgba(21, 21, 21, 0.98) !important;
 }
 
 .dialog-open-wrapper {
-    background: #333;
+    background-color: #333;
     border: 1px solid #222;
     color: #e6e6e6;
 }
 
 .dialog-open-wrapper:hover {
-    background: #4444;
+    background-color: #4444;
 }
 
 .dialog-open-delete {
@@ -149,11 +150,11 @@ line {
 
 /* UIkit Overrides */
 .uk-modal {
-    background: rgba(0, 0, 0, .8);
+    background-color: rgba(0, 0, 0, .8);
 }
 
 .uk-modal-dialog {
-    background: #1f1f1f;
+    background-color: #1f1f1f;
 }
 
 .uk-modal-body {
@@ -198,7 +199,7 @@ line {
 }
 
 .uk-button-danger:active {
-    background: #444;
+    background-color: #444;
 }
 
 .uk-button-danger:disabled {
@@ -228,7 +229,7 @@ line {
 }
 
 .uk-notification-message {
-    background: #252525;
+    background-color: #252525;
 }
 
 .CodeMirror {
@@ -240,16 +241,16 @@ line {
 }
 
 .CodeMirror-selected {
-    background: #193552 !important;
+    background-color: #193552 !important;
 }
 
 .CodeMirror-linenumber {
-    background: #1f1f1f !important;
+    background-color: #1f1f1f !important;
 }
 
 .CodeMirror-scrollbar-filler,
 .CodeMirror-gutter-filler {
-    background: #1f1f1f !important;
+    background-color: #1f1f1f !important;
 }
 
 .cm-unit {
@@ -281,7 +282,7 @@ line {
 }
 
 .CodeMirror-dialog-top {
-    background: #1f1f1f !important;
+    background-color: #1f1f1f !important;
     border-color: #666666;
     color: #e6e6e6 !important;
 }
