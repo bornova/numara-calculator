@@ -158,12 +158,16 @@ function calculate() {
 
         var dateTimeReg = new RegExp('millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia');
         if (line.match(dateTimeReg)) {
-            var lineDate = line.split(/[\+\-]/)[0];
-            var rightOfDate = String(solve(line.replace(lineDate, '') + ' to hours', scope));
-            var durNum = Number(rightOfDate.split(' ')[0]);
-            var durUnit = rightOfDate.split(' ')[1];
+            var lineDate = line.split(/[\+\-]/)[0].trim();
+            if (moment(lineDate, settings.app.dateFormat, true).isValid() || moment(lineDate, settings.app.dateFormat + ' LT', true).isValid()) {
+                var rightOfDate = String(solve(line.replace(lineDate, '') + ' to hours', scope));
+                var durNum = Number(rightOfDate.split(' ')[0]);
+                var durUnit = rightOfDate.split(' ')[1];
 
-            line = '"' + moment(new Date(lineDate)).add(durNum, durUnit).format('l LT') + '"';
+                line = '"' + moment(new Date(lineDate)).add(durNum, durUnit).format('l LT') + '"';
+            } else {
+                line = '"Invalid date format"';
+            }
         }
 
         var modReg = /\d*\.?\d%\d*\.?\d/g;

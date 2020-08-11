@@ -143,13 +143,14 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
             theme: 'system',
             thouSep: true
         },
+        dateFormats: ['l', 'L', 'MMM DD, YYYY', 'ddd, l', 'ddd, L', 'ddd, MMM DD, YYYY'],
         inputWidth: 60,
         plot: {
             plotArea: false,
             plotGrid: false,
             plotCross: false
         },
-        version: '1.0'
+        version: '2.0'
     };
     Object.freeze(defaultSettings);
 
@@ -522,14 +523,10 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
         $('dividerButton').checked = settings.app.divider;
         $('precisionRange').value = settings.app.precision;
         $('precision-label').innerHTML = settings.app.precision;
-        $('dateFormat').innerHTML = `
-            <option value="l">${moment().format('l')}</option>
-            <option value="L">${moment().format('L')}</option>
-            <option value="MMM DD, YYYY">${moment().format('MMM DD, YYYY')}</option>
-            <option value="ddd, l">${moment().format('ddd, l')}</option>
-            <option value="ddd, L">${moment().format('ddd, L')}</option>
-            <option value="ddd, MMM DD, YYYY">${moment().format('ddd, MMM DD, YYYY')}</option>
-            `;
+        $('dateFormat').innerHTML = '';
+        for (var d of settings.dateFormats) {
+            $('dateFormat').innerHTML += `<option value=${d}>${moment().format(d)}</option>`;
+        }
         $('dateFormat').value = settings.app.dateFormat;
         $('bigNumberButton').checked = settings.app.bigNumber;
         $('thouSepButton').checked = settings.app.thouSep;
