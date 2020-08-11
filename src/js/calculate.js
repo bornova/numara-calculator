@@ -156,7 +156,7 @@ function calculate() {
         var lineNoReg = line.match(/\bline\d+\b/g);
         if (lineNoReg) lineNoReg.map(n => line = line.replace(n, scope[n]));
 
-        var dateTimeReg = new RegExp('millisecond|second|minute|hour|day|week|month|quarter|year');
+        var dateTimeReg = new RegExp('millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia');
         if (line.match(dateTimeReg)) {
             var lineDate = line.split(/[\+\-]/)[0];
             var rightOfDate = String(solve(line.replace(lineDate, '') + ' to hours', scope));
