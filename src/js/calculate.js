@@ -117,7 +117,7 @@ function calculate() {
         var b = answer.replace(a, '');
         formattedAnswer = !a.includes('e') && !isNaN(a) ?
             settings.app.thouSep ? Number(a).toLocaleString(undefined, digits) + b : parseFloat(Number(a).toFixed(settings.app.precision)) + b :
-            a.includes('e') ? parseFloat(Number(a.split('e')[0]).toFixed(settings.app.precision)) + 'e' + answer.split('e')[1] + b :
+            a.match(/e-?\d+/) ? parseFloat(Number(a.split('e')[0]).toFixed(settings.app.precision)) + 'e' + answer.split('e')[1] + b :
             strip(answer);
         return formattedAnswer;
     }
@@ -156,18 +156,14 @@ function calculate() {
         var lineNoReg = line.match(/\bline\d+\b/g);
         if (lineNoReg) lineNoReg.map(n => line = line.replace(n, scope[n]));
 
-        var timeReg = 'hour|hours|minute|minutes|second|seconds';
-        var dateReg = 'day|days|week|weeks|month|months|year|years|' + timeReg;
-        var momentReg = new RegExp('[\\+\\-]\\s*\\d*\\s*(' + dateReg + ')\\s*$');
-
-        if (line.match(momentReg)) {
+        var dateTimeReg = new RegExp('millisecond|second|minute|hour|day|week|month|quarter|year');
+        if (line.match(dateTimeReg)) {
             var lineDate = line.split(/[\+\-]/)[0];
-            var rightOfDate = String(solve(line.replace(lineDate, ''), scope));
-            var dwmy = rightOfDate.match(new RegExp(dateReg));
-            var dateNum = rightOfDate.split(dwmy)[0];
-            var timeFormat = line.match(new RegExp(timeReg)) ? settings.app.dateFormat + ' LT' : settings.app.dateFormat;
+            var rightOfDate = String(solve(line.replace(lineDate, '') + ' to hours', scope));
+            var durNum = Number(rightOfDate.split(' ')[0]);
+            var durUnit = rightOfDate.split(' ')[1];
 
-            line = '"' + moment(new Date(lineDate)).add(dateNum, dwmy).format(timeFormat) + '"';
+            line = '"' + moment(new Date(lineDate)).add(durNum, durUnit).format('l LT') + '"';
         }
 
         var modReg = /\d*\.?\d%\d*\.?\d/g;

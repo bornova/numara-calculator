@@ -59,17 +59,17 @@ var bg = theme == 'system' ? (nativeTheme.shouldUseDarkColors ? dark : light) : 
 
 function appWindow() {
     win = new BrowserWindow({
-        width: parseInt(dims.get('appWidth')),
         height: parseInt(dims.get('appHeight')),
-        minWidth: 500,
+        width: parseInt(dims.get('appWidth')),
         minHeight: 400,
-        frame: false,
-        show: false,
-        paintWhenInitiallyHidden: false,
-        hasShadow: true,
+        minWidth: 500,
         backgroundColor: bg,
-        useContentSize: true,
+        frame: false,
+        hasShadow: true,
+        paintWhenInitiallyHidden: false,
+        show: false,
         titleBarStyle: 'hiddenInset',
+        useContentSize: true,
         webPreferences: {
             nodeIntegration: true,
             spellcheck: false,
