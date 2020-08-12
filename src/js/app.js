@@ -130,7 +130,9 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
         app: {
             bigNumber: false,
             currencies: true,
-            dateFormat: 'l',
+            dateDay: false,
+            dateFormat: 'M/D/YYYY',
+            timeFormat: 'h:mm A',
             divider: true,
             fontSize: '1.1rem',
             fontWeight: '400',
@@ -143,14 +145,15 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
             theme: 'system',
             thouSep: true
         },
-        dateFormats: ['l', 'L', 'MMM DD, YYYY', 'ddd, l', 'ddd, L', 'ddd, MMM DD, YYYY'],
+        dateFormats: ['M/D/YYYY', 'D/M/YYYY', 'MMM DD, YYYY'],
+        timeFormats: ['h:mm A', 'H:mm'],
         inputWidth: 60,
         plot: {
             plotArea: false,
             plotGrid: false,
             plotCross: false
         },
-        version: '2.0'
+        version: '3.0'
     };
     Object.freeze(defaultSettings);
 
@@ -423,7 +426,9 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                 settings.app.divider = $('dividerButton').checked;
                 settings.app.precision = $('precisionRange').value;
                 settings.app.bigNumber = $('bigNumberButton').checked;
+                settings.app.dateDay = $('dateDay').checked;
                 settings.app.dateFormat = $('dateFormat').value;
+                settings.app.timeFormat = $('timeFormat').value;
                 settings.app.thouSep = $('thouSepButton').checked;
                 if (!settings.app.currencies && $('currencyButton').checked) {
                     getRates();
@@ -523,11 +528,13 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
         $('dividerButton').checked = settings.app.divider;
         $('precisionRange').value = settings.app.precision;
         $('precision-label').innerHTML = settings.app.precision;
+        $('dateDay').checked = settings.app.dateDay;
         $('dateFormat').innerHTML = '';
-        for (var d of settings.dateFormats) {
-            $('dateFormat').innerHTML += `<option value=${d}>${moment().format(d)}</option>`;
-        }
+        for (var d of settings.dateFormats) $('dateFormat').innerHTML += `<option value="${d}">${moment().format(d)}</option>`;
         $('dateFormat').value = settings.app.dateFormat;
+        $('timeFormat').innerHTML = '';
+        for (var t of settings.timeFormats) $('timeFormat').innerHTML += `<option value="${t}">${moment().format(t)}</option>`;
+        $('timeFormat').value = settings.app.timeFormat;
         $('bigNumberButton').checked = settings.app.bigNumber;
         $('thouSepButton').checked = settings.app.thouSep;
         $('currencyButton').checked = settings.app.currencies;

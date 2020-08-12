@@ -28,8 +28,8 @@ function calculate() {
 
     scopelist.length = 0;
 
-    scope.now = moment().format(settings.app.dateFormat + ' LT');
-    scope.today = moment().format(settings.app.dateFormat);
+    scope.now = moment().format((settings.app.dateDay ? 'ddd, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat);
+    scope.today = moment().format((settings.app.dateDay ? 'ddd, ' : '') + settings.app.dateFormat);
 
     cm.eachLine((line) => {
         var answer = '';
@@ -159,15 +159,14 @@ function calculate() {
         var dateTimeReg = new RegExp('millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia');
         if (line.match(dateTimeReg)) {
             var lineDate = line.split(/[\+\-]/)[0].trim();
-            if (moment(lineDate, settings.app.dateFormat, true).isValid() || moment(lineDate, settings.app.dateFormat + ' LT', true).isValid()) {
-                var rightOfDate = String(solve(line.replace(lineDate, '') + ' to hours', scope));
-                var durNum = Number(rightOfDate.split(' ')[0]);
-                var durUnit = rightOfDate.split(' ')[1];
+            var d = moment(lineDate, settings.app.dateFormat, true);
+            var t = moment(lineDate, settings.app.dateFormat + ' ' + settings.app.timeFormat, true);
+            var dt = d.isValid() ? d : t.isValid() ? t : undefined;
+            var rightOfDate = String(solve(line.replace(lineDate, '') + ' to hours', scope));
+            var durNum = Number(rightOfDate.split(' ')[0]);
+            var durUnit = rightOfDate.split(' ')[1];
 
-                line = '"' + moment(new Date(lineDate)).add(durNum, durUnit).format('l LT') + '"';
-            } else {
-                line = '"Invalid date format"';
-            }
+            line = '"' + dt.add(durNum, durUnit).format((settings.app.dateDay ? 'ddd, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat) + '"';
         }
 
         var modReg = /\d*\.?\d%\d*\.?\d/g;

@@ -79,6 +79,7 @@
                 <ul uk-tab>
                     <li><a href="#">Appearance</a></li>
                     <li><a href="#">Calculator</a></li>
+                    <li><a href="#">Date/Time</a></li>
                     <li><a href="#">Panel UI</a></li>
                 </ul>
                 <ul id="setswitch" class="uk-switcher uk-margin">
@@ -151,12 +152,6 @@
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
-                            <div class="padTop1">Date format</div>
-                            <div class="uk-text-right">
-                                <select id="dateFormat" class="uk-select"></select>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
                             <div>BigNumber<a id="bigNumWarn" class="warn-icon"><i data-feather="alert-circle"></i></a>
                             </div>
                             <div class="uk-text-right">
@@ -186,6 +181,29 @@
                             <div class="uk-text-right uk-width-1-5">
                                 <label class="switch">
                                     <input id="currencyButton" type="checkbox">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div class="padTop1">Date format</div>
+                            <div class="uk-text-right">
+                                <select id="dateFormat" class="uk-select"></select>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div class="padTop1">Time format</div>
+                            <div class="uk-text-right">
+                                <select id="timeFormat" class="uk-select"></select>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div>Show day with date</div>
+                            <div class="uk-text-right">
+                                <label class="switch">
+                                    <input id="dateDay" type="checkbox">
                                     <span class="slider round"></span>
                                 </label>
                             </div>

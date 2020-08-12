@@ -664,7 +664,7 @@ input:checked+.slider:before {
     display: inline-block;
     font-size: 1rem;
     font-weight: 600;
-    margin-right: 15px;
+    margin-right: 10px;
     padding: 0 0 5px 0;
     text-transform: none;
 }
