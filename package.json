@@ -1,7 +1,7 @@
 {
     "name": "numara",
     "productName": "Numara",
-    "version": "1.1.7",
+    "version": "1.1.8",
     "description": "Numara Calculator",
     "main": "src/js/main.js",
     "scripts": {
@@ -13,18 +13,18 @@
     "license": "MIT",
     "devDependencies": {
         "clean-css-cli": "^4.3.0",
-        "codemirror": "^5.56.0",
+        "codemirror": "^5.57.0",
         "cpy-cli": "^3.1.1",
         "del-cli": "^3.0.1",
-        "electron": "^9.2.1",
+        "electron": "10.0.0",
         "electron-builder": "^22.8.0",
         "feather-icons": "^4.28.0",
-        "mathjs": "^7.1.0",
+        "mathjs": "^7.2.0",
         "moment": "^2.27.0",
         "mousetrap": "^1.6.5",
         "mousetrap-global-bind": "^1.1.0",
         "ncp": "^2.0.0",
-        "terser": "^5.2.0",
+        "terser": "^5.2.1",
         "uikit": "^3.5.6"
     },
     "dependencies": {
