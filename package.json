@@ -1,7 +1,7 @@
 {
     "name": "numara",
     "productName": "Numara",
-    "version": "1.1.8",
+    "version": "1.1.9",
     "description": "Numara Calculator",
     "main": "src/js/main.js",
     "scripts": {
@@ -25,7 +25,7 @@
         "mousetrap-global-bind": "^1.1.0",
         "ncp": "^2.0.0",
         "terser": "^5.2.1",
-        "uikit": "^3.5.6"
+        "uikit": "^3.5.7"
     },
     "dependencies": {
         "electron-context-menu": "^2.3.0",
