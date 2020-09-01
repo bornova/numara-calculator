@@ -290,3 +290,7 @@ line {
 .CodeMirror button {
     color: #e6e6e6 !important;
 }
+
+.CodeMirror-matchingbracket {
+    color: #f3f36a !important;
+}

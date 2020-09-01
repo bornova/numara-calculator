@@ -215,3 +215,7 @@ text {
 .CodeMirror-dialog-top {
     background-color: #ffffff !important;
 }
+
+.CodeMirror-matchingbracket {
+    color: #adad00 !important;
+}

@@ -128,6 +128,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
     // App settings
     const defaultSettings = {
         app: {
+            closeBrackets: true,
             bigNumber: false,
             currencies: true,
             dateDay: false,
@@ -140,6 +141,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
             lineErrors: true,
             lineNumbers: true,
             lineWrap: true,
+            matchBrackets: true,
             precision: '4',
             syntax: true,
             theme: 'system',
@@ -153,7 +155,7 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
             plotGrid: false,
             plotCross: false
         },
-        version: '3.0'
+        version: '5.0'
     };
     Object.freeze(defaultSettings);
 
@@ -183,6 +185,8 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
         cm.setOption('mode', settings.app.syntax ? 'numara' : 'plain');
         cm.setOption('lineNumbers', settings.app.lineNumbers);
         cm.setOption('lineWrapping', settings.app.lineWrap);
+        cm.setOption('autoCloseBrackets', settings.app.closeBrackets);
+        cm.setOption('matchBrackets', settings.app.syntax && settings.app.matchBrackets ? {'maxScanLines': 1} : false);
         cm.focus();
 
         math.config({
@@ -402,6 +406,9 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
             case 'syntaxButton':
                 $('functionTipsButton').disabled = $('syntaxButton').checked ? false : true;
                 $('functionTipsButton').parentNode.style.opacity = $('syntaxButton').checked ? '1' : '0.5';
+
+                $('matchBracketsButton').disabled = $('syntaxButton').checked ? false : true;
+                $('matchBracketsButton').parentNode.style.opacity = $('syntaxButton').checked ? '1' : '0.5';
                 break;
             case 'bigNumWarn': // BigNumber warning
                 showError(`Using the BigNumber option will disable function plotting and is not compatible with some math functions. 
@@ -420,6 +427,8 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
                 settings.app.fontSize = $('fontSize').value;
                 settings.app.fontWeight = $('fontWeight').value;
                 settings.app.functionTips = $('functionTipsButton').checked;
+                settings.app.closeBrackets = $('closeBracketsButton').checked;
+                settings.app.matchBrackets = $('matchBracketsButton').checked;
                 settings.app.lineNumbers = $('lineNoButton').checked;
                 settings.app.lineWrap = $('lineWrapButton').checked;
                 settings.app.lineErrors = $('lineErrorButton').checked;
@@ -519,6 +528,8 @@ var cm = CodeMirror.fromTextArea($('inputArea'), {
         $('fontSize').value = settings.app.fontSize;
         $('fontWeight').value = settings.app.fontWeight;
         $('syntaxButton').checked = settings.app.syntax;
+        $('closeBracketsButton').checked = settings.app.closeBrackets;
+        $('matchBracketsButton').checked = settings.app.matchBrackets;
         $('lineNoButton').checked = settings.app.lineNumbers;
         $('lineWrapButton').checked = settings.app.lineWrap;
         $('lineErrorButton').checked = settings.app.lineErrors;
