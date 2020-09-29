@@ -1,14 +1,14 @@
 {
     "name": "numara",
     "productName": "Numara",
-    "version": "1.3.6",
+    "version": "1.4.0",
     "description": "Numara Calculator",
     "main": "src/js/main.js",
     "scripts": {
         "dir": "del-cli docs && mkdirp docs docs/js docs/css",
         "cpy": "ncp src docs && ncp src/assets docs/assets",
         "css": "cleancss -o docs/css/codemirror.css node_modules/codemirror/lib/codemirror.css node_modules/codemirror/addon/dialog/dialog.css && cleancss -o docs/css/numara.css src/css/app.css src/css/print.css && cleancss -o docs/css/light.css src/css/light.css && cleancss -o docs/css/dark.css src/css/dark.css && ncp node_modules/uikit/dist/css/uikit.min.css docs/css/uikit.min.css",
-        "ters": "terser node_modules/uikit/dist/js/uikit.min.js node_modules/feather-icons/dist/feather.min.js node_modules/mathjs/dist/math.min.js node_modules/moment/min/moment.min.js node_modules/mousetrap/mousetrap.min.js node_modules/mousetrap-global-bind/mousetrap-global-bind.min.js -c -o docs/js/packages.js && terser node_modules/codemirror/lib/codemirror.js node_modules/codemirror/addon/search/search.js node_modules/codemirror/addon/search/searchcursor.js node_modules/codemirror/addon/search/jump-to-line.js node_modules/codemirror/addon/dialog/dialog.js node_modules/codemirror/addon/edit/closebrackets.js node_modules/codemirror/addon/edit/matchbrackets.js -c -o docs/js/codemirror.js && terser src/js/d3.js src/js/plot.js src/js/calculate.js src/js/app.js -c -m -o docs/js/numara.js",
+        "ters": "terser node_modules/uikit/dist/js/uikit.min.js node_modules/feather-icons/dist/feather.min.js node_modules/mathjs/dist/math.min.js node_modules/moment/min/moment.min.js node_modules/mousetrap/mousetrap.min.js node_modules/mousetrap-global-bind/mousetrap-global-bind.min.js -c -o docs/js/packages.js && terser node_modules/codemirror/lib/codemirror.js node_modules/codemirror/addon/search/search.js node_modules/codemirror/addon/search/searchcursor.js node_modules/codemirror/addon/search/jump-to-line.js node_modules/codemirror/addon/dialog/dialog.js node_modules/codemirror/addon/edit/closebrackets.js node_modules/codemirror/addon/edit/matchbrackets.js -c -o docs/js/codemirror.js && terser src/js/d3.js src/js/plot.js src/js/app.js -c -m -o docs/js/numara.js",
         "build": "npm run dir && npm run cpy && npm run css && npm run ters",
         "dev": "npm run build && electron .",
         "dist": "npm run build && electron-builder"
@@ -19,7 +19,7 @@
         "clean-css-cli": "^4.3.0",
         "codemirror": "^5.58.1",
         "del-cli": "^3.0.1",
-        "electron": "10.1.2",
+        "electron": "10.1.3",
         "electron-builder": "^22.8.1",
         "feather-icons": "^4.28.0",
         "mathjs": "^7.3.0",
