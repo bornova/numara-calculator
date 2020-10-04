@@ -76,7 +76,7 @@ function appWindow() {
             devTools: true // is.development
         }
     });
-    win.loadFile('docs/index.html');
+    win.loadFile('build/index.html');
     win.on('close', () => {
         if (win.isMaximized()) {
             dims.set('fullSize', true);
