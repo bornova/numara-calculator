@@ -1,7 +1,7 @@
 {
     "name": "numara",
     "productName": "Numara",
-    "version": "1.4.3",
+    "version": "1.5.0",
     "description": "Numara Calculator",
     "main": "src/js/main.js",
     "scripts": {
@@ -33,7 +33,9 @@
     },
     "dependencies": {
         "electron-context-menu": "^2.3.0",
+        "electron-log": "^4.2.4",
         "electron-store": "^6.0.0",
+        "electron-updater": "^4.3.5",
         "electron-util": "^0.14.2",
         "fs-extra": "^9.0.1"
     },
@@ -42,11 +44,21 @@
             "oneClick": false,
             "deleteAppDataOnUninstall": true
         },
+        "win": {
+            "publish": [{
+                "provider": "generic",
+                "url": "https://numara.io/releases/win/"
+            }]
+        },
         "mac": {
             "target": "dmg",
             "electronLanguages": [
                 "en"
-            ]
+            ],
+            "publish": [{
+                "provider": "generic",
+                "url": "https://numara.io/releases/mac/"
+            }]
         },
         "directories": {
             "buildResources": "build/assets"
@@ -55,5 +67,6 @@
             "build",
             "src/js/main.js"
         ]
+
     }
 }

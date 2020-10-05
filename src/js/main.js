@@ -15,6 +15,14 @@ const {
     shell
 } = require('electron');
 
+const log = require('electron-log');
+const {
+    autoUpdater
+} = require("electron-updater");
+
+autoUpdater.logger = log;
+autoUpdater.logger.transports.file.level = 'info';
+
 const {
     is
 } = require('electron-util');
@@ -73,7 +81,7 @@ function appWindow() {
         webPreferences: {
             nodeIntegration: true,
             spellcheck: false,
-            devTools: true // is.development
+            devTools: is.development
         }
     });
     win.loadFile('build/index.html');
@@ -101,6 +109,17 @@ function appWindow() {
         win.on('focus', (event) => globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {}));
         win.on('blur', (event) => globalShortcut.unregisterAll());
     }
+
+    function sendUpdateStatus(status) {
+        win.webContents.send('updateStatus', status);
+    }
+
+    autoUpdater.on('checking-for-update', () => sendUpdateStatus('Checking for update...'));
+    autoUpdater.on('update-available', () => win.webContents.send('notifyUpdate'));
+    autoUpdater.on('update-not-available', () => sendUpdateStatus('You have the latest version.'));
+    autoUpdater.on('error', () => sendUpdateStatus('Error getting lastest version.'));
+    autoUpdater.on('download-progress', () => sendUpdateStatus('Downloading latest version...'));
+    autoUpdater.on('update-downloaded', () => sendUpdateStatus('Restart app to update.'));
 }
 
 if (!app.requestSingleInstanceLock()) {
@@ -110,6 +129,10 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 app.whenReady().then(appWindow);
+
+app.on('ready', () => {
+    if (!is.development) autoUpdater.checkForUpdatesAndNotify();
+});
 
 ipcMain.on('close', () => app.quit());
 ipcMain.on('minimize', () => win.minimize());

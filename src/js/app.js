@@ -57,6 +57,9 @@
     var appName = isNode ? ipc.sendSync('getName') : 'Numara';
     var appVersion = isNode ? ipc.sendSync('getVersion') : ' - Web';
 
+    ipc.on('notifyUpdate', (event) => notify('A new version is available.'));
+    ipc.on('updateStatus', (event, status) => $('dialog-about-updateStatus').innerHTML = status);
+
     // Set app info
     document.title = appName;
     $('dialog-about-title').innerHTML = appName + ' Calculator';
