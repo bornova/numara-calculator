@@ -212,13 +212,20 @@
     cm.on('update', () => {
         var funcs = document.getElementsByClassName('cm-function');
         if (funcs.length > 0 && settings.app.functionTips) {
-            for (var e of funcs) {
-                var res = JSON.stringify(math.help(e.innerHTML).toJSON());
-                var obj = JSON.parse(res);
-                UIkit.tooltip(e, {
-                    title: obj.description,
-                    pos: 'top-left'
-                });
+            for (var f of funcs) {
+                try {
+                    var res = JSON.stringify(math.help(f.innerHTML).toJSON());
+                    var obj = JSON.parse(res);
+                    UIkit.tooltip(f, {
+                        title: obj.description,
+                        pos: 'top-left'
+                    });
+                } catch (e) {
+                    UIkit.tooltip(f, {
+                        title: 'Description not available.',
+                        pos: 'top-left'
+                    });
+                }
             }
         }
     });

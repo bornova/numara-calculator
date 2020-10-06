@@ -1,7 +1,7 @@
 {
     "name": "numara",
     "productName": "Numara",
-    "version": "1.5.0",
+    "version": "1.5.1",
     "description": "Numara Calculator",
     "main": "src/js/main.js",
     "scripts": {
@@ -24,7 +24,7 @@
         "feather-icons": "^4.28.0",
         "mathjs": "^7.3.0",
         "mkdirp": "^1.0.4",
-        "moment": "^2.29.0",
+        "moment": "^2.29.1",
         "mousetrap": "^1.6.5",
         "mousetrap-global-bind": "^1.1.0",
         "ncp": "^2.0.0",
@@ -34,7 +34,7 @@
     "dependencies": {
         "electron-context-menu": "^2.3.0",
         "electron-log": "^4.2.4",
-        "electron-store": "^6.0.0",
+        "electron-store": "^6.0.1",
         "electron-updater": "^4.3.5",
         "electron-util": "^0.14.2",
         "fs-extra": "^9.0.1"
@@ -51,7 +51,7 @@
             }]
         },
         "mac": {
-            "target": "dmg",
+            "target": ["dmg", "zip"],
             "electronLanguages": [
                 "en"
             ],
@@ -67,6 +67,5 @@
             "build",
             "src/js/main.js"
         ]
-
     }
 }
