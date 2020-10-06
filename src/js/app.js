@@ -708,9 +708,10 @@
             var answer = '';
             var lineNo = cm.getLineNumber(line) + 1;
             var mirrorLine = line.text;
-            var line = line.text.trim().split('//')[0].split('#')[0];
 
             setLineNo(lineNo);
+
+            line = line.text.trim().split('//')[0].split('#')[0];
 
             if (line) {
                 try {

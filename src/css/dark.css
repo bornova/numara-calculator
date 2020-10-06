@@ -85,7 +85,7 @@ body {
     color: #1eb5f0;
 }
 
-.output > span::selection {
+.output>span::selection {
     background-color: rgba(21, 21, 21, 0.98) !important;
 }
 
@@ -180,7 +180,8 @@ line {
     border-color: #333333;
 }
 
-.uk-button-default:focus, .uk-button-default:hover {
+.uk-button-default:focus,
+.uk-button-default:hover {
     background-color: #333333;
     border-color: #393e44;
 }
@@ -292,5 +293,6 @@ line {
 }
 
 .CodeMirror-matchingbracket {
-    color: #f3f36a !important;
+    font-weight: bold;
+    color: rgb(167, 130, 74) !important;
 }

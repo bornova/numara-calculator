@@ -86,7 +86,7 @@ body {
     color: #17586b;
 }
 
-.output > span::selection {
+.output>span::selection {
     background-color: rgba(231, 243, 255, 0.98) !important;
     color: inherit;
 }
@@ -149,7 +149,8 @@ text {
     border-color: #e7eff7;
 }
 
-.uk-button-default:focus, .uk-button-default:hover {
+.uk-button-default:focus,
+.uk-button-default:hover {
     border-color: #c9dcef;
 }
 
@@ -217,5 +218,6 @@ text {
 }
 
 .CodeMirror-matchingbracket {
-    color: #adad00 !important;
+    font-weight: bold;
+    color: rgb(167, 130, 74) !important;
 }

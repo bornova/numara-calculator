@@ -1,7 +1,7 @@
 {
     "name": "numara",
     "productName": "Numara",
-    "version": "1.5.1",
+    "version": "1.5.2",
     "description": "Numara Calculator",
     "main": "src/js/main.js",
     "scripts": {
@@ -45,20 +45,27 @@
             "deleteAppDataOnUninstall": true
         },
         "win": {
-            "publish": [{
-                "provider": "generic",
-                "url": "https://numara.io/releases/win/"
-            }]
+            "publish": [
+                {
+                    "provider": "generic",
+                    "url": "https://numara.io/releases/win/"
+                }
+            ]
         },
         "mac": {
-            "target": ["dmg", "zip"],
+            "target": [
+                "dmg",
+                "zip"
+            ],
             "electronLanguages": [
                 "en"
             ],
-            "publish": [{
-                "provider": "generic",
-                "url": "https://numara.io/releases/mac/"
-            }]
+            "publish": [
+                {
+                    "provider": "generic",
+                    "url": "https://numara.io/releases/mac/"
+                }
+            ]
         },
         "directories": {
             "buildResources": "build/assets"
