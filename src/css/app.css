@@ -433,6 +433,12 @@ text {
     text-align: center;
 }
 
+.versionCtnr > div {
+    display: inline-block;
+    margin: 5px;
+    text-align: center;
+}
+
 .dialog-about-updateStatus {
     display: block;
     margin: 0 0 15px 0;
