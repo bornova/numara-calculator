@@ -55,12 +55,12 @@
 
     var ipc = isNode ? require('electron').ipcRenderer : null;
     var appName = isNode ? ipc.sendSync('getName') : 'Numara';
-    var appVersion = isNode ? ipc.sendSync('getVersion') : ' - Web';
+    var appVersion = isNode ? ipc.sendSync('getVersion') : ` - Web</br>Desktop version: <a href="https://numara.io/releases/win/">Windows</a> <a href="https://numara.io/releases/mac/">MacOS</a>`;
 
     // Set app info
     document.title = appName;
     $('dialog-about-title').innerHTML = appName + ' Calculator';
-    $('dialog-about-appVersion').innerHTML = `Version ${appVersion}</br>Download desktop version: <a href="https://numara.io/releases/win/Numara Setup ${appVersion}.exe">Windows</a> <a href="https://numara.io/releases/mac/Numara-${appVersion}.dmg">MacOS</a>`;
+    $('dialog-about-appVersion').innerHTML = 'Version ' + appVersion;
 
     // Set headers
     if (isNode && isWin) {
