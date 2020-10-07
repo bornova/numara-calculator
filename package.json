@@ -1,7 +1,7 @@
 {
     "name": "numara",
     "productName": "Numara",
-    "version": "1.5.6",
+    "version": "2.0.0",
     "description": "Numara Calculator",
     "main": "src/js/main.js",
     "scripts": {
@@ -11,6 +11,7 @@
         "ters": "terser node_modules/uikit/dist/js/uikit.min.js node_modules/feather-icons/dist/feather.min.js node_modules/mathjs/dist/math.min.js node_modules/moment/min/moment.min.js node_modules/mousetrap/mousetrap.min.js node_modules/mousetrap-global-bind/mousetrap-global-bind.min.js -c -o build/js/packages.js && terser node_modules/codemirror/lib/codemirror.js node_modules/codemirror/addon/search/search.js node_modules/codemirror/addon/search/searchcursor.js node_modules/codemirror/addon/search/jump-to-line.js node_modules/codemirror/addon/dialog/dialog.js node_modules/codemirror/addon/edit/closebrackets.js node_modules/codemirror/addon/edit/matchbrackets.js -c -o build/js/codemirror.js && terser src/js/d3.js src/js/plot.js src/js/app.js -c -m -o build/js/numara.js",
         "build": "npm run dir && npm run cpy && npm run css && npm run ters",
         "dev": "npm run build && electron .",
+        "test": "electron .",
         "dist": "npm run build && electron-builder"
     },
     "author": "Timur Atalay",

@@ -126,9 +126,7 @@ ipcMain.on('isNormal', (event) => event.returnValue = win.isNormal());
 ipcMain.on('isMaximized', (event) => event.returnValue = win.isMaximized());
 ipcMain.on('getName', (event) => event.returnValue = app.name);
 ipcMain.on('getVersion', (event) => event.returnValue = app.getVersion());
-ipcMain.on('print', (event) => {
-    win.webContents.print({}, (success) => event.sender.send('printReply', success ? 'Sent to printer' : false));
-});
+ipcMain.on('print', (event) => win.webContents.print({}, (success) => event.sender.send('printReply', success ? 'Sent to printer' : false)));
 ipcMain.on('resetApp', () => {
     session.defaultSession.clearStorageData()
         .then(() => {
@@ -147,7 +145,7 @@ autoUpdater.on('checking-for-update', () => win.webContents.send('updateStatus',
 autoUpdater.on('update-available', () => win.webContents.send('notifyUpdate'));
 autoUpdater.on('update-not-available', () => win.webContents.send('updateStatus', 'You have the latest version.'));
 autoUpdater.on('error', () => win.webContents.send('updateStatus', 'Error getting lastest version.'));
-autoUpdater.on('download-progress', () => win.webContents.send('updateStatus', 'Downloading latest version...'));
+autoUpdater.on('download-progress', (progress) => win.webContents.send('updateStatus', 'Downloading latest version... (' + Math.round(progress.percent) + '%)'));
 autoUpdater.on('update-downloaded', () => win.webContents.send('updateStatus', 'Restart app to update.'));
 
 nativeTheme.on('updated', () => win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors));

@@ -112,6 +112,10 @@ body {
     border-top: 1px solid #eaeaea;
 }
 
+.dialog-about-updateStatus {
+    color: #666666;
+}
+
 /* Settings menu items */
 .precision {
     border: 1px solid #e5e5e5;

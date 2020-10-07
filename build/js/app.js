@@ -60,7 +60,7 @@
     // Set app info
     document.title = appName;
     $('dialog-about-title').innerHTML = appName + ' Calculator';
-    $('dialog-about-appVersion').innerHTML = 'Version ' + appVersion;
+    $('dialog-about-appVersion').innerHTML = `Version ${appVersion}</br>Download desktop version: <a href="https://numara.io/releases/win/Numara Setup ${appVersion}.exe">Windows</a> <a href="https://numara.io/releases/mac/Numara-${appVersion}.dmg">MacOS</a>`;
 
     // Set headers
     if (isNode && isWin) {
