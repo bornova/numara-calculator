@@ -59,11 +59,10 @@ require('electron-context-menu')({
 });
 
 let win;
-
-var theme = dims.get('theme');
-var light = '#ffffff';
-var dark = '#1f1f1f';
-var bg = theme == 'system' ? (nativeTheme.shouldUseDarkColors ? dark : light) : (theme == 'dark' ? dark : light);
+let theme = dims.get('theme');
+let light = '#ffffff';
+let dark = '#1f1f1f';
+let bg = theme == 'system' ? (nativeTheme.shouldUseDarkColors ? dark : light) : (theme == 'dark' ? dark : light);
 
 function appWindow() {
     win = new BrowserWindow({
@@ -109,17 +108,6 @@ function appWindow() {
         win.on('focus', (event) => globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {}));
         win.on('blur', (event) => globalShortcut.unregisterAll());
     }
-
-    function sendUpdateStatus(status) {
-        win.webContents.send('updateStatus', status);
-    }
-
-    autoUpdater.on('checking-for-update', () => sendUpdateStatus('Checking for update...'));
-    autoUpdater.on('update-available', () => win.webContents.send('notifyUpdate'));
-    autoUpdater.on('update-not-available', () => sendUpdateStatus('You have the latest version.'));
-    autoUpdater.on('error', () => sendUpdateStatus('Error getting lastest version.'));
-    autoUpdater.on('download-progress', () => sendUpdateStatus('Downloading latest version...'));
-    autoUpdater.on('update-downloaded', () => sendUpdateStatus('Restart app to update.'));
 }
 
 if (!app.requestSingleInstanceLock()) {
@@ -129,10 +117,6 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 app.whenReady().then(appWindow);
-
-app.on('ready', () => {
-    if (!is.development) autoUpdater.checkForUpdatesAndNotify();
-});
 
 ipcMain.on('close', () => app.quit());
 ipcMain.on('minimize', () => win.minimize());
@@ -154,6 +138,17 @@ ipcMain.on('resetApp', () => {
 });
 ipcMain.on('setTheme', (event, mode) => dims.set('theme', mode));
 ipcMain.on('isDark', (event) => event.returnValue = nativeTheme.shouldUseDarkColors);
+
+ipcMain.on('checkUpdate', () => {
+    if (!is.development) autoUpdater.checkForUpdatesAndNotify();
+});
+
+autoUpdater.on('checking-for-update', () => win.webContents.send('updateStatus', 'Checking for update...'));
+autoUpdater.on('update-available', () => win.webContents.send('notifyUpdate'));
+autoUpdater.on('update-not-available', () => win.webContents.send('updateStatus', 'You have the latest version.'));
+autoUpdater.on('error', () => win.webContents.send('updateStatus', 'Error getting lastest version.'));
+autoUpdater.on('download-progress', () => win.webContents.send('updateStatus', 'Downloading latest version...'));
+autoUpdater.on('update-downloaded', () => win.webContents.send('updateStatus', 'Restart app to update.'));
 
 nativeTheme.on('updated', () => win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors));
 
