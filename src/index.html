@@ -83,14 +83,13 @@
                 <ul uk-tab>
                     <li><a href="#">Appearance</a></li>
                     <li><a href="#">Calculator</a></li>
-                    <li><a href="#">Date/Time</a></li>
                     <li><a href="#">Panel UI</a></li>
                 </ul>
                 <ul id="setswitch" class="uk-switcher uk-margin">
                     <li>
                         <div class="uk-child-width-expand" uk-grid>
-                            <div class="padTop1 uk-width-3-5">Theme</div>
-                            <div class="uk-text-right uk-width-2-5">
+                            <div class="padTop1">Theme</div>
+                            <div class="uk-text-right">
                                 <select id="themeList" class="uk-select">
                                     <option value="system">System</option>
                                     <option value="light">Light</option>
@@ -99,8 +98,8 @@
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
-                            <div class="padTop1 uk-width-3-5">Font size</div>
-                            <div class="uk-text-right uk-width-2-5">
+                            <div class="padTop1">Font size</div>
+                            <div class="uk-text-right">
                                 <select id="fontSize" class="uk-select">
                                     <option value="0.9rem">Tiny</option>
                                     <option value="1.0rem">Small</option>
@@ -111,8 +110,8 @@
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
-                            <div class="padTop1 uk-width-3-5">Font weight</div>
-                            <div class="uk-text-right uk-width-2-5">
+                            <div class="padTop1">Font weight</div>
+                            <div class="uk-text-right">
                                 <select id="fontWeight" class="uk-select">
                                     <option value="200">Light</option>
                                     <option value="300">Thin</option>
@@ -123,28 +122,22 @@
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
-                            <div>Syntax highligting</div>
+                            <div class="padTop1">Date format</div>
+                            <div class="uk-text-right">
+                                <select id="dateFormat" class="uk-select"></select>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div class="padTop1">Time format</div>
+                            <div class="uk-text-right">
+                                <select id="timeFormat" class="uk-select"></select>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div>Show day with date</div>
                             <div class="uk-text-right">
                                 <label class="switch">
-                                    <input id="syntaxButton" type="checkbox">
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div>Function tooltips</div>
-                            <div class="uk-text-right uk-width-2-5">
-                                <label class="switch">
-                                    <input id="functionTipsButton" type="checkbox">
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div>Match brackets</div>
-                            <div class="uk-text-right uk-width-2-5">
-                                <label class="switch">
-                                    <input id="matchBracketsButton" type="checkbox">
+                                    <input id="dateDay" type="checkbox">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -165,10 +158,22 @@
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
-                            <div>BigNumber<a id="bigNumWarn" class="warn-icon"><i data-feather="alert-circle"></i></a></div>
+                            <div class="padTop1">Numeric output<a id="bigNumWarn" class="warn-icon"><i data-feather="alert-circle"></i></a></div>
+                            <div class="uk-text-right">
+                                <select id="numericOutput" class="uk-select"></select>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div class="padTop1">Matrix type</div>
+                            <div class="uk-text-right">
+                                <select id="matrixType" class="uk-select"></select>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div>Predictable output</div>
                             <div class="uk-text-right">
                                 <label class="switch">
-                                    <input id="bigNumberButton" type="checkbox">
+                                    <input id="predictableButton" type="checkbox">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -200,28 +205,41 @@
                     </li>
                     <li>
                         <div class="uk-child-width-expand" uk-grid>
-                            <div class="padTop1">Date format</div>
-                            <div class="uk-text-right">
-                                <select id="dateFormat" class="uk-select"></select>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div class="padTop1">Time format</div>
-                            <div class="uk-text-right">
-                                <select id="timeFormat" class="uk-select"></select>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div>Show day with date</div>
+                            <div>Autocomplete</div>
                             <div class="uk-text-right">
                                 <label class="switch">
-                                    <input id="dateDay" type="checkbox">
+                                    <input id="autocompleteButton" type="checkbox">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
                         </div>
-                    </li>
-                    <li>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div>Syntax highligting</div>
+                            <div class="uk-text-right">
+                                <label class="switch">
+                                    <input id="syntaxButton" type="checkbox">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div>Function tooltips</div>
+                            <div class="uk-text-right uk-width-2-5">
+                                <label class="switch">
+                                    <input id="functionTipsButton" type="checkbox">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
+                            <div>Highlight matching brackets</div>
+                            <div class="uk-text-right uk-width-2-5">
+                                <label class="switch">
+                                    <input id="matchBracketsButton" type="checkbox">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
                         <div class="uk-child-width-expand" uk-grid>
                             <div>Auto close brackets</div>
                             <div class="uk-text-right uk-width-2-5">

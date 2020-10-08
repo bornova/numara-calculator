@@ -300,3 +300,16 @@ line {
     font-weight: bold;
     color: rgb(167, 130, 74) !important;
 }
+
+.CodeMirror-hints {
+    background-color: #333333;
+    border-color: #222222;
+}
+
+.CodeMirror-hint {
+    color: #e6e6e6;
+}
+
+.CodeMirror-hint:hover {
+    background-color: #222222;
+}

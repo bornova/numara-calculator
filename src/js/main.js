@@ -31,13 +31,13 @@ const fs = require('fs-extra');
 
 const store = require('electron-store');
 const schema = {
-    appWidth: {
-        type: 'number',
-        default: 600
-    },
     appHeight: {
         type: 'number',
         default: 480
+    },
+    appWidth: {
+        type: 'number',
+        default: 560
     },
     theme: {
         type: 'string',
@@ -68,8 +68,8 @@ function appWindow() {
     win = new BrowserWindow({
         height: parseInt(dims.get('appHeight')),
         width: parseInt(dims.get('appWidth')),
-        minHeight: 400,
-        minWidth: 500,
+        minHeight: schema.appHeight.default,
+        minWidth: schema.appWidth.default,
         backgroundColor: bg,
         frame: false,
         hasShadow: true,

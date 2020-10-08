@@ -225,3 +225,7 @@ text {
     font-weight: bold;
     color: rgb(167, 130, 74) !important;
 }
+
+.CodeMirror-hint:hover {
+    background-color: #eaeaea;
+}

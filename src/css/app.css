@@ -365,7 +365,7 @@ text {
 }
 
 .warn-icon {
-    display: inline-block;
+    display: none;
     margin-left: 3px;
     vertical-align: middle;
 }
@@ -433,7 +433,7 @@ text {
     text-align: center;
 }
 
-.versionCtnr > div {
+.versionCtnr>div {
     display: inline-block;
     margin: 5px;
     text-align: center;
@@ -642,7 +642,7 @@ input:checked+.slider:before {
 }
 
 .uk-grid+.uk-grid {
-    margin-top: 14px;
+    margin-top: 12px;
 }
 
 .uk-grid-small {
@@ -661,7 +661,7 @@ input:checked+.slider:before {
 
 .uk-switcher {
     margin-bottom: 0;
-    min-height: 200px;
+    min-height: 260px;
 }
 
 .uk-tab>* {

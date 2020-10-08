@@ -49,6 +49,36 @@
         coverGutterNextToScrollbar: true
     });
 
+    // Codemirror autocomplete hints
+    var hints = ['ans', 'now', 'today', 'total', 'subtotal', 'avg'];
+    Object.getOwnPropertyNames(math).forEach((f) => {
+        if (typeof math[f] === 'function' && Object.getOwnPropertyNames(math[f]).includes('signatures')) {
+            hints.push(f);
+        }
+    });
+
+    CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
+        var cur = editor.getCursor();
+        var curLine = editor.getLine(cur.line);
+        var start = cur.ch;
+        var end = start;
+        while (end < curLine.length && /[\w$]/.test(curLine.charAt(end))) ++end;
+        while (start && /[\w$]/.test(curLine.charAt(start - 1))) --start;
+        var curWord = start !== end && curLine.slice(start, end);
+        var regex = new RegExp('^' + curWord, 'i');
+        return {
+            list: (!curWord ? [] : hints.filter((item) => item.match(regex))).sort(),
+            from: CodeMirror.Pos(cur.line, start),
+            to: CodeMirror.Pos(cur.line, end)
+        };
+    });
+
+    CodeMirror.commands.autocomplete = (cm) => {
+        CodeMirror.showHint(cm, CodeMirror.hint.numaraHints, {
+            completeSingle: false
+        });
+    };
+
     // User agent
     var isWin = navigator.userAgent.toLowerCase().includes('win');
     var isNode = navigator.userAgent.toLowerCase().includes('electron');
@@ -126,9 +156,8 @@
     });
 
     // Calculate answers
-    var solve = math.evaluate;
-
     function calculate() {
+        var solve = math.evaluate;
         var answers = [];
         var avgs = [];
         var totals = [];
@@ -309,12 +338,11 @@
     // App settings
     const defaultSettings = {
         app: {
+            autocomplete: true,
             closeBrackets: true,
-            bigNumber: false,
             currencies: true,
             dateDay: false,
             dateFormat: 'M/D/YYYY',
-            timeFormat: 'h:mm A',
             divider: true,
             fontSize: '1.1rem',
             fontWeight: '400',
@@ -323,27 +351,41 @@
             lineNumbers: true,
             lineWrap: true,
             matchBrackets: true,
+            matrixType: 'Matrix',
+            numericOutput: 'number',
             precision: '4',
+            predictable: false,
             syntax: true,
             theme: 'system',
-            thouSep: true
+            thouSep: true,
+            timeFormat: 'h:mm A'
         },
-        dateFormats: ['M/D/YYYY', 'D/M/YYYY', 'MMM DD, YYYY'],
-        timeFormats: ['h:mm A', 'H:mm'],
         inputWidth: 60,
         plot: {
             plotArea: false,
-            plotGrid: false,
-            plotCross: false
-        },
-        version: '5.0'
+            plotCross: false,
+            plotGrid: false
+        }
     };
     Object.freeze(defaultSettings);
 
     // Initiate app settings and theme
     var settings;
-    if (!ls.get('settings') || ls.get('settings').version !== defaultSettings.version) ls.set('settings', defaultSettings);
+    var initSettings = ls.get('settings');
 
+    if (!initSettings) {
+        ls.set('settings', defaultSettings);
+    } else {
+        // Check for and apply default settings changes
+        DeepDiff.observableDiff(initSettings, defaultSettings, (d) => {
+            if (d.kind !== 'E') {
+                DeepDiff.applyChange(initSettings, defaultSettings, d);
+                ls.set('settings', initSettings);
+            }
+        });
+    }
+
+    // Apply settings
     function applySettings() {
         settings = ls.get('settings');
 
@@ -373,7 +415,9 @@
         cm.focus();
 
         math.config({
-            number: settings.app.bigNumber ? 'BigNumber' : 'number'
+            matrix: settings.app.matrixType,
+            number: settings.app.numericOutput,
+            predictable: settings.app.predictable
         });
 
         calculate();
@@ -384,6 +428,9 @@
     cm.on('change', () => {
         calculate();
         cm.scrollIntoView(cm.getCursor());
+    });
+    cm.on("inputRead", (cm, event) => {
+        if (settings.app.autocomplete) CodeMirror.commands.autocomplete(cm);
     });
     cm.on('update', () => {
         var funcs = document.getElementsByClassName('cm-function');
@@ -612,22 +659,18 @@
                 }
                 break;
             case 'dialog-settings-save': // Save settings
+                // Appearance
                 settings.app.theme = $('themeList').value;
-                settings.app.syntax = $('syntaxButton').checked;
                 settings.app.fontSize = $('fontSize').value;
                 settings.app.fontWeight = $('fontWeight').value;
-                settings.app.functionTips = $('functionTipsButton').checked;
-                settings.app.closeBrackets = $('closeBracketsButton').checked;
-                settings.app.matchBrackets = $('matchBracketsButton').checked;
-                settings.app.lineNumbers = $('lineNoButton').checked;
-                settings.app.lineWrap = $('lineWrapButton').checked;
-                settings.app.lineErrors = $('lineErrorButton').checked;
-                settings.app.divider = $('dividerButton').checked;
-                settings.app.precision = $('precisionRange').value;
-                settings.app.bigNumber = $('bigNumberButton').checked;
-                settings.app.dateDay = $('dateDay').checked;
                 settings.app.dateFormat = $('dateFormat').value;
                 settings.app.timeFormat = $('timeFormat').value;
+                settings.app.dateDay = $('dateDay').checked;
+                // Calculator
+                settings.app.precision = $('precisionRange').value;
+                settings.app.matrixType = $('matrixType').value;
+                settings.app.numericOutput = $('numericOutput').value;
+                settings.app.predictable = $('predictableButton').checked;
                 settings.app.thouSep = $('thouSepButton').checked;
                 if (!settings.app.currencies && $('currencyButton').checked) {
                     getRates();
@@ -636,6 +679,16 @@
                     localStorage.removeItem('rateDate');
                 }
                 settings.app.currencies = $('currencyButton').checked;
+                // Panel UI
+                settings.app.autocomplete = $('autocompleteButton').checked;
+                settings.app.syntax = $('syntaxButton').checked;
+                settings.app.functionTips = $('functionTipsButton').checked;
+                settings.app.matchBrackets = $('matchBracketsButton').checked;
+                settings.app.closeBrackets = $('closeBracketsButton').checked;
+                settings.app.lineNumbers = $('lineNoButton').checked;
+                settings.app.lineErrors = $('lineErrorButton').checked;
+                settings.app.divider = $('dividerButton').checked;
+                settings.app.lineWrap = $('lineWrapButton').checked;
 
                 ls.set('settings', settings);
                 applySettings();
@@ -714,36 +767,56 @@
     // Initiate settings dialog
     UIkit.util.on('#setswitch', 'beforeshow', (e) => e.stopPropagation());
     UIkit.util.on('#dialog-settings', 'beforeshow', () => {
+        // Appearance
+        var dateFormats = ['M/D/YYYY', 'D/M/YYYY', 'MMM DD, YYYY'];
+        var timeFormats = ['h:mm A', 'H:mm'];
+        var matrixTypes = ['Matrix', 'Array'];
+        var numericOutputs = ['number', 'BigNumber', 'Fraction'];
+
         $('themeList').value = settings.app.theme;
         $('fontSize').value = settings.app.fontSize;
         $('fontWeight').value = settings.app.fontWeight;
-        $('syntaxButton').checked = settings.app.syntax;
-        $('closeBracketsButton').checked = settings.app.closeBrackets;
-        $('matchBracketsButton').checked = settings.app.matchBrackets;
-        $('lineNoButton').checked = settings.app.lineNumbers;
-        $('lineWrapButton').checked = settings.app.lineWrap;
-        $('lineErrorButton').checked = settings.app.lineErrors;
-        $('functionTipsButton').checked = settings.app.functionTips;
-        $('functionTipsButton').disabled = settings.app.syntax ? false : true;
-        $('functionTipsButton').parentNode.style.opacity = settings.app.syntax ? '1' : '0.5';
-        $('dividerButton').checked = settings.app.divider;
-        $('precisionRange').value = settings.app.precision;
-        $('precision-label').innerHTML = settings.app.precision;
-        $('dateDay').checked = settings.app.dateDay;
         $('dateFormat').innerHTML = '';
-        for (var d of settings.dateFormats) $('dateFormat').innerHTML += `<option value="${d}">${moment().format(d)}</option>`;
+        for (var d of dateFormats) $('dateFormat').innerHTML += `<option value="${d}">${moment().format(d)}</option>`;
         $('dateFormat').value = settings.app.dateFormat;
         $('timeFormat').innerHTML = '';
-        for (var t of settings.timeFormats) $('timeFormat').innerHTML += `<option value="${t}">${moment().format(t)}</option>`;
+        for (var t of timeFormats) $('timeFormat').innerHTML += `<option value="${t}">${moment().format(t)}</option>`;
         $('timeFormat').value = settings.app.timeFormat;
-        $('bigNumberButton').checked = settings.app.bigNumber;
+        $('dateDay').checked = settings.app.dateDay;
+        // Calculator
+        $('precisionRange').value = settings.app.precision;
+        $('precision-label').innerHTML = settings.app.precision;
+        $('matrixType').innerHTML = '';
+        for (var m of matrixTypes) $('matrixType').innerHTML += `<option value="${m}">${m}</option>`;
+        $('matrixType').value = settings.app.matrixType;
+        $('numericOutput').innerHTML = '';
+        for (var n of numericOutputs) $('numericOutput').innerHTML += `<option value="${n}">${n.charAt(0).toUpperCase() + n.slice(1)}</option>`;
+        $('numericOutput').value = settings.app.numericOutput;
+        if (settings.app.numericOutput == 'BigNumber') bigNumberWarning();
+        $('predictableButton').checked = settings.app.predictable;
         $('thouSepButton').checked = settings.app.thouSep;
         $('currencyButton').checked = settings.app.currencies;
         $('lastUpdated').innerHTML = settings.app.currencies ? ls.get('rateDate') : '';
         $('currencyUpdate').style.display = settings.app.currencies ? 'block' : 'none';
+        // Panel UI
+        $('autocompleteButton').checked = settings.app.autocomplete;
+        $('syntaxButton').checked = settings.app.syntax;
+        $('functionTipsButton').checked = settings.app.functionTips;
+        $('matchBracketsButton').checked = settings.app.matchBrackets;
+        $('closeBracketsButton').checked = settings.app.closeBrackets;
+        $('lineNoButton').checked = settings.app.lineNumbers;
+        $('lineErrorButton').checked = settings.app.lineErrors;
+        $('dividerButton').checked = settings.app.divider;
+        $('lineWrapButton').checked = settings.app.lineWrap;
+
         $('defaultSettingsButton').style.display = JSON.stringify(settings.app) === JSON.stringify(defaultSettings.app) ? 'none' : 'inline-block';
     });
 
+    function bigNumberWarning() {
+        $('bigNumWarn').style.display = $('numericOutput').value == 'BigNumber' ? 'inline-block' : 'none';
+    }
+
+    $('numericOutput').addEventListener('change', bigNumberWarning);
     $('precisionRange').addEventListener('input', () => $('precision-label').innerHTML = $('precisionRange').value);
 
     // Help dialog content
