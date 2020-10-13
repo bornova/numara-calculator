@@ -246,7 +246,7 @@ line {
 }
 
 .CodeMirror-selected {
-    background-color: #193552 !important;
+    background: #193552 !important;
 }
 
 .CodeMirror-linenumber {

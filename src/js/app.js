@@ -513,6 +513,7 @@
     }
 
     UIkit.util.on('.modal', 'hidden', () => cm.focus());
+    UIkit.util.on('.uk-switcher', 'show', () => cm.getInputField().blur());
 
     // Update open button count
     var savedCount = () => Object.keys(ls.get('saved') || {}).length;
@@ -594,6 +595,13 @@
                 break;
         }
         e.stopPropagation();
+    });
+
+    $('output').addEventListener('mousedown', () => {
+        var sels = document.getElementsByClassName('CodeMirror-selected');
+        while (sels[0]) {
+            sels[0].classList.remove('CodeMirror-selected');
+        }
     });
 
     // Dialog button actions

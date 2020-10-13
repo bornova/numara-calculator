@@ -148,7 +148,6 @@ text {
     background-color: rgba(0, 0, 0, .6);
 }
 
-
 .uk-button-default {
     border-color: #e7eff7;
 }
@@ -182,7 +181,7 @@ text {
 }
 
 .CodeMirror-selected {
-    background-color: #c9e0f7 !important;
+    background: #c9e0f7 !important;
 }
 
 .CodeMirror-linenumber {
