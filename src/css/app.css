@@ -540,6 +540,7 @@ text {
 .switch {
     display: inline-block;
     height: 16px;
+    margin-top: 2px;
     position: relative;
     width: 28px;
 }
@@ -642,7 +643,7 @@ input:checked+.slider:before {
 }
 
 .uk-grid+.uk-grid {
-    margin-top: 12px;
+    margin-top: 10px;
 }
 
 .uk-grid-small {
@@ -660,13 +661,12 @@ input:checked+.slider:before {
 }
 
 .uk-switcher {
-    margin-bottom: 0;
+    margin: 0 !important;
     min-height: 260px;
 }
 
 .uk-tab {
-    margin-left: -35px;
-    margin-right: -15px;
+    margin: 0 -15px 15px -35px;
 }
 
 .uk-tab>* {
