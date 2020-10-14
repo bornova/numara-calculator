@@ -435,7 +435,7 @@ text {
 
 .versionCtnr>div {
     display: inline-block;
-    margin: 5px;
+    margin: 3px;
     text-align: center;
 }
 
@@ -443,6 +443,11 @@ text {
     display: block;
     margin: 0 0 15px 0;
     text-align: center;
+}
+
+.restartButton {
+    display: none;
+    margin-bottom: 10px;
 }
 
 .dialog-about-copyright {

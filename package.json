@@ -1,14 +1,13 @@
 {
     "name": "numara",
     "productName": "Numara",
-    "version": "2.1.0",
+    "version": "2.1.1",
     "description": "Numara Calculator",
     "main": "src/js/main.js",
     "scripts": {
-        "build": "node build.js",
-        "dev": "npm run build && electron .",
-        "test": "electron .",
-        "dist": "npm run build && electron-builder"
+        "prep": "node prep.js",
+        "test": "npm run prep && electron .",
+        "dist": "npm run prep && electron-builder"
     },
     "author": "Timur Atalay",
     "license": "MIT",
@@ -28,7 +27,6 @@
     },
     "dependencies": {
         "electron-context-menu": "^2.3.0",
-        "electron-log": "^4.2.4",
         "electron-store": "^6.0.1",
         "electron-updater": "^4.3.5",
         "electron-util": "^0.14.2",
@@ -40,10 +38,12 @@
             "deleteAppDataOnUninstall": true
         },
         "win": {
-            "publish": [{
-                "provider": "generic",
-                "url": "https://numara.io/releases/win/"
-            }]
+            "publish": [
+                {
+                    "provider": "generic",
+                    "url": "https://numara.io/releases/win/"
+                }
+            ]
         },
         "mac": {
             "target": [
@@ -53,10 +53,12 @@
             "electronLanguages": [
                 "en"
             ],
-            "publish": [{
-                "provider": "generic",
-                "url": "https://numara.io/releases/mac/"
-            }]
+            "publish": [
+                {
+                    "provider": "generic",
+                    "url": "https://numara.io/releases/mac/"
+                }
+            ]
         },
         "directories": {
             "buildResources": "build/assets"

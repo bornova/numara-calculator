@@ -84,13 +84,17 @@
     var isNode = navigator.userAgent.toLowerCase().includes('electron');
 
     var ipc = isNode ? require('electron').ipcRenderer : null;
-    var appName = isNode ? ipc.sendSync('getName') : 'Numara';
-    var appVersion = isNode ? 'Version ' + ipc.sendSync('getVersion') : ' Web Version<div class="versionCtnr"><div>Desktop version:</div><div><a href="https://numara.io/releases/win/">Windows</a></div><div><a href="https://numara.io/releases/mac/">MacOS</a></div></div>';
 
     // Set app info
-    document.title = appName;
+    document.title = appName + ' Calculator';
     $('dialog-about-title').innerHTML = appName + ' Calculator';
-    $('dialog-about-appVersion').innerHTML = appVersion;
+    $('dialog-about-appVersion').innerHTML = isNode ? 'Version ' + appVersion :
+        `Version ${appVersion}
+        <div class="versionCtnr">
+            <div>Desktop version:</div>
+            <div><a href="https://numara.io/releases/win/Numara Setup ${appVersion}.exe">Windows</a></div>
+            <div><a href="https://numara.io/releases/mac/Numara-${appVersion}.dmg">MacOS</a></div>
+        </div>`;
 
     // Set headers
     if (isNode && isWin) {
@@ -688,10 +692,10 @@
                 }
                 settings.app.currencies = $('currencyButton').checked;
                 // Panel UI
-                settings.app.autocomplete = $('autocompleteButton').checked;
                 settings.app.syntax = $('syntaxButton').checked;
                 settings.app.functionTips = $('functionTipsButton').checked;
                 settings.app.matchBrackets = $('matchBracketsButton').checked;
+                settings.app.autocomplete = $('autocompleteButton').checked;
                 settings.app.closeBrackets = $('closeBracketsButton').checked;
                 settings.app.lineNumbers = $('lineNoButton').checked;
                 settings.app.lineErrors = $('lineErrorButton').checked;
@@ -721,6 +725,9 @@
                 ls.set('settings', settings);
                 plot();
                 break;
+
+            case 'restartButton': // Restart to update
+                ipc.send('updateApp');
         }
     });
 
@@ -807,10 +814,10 @@
         $('lastUpdated').innerHTML = settings.app.currencies ? ls.get('rateDate') : '';
         $('currencyUpdate').style.display = settings.app.currencies ? 'block' : 'none';
         // Panel UI
-        $('autocompleteButton').checked = settings.app.autocomplete;
         $('syntaxButton').checked = settings.app.syntax;
         $('functionTipsButton').checked = settings.app.functionTips;
         $('matchBracketsButton').checked = settings.app.matchBrackets;
+        $('autocompleteButton').checked = settings.app.autocomplete;
         $('closeBracketsButton').checked = settings.app.closeBrackets;
         $('lineNoButton').checked = settings.app.lineNumbers;
         $('lineErrorButton').checked = settings.app.lineErrors;
@@ -989,6 +996,13 @@
     if (isNode) {
         ipc.send('checkUpdate');
         ipc.on('notifyUpdate', (event) => notify('A new version is available.'));
-        ipc.on('updateStatus', (event, status) => $('dialog-about-updateStatus').innerHTML = status);
+        ipc.on('updateStatus', (event, status) => {
+            if (status == 'ready') {
+                $('dialog-about-updateStatus').innerHTML = 'Restart app to update.';
+                $('restartButton').style.display = 'inline-block';
+            } else {
+                $('dialog-about-updateStatus').innerHTML = status;
+            }
+        });
     }
 })();

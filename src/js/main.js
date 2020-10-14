@@ -15,13 +15,9 @@ const {
     shell
 } = require('electron');
 
-const log = require('electron-log');
 const {
     autoUpdater
 } = require("electron-updater");
-
-autoUpdater.logger = log;
-autoUpdater.logger.transports.file.level = 'info';
 
 const {
     is
@@ -124,30 +120,27 @@ ipcMain.on('maximize', () => win.maximize());
 ipcMain.on('unmaximize', () => win.unmaximize());
 ipcMain.on('isNormal', (event) => event.returnValue = win.isNormal());
 ipcMain.on('isMaximized', (event) => event.returnValue = win.isMaximized());
-ipcMain.on('getName', (event) => event.returnValue = app.name);
-ipcMain.on('getVersion', (event) => event.returnValue = app.getVersion());
 ipcMain.on('print', (event) => win.webContents.print({}, (success) => event.sender.send('printReply', success ? 'Sent to printer' : false)));
-ipcMain.on('resetApp', () => {
-    fs.emptyDir(app.getPath('userData'))
-        .then(() => {
-            app.relaunch();
-            app.quit();
-        }).then(() => dims.clear());
-});
 ipcMain.on('setTheme', (event, mode) => dims.set('theme', mode));
 ipcMain.on('isDark', (event) => event.returnValue = nativeTheme.shouldUseDarkColors);
-
+ipcMain.on('updateApp', () => setImmediate(() => autoUpdater.quitAndInstall(isSilent = true, isForceRunAfter = true)));
 ipcMain.on('checkUpdate', () => {
     if (!is.development) autoUpdater.checkForUpdatesAndNotify();
+});
+ipcMain.on('resetApp', () => {
+    dims.clear();
+    session.defaultSession.clearStorageData().then(() => {
+        app.relaunch();
+        app.exit();
+    });
 });
 
 autoUpdater.on('checking-for-update', () => win.webContents.send('updateStatus', 'Checking for update...'));
 autoUpdater.on('update-available', () => win.webContents.send('notifyUpdate'));
-autoUpdater.on('update-not-available', () => win.webContents.send('updateStatus', 'You have the latest version.'));
-autoUpdater.on('error', () => win.webContents.send('updateStatus', 'Error getting lastest version.'));
+autoUpdater.on('update-not-available', () => win.webContents.send('updateStatus', app.name + ' is up to date.'));
+autoUpdater.on('error', () => win.webContents.send('updateStatus', 'Error checking for update.'));
 autoUpdater.on('download-progress', (progress) => win.webContents.send('updateStatus', 'Downloading latest version... (' + Math.round(progress.percent) + '%)'));
-autoUpdater.on('update-downloaded', () => win.webContents.send('updateStatus', 'Restart app to update.'));
-
+autoUpdater.on('update-downloaded', () => win.webContents.send('updateStatus', 'ready'));
 nativeTheme.on('updated', () => win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors));
 
 if (is.macos) {
