@@ -128,11 +128,11 @@ ipcMain.on('getName', (event) => event.returnValue = app.name);
 ipcMain.on('getVersion', (event) => event.returnValue = app.getVersion());
 ipcMain.on('print', (event) => win.webContents.print({}, (success) => event.sender.send('printReply', success ? 'Sent to printer' : false)));
 ipcMain.on('resetApp', () => {
-    session.defaultSession.clearStorageData()
+    fs.emptyDir(app.getPath('userData'))
         .then(() => {
             app.relaunch();
             app.quit();
-        }).then(() => fs.remove(app.getPath('userData')));
+        }).then(() => dims.clear());
 });
 ipcMain.on('setTheme', (event, mode) => dims.set('theme', mode));
 ipcMain.on('isDark', (event) => event.returnValue = nativeTheme.shouldUseDarkColors);
