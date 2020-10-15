@@ -203,11 +203,11 @@
     .uk-notification {
         left: 50%;
         margin-left: calc(-90vw / 2);
-        width: 90vw;
+        width: 100vw;
     }
 
     .uk-notification-bottom-center {
-        margin-left: calc(-90vw / 2);
+        margin-left: calc(-100vw / 2);
     }
 
     .CodeMirror-lines {
