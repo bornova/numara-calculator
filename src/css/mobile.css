@@ -109,8 +109,8 @@
         content: "";
         height: 32px;
         position: absolute;
-        bottom: 4px;
-        left: 4px;
+        bottom: 5px;
+        left: 5px;
         transition: .2s;
         -webkit-transition: .2s;
         width: 32px;
