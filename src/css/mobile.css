@@ -99,8 +99,8 @@
 
     .switch {
         display: inline-block;
-        height: 40px;
-        margin-top: 12px;
+        height: 42px;
+        margin-top: 10px;
         position: relative;
         width: 72px;
     }
