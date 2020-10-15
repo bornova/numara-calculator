@@ -198,6 +198,7 @@
     .uk-notification-close svg {
         height: 48px;
         width: 48px;
+        margin: 10px 15px 0 0;
     }
 
     .uk-notification {
