@@ -7,6 +7,7 @@
 * {
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
+    -webkit-tap-highlight-color: transparent;
     background: none;
     border: none;
     margin: 0;
