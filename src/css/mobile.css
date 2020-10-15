@@ -117,12 +117,12 @@
     }
 
     .slider.round {
-        border-radius: 48px;
+        border-radius: 42px;
     }
 
     input:checked+.slider:before {
-        transform: translateX(32px);
-        -webkit-transform: translateX(32px);
+        transform: translateX(30px);
+        -webkit-transform: translateX(30px);
     }
 
     .uk-modal-body {
