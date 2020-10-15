@@ -85,6 +85,11 @@
 
     var ipc = isNode ? require('electron').ipcRenderer : null;
 
+
+    if (!isNode) {
+        $('mobile').setAttribute('href', 'css/mobile.css');
+    }
+
     // Set app info
     document.title = appName + ' Calculator';
     $('dialog-about-title').innerHTML = appName + ' Calculator';
