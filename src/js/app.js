@@ -4,7 +4,7 @@
  * @license MIT https://github.com/bornova/numara/blob/master/LICENSE
  */
 
-(() => {
+var numara = (() => {
     // Get element by id
     const $ = (id) => document.getElementById(id);
 
@@ -1000,10 +1000,10 @@
     // Check for updates
     if (isNode) {
         ipc.send('checkUpdate');
-        ipc.on('notifyUpdate', (event) => notify('A new version is available.'));
+        ipc.on('notifyUpdate', (event) => notify(`A new version is available. <a onclick="document.getElementById('aboutButton').click();">Info</a>`));
         ipc.on('updateStatus', (event, status) => {
             if (status == 'ready') {
-                $('dialog-about-updateStatus').innerHTML = 'Restart app to update.';
+                $('dialog-about-updateStatus').innerHTML = 'Restart Numara to finish updating.';
                 $('restartButton').style.display = 'inline-block';
             } else {
                 $('dialog-about-updateStatus').innerHTML = status;

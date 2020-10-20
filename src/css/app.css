@@ -441,8 +441,8 @@ text {
 }
 
 .dialog-about-updateStatus {
-    display: block;
-    margin: 0 0 15px 0;
+    display: inline-block;
+    margin-bottom: 10px;
     text-align: center;
 }
 
@@ -713,6 +713,12 @@ input:checked+.slider:before {
     line-height: 28px;
     padding: 0 10px;
     transition: 0s ease-in-out;
+}
+
+.uk-button-default,
+.uk-button-default:hover {
+    color: inherit;
+    cursor: pointer;
 }
 
 .uk-input {

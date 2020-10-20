@@ -122,8 +122,8 @@ body {
 }
 
 .textBox {
-    color: #eaeaea;
     border: 1px solid #666666;
+    color: #eaeaea;
 }
 
 .slider:before {
@@ -148,8 +148,8 @@ line {
 }
 
 .domain {
-    stroke: #333;
     opacity: 1;
+    stroke: #333;
 }
 
 /* UIkit Overrides */
@@ -297,8 +297,8 @@ line {
 }
 
 .CodeMirror-matchingbracket {
-    font-weight: bold;
     color: rgb(167, 130, 74) !important;
+    font-weight: bold;
 }
 
 .CodeMirror-hints {

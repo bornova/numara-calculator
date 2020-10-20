@@ -15,15 +15,8 @@ const {
     shell
 } = require('electron');
 
-const {
-    autoUpdater
-} = require("electron-updater");
-
-const {
-    is
-} = require('electron-util');
-
-const fs = require('fs-extra');
+const autoUpdater = require("electron-updater").autoUpdater;
+const is = require('electron-util').is;
 
 const store = require('electron-store');
 const schema = {
@@ -114,6 +107,13 @@ if (!app.requestSingleInstanceLock()) {
 
 app.whenReady().then(appWindow);
 
+autoUpdater.on('checking-for-update', () => win.webContents.send('updateStatus', 'Checking for update...'));
+autoUpdater.on('update-available', () => win.webContents.send('notifyUpdate'));
+autoUpdater.on('update-not-available', () => win.webContents.send('updateStatus', app.name + ' is up to date.'));
+autoUpdater.on('error', () => win.webContents.send('updateStatus', 'Error checking for update.'));
+autoUpdater.on('download-progress', (progress) => win.webContents.send('updateStatus', 'Downloading latest version... (' + Math.round(progress.percent) + '%)'));
+autoUpdater.on('update-downloaded', () => win.webContents.send('updateStatus', 'ready'));
+
 ipcMain.on('close', () => app.quit());
 ipcMain.on('minimize', () => win.minimize());
 ipcMain.on('maximize', () => win.maximize());
@@ -128,19 +128,13 @@ ipcMain.on('checkUpdate', () => {
     if (!is.development) autoUpdater.checkForUpdatesAndNotify();
 });
 ipcMain.on('resetApp', () => {
-    dims.clear();
     session.defaultSession.clearStorageData().then(() => {
+        dims.clear();
         app.relaunch();
         app.exit();
     });
 });
 
-autoUpdater.on('checking-for-update', () => win.webContents.send('updateStatus', 'Checking for update...'));
-autoUpdater.on('update-available', () => win.webContents.send('notifyUpdate'));
-autoUpdater.on('update-not-available', () => win.webContents.send('updateStatus', app.name + ' is up to date.'));
-autoUpdater.on('error', () => win.webContents.send('updateStatus', 'Error checking for update.'));
-autoUpdater.on('download-progress', (progress) => win.webContents.send('updateStatus', 'Downloading latest version... (' + Math.round(progress.percent) + '%)'));
-autoUpdater.on('update-downloaded', () => win.webContents.send('updateStatus', 'ready'));
 nativeTheme.on('updated', () => win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors));
 
 if (is.macos) {

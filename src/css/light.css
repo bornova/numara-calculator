@@ -221,8 +221,8 @@ text {
 }
 
 .CodeMirror-matchingbracket {
-    font-weight: bold;
     color: rgb(167, 130, 74) !important;
+    font-weight: bold;
 }
 
 .CodeMirror-hint:hover {
