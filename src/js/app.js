@@ -4,7 +4,7 @@
  * @license MIT https://github.com/bornova/numara/blob/master/LICENSE
  */
 
-var numara = (() => {
+(() => {
     // Get element by id
     const $ = (id) => document.getElementById(id);
 
@@ -14,7 +14,12 @@ var numara = (() => {
         set: (key, value) => localStorage.setItem(key, JSON.stringify(value))
     };
 
-    // Codemirror
+    // Initilize Codemirror
+    var cm = CodeMirror.fromTextArea($('inputArea'), {
+        coverGutterNextToScrollbar: true
+    });
+
+    // Codemirror syntax templates
     CodeMirror.defineMode('numara', () => {
         return {
             token: (stream, state) => {
@@ -43,10 +48,6 @@ var numara = (() => {
                 return 'text';
             }
         };
-    });
-
-    var cm = CodeMirror.fromTextArea($('inputArea'), {
-        coverGutterNextToScrollbar: true
     });
 
     // Codemirror autocomplete hints
@@ -85,10 +86,7 @@ var numara = (() => {
 
     var ipc = isNode ? require('electron').ipcRenderer : null;
 
-
-    if (!isNode) {
-        $('mobile').setAttribute('href', 'css/mobile.css');
-    }
+    if (!isNode) $('mobile').setAttribute('href', 'css/mobile.css');
 
     // Set app info
     document.title = appName + ' Calculator';
@@ -265,27 +263,6 @@ var numara = (() => {
 
         ls.set('input', cm.getValue());
 
-        function format(answer) {
-            answer = String(answer);
-            var a = answer.trim().split(' ')[0];
-            var b = answer.replace(a, '');
-            formattedAnswer = !a.includes('e') && !isNaN(a) ?
-                settings.app.thouSep ? Number(a).toLocaleString(undefined, digits) + b : parseFloat(Number(a).toFixed(settings.app.precision)) + b :
-                a.match(/e-?\d+/) ? parseFloat(Number(a.split('e')[0]).toFixed(settings.app.precision)) + 'e' + answer.split('e')[1] + b :
-                strip(answer);
-            return formattedAnswer;
-        }
-
-        function setLineNo(lineNo, isErr) {
-            if (settings.app.lineNumbers) {
-                var ln = document.createElement("div");
-                ln.classList.add('CodeMirror-linenumber');
-                ln.classList.add(isErr ? 'lineErrorNo' : null);
-                ln.innerHTML = lineNo;
-                cm.setGutterMarker(lineNo - 1, 'CodeMirror-linenumbers', ln);
-            }
-        }
-
         function solver(line) {
             solverScope.avg = solve(avgs.length > 0 ? '(' + math.mean(avgs) + ')' : 0);
             solverScope.total = solve(totals.length > 0 ? '(' + totals.join('+') + ')' : 0);
@@ -341,6 +318,27 @@ var numara = (() => {
             if (s.charAt(0) === '"') s = s.substring(1, t--);
             if (s.charAt(--t) === '"') s = s.substring(0, t);
             return s;
+        }
+
+        function format(answer) {
+            answer = String(answer);
+            var a = answer.trim().split(' ')[0];
+            var b = answer.replace(a, '');
+            formattedAnswer = !a.includes('e') && !isNaN(a) ?
+                settings.app.thouSep ? Number(a).toLocaleString(undefined, digits) + b : parseFloat(Number(a).toFixed(settings.app.precision)) + b :
+                a.match(/e-?\d+/) ? parseFloat(Number(a.split('e')[0]).toFixed(settings.app.precision)) + 'e' + answer.split('e')[1] + b :
+                strip(answer);
+            return formattedAnswer;
+        }
+
+        function setLineNo(lineNo, isErr) {
+            if (settings.app.lineNumbers) {
+                var ln = document.createElement("div");
+                ln.classList.add('CodeMirror-linenumber');
+                ln.classList.add(isErr ? 'lineErrorNo' : null);
+                ln.innerHTML = lineNo;
+                cm.setGutterMarker(lineNo - 1, 'CodeMirror-linenumbers', ln);
+            }
         }
     }
 
@@ -421,7 +419,6 @@ var numara = (() => {
         cm.setOption('matchBrackets', settings.app.syntax && settings.app.matchBrackets ? {
             'maxScanLines': 1
         } : false);
-        cm.focus();
 
         math.config({
             matrix: settings.app.matrixType,
@@ -429,6 +426,7 @@ var numara = (() => {
             predictable: settings.app.predictable
         });
 
+        cm.focus();
         calculate();
     }
 
@@ -608,9 +606,7 @@ var numara = (() => {
 
     $('output').addEventListener('mousedown', () => {
         var sels = document.getElementsByClassName('CodeMirror-selected');
-        while (sels[0]) {
-            sels[0].classList.remove('CodeMirror-selected');
-        }
+        while (sels[0]) sels[0].classList.remove('CodeMirror-selected');
     });
 
     // Dialog button actions

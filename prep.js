@@ -1,8 +1,7 @@
 const fs = require('fs-extra');
+const pj = require('./package.json');
 const terser = require("terser");
 const cleanCSS = require('clean-css');
-
-const pj = require('./package.json');
 
 const build_path = 'build';
 
@@ -14,15 +13,6 @@ fs.emptyDir(build_path).then(() => {
     fs.copy('src/index.html', build_path + '/index.html');
 
     // Build JS files
-    var ops_p = {
-        compress: false,
-        mangle: false
-    };
-
-    var ops_c = {
-        mangle: false
-    };
-
     var numara = [
         'src/js/d3.js',
         'src/js/plot.js',
@@ -59,8 +49,13 @@ fs.emptyDir(build_path).then(() => {
     codemirror.forEach((item, index) => t_c[index] = fs.readFileSync(item, 'utf-8'));
 
     terser.minify(t_n).then((js) => fs.outputFileSync(build_path + '/js/numara.js', js.code));
-    terser.minify(t_p, ops_p).then((js) => fs.outputFileSync(build_path + '/js/packages.js', js.code));
-    terser.minify(t_c, ops_c).then((js) => fs.outputFileSync(build_path + '/js/codemirror.js', js.code));
+    terser.minify(t_p, {
+        compress: false,
+        mangle: false
+    }).then((js) => fs.outputFileSync(build_path + '/js/packages.js', js.code));
+    terser.minify(t_c, {
+        mangle: false
+    }).then((js) => fs.outputFileSync(build_path + '/js/codemirror.js', js.code));
 
     // Build CSS files
     var numara_css = [
