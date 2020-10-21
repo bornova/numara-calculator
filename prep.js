@@ -2,8 +2,11 @@ const fs = require('fs-extra');
 const pj = require('./package.json');
 const terser = require("terser");
 const cleanCSS = require('clean-css');
+const performance = require('perf_hooks').performance;
 
 const build_path = 'build';
+
+var t0 = performance.now();
 
 process.stdout.write('Preparing app for build...');
 
@@ -94,6 +97,8 @@ fs.emptyDir(build_path).then(() => {
 }).then(() => {
     // Prepend app name and version
     var str = 'const appName="' + pj.productName + '";const appVersion="' + pj.version + '";';
-    fs.readFile(build_path + '/js/numara.js', 'utf-8')
-        .then(numarajs => fs.writeFile(build_path + '/js/numara.js', str + numarajs));
-}).then(() => process.stdout.write('done.\n\n'));
+    fs.readFile(build_path + '/js/numara.js', 'utf-8').then(numarajs => fs.writeFile(build_path + '/js/numara.js', str + numarajs));
+}).then(() => {
+    var t1 = performance.now();
+    process.stdout.write('done (in ' + ((t1 - t0)/1000).toFixed(2) + ' seconds).\n\n');
+});

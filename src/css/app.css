@@ -441,18 +441,16 @@ text {
 }
 
 .dialog-about-updateStatus {
-    display: inline-block;
-    margin-bottom: 10px;
     text-align: center;
 }
 
 .restartButton {
     display: none;
-    margin-bottom: 10px;
 }
 
 .dialog-about-copyright {
     display: block;
+    margin-top: 15px;
 }
 
 .dialog-open-wrapper:hover {

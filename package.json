@@ -1,7 +1,7 @@
 {
     "name": "numara",
     "productName": "Numara",
-    "version": "2.1.8",
+    "version": "2.1.9",
     "description": "Numara Calculator",
     "main": "src/js/main.js",
     "scripts": {
