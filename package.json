@@ -13,9 +13,9 @@
     "license": "MIT",
     "devDependencies": {
         "clean-css": "^4.2.3",
-        "codemirror": "^5.58.1",
+        "codemirror": "^5.58.2",
         "deep-diff": "^1.0.2",
-        "electron": "^10.1.4",
+        "electron": "^10.1.5",
         "electron-builder": "^22.9.1",
         "feather-icons": "^4.28.0",
         "fs-extra": "^9.0.1",
