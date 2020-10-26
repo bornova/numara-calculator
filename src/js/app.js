@@ -996,7 +996,7 @@
     // Check for updates
     if (isNode) {
         ipc.send('checkUpdate');
-        ipc.on('notifyUpdate', (event) => notify(`A new version is available. <a onclick="document.getElementById('aboutButton').click();">Info</a>`));
+        ipc.on('notifyUpdate', (event) => notify(`A new version is available.  <a onclick="document.getElementById('aboutButton').click();">View</a>`));
         ipc.on('updateStatus', (event, status) => {
             if (status == 'ready') {
                 $('dialog-about-updateStatus').innerHTML = 'Restart Numara to finish updating.';
