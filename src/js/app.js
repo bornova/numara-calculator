@@ -111,6 +111,8 @@
             if (isFullscreen) $('max').click();
         });
 
+        $('header-win').addEventListener("dblclick", toggleMax);
+
         $('winButtons').addEventListener('click', (e) => {
             switch (e.target.id) {
                 case 'min':
@@ -136,6 +138,12 @@
         $('header-win').remove();
         $('header-mac').style.display = 'block';
         $('header-mac-title').innerHTML = appName;
+
+        if (isNode) $('header-mac').addEventListener("dblclick", toggleMax);
+    }
+
+    function toggleMax() {
+        ipc.send(ipc.sendSync('isMaximized') ? 'unmaximize' : 'maximize');
     }
 
     feather.replace();
