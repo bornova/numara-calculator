@@ -100,15 +100,20 @@
         </div>`;
 
     // Set headers
+    if (isNode) {
+        ipc.on('fullscreen', (event, isFullscreen) => {
+            if (isFullscreen) ipc.send('maximize');
+        });
+    }
+
     if (isNode && isWin) {
         $('header-mac').remove();
         $('header-win').style.display = 'block';
         $('header-win-title').innerHTML = appName;
 
-        if (ipc.sendSync('isNormal')) $('unmax').style.display = 'none';
-        if (ipc.sendSync('isMaximized')) $('max').style.display = 'none';
-        ipc.on('fullscreen', (event, isFullscreen) => {
-            if (isFullscreen) $('max').click();
+        ipc.on('isMax', (event, isMax) => {
+            $('unmax').style.display = isMax ? 'block' : 'none';
+            $('max').style.display = !isMax ? 'block' : 'none';
         });
 
         $('header-win').addEventListener("dblclick", toggleMax);
@@ -120,13 +125,9 @@
                     break;
                 case 'max':
                     ipc.send('maximize');
-                    $('unmax').style.display = 'block';
-                    $('max').style.display = 'none';
                     break;
                 case 'unmax':
                     ipc.send('unmaximize');
-                    $('unmax').style.display = 'none';
-                    $('max').style.display = 'block';
                     break;
                 case 'close':
                     ipc.send('close');

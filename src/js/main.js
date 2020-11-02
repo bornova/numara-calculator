@@ -83,6 +83,12 @@ function appWindow() {
             dims.set('fullSize', false);
         }
     });
+    win.on('maximize', () => {
+        win.webContents.send('isMax', true);
+    });
+    win.on('unmaximize', () => {
+        win.webContents.send('isMax', false);
+    });
     win.webContents.on('did-finish-load', () => {
         if (dims.get('fullSize') & is.windows) win.webContents.send('fullscreen', true);
         win.setHasShadow(true);
@@ -118,7 +124,6 @@ ipcMain.on('close', () => app.quit());
 ipcMain.on('minimize', () => win.minimize());
 ipcMain.on('maximize', () => win.maximize());
 ipcMain.on('unmaximize', () => win.unmaximize());
-ipcMain.on('isNormal', (event) => event.returnValue = win.isNormal());
 ipcMain.on('isMaximized', (event) => event.returnValue = win.isMaximized());
 ipcMain.on('print', (event) => win.webContents.print({}, (success) => event.sender.send('printReply', success ? 'Sent to printer' : false)));
 ipcMain.on('setTheme', (event, mode) => dims.set('theme', mode));
@@ -138,137 +143,8 @@ ipcMain.on('resetApp', () => {
 nativeTheme.on('updated', () => win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors));
 
 if (is.macos) {
-    const template = [{
-            label: app.name,
-            submenu: [{
-                    role: 'about'
-                },
-                {
-                    type: 'separator'
-                },
-                {
-                    role: 'hide'
-                },
-                {
-                    role: 'hideothers'
-                },
-                {
-                    role: 'unhide'
-                },
-                {
-                    type: 'separator'
-                },
-                {
-                    role: 'quit'
-                }
-            ]
-        },
-        {
-            label: 'File',
-            submenu: [{
-                role: 'close'
-            }]
-        },
-        {
-            label: 'Edit',
-            submenu: [{
-                    role: 'undo'
-                },
-                {
-                    role: 'redo'
-                },
-                {
-                    type: 'separator'
-                },
-                {
-                    role: 'cut'
-                },
-                {
-                    role: 'copy'
-                },
-                {
-                    role: 'paste'
-                },
-                {
-                    role: 'pasteAndMatchStyle'
-                },
-                {
-                    role: 'delete'
-                },
-                {
-                    role: 'selectAll'
-                },
-                {
-                    type: 'separator'
-                },
-                {
-                    label: 'Speech',
-                    submenu: [{
-                            role: 'startspeaking'
-                        },
-                        {
-                            role: 'stopspeaking'
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            label: 'View',
-            submenu: [{
-                    role: 'reload'
-                },
-                {
-                    type: 'separator'
-                },
-                {
-                    role: 'resetzoom'
-                },
-                {
-                    role: 'zoomin'
-                },
-                {
-                    role: 'zoomout'
-                },
-                {
-                    type: 'separator'
-                }
-            ]
-        },
-        {
-            label: 'Window',
-            submenu: [{
-                    role: 'minimize'
-                },
-                {
-                    role: 'zoom'
-                },
-                {
-                    role: 'togglefullscreen'
-                },
-                {
-                    type: 'separator'
-                },
-                {
-                    role: 'front'
-                },
-                {
-                    type: 'separator'
-                },
-                {
-                    role: 'window'
-                }
-            ]
-        },
-        {
-            role: 'help',
-            submenu: [{
-                label: 'Learn More',
-                click: async () => await shell.openExternal('https://github.com/bornova/numara')
-            }]
-        }
-    ];
+    const template = require('build/js/menu');
 
-    const menu = Menu.buildFromTemplate(template);
+    const menu = Menu.buildFromTemplate(template.macOS);
     Menu.setApplicationMenu(menu);
 }
