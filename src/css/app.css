@@ -446,6 +446,7 @@ text {
 
 .restartButton {
     display: none;
+    margin-top: 5px;
 }
 
 .dialog-about-copyright {
@@ -746,7 +747,8 @@ input:checked+.slider:before {
 
 .uk-range {
     min-height: 1.6em;
-    padding-top: 1px;
+    padding-top: 2px;
+    width: 92%;
 }
 
 .uk-tooltip {
