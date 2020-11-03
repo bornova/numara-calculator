@@ -65,7 +65,8 @@
         },
         "files": [
             "build",
-            "src/js/main.js"
+            "src/js/main.js",
+            "src/js/menu.js"
         ]
     }
 }

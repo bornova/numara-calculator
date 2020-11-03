@@ -111,12 +111,8 @@
         $('header-win').style.display = 'block';
         $('header-win-title').innerHTML = appName;
 
-        ipc.on('isMax', (event, isMax) => {
-            $('unmax').style.display = isMax ? 'block' : 'none';
-            $('max').style.display = !isMax ? 'block' : 'none';
-        });
-
-        $('header-win').addEventListener("dblclick", toggleMax);
+        $('max').style.display = ipc.sendSync('isMaximized') ? 'none' : 'block';
+        $('unmax').style.display = ipc.sendSync('isMaximized') ? 'block' : 'none';
 
         $('winButtons').addEventListener('click', (e) => {
             switch (e.target.id) {
@@ -135,6 +131,13 @@
             }
             e.stopPropagation();
         });
+
+        ipc.on('isMax', (event, isMax) => {
+            $('unmax').style.display = isMax ? 'block' : 'none';
+            $('max').style.display = !isMax ? 'block' : 'none';
+        });
+
+        $('header-win').addEventListener("dblclick", toggleMax);
     } else {
         $('header-win').remove();
         $('header-mac').style.display = 'block';

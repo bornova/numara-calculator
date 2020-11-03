@@ -142,9 +142,5 @@ ipcMain.on('resetApp', () => {
 
 nativeTheme.on('updated', () => win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors));
 
-if (is.macos) {
-    const template = require('build/js/menu');
-
-    const menu = Menu.buildFromTemplate(template.macOS);
-    Menu.setApplicationMenu(menu);
-}
+const menu = require('./menu');
+Menu.setApplicationMenu(is.macos ? Menu.buildFromTemplate(menu.macOS(app.name)) : null);

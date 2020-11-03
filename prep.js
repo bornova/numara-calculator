@@ -59,8 +59,6 @@ fs.emptyDir(build_path).then(() => {
     terser.minify(t_c, {
         mangle: false
     }).then((js) => fs.outputFileSync(build_path + '/js/codemirror.js', js.code));
-    
-    fs.copy('src/js/menu.js', build_path + '/js/menu.js');
 
     // Build CSS files
     var numara_css = [
