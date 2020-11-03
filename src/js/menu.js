@@ -2,7 +2,7 @@ module.exports = {
     macOS: (appName) => {
         const shell = require('electron').shell;
         const template = [{
-                label: app.name,
+                label: appName,
                 submenu: [{
                         role: 'about'
                     },
@@ -131,5 +131,7 @@ module.exports = {
                 }]
             }
         ];
+
+        return template;
     }
 };
