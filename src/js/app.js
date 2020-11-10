@@ -834,7 +834,7 @@ Object.entries(traps).map(([b, c]) => {
 // Check for updates
 if (isNode) {
     ipc.send('checkUpdate');
-    ipc.on('notifyUpdate', (event) => notify(`A new version is available. <a class="updateLink" onclick="document.getElementById('aboutButton').click();">Update Now</a>`));
+    ipc.on('notifyUpdate', (event) => notify(`A new version is available. <a class="updateLink" onclick="$('aboutButton').click();">Update Now</a>`));
     ipc.on('updateStatus', (event, status) => {
         if (status == 'ready') {
             $('dialog-about-updateStatus').innerHTML = 'Restart Numara to finish updating.';
