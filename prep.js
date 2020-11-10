@@ -6,7 +6,7 @@ const performance = require('perf_hooks').performance;
 
 const build_path = 'build';
 
-var t0 = performance.now();
+let t0 = performance.now();
 
 process.stdout.write('Preparing app for build...');
 
@@ -19,7 +19,8 @@ fs.emptyDir(build_path).then(() => {
     var numara = [
         'src/js/d3.js',
         'src/js/plot.js',
-        'src/js/app.js' // app.js has to be last
+        'src/js/calculate.js',
+        'src/js/app.js'
     ];
 
     var packages = [

@@ -444,6 +444,10 @@ text {
     text-align: center;
 }
 
+.updateLink {
+    margin-left: 8px;
+}
+
 .restartButton {
     display: none;
     margin-top: 5px;
