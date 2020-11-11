@@ -39,9 +39,9 @@ fs.emptyDir(build_path).then(() => {
         'node_modules/codemirror/addon/edit/matchbrackets.js',
         'node_modules/codemirror/addon/edit/closebrackets.js',
         'node_modules/codemirror/addon/hint/show-hint.js',
+        'node_modules/codemirror/addon/search/jump-to-line.js',
         'node_modules/codemirror/addon/search/search.js',
-        'node_modules/codemirror/addon/search/searchcursor.js',
-        'node_modules/codemirror/addon/search/jump-to-line.js'
+        'node_modules/codemirror/addon/search/searchcursor.js'
     ];
 
     var t_n = {};
@@ -101,5 +101,5 @@ fs.emptyDir(build_path).then(() => {
     fs.readFile(build_path + '/js/numara.js', 'utf-8').then(numarajs => fs.writeFile(build_path + '/js/numara.js', str + numarajs));
 }).then(() => {
     var t1 = performance.now();
-    process.stdout.write('done (in ' + ((t1 - t0)/1000).toFixed(2) + ' seconds).\n\n');
+    process.stdout.write('done (in ' + ((t1 - t0) / 1000).toFixed(2) + ' seconds).\n\n');
 });

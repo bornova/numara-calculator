@@ -1,16 +1,16 @@
 {
     "name": "numara",
     "productName": "Numara",
-    "version": "2.5.3",
+    "version": "2.5.4",
     "description": "Numara Calculator",
+    "author": "Timur Atalay",
+    "license": "MIT",
     "main": "src/js/main.js",
     "scripts": {
         "prep": "node prep.js",
-        "test": "npm run prep && electron .",
-        "dist": "npm run prep && electron-builder"
+        "test": "node prep.js && electron .",
+        "dist": "node prep.js && electron-builder"
     },
-    "author": "Timur Atalay",
-    "license": "MIT",
     "devDependencies": {
         "clean-css": "^4.2.3",
         "codemirror": "^5.58.2",
