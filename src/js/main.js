@@ -111,6 +111,7 @@ if (!app.requestSingleInstanceLock()) {
     app.on('second-instance', () => win.focus());
 }
 
+app.setAppUserModelId(app.name);
 app.whenReady().then(appWindow);
 
 autoUpdater.on('checking-for-update', () => win.webContents.send('updateStatus', 'Checking for update...'));

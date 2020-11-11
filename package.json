@@ -1,7 +1,7 @@
 {
     "name": "numara",
     "productName": "Numara",
-    "version": "2.5.1",
+    "version": "2.5.2",
     "description": "Numara Calculator",
     "main": "src/js/main.js",
     "scripts": {
@@ -19,7 +19,7 @@
         "electron-builder": "^22.9.1",
         "feather-icons": "^4.28.0",
         "fs-extra": "^9.0.1",
-        "mathjs": "^8.0.0",
+        "mathjs": "^8.0.1",
         "moment": "^2.29.1",
         "mousetrap": "^1.6.5",
         "mousetrap-global-bind": "^1.1.0",
