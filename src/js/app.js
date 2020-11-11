@@ -678,13 +678,16 @@ $('searchBox').addEventListener('input', () => {
 let resizeDelay;
 let isResizing = false;
 
+const panel = $('panel');
+const handle = $('handle');
+
 $('handle').addEventListener('dblclick', resetHandle);
-$('handle').addEventListener('mousedown', (e) => isResizing = e.target == $('panel'));
+$('handle').addEventListener('mousedown', (e) => isResizing = e.target == handle);
 $('panel').addEventListener('mouseup', () => isResizing = false);
 $('panel').addEventListener('mousemove', (e) => {
     var offset = settings.app.lineNumbers ? 12 : 27;
-    var pointerRelativeXpos = e.clientX - $('panel').offsetLeft - offset;
-    var iWidth = pointerRelativeXpos / $('panel').clientWidth * 100;
+    var pointerRelativeXpos = e.clientX - panel.offsetLeft - offset;
+    var iWidth = pointerRelativeXpos / panel.clientWidth * 100;
     var inputWidth = iWidth < 0 ? 0 : iWidth > 100 ? 100 : iWidth;
     if (isResizing) {
         $('input').style.width = inputWidth + '%';
