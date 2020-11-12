@@ -17,8 +17,8 @@ function calculate() {
 
     $('mirror').style.width = document.getElementsByClassName('CodeMirror-line')[0].clientWidth - 8 + 'px';
 
-    scope.now = moment().format((settings.app.dateDay ? 'ddd, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat);
-    scope.today = moment().format((settings.app.dateDay ? 'ddd, ' : '') + settings.app.dateFormat);
+    scope.now = dayjs().format((settings.app.dateDay ? 'ddd, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat);
+    scope.today = dayjs().format((settings.app.dateDay ? 'ddd, ' : '') + settings.app.dateFormat);
 
     cm.eachLine((line) => {
         var answer = '';
@@ -117,8 +117,8 @@ function calculate() {
         var dateTimeReg = new RegExp('millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia');
         if (line.match(dateTimeReg)) {
             var lineDate = line.split(/[\+\-]/)[0].trim();
-            var d = moment(lineDate, settings.app.dateFormat, true);
-            var t = moment(lineDate, settings.app.dateFormat + ' ' + settings.app.timeFormat, true);
+            var d = dayjs(lineDate, settings.app.dateFormat, true);
+            var t = dayjs(lineDate, settings.app.dateFormat + ' ' + settings.app.timeFormat, true);
             var dt = d.isValid() ? d : t.isValid() ? t : undefined;
             var rightOfDate = String(solve(line.replace(lineDate, '') + ' to hours', scope));
             var durNum = Number(rightOfDate.split(' ')[0]);

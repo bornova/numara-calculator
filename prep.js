@@ -24,10 +24,10 @@ fs.emptyDir(build_path).then(() => {
     ];
 
     var packages = [
+        'node_modules/dayjs/dayjs.min.js',
         'node_modules/deep-diff/dist/deep-diff.min.js',
         'node_modules/feather-icons/dist/feather.min.js',
         'node_modules/mathjs/lib/browser/math.js',
-        'node_modules/moment/min/moment.min.js',
         'node_modules/mousetrap/mousetrap.min.js',
         'node_modules/mousetrap-global-bind/mousetrap-global-bind.min.js',
         'node_modules/uikit/dist/js/uikit.min.js'

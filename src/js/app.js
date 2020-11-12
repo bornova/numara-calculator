@@ -423,7 +423,7 @@ $('output').addEventListener('mousedown', () => {
 document.addEventListener('click', (e) => {
     switch (e.target.id) {
         case 'dialog-save-save': // Save calculation
-            var id = moment().format('x');
+            var id = dayjs().format('x');
             var obj = ls.get('saved') || {};
             var data = cm.getValue();
             var title = $('saveTitle').value.replace(/<|>/g, '').trim() || 'No title';
@@ -572,7 +572,7 @@ function populateSaved() {
                     <div class="dialog-open-wrapper" id="${id}">
                         <div data-action="load">
                             <div class="dialog-open-title">${val[0]}</div>
-                            <div class="dialog-open-date">${moment(Number(id)).format('lll')}</div>
+                            <div class="dialog-open-date">${dayjs(Number(id)).format('lll')}</div>
                         </div>
                         <div class="dialog-open-delete" data-action="delete">&#10005;</div>
                     </div>
@@ -599,10 +599,10 @@ UIkit.util.on('#dialog-settings', 'beforeshow', () => {
     $('fontSize').value = settings.app.fontSize;
     $('fontWeight').value = settings.app.fontWeight;
     $('dateFormat').innerHTML = '';
-    for (var d of dateFormats) $('dateFormat').innerHTML += `<option value="${d}">${moment().format(d)}</option>`;
+    for (var d of dateFormats) $('dateFormat').innerHTML += `<option value="${d}">${dayjs().format(d)}</option>`;
     $('dateFormat').value = settings.app.dateFormat;
     $('timeFormat').innerHTML = '';
-    for (var t of timeFormats) $('timeFormat').innerHTML += `<option value="${t}">${moment().format(t)}</option>`;
+    for (var t of timeFormats) $('timeFormat').innerHTML += `<option value="${t}">${dayjs().format(t)}</option>`;
     $('timeFormat').value = settings.app.timeFormat;
     $('dateDay').checked = settings.app.dateDay;
     // Calculator
