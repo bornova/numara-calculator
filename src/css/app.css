@@ -382,11 +382,17 @@ text {
 .lastUpdated {
     display: inline-block;
     font-size: 0.9rem;
-    margin-right: 3px
+    margin-right: 3px;
+    vertical-align: middle;
 }
 
 .updateRatesLink {
     margin-left: 6px;
+}
+
+.resetButton {
+    color: #cd5c5c;
+    line-height: 30px;
 }
 
 /* About dialog items */
@@ -704,11 +710,11 @@ input:checked+.slider:before {
 }
 
 .defButton svg {
-    height: 14px;
+    height: 13px;
     margin: -2px 0 0 0;
     pointer-events: none;
     stroke: #ce6c49;
-    width: 14px;
+    width: 13px;
 }
 
 .uk-button {

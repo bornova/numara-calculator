@@ -68,6 +68,7 @@ function appWindow() {
         useContentSize: true,
         webPreferences: {
             nodeIntegration: true,
+            contextIsolation: false,
             spellcheck: false,
             devTools: is.development
         }

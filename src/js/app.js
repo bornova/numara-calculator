@@ -280,6 +280,7 @@ if (settings.app.currencies) getRates();
 function getRates() {
     var url = 'https://www.floatrates.com/widget/1030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json';
     if (navigator.onLine) {
+        $('lastUpdated').innerHTML = '<div uk-spinner="ratio: 0.3"></div>';
         fetch(url)
             .then((rates) => rates.json())
             .then((data) => {
@@ -288,8 +289,12 @@ function getRates() {
                 $('lastUpdated').innerHTML = ls.get('rateDate');
                 cm.setOption('mode', settings.app.syntax ? 'numara' : 'plain');
                 cm.focus();
-            }).catch((e) => notify('Failed to get exchange rates (' + e + ')', 'warning'));
+            }).catch((e) => {
+                $('lastUpdated').innerHTML = 'n/a';
+                notify('Failed to get exchange rates (' + e + ')', 'warning')
+            });
     } else {
+        $('lastUpdated').innerHTML = 'No internet connection.';
         notify('No internet connection. Could not update exchange rates.', 'warning');
     }
 }
@@ -449,8 +454,7 @@ document.addEventListener('click', (e) => {
                 ls.set('settings', settings);
                 applySettings();
                 if (!$('currencyButton').checked) getRates();
-                UIkit.modal('#dialog-settings').hide();
-                notify('Default settings applied');
+                prepSettings();
             });
             break;
         case 'dialog-settings-reset': // Reset app
@@ -473,49 +477,8 @@ document.addEventListener('click', (e) => {
                 'Caution: BigNumber Limitations');
             break;
         case 'currencyButton': // Enable currency rates
-            if (settings.app.currencies) {
-                $('currencyUpdate').style.display = settings.app.currencies ? $('currencyButton').checked ? 'block' : 'none' : null;
-            }
+            $('currencyUpdate').style.display = $('currencyButton').checked ? 'block' : 'none';
             break;
-        case 'dialog-settings-save': // Save settings
-            // Appearance
-            settings.app.theme = $('themeList').value;
-            settings.app.fontSize = $('fontSize').value;
-            settings.app.fontWeight = $('fontWeight').value;
-            settings.app.dateFormat = $('dateFormat').value;
-            settings.app.timeFormat = $('timeFormat').value;
-            settings.app.dateDay = $('dateDay').checked;
-            // Calculator
-            settings.app.precision = $('precisionRange').value;
-            settings.app.matrixType = $('matrixType').value;
-            settings.app.numericOutput = $('numericOutput').value;
-            settings.app.predictable = $('predictableButton').checked;
-            settings.app.thouSep = $('thouSepButton').checked;
-            if (!settings.app.currencies && $('currencyButton').checked) {
-                getRates();
-            } else if (!$('currencyButton').checked) {
-                localStorage.removeItem('rates');
-                localStorage.removeItem('rateDate');
-            }
-            settings.app.currencies = $('currencyButton').checked;
-            // Panel UI
-            settings.app.syntax = $('syntaxButton').checked;
-            settings.app.functionTips = $('functionTipsButton').checked;
-            settings.app.matchBrackets = $('matchBracketsButton').checked;
-            settings.app.autocomplete = $('autocompleteButton').checked;
-            settings.app.closeBrackets = $('closeBracketsButton').checked;
-            settings.app.lineNumbers = $('lineNoButton').checked;
-            settings.app.lineErrors = $('lineErrorButton').checked;
-            settings.app.divider = $('dividerButton').checked;
-            settings.app.lineWrap = $('lineWrapButton').checked;
-
-            ls.set('settings', settings);
-            applySettings();
-
-            UIkit.modal('#dialog-settings').hide();
-            notify('Settings saved');
-            break;
-
             // Plot settings
         case 'plotGrid':
             settings.plot.plotGrid = $('plotGrid').checked;
@@ -588,7 +551,9 @@ function populateSaved() {
 
 // Initiate settings dialog
 UIkit.util.on('#setswitch', 'beforeshow', (e) => e.stopPropagation());
-UIkit.util.on('#dialog-settings', 'beforeshow', () => {
+UIkit.util.on('#dialog-settings', 'beforeshow', () => prepSettings());
+
+function prepSettings() {
     // Appearance
     var dateFormats = ['M/D/YYYY', 'D/M/YYYY', 'MMM DD, YYYY'];
     var timeFormats = ['h:mm A', 'H:mm'];
@@ -632,8 +597,12 @@ UIkit.util.on('#dialog-settings', 'beforeshow', () => {
     $('dividerButton').checked = settings.app.divider;
     $('lineWrapButton').checked = settings.app.lineWrap;
 
+    checkDefaultSettings();
+}
+
+function checkDefaultSettings() {
     $('defaultSettingsButton').style.display = JSON.stringify(settings.app) === JSON.stringify(defaultSettings.app) ? 'none' : 'inline-block';
-});
+}
 
 function syntaxToggle() {
     $('functionTipsButton').disabled = $('syntaxButton').checked ? false : true;
@@ -649,6 +618,45 @@ function bigNumberWarning() {
 
 $('numericOutput').addEventListener('change', bigNumberWarning);
 $('precisionRange').addEventListener('input', () => $('precision-label').innerHTML = $('precisionRange').value);
+
+function saveSettings() {
+    // Appearance
+    settings.app.theme = $('themeList').value;
+    settings.app.fontSize = $('fontSize').value;
+    settings.app.fontWeight = $('fontWeight').value;
+    settings.app.dateFormat = $('dateFormat').value;
+    settings.app.timeFormat = $('timeFormat').value;
+    settings.app.dateDay = $('dateDay').checked;
+    // Calculator
+    settings.app.precision = $('precisionRange').value;
+    settings.app.matrixType = $('matrixType').value;
+    settings.app.numericOutput = $('numericOutput').value;
+    settings.app.predictable = $('predictableButton').checked;
+    settings.app.thouSep = $('thouSepButton').checked;
+    if (!settings.app.currencies && $('currencyButton').checked) {
+        getRates();
+    } else if (!$('currencyButton').checked) {
+        localStorage.removeItem('rates');
+        localStorage.removeItem('rateDate');
+    }
+    settings.app.currencies = $('currencyButton').checked;
+    // Panel UI
+    settings.app.syntax = $('syntaxButton').checked;
+    settings.app.functionTips = $('functionTipsButton').checked;
+    settings.app.matchBrackets = $('matchBracketsButton').checked;
+    settings.app.autocomplete = $('autocompleteButton').checked;
+    settings.app.closeBrackets = $('closeBracketsButton').checked;
+    settings.app.lineNumbers = $('lineNoButton').checked;
+    settings.app.lineErrors = $('lineErrorButton').checked;
+    settings.app.divider = $('dividerButton').checked;
+    settings.app.lineWrap = $('lineWrapButton').checked;
+
+    ls.set('settings', settings);
+    applySettings();
+    checkDefaultSettings();
+}
+
+document.querySelectorAll('.settingItem').forEach((el) => el.addEventListener('change', () => saveSettings()));
 
 // Help dialog content
 $('searchBox').addEventListener('input', () => {

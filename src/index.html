@@ -91,7 +91,7 @@
                         <div class="uk-child-width-expand" uk-grid>
                             <div class="padTop1">Theme</div>
                             <div class="uk-text-right">
-                                <select id="themeList" class="uk-select">
+                                <select id="themeList" class="uk-select settingItem">
                                     <option value="system">System</option>
                                     <option value="light">Light</option>
                                     <option value="dark">Dark</option>
@@ -101,7 +101,7 @@
                         <div class="uk-child-width-expand" uk-grid>
                             <div class="padTop1">Font size</div>
                             <div class="uk-text-right">
-                                <select id="fontSize" class="uk-select">
+                                <select id="fontSize" class="uk-select settingItem">
                                     <option value="0.9rem">Tiny</option>
                                     <option value="1.0rem">Small</option>
                                     <option value="1.1rem">Normal</option>
@@ -113,7 +113,7 @@
                         <div class="uk-child-width-expand" uk-grid>
                             <div class="padTop1">Font weight</div>
                             <div class="uk-text-right">
-                                <select id="fontWeight" class="uk-select">
+                                <select id="fontWeight" class="uk-select settingItem">
                                     <option value="200">Light</option>
                                     <option value="300">Thin</option>
                                     <option value="400">Normal</option>
@@ -125,20 +125,20 @@
                         <div class="uk-child-width-expand" uk-grid>
                             <div class="padTop1">Date format</div>
                             <div class="uk-text-right">
-                                <select id="dateFormat" class="uk-select"></select>
+                                <select id="dateFormat" class="uk-select settingItem"></select>
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
                             <div class="padTop1">Time format</div>
                             <div class="uk-text-right">
-                                <select id="timeFormat" class="uk-select"></select>
+                                <select id="timeFormat" class="uk-select settingItem"></select>
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
                             <div>Show day with date</div>
                             <div class="uk-text-right">
                                 <label class="switch">
-                                    <input id="dateDay" type="checkbox">
+                                    <input id="dateDay" type="checkbox" class="settingItem">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -150,10 +150,10 @@
                             <div class="uk-text-right uk-width-3-5">
                                 <div class="uk-child-width-expand" uk-grid>
                                     <div class="uk-text-right uk-width-1-5">
-                                        <span id="precision-label" class="uk-label precision">1</span>
+                                        <span id="precision-label" class="uk-label precision"></span>
                                     </div>
                                     <div class="uk-text-right range uk-width-4-5">
-                                        <input id="precisionRange" class="uk-range" type="range" min="0" max="16" step="1">
+                                        <input id="precisionRange" class="uk-range settingItem" type="range" min="0" max="16" step="1">
                                     </div>
                                 </div>
                             </div>
@@ -161,20 +161,20 @@
                         <div class="uk-child-width-expand" uk-grid>
                             <div class="padTop1">Numeric output<a id="bigNumWarn" class="warn-icon"><i data-feather="alert-circle"></i></a></div>
                             <div class="uk-text-right">
-                                <select id="numericOutput" class="uk-select"></select>
+                                <select id="numericOutput" class="uk-select settingItem"></select>
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
                             <div class="padTop1">Matrix type</div>
                             <div class="uk-text-right">
-                                <select id="matrixType" class="uk-select"></select>
+                                <select id="matrixType" class="uk-select settingItem"></select>
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
                             <div>Predictable output</div>
                             <div class="uk-text-right">
                                 <label class="switch">
-                                    <input id="predictableButton" type="checkbox">
+                                    <input id="predictableButton" type="checkbox" class="settingItem">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -183,7 +183,7 @@
                             <div>Thousands separator</div>
                             <div class="uk-text-right">
                                 <label class="switch">
-                                    <input id="thouSepButton" type="checkbox">
+                                    <input id="thouSepButton" type="checkbox" class="settingItem">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -198,7 +198,7 @@
                             </div>
                             <div class="uk-text-right uk-width-1-5">
                                 <label class="switch">
-                                    <input id="currencyButton" type="checkbox">
+                                    <input id="currencyButton" type="checkbox" class="settingItem">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -209,7 +209,7 @@
                             <div>Syntax highligting</div>
                             <div class="uk-text-right">
                                 <label class="switch">
-                                    <input id="syntaxButton" type="checkbox">
+                                    <input id="syntaxButton" type="checkbox" class="settingItem">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -218,7 +218,7 @@
                             <div>Function tooltips</div>
                             <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
-                                    <input id="functionTipsButton" type="checkbox">
+                                    <input id="functionTipsButton" type="checkbox" class="settingItem">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -227,7 +227,7 @@
                             <div>Highlight matching brackets</div>
                             <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
-                                    <input id="matchBracketsButton" type="checkbox">
+                                    <input id="matchBracketsButton" type="checkbox" class="settingItem">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -236,7 +236,7 @@
                             <div>Autocomplete</div>
                             <div class="uk-text-right">
                                 <label class="switch">
-                                    <input id="autocompleteButton" type="checkbox">
+                                    <input id="autocompleteButton" type="checkbox" class="settingItem">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -245,7 +245,7 @@
                             <div>Auto close brackets</div>
                             <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
-                                    <input id="closeBracketsButton" type="checkbox">
+                                    <input id="closeBracketsButton" type="checkbox" class="settingItem">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -254,7 +254,7 @@
                             <div>Line numbers</div>
                             <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
-                                    <input id="lineNoButton" type="checkbox">
+                                    <input id="lineNoButton" type="checkbox" class="settingItem">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -263,7 +263,7 @@
                             <div>Line errors</div>
                             <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
-                                    <input id="lineErrorButton" type="checkbox">
+                                    <input id="lineErrorButton" type="checkbox" class="settingItem">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -272,7 +272,7 @@
                             <div>Panel divider</div>
                             <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
-                                    <input id="dividerButton" type="checkbox">
+                                    <input id="dividerButton" type="checkbox" class="settingItem">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -281,7 +281,7 @@
                             <div>Wrap lines (input only)</div>
                             <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
-                                    <input id="lineWrapButton" type="checkbox">
+                                    <input id="lineWrapButton" type="checkbox" class="settingItem">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -291,12 +291,11 @@
             </div>
             <div uk-grid>
                 <div class="dialog-buttons uk-width-2-5 uk-text-left">
-                    <button id="dialog-settings-reset" class="uk-button uk-button-danger uk-button-small">Reset</button>
-                    <button id="defaultSettingsButton" class="uk-button uk-button-default uk-button-small defButton" title="Restore default settings" uk-tooltip><i data-feather="crosshair"></i></button>
+                    <a id="dialog-settings-reset" class="resetButton">Reset App</a>
                 </div>
                 <div class="dialog-buttons uk-width-3-5 uk-text-right">
-                    <button id="dialog-settings-save" class="uk-button uk-button-primary uk-button-small">Save</button>
-                    <button class="uk-button uk-button-primary uk-modal-close uk-button-small">Cancel</button>
+                    <button id="defaultSettingsButton" class="uk-button uk-button-default uk-button-small defButton" title="Restore default settings" uk-tooltip><i data-feather="rotate-ccw"></i></button>
+                    <button class="uk-button uk-button-primary uk-modal-close uk-button-small">Close</button>
                 </div>
             </div>
         </div>
