@@ -392,7 +392,8 @@ text {
 
 .resetButton {
     color: #cd5c5c;
-    line-height: 30px;
+    line-height: 0;
+    vertical-align: text-bottom;
 }
 
 /* About dialog items */
