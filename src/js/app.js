@@ -22,7 +22,8 @@ if (!isNode) $('mobile').setAttribute('href', 'css/mobile.css');
 
 // Initilize Codemirror
 const cm = CodeMirror.fromTextArea($('inputArea'), {
-    coverGutterNextToScrollbar: true
+    coverGutterNextToScrollbar: true,
+    inputStyle: 'textarea'
 });
 
 // Codemirror syntax templates

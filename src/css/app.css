@@ -820,8 +820,8 @@ pre {
 }
 
 .CodeMirror-cursor {
-    height: 14px !important;
-    margin: 7px 0;
+    height: 15px !important;
+    margin: 7px 0 6px 0;
 }
 
 .CodeMirror-vscrollbar {
