@@ -1,7 +1,7 @@
 {
     "name": "numara",
     "productName": "Numara",
-    "version": "2.7.3",
+    "version": "2.7.4",
     "description": "Numara Calculator",
     "author": "Timur Atalay",
     "license": "MIT",
@@ -13,17 +13,17 @@
     },
     "devDependencies": {
         "clean-css": "^4.2.3",
-        "codemirror": "^5.58.2",
+        "codemirror": "^5.58.3",
         "dayjs": "^1.9.6",
         "deep-diff": "^1.0.2",
-        "electron": "^11.0.1",
+        "electron": "^11.0.2",
         "electron-builder": "^22.9.1",
         "feather-icons": "^4.28.0",
         "fs-extra": "^9.0.1",
         "mathjs": "^8.0.1",
         "mousetrap": "^1.6.5",
         "mousetrap-global-bind": "^1.1.0",
-        "terser": "^5.4.0",
+        "terser": "^5.5.0",
         "uikit": "^3.5.9"
     },
     "dependencies": {
