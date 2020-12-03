@@ -116,21 +116,24 @@ function calculate() {
 
         var dateTimeReg = new RegExp('millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia');
         if (line.match(dateTimeReg)) {
-            var lineDate = line.split(/[\+\-]/)[0].trim();
-            var todayFormat = (settings.app.dateDay ? 'ddd, ' : '') + settings.app.dateFormat;
-            var nowFormat = (settings.app.dateDay ? 'ddd, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat;
+            var lineDate = line.replace(/[A-Za-z]+,/, '').split(/[\+\-]/);
+            var lineDateLeft = lineDate[0].trim();
+            var lineDateRight = lineDate[1].trim();
 
-            var t = moment(lineDate, todayFormat, true);
-            var n = moment(lineDate, nowFormat, true);
+            var todayFormat = settings.app.dateFormat;
+            var nowFormat = settings.app.dateFormat + ' ' + settings.app.timeFormat;
+
+            var t = moment(lineDateLeft, todayFormat, true);
+            var n = moment(lineDateLeft, nowFormat, true);
             var dt = t.isValid() ? t : n.isValid() ? n : null;
 
-            var rightOfDate = String(solve(line.replace(lineDate, '') + ' to hours', scope));
+            var rightOfDate = String(solve(lineDateRight + ' to hours', scope));
             var durNum = Number(rightOfDate.split(' ')[0]);
             var durUnit = rightOfDate.split(' ')[1];
 
             if (dt) {
                 var isToday = dt.format(settings.app.dateFormat + "hh:mm:ss:SS").endsWith('12:00:00:00') ? true : false;
-                line = '"' + dt.add(durNum, durUnit).format(isToday ? todayFormat : nowFormat) + '"';
+                line = '"' + dt.add(durNum, durUnit).format((settings.app.dateDay ? 'ddd, ' : '') + (isToday ? todayFormat : nowFormat)) + '"';
             } else {
                 return 'Invalid Date';
             }
@@ -180,7 +183,7 @@ function calculate() {
         if (settings.app.lineNumbers) {
             var ln = document.createElement("div");
             ln.classList.add('CodeMirror-linenumber');
-            ln.classList.add(isErr ? 'lineErrorNo' : null);
+            ln.classList.add((isErr & settings.app.lineErrors) ? 'lineErrorNo' : null);
             ln.innerHTML = lineNo;
             cm.setGutterMarker(lineNo - 1, 'CodeMirror-linenumbers', ln);
         }
