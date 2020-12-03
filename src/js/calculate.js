@@ -17,8 +17,8 @@ function calculate() {
 
     $('mirror').style.width = document.getElementsByClassName('CodeMirror-line')[0].clientWidth - 8 + 'px';
 
-    scope.now = dayjs().format((settings.app.dateDay ? 'ddd, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat);
-    scope.today = dayjs().format((settings.app.dateDay ? 'ddd, ' : '') + settings.app.dateFormat);
+    scope.now = moment().format((settings.app.dateDay ? 'ddd, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat);
+    scope.today = moment().format((settings.app.dateDay ? 'ddd, ' : '') + settings.app.dateFormat);
 
     cm.eachLine((line) => {
         var answer = '';
@@ -117,14 +117,23 @@ function calculate() {
         var dateTimeReg = new RegExp('millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia');
         if (line.match(dateTimeReg)) {
             var lineDate = line.split(/[\+\-]/)[0].trim();
-            var d = dayjs(lineDate, settings.app.dateFormat, true);
-            var t = dayjs(lineDate, settings.app.dateFormat + ' ' + settings.app.timeFormat, true);
-            var dt = d.isValid() ? d : t.isValid() ? t : undefined;
+            var todayFormat = (settings.app.dateDay ? 'ddd, ' : '') + settings.app.dateFormat;
+            var nowFormat = (settings.app.dateDay ? 'ddd, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat;
+
+            var t = moment(lineDate, todayFormat, true);
+            var n = moment(lineDate, nowFormat, true);
+            var dt = t.isValid() ? t : n.isValid() ? n : null;
+
             var rightOfDate = String(solve(line.replace(lineDate, '') + ' to hours', scope));
             var durNum = Number(rightOfDate.split(' ')[0]);
             var durUnit = rightOfDate.split(' ')[1];
 
-            line = '"' + dt.add(durNum, durUnit).format((settings.app.dateDay ? 'ddd, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat) + '"';
+            if (dt) {
+                var isToday = dt.format(settings.app.dateFormat + "hh:mm:ss:SS").endsWith('12:00:00:00') ? true : false;
+                line = '"' + dt.add(durNum, durUnit).format(isToday ? todayFormat : nowFormat) + '"';
+            } else {
+                return 'Invalid Date';
+            }
         }
 
         var modReg = /\d*\.?\d%\d*\.?\d/g;
