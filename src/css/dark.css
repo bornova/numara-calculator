@@ -89,6 +89,11 @@ body {
     background-color: rgba(21, 21, 21, 0.98) !important;
 }
 
+.action,
+.noAction {
+    color: #818c94;
+}
+
 .dialog-open-wrapper {
     background-color: #333;
     border: 1px solid #222;
@@ -100,7 +105,11 @@ body {
 }
 
 .dialog-open-delete {
-    color: rgba(189, 46, 46, 1);
+    color: #e6e6e6;
+}
+
+.dialog-open-delete:hover {
+    color: #bd2e2e;
 }
 
 .dialog-about-title {

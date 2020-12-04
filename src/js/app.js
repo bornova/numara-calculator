@@ -533,15 +533,15 @@ function populateSaved() {
         $('dialog-open-deleteAll').disabled = false;
         savedItems.map(([id, val]) => {
             $('dialog-open-body').innerHTML += `
-                    <div class="dialog-open-wrapper" id="${id}">
-                        <div data-action="load">
-                            <div class="dialog-open-title">${val[0]}</div>
-                            <div class="dialog-open-date">${moment(Number(id)).format('lll')}</div>
-                        </div>
-                        <div class="dialog-open-delete" data-action="delete">&#10005;</div>
+                <div class="dialog-open-wrapper" id="${id}">
+                    <div data-action="load">
+                        <div class="dialog-open-title">${val[0]}</div>
+                        <div class="dialog-open-date">${moment(Number(id)).format('lll')}</div>
                     </div>
-                    `;
+                    <i class="dialog-open-delete" data-action="delete" data-feather="x-circle"></i>
+                </div>`;
         });
+        feather.replace();
     } else {
         $('dialog-open-deleteAll').disabled = true;
         $('dialog-open-body').innerHTML = 'No saved calculations.';

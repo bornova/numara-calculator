@@ -285,13 +285,12 @@ text {
 
 .action,
 .noAction {
-    color: rgb(95, 107, 116);
     cursor: pointer;
     padding-bottom: 2px;
 }
 
 .noAction {
-    color: rgba(95, 107, 116, 0.6);
+    opacity: 0.6;
     cursor: default;
 }
 
@@ -333,15 +332,12 @@ text {
 .dialog-open-delete {
     cursor: pointer;
     font-weight: 600;
-    padding: 2px 5px;
+    height: 16px;
     position: absolute;
-    right: 0;
-    top: 0;
-}
-
-.dialog-open-delete:hover {
-    background-color: #b33131;
-    color: #ffffff;
+    right: 5px;
+    stroke-width: 1.5px;
+    top: 5px;
+    width: 16px;
 }
 
 .dialog-confirm {

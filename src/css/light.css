@@ -8,7 +8,7 @@
 html,
 body {
     background-color: #fff;
-    color: #333;
+    color: #444444;
 }
 
 ::-webkit-scrollbar,
@@ -91,6 +91,11 @@ body {
     color: inherit;
 }
 
+.action,
+.noAction {
+    color: rgb(95, 107, 116);
+}
+
 .dialog-open-wrapper {
     background-color: rgba(244, 244, 244, 0.3);
     border: 1px solid #eaeaea;
@@ -101,6 +106,10 @@ body {
 }
 
 .dialog-open-delete {
+    color: #666666;
+}
+
+.dialog-open-delete:hover {
     color: #7e1818;
 }
 
@@ -178,6 +187,10 @@ text {
     background-color: transparent;
     border-color: #e5e5e5;
     color: #999;
+}
+
+.uk-select {
+    color: #444444;
 }
 
 .CodeMirror-selected {
