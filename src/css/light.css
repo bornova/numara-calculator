@@ -18,11 +18,11 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background-color: #dcdcdc;
+    background-color: #eaeaea;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background-color: #cccccc;
+    background-color: #dadada;
 }
 
 .header-win-title {

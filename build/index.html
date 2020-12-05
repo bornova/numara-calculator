@@ -252,6 +252,15 @@
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
+                            <div>Panel divider</div>
+                            <div class="uk-text-right uk-width-2-5">
+                                <label class="switch">
+                                    <input id="dividerButton" type="checkbox" class="settingItem">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="uk-child-width-expand" uk-grid>
                             <div>Line numbers</div>
                             <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
@@ -270,15 +279,6 @@
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
-                            <div>Panel divider</div>
-                            <div class="uk-text-right uk-width-2-5">
-                                <label class="switch">
-                                    <input id="dividerButton" type="checkbox" class="settingItem">
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
                             <div>Wrap lines (input only)</div>
                             <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
@@ -291,11 +291,11 @@
                 </ul>
             </div>
             <div uk-grid>
-                <div class="dialog-buttons uk-width-2-5 uk-text-left">
-                    <a id="dialog-settings-reset" class="resetButton">Reset App</a>
+                <div class="dialog-buttons uk-width-1-2 uk-text-left">
+                    <a id="dialog-settings-reset" class="resetButton" title="Reset all app settings and data" uk-tooltip>Reset App</a>
+                    <a id="defaultSettingsButton" class="defButton" title="Restore default settings" uk-tooltip>Defaults</a>
                 </div>
-                <div class="dialog-buttons uk-width-3-5 uk-text-right">
-                    <button id="defaultSettingsButton" class="uk-button uk-button-default uk-button-small defButton" title="Restore default settings" uk-tooltip><i data-feather="rotate-ccw"></i></button>
+                <div class="dialog-buttons uk-width-1-2 uk-text-right">
                     <button class="uk-button uk-button-primary uk-modal-close uk-button-small">Close</button>
                 </div>
             </div>

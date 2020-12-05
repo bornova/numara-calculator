@@ -319,7 +319,7 @@ function createRateUnits() {
 UIkit.mixin({
     data: {
         delay: 300,
-        offset: 8
+        offset: 5
     }
 }, 'tooltip');
 
@@ -602,7 +602,7 @@ function prepSettings() {
 }
 
 function checkDefaultSettings() {
-    $('defaultSettingsButton').style.display = JSON.stringify(settings.app) === JSON.stringify(defaultSettings.app) ? 'none' : 'inline-block';
+    $('defaultSettingsButton').style.display = JSON.stringify(settings.app) === JSON.stringify(defaultSettings.app) ? 'none' : 'inline';
 }
 
 function syntaxToggle() {

@@ -183,7 +183,7 @@ text {
     flex: 1;
     font-weight: 400;
     margin-left: 12px;
-    min-width: 100px;
+    min-width: 180px;
     padding-right: 10px;
     user-select: text;
     white-space: nowrap;
@@ -699,24 +699,15 @@ input:checked+.slider:before {
 }
 
 .defButton {
-    vertical-align: middle;
-}
-
-.defButton:hover {
-    color: #1e87f0 !important;
-}
-
-.defButton svg {
-    height: 13px;
-    margin: -2px 0 0 0;
-    pointer-events: none;
-    stroke: #ce6c49;
-    width: 13px;
+    line-height: 0;
+    margin-left: 10px;
+    vertical-align: text-bottom;
 }
 
 .uk-button {
     border-radius: 3px;
     line-height: 28px;
+    margin-left: 2px;
     padding: 0 10px;
     transition: 0s ease-in-out;
 }
