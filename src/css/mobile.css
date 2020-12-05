@@ -3,7 +3,7 @@
     body,
     html {
         font-family: 'Open Sans', sans-serif;
-        font-size: 36px;
+        font-size: 16px;
         height: 100%;
     }
 
@@ -65,9 +65,9 @@
 
     .leftActions a svg,
     .rightActions a svg {
-        height: 48px;
+        height: 32px;
         pointer-events: none;
-        width: 48px;
+        width: 32px;
     }
 
     .dialog-buttons {
