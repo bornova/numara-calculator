@@ -183,7 +183,7 @@ text {
     flex: 1;
     font-weight: 400;
     margin-left: 12px;
-    min-width: 180px;
+    min-width: 120px;
     padding-right: 10px;
     user-select: text;
     white-space: nowrap;
