@@ -92,7 +92,6 @@ fs.emptyDir(build_path).then(() => {
     new cleanCSS().minify([c_c], (error, css) => fs.outputFileSync(build_path + '/css/codemirror.css', css.styles));
     new cleanCSS().minify(['src/css/dark.css'], (error, css) => fs.outputFileSync(build_path + '/css/dark.css', css.styles));
     new cleanCSS().minify(['src/css/light.css'], (error, css) => fs.outputFileSync(build_path + '/css/light.css', css.styles));
-    new cleanCSS().minify(['src/css/mobile.css'], (error, css) => fs.outputFileSync(build_path + '/css/mobile.css', css.styles));
 
     fs.copy('node_modules/uikit/dist/css/uikit.min.css', build_path + '/css/uikit.min.css');
 }).then(() => {

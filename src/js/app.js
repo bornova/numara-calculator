@@ -18,8 +18,6 @@ const isWin = navigator.userAgent.toLowerCase().includes('win');
 const isNode = navigator.userAgent.toLowerCase().includes('electron');
 const ipc = isNode ? require('electron').ipcRenderer : null;
 
-if (!isNode) $('mobile').setAttribute('href', 'css/mobile.css');
-
 // Initilize Codemirror
 const cm = CodeMirror.fromTextArea($('inputArea'), {
     coverGutterNextToScrollbar: true,
