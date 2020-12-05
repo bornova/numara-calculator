@@ -65,8 +65,9 @@ function calculate() {
                     answer = format(math.format(answer, expLim));
 
                     if (answer.match(/\w\(x\)/)) {
-                        answer = `<a class="plotButton" data-func="${line}">Plot</a>`;
-                        scope.ans = scope['line' + lineNo] = line.split('=')[1].trim();
+                        var plotAns = /\w\(x\)$/.test(answer) ? line.trim() : answer.trim();
+                        answer = `<a class="plotButton" data-func="${plotAns}">Plot</a>`;
+                        scope.ans = scope['line' + lineNo] = plotAns;
                     }
                 } else {
                     subtotals.length = 0;
