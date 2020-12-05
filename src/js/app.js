@@ -231,7 +231,6 @@ function applySettings() {
         predictable: settings.app.predictable
     });
 
-    cm.focus();
     calculate();
 }
 
@@ -551,6 +550,7 @@ function populateSaved() {
 // Initiate settings dialog
 UIkit.util.on('#setswitch', 'beforeshow', (e) => e.stopPropagation());
 UIkit.util.on('#dialog-settings', 'beforeshow', () => prepSettings());
+UIkit.util.on('#dialog-settings', 'hidden', () => cm.focus());
 
 function prepSettings() {
     // Appearance
