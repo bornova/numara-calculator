@@ -469,7 +469,7 @@ document.addEventListener('click', (e) => {
             syntaxToggle();
             break;
         case 'bigNumWarn': // BigNumber warning
-            showError(`Using the BigNumber option will disable function plotting and is not compatible with some math functions. 
+            showError(`Using the BigNumber may break function plotting and is not compatible with some math functions. 
                     It may also cause unexpected behavior and affect overall performance.<br><br>
                     <a target="_blank" href="https://mathjs.org/docs/datatypes/bignumbers.html">Read more on BigNumbers</a>`,
                 'Caution: BigNumber Limitations');
