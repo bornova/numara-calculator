@@ -538,7 +538,7 @@ function populateSaved() {
                         <div class="dialog-open-title">${val[0]}</div>
                         <div class="dialog-open-date">${moment(Number(id)).format('lll')}</div>
                     </div>
-                    <i class="dialog-open-delete" data-action="delete" data-feather="x-circle"></i>
+                    <span class="dialog-open-delete" data-action="delete"><i data-feather="x-circle"></i></span>
                 </div>`;
         });
         feather.replace();

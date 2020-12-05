@@ -335,9 +335,15 @@ text {
     height: 16px;
     position: absolute;
     right: 5px;
-    stroke-width: 1.5px;
     top: 5px;
     width: 16px;
+}
+
+.dialog-open-delete>svg {
+    height: 16px;
+    stroke-width: 1.5px;
+    width: 16px;
+    pointer-events: none;
 }
 
 .dialog-confirm {
