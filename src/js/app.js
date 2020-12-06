@@ -26,6 +26,7 @@ const cm = CodeMirror.fromTextArea($('inputArea'), {
 
 // Codemirror syntax templates
 CodeMirror.defineMode('numara', () => {
+    var rates = ls.get('rates');
     return {
         token: (stream, state) => {
             if (stream.match(/\/\/.*/) || stream.match(/#.*/)) return 'comment';
@@ -35,6 +36,7 @@ CodeMirror.defineMode('numara', () => {
             stream.eatWhile(/\w/);
             var str = stream.current();
             try {
+                if (str.toLowerCase() in rates || str.toLowerCase() == 'usd') return 'currency';
                 if (math.unit(str).units.length > 0) return 'unit';
             } catch (e) {}
 
@@ -252,6 +254,26 @@ cm.on('update', () => {
                 var obj = JSON.parse(res);
                 UIkit.tooltip(f, {
                     title: obj.description,
+                    pos: 'top-left'
+                });
+            } catch (e) {
+                UIkit.tooltip(f, {
+                    title: 'Description not available.',
+                    pos: 'top-left'
+                });
+            }
+        }
+    }
+
+    var curr = document.getElementsByClassName('cm-currency');
+    if (curr.length > 0 && settings.app.currencies) {
+        for (var f of curr) {
+            try {
+                var rates = ls.get('rates');
+                var curr = f.innerHTML.toLowerCase();
+                var currName = curr == 'usd' ? 'U.S. Dollar' : rates[curr].name;
+                UIkit.tooltip(f, {
+                    title: currName,
                     pos: 'top-left'
                 });
             } catch (e) {
@@ -496,6 +518,11 @@ document.addEventListener('click', (e) => {
 
         case 'restartButton': // Restart to update
             ipc.send('updateApp');
+
+        case 'demoButton': // Restart to update
+            cm.setValue(demo);
+            calculate();
+            UIkit.modal('#dialog-help').hide();
     }
 });
 
@@ -854,3 +881,27 @@ if (isNode) {
         }
     });
 }
+
+const demo = `1+2
+
+# In addition to mathjs functions:
+ans // Get last answer
+total // Total up to this point
+avg // Average up to this point
+line4 // Get answer from a line#
+subtotal // Subtotal last block
+
+# Percentages:
+10% of 20
+40 + 30%
+
+# Dates
+today
+now
+today - 3 weeks
+now + 36 hours - 2 days
+
+# Currency conversion
+1 usd to try
+20 cad to usd
+`

@@ -267,6 +267,10 @@ line {
     background-color: #1f1f1f !important;
 }
 
+.cm-currency {
+    color: #d4a865 !important;
+}
+
 .cm-unit {
     color: #4d87c9 !important;
 }
@@ -306,7 +310,7 @@ line {
 }
 
 .CodeMirror-matchingbracket {
-    color: rgb(167, 130, 74) !important;
+    color: #999 !important;
     font-weight: bold;
 }
 

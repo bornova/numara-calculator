@@ -117,9 +117,9 @@ function calculate() {
 
         var dateTimeReg = new RegExp('millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia');
         if (line.match(dateTimeReg)) {
-            var lineDate = line.replace(/[A-Za-z]+,/, '').split(/[\+\-]/);
-            var lineDateLeft = lineDate[0].trim();
-            var lineDateRight = lineDate[1].trim();
+            var lineDate = line.split(/[\+\-]/);
+            var lineDateLeft = lineDate[0].replace(/[A-Za-z]+,/, '').trim();
+            var lineDateRight = line.replace(lineDate[0], '').trim();
 
             var todayFormat = settings.app.dateFormat;
             var nowFormat = settings.app.dateFormat + ' ' + settings.app.timeFormat;

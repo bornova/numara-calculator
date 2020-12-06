@@ -201,6 +201,10 @@ text {
     background-color: #ffffff !important;
 }
 
+.cm-currency {
+    color: #bd965b !important;
+}
+
 .cm-unit {
     color: #005cc5 !important;
 }
@@ -234,7 +238,7 @@ text {
 }
 
 .CodeMirror-matchingbracket {
-    color: rgb(167, 130, 74) !important;
+    color: #999999 !important;
     font-weight: bold;
 }
 
