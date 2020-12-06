@@ -268,7 +268,7 @@ line {
 }
 
 .cm-currency {
-    color: #d4a865 !important;
+    color: #57805a !important;
 }
 
 .cm-unit {
@@ -288,7 +288,7 @@ line {
 }
 
 .cm-comment {
-    color: #57805a !important;
+    color: #5a5a5a !important;
 }
 
 .cm-function {
@@ -311,7 +311,6 @@ line {
 
 .CodeMirror-matchingbracket {
     color: #999 !important;
-    font-weight: bold;
 }
 
 .CodeMirror-hints {

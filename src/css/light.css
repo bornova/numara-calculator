@@ -202,7 +202,7 @@ text {
 }
 
 .cm-currency {
-    color: #bd965b !important;
+    color: #57805a !important;
 }
 
 .cm-unit {
@@ -222,7 +222,7 @@ text {
 }
 
 .cm-comment {
-    color: #57805a !important;
+    color: #bebebe !important;
 }
 
 .cm-function {
@@ -239,7 +239,6 @@ text {
 
 .CodeMirror-matchingbracket {
     color: #999999 !important;
-    font-weight: bold;
 }
 
 .CodeMirror-hint:hover {
