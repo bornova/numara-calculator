@@ -165,7 +165,7 @@ const defaultSettings = {
         divider: true,
         fontSize: '1.1rem',
         fontWeight: '400',
-        functionTips: true,
+        keywordTips: true,
         lineErrors: true,
         lineNumbers: true,
         lineWrap: true,
@@ -247,7 +247,7 @@ cm.on("inputRead", (cm, event) => {
 });
 cm.on('update', () => {
     var funcs = document.getElementsByClassName('cm-function');
-    if (funcs.length > 0 && settings.app.functionTips) {
+    if (funcs.length > 0 && settings.app.keywordTips) {
         for (var f of funcs) {
             try {
                 var res = JSON.stringify(math.help(f.innerHTML).toJSON());
@@ -266,22 +266,32 @@ cm.on('update', () => {
     }
 
     var curr = document.getElementsByClassName('cm-currency');
-    if (curr.length > 0 && settings.app.currencies) {
-        for (var f of curr) {
+    if (curr.length > 0 && settings.app.keywordTips && settings.app.currencies) {
+        for (var c of curr) {
             try {
                 var rates = ls.get('rates');
-                var curr = f.innerHTML.toLowerCase();
+                var curr = c.innerHTML.toLowerCase();
                 var currName = curr == 'usd' ? 'U.S. Dollar' : rates[curr].name;
-                UIkit.tooltip(f, {
+                UIkit.tooltip(c, {
                     title: currName,
                     pos: 'top-left'
                 });
             } catch (e) {
-                UIkit.tooltip(f, {
+                UIkit.tooltip(c, {
                     title: 'Description not available.',
                     pos: 'top-left'
                 });
             }
+        }
+    }
+
+    var units = document.getElementsByClassName('cm-unit');
+    if (units.length > 0 && settings.app.keywordTips) {
+        for (var u of units) {
+            UIkit.tooltip(u, {
+                title: `Unit '${u.innerHTML}'`,
+                pos: 'top-left'
+            });
         }
     }
 });
@@ -614,7 +624,7 @@ function prepSettings() {
     // Panel UI
     $('syntaxButton').checked = settings.app.syntax;
     syntaxToggle();
-    $('functionTipsButton').checked = settings.app.functionTips;
+    $('keywordTipsButton').checked = settings.app.keywordTips;
     $('matchBracketsButton').checked = settings.app.matchBrackets;
     $('autocompleteButton').checked = settings.app.autocomplete;
     $('closeBracketsButton').checked = settings.app.closeBrackets;
@@ -631,10 +641,10 @@ function checkDefaultSettings() {
 }
 
 function syntaxToggle() {
-    $('functionTipsButton').disabled = $('syntaxButton').checked ? false : true;
+    $('keywordTipsButton').disabled = $('syntaxButton').checked ? false : true;
     $('matchBracketsButton').disabled = $('syntaxButton').checked ? false : true;
 
-    $('functionTipsButton').parentNode.style.opacity = $('syntaxButton').checked ? '1' : '0.5';
+    $('keywordTipsButton').parentNode.style.opacity = $('syntaxButton').checked ? '1' : '0.5';
     $('matchBracketsButton').parentNode.style.opacity = $('syntaxButton').checked ? '1' : '0.5';
 }
 
@@ -668,7 +678,7 @@ function saveSettings() {
     settings.app.currencies = $('currencyButton').checked;
     // Panel UI
     settings.app.syntax = $('syntaxButton').checked;
-    settings.app.functionTips = $('functionTipsButton').checked;
+    settings.app.keywordTips = $('keywordTipsButton').checked;
     settings.app.matchBrackets = $('matchBracketsButton').checked;
     settings.app.autocomplete = $('autocompleteButton').checked;
     settings.app.closeBrackets = $('closeBracketsButton').checked;
