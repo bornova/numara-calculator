@@ -25,7 +25,7 @@ function calculate() {
         var lineNo = cm.getLineNumber(line) + 1;
         var mirrorLine = line.text;
 
-        setLineNo(lineNo);
+        cm.removeLineClass(lineNo - 1, 'gutter', 'lineError');
 
         line = line.text.trim().split('//')[0].split('#')[0];
 
@@ -74,8 +74,8 @@ function calculate() {
                 }
             } catch (e) {
                 var errStr = String(e).replace(/'|"/g, '`');
-                answer = settings.app.lineErrors ? `<a class="lineError" data-line="${lineNo}" data-error="${errStr}">Err</a>` : '';
-                setLineNo(lineNo, true);
+                answer = settings.app.lineErrors ? `<a class="lineError" data-line="${lineNo}" data-error="${errStr}">Error</a>` : '';
+                if (settings.app.lineErrors) cm.addLineClass(lineNo - 1, 'gutter', 'lineError');
             }
         } else {
             subtotals.length = 0;
@@ -178,15 +178,5 @@ function calculate() {
             a.match(/e-?\d+/) ? parseFloat(Number(a.split('e')[0]).toFixed(settings.app.precision)) + 'e' + answer.split('e')[1] + b :
             strip(answer);
         return formattedAnswer;
-    }
-
-    function setLineNo(lineNo, isErr) {
-        if (settings.app.lineNumbers) {
-            var ln = document.createElement("div");
-            ln.classList.add('CodeMirror-linenumber');
-            ln.classList.add((isErr & settings.app.lineErrors) ? 'lineErrorNo' : null);
-            ln.innerHTML = lineNo;
-            cm.setGutterMarker(lineNo - 1, 'CodeMirror-linenumbers', ln);
-        }
     }
 }

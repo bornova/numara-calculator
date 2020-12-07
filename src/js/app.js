@@ -18,12 +18,73 @@ const isWin = navigator.userAgent.toLowerCase().includes('win');
 const isNode = navigator.userAgent.toLowerCase().includes('electron');
 const ipc = isNode ? require('electron').ipcRenderer : null;
 
-// Initilize Codemirror
-const cm = CodeMirror.fromTextArea($('inputArea'), {
-    coverGutterNextToScrollbar: true,
-    inputStyle: 'textarea'
-});
+// Set app info
+document.title = appName + ' Calculator';
+$('dialog-about-title').innerHTML = appName + ' Calculator';
+$('dialog-about-appVersion').innerHTML = isNode ? 'Version ' + appVersion :
+    `Version ${appVersion}
+    <div class="versionCtnr">
+        <div>Desktop version:</div>
+        <div><a href="https://numara.io/releases/win/Numara Setup ${appVersion}.exe">Windows</a></div>
+        <div><a href="https://numara.io/releases/mac/Numara-${appVersion}.dmg">MacOS</a></div>
+    </div>`;
 
+
+if (isNode) {
+    ipc.on('themeUpdate', () => applySettings())
+    ipc.on('fullscreen', (event, isFullscreen) => {
+        if (isFullscreen) ipc.send('maximize');
+    });
+}
+
+// Set headers
+if (isNode && isWin) {
+    $('header-mac').remove();
+    $('header-win').style.display = 'block';
+    $('header-win-title').innerHTML = appName;
+
+    $('max').style.display = ipc.sendSync('isMaximized') ? 'none' : 'block';
+    $('unmax').style.display = ipc.sendSync('isMaximized') ? 'block' : 'none';
+
+    $('winButtons').addEventListener('click', (e) => {
+        switch (e.target.id) {
+            case 'min':
+                ipc.send('minimize');
+                break;
+            case 'max':
+                ipc.send('maximize');
+                break;
+            case 'unmax':
+                ipc.send('unmaximize');
+                break;
+            case 'close':
+                ipc.send('close');
+                break;
+        }
+        e.stopPropagation();
+    });
+
+    ipc.on('isMax', (event, isMax) => {
+        $('unmax').style.display = isMax ? 'block' : 'none';
+        $('max').style.display = !isMax ? 'block' : 'none';
+    });
+
+    $('header-win').addEventListener("dblclick", toggleMax);
+} else {
+    $('header-win').remove();
+    $('header-mac').style.display = 'block';
+    $('header-mac-title').innerHTML = appName;
+
+    if (isNode) $('header-mac').addEventListener("dblclick", toggleMax);
+}
+
+function toggleMax() {
+    ipc.send(ipc.sendSync('isMaximized') ? 'unmaximize' : 'maximize');
+}
+
+feather.replace();
+
+// Initilize Codemirror
 // Codemirror syntax templates
 CodeMirror.defineMode('numara', () => {
     var rates = ls.get('rates');
@@ -87,157 +148,14 @@ CodeMirror.commands.autocomplete = (cm) => {
     });
 };
 
-// Set app info
-document.title = appName + ' Calculator';
-$('dialog-about-title').innerHTML = appName + ' Calculator';
-$('dialog-about-appVersion').innerHTML = isNode ? 'Version ' + appVersion :
-    `Version ${appVersion}
-    <div class="versionCtnr">
-        <div>Desktop version:</div>
-        <div><a href="https://numara.io/releases/win/Numara Setup ${appVersion}.exe">Windows</a></div>
-        <div><a href="https://numara.io/releases/mac/Numara-${appVersion}.dmg">MacOS</a></div>
-    </div>`;
-
-// Set headers
-if (isNode) {
-    ipc.on('fullscreen', (event, isFullscreen) => {
-        if (isFullscreen) ipc.send('maximize');
-    });
-}
-
-if (isNode && isWin) {
-    $('header-mac').remove();
-    $('header-win').style.display = 'block';
-    $('header-win-title').innerHTML = appName;
-
-    $('max').style.display = ipc.sendSync('isMaximized') ? 'none' : 'block';
-    $('unmax').style.display = ipc.sendSync('isMaximized') ? 'block' : 'none';
-
-    $('winButtons').addEventListener('click', (e) => {
-        switch (e.target.id) {
-            case 'min':
-                ipc.send('minimize');
-                break;
-            case 'max':
-                ipc.send('maximize');
-                break;
-            case 'unmax':
-                ipc.send('unmaximize');
-                break;
-            case 'close':
-                ipc.send('close');
-                break;
-        }
-        e.stopPropagation();
-    });
-
-    ipc.on('isMax', (event, isMax) => {
-        $('unmax').style.display = isMax ? 'block' : 'none';
-        $('max').style.display = !isMax ? 'block' : 'none';
-    });
-
-    $('header-win').addEventListener("dblclick", toggleMax);
-} else {
-    $('header-win').remove();
-    $('header-mac').style.display = 'block';
-    $('header-mac-title').innerHTML = appName;
-
-    if (isNode) $('header-mac').addEventListener("dblclick", toggleMax);
-}
-
-function toggleMax() {
-    ipc.send(ipc.sendSync('isMaximized') ? 'unmaximize' : 'maximize');
-}
-
-feather.replace();
-
-// App settings
-let settings;
-let initSettings = ls.get('settings');
-
-const defaultSettings = {
-    app: {
-        autocomplete: true,
-        closeBrackets: true,
-        currencies: true,
-        dateDay: false,
-        dateFormat: 'M/D/YYYY',
-        divider: true,
-        fontSize: '1.1rem',
-        fontWeight: '400',
-        keywordTips: true,
-        lineErrors: true,
-        lineNumbers: true,
-        lineWrap: true,
-        matchBrackets: true,
-        matrixType: 'Matrix',
-        numericOutput: 'number',
-        precision: '4',
-        predictable: false,
-        syntax: true,
-        theme: 'system',
-        thouSep: true,
-        timeFormat: 'h:mm A'
-    },
-    inputWidth: 60,
-    plot: {
-        plotArea: false,
-        plotCross: false,
-        plotGrid: false
-    }
-};
-
-if (!initSettings) {
-    ls.set('settings', defaultSettings);
-} else {
-    // Check for and apply default settings changes
-    DeepDiff.observableDiff(initSettings, defaultSettings, (d) => {
-        if (d.kind !== 'E') {
-            DeepDiff.applyChange(initSettings, defaultSettings, d);
-            ls.set('settings', initSettings);
-        }
-    });
-}
-
-// Apply settings
-function applySettings() {
-    settings = ls.get('settings');
-
-    $('style').setAttribute('href',
-        settings.app.theme == 'system' ? (isNode ? (ipc.sendSync('isDark') ? 'css/dark.css' : 'css/light.css') : 'css/light.css') :
-        settings.app.theme == 'light' ? 'css/light.css' : 'css/dark.css');
-
-    if (isNode) ipc.send('setTheme', settings.app.theme);
-
-    var elements = document.querySelectorAll('.panelFont, .CodeMirror');
-    for (var el of elements) {
-        el.style.fontSize = settings.app.fontSize;
-        el.style.fontWeight = settings.app.fontWeight;
-    }
-
-    $('input').style.width = (settings.app.divider ? settings.inputWidth : defaultSettings.inputWidth) + '%';
-    $('handle').style.display = settings.app.divider ? 'block' : 'none';
-    $('output').style.textAlign = settings.app.divider ? 'left' : 'right';
-
-    cm.setOption('mode', settings.app.syntax ? 'numara' : 'plain');
-    cm.setOption('lineNumbers', settings.app.lineNumbers);
-    cm.setOption('lineWrapping', settings.app.lineWrap);
-    cm.setOption('autoCloseBrackets', settings.app.closeBrackets);
-    cm.setOption('matchBrackets', settings.app.syntax && settings.app.matchBrackets ? {
-        'maxScanLines': 1
-    } : false);
-
-    math.config({
-        matrix: settings.app.matrixType,
-        number: settings.app.numericOutput,
-        predictable: settings.app.predictable
-    });
-
-    calculate();
-}
-
 // Prep input
+const cm = CodeMirror.fromTextArea($('inputArea'), {
+    coverGutterNextToScrollbar: true,
+    inputStyle: 'textarea'
+});
+
 cm.setValue(ls.get('input') || '');
+cm.execCommand('goDocEnd');
 cm.on('change', () => {
     calculate();
     cm.scrollIntoView(cm.getCursor());
@@ -296,10 +214,93 @@ cm.on('update', () => {
     }
 });
 
+// App settings
+const defaultSettings = {
+    app: {
+        autocomplete: true,
+        closeBrackets: true,
+        currencies: true,
+        dateDay: false,
+        dateFormat: 'M/D/YYYY',
+        divider: true,
+        fontSize: '1.1rem',
+        fontWeight: '400',
+        keywordTips: true,
+        lineErrors: true,
+        lineNumbers: true,
+        lineWrap: true,
+        matchBrackets: true,
+        matrixType: 'Matrix',
+        numericOutput: 'number',
+        precision: '4',
+        predictable: false,
+        syntax: true,
+        theme: 'system',
+        thouSep: true,
+        timeFormat: 'h:mm A'
+    },
+    inputWidth: 60,
+    plot: {
+        plotArea: false,
+        plotCross: false,
+        plotGrid: false
+    }
+};
+
+let settings;
+let initSettings = ls.get('settings');
+
+if (!initSettings) {
+    ls.set('settings', defaultSettings);
+} else {
+    // Check for and apply default settings changes
+    DeepDiff.observableDiff(initSettings, defaultSettings, (d) => {
+        if (d.kind !== 'E') {
+            DeepDiff.applyChange(initSettings, defaultSettings, d);
+            ls.set('settings', initSettings);
+            applySettings();
+        }
+    });
+}
+
 // Apply settings
+function applySettings() {
+    settings = ls.get('settings');
+
+    $('style').setAttribute('href',
+        settings.app.theme == 'system' ? (isNode ? (ipc.sendSync('isDark') ? 'css/dark.css' : 'css/light.css') : 'css/light.css') :
+        settings.app.theme == 'light' ? 'css/light.css' : 'css/dark.css');
+
+    if (isNode) ipc.send('setTheme', settings.app.theme);
+
+    var elements = document.querySelectorAll('.panelFont, .CodeMirror');
+    for (var el of elements) {
+        el.style.fontSize = settings.app.fontSize;
+        el.style.fontWeight = settings.app.fontWeight;
+    }
+
+    $('input').style.width = (settings.app.divider ? settings.inputWidth : defaultSettings.inputWidth) + '%';
+    $('handle').style.display = settings.app.divider ? 'block' : 'none';
+    $('output').style.textAlign = settings.app.divider ? 'left' : 'right';
+
+    cm.setOption('mode', settings.app.syntax ? 'numara' : 'plain');
+    cm.setOption('lineNumbers', settings.app.lineNumbers);
+    cm.setOption('lineWrapping', settings.app.lineWrap);
+    cm.setOption('autoCloseBrackets', settings.app.closeBrackets);
+    cm.setOption('matchBrackets', settings.app.syntax && settings.app.matchBrackets ? {
+        'maxScanLines': 1
+    } : false);
+
+    math.config({
+        matrix: settings.app.matrixType,
+        number: settings.app.numericOutput,
+        predictable: settings.app.predictable
+    });
+
+    calculate();
+}
+
 applySettings();
-if (isNode) ipc.on('themeUpdate', () => applySettings());
-cm.execCommand('goDocEnd');
 
 // Exchange rates
 math.createUnit('USD', {
@@ -637,7 +638,7 @@ function prepSettings() {
 }
 
 function checkDefaultSettings() {
-    $('defaultSettingsButton').style.display = JSON.stringify(settings.app) === JSON.stringify(defaultSettings.app) ? 'none' : 'inline';
+    $('defaultSettingsButton').style.display = DeepDiff.diff(settings.app, defaultSettings.app) ? 'inline' : 'none';
 }
 
 function syntaxToggle() {
@@ -688,8 +689,8 @@ function saveSettings() {
     settings.app.lineWrap = $('lineWrapButton').checked;
 
     ls.set('settings', settings);
-    applySettings();
     checkDefaultSettings();
+    setTimeout(() => applySettings(), 10);
 }
 
 document.querySelectorAll('.settingItem').forEach((el) => el.addEventListener('change', () => saveSettings()));
@@ -914,4 +915,8 @@ now + 36 hours - 2 days
 # Currency conversion
 1 usd to try
 20 cad to usd
+
+# Plot functions
+f(x) = sin(x)
+f(x) = 2x^2 + 3x - 5
 `

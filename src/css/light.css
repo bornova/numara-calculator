@@ -66,7 +66,7 @@ body {
 
 .lineError,
 .lineError:hover,
-.lineErrorNo {
+.lineError>div {
     color: #7e1818;
 }
 

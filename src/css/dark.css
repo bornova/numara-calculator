@@ -65,7 +65,7 @@ body {
 
 .lineError,
 .lineError:hover,
-.lineErrorNo {
+.lineError>div {
     color: rgba(189, 46, 46, 1);
 }
 
