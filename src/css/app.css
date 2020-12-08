@@ -782,22 +782,6 @@ input:checked+.slider:before {
     width: 10px;
 }
 
-.uk-notification {
-    width: 50vw;
-}
-
-.uk-notification-bottom-center {
-    margin-left: calc(-50vw / 2);
-}
-
-@media (max-width: 639px) {
-    .uk-notification {
-        left: 50%;
-        margin-left: calc(-50vw / 2);
-        width: 50vw;
-    }
-}
-
 pre {
     font: inherit !important;
 }
