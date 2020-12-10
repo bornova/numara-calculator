@@ -561,6 +561,10 @@ text {
 }
 
 /* Function Plot */
+.function-plot {
+    height: calc(100vh - 190px) !important;
+}
+
 .top-right-legend {
     fill: #4682b4;
 }
