@@ -91,7 +91,7 @@ body {
 
 .action,
 .noAction {
-    color: #818c94;
+    color: #5f6b74;
 }
 
 .dialog-open-wrapper {
@@ -244,6 +244,10 @@ line {
 
 .uk-notification-message {
     background-color: #252525;
+}
+
+.uk-notification-message-primary {
+    color: #eaeaea;
 }
 
 .CodeMirror {

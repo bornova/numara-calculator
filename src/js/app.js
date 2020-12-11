@@ -837,7 +837,7 @@ function notify(msg, stat) {
         message: msg,
         status: stat || 'primary',
         pos: 'bottom-center',
-        timeout: 3000
+        timeout: 3000000
     });
 }
 
@@ -882,7 +882,7 @@ Object.entries(traps).map(([b, c]) => {
 // Check for updates
 if (isNode) {
     ipc.send('checkUpdate');
-    ipc.on('notifyUpdate', (event) => notify(`Updating Numara to latest version... <a class="updateLink" onclick="$('aboutButton').click();">Status</a>`));
+    ipc.on('notifyUpdate', (event) => notify(`Updating Numara to latest version... <a class="updateLink" onclick="$('aboutButton').click();">View update status</a>`));
     ipc.on('updateStatus', (event, status) => {
         if (status == 'ready') {
             $('dialog-about-updateStatus').innerHTML = 'Restart Numara to finish updating.';

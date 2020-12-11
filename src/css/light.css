@@ -197,6 +197,10 @@ text {
     background: #c9e0f7 !important;
 }
 
+.uk-notification-message-primary {
+    color: #444;
+}
+
 .CodeMirror-linenumber {
     background-color: #ffffff !important;
 }
