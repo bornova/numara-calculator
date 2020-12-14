@@ -193,6 +193,7 @@ text {
     color: #444444;
 }
 
+/* CodeMirror Overrides */
 .CodeMirror-selected {
     background: #c9e0f7 !important;
 }
@@ -203,6 +204,24 @@ text {
 
 .CodeMirror-linenumber {
     background-color: #ffffff !important;
+}
+
+.CodeMirror-dialog-top {
+    background-color: #ffffff !important;
+}
+
+.CodeMirror-matchingbracket {
+    color: #999999 !important;
+}
+
+.CodeMirror-hint:hover {
+    background-color: #eaeaea;
+    color: #162e44;
+}
+
+li.CodeMirror-hint-active {
+    background-color: #367ea1;
+    color: #ffffff;
 }
 
 .cm-currency {
@@ -235,22 +254,4 @@ text {
 
 .cm-text {
     color: #333333 !important;
-}
-
-.CodeMirror-dialog-top {
-    background-color: #ffffff !important;
-}
-
-.CodeMirror-matchingbracket {
-    color: #999999 !important;
-}
-
-.CodeMirror-hint:hover {
-    background-color: #eaeaea;
-    color: #162e44;
-}
-
-li.CodeMirror-hint-active {
-    background-color: #367ea1;
-    color: #ffffff;
 }

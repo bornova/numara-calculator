@@ -3,7 +3,6 @@ const pj = require('./package.json');
 const terser = require("terser");
 const cleanCSS = require('clean-css');
 const performance = require('perf_hooks').performance;
-
 const build_path = 'build';
 
 let t0 = performance.now();
