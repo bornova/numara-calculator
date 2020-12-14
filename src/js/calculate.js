@@ -21,36 +21,37 @@ function calculate() {
     scope.today = moment().format((settings.app.dateDay ? 'ddd, ' : '') + settings.app.dateFormat);
 
     cm.eachLine((line) => {
-        var answer = '';
-        var lineNo = cm.getLineNumber(line) + 1;
+        var cmLine = line.text.trim().split('//')[0].split('#')[0];
+        var cmLineNo = cm.getLineNumber(line)
+        var lineNo = cmLineNo + 1;
         var mirrorLine = line.text;
 
-        cm.removeLineClass(lineNo - 1, 'gutter', 'lineError');
+        var answer = '';
 
-        line = line.text.trim().split('//')[0].split('#')[0];
+        cm.removeLineClass(cmLineNo, 'gutter', 'lineError');
 
-        if (line) {
+        if (cmLine) {
             try {
-                line = lineNo > 1 && line.charAt(0).match(/[\+\-\*\/]/) && cm.getLine(lineNo - 2).length > 0 ? scope.ans + line : line;
+                cmLine = lineNo > 1 && cmLine.charAt(0).match(/[\+\-\*\/]/) && cm.getLine(lineNo - 2).length > 0 ? scope.ans + cmLine : cmLine;
 
                 try {
-                    answer = solve(line, scope);
+                    answer = solve(cmLine, scope);
                 } catch (e) {
-                    while (line.match(/\([^\)]+\)/)) {
-                        var s = line.substring(line.lastIndexOf('(') + 1);
-                        var sp = line.substring(line.lastIndexOf('('));
+                    while (cmLine.match(/\([^\)]+\)/)) {
+                        var s = cmLine.substring(cmLine.lastIndexOf('(') + 1);
+                        var sp = cmLine.substring(cmLine.lastIndexOf('('));
 
                         s = s.substring(0, s.indexOf(')'));
                         sp = sp.substring(0, sp.indexOf(')') + 1);
                         if (sp.length === 0) break;
 
                         try {
-                            line = line.replace(sp, solver(s));
+                            cmLine = cmLine.replace(sp, solver(s));
                         } catch (e) {
                             break;
                         }
                     }
-                    answer = solver(line);
+                    answer = solver(cmLine);
                 }
 
                 if (answer !== undefined) {
@@ -65,7 +66,7 @@ function calculate() {
                     answer = format(math.format(answer, expLim));
 
                     if (answer.match(/\w\(x\)/)) {
-                        var plotAns = /\w\(x\)$/.test(answer) ? line.trim() : answer.trim();
+                        var plotAns = /\w\(x\)$/.test(answer) ? cmLine.trim() : answer.trim();
                         answer = `<a class="plotButton" data-func="${plotAns}">Plot</a>`;
                         scope.ans = scope['line' + lineNo] = plotAns;
                     }
@@ -75,7 +76,7 @@ function calculate() {
             } catch (e) {
                 var errStr = String(e).replace(/'|"/g, '`');
                 answer = settings.app.lineErrors ? `<a class="lineError" data-line="${lineNo}" data-error="${errStr}">Error</a>` : '';
-                if (settings.app.lineErrors) cm.addLineClass(lineNo - 1, 'gutter', 'lineError');
+                if (settings.app.lineErrors) cm.addLineClass(cmLineNo, 'gutter', 'lineError');
             }
         } else {
             subtotals.length = 0;
@@ -83,9 +84,10 @@ function calculate() {
 
         var br = '';
         if (settings.app.lineWrap) {
-            $('mirror').innerHTML = mirrorLine;
-            var h = $('mirror').offsetHeight;
-            var lh = getComputedStyle($('mirror')).lineHeight.split('px')[0];
+            var mirror = $('mirror');
+            mirror.innerHTML = mirrorLine;
+            var h = mirror.offsetHeight;
+            var lh = getComputedStyle(mirror).lineHeight.split('px')[0];
             br = h > lh ? '<span></span>'.repeat((h / lh) - 1) : '';
         }
 

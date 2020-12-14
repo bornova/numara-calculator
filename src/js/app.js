@@ -150,8 +150,7 @@ CodeMirror.commands.autocomplete = (cm) => {
 
 // Prep input
 const cm = CodeMirror.fromTextArea($('inputArea'), {
-    coverGutterNextToScrollbar: true,
-    inputStyle: 'textarea'
+    coverGutterNextToScrollbar: true
 });
 
 cm.setValue(ls.get('input') || '');
@@ -164,7 +163,7 @@ cm.on("inputRead", (cm, event) => {
     if (settings.app.autocomplete) CodeMirror.commands.autocomplete(cm);
 });
 cm.on('update', () => {
-    var funcs = document.getElementsByClassName('cm-function');
+    var funcs = document.querySelectorAll('.cm-function');
     if (funcs.length > 0 && settings.app.keywordTips) {
         for (var f of funcs) {
             try {
@@ -183,7 +182,7 @@ cm.on('update', () => {
         }
     }
 
-    var curr = document.getElementsByClassName('cm-currency');
+    var curr = document.querySelectorAll('.cm-currency');
     if (curr.length > 0 && settings.app.keywordTips && settings.app.currencies) {
         for (var c of curr) {
             try {
@@ -203,7 +202,7 @@ cm.on('update', () => {
         }
     }
 
-    var units = document.getElementsByClassName('cm-unit');
+    var units = document.querySelectorAll('.cm-unit');
     if (units.length > 0 && settings.app.keywordTips) {
         for (var u of units) {
             UIkit.tooltip(u, {
@@ -451,7 +450,7 @@ $('output').addEventListener('click', (e) => {
 });
 
 $('output').addEventListener('mousedown', () => {
-    var sels = document.getElementsByClassName('CodeMirror-selected');
+    var sels = document.querySelectorAll('.CodeMirror-selected');
     while (sels[0]) sels[0].classList.remove('CodeMirror-selected');
 });
 
@@ -845,7 +844,7 @@ function notify(msg, stat) {
 let inputScroll = false;
 let outputScroll = false;
 
-const leftSide = document.getElementsByClassName('CodeMirror-scroll')[0];
+const leftSide = document.querySelectorAll('.CodeMirror-scroll')[0];
 const rightSide = $('output');
 
 leftSide.addEventListener('scroll', () => {
@@ -864,6 +863,8 @@ rightSide.addEventListener('scroll', () => {
     outputScroll = false;
 });
 
+setTimeout(() => document.querySelectorAll('.CodeMirror-code')[0].lastChild.scrollIntoView(), 10)
+
 // Mousetrap
 const traps = {
     clearButton: ['command+d', 'ctrl+d'],
@@ -875,7 +876,7 @@ const traps = {
 Object.entries(traps).map(([b, c]) => {
     Mousetrap.bindGlobal(c, (e) => {
         e.preventDefault();
-        if (document.getElementsByClassName('uk-open').length === 0) $(b).click();
+        if (document.querySelectorAll('.uk-open').length === 0) $(b).click();
     });
 });
 
