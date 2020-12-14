@@ -154,11 +154,7 @@ const cm = CodeMirror.fromTextArea($('inputArea'), {
 });
 
 cm.setValue(ls.get('input') || '');
-cm.execCommand('goDocEnd');
-cm.on('change', () => {
-    calculate();
-    cm.scrollIntoView(cm.getCursor());
-});
+cm.on('change', calculate);
 cm.on("inputRead", (cm, event) => {
     if (settings.app.autocomplete) CodeMirror.commands.autocomplete(cm);
 });
@@ -863,7 +859,11 @@ rightSide.addEventListener('scroll', () => {
     outputScroll = false;
 });
 
-setTimeout(() => document.querySelectorAll('.CodeMirror-code')[0].lastChild.scrollIntoView(), 10)
+setTimeout(() => {
+    document.querySelectorAll('.CodeMirror-code')[0].lastChild.scrollIntoView()
+    cm.execCommand('goDocEnd');
+    cm.scrollIntoView(cm.getCursor());
+}, 10);
 
 // Mousetrap
 const traps = {
