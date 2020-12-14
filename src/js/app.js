@@ -29,7 +29,6 @@ $('dialog-about-appVersion').innerHTML = isNode ? 'Version ' + appVersion :
         <div><a href="https://numara.io/releases/mac/Numara-${appVersion}.dmg">MacOS</a></div>
     </div>`;
 
-
 if (isNode) {
     ipc.on('themeUpdate', () => applySettings())
     ipc.on('fullscreen', (event, isFullscreen) => {
@@ -154,12 +153,13 @@ const cm = CodeMirror.fromTextArea($('inputArea'), {
 });
 
 cm.setValue(ls.get('input') || '');
+cm.execCommand('goDocEnd');
 cm.on('change', calculate);
 cm.on("inputRead", (cm, event) => {
     if (settings.app.autocomplete) CodeMirror.commands.autocomplete(cm);
 });
 cm.on('update', () => {
-    var funcs = document.querySelectorAll('.cm-function');
+    var funcs = document.getElementsByClassName('cm-function');
     if (funcs.length > 0 && settings.app.keywordTips) {
         for (var f of funcs) {
             try {
@@ -178,7 +178,7 @@ cm.on('update', () => {
         }
     }
 
-    var curr = document.querySelectorAll('.cm-currency');
+    var curr = document.getElementsByClassName('cm-currency');
     if (curr.length > 0 && settings.app.keywordTips && settings.app.currencies) {
         for (var c of curr) {
             try {
@@ -198,7 +198,7 @@ cm.on('update', () => {
         }
     }
 
-    var units = document.querySelectorAll('.cm-unit');
+    var units = document.getElementsByClassName('cm-unit');
     if (units.length > 0 && settings.app.keywordTips) {
         for (var u of units) {
             UIkit.tooltip(u, {
@@ -446,7 +446,7 @@ $('output').addEventListener('click', (e) => {
 });
 
 $('output').addEventListener('mousedown', () => {
-    var sels = document.querySelectorAll('.CodeMirror-selected');
+    var sels = document.getElementsByClassName('CodeMirror-selected');
     while (sels[0]) sels[0].classList.remove('CodeMirror-selected');
 });
 
@@ -795,7 +795,7 @@ UIkit.util.on('#dialog-plot', 'hide', () => activePlot = false);
 // Relayout plot on window resize
 let windowResizeDelay;
 window.addEventListener('resize', () => {
-    if (activePlot && document.querySelector('#dialog-plot').classList.contains('uk-open')) plot();
+    if (activePlot && $('dialog-plot').classList.contains('uk-open')) plot();
     clearTimeout(windowResizeDelay);
     windowResizeDelay = setTimeout(() => {
         calculate();
@@ -832,7 +832,7 @@ function notify(msg, stat) {
         message: msg,
         status: stat || 'primary',
         pos: 'bottom-center',
-        timeout: 3000000
+        timeout: 3000
     });
 }
 
@@ -840,7 +840,7 @@ function notify(msg, stat) {
 let inputScroll = false;
 let outputScroll = false;
 
-const leftSide = document.querySelectorAll('.CodeMirror-scroll')[0];
+const leftSide = document.getElementsByClassName('CodeMirror-scroll')[0];
 const rightSide = $('output');
 
 leftSide.addEventListener('scroll', () => {
@@ -859,12 +859,6 @@ rightSide.addEventListener('scroll', () => {
     outputScroll = false;
 });
 
-setTimeout(() => {
-    document.querySelectorAll('.CodeMirror-code')[0].lastChild.scrollIntoView()
-    cm.execCommand('goDocEnd');
-    cm.scrollIntoView(cm.getCursor());
-}, 10);
-
 // Mousetrap
 const traps = {
     clearButton: ['command+d', 'ctrl+d'],
@@ -873,10 +867,12 @@ const traps = {
     openButton: ['command+o', 'ctrl+o']
 };
 
+document.getElementsByClassName('CodeMirror-code')[0].lastChild.scrollIntoView();
+
 Object.entries(traps).map(([b, c]) => {
     Mousetrap.bindGlobal(c, (e) => {
         e.preventDefault();
-        if (document.querySelectorAll('.uk-open').length === 0) $(b).click();
+        if (document.getElementsByClassName('uk-open').length === 0) $(b).click();
     });
 });
 
@@ -888,7 +884,9 @@ if (isNode) {
         if (status == 'ready') {
             $('dialog-about-updateStatus').innerHTML = 'Restart Numara to finish updating.';
             $('restartButton').style.display = 'inline-block';
-            notify(`Restart Numara to finish updating. <a class="updateLink" onclick="$('restartButton').click();">Restart Now</a>`);
+            if (!$('dialog-about').classList.contains('uk-open')) {
+                notify(`Restart Numara to finish updating. <a class="updateLink" onclick="$('restartButton').click();">Restart Now</a>`);
+            }
         } else {
             $('dialog-about-updateStatus').innerHTML = status;
         }
@@ -921,4 +919,4 @@ now + 36 hours - 2 days
 # Plot functions
 f(x) = sin(x)
 f(x) = 2x^2 + 3x - 5
-`
+`;
