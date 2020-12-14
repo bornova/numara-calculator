@@ -524,11 +524,13 @@ document.addEventListener('click', (e) => {
 
         case 'restartButton': // Restart to update
             ipc.send('updateApp');
+            break;
 
-        case 'demoButton': // Restart to update
+        case 'demoButton': // Load demo
             cm.setValue(demo);
             calculate();
             UIkit.modal('#dialog-help').hide();
+            break;
     }
 });
 
