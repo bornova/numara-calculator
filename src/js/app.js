@@ -604,31 +604,32 @@ function prepSettings() {
     for (var t of timeFormats) $('timeFormat').innerHTML += `<option value="${t}">${moment().format(t)}</option>`;
     $('timeFormat').value = settings.app.timeFormat;
     $('dateDay').checked = settings.app.dateDay;
+    $('syntaxButton').checked = settings.app.syntax;
+    syntaxToggle();
+    $('keywordTipsButton').checked = settings.app.keywordTips;
+    $('matchBracketsButton').checked = settings.app.matchBrackets;
     // Calculator
     $('precisionRange').value = settings.app.precision;
     $('precision-label').innerHTML = settings.app.precision;
-    $('matrixType').innerHTML = '';
-    for (var m of matrixTypes) $('matrixType').innerHTML += `<option value="${m}">${m}</option>`;
-    $('matrixType').value = settings.app.matrixType;
     $('numericOutput').innerHTML = '';
     for (var n of numericOutputs) $('numericOutput').innerHTML += `<option value="${n}">${n.charAt(0).toUpperCase() + n.slice(1)}</option>`;
     $('numericOutput').value = settings.app.numericOutput;
     if (settings.app.numericOutput == 'BigNumber') bigNumberWarning();
+    $('matrixType').innerHTML = '';
+    for (var m of matrixTypes) $('matrixType').innerHTML += `<option value="${m}">${m}</option>`;
+    $('matrixType').value = settings.app.matrixType;
     $('predictableButton').checked = settings.app.predictable;
     $('thouSepButton').checked = settings.app.thouSep;
     $('currencyButton').checked = settings.app.currencies;
     $('lastUpdated').innerHTML = settings.app.currencies ? ls.get('rateDate') : '';
     $('currencyUpdate').style.display = settings.app.currencies ? 'block' : 'none';
     // Panel UI
-    $('syntaxButton').checked = settings.app.syntax;
-    syntaxToggle();
-    $('keywordTipsButton').checked = settings.app.keywordTips;
-    $('matchBracketsButton').checked = settings.app.matchBrackets;
+    
     $('autocompleteButton').checked = settings.app.autocomplete;
     $('closeBracketsButton').checked = settings.app.closeBrackets;
+    $('dividerButton').checked = settings.app.divider;
     $('lineNoButton').checked = settings.app.lineNumbers;
     $('lineErrorButton').checked = settings.app.lineErrors;
-    $('dividerButton').checked = settings.app.divider;
     $('lineWrapButton').checked = settings.app.lineWrap;
 
     checkDefaultSettings();
@@ -661,10 +662,13 @@ function saveSettings() {
     settings.app.dateFormat = $('dateFormat').value;
     settings.app.timeFormat = $('timeFormat').value;
     settings.app.dateDay = $('dateDay').checked;
+    settings.app.syntax = $('syntaxButton').checked;
+    settings.app.keywordTips = $('keywordTipsButton').checked;
+    settings.app.matchBrackets = $('matchBracketsButton').checked;
     // Calculator
     settings.app.precision = $('precisionRange').value;
-    settings.app.matrixType = $('matrixType').value;
     settings.app.numericOutput = $('numericOutput').value;
+    settings.app.matrixType = $('matrixType').value;
     settings.app.predictable = $('predictableButton').checked;
     settings.app.thouSep = $('thouSepButton').checked;
     if (!settings.app.currencies && $('currencyButton').checked) {
@@ -675,19 +679,16 @@ function saveSettings() {
     }
     settings.app.currencies = $('currencyButton').checked;
     // Panel UI
-    settings.app.syntax = $('syntaxButton').checked;
-    settings.app.keywordTips = $('keywordTipsButton').checked;
-    settings.app.matchBrackets = $('matchBracketsButton').checked;
     settings.app.autocomplete = $('autocompleteButton').checked;
     settings.app.closeBrackets = $('closeBracketsButton').checked;
+    settings.app.divider = $('dividerButton').checked;
     settings.app.lineNumbers = $('lineNoButton').checked;
     settings.app.lineErrors = $('lineErrorButton').checked;
-    settings.app.divider = $('dividerButton').checked;
     settings.app.lineWrap = $('lineWrapButton').checked;
 
     ls.set('settings', settings);
     checkDefaultSettings();
-    setTimeout(() => applySettings(), 10);
+    setTimeout(applySettings, 10);
 }
 
 document.querySelectorAll('.settingItem').forEach((el) => el.addEventListener('change', () => saveSettings()));
