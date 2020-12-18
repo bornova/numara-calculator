@@ -149,7 +149,8 @@ CodeMirror.commands.autocomplete = (cm) => {
 
 // Prep input
 const cm = CodeMirror.fromTextArea($('inputArea'), {
-    coverGutterNextToScrollbar: true
+    coverGutterNextToScrollbar: true,
+    inputStyle: 'textarea'
 });
 
 cm.setValue(ls.get('input') || '');
