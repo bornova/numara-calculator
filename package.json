@@ -1,7 +1,7 @@
 {
     "name": "numara",
     "productName": "Numara",
-    "version": "2.9.16",
+    "version": "2.9.17",
     "description": "Numara Calculator",
     "author": "Timur Atalay",
     "license": "MIT",
@@ -24,7 +24,7 @@
         "mousetrap": "^1.6.5",
         "mousetrap-global-bind": "^1.1.0",
         "terser": "^5.5.1",
-        "uikit": "^3.6.1"
+        "uikit": "^3.6.3"
     },
     "dependencies": {
         "electron-context-menu": "^2.3.0",
