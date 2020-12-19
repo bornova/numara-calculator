@@ -1,6 +1,6 @@
 module.exports = {
     macOS: (appName) => {
-        const shell = require('electron').shell;
+        const shell = require('electron').shell
         const template = [{
                 label: appName,
                 submenu: [{
@@ -130,8 +130,8 @@ module.exports = {
                     click: async () => await shell.openExternal('https://github.com/bornova/numara')
                 }]
             }
-        ];
+        ]
 
-        return template;
+        return template
     }
-};
+}

@@ -1,214 +1,208 @@
-/**
- * @copyright 2020 Timur Atalay 
- * @homepage https://github.com/bornova/numara
- * @license MIT https://github.com/bornova/numara/blob/master/LICENSE
- */
-
 // Get element by id
-const $ = (id) => document.getElementById(id);
+const $ = (id) => document.getElementById(id)
 
 // localStorage
 const ls = {
     get: (key) => JSON.parse(localStorage.getItem(key)),
     set: (key, value) => localStorage.setItem(key, JSON.stringify(value))
-};
+}
 
 // User agent
-const isWin = navigator.userAgent.toLowerCase().includes('win');
-const isNode = navigator.userAgent.toLowerCase().includes('electron');
-const ipc = isNode ? require('electron').ipcRenderer : null;
+const isWin = navigator.userAgent.toLowerCase().includes('win')
+const isNode = navigator.userAgent.toLowerCase().includes('electron')
+const ipc = isNode ? require('electron').ipcRenderer : null
 
 // Set app info
-document.title = appName + ' Calculator';
-$('dialog-about-title').innerHTML = appName + ' Calculator';
+document.title = appName + ' Calculator'
+$('dialog-about-title').innerHTML = appName + ' Calculator'
 $('dialog-about-appVersion').innerHTML = isNode ? 'Version ' + appVersion :
     `Version ${appVersion}
     <div class="versionCtnr">
         <div>Desktop version:</div>
         <div><a href="https://numara.io/releases/win/Numara Setup ${appVersion}.exe">Windows</a></div>
         <div><a href="https://numara.io/releases/mac/Numara-${appVersion}.dmg">MacOS</a></div>
-    </div>`;
+    </div>`
 
 if (isNode) {
     ipc.on('themeUpdate', () => applySettings())
     ipc.on('fullscreen', (event, isFullscreen) => {
-        if (isFullscreen) ipc.send('maximize');
-    });
+        if (isFullscreen) ipc.send('maximize')
+    })
 }
 
 // Set headers
 if (isNode && isWin) {
-    $('header-mac').remove();
-    $('header-win').style.display = 'block';
-    $('header-win-title').innerHTML = appName;
+    $('header-mac').remove()
+    $('header-win').style.display = 'block'
+    $('header-win-title').innerHTML = appName
 
-    $('max').style.display = ipc.sendSync('isMaximized') ? 'none' : 'block';
-    $('unmax').style.display = ipc.sendSync('isMaximized') ? 'block' : 'none';
+    $('max').style.display = ipc.sendSync('isMaximized') ? 'none' : 'block'
+    $('unmax').style.display = ipc.sendSync('isMaximized') ? 'block' : 'none'
 
     $('winButtons').addEventListener('click', (e) => {
         switch (e.target.id) {
             case 'min':
-                ipc.send('minimize');
-                break;
+                ipc.send('minimize')
+                break
             case 'max':
-                ipc.send('maximize');
-                break;
+                ipc.send('maximize')
+                break
             case 'unmax':
-                ipc.send('unmaximize');
-                break;
+                ipc.send('unmaximize')
+                break
             case 'close':
-                ipc.send('close');
-                break;
+                ipc.send('close')
+                break
         }
-        e.stopPropagation();
-    });
+        e.stopPropagation()
+    })
 
     ipc.on('isMax', (event, isMax) => {
-        $('unmax').style.display = isMax ? 'block' : 'none';
-        $('max').style.display = !isMax ? 'block' : 'none';
-    });
+        $('unmax').style.display = isMax ? 'block' : 'none'
+        $('max').style.display = !isMax ? 'block' : 'none'
+    })
 
-    $('header-win').addEventListener("dblclick", toggleMax);
+    $('header-win').addEventListener("dblclick", toggleMax)
 } else {
-    $('header-win').remove();
-    $('header-mac').style.display = 'block';
-    $('header-mac-title').innerHTML = appName;
+    $('header-win').remove()
+    $('header-mac').style.display = 'block'
+    $('header-mac-title').innerHTML = appName
 
-    if (isNode) $('header-mac').addEventListener("dblclick", toggleMax);
+    if (isNode) $('header-mac').addEventListener("dblclick", toggleMax)
 }
 
 function toggleMax() {
-    ipc.send(ipc.sendSync('isMaximized') ? 'unmaximize' : 'maximize');
+    ipc.send(ipc.sendSync('isMaximized') ? 'unmaximize' : 'maximize')
 }
 
-feather.replace();
+feather.replace()
 
 // Initilize Codemirror
 // Codemirror syntax templates
 CodeMirror.defineMode('numara', () => {
-    var rates = ls.get('rates');
+    var rates = ls.get('rates')
     return {
         token: (stream, state) => {
-            if (stream.match(/\/\/.*/) || stream.match(/#.*/)) return 'comment';
-            if (stream.match(/\d/)) return 'number';
-            if (stream.match(/(?:\+|\-|\*|\/|,|;|\.|:|@|~|=|>|<|&|\||_|`|'|\^|\?|!|%)/)) return 'operator';
+            if (stream.match(/\/\/.*/) || stream.match(/#.*/)) return 'comment'
+            if (stream.match(/\d/)) return 'number'
+            if (stream.match(/(?:\+|\-|\*|\/|,|;|\.|:|@|~|=|>|<|&|\||_|`|'|\^|\?|!|%)/)) return 'operator'
 
-            stream.eatWhile(/\w/);
-            var str = stream.current();
+            stream.eatWhile(/\w/)
+            var str = stream.current()
             try {
-                if (str.toLowerCase() in rates || str.toLowerCase() == 'usd') return 'currency';
-                if (math.unit(str).units.length > 0) return 'unit';
+                if (str.toLowerCase() in rates || str.toLowerCase() == 'usd') return 'currency'
+                if (math.unit(str).units.length > 0) return 'unit'
             } catch (e) {}
 
-            if (typeof math[str] === 'function' && Object.getOwnPropertyNames(math[str]).includes('signatures')) return 'function';
-            if (str.match(/\b(?:ans|total|subtotal|avg|today|now|line\d+)\b/)) return 'scope';
-            stream.next();
-            return 'text';
+            if (typeof math[str] === 'function' && Object.getOwnPropertyNames(math[str]).includes('signatures')) return 'function'
+            if (str.match(/\b(?:ans|total|subtotal|avg|today|now|line\d+)\b/)) return 'scope'
+            stream.next()
+            return 'text'
         }
-    };
-});
+    }
+})
 
 CodeMirror.defineMode('plain', () => {
     return {
         token: (stream, state) => {
-            stream.next();
-            return 'text';
+            stream.next()
+            return 'text'
         }
-    };
-});
+    }
+})
 
 // Codemirror autocomplete hints
-let numaraHints = ['ans', 'now', 'today', 'total', 'subtotal', 'avg'];
+let numaraHints = ['ans', 'now', 'today', 'total', 'subtotal', 'avg']
 Object.getOwnPropertyNames(math).forEach((f) => {
     if (typeof math[f] === 'function' && Object.getOwnPropertyNames(math[f]).includes('signatures')) {
-        numaraHints.push(f);
+        numaraHints.push(f)
     }
-});
+})
 
 CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
-    var cur = editor.getCursor();
-    var curLine = editor.getLine(cur.line);
-    var start = cur.ch;
-    var end = start;
-    while (end < curLine.length && /[\w$]/.test(curLine.charAt(end))) ++end;
-    while (start && /[\w$]/.test(curLine.charAt(start - 1))) --start;
-    var curWord = start !== end && curLine.slice(start, end);
-    var regex = new RegExp('^' + curWord, 'i');
+    var cur = editor.getCursor()
+    var curLine = editor.getLine(cur.line)
+    var start = cur.ch
+    var end = start
+    while (end < curLine.length && /[\w$]/.test(curLine.charAt(end))) ++end
+    while (start && /[\w$]/.test(curLine.charAt(start - 1))) --start
+    var curWord = start !== end && curLine.slice(start, end)
+    var regex = new RegExp('^' + curWord, 'i')
     return {
         list: (!curWord ? [] : numaraHints.filter((item) => item.match(regex))).sort(),
         from: CodeMirror.Pos(cur.line, start),
         to: CodeMirror.Pos(cur.line, end)
-    };
-});
+    }
+})
 
 CodeMirror.commands.autocomplete = (cm) => {
     CodeMirror.showHint(cm, CodeMirror.hint.numaraHints, {
         completeSingle: false
-    });
-};
+    })
+}
 
 // Prep input
 const cm = CodeMirror.fromTextArea($('inputArea'), {
     coverGutterNextToScrollbar: true,
     inputStyle: 'textarea'
-});
+})
 
-cm.setValue(ls.get('input') || '');
-cm.execCommand('goDocEnd');
-cm.on('change', calculate);
+cm.setValue(ls.get('input') || '')
+cm.execCommand('goDocEnd')
+cm.on('change', calculate)
 cm.on("inputRead", (cm, event) => {
-    if (settings.app.autocomplete) CodeMirror.commands.autocomplete(cm);
-});
+    if (settings.app.autocomplete) CodeMirror.commands.autocomplete(cm)
+})
 cm.on('update', () => {
-    var funcs = document.getElementsByClassName('cm-function');
+    var funcs = document.getElementsByClassName('cm-function')
     if (funcs.length > 0 && settings.app.keywordTips) {
         for (var f of funcs) {
             try {
-                var res = JSON.stringify(math.help(f.innerHTML).toJSON());
-                var obj = JSON.parse(res);
+                var res = JSON.stringify(math.help(f.innerHTML).toJSON())
+                var obj = JSON.parse(res)
                 UIkit.tooltip(f, {
                     title: obj.description,
                     pos: 'top-left'
-                });
+                })
             } catch (e) {
                 UIkit.tooltip(f, {
                     title: 'Description not available.',
                     pos: 'top-left'
-                });
+                })
             }
         }
     }
 
-    var curr = document.getElementsByClassName('cm-currency');
+    var curr = document.getElementsByClassName('cm-currency')
     if (curr.length > 0 && settings.app.keywordTips && settings.app.currencies) {
         for (var c of curr) {
             try {
-                var rates = ls.get('rates');
-                var curr = c.innerHTML.toLowerCase();
-                var currName = curr == 'usd' ? 'U.S. Dollar' : rates[curr].name;
+                var rates = ls.get('rates')
+                var curr = c.innerHTML.toLowerCase()
+                var currName = curr == 'usd' ? 'U.S. Dollar' : rates[curr].name
                 UIkit.tooltip(c, {
                     title: currName,
                     pos: 'top-left'
-                });
+                })
             } catch (e) {
                 UIkit.tooltip(c, {
                     title: 'Description not available.',
                     pos: 'top-left'
-                });
+                })
             }
         }
     }
 
-    var units = document.getElementsByClassName('cm-unit');
+    var units = document.getElementsByClassName('cm-unit')
     if (units.length > 0 && settings.app.keywordTips) {
         for (var u of units) {
             UIkit.tooltip(u, {
                 title: `Unit '${u.innerHTML}'`,
                 pos: 'top-left'
-            });
+            })
         }
     }
-});
+})
 
 // App settings
 const defaultSettings = {
@@ -241,104 +235,104 @@ const defaultSettings = {
         plotCross: false,
         plotGrid: false
     }
-};
+}
 
-let settings;
-let initSettings = ls.get('settings');
+let settings
+let initSettings = ls.get('settings')
 
 if (!initSettings) {
-    ls.set('settings', defaultSettings);
+    ls.set('settings', defaultSettings)
 } else {
     // Check for and apply default settings changes
     DeepDiff.observableDiff(initSettings, defaultSettings, (d) => {
         if (d.kind !== 'E') {
-            DeepDiff.applyChange(initSettings, defaultSettings, d);
-            ls.set('settings', initSettings);
-            applySettings();
+            DeepDiff.applyChange(initSettings, defaultSettings, d)
+            ls.set('settings', initSettings)
+            applySettings()
         }
-    });
+    })
 }
 
 // Apply settings
 function applySettings() {
-    settings = ls.get('settings');
+    settings = ls.get('settings')
 
     $('style').setAttribute('href',
         settings.app.theme == 'system' ? (isNode ? (ipc.sendSync('isDark') ? 'css/dark.css' : 'css/light.css') : 'css/light.css') :
-        settings.app.theme == 'light' ? 'css/light.css' : 'css/dark.css');
+        settings.app.theme == 'light' ? 'css/light.css' : 'css/dark.css')
 
-    if (isNode) ipc.send('setTheme', settings.app.theme);
+    if (isNode) ipc.send('setTheme', settings.app.theme)
 
-    var elements = document.querySelectorAll('.panelFont, .CodeMirror');
+    var elements = document.querySelectorAll('.panelFont, .CodeMirror')
     for (var el of elements) {
-        el.style.fontSize = settings.app.fontSize;
-        el.style.fontWeight = settings.app.fontWeight;
+        el.style.fontSize = settings.app.fontSize
+        el.style.fontWeight = settings.app.fontWeight
     }
 
-    $('input').style.width = (settings.app.divider ? settings.inputWidth : defaultSettings.inputWidth) + '%';
-    $('handle').style.display = settings.app.divider ? 'block' : 'none';
-    $('output').style.textAlign = settings.app.divider ? 'left' : 'right';
+    $('input').style.width = (settings.app.divider ? settings.inputWidth : defaultSettings.inputWidth) + '%'
+    $('divider').style.display = settings.app.divider ? 'block' : 'none'
+    $('output').style.textAlign = settings.app.divider ? 'left' : 'right'
 
-    cm.setOption('mode', settings.app.syntax ? 'numara' : 'plain');
-    cm.setOption('lineNumbers', settings.app.lineNumbers);
-    cm.setOption('lineWrapping', settings.app.lineWrap);
-    cm.setOption('autoCloseBrackets', settings.app.closeBrackets);
+    cm.setOption('mode', settings.app.syntax ? 'numara' : 'plain')
+    cm.setOption('lineNumbers', settings.app.lineNumbers)
+    cm.setOption('lineWrapping', settings.app.lineWrap)
+    cm.setOption('autoCloseBrackets', settings.app.closeBrackets)
     cm.setOption('matchBrackets', settings.app.syntax && settings.app.matchBrackets ? {
         'maxScanLines': 1
-    } : false);
+    } : false)
 
     math.config({
         matrix: settings.app.matrixType,
         number: settings.app.numericOutput,
         predictable: settings.app.predictable
-    });
+    })
 
-    calculate();
+    calculate()
 }
 
-applySettings();
+applySettings()
 
 // Exchange rates
 math.createUnit('USD', {
     aliases: ['usd']
-});
-if (settings.app.currencies) getRates();
+})
+if (settings.app.currencies) getRates()
 
 function getRates() {
-    var url = 'https://www.floatrates.com/widget/1030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json';
+    var url = 'https://www.floatrates.com/widget/1030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json'
     if (navigator.onLine) {
-        $('lastUpdated').innerHTML = '<div uk-spinner="ratio: 0.3"></div>';
+        $('lastUpdated').innerHTML = '<div uk-spinner="ratio: 0.3"></div>'
         fetch(url)
             .then((rates) => rates.json())
             .then((data) => {
-                ls.set('rates', data);
-                createRateUnits();
-                $('lastUpdated').innerHTML = ls.get('rateDate');
-                cm.setOption('mode', settings.app.syntax ? 'numara' : 'plain');
-                cm.focus();
+                ls.set('rates', data)
+                createRateUnits()
+                $('lastUpdated').innerHTML = ls.get('rateDate')
+                cm.setOption('mode', settings.app.syntax ? 'numara' : 'plain')
+                cm.focus()
             }).catch((e) => {
-                $('lastUpdated').innerHTML = 'n/a';
+                $('lastUpdated').innerHTML = 'n/a'
                 notify('Failed to get exchange rates (' + e + ')', 'warning')
-            });
+            })
     } else {
-        $('lastUpdated').innerHTML = 'No internet connection.';
-        notify('No internet connection. Could not update exchange rates.', 'warning');
+        $('lastUpdated').innerHTML = 'No internet connection.'
+        notify('No internet connection. Could not update exchange rates.', 'warning')
     }
 }
 
 function createRateUnits() {
-    var data = ls.get('rates');
-    var dups = ['cup'];
+    var data = ls.get('rates')
+    var dups = ['cup']
     Object.keys(data).map((currency) => {
         math.createUnit(data[currency].code, {
             definition: math.unit(data[currency].inverseRate + 'USD'),
             aliases: [dups.includes(data[currency].code.toLowerCase()) ? '' : data[currency].code.toLowerCase()]
         }, {
             override: true
-        });
-        ls.set('rateDate', data[currency].date);
-    });
-    calculate();
+        })
+        ls.set('rateDate', data[currency].date)
+    })
+    calculate()
 }
 
 // Tooltip defaults
@@ -347,223 +341,223 @@ UIkit.mixin({
         delay: 300,
         offset: 5
     }
-}, 'tooltip');
+}, 'tooltip')
 
 // Show modal dialog
 function showModal(id) {
     UIkit.modal(id, {
         bgClose: false,
         stack: true
-    }).show();
+    }).show()
 }
 
-UIkit.util.on('.modal', 'hidden', () => cm.focus());
-UIkit.util.on('.uk-switcher', 'show', () => cm.getInputField().blur());
+UIkit.util.on('.modal', 'hidden', () => cm.focus())
+UIkit.util.on('.uk-switcher', 'show', () => cm.getInputField().blur())
 
 // Update open button count
-const savedCount = () => Object.keys(ls.get('saved') || {}).length;
+const savedCount = () => Object.keys(ls.get('saved') || {}).length
 
 function updateSavedCount() {
     UIkit.tooltip('#openButton', {
         title: 'Open (' + savedCount() + ')'
-    });
+    })
 }
-updateSavedCount();
+updateSavedCount()
 
-$('openButton').className = savedCount() > 0 ? 'action' : 'noAction';
+$('openButton').className = savedCount() > 0 ? 'action' : 'noAction'
 
 // App button actions
 $('actions').addEventListener('click', (e) => {
     switch (e.target.id) {
         case 'clearButton': // Clear board
             if (cm.getValue() != '') {
-                cm.setValue('');
-                cm.focus();
-                calculate();
+                cm.setValue('')
+                cm.focus()
+                calculate()
             }
-            break;
+            break
         case 'printButton': // Print calculations
-            UIkit.tooltip('#printButton').hide();
+            UIkit.tooltip('#printButton').hide()
             if (cm.getValue() != '') {
-                $('print-title').innerHTML = appName;
-                $('printBox').innerHTML = $('panel').innerHTML;
+                $('print-title').innerHTML = appName
+                $('printBox').innerHTML = $('panel').innerHTML
                 if (isNode) {
-                    ipc.send('print');
+                    ipc.send('print')
                     ipc.once('printReply', (event, response) => {
-                        if (response) notify(response);
-                        $('printBox').innerHTML = '';
-                    });
+                        if (response) notify(response)
+                        $('printBox').innerHTML = ''
+                    })
                 } else {
-                    window.print();
+                    window.print()
                 }
             }
-            break;
+            break
         case 'saveButton': // Save calcualtions
             if (cm.getValue() != '') {
-                $('saveTitle').value = '';
-                showModal('#dialog-save');
-                $('saveTitle').focus();
+                $('saveTitle').value = ''
+                showModal('#dialog-save')
+                $('saveTitle').focus()
             }
-            break;
+            break
         case 'openButton': // Open saved calculations
-            if (Object.keys(ls.get('saved') || {}).length > 0) showModal('#dialog-open');
-            break;
+            if (Object.keys(ls.get('saved') || {}).length > 0) showModal('#dialog-open')
+            break
         case 'settingsButton': // Open settings dialog
-            showModal('#dialog-settings');
-            break;
+            showModal('#dialog-settings')
+            break
         case 'helpButton': // Open help dialog
-            showModal('#dialog-help');
-            $('searchBox').focus();
-            break;
+            showModal('#dialog-help')
+            $('searchBox').focus()
+            break
         case 'aboutButton': // Open app info dialog
-            showModal('#dialog-about');
-            break;
+            showModal('#dialog-about')
+            break
     }
-    e.stopPropagation();
-});
+    e.stopPropagation()
+})
 
 // Output actions
 $('output').addEventListener('click', (e) => {
     switch (e.target.className) {
         case 'plotButton': // Plot function
-            func = e.target.getAttribute('data-func');
+            func = e.target.getAttribute('data-func')
             try {
-                $('plotGrid').checked = settings.plot.plotGrid;
-                $('plotCross').checked = settings.plot.plotCross;
-                $('plotArea').checked = settings.plot.plotArea;
-                plot();
-                showModal('#dialog-plot');
+                $('plotGrid').checked = settings.plot.plotGrid
+                $('plotCross').checked = settings.plot.plotCross
+                $('plotArea').checked = settings.plot.plotArea
+                plot()
+                showModal('#dialog-plot')
             } catch (error) {
-                showError(error);
+                showError(error)
             }
-            break;
+            break
         case 'lineError': // Show line error
-            var num = e.target.getAttribute('data-line');
-            var err = e.target.getAttribute('data-error');
-            showError(err, 'Error on Line ' + num);
-            break;
+            var num = e.target.getAttribute('data-line')
+            var err = e.target.getAttribute('data-error')
+            showError(err, 'Error on Line ' + num)
+            break
     }
-    e.stopPropagation();
-});
+    e.stopPropagation()
+})
 
 $('output').addEventListener('mousedown', () => {
-    var sels = document.getElementsByClassName('CodeMirror-selected');
-    while (sels[0]) sels[0].classList.remove('CodeMirror-selected');
-});
+    var sels = document.getElementsByClassName('CodeMirror-selected')
+    while (sels[0]) sels[0].classList.remove('CodeMirror-selected')
+})
 
 // Dialog button actions
 document.addEventListener('click', (e) => {
     switch (e.target.id) {
         case 'dialog-save-save': // Save calculation
-            var id = moment().format('x');
-            var obj = ls.get('saved') || {};
-            var data = cm.getValue();
-            var title = $('saveTitle').value.replace(/<|>/g, '').trim() || 'No title';
+            var id = moment().format('x')
+            var obj = ls.get('saved') || {}
+            var data = cm.getValue()
+            var title = $('saveTitle').value.replace(/<|>/g, '').trim() || 'No title'
 
-            obj[id] = [title, data];
-            ls.set('saved', obj);
-            UIkit.modal('#dialog-save').hide();
-            $('openButton').className = 'action';
-            updateSavedCount();
-            notify('Saved');
-            break;
+            obj[id] = [title, data]
+            ls.set('saved', obj)
+            UIkit.modal('#dialog-save').hide()
+            $('openButton').className = 'action'
+            updateSavedCount()
+            notify('Saved')
+            break
         case 'dialog-open-deleteAll': // Delete all saved calculations
             confirm('All saved calculations will be deleted.', () => {
-                localStorage.removeItem('saved');
-                populateSaved();
-                UIkit.modal('#dialog-open').hide();
-                notify('Deleted all saved calculations');
-            });
-            break;
+                localStorage.removeItem('saved')
+                populateSaved()
+                UIkit.modal('#dialog-open').hide()
+                notify('Deleted all saved calculations')
+            })
+            break
         case 'defaultSettingsButton': // Revert back to default settings
             confirm('All settings will revert back to defaults.', () => {
-                settings.app = defaultSettings.app;
-                ls.set('settings', settings);
-                applySettings();
-                if (!$('currencyButton').checked) getRates();
-                prepSettings();
-            });
-            break;
+                settings.app = defaultSettings.app
+                ls.set('settings', settings)
+                applySettings()
+                if (!$('currencyButton').checked) getRates()
+                prepSettings()
+            })
+            break
         case 'dialog-settings-reset': // Reset app
             confirm('All user settings and data will be lost.', () => {
                 if (isNode) {
-                    ipc.send('resetApp');
+                    ipc.send('resetApp')
                 } else {
-                    localStorage.clear();
-                    location.reload();
+                    localStorage.clear()
+                    location.reload()
                 }
-            });
-            break;
+            })
+            break
         case 'syntaxButton':
-            syntaxToggle();
-            break;
+            syntaxToggle()
+            break
         case 'bigNumWarn': // BigNumber warning
             showError(`Using the BigNumber may break function plotting and is not compatible with some math functions. 
-                    It may also cause unexpected behavior and affect overall performance.<br><br>
-                    <a target="_blank" href="https://mathjs.org/docs/datatypes/bignumbers.html">Read more on BigNumbers</a>`,
-                'Caution: BigNumber Limitations');
-            break;
+                It may also cause unexpected behavior and affect overall performance.<br><br>
+                <a target="_blank" href="https://mathjs.org/docs/datatypes/bignumbers.html">Read more on BigNumbers</a>`,
+                'Caution: BigNumber Limitations')
+            break
         case 'currencyButton': // Enable currency rates
-            $('currencyUpdate').style.display = $('currencyButton').checked ? 'block' : 'none';
-            break;
+            $('currencyUpdate').style.display = $('currencyButton').checked ? 'block' : 'none'
+            break
             // Plot settings
         case 'plotGrid':
-            settings.plot.plotGrid = $('plotGrid').checked;
-            ls.set('settings', settings);
-            plot();
-            break;
+            settings.plot.plotGrid = $('plotGrid').checked
+            ls.set('settings', settings)
+            plot()
+            break
         case 'plotCross':
-            settings.plot.plotCross = $('plotCross').checked;
-            ls.set('settings', settings);
-            plot();
-            break;
+            settings.plot.plotCross = $('plotCross').checked
+            ls.set('settings', settings)
+            plot()
+            break
         case 'plotArea':
-            settings.plot.plotArea = $('plotArea').checked;
-            ls.set('settings', settings);
-            plot();
-            break;
+            settings.plot.plotArea = $('plotArea').checked
+            ls.set('settings', settings)
+            plot()
+            break
 
         case 'restartButton': // Restart to update
-            ipc.send('updateApp');
-            break;
+            ipc.send('updateApp')
+            break
 
         case 'demoButton': // Load demo
-            cm.setValue(demo);
-            calculate();
-            UIkit.modal('#dialog-help').hide();
-            break;
+            cm.setValue(demo)
+            calculate()
+            UIkit.modal('#dialog-help').hide()
+            break
     }
-});
+})
 
 // Open saved calculations dialog actions
 $('dialog-open').addEventListener('click', (e) => {
-    var pid;
-    var saved = ls.get('saved');
+    var pid
+    var saved = ls.get('saved')
     if (e.target.parentNode.getAttribute('data-action') == 'load') {
-        pid = e.target.parentNode.parentNode.id;
-        cm.setValue(saved[pid][1]);
-        calculate();
-        UIkit.modal('#dialog-open').hide();
+        pid = e.target.parentNode.parentNode.id
+        cm.setValue(saved[pid][1])
+        calculate()
+        UIkit.modal('#dialog-open').hide()
     }
     if (e.target.getAttribute('data-action') == 'delete') {
-        pid = e.target.parentNode.id;
+        pid = e.target.parentNode.id
         confirm('Calculation "' + saved[pid][0] + '" will be deleted.', () => {
-            delete saved[pid];
-            ls.set('saved', saved);
-            populateSaved();
-        });
+            delete saved[pid]
+            ls.set('saved', saved)
+            populateSaved()
+        })
     }
-});
+})
 
 // Populate saved calculation
-UIkit.util.on('#dialog-open', 'beforeshow', () => populateSaved());
+UIkit.util.on('#dialog-open', 'beforeshow', () => populateSaved())
 
 function populateSaved() {
-    var obj = ls.get('saved') || {};
-    var savedItems = Object.entries(obj);
-    $('dialog-open-body').innerHTML = '';
+    var obj = ls.get('saved') || {}
+    var savedItems = Object.entries(obj)
+    $('dialog-open-body').innerHTML = ''
     if (savedItems.length > 0) {
-        $('dialog-open-deleteAll').disabled = false;
+        $('dialog-open-deleteAll').disabled = false
         savedItems.map(([id, val]) => {
             $('dialog-open-body').innerHTML += `
                 <div class="dialog-open-wrapper" id="${id}">
@@ -572,203 +566,202 @@ function populateSaved() {
                         <div class="dialog-open-date">${moment(Number(id)).format('lll')}</div>
                     </div>
                     <span class="dialog-open-delete" data-action="delete"><i data-feather="x-circle"></i></span>
-                </div>`;
-        });
-        feather.replace();
+                </div>`
+        })
+        feather.replace()
     } else {
-        $('dialog-open-deleteAll').disabled = true;
-        $('dialog-open-body').innerHTML = 'No saved calculations.';
-        $('openButton').className = 'noAction';
+        $('dialog-open-deleteAll').disabled = true
+        $('dialog-open-body').innerHTML = 'No saved calculations.'
+        $('openButton').className = 'noAction'
     }
-    updateSavedCount();
+    updateSavedCount()
 }
 
 // Initiate settings dialog
-UIkit.util.on('#setswitch', 'beforeshow', (e) => e.stopPropagation());
-UIkit.util.on('#dialog-settings', 'beforeshow', () => prepSettings());
-UIkit.util.on('#dialog-settings', 'hidden', () => cm.focus());
+UIkit.util.on('#setswitch', 'beforeshow', (e) => e.stopPropagation())
+UIkit.util.on('#dialog-settings', 'beforeshow', () => prepSettings())
+UIkit.util.on('#dialog-settings', 'hidden', () => cm.focus())
 
 function prepSettings() {
     // Appearance
-    var dateFormats = ['M/D/YYYY', 'D/M/YYYY', 'MMM DD, YYYY'];
-    var timeFormats = ['h:mm A', 'H:mm'];
-    var matrixTypes = ['Matrix', 'Array'];
-    var numericOutputs = ['number', 'BigNumber', 'Fraction'];
+    var dateFormats = ['M/D/YYYY', 'D/M/YYYY', 'MMM DD, YYYY']
+    var timeFormats = ['h:mm A', 'H:mm']
+    var matrixTypes = ['Matrix', 'Array']
+    var numericOutputs = ['number', 'BigNumber', 'Fraction']
 
-    $('themeList').value = settings.app.theme;
-    $('fontSize').value = settings.app.fontSize;
-    $('fontWeight').value = settings.app.fontWeight;
-    $('dateFormat').innerHTML = '';
-    for (var d of dateFormats) $('dateFormat').innerHTML += `<option value="${d}">${moment().format(d)}</option>`;
-    $('dateFormat').value = settings.app.dateFormat;
-    $('timeFormat').innerHTML = '';
-    for (var t of timeFormats) $('timeFormat').innerHTML += `<option value="${t}">${moment().format(t)}</option>`;
-    $('timeFormat').value = settings.app.timeFormat;
-    $('dateDay').checked = settings.app.dateDay;
-    $('syntaxButton').checked = settings.app.syntax;
-    syntaxToggle();
-    $('keywordTipsButton').checked = settings.app.keywordTips;
-    $('matchBracketsButton').checked = settings.app.matchBrackets;
+    $('themeList').value = settings.app.theme
+    $('fontSize').value = settings.app.fontSize
+    $('fontWeight').value = settings.app.fontWeight
+    $('dateFormat').innerHTML = ''
+    for (var d of dateFormats) $('dateFormat').innerHTML += `<option value="${d}">${moment().format(d)}</option>`
+    $('dateFormat').value = settings.app.dateFormat
+    $('timeFormat').innerHTML = ''
+    for (var t of timeFormats) $('timeFormat').innerHTML += `<option value="${t}">${moment().format(t)}</option>`
+    $('timeFormat').value = settings.app.timeFormat
+    $('dateDay').checked = settings.app.dateDay
+    $('syntaxButton').checked = settings.app.syntax
+    syntaxToggle()
+    $('keywordTipsButton').checked = settings.app.keywordTips
+    $('matchBracketsButton').checked = settings.app.matchBrackets
     // Calculator
-    $('precisionRange').value = settings.app.precision;
-    $('precision-label').innerHTML = settings.app.precision;
-    $('numericOutput').innerHTML = '';
-    for (var n of numericOutputs) $('numericOutput').innerHTML += `<option value="${n}">${n.charAt(0).toUpperCase() + n.slice(1)}</option>`;
-    $('numericOutput').value = settings.app.numericOutput;
-    if (settings.app.numericOutput == 'BigNumber') bigNumberWarning();
-    $('matrixType').innerHTML = '';
-    for (var m of matrixTypes) $('matrixType').innerHTML += `<option value="${m}">${m}</option>`;
-    $('matrixType').value = settings.app.matrixType;
-    $('predictableButton').checked = settings.app.predictable;
-    $('thouSepButton').checked = settings.app.thouSep;
-    $('currencyButton').checked = settings.app.currencies;
-    $('lastUpdated').innerHTML = settings.app.currencies ? ls.get('rateDate') : '';
-    $('currencyUpdate').style.display = settings.app.currencies ? 'block' : 'none';
+    $('precisionRange').value = settings.app.precision
+    $('precision-label').innerHTML = settings.app.precision
+    $('numericOutput').innerHTML = ''
+    for (var n of numericOutputs) $('numericOutput').innerHTML += `<option value="${n}">${n.charAt(0).toUpperCase() + n.slice(1)}</option>`
+    $('numericOutput').value = settings.app.numericOutput
+    if (settings.app.numericOutput == 'BigNumber') bigNumberWarning()
+    $('matrixType').innerHTML = ''
+    for (var m of matrixTypes) $('matrixType').innerHTML += `<option value="${m}">${m}</option>`
+    $('matrixType').value = settings.app.matrixType
+    $('predictableButton').checked = settings.app.predictable
+    $('thouSepButton').checked = settings.app.thouSep
+    $('currencyButton').checked = settings.app.currencies
+    $('lastUpdated').innerHTML = settings.app.currencies ? ls.get('rateDate') : ''
+    $('currencyUpdate').style.display = settings.app.currencies ? 'block' : 'none'
     // Panel UI
-    
-    $('autocompleteButton').checked = settings.app.autocomplete;
-    $('closeBracketsButton').checked = settings.app.closeBrackets;
-    $('dividerButton').checked = settings.app.divider;
-    $('lineNoButton').checked = settings.app.lineNumbers;
-    $('lineErrorButton').checked = settings.app.lineErrors;
-    $('lineWrapButton').checked = settings.app.lineWrap;
+    $('autocompleteButton').checked = settings.app.autocomplete
+    $('closeBracketsButton').checked = settings.app.closeBrackets
+    $('dividerButton').checked = settings.app.divider
+    $('lineNoButton').checked = settings.app.lineNumbers
+    $('lineErrorButton').checked = settings.app.lineErrors
+    $('lineWrapButton').checked = settings.app.lineWrap
 
-    checkDefaultSettings();
+    checkDefaultSettings()
 }
 
 function checkDefaultSettings() {
-    $('defaultSettingsButton').style.display = DeepDiff.diff(settings.app, defaultSettings.app) ? 'inline' : 'none';
+    $('defaultSettingsButton').style.display = DeepDiff.diff(settings.app, defaultSettings.app) ? 'inline' : 'none'
 }
 
 function syntaxToggle() {
-    $('keywordTipsButton').disabled = $('syntaxButton').checked ? false : true;
-    $('matchBracketsButton').disabled = $('syntaxButton').checked ? false : true;
+    $('keywordTipsButton').disabled = $('syntaxButton').checked ? false : true
+    $('matchBracketsButton').disabled = $('syntaxButton').checked ? false : true
 
-    $('keywordTipsButton').parentNode.style.opacity = $('syntaxButton').checked ? '1' : '0.5';
-    $('matchBracketsButton').parentNode.style.opacity = $('syntaxButton').checked ? '1' : '0.5';
+    $('keywordTipsButton').parentNode.style.opacity = $('syntaxButton').checked ? '1' : '0.5'
+    $('matchBracketsButton').parentNode.style.opacity = $('syntaxButton').checked ? '1' : '0.5'
 }
 
 function bigNumberWarning() {
-    $('bigNumWarn').style.display = $('numericOutput').value == 'BigNumber' ? 'inline-block' : 'none';
+    $('bigNumWarn').style.display = $('numericOutput').value == 'BigNumber' ? 'inline-block' : 'none'
 }
 
-$('numericOutput').addEventListener('change', bigNumberWarning);
-$('precisionRange').addEventListener('input', () => $('precision-label').innerHTML = $('precisionRange').value);
+$('numericOutput').addEventListener('change', bigNumberWarning)
+$('precisionRange').addEventListener('input', () => $('precision-label').innerHTML = $('precisionRange').value)
 
 function saveSettings() {
     // Appearance
-    settings.app.theme = $('themeList').value;
-    settings.app.fontSize = $('fontSize').value;
-    settings.app.fontWeight = $('fontWeight').value;
-    settings.app.dateFormat = $('dateFormat').value;
-    settings.app.timeFormat = $('timeFormat').value;
-    settings.app.dateDay = $('dateDay').checked;
-    settings.app.syntax = $('syntaxButton').checked;
-    settings.app.keywordTips = $('keywordTipsButton').checked;
-    settings.app.matchBrackets = $('matchBracketsButton').checked;
+    settings.app.theme = $('themeList').value
+    settings.app.fontSize = $('fontSize').value
+    settings.app.fontWeight = $('fontWeight').value
+    settings.app.dateFormat = $('dateFormat').value
+    settings.app.timeFormat = $('timeFormat').value
+    settings.app.dateDay = $('dateDay').checked
+    settings.app.syntax = $('syntaxButton').checked
+    settings.app.keywordTips = $('keywordTipsButton').checked
+    settings.app.matchBrackets = $('matchBracketsButton').checked
     // Calculator
-    settings.app.precision = $('precisionRange').value;
-    settings.app.numericOutput = $('numericOutput').value;
-    settings.app.matrixType = $('matrixType').value;
-    settings.app.predictable = $('predictableButton').checked;
-    settings.app.thouSep = $('thouSepButton').checked;
+    settings.app.precision = $('precisionRange').value
+    settings.app.numericOutput = $('numericOutput').value
+    settings.app.matrixType = $('matrixType').value
+    settings.app.predictable = $('predictableButton').checked
+    settings.app.thouSep = $('thouSepButton').checked
     if (!settings.app.currencies && $('currencyButton').checked) {
-        getRates();
+        getRates()
     } else if (!$('currencyButton').checked) {
-        localStorage.removeItem('rates');
-        localStorage.removeItem('rateDate');
+        localStorage.removeItem('rates')
+        localStorage.removeItem('rateDate')
     }
-    settings.app.currencies = $('currencyButton').checked;
+    settings.app.currencies = $('currencyButton').checked
     // Panel UI
-    settings.app.autocomplete = $('autocompleteButton').checked;
-    settings.app.closeBrackets = $('closeBracketsButton').checked;
-    settings.app.divider = $('dividerButton').checked;
-    settings.app.lineNumbers = $('lineNoButton').checked;
-    settings.app.lineErrors = $('lineErrorButton').checked;
-    settings.app.lineWrap = $('lineWrapButton').checked;
+    settings.app.autocomplete = $('autocompleteButton').checked
+    settings.app.closeBrackets = $('closeBracketsButton').checked
+    settings.app.divider = $('dividerButton').checked
+    settings.app.lineNumbers = $('lineNoButton').checked
+    settings.app.lineErrors = $('lineErrorButton').checked
+    settings.app.lineWrap = $('lineWrapButton').checked
 
-    ls.set('settings', settings);
-    checkDefaultSettings();
-    setTimeout(applySettings, 10);
+    ls.set('settings', settings)
+    checkDefaultSettings()
+    setTimeout(applySettings, 10)
 }
 
-document.querySelectorAll('.settingItem').forEach((el) => el.addEventListener('change', () => saveSettings()));
+document.querySelectorAll('.settingItem').forEach((el) => el.addEventListener('change', () => saveSettings()))
 
 // Help dialog content
 $('searchBox').addEventListener('input', () => {
-    var str = $('searchBox').value.trim();
+    var str = $('searchBox').value.trim()
     if (str) {
         try {
-            $('searchResults').innerHTML = '';
-            var res = JSON.stringify(math.help(str).toJSON());
-            var obj = JSON.parse(res);
+            $('searchResults').innerHTML = ''
+            var res = JSON.stringify(math.help(str).toJSON())
+            var obj = JSON.parse(res)
             $('searchResults').innerHTML = `
-                    <div>Name:</div><div>${obj.name}</div>
-                    <div>Description:</div><div>${obj.description}</div>
-                    <div>Category:</div><div>${obj.category}</div>
-                    <div>Syntax:</div><div>${String(obj.syntax).split(',').join(', ')}</div>
-                    <div>Examples:</div><div>${String(obj.examples).split(',').join(', ')}</div>
-                    <div>Also see:</div><div>${String(obj.seealso).split(',').join(', ')}</div>
-                    `;
+                <div>Name:</div><div>${obj.name}</div>
+                <div>Description:</div><div>${obj.description}</div>
+                <div>Category:</div><div>${obj.category}</div>
+                <div>Syntax:</div><div>${String(obj.syntax).split(',').join(', ')}</div>
+                <div>Examples:</div><div>${String(obj.examples).split(',').join(', ')}</div>
+                <div>Also see:</div><div>${String(obj.seealso).split(',').join(', ')}</div>
+                `
         } catch (error) {
-            $('searchResults').innerHTML = `No results for "${str}"`;
+            $('searchResults').innerHTML = `No results for "${str}"`
         }
     } else {
-        $('searchResults').innerHTML = 'Start typing above to search...';
+        $('searchResults').innerHTML = 'Start typing above to search...'
     }
-});
+})
 
 // Panel resizer
-let resizeDelay;
-let isResizing = false;
+let resizeDelay
+let isResizing = false
 
-const panel = $('panel');
-const handle = $('handle');
+const panel = $('panel')
+const divider = $('divider')
 
-$('handle').addEventListener('dblclick', resetHandle);
-$('handle').addEventListener('mousedown', (e) => isResizing = e.target == handle);
-$('panel').addEventListener('mouseup', () => isResizing = false);
+$('divider').addEventListener('dblclick', resetDivider)
+$('divider').addEventListener('mousedown', (e) => isResizing = e.target == divider)
+$('panel').addEventListener('mouseup', () => isResizing = false)
 $('panel').addEventListener('mousemove', (e) => {
-    var offset = settings.app.lineNumbers ? 12 : 27;
-    var pointerRelativeXpos = e.clientX - panel.offsetLeft - offset;
-    var iWidth = pointerRelativeXpos / panel.clientWidth * 100;
-    var inputWidth = iWidth < 0 ? 0 : iWidth > 100 ? 100 : iWidth;
+    var offset = settings.app.lineNumbers ? 12 : 27
+    var pointerRelativeXpos = e.clientX - panel.offsetLeft - offset
+    var iWidth = pointerRelativeXpos / panel.clientWidth * 100
+    var inputWidth = iWidth < 0 ? 0 : iWidth > 100 ? 100 : iWidth
     if (isResizing) {
-        $('input').style.width = inputWidth + '%';
-        settings.inputWidth = inputWidth;
-        ls.set('settings', settings);
-        clearTimeout(resizeDelay);
+        $('input').style.width = inputWidth + '%'
+        settings.inputWidth = inputWidth
+        ls.set('settings', settings)
+        clearTimeout(resizeDelay)
         resizeDelay = setTimeout(() => {
-            calculate();
-            cm.refresh();
-        }, 10);
+            calculate()
+            cm.refresh()
+        }, 10)
     }
-});
+})
 
-function resetHandle() {
-    settings.inputWidth = defaultSettings.inputWidth;
-    ls.set('settings', settings);
-    applySettings();
+function resetDivider() {
+    settings.inputWidth = defaultSettings.inputWidth
+    ls.set('settings', settings)
+    applySettings()
 }
 
 // Plot
-let func;
-let activePlot;
+let func
+let activePlot
 
-const numaraPlot = window.functionPlot;
+const numaraPlot = window.functionPlot
 
 function plot() {
-    $('plotTitle').innerHTML = func;
+    $('plotTitle').innerHTML = func
 
-    var f = func.split('=')[1];
+    var f = func.split('=')[1]
     var domain = math.abs(math.evaluate(f, {
         x: 0
-    })) * 2;
+    })) * 2
 
-    if (domain == Infinity || domain == 0) domain = 10;
+    if (domain == Infinity || domain == 0) domain = 10
 
-    var xDomain = activePlot ? activePlot.meta.xScale.domain() : [-domain, domain];
-    var yDomain = activePlot ? activePlot.meta.yScale.domain() : [-domain, domain];
+    var xDomain = activePlot ? activePlot.meta.xScale.domain() : [-domain, domain]
+    var yDomain = activePlot ? activePlot.meta.yScale.domain() : [-domain, domain]
 
     activePlot = numaraPlot({
         target: '#plot',
@@ -791,43 +784,43 @@ function plot() {
             closed: settings.plot.plotArea
         }],
         plugins: [numaraPlot.plugins.zoomBox()]
-    });
+    })
 }
 
-UIkit.util.on('#dialog-plot', 'hide', () => activePlot = false);
+UIkit.util.on('#dialog-plot', 'hide', () => activePlot = false)
 
 // Relayout plot on window resize
-let windowResizeDelay;
+let windowResizeDelay
 window.addEventListener('resize', () => {
-    if (activePlot && $('dialog-plot').classList.contains('uk-open')) plot();
-    clearTimeout(windowResizeDelay);
+    if (activePlot && $('dialog-plot').classList.contains('uk-open')) plot()
+    clearTimeout(windowResizeDelay)
     windowResizeDelay = setTimeout(() => {
-        calculate();
-        cm.refresh();
-    }, 10);
-});
+        calculate()
+        cm.refresh()
+    }, 10)
+})
 
 // Show confirmation dialog
 function confirm(msg, action) {
-    $('confirmMsg').innerHTML = msg;
-    showModal('#dialog-confirm');
+    $('confirmMsg').innerHTML = msg
+    showModal('#dialog-confirm')
     var yesAction = (e) => {
-        action();
-        e.stopPropagation();
-        UIkit.modal('#dialog-confirm').hide();
-        $('confirm-yes').removeEventListener('click', yesAction);
-    };
-    $('confirm-yes').addEventListener('click', yesAction);
-    UIkit.util.on('#dialog-confirm', 'hidden', () => $('confirm-yes').removeEventListener('click', yesAction));
+        action()
+        e.stopPropagation()
+        UIkit.modal('#dialog-confirm').hide()
+        $('confirm-yes').removeEventListener('click', yesAction)
+    }
+    $('confirm-yes').addEventListener('click', yesAction)
+    UIkit.util.on('#dialog-confirm', 'hidden', () => $('confirm-yes').removeEventListener('click', yesAction))
 }
 
 // Show error dialog
 function showError(e, title) {
     UIkit.util.on('#dialog-error', 'beforeshow', () => {
-        $('errTitle').innerHTML = title || 'Error';
-        $('errMsg').innerHTML = e;
-    });
-    showModal('#dialog-error');
+        $('errTitle').innerHTML = title || 'Error'
+        $('errMsg').innerHTML = e
+    })
+    showModal('#dialog-error')
 }
 
 // Show app messages
@@ -837,31 +830,31 @@ function notify(msg, stat) {
         status: stat || 'primary',
         pos: 'bottom-center',
         timeout: 3000
-    });
+    })
 }
 
 // Sync scroll
-let inputScroll = false;
-let outputScroll = false;
+let inputScroll = false
+let outputScroll = false
 
-const leftSide = document.getElementsByClassName('CodeMirror-scroll')[0];
-const rightSide = $('output');
+const leftSide = document.getElementsByClassName('CodeMirror-scroll')[0]
+const rightSide = $('output')
 
 leftSide.addEventListener('scroll', () => {
     if (!inputScroll) {
-        outputScroll = true;
-        rightSide.scrollTop = leftSide.scrollTop;
+        outputScroll = true
+        rightSide.scrollTop = leftSide.scrollTop
     }
-    inputScroll = false;
-});
+    inputScroll = false
+})
 
 rightSide.addEventListener('scroll', () => {
     if (!outputScroll) {
-        inputScroll = true;
-        leftSide.scrollTop = rightSide.scrollTop;
+        inputScroll = true
+        leftSide.scrollTop = rightSide.scrollTop
     }
-    outputScroll = false;
-});
+    outputScroll = false
+})
 
 // Mousetrap
 const traps = {
@@ -869,32 +862,32 @@ const traps = {
     printButton: ['command+p', 'ctrl+p'],
     saveButton: ['command+s', 'ctrl+s'],
     openButton: ['command+o', 'ctrl+o']
-};
+}
 
-document.getElementsByClassName('CodeMirror-code')[0].lastChild.scrollIntoView();
+document.getElementsByClassName('CodeMirror-code')[0].lastChild.scrollIntoView()
 
 Object.entries(traps).map(([b, c]) => {
     Mousetrap.bindGlobal(c, (e) => {
-        e.preventDefault();
-        if (document.getElementsByClassName('uk-open').length === 0) $(b).click();
-    });
-});
+        e.preventDefault()
+        if (document.getElementsByClassName('uk-open').length === 0) $(b).click()
+    })
+})
 
 // Check for updates
 if (isNode) {
-    ipc.send('checkUpdate');
-    ipc.on('notifyUpdate', (event) => notify(`Updating Numara to latest version... <a class="updateLink" onclick="$('aboutButton').click();">View update status</a>`));
+    ipc.send('checkUpdate')
+    ipc.on('notifyUpdate', (event) => notify(`Updating Numara to latest version... <a class="updateLink" onclick="$('aboutButton').click()">View update status</a>`))
     ipc.on('updateStatus', (event, status) => {
         if (status == 'ready') {
-            $('dialog-about-updateStatus').innerHTML = 'Restart Numara to finish updating.';
-            $('restartButton').style.display = 'inline-block';
+            $('dialog-about-updateStatus').innerHTML = 'Restart Numara to finish updating.'
+            $('restartButton').style.display = 'inline-block'
             if (!$('dialog-about').classList.contains('uk-open')) {
-                notify(`Restart Numara to finish updating. <a class="updateLink" onclick="$('restartButton').click();">Restart Now</a>`);
+                notify(`Restart Numara to finish updating. <a class="updateLink" onclick="$('restartButton').click()">Restart Now</a>`)
             }
         } else {
-            $('dialog-about-updateStatus').innerHTML = status;
+            $('dialog-about-updateStatus').innerHTML = status
         }
-    });
+    })
 }
 
 const demo = `1+2
@@ -923,4 +916,4 @@ now + 36 hours - 2 days
 # Plot functions
 f(x) = sin(x)
 f(x) = 2x^2 + 3x - 5
-`;
+`

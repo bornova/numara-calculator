@@ -1,7 +1,7 @@
 {
     "name": "numara",
     "productName": "Numara",
-    "version": "2.9.17",
+    "version": "2.9.18",
     "description": "Numara Calculator",
     "author": "Timur Atalay",
     "license": "MIT",
@@ -38,12 +38,10 @@
             "deleteAppDataOnUninstall": true
         },
         "win": {
-            "publish": [
-                {
-                    "provider": "generic",
-                    "url": "https://numara.io/releases/win/"
-                }
-            ]
+            "publish": [{
+                "provider": "generic",
+                "url": "https://numara.io/releases/win/"
+            }]
         },
         "mac": {
             "target": [
@@ -53,12 +51,10 @@
             "electronLanguages": [
                 "en"
             ],
-            "publish": [
-                {
-                    "provider": "generic",
-                    "url": "https://numara.io/releases/mac/"
-                }
-            ]
+            "publish": [{
+                "provider": "generic",
+                "url": "https://numara.io/releases/mac/"
+            }]
         },
         "directories": {
             "buildResources": "build/assets"

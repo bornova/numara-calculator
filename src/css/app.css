@@ -1,9 +1,3 @@
-/**
- * @copyright 2020 Timur Atalay 
- * @Homepage https://github.com/bornova/numara
- * @license MIT https://github.com/bornova/numara/blob/master/LICENSE
- */
-
 * {
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
@@ -221,14 +215,14 @@ text {
     word-break: break-word;
 }
 
-.handle {
+.divider {
     cursor: ew-resize;
     flex: 0 0 auto;
     height: calc(100% - 8px);
     width: 5px;
 }
 
-.handle::before {
+.divider::before {
     content: '';
     display: block;
     height: 100%;
@@ -361,11 +355,6 @@ text {
     padding: 1px 0 0 0;
     text-align: center;
     width: 24px;
-}
-
-.divider {
-    display: block;
-    height: 20px;
 }
 
 .warn-icon {
