@@ -24,6 +24,7 @@
         font-size: 12px;
         font-weight: bold;
         margin: 0 0 0 8px;
+        text-transform: capitalize;
     }
 
     .printArea {

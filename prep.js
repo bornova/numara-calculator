@@ -6,12 +6,20 @@ const performance = require('perf_hooks').performance
 const build_path = 'build'
 
 const header = `/**
- * @copyright 2020 Timur Atalay
- * @homepage https://github.com/bornova/numara-calculator
- * @license MIT https://github.com/bornova/numara-calculator/blob/master/LICENSE
+ * @copyright ${new Date().getFullYear()} ${pj.author}
+ * @homepage ${pj.homepage}
+ * @license ${pj.license} - ${pj.homepage}/blob/master/LICENSE
  */
-const appName="${pj.productName}"
-const appVersion="${pj.version}"
+
+const appInfo = {
+    productName: '${pj.productName}',
+    description:'${pj.description}',
+    version: '${pj.version}',
+    author: '${pj.author}',
+    homepage: '${pj.homepage}',
+    licence: '${pj.license}',
+    website: 'https://numara.io'
+}
 `
 
 let t0 = performance.now()

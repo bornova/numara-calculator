@@ -84,6 +84,7 @@ text {
     float: left;
     font-weight: 600;
     margin: 5px 0 0 8px;
+    text-transform: capitalize;
 }
 
 .header-win-icon {
@@ -139,6 +140,7 @@ text {
     font-weight: 600;
     padding-top: 10px;
     text-align: center;
+    text-transform: capitalize;
 }
 
 /* Content */
@@ -430,7 +432,7 @@ text {
 
 .versionCtnr>div {
     display: inline-block;
-    margin: 3px;
+    margin: 8px 3px 3px 3px;
     text-align: center;
 }
 

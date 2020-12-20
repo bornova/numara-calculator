@@ -13,15 +13,19 @@ const isNode = navigator.userAgent.toLowerCase().includes('electron')
 const ipc = isNode ? require('electron').ipcRenderer : null
 
 // Set app info
-document.title = appName + ' Calculator'
-$('dialog-about-title').innerHTML = appName + ' Calculator'
-$('dialog-about-appVersion').innerHTML = isNode ? 'Version ' + appVersion :
-    `Version ${appVersion}
+document.title = appInfo.description
+$('dialog-about-title').innerHTML = appInfo.description
+$('dialog-about-copyright').innerHTML = `Copyright ©️ ${moment().year()} ${appInfo.author}`
+$('dialog-about-appVersion').innerHTML = isNode ? 'Version ' + appInfo.version :
+    `Version ${appInfo.version}
     <div class="versionCtnr">
         <div>Desktop version:</div>
-        <div><a href="https://numara.io/releases/win/Numara Setup ${appVersion}.exe">Windows</a></div>
-        <div><a href="https://numara.io/releases/mac/Numara-${appVersion}.dmg">MacOS</a></div>
+        <div><a href="https://numara.io/releases/win/${appInfo.productName}-${appInfo.version}.exe">Windows</a></div>
+        <div><a href="https://numara.io/releases/mac/${appInfo.productName}-${appInfo.version}.dmg">MacOS</a></div>
     </div>`
+$('gitLink').setAttribute('href', appInfo.homepage)
+$('webLink').setAttribute('href', appInfo.website)
+$('licenseLink').setAttribute('href', appInfo.homepage + '/blob/master/LICENSE')
 
 if (isNode) {
     ipc.on('themeUpdate', () => applySettings())
@@ -34,7 +38,7 @@ if (isNode) {
 if (isNode && isWin) {
     $('header-mac').remove()
     $('header-win').style.display = 'block'
-    $('header-win-title').innerHTML = appName
+    $('header-win-title').innerHTML = appInfo.productName
 
     $('max').style.display = ipc.sendSync('isMaximized') ? 'none' : 'block'
     $('unmax').style.display = ipc.sendSync('isMaximized') ? 'block' : 'none'
@@ -66,7 +70,7 @@ if (isNode && isWin) {
 } else {
     $('header-win').remove()
     $('header-mac').style.display = 'block'
-    $('header-mac-title').innerHTML = appName
+    $('header-mac-title').innerHTML = appInfo.productName
 
     if (isNode) $('header-mac').addEventListener("dblclick", toggleMax)
 }
@@ -379,7 +383,7 @@ $('actions').addEventListener('click', (e) => {
         case 'printButton': // Print calculations
             UIkit.tooltip('#printButton').hide()
             if (cm.getValue() != '') {
-                $('print-title').innerHTML = appName
+                $('print-title').innerHTML = appInfo.productName
                 $('printBox').innerHTML = $('panel').innerHTML
                 if (isNode) {
                     ipc.send('print')
