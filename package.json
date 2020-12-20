@@ -41,10 +41,12 @@
         },
         "win": {
             "target": "nsis-web",
-            "publish": [{
-                "provider": "generic",
-                "url": "https://numara.io/releases/win/"
-            }],
+            "publish": [
+                {
+                    "provider": "generic",
+                    "url": "https://numara.io/releases/win/"
+                }
+            ],
             "artifactName": "${productName}-${version}.${ext}"
         },
         "mac": {
@@ -55,10 +57,12 @@
             "electronLanguages": [
                 "en"
             ],
-            "publish": [{
-                "provider": "generic",
-                "url": "https://numara.io/releases/mac/"
-            }]
+            "publish": [
+                {
+                    "provider": "generic",
+                    "url": "https://numara.io/releases/mac/"
+                }
+            ]
         },
         "directories": {
             "buildResources": "build/assets"
