@@ -860,6 +860,8 @@ rightSide.addEventListener('scroll', () => {
     outputScroll = false
 })
 
+document.getElementsByClassName('CodeMirror-code')[0].lastChild.scrollIntoView()
+
 // Mousetrap
 const traps = {
     clearButton: ['command+d', 'ctrl+d'],
@@ -867,8 +869,6 @@ const traps = {
     saveButton: ['command+s', 'ctrl+s'],
     openButton: ['command+o', 'ctrl+o']
 }
-
-document.getElementsByClassName('CodeMirror-code')[0].lastChild.scrollIntoView()
 
 Object.entries(traps).map(([b, c]) => {
     Mousetrap.bindGlobal(c, (e) => {
@@ -896,7 +896,7 @@ if (isNode) {
 
 const demo = `1+2
 
-# In addition to mathjs functions:
+# In addition to mathjs functions, you can do:
 ans // Get last answer
 total // Total up to this point
 avg // Average up to this point
