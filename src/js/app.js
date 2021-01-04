@@ -154,7 +154,6 @@ const cm = CodeMirror.fromTextArea($('inputArea'), {
 cm.setValue(ls.get('input') || '')
 cm.execCommand('goDocEnd')
 cm.on('changes', calculate)
-cm.on('focus', calculate)
 cm.on("inputRead", (cm, event) => {
     if (settings.app.autocomplete) CodeMirror.commands.autocomplete(cm)
 })
@@ -285,7 +284,6 @@ function applySettings() {
     cm.setOption('matchBrackets', settings.app.syntax && settings.app.matchBrackets ? {
         'maxScanLines': 1
     } : false)
-    cm.refresh()
 
     math.config({
         matrix: settings.app.matrixType,
@@ -293,7 +291,7 @@ function applySettings() {
         predictable: settings.app.predictable
     })
 
-    calculate()
+    setTimeout(calculate, 15)
 }
 
 applySettings()
@@ -314,8 +312,6 @@ function getRates() {
                 ls.set('rates', data)
                 createRateUnits()
                 $('lastUpdated').innerHTML = ls.get('rateDate')
-                cm.setOption('mode', settings.app.syntax ? 'numara' : 'plain')
-                cm.focus()
             }).catch((e) => {
                 $('lastUpdated').innerHTML = 'n/a'
                 notify('Failed to get exchange rates (' + e + ')', 'warning')
@@ -688,7 +684,7 @@ function saveSettings() {
 
     ls.set('settings', settings)
     checkDefaultSettings()
-    setTimeout(applySettings, 10)
+    applySettings()
 }
 
 document.querySelectorAll('.settingItem').forEach((el) => el.addEventListener('change', () => saveSettings()))
@@ -737,10 +733,7 @@ $('panel').addEventListener('mousemove', (e) => {
         settings.inputWidth = inputWidth
         ls.set('settings', settings)
         clearTimeout(resizeDelay)
-        resizeDelay = setTimeout(() => {
-            calculate()
-            cm.refresh()
-        }, 10)
+        resizeDelay = setTimeout(calculate, 10)
     }
 })
 
@@ -800,10 +793,7 @@ let windowResizeDelay
 window.addEventListener('resize', () => {
     if (activePlot && $('dialog-plot').classList.contains('uk-open')) plot()
     clearTimeout(windowResizeDelay)
-    windowResizeDelay = setTimeout(() => {
-        calculate()
-        cm.refresh()
-    }, 10)
+    windowResizeDelay = setTimeout(calculate, 10)
 })
 
 // Show confirmation dialog
@@ -861,8 +851,6 @@ rightSide.addEventListener('scroll', () => {
     }
     outputScroll = false
 })
-
-document.getElementsByClassName('CodeMirror-code')[0].lastChild.scrollIntoView()
 
 // Mousetrap
 const traps = {
@@ -923,3 +911,6 @@ now + 36 hours - 2 days
 f(x) = sin(x)
 f(x) = 2x^2 + 3x - 5
 `
+
+setTimeout(() => document.getElementsByClassName('CodeMirror-code')[0].lastChild.scrollIntoView(), 100)
+setTimeout(() => cm.focus(), 200)
