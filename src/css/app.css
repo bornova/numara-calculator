@@ -198,12 +198,6 @@ text {
     user-select: text;
 }
 
-.mirror {
-    display: inline-block;
-    visibility: hidden;
-    word-break: break-word;
-}
-
 .panelFont {
     font-family: 'Roboto Mono', monospace;
     line-height: 28px;

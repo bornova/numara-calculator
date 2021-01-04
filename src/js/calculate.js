@@ -14,8 +14,6 @@ function calculate() {
         maximumFractionDigits: settings.app.precision
     }
 
-    $('mirror').style.width = document.getElementsByClassName('CodeMirror-line')[0].clientWidth - 8 + 'px'
-
     scope.now = moment().format((settings.app.dateDay ? 'ddd, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat)
     scope.today = moment().format((settings.app.dateDay ? 'ddd, ' : '') + settings.app.dateFormat)
 
@@ -23,7 +21,7 @@ function calculate() {
         var cmLine = line.text.trim().split('//')[0].split('#')[0]
         var cmLineNo = cm.getLineNumber(line)
         var lineNo = cmLineNo + 1
-        var mirrorLine = line.text
+        var lineHeight = line.height
         var answer = ''
 
         cm.removeLineClass(cmLineNo, 'gutter', 'lineError')
@@ -80,16 +78,7 @@ function calculate() {
             subtotals.length = 0
         }
 
-        var br = ''
-        if (settings.app.lineWrap) {
-            var mirror = $('mirror')
-            mirror.innerHTML = mirrorLine
-            var h = mirror.offsetHeight
-            var lh = getComputedStyle(mirror).lineHeight.split('px')[0]
-            br = h > lh ? '<span></span>'.repeat((h / lh) - 1) : ''
-        }
-
-        answers += '<span>' + answer + '</span>' + br
+        answers += `<span style="height:${lineHeight}px">${answer}</span>`
     })
 
     $('output').innerHTML = answers

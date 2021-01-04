@@ -153,7 +153,8 @@ const cm = CodeMirror.fromTextArea($('inputArea'), {
 
 cm.setValue(ls.get('input') || '')
 cm.execCommand('goDocEnd')
-cm.on('change', calculate)
+cm.on('changes', calculate)
+cm.on('focus', calculate)
 cm.on("inputRead", (cm, event) => {
     if (settings.app.autocomplete) CodeMirror.commands.autocomplete(cm)
 })
@@ -284,6 +285,7 @@ function applySettings() {
     cm.setOption('matchBrackets', settings.app.syntax && settings.app.matchBrackets ? {
         'maxScanLines': 1
     } : false)
+    cm.refresh()
 
     math.config({
         matrix: settings.app.matrixType,
