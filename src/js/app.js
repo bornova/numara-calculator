@@ -102,8 +102,15 @@ CodeMirror.defineMode('numara', () => {
 
             if (typeof math[str] === 'function' && Object.getOwnPropertyNames(math[str]).includes('signatures')) return 'function'
             if (str.match(/\b(?:ans|total|subtotal|avg|today|now|line\d+)\b/)) return 'scope'
+
+            try {
+                math.evaluate(str)
+            } catch (e) {
+                return 'variable'
+            }
+
             stream.next()
-            return 'text'
+            return 'space'
         }
     }
 })
@@ -158,6 +165,7 @@ cm.execCommand('goDocEnd')
 cm.on('changes', calculate)
 cm.on("inputRead", (cm, event) => {
     if (settings.app.autocomplete) CodeMirror.commands.autocomplete(cm)
+    if (cm.lastLine()) console.log('hi')
 })
 cm.on('update', () => {
     var funcs = document.getElementsByClassName('cm-function')

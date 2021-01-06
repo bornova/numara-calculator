@@ -219,7 +219,7 @@ li.CodeMirror-hint-active {
 }
 
 .cm-currency {
-    color: #57805a !important;
+    color: #009688 !important;
 }
 
 .cm-unit {
@@ -248,4 +248,8 @@ li.CodeMirror-hint-active {
 
 .cm-text {
     color: #333333 !important;
+}
+
+.cm-variable {
+    color: #57707c !important;
 }

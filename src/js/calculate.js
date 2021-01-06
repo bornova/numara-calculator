@@ -1,5 +1,6 @@
+const solve = math.evaluate
+
 function calculate() {
-    var solve = math.evaluate
     var answers = []
     var avgs = []
     var totals = []
@@ -34,6 +35,13 @@ function calculate() {
                 try {
                     answer = solve(cmLine, scope)
                 } catch (e) {
+                    if (cmLine.match(/:/)) {
+                        try {
+                            solve(cmLine.split(':')[0])
+                         } catch (e) {
+                            cmLine = cmLine.substring(cmLine.indexOf(':')+1)
+                        }
+                    }
                     while (cmLine.match(/\([^\)]+\)/)) {
                         var s = cmLine.substring(cmLine.lastIndexOf('(') + 1)
                         var sp = cmLine.substring(cmLine.lastIndexOf('('))
