@@ -2,7 +2,7 @@
     "name": "numara",
     "productName": "Numara",
     "description": "Numara Calculator",
-    "version": "2.12.0",
+    "version": "2.13.0",
     "author": "Timur Atalay",
     "license": "MIT",
     "homepage": "https://github.com/bornova/numara-calculator",
@@ -20,12 +20,12 @@
         "electron-builder": "^22.9.1",
         "feather-icons": "^4.28.0",
         "fs-extra": "^9.0.1",
+        "luxon": "^1.25.0",
         "mathjs": "^8.1.1",
-        "moment": "^2.29.1",
         "mousetrap": "^1.6.5",
         "mousetrap-global-bind": "^1.1.0",
         "terser": "^5.5.1",
-        "uikit": "^3.6.6"
+        "uikit": "^3.6.8"
     },
     "dependencies": {
         "electron-context-menu": "^2.3.1",

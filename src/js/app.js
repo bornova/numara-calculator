@@ -12,10 +12,12 @@ const isWin = navigator.userAgent.toLowerCase().includes('win')
 const isNode = navigator.userAgent.toLowerCase().includes('electron')
 const ipc = isNode ? require('electron').ipcRenderer : null
 
+const numdate = luxon.DateTime;
+
 // Set app info
 document.title = appInfo.description
 $('dialog-about-title').innerHTML = appInfo.description
-$('dialog-about-copyright').innerHTML = `Copyright ©️ ${moment().year()} ${appInfo.author}`
+$('dialog-about-copyright').innerHTML = `Copyright ©️ ${numdate.local().year} ${appInfo.author}`
 $('dialog-about-appVersion').innerHTML = isNode ? 'Version ' + appInfo.version :
     `Version ${appInfo.version}
     <div class="versionCtnr">
@@ -215,7 +217,7 @@ const defaultSettings = {
         closeBrackets: true,
         currencies: true,
         dateDay: false,
-        dateFormat: 'M/D/YYYY',
+        dateFormat: 'M/d/yyyy',
         divider: true,
         fontSize: '1.1rem',
         fontWeight: '400',
@@ -231,7 +233,7 @@ const defaultSettings = {
         syntax: true,
         theme: 'system',
         thouSep: true,
-        timeFormat: 'h:mm A'
+        timeFormat: 'h:mm a'
     },
     inputWidth: 60,
     plot: {
@@ -451,7 +453,7 @@ $('output').addEventListener('mousedown', () => {
 document.addEventListener('click', (e) => {
     switch (e.target.id) {
         case 'dialog-save-save': // Save calculation
-            var id = moment().format('x')
+            var id = numdate.local().toFormat('x')
             var obj = ls.get('saved') || {}
             var data = cm.getValue()
             var title = $('saveTitle').value.replace(/<|>/g, '').trim() || 'No title'
@@ -565,7 +567,7 @@ function populateSaved() {
                 <div class="dialog-open-wrapper" id="${id}">
                     <div data-action="load">
                         <div class="dialog-open-title">${val[0]}</div>
-                        <div class="dialog-open-date">${moment(Number(id)).format('lll')}</div>
+                        <div class="dialog-open-date">${numdate.fromFormat(Number(id), 'x').toFormat('lll')}</div>
                     </div>
                     <span class="dialog-open-delete" data-action="delete"><i data-feather="x-circle"></i></span>
                 </div>`
@@ -586,8 +588,8 @@ UIkit.util.on('#dialog-settings', 'hidden', () => cm.focus())
 
 function prepSettings() {
     // Appearance
-    var dateFormats = ['M/D/YYYY', 'D/M/YYYY', 'MMM DD, YYYY']
-    var timeFormats = ['h:mm A', 'H:mm']
+    var dateFormats = ['M/d/yyyy', 'd/M/yyyy', 'MMM d, yyyy']
+    var timeFormats = ['h:mm a', 'H:mm']
     var matrixTypes = ['Matrix', 'Array']
     var numericOutputs = ['number', 'BigNumber', 'Fraction']
 
@@ -595,10 +597,10 @@ function prepSettings() {
     $('fontSize').value = settings.app.fontSize
     $('fontWeight').value = settings.app.fontWeight
     $('dateFormat').innerHTML = ''
-    for (var d of dateFormats) $('dateFormat').innerHTML += `<option value="${d}">${moment().format(d)}</option>`
+    for (var d of dateFormats) $('dateFormat').innerHTML += `<option value="${d}">${numdate.local().toFormat(d)}</option>`
     $('dateFormat').value = settings.app.dateFormat
     $('timeFormat').innerHTML = ''
-    for (var t of timeFormats) $('timeFormat').innerHTML += `<option value="${t}">${moment().format(t)}</option>`
+    for (var t of timeFormats) $('timeFormat').innerHTML += `<option value="${t}">${numdate.local().toFormat(t)}</option>`
     $('timeFormat').value = settings.app.timeFormat
     $('dateDay').checked = settings.app.dateDay
     $('syntaxButton').checked = settings.app.syntax

@@ -14,8 +14,8 @@ function calculate() {
         maximumFractionDigits: settings.app.precision
     }
 
-    scope.now = moment().format((settings.app.dateDay ? 'ddd, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat)
-    scope.today = moment().format((settings.app.dateDay ? 'ddd, ' : '') + settings.app.dateFormat)
+    scope.now = numdate.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat)
+    scope.today = numdate.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat)
 
     cm.refresh()
     cm.eachLine((line) => {
@@ -114,17 +114,18 @@ function calculate() {
             var todayFormat = settings.app.dateFormat
             var nowFormat = settings.app.dateFormat + ' ' + settings.app.timeFormat
 
-            var t = moment(lineDateLeft, todayFormat, true)
-            var n = moment(lineDateLeft, nowFormat, true)
-            var dt = t.isValid() ? t : n.isValid() ? n : null
+            var t = numdate.fromFormat(lineDateLeft, todayFormat)
+            var n = numdate.fromFormat(lineDateLeft, nowFormat)
+            var dt = t.isValid ? t : n.isValid ? n : null
 
             var rightOfDate = String(solve(lineDateRight + ' to hours', scope))
-            var durNum = Number(rightOfDate.split(' ')[0])
-            var durUnit = rightOfDate.split(' ')[1]
+            var durHrs = Number(rightOfDate.split(' ')[0])
 
             if (dt) {
-                var isToday = dt.format(settings.app.dateFormat + "hh:mm:ss:SS").endsWith('12:00:00:00') ? true : false
-                line = '"' + dt.add(durNum, durUnit).format((settings.app.dateDay ? 'ddd, ' : '') + (isToday ? todayFormat : nowFormat)) + '"'
+                var isToday = dt.toFormat(settings.app.dateFormat + "hh:mm:ss:SSS").endsWith('12:00:00:000') ? true : false
+                line = '"' + dt.plus({
+                    hours: durHrs
+                }).toFormat((settings.app.dateDay ? 'ccc, ' : '') + (isToday ? todayFormat : nowFormat)) + '"'
             } else {
                 return 'Invalid Date'
             }
