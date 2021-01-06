@@ -157,7 +157,8 @@ CodeMirror.commands.autocomplete = (cm) => {
 // Prep input
 const cm = CodeMirror.fromTextArea($('inputArea'), {
     coverGutterNextToScrollbar: true,
-    inputStyle: 'textarea'
+    inputStyle: 'textarea',
+    viewportMargin: Infinity
 })
 
 cm.setValue(ls.get('input') || '')
@@ -165,7 +166,6 @@ cm.execCommand('goDocEnd')
 cm.on('changes', calculate)
 cm.on("inputRead", (cm, event) => {
     if (settings.app.autocomplete) CodeMirror.commands.autocomplete(cm)
-    if (cm.lastLine()) console.log('hi')
 })
 cm.on('update', () => {
     var funcs = document.getElementsByClassName('cm-function')
