@@ -139,34 +139,32 @@ math.createUnit('USD', {
 let currencyRates = {}
 
 function getRates() {
-    if (settings.app.currencies) {
-        var url = 'https://www.floatrates.com/widget/1030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json'
-        if (navigator.onLine) {
-            $('lastUpdated').innerHTML = '<div uk-spinner="ratio: 0.3"></div>'
-            fetch(url)
-                .then((response) => response.json())
-                .then((rates) => {
-                    currencyRates = rates
-                    var dups = ['cup']
-                    Object.keys(rates).map((currency) => {
-                        math.createUnit(rates[currency].code, {
-                            definition: math.unit(rates[currency].inverseRate + 'USD'),
-                            aliases: [dups.includes(rates[currency].code.toLowerCase()) ? '' : rates[currency].code.toLowerCase()]
-                        }, {
-                            override: true
-                        })
-                        ls.set('rateDate', rates[currency].date)
+    var url = 'https://www.floatrates.com/widget/1030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json'
+    if (navigator.onLine) {
+        $('lastUpdated').innerHTML = '<div uk-spinner="ratio: 0.3"></div>'
+        fetch(url)
+            .then((response) => response.json())
+            .then((rates) => {
+                currencyRates = rates
+                var dups = ['cup']
+                Object.keys(rates).map((currency) => {
+                    math.createUnit(rates[currency].code, {
+                        definition: math.unit(rates[currency].inverseRate + 'USD'),
+                        aliases: [dups.includes(rates[currency].code.toLowerCase()) ? '' : rates[currency].code.toLowerCase()]
+                    }, {
+                        override: true
                     })
-                    applySettings()
-                    $('lastUpdated').innerHTML = ls.get('rateDate')
-                }).catch((e) => {
-                    $('lastUpdated').innerHTML = 'n/a'
-                    notify('Failed to get exchange rates (' + e + ')', 'warning')
+                    ls.set('rateDate', rates[currency].date)
                 })
-        } else {
-            $('lastUpdated').innerHTML = 'No internet connection.'
-            notify('No internet connection. Could not update exchange rates.', 'warning')
-        }
+                applySettings()
+                $('lastUpdated').innerHTML = ls.get('rateDate')
+            }).catch((e) => {
+                $('lastUpdated').innerHTML = 'n/a'
+                notify('Failed to get exchange rates (' + e + ')', 'warning')
+            })
+    } else {
+        $('lastUpdated').innerHTML = 'No internet connection.'
+        notify('No internet connection. Could not update exchange rates.', 'warning')
     }
 }
 
@@ -341,7 +339,7 @@ function applySettings() {
     setTimeout(calculate, 15)
 }
 applySettings()
-getRates()
+if (settings.app.currencies) getRates()
 
 // Tooltip defaults
 UIkit.mixin({
