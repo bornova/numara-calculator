@@ -83,10 +83,102 @@ function toggleMax() {
 
 feather.replace()
 
-// Initilize Codemirror
+// App settings
+const defaultSettings = {
+    app: {
+        autocomplete: true,
+        closeBrackets: true,
+        currencies: true,
+        dateDay: false,
+        dateFormat: 'M/d/yyyy',
+        divider: true,
+        fontSize: '1.1rem',
+        fontWeight: '400',
+        keywordTips: true,
+        lineErrors: true,
+        lineNumbers: true,
+        lineWrap: true,
+        matchBrackets: true,
+        matrixType: 'Matrix',
+        numericOutput: 'number',
+        precision: '4',
+        predictable: false,
+        syntax: true,
+        theme: 'system',
+        thouSep: true,
+        timeFormat: 'h:mm a'
+    },
+    inputWidth: 60,
+    plot: {
+        plotArea: false,
+        plotCross: false,
+        plotGrid: false
+    }
+}
+
+let settings = ls.get('settings')
+
+if (!settings) {
+    settings = defaultSettings
+    ls.set('settings', defaultSettings)
+} else {
+    // Check for and apply default settings changes
+    DeepDiff.observableDiff(settings, defaultSettings, (d) => {
+        if (d.kind !== 'E') {
+            DeepDiff.applyChange(settings, defaultSettings, d)
+            ls.set('settings', settings)
+        }
+    })
+}
+
+// Exchange rates
+math.createUnit('USD', {
+    aliases: ['usd']
+})
+
+let currencyRates = {}
+
+function getRates() {
+    if (settings.app.currencies) {
+        var url = 'https://www.floatrates.com/widget/1030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json'
+        if (navigator.onLine) {
+            $('lastUpdated').innerHTML = '<div uk-spinner="ratio: 0.3"></div>'
+            fetch(url)
+                .then((response) => response.json())
+                .then((rates) => {
+                    currencyRates = rates
+                    var dups = ['cup']
+                    Object.keys(rates).map((currency) => {
+                        math.createUnit(rates[currency].code, {
+                            definition: math.unit(rates[currency].inverseRate + 'USD'),
+                            aliases: [dups.includes(rates[currency].code.toLowerCase()) ? '' : rates[currency].code.toLowerCase()]
+                        }, {
+                            override: true
+                        })
+                        ls.set('rateDate', rates[currency].date)
+                    })
+                    applySettings()
+                    $('lastUpdated').innerHTML = ls.get('rateDate')
+                }).catch((e) => {
+                    $('lastUpdated').innerHTML = 'n/a'
+                    notify('Failed to get exchange rates (' + e + ')', 'warning')
+                })
+        } else {
+            $('lastUpdated').innerHTML = 'No internet connection.'
+            notify('No internet connection. Could not update exchange rates.', 'warning')
+        }
+    }
+}
+
+// Prep input
+const cm = CodeMirror.fromTextArea($('inputArea'), {
+    coverGutterNextToScrollbar: true,
+    inputStyle: 'textarea',
+    viewportMargin: Infinity
+})
+
 // Codemirror syntax templates
 CodeMirror.defineMode('numara', () => {
-    var rates = ls.get('rates')
     return {
         token: (stream, state) => {
             if (stream.match(/\/\/.*/) || stream.match(/#.*/)) return 'comment'
@@ -95,8 +187,10 @@ CodeMirror.defineMode('numara', () => {
 
             stream.eatWhile(/\w/)
             var str = stream.current()
+
+            if (settings.app.currencies && (str.toLowerCase() in currencyRates || str.toLowerCase() == 'usd')) return 'currency'
+
             try {
-                if (str.toLowerCase() in rates || str.toLowerCase() == 'usd') return 'currency'
                 if (math.unit(str).units.length > 0) return 'unit'
             } catch (e) {}
 
@@ -154,13 +248,6 @@ CodeMirror.commands.autocomplete = (cm) => {
     })
 }
 
-// Prep input
-const cm = CodeMirror.fromTextArea($('inputArea'), {
-    coverGutterNextToScrollbar: true,
-    inputStyle: 'textarea',
-    viewportMargin: Infinity
-})
-
 cm.setValue(ls.get('input') || '')
 cm.execCommand('goDocEnd')
 cm.on('changes', calculate)
@@ -188,12 +275,11 @@ cm.on('update', () => {
     }
 
     var curr = document.getElementsByClassName('cm-currency')
-    if (curr.length > 0 && settings.app.keywordTips && settings.app.currencies) {
+    if (curr.length > 0 && settings.app.keywordTips) {
         for (var c of curr) {
             try {
-                var rates = ls.get('rates')
                 var curr = c.innerHTML.toLowerCase()
-                var currName = curr == 'usd' ? 'U.S. Dollar' : rates[curr].name
+                var currName = curr == 'usd' ? 'U.S. Dollar' : currencyRates[curr].name
                 UIkit.tooltip(c, {
                     title: currName,
                     pos: 'top-left'
@@ -217,55 +303,6 @@ cm.on('update', () => {
         }
     }
 })
-
-// App settings
-const defaultSettings = {
-    app: {
-        autocomplete: true,
-        closeBrackets: true,
-        currencies: true,
-        dateDay: false,
-        dateFormat: 'M/d/yyyy',
-        divider: true,
-        fontSize: '1.1rem',
-        fontWeight: '400',
-        keywordTips: true,
-        lineErrors: true,
-        lineNumbers: true,
-        lineWrap: true,
-        matchBrackets: true,
-        matrixType: 'Matrix',
-        numericOutput: 'number',
-        precision: '4',
-        predictable: false,
-        syntax: true,
-        theme: 'system',
-        thouSep: true,
-        timeFormat: 'h:mm a'
-    },
-    inputWidth: 60,
-    plot: {
-        plotArea: false,
-        plotCross: false,
-        plotGrid: false
-    }
-}
-
-let settings
-let initSettings = ls.get('settings')
-
-if (!initSettings) {
-    ls.set('settings', defaultSettings)
-} else {
-    // Check for and apply default settings changes
-    DeepDiff.observableDiff(initSettings, defaultSettings, (d) => {
-        if (d.kind !== 'E') {
-            DeepDiff.applyChange(initSettings, defaultSettings, d)
-            ls.set('settings', initSettings)
-            applySettings()
-        }
-    })
-}
 
 // Apply settings
 function applySettings() {
@@ -303,49 +340,8 @@ function applySettings() {
 
     setTimeout(calculate, 15)
 }
-
 applySettings()
-
-// Exchange rates
-math.createUnit('USD', {
-    aliases: ['usd']
-})
-if (settings.app.currencies) getRates()
-
-function getRates() {
-    var url = 'https://www.floatrates.com/widget/1030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json'
-    if (navigator.onLine) {
-        $('lastUpdated').innerHTML = '<div uk-spinner="ratio: 0.3"></div>'
-        fetch(url)
-            .then((rates) => rates.json())
-            .then((data) => {
-                ls.set('rates', data)
-                createRateUnits()
-                $('lastUpdated').innerHTML = ls.get('rateDate')
-            }).catch((e) => {
-                $('lastUpdated').innerHTML = 'n/a'
-                notify('Failed to get exchange rates (' + e + ')', 'warning')
-            })
-    } else {
-        $('lastUpdated').innerHTML = 'No internet connection.'
-        notify('No internet connection. Could not update exchange rates.', 'warning')
-    }
-}
-
-function createRateUnits() {
-    var data = ls.get('rates')
-    var dups = ['cup']
-    Object.keys(data).map((currency) => {
-        math.createUnit(data[currency].code, {
-            definition: math.unit(data[currency].inverseRate + 'USD'),
-            aliases: [dups.includes(data[currency].code.toLowerCase()) ? '' : data[currency].code.toLowerCase()]
-        }, {
-            override: true
-        })
-        ls.set('rateDate', data[currency].date)
-    })
-    calculate()
-}
+getRates()
 
 // Tooltip defaults
 UIkit.mixin({
@@ -680,8 +676,8 @@ function saveSettings() {
     if (!settings.app.currencies && $('currencyButton').checked) {
         getRates()
     } else if (!$('currencyButton').checked) {
-        localStorage.removeItem('rates')
         localStorage.removeItem('rateDate')
+        currencyRates = {}
     }
     settings.app.currencies = $('currencyButton').checked
     // Panel UI
