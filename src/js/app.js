@@ -12,7 +12,7 @@ const isWin = navigator.userAgent.toLowerCase().includes('win')
 const isNode = navigator.userAgent.toLowerCase().includes('electron')
 const ipc = isNode ? require('electron').ipcRenderer : null
 
-const numdate = luxon.DateTime;
+const numdate = luxon.DateTime
 
 // Set app info
 document.title = appInfo.description
