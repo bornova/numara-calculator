@@ -134,5 +134,133 @@ ipcMain.on('resetApp', () => {
 
 nativeTheme.on('updated', () => win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors))
 
-const menu = require('./menu')
-Menu.setApplicationMenu(is.macos ? Menu.buildFromTemplate(menu.macOS(app.name)) : null)
+const menuTemplate = [{
+        label: app.name,
+        submenu: [{
+                role: 'about'
+            },
+            {
+                type: 'separator'
+            },
+            {
+                role: 'hide'
+            },
+            {
+                role: 'hideothers'
+            },
+            {
+                role: 'unhide'
+            },
+            {
+                type: 'separator'
+            },
+            {
+                role: 'quit'
+            }
+        ]
+    },
+    {
+        label: 'Edit',
+        submenu: [{
+                role: 'undo'
+            },
+            {
+                role: 'redo'
+            },
+            {
+                type: 'separator'
+            },
+            {
+                role: 'cut'
+            },
+            {
+                role: 'copy'
+            },
+            {
+                role: 'paste'
+            },
+            {
+                role: 'pasteAndMatchStyle'
+            },
+            {
+                role: 'delete'
+            },
+            {
+                role: 'selectAll'
+            },
+            {
+                type: 'separator'
+            },
+            {
+                label: 'Speech',
+                submenu: [{
+                        role: 'startspeaking'
+                    },
+                    {
+                        role: 'stopspeaking'
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        label: 'View',
+        submenu: [{
+                role: 'reload'
+            },
+            {
+                type: 'separator'
+            },
+            {
+                role: 'resetzoom'
+            },
+            {
+                role: 'zoomin'
+            },
+            {
+                role: 'zoomout'
+            },
+            {
+                type: 'separator'
+            }
+        ]
+    },
+    {
+        label: 'Window',
+        submenu: [{
+                role: 'minimize'
+            },
+            {
+                role: 'zoom'
+            },
+            {
+                role: 'togglefullscreen'
+            },
+            {
+                label: 'Reset Size',
+                click: () => win.setSize(schema.appWidth.default, schema.appHeight.default)
+            },
+            {
+                type: 'separator'
+            },
+            {
+                role: 'front'
+            },
+            {
+                type: 'separator'
+            },
+            {
+                role: 'window'
+            }
+        ]
+    },
+    {
+        role: 'help',
+        submenu: [{
+            label: 'Learn More',
+            click: async () => await shell.openExternal('https://github.com/bornova/numara-calculator')
+        }]
+    }
+]
+
+Menu.setApplicationMenu(is.macos ? Menu.buildFromTemplate(menuTemplate) : null)
