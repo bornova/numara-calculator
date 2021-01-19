@@ -15,7 +15,6 @@ const appInfo = {
     productName: '${pj.productName}',
     description:'${pj.description}',
     version: '${pj.version}',
-    buildDate: '${new Date()}',
     author: '${pj.author}',
     homepage: '${pj.homepage}',
     licence: '${pj.license}',
