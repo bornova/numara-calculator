@@ -117,6 +117,8 @@ ipcMain.on('minimize', () => win.minimize())
 ipcMain.on('maximize', () => win.maximize())
 ipcMain.on('unmaximize', () => win.unmaximize())
 ipcMain.on('isMaximized', (event) => event.returnValue = win.isMaximized())
+ipcMain.on('isResized', (event) => event.returnValue = (win.getSize()[0] != schema.appWidth.default || win.getSize()[1] != schema.appHeight.default))
+ipcMain.on('resetSize', resetSize)
 ipcMain.on('print', (event) => win.webContents.print({}, (success) => event.sender.send('printReply', success ? 'Sent to printer' : false)))
 ipcMain.on('setTheme', (event, mode) => dims.set('theme', mode))
 ipcMain.on('isDark', (event) => event.returnValue = nativeTheme.shouldUseDarkColors)
@@ -133,6 +135,10 @@ ipcMain.on('resetApp', () => {
 })
 
 nativeTheme.on('updated', () => win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors))
+
+function resetSize() {
+    if (win) win.setSize(schema.appWidth.default, schema.appHeight.default)
+}
 
 const menuTemplate = [{
         label: app.name,
@@ -238,7 +244,7 @@ const menuTemplate = [{
             },
             {
                 label: 'Reset Size',
-                click: () => win.setSize(schema.appWidth.default, schema.appHeight.default)
+                click: resetSize()
             },
             {
                 type: 'separator'

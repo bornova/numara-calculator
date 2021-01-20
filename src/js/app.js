@@ -494,6 +494,9 @@ document.addEventListener('click', (e) => {
                 }
             })
             break
+        case 'resetSizeButton': // Reset window size
+            if (isNode) ipc.send('resetSize')
+            break
         case 'syntaxButton':
             syntaxToggle()
             break
@@ -633,10 +636,15 @@ function prepSettings() {
     $('lineWrapButton').checked = settings.app.lineWrap
 
     checkDefaultSettings()
+    checkWindowSize()
 }
 
 function checkDefaultSettings() {
     $('defaultSettingsButton').style.display = DeepDiff.diff(settings.app, defaultSettings.app) ? 'inline' : 'none'
+}
+
+function checkWindowSize() {
+    $('resetSizeButton').style.display = isNode ? (ipc.sendSync('isResized') ? 'block' : 'none') : 'none'
 }
 
 function syntaxToggle() {
@@ -798,6 +806,7 @@ window.addEventListener('resize', () => {
     if (activePlot && $('dialog-plot').classList.contains('uk-open')) plot()
     clearTimeout(windowResizeDelay)
     windowResizeDelay = setTimeout(calculate, 10)
+    checkWindowSize()
 })
 
 // Show confirmation dialog
@@ -854,7 +863,10 @@ rightSide.addEventListener('scroll', () => {
         leftSide.scrollTop = rightSide.scrollTop
     }
     outputScroll = false
+    $('scrollTop').style.display = $('output').scrollTop > 50 ? 'block' : 'none';
 })
+
+$('scrollTop').addEventListener('click', () => $('output').scrollTop = 0)
 
 // Mousetrap
 const traps = {

@@ -200,6 +200,11 @@ text {
     background-color: #ffffff !important;
 }
 
+.CodeMirror-scrollbar-filler,
+.CodeMirror-gutter-filler {
+    background-color: #ffffff !important;
+}
+
 .CodeMirror-dialog-top {
     background-color: #ffffff !important;
 }

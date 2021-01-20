@@ -507,6 +507,13 @@ text {
     vertical-align: middle;
 }
 
+.resetLabel {
+    float: left;
+    line-height: 30px;
+    vertical-align: middle;
+    margin-right: 10px;
+}
+
 /* Messages */
 .msgBox {
     min-width: 100px;
@@ -622,6 +629,13 @@ input:checked+.slider {
 input:checked+.slider:before {
     transform: translateX(12px);
     -webkit-transform: translateX(12px);
+}
+
+.scrollTop {
+    position: fixed;
+    bottom: 36px;
+    right: 2px;
+    width: 10px;
 }
 
 /* UIkit Overrides */

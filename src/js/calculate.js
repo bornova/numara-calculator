@@ -18,7 +18,6 @@ function calculate() {
     scope.now = numdate.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat)
     scope.today = numdate.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat)
 
-    cm.refresh()
     cm.eachLine((line) => {
         var cmLine = line.text.trim().split('//')[0].split('#')[0]
         var cmLineNo = cm.getLineNumber(line)
