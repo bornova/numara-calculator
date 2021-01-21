@@ -632,6 +632,7 @@ input:checked+.slider:before {
 }
 
 .scrollTop {
+    display: none;
     position: fixed;
     bottom: 36px;
     right: 2px;
