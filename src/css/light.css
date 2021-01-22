@@ -64,6 +64,10 @@ body {
     color: #7e1818;
 }
 
+.syntaxError {
+    color: #7e1818;
+}
+
 .errTitle {
     color: #7e1818;
 }
@@ -187,74 +191,82 @@ text {
     color: #444444;
 }
 
-/* CodeMirror Overrides */
-.CodeMirror-selected {
-    background: #c9e0f7 !important;
-}
-
 .uk-notification-message-primary {
     color: #444;
 }
 
-.CodeMirror-linenumber {
+/* CodeMirror Overrides */
+.cm-s-numara .CodeMirror-selected {
+    background: #c9e0f7 !important;
+}
+
+.cm-s-numara .CodeMirror-linenumber {
     background-color: #ffffff !important;
 }
 
-.CodeMirror-scrollbar-filler,
-.CodeMirror-gutter-filler {
+.cm-s-numara .CodeMirror-scrollbar-filler,
+.cm-s-numara .CodeMirror-gutter-filler {
     background-color: #ffffff !important;
 }
 
-.CodeMirror-dialog-top {
+.cm-s-numara .CodeMirror-dialog-top {
     background-color: #ffffff !important;
 }
 
-.CodeMirror-matchingbracket {
+.cm-s-numara .CodeMirror-matchingbracket {
     color: #999999 !important;
 }
 
-.CodeMirror-hint:hover {
+.cm-s-numara .CodeMirror-hint:hover {
     background-color: #eaeaea;
     color: #162e44;
 }
 
-li.CodeMirror-hint-active {
+.cm-s-numara li.CodeMirror-hint-active {
     background-color: #367ea1;
     color: #ffffff;
 }
 
-.cm-currency {
+.cm-s-numara .cm-currency {
     color: #009688 !important;
 }
 
-.cm-unit {
+.cm-s-numara .cm-unit {
     color: #005cc5 !important;
 }
 
-.cm-scope {
+.cm-s-numara .cm-scope {
     color: #be6317 !important;
 }
 
-.cm-number {
+.cm-s-numara .cm-number {
     color: #333 !important;
 }
 
-.cm-operator {
+.cm-s-numara .cm-operator {
     color: #888888 !important;
 }
 
-.cm-comment {
+.cm-s-numara .cm-comment {
     color: #bebebe !important;
 }
 
-.cm-function {
+.cm-s-numara .cm-function {
     color: #6f42c1 !important;
 }
 
-.cm-text {
+.cm-s-numara .cm-udf {
+    color: #6f42c1 !important;
+}
+
+.cm-s-numara .cm-text {
     color: #333333 !important;
 }
 
-.cm-variable {
+.cm-s-numara .cm-variable {
     color: #57707c !important;
+}
+
+.dialog-udf .CodeMirror {
+    border: 1px solid #eaeaea !important;
 }

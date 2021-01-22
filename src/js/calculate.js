@@ -15,9 +15,10 @@ function calculate() {
         maximumFractionDigits: settings.app.precision
     }
 
-    scope.now = numdate.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat)
-    scope.today = numdate.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat)
+    scope.now = DateTime.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat)
+    scope.today = DateTime.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat)
 
+    cm.refresh()
     cm.eachLine((line) => {
         var cmLine = line.text.trim().split('//')[0].split('#')[0]
         var cmLineNo = cm.getLineNumber(line)
@@ -37,8 +38,8 @@ function calculate() {
                     if (cmLine.match(/:/)) {
                         try {
                             solve(cmLine.split(':')[0])
-                         } catch (e) {
-                            cmLine = cmLine.substring(cmLine.indexOf(':')+1)
+                        } catch (e) {
+                            cmLine = cmLine.substring(cmLine.indexOf(':') + 1)
                         }
                     }
                     while (cmLine.match(/\([^\)]+\)/)) {
@@ -121,8 +122,8 @@ function calculate() {
             var todayFormat = settings.app.dateFormat
             var nowFormat = settings.app.dateFormat + ' ' + settings.app.timeFormat
 
-            var t = numdate.fromFormat(lineDateLeft, todayFormat)
-            var n = numdate.fromFormat(lineDateLeft, nowFormat)
+            var t = DateTime.fromFormat(lineDateLeft, todayFormat)
+            var n = DateTime.fromFormat(lineDateLeft, nowFormat)
             var dt = t.isValid ? t : n.isValid ? n : null
 
             var rightOfDate = String(solve(lineDateRight + ' to hours', scope))

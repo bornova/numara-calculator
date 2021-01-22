@@ -2,15 +2,15 @@
     "name": "numara",
     "productName": "Numara",
     "description": "Numara Calculator",
-    "version": "2.17.1",
+    "version": "2.18.0",
     "author": "Timur Atalay",
     "license": "MIT",
     "homepage": "https://github.com/bornova/numara-calculator",
     "main": "src/js/main.js",
     "scripts": {
-        "prep": "node prep.js",
-        "test": "node prep.js && electron .",
-        "dist": "node prep.js && electron-builder"
+        "build": "node build.js",
+        "test": "node build.js && electron .",
+        "dist": "node build.js && electron-builder"
     },
     "devDependencies": {
         "clean-css": "^4.2.3",

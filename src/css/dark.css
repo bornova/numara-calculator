@@ -155,6 +155,10 @@ line {
     stroke: #333;
 }
 
+.syntaxError {
+    color: #bd2e2e;
+}
+
 /* UIkit Overrides */
 .uk-modal {
     background-color: rgba(0, 0, 0, .8);
@@ -245,91 +249,99 @@ line {
 }
 
 /* CodeMirror Overrides */
-.CodeMirror {
+.cm-s-numara {
     color: #e6e6e6 !important;
 }
 
-.CodeMirror-cursor {
+.cm-s-numara .CodeMirror-cursor {
     border-left: 1px solid #e6e6e6 !important;
 }
 
-.CodeMirror-selected {
+.cm-s-numara .CodeMirror-selected {
     background: #193552 !important;
 }
 
-.CodeMirror-linenumber {
+.cm-s-numara .CodeMirror-linenumber {
     background-color: #1f1f1f !important;
 }
 
-.CodeMirror-scrollbar-filler,
-.CodeMirror-gutter-filler {
+.cm-s-numara .CodeMirror-scrollbar-filler,
+.cm-s-numara .CodeMirror-gutter-filler {
     background-color: #1f1f1f !important;
 }
 
-.CodeMirror-dialog-top {
+.cm-s-numara .CodeMirror-dialog-top {
     background-color: #1f1f1f !important;
     border-color: #666666;
     color: #e6e6e6 !important;
 }
 
-.CodeMirror button {
+.cm-s-numara button {
     color: #e6e6e6 !important;
 }
 
-.CodeMirror-matchingbracket {
+.cm-s-numara .CodeMirror-matchingbracket {
     color: #999 !important;
 }
 
-.CodeMirror-hints {
+.cm-s-numara .CodeMirror-hints {
     background-color: #333333;
     border-color: #222222;
 }
 
-.CodeMirror-hint {
+.cm-s-numara .CodeMirror-hint {
     color: #e6e6e6;
 }
 
-.CodeMirror-hint:hover {
+.cm-s-numara .CodeMirror-hint:hover {
     background-color: #222222;
 }
 
-li.CodeMirror-hint-active {
+.cm-s-numara li.CodeMirror-hint-active {
     background-color: #006699;
     color: #eaeaea;
 }
 
-.cm-currency {
+.cm-s-numara .cm-currency {
     color: #009688 !important;
 }
 
-.cm-unit {
+.cm-s-numara .cm-unit {
     color: #4d87c9 !important;
 }
 
-.cm-scope {
+.cm-s-numara .cm-scope {
     color: #be6317 !important;
 }
 
-.cm-number {
+.cm-s-numara .cm-number {
     color: #e6e6e6 !important;
 }
 
-.cm-operator {
+.cm-s-numara .cm-operator {
     color: #bbbbbb !important;
 }
 
-.cm-comment {
+.cm-s-numara .cm-comment {
     color: #5a5a5a !important;
 }
 
-.cm-function {
+.cm-s-numara .cm-function {
     color: #af64db !important;
 }
 
-.cm-text {
+.cm-s-numara .cm-udf {
+    color: #af64db !important;
+}
+
+.cm-s-numara .cm-text {
     color: #e6e6e6 !important;
 }
 
-.cm-variable {
+.cm-s-numara .cm-variable {
     color: #96b4c4 !important;
+}
+
+.dialog-udf .CodeMirror {
+    border: 1px solid #333333 !important;
 }

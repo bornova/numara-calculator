@@ -49,6 +49,7 @@
                 <span id="msg" class="msg"></span>
             </div>
             <div id="rightActions" class="rightActions">
+                <a id="udfButton" class="action" title="User defined functions" uk-tooltip><i data-feather="edit-3"></i></a>
                 <a id="settingsButton" class="action" title="Settings" uk-tooltip><i data-feather="settings"></i></a>
                 <a id="helpButton" class="action" title="Help" uk-tooltip><i data-feather="help-circle"></i></a>
                 <a id="aboutButton" class="action" title="Info" uk-tooltip><i data-feather="info"></i></a>
@@ -74,6 +75,24 @@
             <div class="dialog-buttons uk-text-right">
                 <button id="dialog-open-deleteAll" class="uk-button uk-button-danger uk-button-small">Delete All</button>
                 <button class="uk-button uk-button-primary uk-modal-close uk-button-small">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dialog-udf" class="dialog-udf modal" uk-modal>
+        <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical">
+            <h2 class="uk-modal-title">User defined functions</h2>
+            <div>
+                <textarea id="udfInput" class="udfInput"></textarea>
+            </div>
+            <div uk-grid>
+                <div class="dialog-buttons uk-width-2-3 uk-text-left">
+                    <span id="syntaxError" class="syntaxError"></span>
+                </div>
+                <div class="dialog-buttons uk-width-1-3 uk-text-right">
+                    <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
+                    <button id="dialog-udf-save" class="uk-button uk-button-primary uk-button-small">Save</button>
+                </div>
             </div>
         </div>
     </div>
@@ -417,6 +436,7 @@
     </div>
 
     <a id="scrollTop" class="scrollTop" uk-totop></a>
+    <div id="dd" uk-dropdown>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.</div>
 
     <script src="js/packages.js"></script>
     <script src="js/codemirror.js"></script>

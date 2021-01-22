@@ -52,12 +52,14 @@ fs.emptyDir(build_path).then(() => {
     var codemirror = [
         'node_modules/codemirror/lib/codemirror.js',
         'node_modules/codemirror/addon/dialog/dialog.js',
+        'node_modules/codemirror/addon/display/placeholder.js',
         'node_modules/codemirror/addon/edit/matchbrackets.js',
         'node_modules/codemirror/addon/edit/closebrackets.js',
         'node_modules/codemirror/addon/hint/show-hint.js',
         'node_modules/codemirror/addon/search/jump-to-line.js',
         'node_modules/codemirror/addon/search/search.js',
-        'node_modules/codemirror/addon/search/searchcursor.js'
+        'node_modules/codemirror/addon/search/searchcursor.js',
+        'node_modules/codemirror/mode/javascript/javascript.js'
     ]
 
     var t_n = {}
@@ -86,7 +88,8 @@ fs.emptyDir(build_path).then(() => {
     var codemirror_css = [
         'node_modules/codemirror/lib/codemirror.css',
         'node_modules/codemirror/addon/dialog/dialog.css',
-        'node_modules/codemirror/addon/hint/show-hint.css'
+        'node_modules/codemirror/addon/hint/show-hint.css',
+        'node_modules/codemirror/theme/material-darker.css',
     ]
 
     var c_n = {}

@@ -286,7 +286,7 @@ text {
 
 .noAction:hover {
     color: rgb(95, 107, 116);
-    
+
 }
 
 /* Dialogs */
@@ -809,64 +809,64 @@ pre {
 }
 
 /* CodeMirror Overrides */
-.CodeMirror {
+.cm-s-numara {
     background: none !important;
     font-family: 'Roboto Mono' !important;
     height: 100% !important;
 }
 
-.CodeMirror-gutters {
+.cm-s-numara .CodeMirror-gutters {
     background: none !important;
     border: none !important;
 }
 
-.CodeMirror-lines {
+.cm-s-numara .CodeMirror-lines {
     line-height: 28px !important;
     padding: 0 !important;
 }
 
-.CodeMirror-cursor {
+.cm-s-numara .CodeMirror-cursor {
     height: 15px !important;
     margin: 7px 0 6px 0;
 }
 
-.CodeMirror-vscrollbar {
+.cm-s-numara .CodeMirror-vscrollbar {
     display: none !important;
 }
 
-.CodeMirror-hscrollbar,
-.CodeMirror-gutter-filler {
+.cm-s-numara .cm-s-numara .CodeMirror-hscrollbar,
+.cm-s-numara .CodeMirror-gutter-filler {
     display: block !important;
     height: 8px !important;
     width: auto;
 }
 
-.CodeMirror-hscrollbar {
+.cm-s-numara .CodeMirror-hscrollbar {
     right: 8px !important;
 }
 
-.CodeMirror-linenumber {
+.cm-s-numara .CodeMirror-linenumber {
     padding: 0 10px 0 0 !important;
 }
 
-.CodeMirror-sizer {
+.cm-s-numara .CodeMirror-sizer {
     padding-bottom: 8px !important;
 }
 
-.CodeMirror-search-hint {
+.cm-s-numara .CodeMirror-search-hint {
     display: none !important;
 }
 
-.CodeMirror-dialog input {
+.cm-s-numara .CodeMirror-dialog input {
     font-family: inherit !important;
 }
 
-.CodeMirror button {
+.cm-s-numara button {
     color: #1e87f0 !important;
     font-size: inherit !important;
 }
 
-.CodeMirror button:hover {
+.cm-s-numara button:hover {
     color: #5286b9 !important;
     cursor: pointer !important;
     font-size: inherit !important;
@@ -876,10 +876,19 @@ pre {
     background-color: rgba(255, 250, 82, 0.5) !important;
 }
 
-.CodeMirror-search-label {
+.cm-s-numara .CodeMirror-search-label {
     font-size: 1rem !important;
 }
 
-.CodeMirror-search-label {
+.cm-s-numara .CodeMirror-search-label {
     font-size: 1rem !important;
+}
+
+.dialog-udf .CodeMirror {
+    height: calc(100vh - 180px) !important;
+    max-height: 600px;
+}
+
+.dialog-udf .CodeMirror-placeholder {
+    opacity: 0.4;
 }
