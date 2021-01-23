@@ -33,7 +33,8 @@ const schema = {
 }
 const dims = new store({
     schema,
-    fileExtension: ''
+    fileExtension: '',
+    clearInvalidConfig: true
 })
 
 require('electron-context-menu')({
