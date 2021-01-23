@@ -2,7 +2,7 @@
     "name": "numara",
     "productName": "Numara",
     "description": "Numara Calculator",
-    "version": "2.18.1",
+    "version": "2.18.2",
     "author": "Timur Atalay",
     "license": "MIT",
     "homepage": "https://github.com/bornova/numara-calculator",
@@ -29,7 +29,7 @@
     },
     "dependencies": {
         "electron-context-menu": "^2.4.0",
-        "electron-store": "^6.0.1",
+        "electron-store": "^7.0.0",
         "electron-updater": "^4.3.5",
         "electron-util": "^0.14.2"
     },
