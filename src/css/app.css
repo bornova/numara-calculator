@@ -155,7 +155,7 @@ text {
 .panel {
     display: flex;
     position: fixed;
-    bottom: 45px;
+    bottom: 42px;
     left: 20px;
     right: 8px;
     top: 50px;
@@ -842,6 +842,7 @@ pre {
 }
 
 .cm-s-numara .CodeMirror-hscrollbar {
+    display: block !important;
     right: 8px !important;
 }
 

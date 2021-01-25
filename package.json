@@ -2,7 +2,7 @@
     "name": "numara",
     "productName": "Numara",
     "description": "Numara Calculator",
-    "version": "2.18.3",
+    "version": "2.18.4",
     "author": "Timur Atalay",
     "license": "MIT",
     "homepage": "https://github.com/bornova/numara-calculator",
@@ -42,10 +42,12 @@
         },
         "win": {
             "target": "nsis-web",
-            "publish": [{
-                "provider": "generic",
-                "url": "https://numara.io/releases/win/"
-            }],
+            "publish": [
+                {
+                    "provider": "generic",
+                    "url": "https://numara.io/releases/win/"
+                }
+            ],
             "artifactName": "${productName}-${version}.${ext}"
         },
         "mac": {
@@ -56,10 +58,12 @@
             "electronLanguages": [
                 "en"
             ],
-            "publish": [{
-                "provider": "generic",
-                "url": "https://numara.io/releases/mac/"
-            }]
+            "publish": [
+                {
+                    "provider": "generic",
+                    "url": "https://numara.io/releases/mac/"
+                }
+            ]
         },
         "directories": {
             "buildResources": "build/assets"
