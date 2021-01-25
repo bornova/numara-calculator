@@ -17,6 +17,8 @@ const cm = CodeMirror.fromTextArea($('inputArea'), {
     viewportMargin: Infinity
 })
 
+cm.setValue(ls.get('input') || '')
+
 $('udfInput').setAttribute('placeholder', `// Define new functions and variables:
 myvalue: 42,
 hello: function (name) {
@@ -266,8 +268,6 @@ let settings;
         })
     }
 
-    cm.setValue(ls.get('input') || '')
-    cm.execCommand('goDocEnd')
     cm.on('changes', calculate)
     cm.on("inputRead", (cm, event) => {
         if (settings.app.autocomplete) CodeMirror.commands.autocomplete(cm)
@@ -995,7 +995,9 @@ now + 36 hours - 2 days
 f(x) = sin(x)
 f(x) = 2x^2 + 3x - 5
 `
-
-    setTimeout(() => document.getElementsByClassName('CodeMirror-code')[0].lastChild.scrollIntoView(), 100)
-    setTimeout(() => cm.focus(), 200)
 })();
+
+window.addEventListener('load', () => {
+    cm.execCommand('goDocEnd')
+    document.getElementsByClassName('CodeMirror-code')[0].lastChild.scrollIntoView()
+});
