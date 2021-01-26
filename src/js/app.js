@@ -994,6 +994,6 @@ f(x) = 2x^2 + 3x - 5
 })();
 
 window.addEventListener('load', () => {
-    document.getElementsByClassName('CodeMirror-code')[0].lastChild.scrollIntoView()
-    setTimeout(() => cm.focus(), 1000)
+    setTimeout(() => document.getElementsByClassName('CodeMirror-code')[0].lastChild.scrollIntoView(), 250)
+    setTimeout(() => cm.focus(), 500)
 });
