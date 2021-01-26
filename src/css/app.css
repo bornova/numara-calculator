@@ -834,7 +834,7 @@ pre {
     display: none !important;
 }
 
-.cm-s-numara .cm-s-numara .CodeMirror-hscrollbar,
+.cm-s-numara .CodeMirror-hscrollbar,
 .cm-s-numara .CodeMirror-gutter-filler {
     display: block !important;
     height: 8px !important;
@@ -842,7 +842,6 @@ pre {
 }
 
 .cm-s-numara .CodeMirror-hscrollbar {
-    display: block !important;
     right: 8px !important;
 }
 
