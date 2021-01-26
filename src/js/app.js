@@ -11,24 +11,20 @@ const DateTime = luxon.DateTime;
 
 // Prep input
 const cm = CodeMirror.fromTextArea($('inputArea'), {
-    theme: "numara",
+    theme: 'numara',
     coverGutterNextToScrollbar: true,
     inputStyle: 'textarea',
     viewportMargin: Infinity
 })
 
 cm.setValue(ls.get('input') || '')
+cm.execCommand('goDocEnd')
 
-$('udfInput').setAttribute('placeholder', `// Define new functions and variables:
-myvalue: 42,
-hello: function (name) {
-  return 'hello, ' + name + '!'
-}`)
+$('udfInput').setAttribute('placeholder', `// Define new functions and variables:\nmyvalue: 42,\nhello: (name) => {\n\treturn 'hello, ' + name + '!'\n}`)
 const udfInput = CodeMirror.fromTextArea($('udfInput'), {
-    mode: "javascript",
+    mode: 'javascript',
     autoCloseBrackets: true,
-    smartIndent: false,
-    tabSize: 2
+    smartIndent: false
 })
 
 let settings;
@@ -93,13 +89,13 @@ let settings;
             $('max').style.display = !isMax ? 'block' : 'none'
         })
 
-        $('header-win').addEventListener("dblclick", toggleMax)
+        $('header-win').addEventListener('dblclick', toggleMax)
     } else {
         $('header-win').remove()
         $('header-mac').style.display = 'block'
         $('header-mac-title').innerHTML = appInfo.productName
 
-        if (isNode) $('header-mac').addEventListener("dblclick", toggleMax)
+        if (isNode) $('header-mac').addEventListener('dblclick', toggleMax)
     }
 
     function toggleMax() {
@@ -269,7 +265,7 @@ let settings;
     }
 
     cm.on('changes', calculate)
-    cm.on("inputRead", (cm, event) => {
+    cm.on('inputRead', (cm, event) => {
         if (settings.app.autocomplete) CodeMirror.commands.autocomplete(cm)
     })
     cm.on('update', () => {
@@ -641,7 +637,7 @@ let settings;
             calculate()
             ls.set('udf', udf)
 
-            var udfs = eval("[{" + udf + "}]")
+            var udfs = eval('[{' + udf + '}]')
             udfList = []
             udfs.forEach((f) => Object.keys(f).forEach((k) => udfList.push(k)))
 
@@ -998,6 +994,6 @@ f(x) = 2x^2 + 3x - 5
 })();
 
 window.addEventListener('load', () => {
-    cm.execCommand('goDocEnd')
     document.getElementsByClassName('CodeMirror-code')[0].lastChild.scrollIntoView()
+    setTimeout(() => cm.focus(), 1000)
 });
