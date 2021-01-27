@@ -487,7 +487,7 @@ let settings;
     document.addEventListener('click', (e) => {
         switch (e.target.id) {
             case 'dialog-save-save': // Save calculation
-                var id = DateTime.local().toFormat('x');
+                var id = DateTime.local().toFormat('yyyyMMddHHmmssSSS');
                 var obj = ls.get('saved') || {};
                 var data = cm.getValue();
                 var title = $('saveTitle').value.replace(/<|>/g, '').trim() || 'No title';
@@ -608,7 +608,7 @@ let settings;
                 <div class="dialog-open-wrapper" id="${id}">
                     <div data-action="load">
                         <div class="dialog-open-title">${val[0]}</div>
-                        <div class="dialog-open-date">${DateTime.fromFormat(Number(id), 'x').toFormat('lll')}</div>
+                        <div class="dialog-open-date">${DateTime.fromFormat(id, 'yyyyMMddHHmmssSSS').toFormat('ff')}</div>
                     </div>
                     <span class="dialog-open-delete" data-action="delete"><i data-feather="x-circle"></i></span>
                 </div>`;
