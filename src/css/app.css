@@ -554,7 +554,8 @@ text {
 
 /* Function Plot */
 .function-plot {
-    height: calc(100vh - 190px) !important;
+    height: calc(100vh - 180px) !important;
+    max-height: 800px;
 }
 
 .top-right-legend {
@@ -588,7 +589,7 @@ text {
 }
 
 .plotSwitches {
-    margin-top: 7px;
+    margin-top: 5px;
 }
 
 .slider {
@@ -646,7 +647,7 @@ input:checked+.slider:before {
 
 @media (min-width: 640px) {
     .uk-modal {
-        padding: 0;
+        padding: 15px;
     }
 }
 
@@ -746,11 +747,19 @@ input:checked+.slider:before {
 }
 
 .uk-width-medium {
-    width: 300px;
+    width: 350px;
 }
 
 .uk-width-large {
-    width: 350px;
+    width: 600px;
+}
+
+.uk-width-xlarge {
+    width: 800px;
+}
+
+.uk-width-2xlarge {
+    width: 1200px;
 }
 
 .uk-overflow-auto {
