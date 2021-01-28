@@ -373,7 +373,7 @@ let settings;
     // Tooltip defaults
     UIkit.mixin({
         data: {
-            delay: 300,
+            delay: 500,
             offset: 5
         }
     }, 'tooltip');
@@ -956,6 +956,7 @@ let settings;
             if (status == 'ready') {
                 $('dialog-about-updateStatus').innerHTML = 'Restart Numara to finish updating.';
                 $('restartButton').style.display = 'inline-block';
+                $('notificationDot').style.display = 'block';
                 if (!$('dialog-about').classList.contains('uk-open')) {
                     notify(`Restart Numara to finish updating. <a class="updateLink" onclick="$('restartButton').click()">Restart Now</a>`);
                 }

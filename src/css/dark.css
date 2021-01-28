@@ -85,7 +85,7 @@ body {
 
 .action,
 .noAction {
-    color: #5f6b74;
+    color: #607d8b;
 }
 
 .dialog-open-wrapper {
@@ -245,7 +245,7 @@ line {
 }
 
 .uk-notification-message-primary {
-    color: #eaeaea;
+    color: #2196f3;
 }
 
 /* CodeMirror Overrides */
@@ -284,16 +284,16 @@ line {
     color: #999 !important;
 }
 
-.cm-s-numara .CodeMirror-hints {
+.CodeMirror-hints {
     background-color: #333333;
     border-color: #222222;
 }
 
-.cm-s-numara .CodeMirror-hint {
+.CodeMirror-hint {
     color: #e6e6e6;
 }
 
-.cm-s-numara .CodeMirror-hint:hover {
+.CodeMirror-hint:hover {
     background-color: #222222;
 }
 

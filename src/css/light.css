@@ -91,7 +91,7 @@ body {
 
 .action,
 .noAction {
-    color: rgb(95, 107, 116);
+    color: #607d8b;
 }
 
 .dialog-open-wrapper {
@@ -192,7 +192,7 @@ text {
 }
 
 .uk-notification-message-primary {
-    color: #444;
+    color: #2196f3;
 }
 
 /* CodeMirror Overrides */
@@ -217,12 +217,12 @@ text {
     color: #999999 !important;
 }
 
-.cm-s-numara .CodeMirror-hint:hover {
+.CodeMirror-hint:hover {
     background-color: #eaeaea;
     color: #162e44;
 }
 
-.cm-s-numara li.CodeMirror-hint-active {
+li.CodeMirror-hint-active {
     background-color: #367ea1;
     color: #ffffff;
 }

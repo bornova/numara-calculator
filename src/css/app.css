@@ -280,13 +280,26 @@ text {
 }
 
 .noAction {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: default;
 }
 
 .noAction:hover {
-    color: rgb(95, 107, 116);
+    color: #607d8b;
+}
 
+.notificationDot {
+    display: none;
+    position: fixed;
+    right: 10px;
+    bottom: 18px;
+}
+
+.notificationDot > svg {
+    width: 5px;
+    height: 5px;
+    fill: #1e87f0;
+    stroke: #1e87f0;
 }
 
 /* Dialogs */
