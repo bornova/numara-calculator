@@ -1,7 +1,7 @@
 /* UI defaults */
 html,
 body {
-    background-color: #fff;
+    background-color: #ffffff;
     color: #444444;
 }
 
@@ -26,7 +26,7 @@ body {
 .min-btn-win:hover,
 .max-btn-win:hover,
 .unmax-btn-win:hover {
-    background-color: #f4f4f4;
+    background-color: #eeeeee;
 }
 
 .min-btn-win {
@@ -94,6 +94,10 @@ body {
     color: #607d8b;
 }
 
+.noAction:hover {
+    color: #607d8b;
+}
+
 .dialog-open-wrapper {
     background-color: rgba(244, 244, 244, 0.3);
     border: 1px solid #eaeaea;
@@ -130,7 +134,7 @@ body {
 }
 
 .textBox {
-    color: #666;
+    color: #666666;
 }
 
 .slider:before {
@@ -138,16 +142,16 @@ body {
 }
 
 .slider.round:before {
-    background-color: #fff;
+    background-color: #ffffff;
 }
 
 .lastUpdated {
-    color: #999;
+    color: #999999;
 }
 
 /* Plot */
 text {
-    fill: #444;
+    fill: #444444;
 }
 
 /* UIkit Overrides */
@@ -184,7 +188,7 @@ text {
 .uk-button-danger:disabled:hover {
     background-color: transparent;
     border-color: #e5e5e5;
-    color: #999;
+    color: #999999;
 }
 
 .uk-select {
@@ -240,7 +244,7 @@ li.CodeMirror-hint-active {
 }
 
 .cm-s-numara .cm-number {
-    color: #333 !important;
+    color: #333333 !important;
 }
 
 .cm-s-numara .cm-operator {

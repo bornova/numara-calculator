@@ -15,7 +15,7 @@ const cm = CodeMirror.fromTextArea($('inputArea'), {
     coverGutterNextToScrollbar: true,
     inputStyle: 'textarea',
     viewportMargin: Infinity
-})
+});
 
 cm.setValue(ls.get('input') || '');
 cm.execCommand('goDocEnd');
@@ -51,10 +51,10 @@ let settings;
     $('licenseLink').setAttribute('href', appInfo.homepage + '/blob/master/LICENSE');
 
     if (isNode) {
-        ipc.on('themeUpdate', () => applySettings())
+        ipc.on('themeUpdate', () => applySettings());
         ipc.on('fullscreen', (event, isFullscreen) => {
             if (isFullscreen) ipc.send('maximize');
-        })
+        });
     }
 
     // Set headers
@@ -81,7 +81,7 @@ let settings;
                     ipc.send('close');
                     break
             }
-            e.stopPropagation()
+            e.stopPropagation();
         })
 
         ipc.on('isMax', (event, isMax) => {
@@ -149,7 +149,7 @@ let settings;
                 DeepDiff.applyChange(settings, defaultSettings, d);
                 ls.set('settings', settings);
             }
-        })
+        });
     }
 
     // Exchange rates
@@ -176,7 +176,7 @@ let settings;
                             override: true
                         });
                         ls.set('rateDate', rates[currency].date);
-                    })
+                    });
                     applySettings();
                     $('lastUpdated').innerHTML = ls.get('rateDate');
                 }).catch((e) => {
@@ -261,7 +261,7 @@ let settings;
     CodeMirror.commands.autocomplete = (cm) => {
         CodeMirror.showHint(cm, CodeMirror.hint.numaraHints, {
             completeSingle: false
-        })
+        });
     }
 
     cm.on('changes', calculate);
@@ -476,12 +476,12 @@ let settings;
                 break
         }
         e.stopPropagation();
-    })
+    });
 
     $('output').addEventListener('mousedown', () => {
         var sels = document.getElementsByClassName('CodeMirror-selected');
         while (sels[0]) sels[0].classList.remove('CodeMirror-selected');
-    })
+    });
 
     // Dialog button actions
     document.addEventListener('click', (e) => {
@@ -592,7 +592,7 @@ let settings;
                 populateSaved();
             });
         }
-    })
+    });
 
     // Populate saved calculation
     UIkit.util.on('#dialog-open', 'beforeshow', () => populateSaved());
@@ -787,7 +787,7 @@ let settings;
         } else {
             $('searchResults').innerHTML = 'Start typing above to search...';
         }
-    })
+    });
 
     // Panel resizer
     let resizeDelay;
@@ -872,7 +872,7 @@ let settings;
         clearTimeout(windowResizeDelay);
         windowResizeDelay = setTimeout(calculate, 10);
         checkWindowSize();
-    })
+    });
 
     // Show confirmation dialog
     function confirm(msg, action) {
@@ -963,7 +963,7 @@ let settings;
             } else {
                 $('dialog-about-updateStatus').innerHTML = status;
             }
-        })
+        });
     }
 
     const demo = `1+2

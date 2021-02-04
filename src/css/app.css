@@ -38,7 +38,7 @@ input {
 }
 
 input[type=range]::-webkit-slider-runnable-track {
-    background-color: #999;
+    background-color: #999999;
     border: none;
     border-radius: 3px;
     height: 1px;
@@ -57,7 +57,7 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 input[type=range]:focus::-webkit-slider-runnable-track {
-    background-color: #999;
+    background-color: #999999;
 }
 
 textarea {
@@ -280,12 +280,8 @@ text {
 }
 
 .noAction {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: default;
-}
-
-.noAction:hover {
-    color: #607d8b;
 }
 
 .notificationDot {
@@ -295,7 +291,7 @@ text {
     bottom: 18px;
 }
 
-.notificationDot > svg {
+.notificationDot>svg {
     width: 5px;
     height: 5px;
     fill: #1e87f0;
@@ -528,11 +524,6 @@ text {
 }
 
 /* Messages */
-.msgBox {
-    min-width: 100px;
-    text-align: center;
-}
-
 .msg {
     opacity: 0;
     transition: visibility 0.3s linear, opacity 0.3s linear;
@@ -555,7 +546,7 @@ text {
 }
 
 .textBox {
-    border: 1px solid #ccc;
+    border: 1px solid #cccccc;
     box-sizing: border-box;
     padding: 5px;
     width: 100%;

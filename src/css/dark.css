@@ -11,11 +11,11 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background-color: #333;
+    background-color: #333333;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background-color: #444;
+    background-color: #444444;
 }
 
 .header-win-title {
@@ -60,11 +60,11 @@ body {
 .lineError,
 .lineError:hover,
 .lineError>div {
-    color: rgba(189, 46, 46, 1);
+    color: #bd2e2e;
 }
 
 .errTitle {
-    color: rgba(189, 46, 46, 1);
+    color: #bd2e2e;
 }
 
 .msgBox {
@@ -72,7 +72,7 @@ body {
 }
 
 .divider::before {
-    background-color: #333;
+    background-color: #333333;
 }
 
 .output {
@@ -88,14 +88,18 @@ body {
     color: #607d8b;
 }
 
+.noAction:hover {
+    color: #607d8b;
+}
+
 .dialog-open-wrapper {
-    background-color: #333;
-    border: 1px solid #222;
+    background-color: #333333;
+    border: 1px solid #404040;
     color: #e6e6e6;
 }
 
 .dialog-open-wrapper:hover {
-    background-color: #4444;
+    background-color: #444444;
 }
 
 .dialog-open-delete {
@@ -120,7 +124,7 @@ body {
 
 /* Settings menu items */
 .precision {
-    border: 1px solid #333;
+    border: 1px solid #333333;
     color: #e6e6e6;
 }
 
@@ -130,11 +134,11 @@ body {
 }
 
 .slider:before {
-    background-color: #222;
+    background-color: #222222;
 }
 
 .lastUpdated {
-    color: #999;
+    color: #999999;
 }
 
 /* Plot */
@@ -152,7 +156,7 @@ line {
 
 .domain {
     opacity: 1;
-    stroke: #333;
+    stroke: #333333;
 }
 
 .syntaxError {
@@ -178,7 +182,7 @@ line {
 
 .uk-select:not([multiple]):not([size]) {
     background-color: #1f1f1f;
-    border-color: #333;
+    border-color: #333333;
     color: #e6e6e6;
 }
 
@@ -199,37 +203,37 @@ line {
 
 .uk-button-danger,
 .uk-button-danger:focus {
-    background-color: #333;
-    border-color: #333;
-    color: rgba(189, 46, 46, 1);
+    background-color: #333333;
+    border-color: #333333;
+    color: #bd2e2e;
 }
 
 .uk-button-danger:hover {
-    background-color: #444;
+    background-color: #444444;
     border-color: rgba(189, 46, 46, 0.3);
-    color: rgba(189, 46, 46, 1);
+    color: #bd2e2e;
 }
 
 .uk-button-danger:active {
-    background-color: #444;
+    background-color: #444444;
 }
 
 .uk-button-danger:disabled {
-    border-color: #333;
+    border-color: #333333;
 }
 
 .uk-button-danger:disabled:hover {
     background-color: transparent;
-    border-color: #333;
-    color: #999;
+    border-color: #333333;
+    color: #999999;
 }
 
 .uk-tab>*>a {
-    color: #666;
+    color: #666666;
 }
 
 .uk-tab>*>a:hover {
-    color: #777;
+    color: #777777;
 }
 
 .uk-tab>.uk-active>a {
@@ -237,7 +241,7 @@ line {
 }
 
 .uk-tab::before {
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid #333333;
 }
 
 .uk-notification-message {
@@ -281,7 +285,7 @@ line {
 }
 
 .cm-s-numara .CodeMirror-matchingbracket {
-    color: #999 !important;
+    color: #999999 !important;
 }
 
 .CodeMirror-hints {
