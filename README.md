@@ -5,3 +5,6 @@ Simple notepad calculator built on [Electron](https://github.com/electron/electr
 Available for Windows, MacOS, and on the web.
 
 See it in action at https://numara.io (mobile friendly)
+
+<img src="http://numara.io/assets/numara-light.png" width="500">
+<img src="http://numara.io/assets/numara-dark.png" width="500">
