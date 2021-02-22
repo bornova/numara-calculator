@@ -2,8 +2,11 @@
     "name": "numara",
     "productName": "Numara",
     "description": "Numara Calculator",
-    "version": "2.19.9",
-    "author": "Timur Atalay",
+    "version": "3.0.0",
+    "author": {
+        "name": "Timur Atalay",
+        "email": "mail@numara.io"
+    },
     "license": "MIT",
     "homepage": "https://github.com/bornova/numara-calculator",
     "main": "src/js/main.js",
@@ -11,13 +14,14 @@
         "build": "node build.js",
         "test": "node build.js && electron .",
         "dist": "node build.js && electron-builder",
-        "dist-all": "node build.js && electron-builder -m -w"
+        "dist-all": "node build.js && electron-builder -mwl",
+        "publish": "node build.js && electron-builder -mwl -p always"
     },
     "devDependencies": {
         "clean-css": "^5.1.0",
-        "codemirror": "^5.59.2",
+        "codemirror": "^5.59.3",
         "deep-diff": "^1.0.2",
-        "electron": "^11.2.3",
+        "electron": "^11.3.0",
         "electron-builder": "^22.9.1",
         "feather-icons": "^4.28.0",
         "fs-extra": "^9.1.0",
@@ -36,37 +40,31 @@
     },
     "build": {
         "appId": "com.numara.app",
+        "artifactName": "${productName}-${version}.${ext}",
+        "publish": [{
+            "provider": "github"
+        }],
+        "mac": {
+            "electronLanguages": [
+                "en"
+            ]
+        },
+        "win": {
+            "target": "nsis-web"
+        },
         "nsisWeb": {
             "oneClick": false,
             "deleteAppDataOnUninstall": true
         },
-        "win": {
-            "target": "nsis-web",
-            "publish": [
-                {
-                    "provider": "generic",
-                    "url": "https://numara.io/releases/win/"
-                }
-            ],
-            "artifactName": "${productName}-${version}.${ext}"
-        },
-        "mac": {
+        "linux": {
             "target": [
-                "dmg",
-                "zip"
-            ],
-            "electronLanguages": [
-                "en"
-            ],
-            "publish": [
-                {
-                    "provider": "generic",
-                    "url": "https://numara.io/releases/mac/"
-                }
+                "AppImage",
+                "deb"
             ]
         },
         "directories": {
-            "buildResources": "build/assets"
+            "buildResources": "build/assets",
+            "output": "dist/${version}/${os}"
         },
         "files": [
             "build",
