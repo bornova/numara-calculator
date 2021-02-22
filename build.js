@@ -15,7 +15,7 @@ const appInfo = {
     productName: '${pj.productName}',
     description:'${pj.description}',
     version: '${pj.version}',
-    author: '${pj.author}',
+    author: '${pj.author.name}',
     homepage: '${pj.homepage}',
     licence: '${pj.license}',
     website: 'https://numara.io'
