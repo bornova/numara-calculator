@@ -31,7 +31,7 @@ let settings;
 
 (() => {
     // User agent
-    let isWin = navigator.userAgent.toLowerCase().includes('win');
+    let isMac = navigator.userAgent.toLowerCase().includes('mac');
     let isNode = navigator.userAgent.toLowerCase().includes('electron');
     let ipc = isNode ? require('electron').ipcRenderer : null;
 
@@ -42,9 +42,9 @@ let settings;
     $('dialog-about-appVersion').innerHTML = isNode ? 'Version ' + appInfo.version :
         `Version ${appInfo.version}
     <div class="versionCtnr">
-        <div>Desktop version:</div>
-        <div><a href="https://numara.io/releases/win/${appInfo.productName}-${appInfo.version}.exe">Windows</a></div>
-        <div><a href="https://numara.io/releases/mac/${appInfo.productName}-${appInfo.version}.dmg">MacOS</a></div>
+        <div><a href="https://numara.io/releases/win/${appInfo.productName}-${appInfo.version}.exe">Windows</a><br>(.exe)</div>
+        <div><a href="https://numara.io/releases/mac/${appInfo.productName}-${appInfo.version}.dmg">MacOS</a><br>(.dmg)</div>
+        <div><a href="https://numara.io/releases/linux/${appInfo.productName}-${appInfo.version}.deb">Linux</a><br>(.deb)</div>
     </div>`;
     $('gitLink').setAttribute('href', appInfo.homepage);
     $('webLink').setAttribute('href', appInfo.website);
@@ -58,7 +58,7 @@ let settings;
     }
 
     // Set headers
-    if (isNode && isWin) {
+    if (isNode && !isMac) {
         $('header-mac').remove();
         $('header-win').style.display = 'block';
         $('header-win-title').innerHTML = appInfo.productName;
