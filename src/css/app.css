@@ -1,6 +1,6 @@
 * {
-    backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
     -webkit-tap-highlight-color: transparent;
     background: none;
     border: none;
@@ -604,8 +604,8 @@ text {
     left: 0;
     right: 0;
     top: 0;
-    transition: .2s;
     -webkit-transition: .2s;
+    transition: .2s;
 }
 
 .slider:before {
@@ -614,8 +614,8 @@ text {
     position: absolute;
     bottom: 2px;
     left: 2px;
-    transition: .2s;
     -webkit-transition: .2s;
+    transition: .2s;
     width: 12px;
 }
 
@@ -632,8 +632,8 @@ input:checked+.slider {
 }
 
 input:checked+.slider:before {
-    transform: translateX(12px);
     -webkit-transform: translateX(12px);
+    transform: translateX(12px);
 }
 
 .scrollTop {
@@ -897,11 +897,11 @@ pre {
     font-size: 1rem !important;
 }
 
-.dialog-udf .CodeMirror {
+.dialog-udfu .CodeMirror {
     height: calc(100vh - 180px) !important;
     max-height: 600px;
 }
 
-.dialog-udf .CodeMirror-placeholder {
+.dialog-udfu .CodeMirror-placeholder {
     opacity: 0.4;
 }

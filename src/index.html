@@ -46,7 +46,7 @@
                 <a id="openButton" class="action" uk-tooltip><i data-feather="folder"></i></a>
             </div>
             <div id="rightActions" class="rightActions">
-                <a id="udfButton" class="action" title="User defined functions" uk-tooltip><i data-feather="edit-3"></i></a>
+                <a id="udfuButton" class="action" title="User functions and units" uk-tooltip><i data-feather="edit-3"></i></a>
                 <a id="settingsButton" class="action" title="Settings" uk-tooltip><i data-feather="settings"></i></a>
                 <a id="helpButton" class="action" title="Help" uk-tooltip><i data-feather="help-circle"></i></a>
                 <a id="aboutButton" class="action" title="Info" uk-tooltip><i data-feather="info"></i></a>
@@ -77,21 +77,43 @@
         </div>
     </div>
 
-    <div id="dialog-udf" class="dialog-udf modal" uk-modal>
+    <div id="dialog-udfu" class="dialog-udfu modal" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-xlarge">
-            <h2 class="uk-modal-title">User defined functions</h2>
-            <div>
-                <textarea id="udfInput" class="udfInput"></textarea>
-            </div>
-            <div uk-grid>
-                <div class="dialog-buttons uk-width-3-5 uk-text-left">
-                    <span id="syntaxError" class="syntaxError"></span>
-                </div>
-                <div class="dialog-buttons uk-width-2-5 uk-text-right">
-                    <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
-                    <button id="dialog-udf-save" class="uk-button uk-button-primary uk-button-small">Save</button>
-                </div>
-            </div>
+            <h2 class="uk-modal-title">User defined:</h2>
+            <ul uk-tab>
+                <li><a>Functions</a></li>
+                <li><a>Units</a></li>
+            </ul>
+            <ul id="setswitch" class="uk-switcher uk-margin">
+                <li>
+                    <div>
+                        <textarea id="udfInput" class="udfInput"></textarea>
+                    </div>
+                    <div uk-grid>
+                        <div class="dialog-buttons uk-width-3-5 uk-text-left">
+                            <span id="syntaxError" class="syntaxError"></span>
+                        </div>
+                        <div class="dialog-buttons uk-width-2-5 uk-text-right">
+                            <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
+                            <button id="dialog-udfu-save-f" class="uk-button uk-button-primary uk-button-small">Save</button>
+                        </div>
+                    </div>
+                </li>
+                <li>
+                    <div>
+                        <textarea id="uduInput" class="uduInput"></textarea>
+                    </div>
+                    <div uk-grid>
+                        <div class="dialog-buttons uk-width-3-5 uk-text-left">
+                            <span id="syntaxError2" class="syntaxError"></span>
+                        </div>
+                        <div class="dialog-buttons uk-width-2-5 uk-text-right">
+                            <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
+                            <button id="dialog-udfu-save-u" class="uk-button uk-button-primary uk-button-small">Save</button>
+                        </div>
+                    </div>
+                </li>
+            </ul>
         </div>
     </div>
 
