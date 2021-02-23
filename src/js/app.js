@@ -27,6 +27,13 @@ const udfInput = CodeMirror.fromTextArea($('udfInput'), {
     smartIndent: false
 });
 
+$('uduInput').setAttribute('placeholder', `// Define new units:\nfoo: {\n\tprefixes: 'long',\n\tbaseName: 'essence-of-foo'\n},\nbar: '40 foo',\nbaz: {\n\tdefinition: '1 bar/hour',\n\tprefixes: 'long'\n}`);
+const uduInput = CodeMirror.fromTextArea($('uduInput'), {
+    mode: 'javascript',
+    autoCloseBrackets: true,
+    smartIndent: false
+});
+
 let settings;
 
 (() => {
@@ -42,9 +49,7 @@ let settings;
     $('dialog-about-appVersion').innerHTML = isNode ? 'Version ' + appInfo.version :
         `Version ${appInfo.version}
     <div class="versionCtnr">
-        <div><a href="https://numara.io/releases/win/${appInfo.productName}-${appInfo.version}.exe">Windows</a><br>(.exe)</div>
-        <div><a href="https://numara.io/releases/mac/${appInfo.productName}-${appInfo.version}.dmg">MacOS</a><br>(.dmg)</div>
-        <div><a href="https://numara.io/releases/linux/${appInfo.productName}-${appInfo.version}.deb">Linux</a><br>(.deb)</div>
+        <div><a href="https://github.com/bornova/numara-calculator/releases" target="_blank">Download desktop version</a></div>
     </div>`;
     $('gitLink').setAttribute('href', appInfo.homepage);
     $('webLink').setAttribute('href', appInfo.website);
@@ -190,6 +195,7 @@ let settings;
     }
 
     let udfList = [];
+    let uduList = [];
 
     // Codemirror syntax templates
     CodeMirror.defineMode('numara', () => {
@@ -209,6 +215,7 @@ let settings;
                 } catch (e) {}
 
                 if (udfList.includes(str)) return 'udf';
+                if (uduList.includes(str)) return 'udu';
 
                 if (typeof math[str] === 'function' && Object.getOwnPropertyNames(math[str]).includes('signatures')) return 'function';
                 if (str.match(/\b(?:ans|total|subtotal|avg|today|now|line\d+)\b/)) return 'scope';
@@ -298,6 +305,16 @@ let settings;
             }
         }
 
+        var udus = document.getElementsByClassName('cm-udu');
+        if (udus.length > 0 && settings.app.keywordTips) {
+            for (var u of udus) {
+                UIkit.tooltip(u, {
+                    title: `User defined unit.`,
+                    pos: 'top-left'
+                });
+            }
+        }
+
         var curr = document.getElementsByClassName('cm-currency');
         if (curr.length > 0 && settings.app.keywordTips) {
             for (var c of curr) {
@@ -357,6 +374,9 @@ let settings;
         } : false);
 
         udfInput.setOption('theme', settings.app.theme == 'system' ? (isNode ? (ipc.sendSync('isDark') ? 'material-darker' : 'default') : 'default') :
+            settings.app.theme == 'light' ? 'default' : 'material-darker');
+
+        uduInput.setOption('theme', settings.app.theme == 'system' ? (isNode ? (ipc.sendSync('isDark') ? 'material-darker' : 'default') : 'default') :
             settings.app.theme == 'light' ? 'default' : 'material-darker');
 
         math.config({
@@ -437,8 +457,8 @@ let settings;
             case 'openButton': // Open saved calculations
                 if (Object.keys(ls.get('saved') || {}).length > 0) showModal('#dialog-open');
                 break
-            case 'udfButton': // Open custom functions dialog
-                showModal('#dialog-udf');
+            case 'udfuButton': // Open custom functions dialog
+                showModal('#dialog-udfu');
                 break
             case 'settingsButton': // Open settings dialog
                 showModal('#dialog-settings');
@@ -507,9 +527,13 @@ let settings;
                     notify('Deleted all saved calculations');
                 });
                 break
-            case 'dialog-udf-save': // Save custom functions
+            case 'dialog-udfu-save-f': // Save custom functions
                 var udf = udfInput.getValue().trim();
                 applyUdf(udf);
+                break
+            case 'dialog-udfu-save-u': // Save custom functions
+                var udu = uduInput.getValue().trim();
+                applyUdu(udu);
                 break
             case 'defaultSettingsButton': // Revert back to default settings
                 confirm('All settings will revert back to defaults.', () => {
@@ -622,13 +646,19 @@ let settings;
         updateSavedCount();
     }
 
-    // User defined functions
-    UIkit.util.on('#dialog-udf', 'beforeshow', () => {
+    // User defined functions and units
+    UIkit.util.on('#dialog-udfu', 'beforeshow', () => {
         $('syntaxError').innerHTML = '';
+        $('syntaxError2').innerHTML = '';
         var udf = ls.get('udf').trim();
+        var udu = ls.get('udu').trim();
         udfInput.setValue(udf);
+        uduInput.setValue(udu);
     })
-    UIkit.util.on('#dialog-udf', 'shown', () => udfInput.refresh());
+    UIkit.util.on('#dialog-udfu', 'shown', () => {
+        udfInput.refresh();
+        uduInput.refresh();
+    });
 
     function applyUdf(udf) {
         try {
@@ -641,14 +671,33 @@ let settings;
             udfList = [];
             udfs.forEach((f) => Object.keys(f).forEach((k) => udfList.push(k)));
 
-            UIkit.modal('#dialog-udf').hide();
+            UIkit.modal('#dialog-udfu').hide();
+        } catch (e) {
+            $('syntaxError').innerHTML = e;
+        }
+    }
+
+    function applyUdu(udu) {
+        try {
+            loadUdu = new Function(`"use strict";math.createUnit({${udu}}, {override: true})`);
+            loadUdu();
+            calculate();
+            ls.set('udu', udu);
+
+            var udus = eval('[{' + udu + '}]');
+            uduList = [];
+            udus.forEach((f) => Object.keys(f).forEach((k) => uduList.push(k)));
+
+            UIkit.modal('#dialog-udfu').hide();
         } catch (e) {
             $('syntaxError').innerHTML = e;
         }
     }
 
     if (!ls.get('udf')) ls.set('udf', '');
+    if (!ls.get('udu')) ls.set('udu', '');
     applyUdf(ls.get('udf'));
+    applyUdu(ls.get('udu'));
 
     // Initiate settings dialog
     UIkit.util.on('#setswitch', 'beforeshow', (e) => e.stopPropagation());
