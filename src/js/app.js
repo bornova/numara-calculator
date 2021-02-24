@@ -648,8 +648,8 @@ let settings;
 
     // User defined functions and units
     UIkit.util.on('#dialog-udfu', 'beforeshow', () => {
-        $('syntaxError').innerHTML = '';
-        $('syntaxError2').innerHTML = '';
+        $('udfSyntaxError').innerHTML = '';
+        $('uduSyntaxError').innerHTML = '';
         var udf = ls.get('udf').trim();
         var udu = ls.get('udu').trim();
         udfInput.setValue(udf);
@@ -673,7 +673,7 @@ let settings;
 
             UIkit.modal('#dialog-udfu').hide();
         } catch (e) {
-            $('syntaxError').innerHTML = e;
+            $('udfSyntaxError').innerHTML = e;
         }
     }
 
@@ -690,7 +690,7 @@ let settings;
 
             UIkit.modal('#dialog-udfu').hide();
         } catch (e) {
-            $('syntaxError').innerHTML = e;
+            $('uduSyntaxError').innerHTML = e;
         }
     }
 
