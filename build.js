@@ -30,7 +30,6 @@ fs.emptyDir(build_path).then(() => {
     // Copy assets and index.html
     fs.copy('src/assets', build_path + '/assets');
     fs.copy('src/index.html', build_path + '/index.html');
-    fs.copy('src/entitlements.mac.plist', build_path + '/entitlements.mac.plist');
 
     // Build JS files
     var numara = [
