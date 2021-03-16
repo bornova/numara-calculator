@@ -474,7 +474,7 @@ text {
 }
 
 .searchWrapper {
-    height: calc(100vh - 240px);
+    height: calc(100vh - 228px);
     max-height: 400px;
     overflow: auto;
 }
@@ -898,7 +898,7 @@ pre {
 }
 
 .dialog-udfu .CodeMirror {
-    height: calc(100vh - 180px) !important;
+    height: calc(100vh - 220px) !important;
     max-height: 600px;
 }
 
