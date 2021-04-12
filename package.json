@@ -2,7 +2,7 @@
     "name": "numara",
     "productName": "Numara",
     "description": "Numara Calculator",
-    "version": "3.2.9",
+    "version": "3.2.10",
     "author": {
         "name": "Timur Atalay",
         "email": "mail@numara.io"
@@ -27,7 +27,7 @@
         "feather-icons": "^4.28.0",
         "fs-extra": "^9.1.0",
         "luxon": "^1.26.0",
-        "mathjs": "^9.3.0",
+        "mathjs": "^9.3.2",
         "mousetrap": "^1.6.5",
         "mousetrap-global-bind": "^1.1.0",
         "terser": "^5.6.1",
