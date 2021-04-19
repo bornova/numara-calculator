@@ -42,11 +42,12 @@ require('electron-context-menu')({
     showSearchWithGoogle: false
 });
 
-let win;
 let theme = dims.get('theme');
 let light = '#ffffff';
 let dark = '#1f1f1f';
 let bg = theme == 'system' ? (nativeTheme.shouldUseDarkColors ? dark : light) : (theme == 'dark' ? dark : light);
+
+let win;
 
 function appWindow() {
     win = new BrowserWindow({

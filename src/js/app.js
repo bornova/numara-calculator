@@ -823,12 +823,12 @@ let settings;
                 var res = JSON.stringify(math.help(str).toJSON());
                 var obj = JSON.parse(res);
                 $('searchResults').innerHTML = `
-                <div>Name:</div><div>${obj.name}</div>
-                <div>Description:</div><div>${obj.description}</div>
-                <div>Category:</div><div>${obj.category}</div>
-                <div>Syntax:</div><div>${String(obj.syntax).split(',').join(', ')}</div>
-                <div>Examples:</div><div>${String(obj.examples).split(',').join(', ')}</div>
-                <div>Also see:</div><div>${String(obj.seealso).split(',').join(', ')}</div>
+                    <div>Name:</div><div>${obj.name}</div>
+                    <div>Description:</div><div>${obj.description}</div>
+                    <div>Category:</div><div>${obj.category}</div>
+                    <div>Syntax:</div><div>${String(obj.syntax).split(',').join(', ')}</div>
+                    <div>Examples:</div><div>${String(obj.examples).split(',').join(', ')}</div>
+                    <div>Also see:</div><div>${String(obj.seealso).split(',').join(', ')}</div>
                 `;
             } catch (error) {
                 $('searchResults').innerHTML = `No results for "${str}"`;

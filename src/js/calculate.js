@@ -42,6 +42,7 @@ function calculate() {
                             cmLine = cmLine.substring(cmLine.indexOf(':') + 1);
                         }
                     }
+
                     while (cmLine.match(/\([^\)]+\)/)) {
                         var s = cmLine.substring(cmLine.lastIndexOf('(') + 1);
                         var sp = cmLine.substring(cmLine.lastIndexOf('('));
@@ -56,6 +57,7 @@ function calculate() {
                             break
                         }
                     }
+                    
                     answer = solver(cmLine);
                 }
 
@@ -88,7 +90,7 @@ function calculate() {
         }
 
         answers += `<span style="height:${lineHeight}px">${answer}</span>`;
-    })
+    });
 
     $('output').innerHTML = answers;
 
@@ -108,7 +110,7 @@ function calculate() {
             .replace(/\btoday\b/g, scope.today)
             .replace(/\bavg\b/g, solverScope.avg)
             .replace(/\btotal\b/g, solverScope.total)
-            .replace(/\bsubtotal\b/g, solverScope.subtotal)
+            .replace(/\bsubtotal\b/g, solverScope.subtotal);
 
         var lineNoReg = line.match(/\bline\d+\b/g);
         if (lineNoReg) lineNoReg.map((n) => line = line.replace(n, scope[n]));
@@ -165,6 +167,7 @@ function calculate() {
         var t = s.length;
         if (s.charAt(0) === '"') s = s.substring(1, t--);
         if (s.charAt(--t) === '"') s = s.substring(0, t);
+
         return s
     }
 
@@ -176,6 +179,7 @@ function calculate() {
             settings.app.thouSep ? Number(a).toLocaleString(undefined, digits) + b : parseFloat(Number(a).toFixed(settings.app.precision)) + b :
             a.match(/e-?\d+/) ? parseFloat(Number(a.split('e')[0]).toFixed(settings.app.precision)) + 'e' + answer.split('e')[1] + b :
             strip(answer);
+
         return formattedAnswer
     }
 }
