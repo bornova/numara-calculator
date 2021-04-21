@@ -48,9 +48,9 @@ let settings;
     $('dialog-about-copyright').innerHTML = `Copyright ©️ ${DateTime.local().year} ${appInfo.author}`;
     $('dialog-about-appVersion').innerHTML = isNode ? 'Version ' + appInfo.version :
         `Version ${appInfo.version}
-    <div class="versionCtnr">
-        <div><a href="https://github.com/bornova/numara-calculator/releases" target="_blank">Download desktop version</a></div>
-    </div>`;
+        <div class="versionCtnr">
+            <div><a href="https://github.com/bornova/numara-calculator/releases" target="_blank">Download desktop version</a></div>
+        </div>`;
     $('gitLink').setAttribute('href', appInfo.homepage);
     $('webLink').setAttribute('href', appInfo.website);
     $('licenseLink').setAttribute('href', appInfo.homepage + '/blob/master/LICENSE');
@@ -87,12 +87,12 @@ let settings;
                     break
             }
             e.stopPropagation();
-        })
+        });
 
         ipc.on('isMax', (event, isMax) => {
             $('unmax').style.display = isMax ? 'block' : 'none';
             $('max').style.display = !isMax ? 'block' : 'none';
-        })
+        });
 
         $('header-win').addEventListener('dblclick', toggleMax);
     } else {
@@ -472,7 +472,7 @@ let settings;
                 break
         }
         e.stopPropagation();
-    })
+    });
 
     // Output actions
     $('output').addEventListener('click', (e) => {
@@ -596,7 +596,7 @@ let settings;
                 UIkit.modal('#dialog-help').hide();
                 break
         }
-    })
+    });
 
     // Open saved calculations dialog actions
     $('dialog-open').addEventListener('click', (e) => {
