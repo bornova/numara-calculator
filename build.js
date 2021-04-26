@@ -29,6 +29,8 @@ process.stdout.write('Preparing app for build...');
 fs.emptyDir(build_path).then(() => {
     // Copy assets and index.html
     fs.copy('src/assets', build_path + '/assets');
+    fs.copy('src/js/sw.js', build_path + '/js/sw.js');
+    fs.copy('manifest.json', build_path + '/manifest.json');
     fs.copy('src/index.html', build_path + '/index.html');
 
     // Build JS files

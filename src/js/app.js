@@ -60,6 +60,12 @@ let settings;
         ipc.on('fullscreen', (event, isFullscreen) => {
             if (isFullscreen) ipc.send('maximize');
         });
+    } else {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker
+                .register('sw.js')
+                .catch(() => console.log("Service worker registration failed"));
+        }
     }
 
     // Set headers
