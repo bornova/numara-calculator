@@ -45,7 +45,8 @@
         "afterSign": "electron-builder-notarize",
         "publish": [
             {
-                "provider": "github"
+                "provider": "github",
+                "releaseType": "release"
             }
         ],
         "mac": {
