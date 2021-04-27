@@ -63,7 +63,7 @@ let settings;
     } else {
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker
-                .register('./js/sw.js')
+                .register('./sw.js')
                 .catch(() => console.log("Service worker registration failed"));
         }
     }
