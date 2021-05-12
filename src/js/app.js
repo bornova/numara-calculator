@@ -444,7 +444,7 @@ let settings;
                     $('printBox').innerHTML = $('panel').innerHTML;
                     if (isNode) {
                         ipc.send('print');
-                        ipc.once('printReply', (event, response) => {
+                        ipc.on('printReply', (event, response) => {
                             if (response) notify(response);
                             $('printBox').innerHTML = '';
                         });
