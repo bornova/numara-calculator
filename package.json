@@ -2,7 +2,7 @@
     "name": "numara",
     "productName": "Numara",
     "description": "Numara Calculator",
-    "version": "3.3.2",
+    "version": "3.3.3",
     "author": {
         "name": "Timur Atalay",
         "email": "mail@numara.io"
@@ -45,7 +45,8 @@
         "afterSign": "electron-builder-notarize",
         "publish": [
             {
-                "provider": "github"
+                "provider": "github",
+                "releaseType": "release"
             }
         ],
         "mac": {
