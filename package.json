@@ -2,7 +2,7 @@
     "name": "numara",
     "productName": "Numara",
     "description": "Numara Calculator",
-    "version": "3.3.3",
+    "version": "3.3.4",
     "author": {
         "name": "Timur Atalay",
         "email": "mail@numara.io"
@@ -19,22 +19,22 @@
     },
     "devDependencies": {
         "clean-css": "^5.1.2",
-        "codemirror": "^5.61.0",
+        "codemirror": "^5.61.1",
         "deep-diff": "^1.0.2",
-        "electron": "^12.0.7",
-        "electron-builder": "^22.10.5",
+        "electron": "^12.0.9",
+        "electron-builder": "^22.11.5",
         "electron-builder-notarize": "^1.2.0",
         "feather-icons": "^4.28.0",
         "fs-extra": "^10.0.0",
-        "luxon": "^1.26.0",
-        "mathjs": "^9.3.2",
+        "luxon": "^1.27.0",
+        "mathjs": "^9.4.0",
         "mousetrap": "^1.6.5",
         "mousetrap-global-bind": "^1.1.0",
         "terser": "^5.7.0",
-        "uikit": "^3.6.21"
+        "uikit": "^3.6.22"
     },
     "dependencies": {
-        "electron-context-menu": "^3.0.0",
+        "electron-context-menu": "^3.1.0",
         "electron-store": "^8.0.0",
         "electron-updater": "^4.3.8",
         "electron-util": "^0.16.0"
