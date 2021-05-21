@@ -7,7 +7,7 @@
 const appInfo = {
     productName: 'Numara',
     description:'Numara Calculator',
-    version: '3.3.3',
+    version: '3.3.4',
     author: 'Timur Atalay',
     homepage: 'https://github.com/bornova/numara-calculator',
     licence: 'MIT',
