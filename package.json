@@ -51,10 +51,7 @@
         ],
         "mac": {
             "hardenedRuntime": true,
-            "entitlements": "src/entitlements.mac.plist",
-            "electronLanguages": [
-                "en"
-            ]
+            "entitlements": "src/entitlements.mac.plist"
         },
         "win": {
             "target": "nsis-web"
