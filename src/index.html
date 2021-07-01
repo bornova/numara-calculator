@@ -17,7 +17,7 @@
 <body>
     <div id="wrapper" class="wrapper">
         <div id="header-win" class="header-win">
-            <div class="header-win-icon"><img src="assets/numara.png"></div>
+            <div class="header-win-icon"><img src="assets/numara.png" title=""></div>
             <div id="header-win-title" class="header-win-title"></div>
             <div id="winButtons" class="winButtons">
                 <span id="close" class="close-btn-win" title="Exit"></span>
@@ -32,9 +32,9 @@
         </div>
 
         <div id="panel" class="panel">
-            <div id="input" class="input">
-                <textarea id="inputArea" class="inputArea panelFont" name="sync" spellcheck="false"
-                    tabindex="-1"></textarea>
+            <div id="input" class="input" title="" placeholder="">
+                <textarea id="inputArea" class="inputArea panelFont" name="sync" spellcheck="false" tabindex="-1"
+                    title="" placeholder=""></textarea>
             </div>
             <div id="divider" class="divider"></div>
             <div id="output" class="output panelFont" name="sync"></div>
@@ -62,7 +62,8 @@
     <div id="dialog-save" class="modal" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
             <h2 class="uk-modal-title">Save Calculation</h2>
-            <div><input id="saveTitle" class="textBox" type="text" maxlength="36" placeholder="Title (Optional)"></div>
+            <div><input id="saveTitle" class="textBox" type="text" maxlength="36" title=""
+                    placeholder="Title (Optional)"></div>
             <div class="dialog-buttons uk-text-right">
                 <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
                 <button id="dialog-save-save" class="uk-button uk-button-primary uk-button-small">Save</button>
@@ -89,10 +90,10 @@
                 <li><a>Functions</a></li>
                 <li><a>Units</a></li>
             </ul>
-            <ul id="setswitch" class="uk-switcher uk-margin">
+            <ul class="uk-switcher uk-margin">
                 <li>
                     <div>
-                        <textarea id="udfInput" class="udfInput"></textarea>
+                        <textarea id="udfInput" class="udfInput" title="" placeholder=""></textarea>
                     </div>
                     <div uk-grid>
                         <div class="dialog-buttons uk-width-3-5 uk-text-left">
@@ -107,7 +108,7 @@
                 </li>
                 <li>
                     <div>
-                        <textarea id="uduInput" class="uduInput"></textarea>
+                        <textarea id="uduInput" class="uduInput" title="" placeholder=""></textarea>
                     </div>
                     <div uk-grid>
                         <div class="dialog-buttons uk-width-3-5 uk-text-left">
@@ -137,7 +138,7 @@
                         <div class="uk-child-width-expand" uk-grid>
                             <div class="padTop1">Theme</div>
                             <div class="uk-text-right">
-                                <select id="themeList" class="uk-select settingItem">
+                                <select id="themeList" class="uk-select settingItem" title="">
                                     <option value="system">System</option>
                                     <option value="light">Light</option>
                                     <option value="dark">Dark</option>
@@ -147,7 +148,7 @@
                         <div class="uk-child-width-expand" uk-grid>
                             <div class="padTop1">Font size</div>
                             <div class="uk-text-right">
-                                <select id="fontSize" class="uk-select settingItem">
+                                <select id="fontSize" class="uk-select settingItem" title="">
                                     <option value="0.9rem">Tiny</option>
                                     <option value="1.0rem">Small</option>
                                     <option value="1.1rem">Normal</option>
@@ -159,7 +160,7 @@
                         <div class="uk-child-width-expand" uk-grid>
                             <div class="padTop1">Font weight</div>
                             <div class="uk-text-right">
-                                <select id="fontWeight" class="uk-select settingItem">
+                                <select id="fontWeight" class="uk-select settingItem" title="">
                                     <option value="200">Light</option>
                                     <option value="300">Thin</option>
                                     <option value="400">Normal</option>
@@ -171,13 +172,13 @@
                         <div class="uk-child-width-expand" uk-grid>
                             <div class="padTop1">Date format</div>
                             <div class="uk-text-right">
-                                <select id="dateFormat" class="uk-select settingItem"></select>
+                                <select id="dateFormat" class="uk-select settingItem" title=""></select>
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
                             <div class="padTop1">Time format</div>
                             <div class="uk-text-right">
-                                <select id="timeFormat" class="uk-select settingItem"></select>
+                                <select id="timeFormat" class="uk-select settingItem" title=""></select>
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
@@ -200,7 +201,7 @@
                                     </div>
                                     <div class="uk-text-right range uk-width-4-5">
                                         <input id="precisionRange" class="uk-range settingItem" type="range" min="0"
-                                            max="16" step="1">
+                                            max="16" step="1" title="" placeholder="">
                                     </div>
                                 </div>
                             </div>
@@ -209,20 +210,21 @@
                             <div class="padTop1">Numeric output<a id="bigNumWarn" class="warn-icon"><i
                                         data-feather="alert-circle"></i></a></div>
                             <div class="uk-text-right">
-                                <select id="numericOutput" class="uk-select settingItem"></select>
+                                <select id="numericOutput" class="uk-select settingItem" title=""></select>
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
                             <div class="padTop1">Matrix type</div>
                             <div class="uk-text-right">
-                                <select id="matrixType" class="uk-select settingItem"></select>
+                                <select id="matrixType" class="uk-select settingItem" title=""></select>
                             </div>
                         </div>
                         <div class="uk-child-width-expand" uk-grid>
                             <div>Predictable output</div>
                             <div class="uk-text-right">
                                 <label class="switch">
-                                    <input id="predictableButton" type="checkbox" class="settingItem">
+                                    <input id="predictableButton" type="checkbox" class="settingItem" title=""
+                                        placeholder="">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -231,7 +233,8 @@
                             <div>Thousands separator</div>
                             <div class="uk-text-right">
                                 <label class="switch">
-                                    <input id="thouSepButton" type="checkbox" class="settingItem">
+                                    <input id="thouSepButton" type="checkbox" class="settingItem" title=""
+                                        placeholder="">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -246,7 +249,8 @@
                             </div>
                             <div class="uk-text-right uk-width-1-5">
                                 <label class="switch">
-                                    <input id="currencyButton" type="checkbox" class="settingItem">
+                                    <input id="currencyButton" type="checkbox" class="settingItem" title=""
+                                        placeholder="">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -257,7 +261,8 @@
                             <div>Syntax highligting</div>
                             <div class="uk-text-right">
                                 <label class="switch">
-                                    <input id="syntaxButton" type="checkbox" class="settingItem">
+                                    <input id="syntaxButton" type="checkbox" class="settingItem" title=""
+                                        placeholder="">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -266,7 +271,8 @@
                             <div>Keyword tooltips</div>
                             <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
-                                    <input id="keywordTipsButton" type="checkbox" class="settingItem">
+                                    <input id="keywordTipsButton" type="checkbox" class="settingItem" title=""
+                                        placeholder="">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -275,7 +281,8 @@
                             <div>Highlight matching brackets</div>
                             <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
-                                    <input id="matchBracketsButton" type="checkbox" class="settingItem">
+                                    <input id="matchBracketsButton" type="checkbox" class="settingItem" title=""
+                                        placeholder="">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -284,7 +291,8 @@
                             <div>Autocomplete hints</div>
                             <div class="uk-text-right">
                                 <label class="switch">
-                                    <input id="autocompleteButton" type="checkbox" class="settingItem">
+                                    <input id="autocompleteButton" type="checkbox" class="settingItem" title=""
+                                        placeholder="">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -293,7 +301,8 @@
                             <div>Close matching brackets</div>
                             <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
-                                    <input id="closeBracketsButton" type="checkbox" class="settingItem">
+                                    <input id="closeBracketsButton" type="checkbox" class="settingItem" title=""
+                                        placeholder="">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -302,7 +311,8 @@
                             <div>Panel divider</div>
                             <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
-                                    <input id="dividerButton" type="checkbox" class="settingItem">
+                                    <input id="dividerButton" type="checkbox" class="settingItem" title=""
+                                        placeholder="">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -311,7 +321,8 @@
                             <div>Line numbers</div>
                             <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
-                                    <input id="lineNoButton" type="checkbox" class="settingItem">
+                                    <input id="lineNoButton" type="checkbox" class="settingItem" title=""
+                                        placeholder="">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -320,7 +331,8 @@
                             <div>Line errors</div>
                             <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
-                                    <input id="lineErrorButton" type="checkbox" class="settingItem">
+                                    <input id="lineErrorButton" type="checkbox" class="settingItem" title=""
+                                        placeholder="">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -329,7 +341,8 @@
                             <div>Wrap lines (input only)</div>
                             <div class="uk-text-right uk-width-2-5">
                                 <label class="switch">
-                                    <input id="lineWrapButton" type="checkbox" class="settingItem">
+                                    <input id="lineWrapButton" type="checkbox" class="settingItem" title=""
+                                        placeholder="">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -357,7 +370,7 @@
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-large">
             <h2 class="uk-modal-title">Help</h2>
             <div class="helpBox">
-                <input id="searchBox" class="textBox" type="search" placeholder="Start typing to search...">
+                <input id="searchBox" class="textBox" type="search" title="" placeholder="Start typing to search...">
             </div>
             <div class="searchWrapper">
                 <div id="searchResults" class="searchResults">Start typing above to search...</div>
@@ -376,7 +389,7 @@
     <div id="dialog-about" class="dialog-about modal" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
             <div class=dialog-about-header>
-                <span class="dialog-about-icon"><img src="assets/numara.png"></span>
+                <span class="dialog-about-icon"><img src="assets/numara.png" title=""></span>
                 <span id="dialog-about-title" class="dialog-about-title"></span>
             </div>
             <div>
@@ -415,17 +428,17 @@
                 <div class="dialog-buttons uk-width-3-4 uk-text-left">
                     <div class="plotSwitches">
                         <label class="switch">
-                            <input id="plotGrid" type="checkbox">
+                            <input id="plotGrid" type="checkbox" title="" placeholder="">
                             <span class="slider round"></span>
                         </label>
                         <span class="switchText">Grid</span>
                         <label class="switch">
-                            <input id="plotCross" type="checkbox">
+                            <input id="plotCross" type="checkbox" title="" placeholder="">
                             <span class="slider round"></span>
                         </label>
                         <span class="switchText">Cross</span>
                         <label class="switch">
-                            <input id="plotArea" type="checkbox">
+                            <input id="plotArea" type="checkbox" title="" placeholder="">
                             <span class="slider round"></span>
                         </label>
                         <span class="switchText">Area</span>
@@ -461,7 +474,7 @@
 
     <div class="printArea">
         <div class="printHeader">
-            <span class="print-icon"><img src="assets/numara.png"></span>
+            <span class="print-icon"><img src="assets/numara.png" title=""></span>
             <span id="print-title" class="print-title"></span>
         </div>
         <div id="printBox" class="printBox"></div>
