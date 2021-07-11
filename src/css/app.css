@@ -178,9 +178,7 @@ text {
 .output {
     flex: 1;
     font-weight: 400;
-    margin-left: 12px;
     min-width: 120px;
-    padding-right: 10px;
     user-select: text;
     white-space: nowrap;
 }
@@ -192,15 +190,26 @@ text {
     overflow: scroll;
 }
 
-.output>span {
+.output>div {
     display: block;
     height: 28px;
-    user-select: text;
+    width: 100%;
+}
+
+.answer {
+    border-radius: 5px;
+    height: 28px;
+    padding: 2px 5px;
+    margin: 0 5px;
 }
 
 .panelFont {
     font-family: 'Roboto Mono', monospace;
     line-height: 28px;
+}
+
+.lineError, .plotButton {
+    margin: 0 10px;
 }
 
 .lineError:hover {

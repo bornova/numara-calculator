@@ -60,7 +60,8 @@ body {
 
 .lineError,
 .lineError:hover,
-.lineError>div {
+.lineError>div,
+.lineNoError>div {
     color: #7e1818;
 }
 
@@ -87,6 +88,10 @@ body {
 .output>span::selection {
     background-color: rgba(231, 243, 255, 0.98) !important;
     color: inherit;
+}
+
+.answer:hover {
+    background: rgb(245, 245, 245);
 }
 
 .action,

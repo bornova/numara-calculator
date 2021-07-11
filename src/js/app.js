@@ -483,6 +483,11 @@ let settings;
     // Output actions
     $('output').addEventListener('click', (e) => {
         switch (e.target.className) {
+            case 'answer':
+                var copyText = e.target.innerText;
+                navigator.clipboard.writeText(copyText);
+                notify(`Copied '${copyText}' to clipboard.`);
+                break
             case 'plotButton': // Plot function
                 func = e.target.getAttribute('data-func');
                 try {

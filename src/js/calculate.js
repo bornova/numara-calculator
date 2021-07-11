@@ -26,7 +26,7 @@ function calculate() {
         var lineHeight = line.height;
         var answer = '';
 
-        cm.removeLineClass(cmLineNo, 'gutter', 'lineError');
+        cm.removeLineClass(cmLineNo, 'gutter', 'lineNoError');
 
         if (cmLine) {
             try {
@@ -83,13 +83,13 @@ function calculate() {
             } catch (e) {
                 var errStr = String(e).replace(/'|"/g, '`');
                 answer = settings.app.lineErrors ? `<a class="lineError" data-line="${lineNo}" data-error="${errStr}">Error</a>` : '';
-                if (settings.app.lineErrors) cm.addLineClass(cmLineNo, 'gutter', 'lineError');
+                if (settings.app.lineErrors) cm.addLineClass(cmLineNo, 'gutter', 'lineNoError');
             }
         } else {
             subtotals.length = 0;
         }
 
-        answers += `<span style="height:${lineHeight}px">${answer}</span>`;
+        answers += `<div style="height:${lineHeight}px"><span class="${answer && !answer.startsWith('<a') ? 'answer' : ''}" >${answer}</span></div>`;
     });
 
     $('output').innerHTML = answers;
