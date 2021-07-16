@@ -57,7 +57,7 @@ function calculate() {
                             break
                         }
                     }
-                    
+
                     answer = solver(cmLine);
                 }
 

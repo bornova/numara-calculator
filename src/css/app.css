@@ -208,7 +208,8 @@ text {
     line-height: 28px;
 }
 
-.lineError, .plotButton {
+.lineError,
+.plotButton {
     margin: 0 10px;
 }
 
