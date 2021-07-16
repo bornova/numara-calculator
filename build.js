@@ -34,9 +34,12 @@ fs.emptyDir(build_path).then(() => {
     fs.copy('src/index.html', build_path + '/index.html');
 
     // Build JS files
-    var numara = [
+    var plot = [
         'src/js/d3.js',
-        'src/js/plot.js',
+        'src/js/plot.js'
+    ]
+
+    var numara = [
         'src/js/calculate.js',
         'src/js/app.js'
     ]
@@ -64,20 +67,23 @@ fs.emptyDir(build_path).then(() => {
         'node_modules/codemirror/mode/javascript/javascript.js'
     ]
 
-    var t_n = {}
-    var t_p = {}
-    var t_c = {}
+    var t_plot = {}
+    var t_numara = {}
+    var t_packages = {}
+    var t_codemirror = {}
 
-    numara.forEach((item, index) => t_n[index] = fs.readFileSync(item, 'utf-8'));
-    packages.forEach((item, index) => t_p[index] = fs.readFileSync(item, 'utf-8'));
-    codemirror.forEach((item, index) => t_c[index] = fs.readFileSync(item, 'utf-8'));
+    plot.forEach((item, index) => t_plot[index] = fs.readFileSync(item, 'utf-8'));
+    numara.forEach((item, index) => t_numara[index] = fs.readFileSync(item, 'utf-8'));
+    packages.forEach((item, index) => t_packages[index] = fs.readFileSync(item, 'utf-8'));
+    codemirror.forEach((item, index) => t_codemirror[index] = fs.readFileSync(item, 'utf-8'));
 
-    terser.minify(t_n).then((js) => fs.outputFileSync(build_path + '/js/numara.js', js.code));
-    terser.minify(t_p, {
+    terser.minify(t_plot).then((js) => fs.outputFileSync(build_path + '/js/plot.js', js.code));
+    terser.minify(t_numara).then((js) => fs.outputFileSync(build_path + '/js/numara.js', js.code));
+    terser.minify(t_packages, {
         compress: false,
         mangle: false
     }).then((js) => fs.outputFileSync(build_path + '/js/packages.js', js.code));
-    terser.minify(t_c, {
+    terser.minify(t_codemirror, {
         mangle: false
     }).then((js) => fs.outputFileSync(build_path + '/js/codemirror.js', js.code));
 
@@ -94,23 +100,23 @@ fs.emptyDir(build_path).then(() => {
         'node_modules/codemirror/theme/material-darker.css',
     ]
 
-    var c_n = {}
-    var c_c = {}
+    var c_numara = {}
+    var c_codemirror = {}
 
     numara_css.forEach((item, index) => {
-        c_n[item] = {
+        c_numara[item] = {
             styles: fs.readFileSync(item, 'utf-8')
         }
     });
 
     codemirror_css.forEach((item, index) => {
-        c_c[item] = {
+        c_codemirror[item] = {
             styles: fs.readFileSync(item, 'utf-8')
         }
     });
 
-    new cleanCSS().minify([c_n], (error, css) => fs.outputFileSync(build_path + '/css/numara.css', css.styles));
-    new cleanCSS().minify([c_c], (error, css) => fs.outputFileSync(build_path + '/css/codemirror.css', css.styles));
+    new cleanCSS().minify([c_numara], (error, css) => fs.outputFileSync(build_path + '/css/numara.css', css.styles));
+    new cleanCSS().minify([c_codemirror], (error, css) => fs.outputFileSync(build_path + '/css/codemirror.css', css.styles));
     new cleanCSS().minify(['src/css/dark.css'], (error, css) => fs.outputFileSync(build_path + '/css/dark.css', css.styles));
     new cleanCSS().minify(['src/css/light.css'], (error, css) => fs.outputFileSync(build_path + '/css/light.css', css.styles));
 
