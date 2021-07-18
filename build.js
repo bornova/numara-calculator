@@ -6,7 +6,7 @@ const performance = require('perf_hooks').performance;
 const build_path = 'build';
 
 const header = `/**
- * @copyright ${new Date().getFullYear()} ${pj.author}
+ * @copyright ${new Date().getFullYear()} ${pj.author.name}
  * @homepage ${pj.homepage}
  * @license ${pj.license} - ${pj.homepage}/blob/master/LICENSE
  */
@@ -19,8 +19,7 @@ const appInfo = {
     homepage: '${pj.homepage}',
     licence: '${pj.license}',
     website: 'https://numara.io'
-}
-`
+};`
 
 let t0 = performance.now();
 
@@ -79,13 +78,8 @@ fs.emptyDir(build_path).then(() => {
 
     terser.minify(t_plot).then((js) => fs.outputFileSync(build_path + '/js/plot.js', js.code));
     terser.minify(t_numara).then((js) => fs.outputFileSync(build_path + '/js/numara.js', js.code));
-    terser.minify(t_packages, {
-        compress: false,
-        mangle: false
-    }).then((js) => fs.outputFileSync(build_path + '/js/packages.js', js.code));
-    terser.minify(t_codemirror, {
-        mangle: false
-    }).then((js) => fs.outputFileSync(build_path + '/js/codemirror.js', js.code));
+    terser.minify(t_packages).then((js) => fs.outputFileSync(build_path + '/js/packages.js', js.code));
+    terser.minify(t_codemirror).then((js) => fs.outputFileSync(build_path + '/js/codemirror.js', js.code));
 
     // Build CSS files
     var numara_css = [
@@ -122,7 +116,7 @@ fs.emptyDir(build_path).then(() => {
 
     fs.copy('node_modules/uikit/dist/css/uikit.min.css', build_path + '/css/uikit.min.css');
 }).then(() => {
-    // Prepend app name and version
+    // Prepend app info
     fs.readFile(build_path + '/js/numara.js', 'utf-8').then(numarajs => fs.writeFile(build_path + '/js/numara.js', header + numarajs));
 }).then(() => {
     var t1 = performance.now();
