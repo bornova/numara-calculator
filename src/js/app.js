@@ -120,6 +120,7 @@ let settings;
         app: {
             autocomplete: true,
             closeBrackets: true,
+            contPrevLine: true,
             currencies: true,
             dateDay: false,
             dateFormat: 'M/d/yyyy',
@@ -578,7 +579,7 @@ let settings;
                     'Caution: BigNumber Limitations');
                 break
             case 'currencyButton': // Enable currency rates
-                $('currencyUpdate').style.display = $('currencyButton').checked ? 'block' : 'none';
+                $('currencyUpdate').style.visibility = $('currencyButton').checked ? 'visible': 'hidden';
                 break
                 // Plot settings
             case 'plotGrid':
@@ -743,6 +744,7 @@ let settings;
         for (var n of numericOutputs) $('numericOutput').innerHTML += `<option value="${n}">${n.charAt(0).toUpperCase() + n.slice(1)}</option>`;
         $('numericOutput').value = settings.app.numericOutput;
         if (settings.app.numericOutput == 'BigNumber') bigNumberWarning();
+        $('contPrevLineButton').checked = settings.app.contPrevLine;
         $('matrixType').innerHTML = '';
         for (var m of matrixTypes) $('matrixType').innerHTML += `<option value="${m}">${m}</option>`;
         $('matrixType').value = settings.app.matrixType;
@@ -800,6 +802,7 @@ let settings;
         // Calculator
         settings.app.precision = $('precisionRange').value;
         settings.app.numericOutput = $('numericOutput').value;
+        settings.app.contPrevLine = $('contPrevLineButton').checked;
         settings.app.matrixType = $('matrixType').value;
         settings.app.predictable = $('predictableButton').checked;
         settings.app.thouSep = $('thouSepButton').checked;

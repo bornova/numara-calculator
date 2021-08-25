@@ -30,7 +30,7 @@ function calculate() {
 
         if (cmLine) {
             try {
-                cmLine = lineNo > 1 && cmLine.charAt(0).match(/[\+\-\*\/]/) && cm.getLine(lineNo - 2).length > 0 ? scope.ans + cmLine : cmLine;
+                cmLine = lineNo > 1 && cmLine.charAt(0).match(/[\+\-\*\/]/) && cm.getLine(lineNo - 2).length > 0 && settings.app.contPrevLine ? scope.ans + cmLine : cmLine;
 
                 try {
                     answer = solve(cmLine, scope);
