@@ -58,7 +58,7 @@
 
     <div id="dialog-save" class="modal" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
-            <h2 class="uk-modal-title">Save Calculation</h2>
+            <h2 class="uk-modal-title uk-text-center">Save Calculation</h2>
             <div><input id="saveTitle" class="textBox" type="text" maxlength="36" placeholder="Title (Optional)"></div>
             <div class="dialog-buttons uk-text-right">
                 <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
@@ -69,7 +69,7 @@
 
     <div id="dialog-open" class="modal" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
-            <h2 class="uk-modal-title">Open Calculation</h2>
+            <h2 class="uk-modal-title uk-text-center">Open Calculation</h2>
             <div id="dialog-open-body" class="dialog-open-body uk-overflow-auto"></div>
             <div class="dialog-buttons uk-text-right">
                 <button id="dialog-open-deleteAll" class="uk-button uk-button-danger uk-button-small">Delete All</button>
@@ -80,7 +80,7 @@
 
     <div id="dialog-udfu" class="dialog-udfu modal" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-xlarge">
-            <h2 class="uk-modal-title">User defined:</h2>
+            <h2 class="uk-modal-title uk-text-center">User Defined Functions</h2>
             <ul uk-tab>
                 <li><a>Functions</a></li>
                 <li><a>Units</a></li>
@@ -91,10 +91,10 @@
                         <textarea id="udfInput" class="udfInput"></textarea>
                     </div>
                     <div uk-grid>
-                        <div class="dialog-buttons uk-width-3-5 uk-text-left">
+                        <div class="dialog-buttons uk-width-1-2 uk-text-left">
                             <span id="udfSyntaxError" class="syntaxError"></span>
                         </div>
-                        <div class="dialog-buttons uk-width-2-5 uk-text-right">
+                        <div class="dialog-buttons uk-width-1-2 uk-text-right">
                             <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
                             <button id="dialog-udfu-save-f" class="uk-button uk-button-primary uk-button-small">Save</button>
                         </div>
@@ -105,10 +105,10 @@
                         <textarea id="uduInput" class="uduInput"></textarea>
                     </div>
                     <div uk-grid>
-                        <div class="dialog-buttons uk-width-3-5 uk-text-left">
+                        <div class="dialog-buttons uk-width-1-2 uk-text-left">
                             <span id="uduSyntaxError" class="syntaxError"></span>
                         </div>
-                        <div class="dialog-buttons uk-width-2-5 uk-text-right">
+                        <div class="dialog-buttons uk-width-1-2 uk-text-right">
                             <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
                             <button id="dialog-udfu-save-u" class="uk-button uk-button-primary uk-button-small">Save</button>
                         </div>
@@ -120,214 +120,217 @@
 
     <div id="dialog-settings" class="modal" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
-            <div id="dialog-settings-body">
-                <ul uk-tab>
-                    <li><a>Appearance</a></li>
-                    <li><a>Calculator</a></li>
-                    <li><a>Editor</a></li>
-                </ul>
-                <ul id="setswitch" class="uk-switcher uk-margin">
-                    <li class="set1">
+            <h2 class="uk-modal-title uk-text-center">Settings</h2>
+            <div id="dialog-settings-body" uk-overflow-auto>
+                <h3>Appearance</h3>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div class="padTop1">Theme</div>
+                    <div class="uk-text-right">
+                        <select id="themeList" class="uk-select settingItem">
+                            <option value="system">System</option>
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                        </select>
+                    </div>
+                </div>
+                <h3>Typography</h3>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div class="padTop1">Font size</div>
+                    <div class="uk-text-right">
+                        <select id="fontSize" class="uk-select settingItem">
+                            <option value="0.9rem">Tiny</option>
+                            <option value="1.0rem">Small</option>
+                            <option value="1.1rem">Normal</option>
+                            <option value="1.2rem">Large</option>
+                            <option value="1.3rem">X-Large</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div class="padTop1">Font weight</div>
+                    <div class="uk-text-right">
+                        <select id="fontWeight" class="uk-select settingItem">
+                            <option value="200">Light</option>
+                            <option value="300">Thin</option>
+                            <option value="400">Normal</option>
+                            <option value="500">Semi Bold</option>
+                            <option value="700">Bold</option>
+                        </select>
+                    </div>
+                </div>
+                <h3>Date & Time</h3>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div class="padTop1">Date format</div>
+                    <div class="uk-text-right">
+                        <select id="dateFormat" class="uk-select settingItem"></select>
+                    </div>
+                </div>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div class="padTop1">Time format</div>
+                    <div class="uk-text-right">
+                        <select id="timeFormat" class="uk-select settingItem"></select>
+                    </div>
+                </div>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div>Show day with date</div>
+                    <div class="uk-text-right">
+                        <label class="switch">
+                            <input id="dateDay" type="checkbox" class="settingItem">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <h3>Calculator</h3>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div class="uk-width-2-5 pr-lh">Precision</div>
+                    <div class="uk-text-right uk-width-3-5">
                         <div class="uk-child-width-expand" uk-grid>
-                            <div class="padTop1">Theme</div>
-                            <div class="uk-text-right">
-                                <select id="themeList" class="uk-select settingItem">
-                                    <option value="system">System</option>
-                                    <option value="light">Light</option>
-                                    <option value="dark">Dark</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div class="padTop1">Font size</div>
-                            <div class="uk-text-right">
-                                <select id="fontSize" class="uk-select settingItem">
-                                    <option value="0.9rem">Tiny</option>
-                                    <option value="1.0rem">Small</option>
-                                    <option value="1.1rem">Normal</option>
-                                    <option value="1.2rem">Large</option>
-                                    <option value="1.3rem">X-Large</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div class="padTop1">Font weight</div>
-                            <div class="uk-text-right">
-                                <select id="fontWeight" class="uk-select settingItem">
-                                    <option value="200">Light</option>
-                                    <option value="300">Thin</option>
-                                    <option value="400">Normal</option>
-                                    <option value="500">Semi Bold</option>
-                                    <option value="700">Bold</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div class="padTop1">Date format</div>
-                            <div class="uk-text-right">
-                                <select id="dateFormat" class="uk-select settingItem"></select>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div class="padTop1">Time format</div>
-                            <div class="uk-text-right">
-                                <select id="timeFormat" class="uk-select settingItem"></select>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div>Show day with date</div>
-                            <div class="uk-text-right">
-                                <label class="switch">
-                                    <input id="dateDay" type="checkbox" class="settingItem">
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
-                        </div>
-                    </li>
-                    <li class="set2">
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div class="uk-width-2-5 pr-lh">Precision</div>
-                            <div class="uk-text-right uk-width-3-5">
-                                <div class="uk-child-width-expand" uk-grid>
-                                    <div class="uk-text-right uk-width-1-5">
-                                        <span id="precision-label" class="uk-label precision"></span>
-                                    </div>
-                                    <div class="uk-text-right range uk-width-4-5">
-                                        <input id="precisionRange" class="uk-range settingItem" type="range" min="0" max="16" step="1">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div class="padTop1">Numeric output<a id="bigNumWarn" class="warn-icon"><i data-feather="alert-circle"></i></a></div>
-                            <div class="uk-text-right">
-                                <select id="numericOutput" class="uk-select settingItem"></select>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div class="padTop1">Matrix type</div>
-                            <div class="uk-text-right">
-                                <select id="matrixType" class="uk-select settingItem"></select>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div>Predictable output</div>
-                            <div class="uk-text-right">
-                                <label class="switch">
-                                    <input id="predictableButton" type="checkbox" class="settingItem">
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div>Thousands separator</div>
-                            <div class="uk-text-right">
-                                <label class="switch">
-                                    <input id="thouSepButton" type="checkbox" class="settingItem">
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div class="uk-width-4-5">
-                                <div>Currency conversion</div>
-                                <div id="currencyUpdate">
-                                    <span class="lastUpdated">Last update:</span>
-                                    <span id="lastUpdated" class="lastUpdated"></span>
-                                </div>
-                            </div>
                             <div class="uk-text-right uk-width-1-5">
-                                <label class="switch">
-                                    <input id="currencyButton" type="checkbox" class="settingItem">
-                                    <span class="slider round"></span>
-                                </label>
+                                <span id="precision-label" class="uk-label precision"></span>
+                            </div>
+                            <div class="uk-text-right range uk-width-4-5">
+                                <input id="precisionRange" class="uk-range settingItem" type="range" min="0" max="16" step="1">
                             </div>
                         </div>
-                    </li>
-                    <li class="set3">
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div>Syntax highligting</div>
-                            <div class="uk-text-right">
-                                <label class="switch">
-                                    <input id="syntaxButton" type="checkbox" class="settingItem">
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
+                    </div>
+                </div>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div class="padTop1">Numeric output<a id="bigNumWarn" class="warn-icon"><i data-feather="alert-circle"></i></a></div>
+                    <div class="uk-text-right">
+                        <select id="numericOutput" class="uk-select settingItem"></select>
+                    </div>
+                </div>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div class="padTop1">Matrix type</div>
+                    <div class="uk-text-right">
+                        <select id="matrixType" class="uk-select settingItem"></select>
+                    </div>
+                </div>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div>Predictable output</div>
+                    <div class="uk-text-right">
+                        <label class="switch">
+                            <input id="predictableButton" type="checkbox" class="settingItem">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div>Continue previous line</div>
+                    <div class="uk-text-right">
+                        <label class="switch">
+                            <input id="contPrevLineButton" type="checkbox" class="settingItem">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div>Thousands separator</div>
+                    <div class="uk-text-right">
+                        <label class="switch">
+                            <input id="thouSepButton" type="checkbox" class="settingItem">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <h3>Editor</h3>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div>Syntax highligting</div>
+                    <div class="uk-text-right">
+                        <label class="switch">
+                            <input id="syntaxButton" type="checkbox" class="settingItem">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div>Keyword tooltips</div>
+                    <div class="uk-text-right uk-width-2-5">
+                        <label class="switch">
+                            <input id="keywordTipsButton" type="checkbox" class="settingItem">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div>Highlight matching brackets</div>
+                    <div class="uk-text-right uk-width-2-5">
+                        <label class="switch">
+                            <input id="matchBracketsButton" type="checkbox" class="settingItem">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div>Autocomplete hints</div>
+                    <div class="uk-text-right">
+                        <label class="switch">
+                            <input id="autocompleteButton" type="checkbox" class="settingItem">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div>Close matching brackets</div>
+                    <div class="uk-text-right uk-width-2-5">
+                        <label class="switch">
+                            <input id="closeBracketsButton" type="checkbox" class="settingItem">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div>Panel divider</div>
+                    <div class="uk-text-right uk-width-2-5">
+                        <label class="switch">
+                            <input id="dividerButton" type="checkbox" class="settingItem">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div>Line numbers</div>
+                    <div class="uk-text-right uk-width-2-5">
+                        <label class="switch">
+                            <input id="lineNoButton" type="checkbox" class="settingItem">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div>Line errors</div>
+                    <div class="uk-text-right uk-width-2-5">
+                        <label class="switch">
+                            <input id="lineErrorButton" type="checkbox" class="settingItem">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div>Wrap lines (input only)</div>
+                    <div class="uk-text-right uk-width-2-5">
+                        <label class="switch">
+                            <input id="lineWrapButton" type="checkbox" class="settingItem">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <h3>Currency Conversion</h3>
+                <div class="uk-child-width-expand" uk-grid>
+                    <div class="uk-width-4-5">
+                        <div>Enabled</div>
+                        <div id="currencyUpdate">
+                            <span class="lastUpdated">Last update:</span>
+                            <span id="lastUpdated" class="lastUpdated"></span>
                         </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div>Keyword tooltips</div>
-                            <div class="uk-text-right uk-width-2-5">
-                                <label class="switch">
-                                    <input id="keywordTipsButton" type="checkbox" class="settingItem">
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div>Highlight matching brackets</div>
-                            <div class="uk-text-right uk-width-2-5">
-                                <label class="switch">
-                                    <input id="matchBracketsButton" type="checkbox" class="settingItem">
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div>Autocomplete hints</div>
-                            <div class="uk-text-right">
-                                <label class="switch">
-                                    <input id="autocompleteButton" type="checkbox" class="settingItem">
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div>Close matching brackets</div>
-                            <div class="uk-text-right uk-width-2-5">
-                                <label class="switch">
-                                    <input id="closeBracketsButton" type="checkbox" class="settingItem">
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div>Panel divider</div>
-                            <div class="uk-text-right uk-width-2-5">
-                                <label class="switch">
-                                    <input id="dividerButton" type="checkbox" class="settingItem">
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div>Line numbers</div>
-                            <div class="uk-text-right uk-width-2-5">
-                                <label class="switch">
-                                    <input id="lineNoButton" type="checkbox" class="settingItem">
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div>Line errors</div>
-                            <div class="uk-text-right uk-width-2-5">
-                                <label class="switch">
-                                    <input id="lineErrorButton" type="checkbox" class="settingItem">
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="uk-child-width-expand" uk-grid>
-                            <div>Wrap lines (input only)</div>
-                            <div class="uk-text-right uk-width-2-5">
-                                <label class="switch">
-                                    <input id="lineWrapButton" type="checkbox" class="settingItem">
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
+                    </div>
+                    <div class="uk-text-right uk-width-1-5">
+                        <label class="switch">
+                            <input id="currencyButton" type="checkbox" class="settingItem">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
             </div>
             <div uk-grid>
                 <div class="dialog-buttons uk-width-2-3 uk-text-left">
@@ -345,7 +348,7 @@
 
     <div id="dialog-help" class="dialog-help modal" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-large">
-            <h2 class="uk-modal-title">Help</h2>
+            <h2 class="uk-modal-title uk-text-center">Help</h2>
             <div class="helpBox">
                 <input id="searchBox" class="textBox" type="search" placeholder="Start typing to search...">
             </div>
@@ -392,7 +395,7 @@
 
     <div id="dialog-plot" class="modal" uk-modal>
         <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-2xlarge">
-            <h2 id="plotTitle" class="uk-modal-title"></h2>
+            <h2 id="plotTitle" class="uk-modal-title uk-text-center"></h2>
             <div id="plot"></div>
             <div uk-grid>
                 <div class="dialog-buttons uk-width-3-4 uk-text-left">
