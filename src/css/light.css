@@ -133,6 +133,10 @@ body {
 }
 
 /* Settings menu items */
+#dialog-settings h3 {
+    color:rgb(29, 63, 92);
+}
+
 .precision {
     border: 1px solid #e5e5e5;
     color: #333333;

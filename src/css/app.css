@@ -365,6 +365,32 @@ text {
 }
 
 /* Settings */
+#dialog-settings .uk-width-medium {
+    width: 380px;
+}
+
+#dialog-settings-body {
+    margin-right: -8px;
+}
+
+#dialog-settings .uk-modal-title {
+    margin-right: 10px;
+}
+
+#dialog-settings .uk-overflow-auto {
+    padding-right: 10px;
+}
+
+#dialog-settings h3 {
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 25px 0 12px 0;
+}
+
+#dialog-settings h3:first-of-type {
+    margin: 0px 0 12px 0;
+}
+
 .set1 {
     padding-top: 1px;
 }
@@ -476,10 +502,6 @@ text {
     margin-top: 15px;
 }
 
-.dialog-open-wrapper:hover {
-    background-color: #f4f4f4;
-}
-
 .plotOptions {
     line-height: 30px;
     margin: 0 10px 0 10px;
@@ -492,7 +514,7 @@ text {
 }
 
 .searchWrapper {
-    height: calc(100vh - 228px);
+    height: calc(100vh - 235px);
     max-height: 400px;
     overflow: auto;
 }
@@ -588,7 +610,7 @@ text {
 .switch {
     display: inline-block;
     height: 16px;
-    margin-top: 2px;
+    margin-top: 1px;
     position: relative;
     width: 28px;
 }
@@ -665,12 +687,7 @@ input:checked+.slider:before {
 /* UIkit Overrides */
 .uk-modal {
     background-color: rgba(0, 0, 0, .6);
-}
-
-@media (min-width: 640px) {
-    .uk-modal {
-        padding: 15px;
-    }
+    padding: 40px !important;
 }
 
 .uk-modal-full {
@@ -718,7 +735,6 @@ input:checked+.slider:before {
 
 .uk-switcher {
     margin: 0 !important;
-    min-height: 265px;
 }
 
 .uk-tab {
@@ -916,7 +932,7 @@ pre {
 }
 
 .dialog-udfu .CodeMirror {
-    height: calc(100vh - 220px) !important;
+    height: calc(100vh - 240px) !important;
     max-height: 600px;
 }
 
