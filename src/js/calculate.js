@@ -156,8 +156,17 @@ function calculate() {
             var left = line.split(right)[0];
             var leftVal = solve(left.trim().slice(0, -1), scope);
 
-            newval = solve(leftVal + '*' + rightVal + '/100', scope);
-            line = line.replace(left + right, solve(left + newval, scope));
+            if (left) {
+                var operator = left.slice(-1);
+                newval = operator === '*' || operator === '/' ?
+                    solve(leftVal + operator + '(' + rightVal + '/100' + ')', scope) :
+                    left + solve(leftVal + '*' + rightVal + '/100', scope);
+
+                line = line.replace(left + right, solve(newval, scope));
+            } else {
+                newval = solve(rightVal + '/100');
+                line = line.replace(right, solve(newval, scope));
+            }
         }
 
         return solve(line, scope);
