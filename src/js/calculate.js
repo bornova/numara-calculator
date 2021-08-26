@@ -158,7 +158,7 @@ function calculate() {
 
             if (left) {
                 var operator = left.slice(-1);
-                newval = operator === '*' || operator === '/' ?
+                newval = operator === '*' || operator === '/' || operator === '^' ?
                     solve(leftVal + operator + '(' + rightVal + '/100' + ')', scope) :
                     left + solve(leftVal + '*' + rightVal + '/100', scope);
 
