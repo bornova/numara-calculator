@@ -75,9 +75,9 @@ text {
     display: none;
     height: 30px;
     position: fixed;
-    left: 0;
-    right: 0;
     top: 5px;
+    right: 0;
+    left: 0;
 }
 
 .header-win-title {
@@ -99,8 +99,8 @@ text {
 
 .winButtons {
     position: fixed;
-    right: 0;
     top: 0;
+    right: 0;
 }
 
 .unmax {
@@ -131,9 +131,9 @@ text {
     display: none;
     height: 50px;
     position: fixed;
-    left: 0;
-    right: 0;
     top: 0;
+    right: 0;
+    left: 0;
 }
 
 .header-mac-title {
@@ -147,18 +147,18 @@ text {
 .wrapper {
     position: fixed;
     bottom: 0;
-    left: 0;
-    right: 0;
     top: 0;
+    right: 0;
+    left: 0;
 }
 
 .panel {
     display: flex;
     position: fixed;
+    top: 50px;
+    right: 8px;
     bottom: 42px;
     left: 20px;
-    right: 8px;
-    top: 50px;
 }
 
 .inputArea::-webkit-scrollbar {
@@ -199,8 +199,8 @@ text {
 .answer {
     border-radius: 5px;
     height: 28px;
-    padding: 2px 5px;
     margin: 0 5px;
+    padding: 2px 5px;
 }
 
 .panelFont {
@@ -248,9 +248,9 @@ text {
 .actions {
     display: flex;
     position: fixed;
+    right: 15px;
     bottom: 12px;
     left: 15px;
-    right: 15px;
 }
 
 .actions>div {
@@ -302,8 +302,8 @@ text {
 }
 
 .notificationDot>svg {
-    width: 5px;
     height: 5px;
+    width: 5px;
     fill: #1e87f0;
     stroke: #1e87f0;
 }
@@ -344,8 +344,8 @@ text {
     font-weight: 600;
     height: 16px;
     position: absolute;
-    right: 5px;
     top: 5px;
+    right: 5px;
     width: 16px;
 }
 
@@ -369,12 +369,12 @@ text {
     width: 380px;
 }
 
-#dialog-settings-body {
+.dialog-settings-body {
+    height: calc(100vh - 185px);
+    max-height: 600px;
     margin-right: -8px;
-}
-
-#dialog-settings .uk-modal-title {
-    margin-right: 10px;
+    padding-right: 10px;
+    overflow: scroll;
 }
 
 #dialog-settings .uk-overflow-auto {
@@ -640,10 +640,10 @@ text {
     background-color: #cccccc;
     cursor: pointer;
     position: absolute;
+    top: 0;
+    right: 0;
     bottom: 0;
     left: 0;
-    right: 0;
-    top: 0;
     -webkit-transition: .2s;
     transition: .2s;
 }
@@ -679,8 +679,8 @@ input:checked+.slider:before {
 .scrollTop {
     display: none;
     position: fixed;
-    bottom: 35px;
     right: 2px;
+    bottom: 35px;
     width: 10px;
 }
 
