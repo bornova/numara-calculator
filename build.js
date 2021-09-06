@@ -1,9 +1,9 @@
-const fs = require('fs-extra');
-const pj = require('./package.json');
-const terser = require("terser");
-const cleanCSS = require('clean-css');
-const performance = require('perf_hooks').performance;
-const build_path = 'build';
+const fs = require('fs-extra')
+const pj = require('./package.json')
+const terser = require('terser')
+const CleanCSS = require('clean-css')
+const performance = require('perf_hooks').performance
+const buildPath = 'build'
 
 const header = `/**
  * @copyright ${new Date().getFullYear()} ${pj.author.name}
@@ -11,7 +11,7 @@ const header = `/**
  * @license ${pj.license} - ${pj.homepage}/blob/master/LICENSE
  */
 
-const appInfo = {
+appInfo = {
     productName: '${pj.productName}',
     description:'${pj.description}',
     version: '${pj.version}',
@@ -19,106 +19,139 @@ const appInfo = {
     homepage: '${pj.homepage}',
     licence: '${pj.license}',
     website: 'https://numara.io'
-};`
+}
+`
 
-let t0 = performance.now();
+const t0 = performance.now()
 
-process.stdout.write('Preparing app for build...');
+process.stdout.write('Preparing app for build...')
 
-fs.emptyDir(build_path).then(() => {
+fs.emptyDir(buildPath)
+  .then(() => {
     // Copy assets and index.html
-    fs.copy('src/assets', build_path + '/assets');
-    fs.copy('src/js/sw.js', build_path + '/sw.js');
-    fs.copy('manifest.json', build_path + '/manifest.json');
-    fs.copy('src/index.html', build_path + '/index.html');
+    fs.copy('src/assets', buildPath + '/assets')
+    fs.copy('src/js/sw.js', buildPath + '/sw.js')
+    fs.copy('manifest.json', buildPath + '/manifest.json')
+    fs.copy('src/index.html', buildPath + '/index.html')
 
     // Build JS files
-    var plot = [
-        'src/js/d3.js',
-        'src/js/plot.js'
+    const plot = [
+      'src/js/d3.js',
+      'src/js/plot.js'
     ]
 
-    var numara = [
-        'src/js/calculate.js',
-        'src/js/app.js'
+    const numara = [
+      'src/js/numara.js'
     ]
 
-    var packages = [
-        'node_modules/deep-diff/dist/deep-diff.min.js',
-        'node_modules/feather-icons/dist/feather.min.js',
-        'node_modules/luxon/build/global/luxon.min.js',
-        'node_modules/mathjs/lib/browser/math.js',
-        'node_modules/mousetrap/mousetrap.min.js',
-        'node_modules/mousetrap-global-bind/mousetrap-global-bind.min.js',
-        'node_modules/uikit/dist/js/uikit.min.js'
+    const packages = [
+      'node_modules/deep-diff/dist/deep-diff.min.js',
+      'node_modules/feather-icons/dist/feather.min.js',
+      'node_modules/luxon/build/global/luxon.min.js',
+      'node_modules/mathjs/lib/browser/math.js',
+      'node_modules/mousetrap/mousetrap.min.js',
+      'node_modules/mousetrap-global-bind/mousetrap-global-bind.min.js',
+      'node_modules/uikit/dist/js/uikit.min.js'
     ]
 
-    var codemirror = [
-        'node_modules/codemirror/lib/codemirror.js',
-        'node_modules/codemirror/addon/dialog/dialog.js',
-        'node_modules/codemirror/addon/display/placeholder.js',
-        'node_modules/codemirror/addon/edit/matchbrackets.js',
-        'node_modules/codemirror/addon/edit/closebrackets.js',
-        'node_modules/codemirror/addon/hint/show-hint.js',
-        'node_modules/codemirror/addon/search/jump-to-line.js',
-        'node_modules/codemirror/addon/search/search.js',
-        'node_modules/codemirror/addon/search/searchcursor.js',
-        'node_modules/codemirror/mode/javascript/javascript.js'
+    const codemirror = [
+      'node_modules/codemirror/lib/codemirror.js',
+      'node_modules/codemirror/addon/dialog/dialog.js',
+      'node_modules/codemirror/addon/display/placeholder.js',
+      'node_modules/codemirror/addon/edit/matchbrackets.js',
+      'node_modules/codemirror/addon/edit/closebrackets.js',
+      'node_modules/codemirror/addon/hint/show-hint.js',
+      'node_modules/codemirror/addon/search/jump-to-line.js',
+      'node_modules/codemirror/addon/search/search.js',
+      'node_modules/codemirror/addon/search/searchcursor.js',
+      'node_modules/codemirror/mode/javascript/javascript.js'
     ]
 
-    var t_plot = {}
-    var t_numara = {}
-    var t_packages = {}
-    var t_codemirror = {}
+    const tersePlot = {}
+    const terseNumara = {}
+    const tersePackages = {}
+    const terseCodemirror = {}
 
-    plot.forEach((item, index) => t_plot[index] = fs.readFileSync(item, 'utf-8'));
-    numara.forEach((item, index) => t_numara[index] = fs.readFileSync(item, 'utf-8'));
-    packages.forEach((item, index) => t_packages[index] = fs.readFileSync(item, 'utf-8'));
-    codemirror.forEach((item, index) => t_codemirror[index] = fs.readFileSync(item, 'utf-8'));
+    plot.forEach((item, index) => {
+      tersePlot[index] = fs.readFileSync(item, 'utf-8')
+    })
+    numara.forEach((item, index) => {
+      terseNumara[index] = fs.readFileSync(item, 'utf-8')
+    })
+    packages.forEach((item, index) => {
+      tersePackages[index] = fs.readFileSync(item, 'utf-8')
+    })
+    codemirror.forEach((item, index) => {
+      terseCodemirror[index] = fs.readFileSync(item, 'utf-8')
+    })
 
-    terser.minify(t_plot).then((js) => fs.outputFileSync(build_path + '/js/plot.js', js.code));
-    terser.minify(t_numara).then((js) => fs.outputFileSync(build_path + '/js/numara.js', js.code));
-    terser.minify(t_packages).then((js) => fs.outputFileSync(build_path + '/js/packages.js', js.code));
-    terser.minify(t_codemirror).then((js) => fs.outputFileSync(build_path + '/js/codemirror.js', js.code));
+    terser.minify(tersePlot).then(js => {
+      fs.outputFileSync(buildPath + '/js/plot.js', js.code)
+    })
+    terser.minify(terseNumara).then(js => {
+      fs.outputFileSync(buildPath + '/js/numara.js', js.code)
+    })
+    terser.minify(tersePackages).then(js => {
+      fs.outputFileSync(buildPath + '/js/packages.js', js.code)
+    })
+    terser.minify(terseCodemirror).then(js => {
+      fs.outputFileSync(buildPath + '/js/codemirror.js', js.code)
+    })
 
     // Build CSS files
-    var numara_css = [
-        'src/css/app.css',
-        'src/css/print.css'
+    const numaraCss = [
+      'src/css/app.css',
+      'src/css/print.css'
     ]
 
-    var codemirror_css = [
-        'node_modules/codemirror/lib/codemirror.css',
-        'node_modules/codemirror/addon/dialog/dialog.css',
-        'node_modules/codemirror/addon/hint/show-hint.css',
-        'node_modules/codemirror/theme/material-darker.css',
+    const codemirrorCss = [
+      'node_modules/codemirror/lib/codemirror.css',
+      'node_modules/codemirror/addon/dialog/dialog.css',
+      'node_modules/codemirror/addon/hint/show-hint.css',
+      'node_modules/codemirror/theme/material-darker.css'
     ]
 
-    var c_numara = {}
-    var c_codemirror = {}
+    const cleanNumara = {}
+    const cleanCodemirror = {}
 
-    numara_css.forEach((item, index) => {
-        c_numara[item] = {
-            styles: fs.readFileSync(item, 'utf-8')
-        }
-    });
+    numaraCss.forEach((item, index) => {
+      cleanNumara[item] = {
+        styles: fs.readFileSync(item, 'utf-8')
+      }
+    })
 
-    codemirror_css.forEach((item, index) => {
-        c_codemirror[item] = {
-            styles: fs.readFileSync(item, 'utf-8')
-        }
-    });
+    codemirrorCss.forEach((item, index) => {
+      cleanCodemirror[item] = {
+        styles: fs.readFileSync(item, 'utf-8')
+      }
+    })
 
-    new cleanCSS().minify([c_numara], (error, css) => fs.outputFileSync(build_path + '/css/numara.css', css.styles));
-    new cleanCSS().minify([c_codemirror], (error, css) => fs.outputFileSync(build_path + '/css/codemirror.css', css.styles));
-    new cleanCSS().minify(['src/css/dark.css'], (error, css) => fs.outputFileSync(build_path + '/css/dark.css', css.styles));
-    new cleanCSS().minify(['src/css/light.css'], (error, css) => fs.outputFileSync(build_path + '/css/light.css', css.styles));
+    new CleanCSS().minify([cleanNumara], (error, css) => {
+      if (error) throw error
+      fs.outputFileSync(buildPath + '/css/numara.css', css.styles)
+    })
+    new CleanCSS().minify([cleanCodemirror], (error, css) => {
+      if (error) throw error
+      fs.outputFileSync(buildPath + '/css/codemirror.css', css.styles)
+    })
+    new CleanCSS().minify(['src/css/dark.css'], (error, css) => {
+      if (error) throw error
+      fs.outputFileSync(buildPath + '/css/dark.css', css.styles)
+    })
+    new CleanCSS().minify(['src/css/light.css'], (error, css) => {
+      if (error) throw error
+      fs.outputFileSync(buildPath + '/css/light.css', css.styles)
+    })
 
-    fs.copy('node_modules/uikit/dist/css/uikit.min.css', build_path + '/css/uikit.min.css');
-}).then(() => {
+    fs.copy('node_modules/uikit/dist/css/uikit.min.css', buildPath + '/css/uikit.min.css')
+  })
+  .then(() => {
     // Prepend app info
-    fs.readFile(build_path + '/js/numara.js', 'utf-8').then(numarajs => fs.writeFile(build_path + '/js/numara.js', header + numarajs));
-}).then(() => {
-    var t1 = performance.now();
-    process.stdout.write('done (in ' + ((t1 - t0) / 1000).toFixed(2) + ' seconds).\n\n');
-});
+    fs.readFile(buildPath + '/js/numara.js', 'utf-8').then(numarajs => {
+      fs.writeFile(buildPath + '/js/numara.js', header + numarajs)
+    })
+  })
+  .then(() => {
+    const t1 = performance.now()
+    process.stdout.write('done (in ' + ((t1 - t0) / 1000).toFixed(2) + ' seconds).\n\n')
+  })
