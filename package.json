@@ -1,78 +1,78 @@
 {
-    "name": "numara",
-    "productName": "Numara",
-    "description": "Numara Calculator",
-    "version": "3.5.3",
-    "author": {
-        "name": "Timur Atalay",
-        "email": "mail@numara.io"
+  "name": "numara",
+  "productName": "Numara",
+  "description": "Numara Calculator",
+  "version": "3.5.4",
+  "author": {
+    "name": "Timur Atalay",
+    "email": "mail@numara.io"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/bornova/numara-calculator",
+  "main": "src/js/main.js",
+  "scripts": {
+    "build": "node build.js",
+    "test": "node build.js && electron .",
+    "dist": "node build.js && electron-builder",
+    "dist-all": "node build.js && electron-builder -mwl",
+    "publish": "node build.js && electron-builder -mwl -p always"
+  },
+  "devDependencies": {
+    "clean-css": "^5.1.5",
+    "codemirror": "^5.62.3",
+    "deep-diff": "^1.0.2",
+    "electron": "^14.0.0",
+    "electron-builder": "^22.11.7",
+    "electron-builder-notarize": "^1.2.0",
+    "feather-icons": "^4.28.0",
+    "fs-extra": "^10.0.0",
+    "luxon": "^2.0.2",
+    "mathjs": "^9.4.4",
+    "mousetrap": "^1.6.5",
+    "mousetrap-global-bind": "^1.1.0",
+    "terser": "^5.7.2",
+    "uikit": "^3.7.2"
+  },
+  "dependencies": {
+    "electron-context-menu": "^3.1.1",
+    "electron-store": "^8.0.0",
+    "electron-updater": "^4.3.9",
+    "electron-util": "^0.17.2"
+  },
+  "build": {
+    "appId": "com.numara.app",
+    "artifactName": "${productName}-${version}.${ext}",
+    "afterSign": "electron-builder-notarize",
+    "publish": [
+      {
+        "provider": "github",
+        "releaseType": "release"
+      }
+    ],
+    "mac": {
+      "hardenedRuntime": true,
+      "entitlements": "src/entitlements.mac.plist"
     },
-    "license": "MIT",
-    "homepage": "https://github.com/bornova/numara-calculator",
-    "main": "src/js/main.js",
-    "scripts": {
-        "build": "node build.js",
-        "test": "node build.js && electron .",
-        "dist": "node build.js && electron-builder",
-        "dist-all": "node build.js && electron-builder -mwl",
-        "publish": "node build.js && electron-builder -mwl -p always"
+    "win": {
+      "target": "nsis-web"
     },
-    "devDependencies": {
-        "clean-css": "^5.1.5",
-        "codemirror": "^5.62.3",
-        "deep-diff": "^1.0.2",
-        "electron": "^13.2.3",
-        "electron-builder": "^22.11.7",
-        "electron-builder-notarize": "^1.2.0",
-        "feather-icons": "^4.28.0",
-        "fs-extra": "^10.0.0",
-        "luxon": "^2.0.2",
-        "mathjs": "^9.4.4",
-        "mousetrap": "^1.6.5",
-        "mousetrap-global-bind": "^1.1.0",
-        "terser": "^5.7.2",
-        "uikit": "^3.7.2"
+    "nsisWeb": {
+      "oneClick": false,
+      "deleteAppDataOnUninstall": true
     },
-    "dependencies": {
-        "electron-context-menu": "^3.1.1",
-        "electron-store": "^8.0.0",
-        "electron-updater": "^4.3.9",
-        "electron-util": "^0.17.0"
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ]
     },
-    "build": {
-        "appId": "com.numara.app",
-        "artifactName": "${productName}-${version}.${ext}",
-        "afterSign": "electron-builder-notarize",
-        "publish": [
-            {
-                "provider": "github",
-                "releaseType": "release"
-            }
-        ],
-        "mac": {
-            "hardenedRuntime": true,
-            "entitlements": "src/entitlements.mac.plist"
-        },
-        "win": {
-            "target": "nsis-web"
-        },
-        "nsisWeb": {
-            "oneClick": false,
-            "deleteAppDataOnUninstall": true
-        },
-        "linux": {
-            "target": [
-                "AppImage",
-                "deb"
-            ]
-        },
-        "directories": {
-            "buildResources": "build/assets",
-            "output": "dist/${version}/${os}"
-        },
-        "files": [
-            "build",
-            "src/js/main.js"
-        ]
-    }
+    "directories": {
+      "buildResources": "build/assets",
+      "output": "dist/${version}/${os}"
+    },
+    "files": [
+      "build",
+      "src/js/main.js"
+    ]
+  }
 }
