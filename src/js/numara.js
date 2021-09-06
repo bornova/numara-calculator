@@ -29,14 +29,31 @@ const cm = CodeMirror.fromTextArea($('inputArea'), {
 cm.setValue(ls.get('input') || '')
 cm.execCommand('goDocEnd')
 
-$('udfInput').setAttribute('placeholder', '// Define new functions and variables:\nmyvalue: 42,\nhello: (name) => {\n\treturn "hello, " + name + "!"\n}')
+$('udfInput').setAttribute('placeholder', `
+// Define new functions and variables:
+myvalue: 42,
+hello: (name) => {
+  return "hello, " + name + "!"
+}`)
+
 const udfInput = CodeMirror.fromTextArea($('udfInput'), {
   mode: 'javascript',
   autoCloseBrackets: true,
   smartIndent: false
 })
 
-$('uduInput').setAttribute('placeholder', '// Define new units:\nfoo: {\n\tprefixes: "long",\n\tbaseName: "essence-of-foo"\n},\nbar: "40 foo",\nbaz: {\n\tdefinition: "1 bar/hour",\n\tprefixes: "long"\n}')
+$('uduInput').setAttribute('placeholder', `
+// Define new units:
+foo: {
+  prefixes: "long",
+  baseName: "essence-of-foo"
+},
+bar: "40 foo",
+baz: {
+  definition: "1 bar/hour",
+  prefixes: "long"
+}`)
+
 const uduInput = CodeMirror.fromTextArea($('uduInput'), {
   mode: 'javascript',
   autoCloseBrackets: true,
@@ -55,7 +72,11 @@ $('dialog-about-copyright').innerHTML = `Copyright ©️ ${DateTime.local().year
 $('dialog-about-appVersion').innerHTML = isNode
   ? 'Version ' + appInfo.version
   : `Version ${appInfo.version}
-    <div class="versionCtnr"><div><a href="https://github.com/bornova/numara-calculator/releases" target="_blank">Download desktop version</a></div></div>`
+    <div class="versionCtnr">
+      <div>
+        <a href="https://github.com/bornova/numara-calculator/releases" target="_blank">Download desktop version</a>
+      </div>
+    </div>`
 $('gitLink').setAttribute('href', appInfo.homepage)
 $('webLink').setAttribute('href', appInfo.website)
 $('licenseLink').setAttribute('href', appInfo.homepage + '/blob/master/LICENSE')
@@ -244,7 +265,9 @@ function calculate () {
 
     if (cmLine) {
       try {
-        cmLine = lineNo > 1 && cmLine.charAt(0).match(/[+\-*/]/) && cm.getLine(lineNo - 2).length > 0 && settings.app.contPrevLine ? scope.ans + cmLine : cmLine
+        cmLine = lineNo > 1 && cmLine.charAt(0).match(/[+\-*/]/) && cm.getLine(lineNo - 2).length > 0 && settings.app.contPrevLine
+          ? scope.ans + cmLine
+          : cmLine
 
         try {
           answer = math.evaluate(cmLine, scope)
@@ -308,7 +331,9 @@ function calculate () {
       subtotals.length = 0
     }
 
-    answers += `<div style="height:${lineHeight}px"><span class="${answer && !answer.startsWith('<a') ? 'answer' : ''}" >${answer}</span></div>`
+    answers += `<div style="height:${lineHeight}px">
+      <span class="${answer && !answer.startsWith('<a') ? 'answer' : ''}" >${answer}</span>
+    </div>`
   })
 
   $('output').innerHTML = answers
@@ -1087,12 +1112,12 @@ $('searchBox').addEventListener('input', () => {
       const res = JSON.stringify(math.help(str).toJSON())
       const obj = JSON.parse(res)
       $('searchResults').innerHTML = `
-            <div>Name:</div><div>${obj.name}</div>
-            <div>Description:</div><div>${obj.description}</div>
-            <div>Category:</div><div>${obj.category}</div>
-            <div>Syntax:</div><div>${String(obj.syntax).split(',').join(', ')}</div>
-            <div>Examples:</div><div>${String(obj.examples).split(',').join(', ')}</div>
-            <div>Also see:</div><div>${String(obj.seealso).split(',').join(', ')}</div>
+        <div>Name:</div><div>${obj.name}</div>
+        <div>Description:</div><div>${obj.description}</div>
+        <div>Category:</div><div>${obj.category}</div>
+        <div>Syntax:</div><div>${String(obj.syntax).split(',').join(', ')}</div>
+        <div>Examples:</div><div>${String(obj.examples).split(',').join(', ')}</div>
+        <div>Also see:</div><div>${String(obj.seealso).split(',').join(', ')}</div>
         `
     } catch (error) {
       $('searchResults').innerHTML = `No results for "${str}"`
