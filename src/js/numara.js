@@ -29,8 +29,7 @@ const cm = CodeMirror.fromTextArea($('inputArea'), {
 cm.setValue(ls.get('input') || '')
 cm.execCommand('goDocEnd')
 
-$('udfInput').setAttribute('placeholder', `
-// Define new functions and variables:
+$('udfInput').setAttribute('placeholder', `// Define new functions and variables:
 myvalue: 42,
 hello: (name) => {
   return "hello, " + name + "!"
@@ -42,8 +41,7 @@ const udfInput = CodeMirror.fromTextArea($('udfInput'), {
   smartIndent: false
 })
 
-$('uduInput').setAttribute('placeholder', `
-// Define new units:
+$('uduInput').setAttribute('placeholder', `// Define new units:
 foo: {
   prefixes: "long",
   baseName: "essence-of-foo"
@@ -331,9 +329,10 @@ function calculate () {
       subtotals.length = 0
     }
 
-    answers += `<div style="height:${lineHeight}px">
-      <span class="${answer && !answer.startsWith('<a') ? 'answer' : ''}" >${answer}</span>
-    </div>`
+    answers += `
+      <div style="height:${lineHeight}px">
+        <span class="${answer && !answer.startsWith('<a') ? 'answer' : ''}" >${answer}</span>
+      </div>`
   })
 
   $('output').innerHTML = answers
@@ -349,7 +348,8 @@ function calculate () {
     solverScope.total = math.evaluate(totals.length > 0 ? '(' + totals.join('+') + ')' : 0)
     solverScope.subtotal = math.evaluate(subtotals.length > 0 ? '(' + subtotals.join('+') + ')' : 0)
 
-    line = line.replace(/\bans\b/g, scope.ans)
+    line = line
+      .replace(/\bans\b/g, scope.ans)
       .replace(/\bnow\b/g, scope.now)
       .replace(/\btoday\b/g, scope.today)
       .replace(/\bavg\b/g, solverScope.avg)
