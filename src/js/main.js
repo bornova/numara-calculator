@@ -63,6 +63,7 @@ function appWindow () {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
+      nativeWindowOpen: true,
       spellcheck: false,
       devTools: is.development
     }
