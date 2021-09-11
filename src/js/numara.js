@@ -1,6 +1,5 @@
 /* global appInfo, CodeMirror, DeepDiff, feather, fetch, localStorage, location, luxon, math, Mousetrap, UIkit  */
 /* eslint no-new-func: 0 */
-/* eslint no-eval: 0 */
 
 // Get element by id
 const $ = (id) => document.getElementById(id)
@@ -464,13 +463,15 @@ UIkit.util.on('#dialog-udfu', 'shown', () => {
 
 function applyUdf (udf) {
   try {
-    const loadUdf = new Function(`"use strict"; math.import({${udf}}, {override: true});`)
+    const loadUdf = new Function(`'use strict'; math.import({${udf}}, {override: true})`)
     loadUdf()
     calculate()
     ls.set('udf', udf)
 
-    const udfs = eval('[{' + udf + '}]')
-    for (const f in udfs[0]) {
+    const udfFunc = new Function(`'use strict'; return {${udf}}`)
+    const udfObj = udfFunc()
+
+    for (const f in udfObj) {
       udfList.push(f)
     }
 
@@ -482,14 +483,16 @@ function applyUdf (udf) {
 
 function applyUdu (udu) {
   try {
-    const loadUdu = new Function(`"use strict"; math.createUnit({${udu}}, {override: true});`)
+    const loadUdu = new Function(`'use strict'; math.createUnit({${udu}}, {override: true})`)
     loadUdu()
     calculate()
     ls.set('udu', udu)
 
-    const udus = eval('[{' + udu + '}]')
-    for (const u in udus[0]) {
-      uduList.push(u)
+    const uduFunc = new Function(`'use strict'; return {${udu}}`)
+    const uduObj = uduFunc()
+
+    for (const f in uduObj) {
+      uduList.push(f)
     }
 
     UIkit.modal('#dialog-udfu').hide()
@@ -958,11 +961,11 @@ function populateSaved () {
     savedItems.forEach(([id, val]) => {
       $('dialog-open-body').innerHTML += `
         <div class="dialog-open-wrapper" id="${id}">
-            <div data-action="load">
-                <div class="dialog-open-title">${val[0]}</div>
-                <div class="dialog-open-date">${DateTime.fromFormat(id, 'yyyyMMddHHmmssSSS').toFormat('ff')}</div>
-            </div>
-            <span class="dialog-open-delete" data-action="delete"><i data-feather="x-circle"></i></span>
+          <div data-action="load">
+            <div class="dialog-open-title">${val[0]}</div>
+            <div class="dialog-open-date">${DateTime.fromFormat(id, 'yyyyMMddHHmmssSSS').toFormat('ff')}</div>
+          </div>
+          <span class="dialog-open-delete" data-action="delete"><i data-feather="x-circle"></i></span>
         </div>`
     })
     feather.replace()
