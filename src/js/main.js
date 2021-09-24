@@ -34,16 +34,15 @@ const dims = new Store({
   fileExtension: '',
   clearInvalidConfig: true
 })
+const theme = dims.get('theme')
+const light = '#ffffff'
+const dark = '#1f1f1f'
+const bg = theme === 'system' ? nativeTheme.shouldUseDarkColors ? dark : light : theme === 'dark' ? dark : light
 
 require('electron-context-menu')({
   prepend: (params, browserWindow) => [],
   showSearchWithGoogle: false
 })
-
-const theme = dims.get('theme')
-const light = '#ffffff'
-const dark = '#1f1f1f'
-const bg = theme === 'system' ? nativeTheme.shouldUseDarkColors ? dark : light : theme === 'dark' ? dark : light
 
 let win
 
