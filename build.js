@@ -4,7 +4,6 @@ const terser = require('terser')
 const CleanCSS = require('clean-css')
 const performance = require('perf_hooks').performance
 const buildPath = 'build'
-
 const header = `/**
  * @copyright ${new Date().getFullYear()} ${pj.author.name}
  * @homepage ${pj.homepage}
@@ -19,7 +18,7 @@ appInfo = {
     homepage: '${pj.homepage}',
     licence: '${pj.license}',
     website: 'https://numara.io'
-}
+};
 `
 
 const t0 = performance.now()
