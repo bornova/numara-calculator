@@ -2,7 +2,7 @@
   "name": "numara",
   "productName": "Numara",
   "description": "Numara Calculator",
-  "version": "3.5.5",
+  "version": "3.6.0",
   "author": {
     "name": "Timur Atalay",
     "email": "mail@numara.io"
@@ -11,6 +11,7 @@
   "homepage": "https://github.com/bornova/numara-calculator",
   "main": "src/js/main.js",
   "scripts": {
+    "lint": "eslint src/js/*.js",
     "build": "node build.js",
     "test": "node build.js && electron .",
     "dist": "node build.js && electron-builder",
@@ -19,23 +20,24 @@
   },
   "devDependencies": {
     "clean-css": "^5.1.5",
-    "codemirror": "^5.62.3",
+    "codemirror": "^5.63.0",
     "deep-diff": "^1.0.2",
-    "electron": "^14.0.0",
+    "electron": "^15.0.0",
     "electron-builder": "^22.11.7",
     "electron-builder-notarize": "^1.2.0",
+    "eslint": "^7.32.0",
     "feather-icons": "^4.28.0",
     "fs-extra": "^10.0.0",
     "luxon": "^2.0.2",
-    "mathjs": "^9.4.4",
+    "mathjs": "^9.5.0",
     "mousetrap": "^1.6.5",
     "mousetrap-global-bind": "^1.1.0",
-    "terser": "^5.7.2",
-    "uikit": "^3.7.3"
+    "terser": "^5.9.0",
+    "uikit": "^3.7.4"
   },
   "dependencies": {
     "electron-context-menu": "^3.1.1",
-    "electron-store": "^8.0.0",
+    "electron-store": "^8.0.1",
     "electron-updater": "^4.3.9",
     "electron-util": "^0.17.2"
   },
