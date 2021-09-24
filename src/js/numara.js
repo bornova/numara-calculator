@@ -383,39 +383,10 @@ function calculate () {
       }
     }
 
-    const modReg = /\d*\.?\d%\d*\.?\d/g
-    const pcntReg = /[\w.]*%/g
     const pcntOfReg = /%[ ]*of[ ]*/g
     const pcntOfRegC = /[\w.]*%[ ]*of[ ]*/g
 
     line = line.match(pcntOfRegC) ? line.replace(pcntOfReg, '/100*') : line
-
-    if (line.match(modReg)) {
-      line.match(modReg).forEach((m) => {
-        line = line.replace(m, math.evaluate(m, scope))
-      })
-    }
-
-    while (line.match(pcntReg) && !line.match(modReg)) {
-      const right = line.match(pcntReg)[0]
-      const rightVal = math.evaluate(right.slice(0, -1), scope)
-      const left = line.split(right)[0]
-      const leftVal = math.evaluate(left.trim().slice(0, -1), scope)
-
-      let newVal
-
-      if (left) {
-        const operator = left.slice(-1)
-        newVal = operator === '*' || operator === '/' || operator === '^'
-          ? math.evaluate(leftVal + operator + '(' + rightVal + '/100' + ')', scope)
-          : left + math.evaluate(leftVal + '*' + rightVal + '/100', scope)
-
-        line = line.replace(left + right, math.evaluate(newVal, scope))
-      } else {
-        newVal = math.evaluate(rightVal + '/100')
-        line = line.replace(right, math.evaluate(newVal, scope))
-      }
-    }
 
     return math.evaluate(line, scope)
   }
