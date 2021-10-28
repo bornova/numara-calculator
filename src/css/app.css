@@ -169,6 +169,7 @@ text {
 .input {
   min-width: 120px;
   padding-right: 10px;
+  width: 60%;
 }
 
 .inputArea {
@@ -685,6 +686,11 @@ input:checked+.slider:before {
 }
 
 /* UIkit Overrides */
+:focus:not([tabindex^='-']),
+:focus-visible {
+  outline: none;
+}
+
 .uk-modal {
   background-color: rgba(0, 0, 0, .6);
   padding: 40px !important;
