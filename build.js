@@ -30,7 +30,7 @@ fs.emptyDir(buildPath)
     // Copy assets and index.html
     fs.copy('src/assets', buildPath + '/assets')
     fs.copy('src/js/sw.js', buildPath + '/sw.js')
-    fs.copy('manifest.json', buildPath + '/manifest.json')
+    fs.copy('numara.webmanifest', buildPath + '/numara.webmanifest')
     fs.copy('src/index.html', buildPath + '/index.html')
 
     // Build JS files
