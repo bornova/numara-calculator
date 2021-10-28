@@ -496,9 +496,7 @@ CodeMirror.defineMode('numara', () => {
 
       if (settings.app.currencies && (str.toLowerCase() in currencyRates || str.toLowerCase() === 'usd')) return 'currency'
 
-      try {
-        if (math.unit(str).units.length > 0) return 'unit'
-      } catch (e) { }
+      if (str && str in math.Unit.UNITS) return 'unit'
 
       if (udfList.includes(str)) return 'udf'
       if (uduList.includes(str)) return 'udu'
