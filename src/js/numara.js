@@ -438,6 +438,7 @@
     try {
       const loadUdf = new Function(`'use strict'; math.import({${udf}}, {override: true})`)
       loadUdf()
+      cm.refresh()
       calculate()
       store.set('udf', udf)
 
@@ -458,6 +459,7 @@
     try {
       const loadUdu = new Function(`'use strict'; math.createUnit({${udu}}, {override: true})`)
       loadUdu()
+      cm.refresh()
       calculate()
       store.set('udu', udu)
 
@@ -678,9 +680,12 @@
       predictable: settings.app.predictable
     })
 
-    setTimeout(calculate, 15)
+    cm.refresh()
+    setTimeout(calculate, 10)
   }
+
   applySettings()
+
   if (settings.app.currencies) {
     getRates()
   }
@@ -723,6 +728,7 @@
         if (cm.getValue() !== '') {
           cm.setValue('')
           cm.focus()
+          cm.refresh()
           calculate()
         }
         break
@@ -898,6 +904,7 @@
 
       case 'demoButton': // Load demo
         cm.setValue(demo)
+        cm.refresh()
         calculate()
         UIkit.modal('#dialog-help').hide()
         break
@@ -911,6 +918,7 @@
     if (e.target.parentNode.getAttribute('data-action') === 'load') {
       pid = e.target.parentNode.parentNode.id
       cm.setValue(saved[pid][1])
+      cm.refresh()
       calculate()
       UIkit.modal('#dialog-open').hide()
     }
@@ -1118,17 +1126,20 @@
     isResizing = false
   })
   $('panel').addEventListener('mousemove', (e) => {
-    const offset = settings.app.lineNumbers ? 12 : 27
-    const pointerRelativeXpos = e.clientX - panel.offsetLeft - offset
-    const iWidth = pointerRelativeXpos / panel.clientWidth * 100
-    const inputWidth = iWidth < 0 ? 0 : iWidth > 100 ? 100 : iWidth
     if (isResizing) {
+      const offset = settings.app.lineNumbers ? 12 : 27
+      const pointerRelativeXpos = e.clientX - panel.offsetLeft - offset
+      const iWidth = pointerRelativeXpos / panel.clientWidth * 100
+      const inputWidth = iWidth < 0 ? 0 : iWidth > 100 ? 100 : iWidth
+
       $('input').style.width = inputWidth + '%'
       settings.inputWidth = inputWidth
       store.set('settings', settings)
       clearTimeout(resizeDelay)
-      cm.refresh()
-      resizeDelay = setTimeout(calculate, 10)
+      resizeDelay = setTimeout(() => {
+        cm.refresh()
+        calculate()
+      }, 10)
     }
   })
 
