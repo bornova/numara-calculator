@@ -72,11 +72,11 @@
   $('dialog-about-appVersion').innerHTML = isNode
     ? 'Version ' + appInfo.version
     : `Version ${appInfo.version}
-    <div class="versionCtnr">
-      <div>
-        <a href="https://github.com/bornova/numara-calculator/releases" target="_blank">Download desktop version</a>
-      </div>
-    </div>`
+      <div class="versionCtnr">
+        <div>
+          <a href="https://github.com/bornova/numara-calculator/releases" target="_blank">Download desktop version</a>
+        </div>
+      </div>`
   $('gitLink').setAttribute('href', appInfo.homepage)
   $('webLink').setAttribute('href', appInfo.website)
   $('licenseLink').setAttribute('href', appInfo.homepage + '/blob/master/LICENSE')
@@ -252,7 +252,6 @@
     scope.now = DateTime.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat)
     scope.today = DateTime.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat)
 
-    cm.refresh()
     cm.eachLine((line) => {
       const cmLineNo = cm.getLineNumber(line)
       const lineNo = cmLineNo + 1
@@ -332,9 +331,9 @@
       }
 
       answers += `
-      <div style="height:${lineHeight}px">
-        <span class="${answer && !answer.startsWith('<a') ? 'answer' : ''}" >${answer}</span>
-      </div>`
+        <div style="height:${lineHeight}px">
+          <span class="${answer && !answer.startsWith('<a') ? 'answer' : ''}" >${answer}</span>
+        </div>`
     })
 
     $('output').innerHTML = answers
@@ -870,8 +869,8 @@
         break
       case 'bigNumWarn': // BigNumber warning
         showError(`Using the BigNumber may break function plotting and is not compatible with some math functions. 
-        It may also cause unexpected behavior and affect overall performance.<br><br>
-        <a target="_blank" href="https://mathjs.org/docs/datatypes/bignumbers.html">Read more on BigNumbers</a>`, 'Caution: BigNumber Limitations')
+          It may also cause unexpected behavior and affect overall performance.<br><br>
+          <a target="_blank" href="https://mathjs.org/docs/datatypes/bignumbers.html">Read more on BigNumbers</a>`, 'Caution: BigNumber Limitations')
         break
       case 'currencyButton': // Enable currency rates
         $('currencyUpdate').style.visibility = $('currencyButton').checked ? 'visible' : 'hidden'
@@ -936,13 +935,13 @@
       $('dialog-open-deleteAll').disabled = false
       savedItems.forEach(([id, val]) => {
         $('dialog-open-body').innerHTML += `
-        <div class="dialog-open-wrapper" id="${id}">
-          <div data-action="load">
-            <div class="dialog-open-title">${val[0]}</div>
-            <div class="dialog-open-date">${DateTime.fromFormat(id, 'yyyyMMddHHmmssSSS').toFormat('ff')}</div>
-          </div>
-          <span class="dialog-open-delete" data-action="delete"><i data-feather="x-circle"></i></span>
-        </div>`
+          <div class="dialog-open-wrapper" id="${id}">
+            <div data-action="load">
+              <div class="dialog-open-title">${val[0]}</div>
+              <div class="dialog-open-date">${DateTime.fromFormat(id, 'yyyyMMddHHmmssSSS').toFormat('ff')}</div>
+            </div>
+            <span class="dialog-open-delete" data-action="delete"><i data-feather="x-circle"></i></span>
+          </div>`
       })
       feather.replace()
     } else {
@@ -1090,13 +1089,12 @@
         const searchResult = JSON.parse(JSON.stringify(math.help(searchString).toJSON()))
 
         $('searchResults').innerHTML = `
-        <div>Name:</div><div>${searchResult.name}</div>
-        <div>Description:</div><div>${searchResult.description}</div>
-        <div>Category:</div><div>${searchResult.category}</div>
-        <div>Syntax:</div><div>${String(searchResult.syntax).split(',').join(', ')}</div>
-        <div>Examples:</div><div>${String(searchResult.examples).split(',').join(', ')}</div>
-        <div>Also see:</div><div>${String(searchResult.seealso).split(',').join(', ')}</div>
-        `
+          <div>Name:</div><div>${searchResult.name}</div>
+          <div>Description:</div><div>${searchResult.description}</div>
+          <div>Category:</div><div>${searchResult.category}</div>
+          <div>Syntax:</div><div>${String(searchResult.syntax).split(',').join(', ')}</div>
+          <div>Examples:</div><div>${String(searchResult.examples).split(',').join(', ')}</div>
+          <div>Also see:</div><div>${String(searchResult.seealso).split(',').join(', ')}</div>`
       } catch (error) {
         $('searchResults').innerHTML = `No results for "${searchString}"`
       }
@@ -1129,6 +1127,7 @@
       settings.inputWidth = inputWidth
       store.set('settings', settings)
       clearTimeout(resizeDelay)
+      cm.refresh()
       resizeDelay = setTimeout(calculate, 10)
     }
   })
@@ -1196,6 +1195,7 @@
       plot()
     }
     clearTimeout(windowResizeDelay)
+    cm.refresh()
     windowResizeDelay = setTimeout(calculate, 10)
     checkWindowSize()
   })
