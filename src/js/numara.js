@@ -3,7 +3,7 @@
 
 (() => {
   // Get element by id
-  const $ = (id) => document.getElementById(id)
+  const $ = (selector) => document.querySelector(selector)
 
   // localStorage
   const store = {
@@ -19,7 +19,7 @@
   feather.replace()
 
   // Initialize input
-  const cm = CodeMirror.fromTextArea($('inputArea'), {
+  const cm = CodeMirror.fromTextArea($('#inputArea'), {
     theme: 'numara',
     coverGutterNextToScrollbar: true,
     inputStyle: 'textarea',
@@ -29,20 +29,20 @@
   cm.setValue(store.get('input') || '')
   cm.execCommand('goDocEnd')
 
-  $('udfInput').setAttribute('placeholder', (
+  $('#udfInput').setAttribute('placeholder', (
     `// Define new functions and variables:
     myvalue: 42,
     hello: (name) => {
     \treturn "hello, " + name + "!"
     }`).replace(/^ +/gm, ''))
 
-  const udfInput = CodeMirror.fromTextArea($('udfInput'), {
+  const udfInput = CodeMirror.fromTextArea($('#udfInput'), {
     mode: 'javascript',
     autoCloseBrackets: true,
     smartIndent: false
   })
 
-  $('uduInput').setAttribute('placeholder', (
+  $('#uduInput').setAttribute('placeholder', (
     `// Define new units:
     foo: {
     \tprefixes: "long",
@@ -54,7 +54,7 @@
     \tprefixes: "long"
     }`).replace(/^ +/gm, ''))
 
-  const uduInput = CodeMirror.fromTextArea($('uduInput'), {
+  const uduInput = CodeMirror.fromTextArea($('#uduInput'), {
     mode: 'javascript',
     autoCloseBrackets: true,
     smartIndent: false
@@ -67,9 +67,9 @@
 
   // Set app info
   document.title = appInfo.description
-  $('dialog-about-title').innerHTML = appInfo.description
-  $('dialog-about-copyright').innerHTML = `Copyright ©️ ${DateTime.local().year} ${appInfo.author}`
-  $('dialog-about-appVersion').innerHTML = isNode
+  $('#dialog-about-title').innerHTML = appInfo.description
+  $('#dialog-about-copyright').innerHTML = `Copyright ©️ ${DateTime.local().year} ${appInfo.author}`
+  $('#dialog-about-appVersion').innerHTML = isNode
     ? 'Version ' + appInfo.version
     : `Version ${appInfo.version}
       <div class="versionCtnr">
@@ -77,9 +77,9 @@
           <a href="https://github.com/bornova/numara-calculator/releases" target="_blank">Download desktop version</a>
         </div>
       </div>`
-  $('gitLink').setAttribute('href', appInfo.homepage)
-  $('webLink').setAttribute('href', appInfo.website)
-  $('licenseLink').setAttribute('href', appInfo.homepage + '/blob/master/LICENSE')
+  $('#gitLink').setAttribute('href', appInfo.homepage)
+  $('#webLink').setAttribute('href', appInfo.website)
+  $('#licenseLink').setAttribute('href', appInfo.homepage + '/blob/master/LICENSE')
 
   if (isNode) {
     ipc.on('themeUpdate', applySettings)
@@ -100,14 +100,14 @@
 
   // Set headers
   if (isNode && !isMac) {
-    $('header-mac').remove()
-    $('header-win').style.display = 'block'
-    $('header-win-title').innerHTML = appInfo.productName
+    $('#header-mac').remove()
+    $('#header-win').style.display = 'block'
+    $('#header-win-title').innerHTML = appInfo.productName
 
-    $('max').style.display = ipc.sendSync('isMaximized') ? 'none' : 'block'
-    $('unmax').style.display = ipc.sendSync('isMaximized') ? 'block' : 'none'
+    $('#max').style.display = ipc.sendSync('isMaximized') ? 'none' : 'block'
+    $('#unmax').style.display = ipc.sendSync('isMaximized') ? 'block' : 'none'
 
-    $('winButtons').addEventListener('click', (e) => {
+    $('#winButtons').addEventListener('click', (e) => {
       switch (e.target.id) {
         case 'min':
           ipc.send('minimize')
@@ -126,18 +126,18 @@
     })
 
     ipc.on('isMax', (event, isMax) => {
-      $('unmax').style.display = isMax ? 'block' : 'none'
-      $('max').style.display = isMax ? 'none' : 'block'
+      $('#unmax').style.display = isMax ? 'block' : 'none'
+      $('#max').style.display = isMax ? 'none' : 'block'
     })
 
-    $('header-win').addEventListener('dblclick', toggleMax)
+    $('#header-win').addEventListener('dblclick', toggleMax)
   } else {
-    $('header-win').remove()
-    $('header-mac').style.display = 'block'
-    $('header-mac-title').innerHTML = appInfo.productName
+    $('#header-win').remove()
+    $('#header-mac').style.display = 'block'
+    $('#header-mac-title').innerHTML = appInfo.productName
 
     if (isNode) {
-      $('header-mac').addEventListener('dblclick', toggleMax)
+      $('#header-mac').addEventListener('dblclick', toggleMax)
     }
   }
 
@@ -206,7 +206,7 @@
   function getRates () {
     const url = 'https://www.floatrates.com/widget/1030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json'
     if (navigator.onLine) {
-      $('lastUpdated').innerHTML = '<div uk-spinner="ratio: 0.3"></div>'
+      $('#lastUpdated').innerHTML = '<div uk-spinner="ratio: 0.3"></div>'
       fetch(url)
         .then((response) => response.json())
         .then((rates) => {
@@ -222,13 +222,13 @@
             store.set('rateDate', rates[currency].date)
           })
           applySettings()
-          $('lastUpdated').innerHTML = store.get('rateDate')
+          $('#lastUpdated').innerHTML = store.get('rateDate')
         }).catch((e) => {
-          $('lastUpdated').innerHTML = 'n/a'
+          $('#lastUpdated').innerHTML = 'n/a'
           notify('Failed to get exchange rates (' + e + ')', 'warning')
         })
     } else {
-      $('lastUpdated').innerHTML = 'No internet connection.'
+      $('#lastUpdated').innerHTML = 'No internet connection.'
       notify('No internet connection. Could not update exchange rates.', 'warning')
     }
   }
@@ -251,6 +251,10 @@
 
     scope.now = DateTime.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat)
     scope.today = DateTime.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat)
+
+    if (refreshCM) {
+      cm.refresh()
+    }
 
     cm.eachLine((line) => {
       const cmLineNo = cm.getLineNumber(line)
@@ -336,11 +340,11 @@
         </div>`
     })
 
-    $('output').innerHTML = answers
+    $('#output').innerHTML = answers
 
-    $('clearButton').className = cm.getValue() === '' ? 'noAction' : 'action'
-    $('printButton').className = cm.getValue() === '' ? 'noAction' : 'action'
-    $('saveButton').className = cm.getValue() === '' ? 'noAction' : 'action'
+    $('#clearButton').className = cm.getValue() === '' ? 'noAction' : 'action'
+    $('#printButton').className = cm.getValue() === '' ? 'noAction' : 'action'
+    $('#saveButton').className = cm.getValue() === '' ? 'noAction' : 'action'
 
     store.set('input', cm.getValue())
 
@@ -422,8 +426,8 @@
   const uduList = []
 
   UIkit.util.on('#dialog-udfu', 'beforeshow', () => {
-    $('udfSyntaxError').innerHTML = ''
-    $('uduSyntaxError').innerHTML = ''
+    $('#udfSyntaxError').innerHTML = ''
+    $('#uduSyntaxError').innerHTML = ''
     const udf = store.get('udf').trim()
     const udu = store.get('udu').trim()
     udfInput.setValue(udf)
@@ -438,7 +442,6 @@
     try {
       const loadUdf = new Function(`'use strict'; math.import({${udf}}, {override: true})`)
       loadUdf()
-      cm.refresh()
       calculate()
       store.set('udf', udf)
 
@@ -451,7 +454,7 @@
 
       UIkit.modal('#dialog-udfu').hide()
     } catch (e) {
-      $('udfSyntaxError').innerHTML = e
+      $('#udfSyntaxError').innerHTML = e
     }
   }
 
@@ -459,7 +462,6 @@
     try {
       const loadUdu = new Function(`'use strict'; math.createUnit({${udu}}, {override: true})`)
       loadUdu()
-      cm.refresh()
       calculate()
       store.set('udu', udu)
 
@@ -472,7 +474,7 @@
 
       UIkit.modal('#dialog-udfu').hide()
     } catch (e) {
-      $('uduSyntaxError').innerHTML = e
+      $('#uduSyntaxError').innerHTML = e
     }
   }
 
@@ -642,7 +644,7 @@
   function applySettings () {
     settings = store.get('settings')
 
-    $('style').setAttribute('href',
+    $('#style').setAttribute('href',
       settings.app.theme === 'system'
         ? (isNode ? (ipc.sendSync('isDark') ? 'css/dark.css' : 'css/light.css') : 'css/light.css')
         : settings.app.theme === 'light' ? 'css/light.css' : 'css/dark.css')
@@ -657,9 +659,9 @@
       el.style.fontWeight = settings.app.fontWeight
     }
 
-    $('input').style.width = (settings.app.divider ? settings.inputWidth : defaultSettings.inputWidth) + '%'
-    $('divider').style.display = settings.app.divider ? 'block' : 'none'
-    $('output').style.textAlign = settings.app.divider ? 'left' : 'right'
+    $('#input').style.width = (settings.app.divider ? settings.inputWidth : defaultSettings.inputWidth) + '%'
+    $('#divider').style.display = settings.app.divider ? 'block' : 'none'
+    $('#output').style.textAlign = settings.app.divider ? 'left' : 'right'
 
     cm.setOption('mode', settings.app.syntax ? 'numara' : 'plain')
     cm.setOption('lineNumbers', settings.app.lineNumbers)
@@ -680,7 +682,6 @@
       predictable: settings.app.predictable
     })
 
-    cm.refresh()
     setTimeout(calculate, 10)
   }
 
@@ -719,31 +720,30 @@
   }
   updateSavedCount()
 
-  $('openButton').className = savedCount() > 0 ? 'action' : 'noAction'
+  $('#openButton').className = savedCount() > 0 ? 'action' : 'noAction'
 
   // App button actions
-  $('actions').addEventListener('click', (e) => {
+  $('#actions').addEventListener('click', (e) => {
     switch (e.target.id) {
       case 'clearButton': // Clear board
         if (cm.getValue() !== '') {
           cm.setValue('')
           cm.focus()
-          cm.refresh()
           calculate()
         }
         break
       case 'printButton': // Print calculations
         UIkit.tooltip('#printButton').hide()
         if (cm.getValue() !== '') {
-          $('print-title').innerHTML = appInfo.productName
-          $('printBox').innerHTML = $('panel').innerHTML
+          $('#print-title').innerHTML = appInfo.productName
+          $('#printBox').innerHTML = $('#panel').innerHTML
           if (isNode) {
             ipc.send('print')
             ipc.on('printReply', (event, response) => {
               if (response) {
                 notify(response)
               }
-              $('printBox').innerHTML = ''
+              $('#printBox').innerHTML = ''
             })
           } else {
             window.print()
@@ -752,9 +752,9 @@
         break
       case 'saveButton': // Save calcualtions
         if (cm.getValue() !== '') {
-          $('saveTitle').value = ''
+          $('#saveTitle').value = ''
           showModal('#dialog-save')
-          $('saveTitle').focus()
+          $('#saveTitle').focus()
         }
         break
       case 'openButton': // Open saved calculations
@@ -770,7 +770,7 @@
         break
       case 'helpButton': // Open help dialog
         showModal('#dialog-help')
-        $('searchBox').focus()
+        $('#searchBox').focus()
         break
       case 'aboutButton': // Open app info dialog
         showModal('#dialog-about')
@@ -780,7 +780,7 @@
   })
 
   // Output actions
-  $('output').addEventListener('click', (e) => {
+  $('#output').addEventListener('click', (e) => {
     switch (e.target.className) {
       case 'answer':
         navigator.clipboard.writeText(e.target.innerText)
@@ -789,9 +789,9 @@
       case 'plotButton': // Plot function
         func = e.target.getAttribute('data-func')
         try {
-          $('plotGrid').checked = settings.plot.plotGrid
-          $('plotCross').checked = settings.plot.plotCross
-          $('plotArea').checked = settings.plot.plotArea
+          $('#plotGrid').checked = settings.plot.plotGrid
+          $('#plotCross').checked = settings.plot.plotCross
+          $('#plotArea').checked = settings.plot.plotArea
           plot()
           showModal('#dialog-plot')
         } catch (error) {
@@ -805,11 +805,20 @@
     e.stopPropagation()
   })
 
-  $('output').addEventListener('mousedown', () => {
+  $('#output').addEventListener('mousedown', () => {
     const sels = document.getElementsByClassName('CodeMirror-selected')
     while (sels[0]) {
       sels[0].classList.remove('CodeMirror-selected')
     }
+  })
+
+  // Prevent CM refresh if keydown
+  let refreshCM = true
+  document.addEventListener('keydown', (e) => {
+    refreshCM = !e.repeat
+  })
+  document.addEventListener('keyup', (e) => {
+    refreshCM = true
   })
 
   // Dialog button actions
@@ -820,14 +829,14 @@
         const id = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
         const savedItems = store.get('saved') || {}
         const data = cm.getValue()
-        const title = $('saveTitle').value.replace(/<|>/g, '').trim() || 'No title'
+        const title = $('#saveTitle').value.replace(/<|>/g, '').trim() || 'No title'
 
         savedItems[id] = [title, data]
         store.set('saved', savedItems)
         UIkit.modal('#dialog-save').hide()
-        $('openButton').className = 'action'
+        $('#openButton').className = 'action'
         updateSavedCount()
-        notify('Saved')
+        notify(`Saved as '${title}' <a class="notificationLink" onclick="document.querySelector('#openButton').click()">View saved calculations</a>`)
         break
       }
       case 'dialog-open-deleteAll': // Delete all saved calculations
@@ -849,7 +858,7 @@
           settings.app = defaultSettings.app
           store.set('settings', settings)
           applySettings()
-          if (!$('currencyButton').checked) {
+          if (!$('#currencyButton').checked) {
             getRates()
           }
           prepSettings()
@@ -879,21 +888,21 @@
           <a target="_blank" href="https://mathjs.org/docs/datatypes/bignumbers.html">Read more on BigNumbers</a>`, 'Caution: BigNumber Limitations')
         break
       case 'currencyButton': // Enable currency rates
-        $('currencyUpdate').style.visibility = $('currencyButton').checked ? 'visible' : 'hidden'
+        $('#currencyUpdate').style.visibility = $('#currencyButton').checked ? 'visible' : 'hidden'
         break
       // Plot settings
       case 'plotGrid':
-        settings.plot.plotGrid = $('plotGrid').checked
+        settings.plot.plotGrid = $('#plotGrid').checked
         store.set('settings', settings)
         plot()
         break
       case 'plotCross':
-        settings.plot.plotCross = $('plotCross').checked
+        settings.plot.plotCross = $('#plotCross').checked
         store.set('settings', settings)
         plot()
         break
       case 'plotArea':
-        settings.plot.plotArea = $('plotArea').checked
+        settings.plot.plotArea = $('#plotArea').checked
         store.set('settings', settings)
         plot()
         break
@@ -904,7 +913,6 @@
 
       case 'demoButton': // Load demo
         cm.setValue(demo)
-        cm.refresh()
         calculate()
         UIkit.modal('#dialog-help').hide()
         break
@@ -912,13 +920,12 @@
   })
 
   // Open saved calculations dialog actions
-  $('dialog-open').addEventListener('click', (e) => {
+  $('#dialog-open').addEventListener('click', (e) => {
     let pid
     const saved = store.get('saved')
     if (e.target.parentNode.getAttribute('data-action') === 'load') {
       pid = e.target.parentNode.parentNode.id
       cm.setValue(saved[pid][1])
-      cm.refresh()
       calculate()
       UIkit.modal('#dialog-open').hide()
     }
@@ -938,11 +945,11 @@
   function populateSaved () {
     const savedObj = store.get('saved') || {}
     const savedItems = Object.entries(savedObj)
-    $('dialog-open-body').innerHTML = ''
+    $('#dialog-open-body').innerHTML = ''
     if (savedItems.length > 0) {
-      $('dialog-open-deleteAll').disabled = false
+      $('#dialog-open-deleteAll').disabled = false
       savedItems.forEach(([id, val]) => {
-        $('dialog-open-body').innerHTML += `
+        $('#dialog-open-body').innerHTML += `
           <div class="dialog-open-wrapper" id="${id}">
             <div data-action="load">
               <div class="dialog-open-title">${val[0]}</div>
@@ -953,9 +960,9 @@
       })
       feather.replace()
     } else {
-      $('dialog-open-deleteAll').disabled = true
-      $('dialog-open-body').innerHTML = 'No saved calculations.'
-      $('openButton').className = 'noAction'
+      $('#dialog-open-deleteAll').disabled = true
+      $('#dialog-open-body').innerHTML = 'No saved calculations.'
+      $('#openButton').className = 'noAction'
     }
     updateSavedCount()
   }
@@ -975,110 +982,110 @@
     const matrixTypes = ['Matrix', 'Array']
     const numericOutputs = ['number', 'BigNumber', 'Fraction']
 
-    $('themeList').value = settings.app.theme
-    $('fontSize').value = settings.app.fontSize
-    $('fontWeight').value = settings.app.fontWeight
-    $('dateFormat').innerHTML = ''
+    $('#themeList').value = settings.app.theme
+    $('#fontSize').value = settings.app.fontSize
+    $('#fontWeight').value = settings.app.fontWeight
+    $('#dateFormat').innerHTML = ''
     for (const d of dateFormats) {
-      $('dateFormat').innerHTML += `<option value="${d}">${DateTime.local().toFormat(d)}</option>`
+      $('#dateFormat').innerHTML += `<option value="${d}">${DateTime.local().toFormat(d)}</option>`
     }
-    $('dateFormat').value = settings.app.dateFormat
-    $('timeFormat').innerHTML = ''
+    $('#dateFormat').value = settings.app.dateFormat
+    $('#timeFormat').innerHTML = ''
     for (const t of timeFormats) {
-      $('timeFormat').innerHTML += `<option value="${t}">${DateTime.local().toFormat(t)}</option>`
+      $('#timeFormat').innerHTML += `<option value="${t}">${DateTime.local().toFormat(t)}</option>`
     }
-    $('timeFormat').value = settings.app.timeFormat
-    $('dateDay').checked = settings.app.dateDay
-    $('syntaxButton').checked = settings.app.syntax
+    $('#timeFormat').value = settings.app.timeFormat
+    $('#dateDay').checked = settings.app.dateDay
+    $('#syntaxButton').checked = settings.app.syntax
     syntaxToggle()
-    $('keywordTipsButton').checked = settings.app.keywordTips
-    $('matchBracketsButton').checked = settings.app.matchBrackets
-    $('precisionRange').value = settings.app.precision
-    $('precision-label').innerHTML = settings.app.precision
-    $('numericOutput').innerHTML = ''
+    $('#keywordTipsButton').checked = settings.app.keywordTips
+    $('#matchBracketsButton').checked = settings.app.matchBrackets
+    $('#precisionRange').value = settings.app.precision
+    $('#precision-label').innerHTML = settings.app.precision
+    $('#numericOutput').innerHTML = ''
     for (const n of numericOutputs) {
-      $('numericOutput').innerHTML += `<option value="${n}">${n.charAt(0).toUpperCase() + n.slice(1)}</option>`
+      $('#numericOutput').innerHTML += `<option value="${n}">${n.charAt(0).toUpperCase() + n.slice(1)}</option>`
     }
-    $('numericOutput').value = settings.app.numericOutput
+    $('#numericOutput').value = settings.app.numericOutput
     if (settings.app.numericOutput === 'BigNumber') {
       bigNumberWarning()
     }
-    $('contPrevLineButton').checked = settings.app.contPrevLine
-    $('matrixType').innerHTML = ''
+    $('#contPrevLineButton').checked = settings.app.contPrevLine
+    $('#matrixType').innerHTML = ''
     for (const m of matrixTypes) {
-      $('matrixType').innerHTML += `<option value="${m}">${m}</option>`
+      $('#matrixType').innerHTML += `<option value="${m}">${m}</option>`
     }
-    $('matrixType').value = settings.app.matrixType
-    $('predictableButton').checked = settings.app.predictable
-    $('thouSepButton').checked = settings.app.thouSep
-    $('currencyButton').checked = settings.app.currencies
-    $('lastUpdated').innerHTML = settings.app.currencies ? store.get('rateDate') : ''
-    $('currencyUpdate').style.display = settings.app.currencies ? 'block' : 'none'
-    $('autocompleteButton').checked = settings.app.autocomplete
-    $('closeBracketsButton').checked = settings.app.closeBrackets
-    $('dividerButton').checked = settings.app.divider
-    $('lineNoButton').checked = settings.app.lineNumbers
-    $('lineErrorButton').checked = settings.app.lineErrors
-    $('lineWrapButton').checked = settings.app.lineWrap
+    $('#matrixType').value = settings.app.matrixType
+    $('#predictableButton').checked = settings.app.predictable
+    $('#thouSepButton').checked = settings.app.thouSep
+    $('#currencyButton').checked = settings.app.currencies
+    $('#lastUpdated').innerHTML = settings.app.currencies ? store.get('rateDate') : ''
+    $('#currencyUpdate').style.display = settings.app.currencies ? 'block' : 'none'
+    $('#autocompleteButton').checked = settings.app.autocomplete
+    $('#closeBracketsButton').checked = settings.app.closeBrackets
+    $('#dividerButton').checked = settings.app.divider
+    $('#lineNoButton').checked = settings.app.lineNumbers
+    $('#lineErrorButton').checked = settings.app.lineErrors
+    $('#lineWrapButton').checked = settings.app.lineWrap
 
     checkDefaultSettings()
     checkWindowSize()
   }
 
   function checkDefaultSettings () {
-    $('defaultSettingsButton').style.display = DeepDiff.diff(settings.app, defaultSettings.app) ? 'inline' : 'none'
+    $('#defaultSettingsButton').style.display = DeepDiff.diff(settings.app, defaultSettings.app) ? 'inline' : 'none'
   }
 
   function checkWindowSize () {
-    $('resetSizeButton').style.display = isNode ? (ipc.sendSync('isResized') && !ipc.sendSync('isMaximized') ? 'block' : 'none') : 'none'
+    $('#resetSizeButton').style.display = isNode ? (ipc.sendSync('isResized') && !ipc.sendSync('isMaximized') ? 'block' : 'none') : 'none'
   }
 
   function syntaxToggle () {
-    $('keywordTipsButton').disabled = !$('syntaxButton').checked
-    $('matchBracketsButton').disabled = !$('syntaxButton').checked
+    $('#keywordTipsButton').disabled = !$('#syntaxButton').checked
+    $('#matchBracketsButton').disabled = !$('#syntaxButton').checked
 
-    $('keywordTipsButton').parentNode.style.opacity = $('syntaxButton').checked ? '1' : '0.5'
-    $('matchBracketsButton').parentNode.style.opacity = $('syntaxButton').checked ? '1' : '0.5'
+    $('#keywordTipsButton').parentNode.style.opacity = $('#syntaxButton').checked ? '1' : '0.5'
+    $('#matchBracketsButton').parentNode.style.opacity = $('#syntaxButton').checked ? '1' : '0.5'
   }
 
   function bigNumberWarning () {
-    $('bigNumWarn').style.display = $('numericOutput').value === 'BigNumber' ? 'inline-block' : 'none'
+    $('#bigNumWarn').style.display = $('#numericOutput').value === 'BigNumber' ? 'inline-block' : 'none'
   }
 
-  $('numericOutput').addEventListener('change', bigNumberWarning)
-  $('precisionRange').addEventListener('input', () => {
-    $('precision-label').innerHTML = $('precisionRange').value
+  $('#numericOutput').addEventListener('change', bigNumberWarning)
+  $('#precisionRange').addEventListener('input', () => {
+    $('#precision-label').innerHTML = $('#precisionRange').value
   })
 
   function saveSettings () {
-    settings.app.theme = $('themeList').value
-    settings.app.fontSize = $('fontSize').value
-    settings.app.fontWeight = $('fontWeight').value
-    settings.app.dateFormat = $('dateFormat').value
-    settings.app.timeFormat = $('timeFormat').value
-    settings.app.dateDay = $('dateDay').checked
-    settings.app.syntax = $('syntaxButton').checked
-    settings.app.keywordTips = $('keywordTipsButton').checked
-    settings.app.matchBrackets = $('matchBracketsButton').checked
-    settings.app.precision = $('precisionRange').value
-    settings.app.numericOutput = $('numericOutput').value
-    settings.app.contPrevLine = $('contPrevLineButton').checked
-    settings.app.matrixType = $('matrixType').value
-    settings.app.predictable = $('predictableButton').checked
-    settings.app.thouSep = $('thouSepButton').checked
-    if (!settings.app.currencies && $('currencyButton').checked) {
+    settings.app.theme = $('#themeList').value
+    settings.app.fontSize = $('#fontSize').value
+    settings.app.fontWeight = $('#fontWeight').value
+    settings.app.dateFormat = $('#dateFormat').value
+    settings.app.timeFormat = $('#timeFormat').value
+    settings.app.dateDay = $('#dateDay').checked
+    settings.app.syntax = $('#syntaxButton').checked
+    settings.app.keywordTips = $('#keywordTipsButton').checked
+    settings.app.matchBrackets = $('#matchBracketsButton').checked
+    settings.app.precision = $('#precisionRange').value
+    settings.app.numericOutput = $('#numericOutput').value
+    settings.app.contPrevLine = $('#contPrevLineButton').checked
+    settings.app.matrixType = $('#matrixType').value
+    settings.app.predictable = $('#predictableButton').checked
+    settings.app.thouSep = $('#thouSepButton').checked
+    if (!settings.app.currencies && $('#currencyButton').checked) {
       getRates()
-    } else if (!$('currencyButton').checked) {
+    } else if (!$('#currencyButton').checked) {
       localStorage.removeItem('rateDate')
       currencyRates = {}
     }
-    settings.app.currencies = $('currencyButton').checked
-    settings.app.autocomplete = $('autocompleteButton').checked
-    settings.app.closeBrackets = $('closeBracketsButton').checked
-    settings.app.divider = $('dividerButton').checked
-    settings.app.lineNumbers = $('lineNoButton').checked
-    settings.app.lineErrors = $('lineErrorButton').checked
-    settings.app.lineWrap = $('lineWrapButton').checked
+    settings.app.currencies = $('#currencyButton').checked
+    settings.app.autocomplete = $('#autocompleteButton').checked
+    settings.app.closeBrackets = $('#closeBracketsButton').checked
+    settings.app.divider = $('#dividerButton').checked
+    settings.app.lineNumbers = $('#lineNoButton').checked
+    settings.app.lineErrors = $('#lineErrorButton').checked
+    settings.app.lineWrap = $('#lineWrapButton').checked
 
     store.set('settings', settings)
     checkDefaultSettings()
@@ -1090,13 +1097,13 @@
   })
 
   // Help dialog content
-  $('searchBox').addEventListener('input', () => {
-    const searchString = $('searchBox').value.trim()
+  $('#searchBox').addEventListener('input', () => {
+    const searchString = $('#searchBox').value.trim()
     if (searchString) {
       try {
         const searchResult = JSON.parse(JSON.stringify(math.help(searchString).toJSON()))
 
-        $('searchResults').innerHTML = `
+        $('#searchResults').innerHTML = `
           <div>Name:</div><div>${searchResult.name}</div>
           <div>Description:</div><div>${searchResult.description}</div>
           <div>Category:</div><div>${searchResult.category}</div>
@@ -1104,10 +1111,10 @@
           <div>Examples:</div><div>${String(searchResult.examples).split(',').join(', ')}</div>
           <div>Also see:</div><div>${String(searchResult.seealso).split(',').join(', ')}</div>`
       } catch (error) {
-        $('searchResults').innerHTML = `No results for "${searchString}"`
+        $('#searchResults').innerHTML = `No results for "${searchString}"`
       }
     } else {
-      $('searchResults').innerHTML = 'Start typing above to search...'
+      $('#searchResults').innerHTML = 'Start typing above to search...'
     }
   })
 
@@ -1115,31 +1122,28 @@
   let resizeDelay
   let isResizing = false
 
-  const panel = $('panel')
-  const divider = $('divider')
+  const panel = $('#panel')
+  const divider = $('#divider')
 
-  $('divider').addEventListener('dblclick', resetDivider)
-  $('divider').addEventListener('mousedown', (e) => {
+  $('#divider').addEventListener('dblclick', resetDivider)
+  $('#divider').addEventListener('mousedown', (e) => {
     isResizing = e.target === divider
   })
-  $('panel').addEventListener('mouseup', () => {
+  $('#panel').addEventListener('mouseup', () => {
     isResizing = false
   })
-  $('panel').addEventListener('mousemove', (e) => {
+  $('#panel').addEventListener('mousemove', (e) => {
     if (isResizing) {
       const offset = settings.app.lineNumbers ? 12 : 27
       const pointerRelativeXpos = e.clientX - panel.offsetLeft - offset
       const iWidth = pointerRelativeXpos / panel.clientWidth * 100
       const inputWidth = iWidth < 0 ? 0 : iWidth > 100 ? 100 : iWidth
 
-      $('input').style.width = inputWidth + '%'
+      $('#input').style.width = inputWidth + '%'
       settings.inputWidth = inputWidth
       store.set('settings', settings)
       clearTimeout(resizeDelay)
-      resizeDelay = setTimeout(() => {
-        cm.refresh()
-        calculate()
-      }, 10)
+      resizeDelay = setTimeout(calculate, 10)
     }
   })
 
@@ -1156,7 +1160,7 @@
   const numaraPlot = window.functionPlot
 
   function plot () {
-    $('plotTitle').innerHTML = func
+    $('#plotTitle').innerHTML = func
 
     const f = func.split('=')[1]
     let domain = math.abs(math.evaluate(f, {
@@ -1172,8 +1176,8 @@
 
     activePlot = numaraPlot({
       target: '#plot',
-      height: $('plot').clientHeight,
-      width: $('plot').clientWidth,
+      height: $('#plot').clientHeight,
+      width: $('#plot').clientWidth,
       xAxis: {
         domain: xDomain
       },
@@ -1202,36 +1206,35 @@
   // Relayout plot on window resize
   let windowResizeDelay
   window.addEventListener('resize', () => {
-    if (activePlot && $('dialog-plot').classList.contains('uk-open')) {
+    if (activePlot && $('#dialog-plot').classList.contains('uk-open')) {
       plot()
     }
     clearTimeout(windowResizeDelay)
-    cm.refresh()
     windowResizeDelay = setTimeout(calculate, 10)
     checkWindowSize()
   })
 
   // Show confirmation dialog
   function confirm (msg, action) {
-    $('confirmMsg').innerHTML = msg
+    $('#confirmMsg').innerHTML = msg
     showModal('#dialog-confirm')
     const yesAction = (e) => {
       action()
       e.stopPropagation()
       UIkit.modal('#dialog-confirm').hide()
-      $('confirm-yes').removeEventListener('click', yesAction)
+      $('#confirm-yes').removeEventListener('click', yesAction)
     }
-    $('confirm-yes').addEventListener('click', yesAction)
+    $('#confirm-yes').addEventListener('click', yesAction)
     UIkit.util.on('#dialog-confirm', 'hidden', () => {
-      $('confirm-yes').removeEventListener('click', yesAction)
+      $('#confirm-yes').removeEventListener('click', yesAction)
     })
   }
 
   // Show error dialog
   function showError (e, title) {
     UIkit.util.on('#dialog-error', 'beforeshow', () => {
-      $('errTitle').innerHTML = title || 'Error'
-      $('errMsg').innerHTML = e
+      $('#errTitle').innerHTML = title || 'Error'
+      $('#errMsg').innerHTML = e
     })
     showModal('#dialog-error')
   }
@@ -1251,7 +1254,7 @@
   let outputScroll = false
 
   const leftSide = document.getElementsByClassName('CodeMirror-scroll')[0]
-  const rightSide = $('output')
+  const rightSide = $('#output')
 
   leftSide.addEventListener('scroll', () => {
     if (!inputScroll) {
@@ -1267,11 +1270,11 @@
       leftSide.scrollTop = rightSide.scrollTop
     }
     outputScroll = false
-    $('scrollTop').style.display = $('output').scrollTop > 50 ? 'block' : 'none'
+    $('#scrollTop').style.display = $('#output').scrollTop > 50 ? 'block' : 'none'
   })
 
-  $('scrollTop').addEventListener('click', () => {
-    $('output').scrollTop = 0
+  $('#scrollTop').addEventListener('click', () => {
+    $('#output').scrollTop = 0
   })
 
   // Mousetrap
@@ -1295,18 +1298,18 @@
   if (isNode) {
     ipc.send('checkUpdate')
     ipc.on('notifyUpdate', (event) => {
-      notify('Updating Numara to latest version... <a class="updateLink" onclick="$(`aboutButton`).click()">View update status</a>')
-      $('notificationDot').style.display = 'block'
+      notify('Updating Numara... <a class="notificationLink" onclick="document.querySelector(`#aboutButton`).click()">View update status</a>')
+      $('#notificationDot').style.display = 'block'
     })
     ipc.on('updateStatus', (event, status) => {
       if (status === 'ready') {
-        $('dialog-about-updateStatus').innerHTML = 'Restart Numara to finish updating.'
-        $('restartButton').style.display = 'inline-block'
-        if (!$('dialog-about').classList.contains('uk-open')) {
-          notify('Restart Numara to finish updating. <a class="updateLink" onclick="$(`restartButton`).click()">Restart Now</a>')
+        $('#dialog-about-updateStatus').innerHTML = 'Restart Numara to finish updating.'
+        $('#restartButton').style.display = 'inline-block'
+        if (!$('#dialog-about').classList.contains('uk-open')) {
+          notify('Restart Numara to finish updating. <a class="notificationLink" onclick="document.querySelector(`#restartButton`).click()">Restart Now</a>')
         }
       } else {
-        $('dialog-about-updateStatus').innerHTML = status
+        $('#dialog-about-updateStatus').innerHTML = status
       }
     })
   }
