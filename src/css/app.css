@@ -488,7 +488,8 @@ text {
   text-align: center;
 }
 
-.updateLink {
+.notificationLink {
+  color: #e06c75;
   margin-left: 8px;
 }
 
