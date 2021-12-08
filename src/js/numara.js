@@ -235,7 +235,7 @@
 
   // Calculate
   function calculate () {
-    let answers = []
+    let answers = ''
     const avgs = []
     const totals = []
     const subtotals = []
@@ -248,9 +248,6 @@
     const digits = {
       maximumFractionDigits: settings.app.precision
     }
-
-    scope.now = DateTime.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat)
-    scope.today = DateTime.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat)
 
     if (refreshCM) {
       cm.refresh()
@@ -267,6 +264,9 @@
       cm.removeLineClass(cmLineNo, 'gutter', 'lineNoError')
 
       if (cmLine) {
+        scope.now = DateTime.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat)
+        scope.today = DateTime.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat)
+
         try {
           cmLine = lineNo > 1 && cmLine.charAt(0).match(/[+\-*/]/) && cm.getLine(lineNo - 2).length > 0 && settings.app.contPrevLine
             ? scope.ans + cmLine
