@@ -234,46 +234,37 @@
   }
 
   // Calculate
+  let mathScope
+
   function calculate () {
     let answers = ''
     const avgs = []
     const totals = []
     const subtotals = []
-    const scope = {}
-    const solverScope = {}
-    const expLim = {
-      lowerExp: -12,
-      upperExp: 12
-    }
-    const digits = {
-      maximumFractionDigits: settings.app.precision
-    }
 
     if (refreshCM) {
       cm.refresh()
     }
 
+    mathScope = {}
+
     cm.eachLine((line) => {
       const cmLineNo = cm.getLineNumber(line)
       const lineNo = cmLineNo + 1
-      const lineHeight = line.height
+
+      cm.removeLineClass(cmLineNo, 'gutter', 'lineNoError')
 
       let answer = ''
       let cmLine = line.text.trim().split('//')[0].split('#')[0]
 
-      cm.removeLineClass(cmLineNo, 'gutter', 'lineNoError')
-
       if (cmLine) {
-        scope.now = DateTime.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat)
-        scope.today = DateTime.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat)
-
         try {
           cmLine = lineNo > 1 && cmLine.charAt(0).match(/[+\-*/]/) && cm.getLine(lineNo - 2).length > 0 && settings.app.contPrevLine
-            ? scope.ans + cmLine
+            ? mathScope.ans + cmLine
             : cmLine
 
           try {
-            answer = math.evaluate(cmLine, scope)
+            answer = math.evaluate(cmLine, mathScope)
           } catch (e) {
             if (cmLine.match(/:/)) {
               try {
@@ -302,8 +293,8 @@
           }
 
           if (answer !== undefined) {
-            scope.ans = answer
-            scope['line' + lineNo] = answer
+            mathScope.ans = answer
+            mathScope['line' + lineNo] = answer
 
             if (!isNaN(answer)) {
               avgs.push(answer)
@@ -311,13 +302,16 @@
               subtotals.push(answer)
             }
 
-            answer = format(math.format(answer, expLim))
+            answer = format(math.format(answer, {
+              lowerExp: -12,
+              upperExp: 12
+            }))
 
             if (answer.match(/\w\(x\)/)) {
               const plotAns = /\w\(x\)$/.test(answer) ? cmLine.trim() : answer.trim()
               answer = `<a class="plotButton" data-func="${plotAns}">Plot</a>`
-              scope.ans = plotAns
-              scope['line' + lineNo] = plotAns
+              mathScope.ans = plotAns
+              mathScope['line' + lineNo] = plotAns
             }
           } else {
             subtotals.length = 0
@@ -335,7 +329,7 @@
       }
 
       answers += `
-        <div style="height:${lineHeight}px">
+        <div style="height:${line.height}px">
           <span class="${answer && !answer.startsWith('<a') ? 'answer' : ''}" >${answer}</span>
         </div>`
     })
@@ -349,36 +343,39 @@
     store.set('input', cm.getValue())
 
     function solve (line) {
-      solverScope.avg = math.evaluate(avgs.length > 0 ? '(' + math.mean(avgs) + ')' : 0)
-      solverScope.total = math.evaluate(totals.length > 0 ? '(' + totals.join('+') + ')' : 0)
-      solverScope.subtotal = math.evaluate(subtotals.length > 0 ? '(' + subtotals.join('+') + ')' : 0)
+      const avg = math.evaluate(avgs.length > 0 ? '(' + math.mean(avgs) + ')' : 0)
+      const total = math.evaluate(totals.length > 0 ? '(' + totals.join('+') + ')' : 0)
+      const subtotal = math.evaluate(subtotals.length > 0 ? '(' + subtotals.join('+') + ')' : 0)
+
+      mathScope.now = DateTime.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat)
+      mathScope.today = DateTime.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat)
 
       line = line
-        .replace(/\bans\b/g, scope.ans)
-        .replace(/\bnow\b/g, scope.now)
-        .replace(/\btoday\b/g, scope.today)
-        .replace(/\bavg\b/g, solverScope.avg)
-        .replace(/\btotal\b/g, solverScope.total)
-        .replace(/\bsubtotal\b/g, solverScope.subtotal)
+        .replace(/\bans\b/g, mathScope.ans)
+        .replace(/\bnow\b/g, mathScope.now)
+        .replace(/\btoday\b/g, mathScope.today)
+        .replace(/\bavg\b/g, avg)
+        .replace(/\btotal\b/g, total)
+        .replace(/\bsubtotal\b/g, subtotal)
 
       const lineNoMatch = line.match(/\bline\d+\b/g)
       if (lineNoMatch) {
         lineNoMatch.forEach((n) => {
-          line = line.replace(n, scope[n])
+          line = mathScope[n] ? line.replace(n, mathScope[n]) : n
         })
       }
 
       const dateTimeReg = /'millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia'/g
       if (line.match(dateTimeReg)) {
-        const lineDate = line.split(/[+-]/)
-        const lineDateLeft = lineDate[0].replace(/[A-Za-z]+,/, '').trim()
-        const lineDateRight = line.replace(lineDate[0], '').trim()
+        const lineDate = line.split(/[+-]/)[0]
+        const lineDateLeft = lineDate.replace(/[A-Za-z]+,/, '').trim()
+        const lineDateRight = line.replace(lineDate, '').trim()
         const todayFormat = settings.app.dateFormat
         const nowFormat = settings.app.dateFormat + ' ' + settings.app.timeFormat
         const lineTime = DateTime.fromFormat(lineDateLeft, todayFormat)
         const lineNow = DateTime.fromFormat(lineDateLeft, nowFormat)
         const lineDateTime = lineTime.isValid ? lineTime : lineNow.isValid ? lineNow : null
-        const rightOfDate = String(math.evaluate(lineDateRight + ' to hours', scope))
+        const rightOfDate = String(math.evaluate(lineDateRight + ' to hours', mathScope))
         const durHrs = Number(rightOfDate.split(' ')[0])
 
         if (lineDateTime) {
@@ -394,7 +391,7 @@
 
       line = line.match(pcntOfValReg) ? line.replace(pcntOfReg, '/100*') : line
 
-      return math.evaluate(line, scope)
+      return math.evaluate(line, mathScope)
     }
 
     function strip (s) {
@@ -413,6 +410,9 @@
       answer = String(answer)
       const a = answer.trim().split(' ')[0]
       const b = answer.replace(a, '')
+      const digits = {
+        maximumFractionDigits: settings.app.precision
+      }
       const formattedAnswer = !a.includes('e') && !isNaN(a)
         ? (settings.app.thouSep ? Number(a).toLocaleString(undefined, digits) + b : parseFloat(Number(a).toFixed(settings.app.precision)) + b)
         : (a.match(/e-?\d+/) ? parseFloat(Number(a.split('e')[0]).toFixed(settings.app.precision)) + 'e' + answer.split('e')[1] + b : strip(answer))
@@ -510,7 +510,8 @@
         if (uduList.includes(cmStream)) return 'udu'
 
         if (typeof math[cmStream] === 'function' && Object.getOwnPropertyNames(math[cmStream]).includes('signatures')) return 'function'
-        if (cmStream.match(/\b(?:ans|total|subtotal|avg|today|now|line\d+)\b/)) return 'scope'
+        if (cmStream.match(/\b(?:ans|total|subtotal|avg|today|now)\b/)) return 'scope'
+        if (cmStream.match(/\b(?:line\d+)\b/)) return 'lineNo'
 
         try {
           math.evaluate(cmStream)
@@ -575,7 +576,7 @@
     if (funcs.length > 0 && settings.app.keywordTips) {
       for (const f of funcs) {
         try {
-          const res = JSON.stringify(math.help(f.innerHTML).toJSON())
+          const res = JSON.stringify(math.help(f.innerText).toJSON())
           const obj = JSON.parse(res)
           UIkit.tooltip(f, {
             title: obj.description,
@@ -614,7 +615,7 @@
     if (curr.length > 0 && settings.app.keywordTips) {
       for (const c of curr) {
         try {
-          const curr = c.innerHTML.toLowerCase()
+          const curr = c.innerText.toLowerCase()
           const currName = curr === 'usd' ? 'U.S. Dollar' : currencyRates[curr].name
           UIkit.tooltip(c, {
             title: currName,
@@ -633,7 +634,25 @@
     if (units.length > 0 && settings.app.keywordTips) {
       for (const u of units) {
         UIkit.tooltip(u, {
-          title: `Unit '${u.innerHTML}'`,
+          title: `Unit '${u.innerText}'`,
+          pos: 'top-left'
+        })
+      }
+    }
+
+    const lineNos = document.getElementsByClassName('cm-lineNo')
+    if (lineNos.length > 0 && settings.app.keywordTips) {
+      for (const ln of lineNos) {
+        let scopeTooltip
+
+        try {
+          scopeTooltip = math.evaluate(ln.innerText, mathScope)
+        } catch (e) {
+          scopeTooltip = 'Undefined'
+        }
+
+        UIkit.tooltip(ln, {
+          title: scopeTooltip,
           pos: 'top-left'
         })
       }

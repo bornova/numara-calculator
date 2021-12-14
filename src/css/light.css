@@ -252,6 +252,10 @@ li.CodeMirror-hint-active {
   color: #be6317 !important;
 }
 
+.cm-s-numara .cm-lineNo {
+  color: #e06c75 !important;
+}
+
 .cm-s-numara .cm-number {
   color: #333333 !important;
 }

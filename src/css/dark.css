@@ -327,6 +327,10 @@ line {
   color: #be6317 !important;
 }
 
+.cm-s-numara .cm-lineNo {
+  color: #e06c75 !important;
+}
+
 .cm-s-numara .cm-number {
   color: #e6e6e6 !important;
 }
