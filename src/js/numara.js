@@ -3,7 +3,7 @@
 
 (() => {
   // Get element by id
-  const $ = (selector) => document.querySelector(selector)
+  const $ = (selector, all) => all ? document.querySelectorAll(selector) : document.querySelector(selector)
 
   // localStorage
   const store = {
@@ -197,9 +197,7 @@
   }
 
   // Exchange rates
-  math.createUnit('USD', {
-    aliases: ['usd']
-  })
+  math.createUnit('USD', { aliases: ['usd'] })
 
   let currencyRates = {}
 
@@ -237,10 +235,11 @@
   let mathScope
 
   function calculate () {
-    let answers = ''
     const avgs = []
     const totals = []
     const subtotals = []
+
+    let answers = ''
 
     if (refreshCM) {
       cm.refresh()
@@ -283,13 +282,13 @@
               if (sp.length === 0) break
 
               try {
-                cmLine = cmLine.replace(sp, solve(s))
+                cmLine = cmLine.replace(sp, solveLine(s))
               } catch (e) {
                 break
               }
             }
 
-            answer = solve(cmLine)
+            answer = solveLine(cmLine)
           }
 
           if (answer !== undefined) {
@@ -302,7 +301,7 @@
               subtotals.push(answer)
             }
 
-            answer = format(math.format(answer, {
+            answer = formatAnswer(math.format(answer, {
               lowerExp: -12,
               upperExp: 12
             }))
@@ -342,7 +341,7 @@
 
     store.set('input', cm.getValue())
 
-    function solve (line) {
+    function solveLine (line) {
       const avg = math.evaluate(avgs.length > 0 ? '(' + math.mean(avgs) + ')' : 0)
       const total = math.evaluate(totals.length > 0 ? '(' + totals.join('+') + ')' : 0)
       const subtotal = math.evaluate(subtotals.length > 0 ? '(' + subtotals.join('+') + ')' : 0)
@@ -380,7 +379,7 @@
 
         if (lineDateTime) {
           const isToday = lineDateTime.toFormat(settings.app.dateFormat + 'hh:mm:ss:SSS').endsWith('12:00:00:000')
-          line = '"' + lineDateTime.plus({ hours: durHrs }).toFormat((settings.app.dateDay ? 'ccc, ' : '') + (isToday ? todayFormat : nowFormat)) + '"'
+          line = `"${lineDateTime.plus({ hours: durHrs }).toFormat((settings.app.dateDay ? 'ccc, ' : '') + (isToday ? todayFormat : nowFormat))}"`
         } else {
           return 'Invalid Date'
         }
@@ -393,32 +392,36 @@
 
       return math.evaluate(line, mathScope)
     }
+  }
 
-    function strip (s) {
-      let t = s.length
-      if (s.charAt(0) === '"') {
-        s = s.substring(1, t--)
-      }
-      if (s.charAt(--t) === '"') {
-        s = s.substring(0, t)
-      }
-
-      return s
+  function stripAnswer (answer) {
+    let t = answer.length
+    if (answer.charAt(0) === '"') {
+      answer = answer.substring(1, t--)
+    }
+    if (answer.charAt(--t) === '"') {
+      answer = answer.substring(0, t)
     }
 
-    function format (answer) {
-      answer = String(answer)
-      const a = answer.trim().split(' ')[0]
-      const b = answer.replace(a, '')
-      const digits = {
-        maximumFractionDigits: settings.app.precision
-      }
-      const formattedAnswer = !a.includes('e') && !isNaN(a)
-        ? (settings.app.thouSep ? Number(a).toLocaleString(undefined, digits) + b : parseFloat(Number(a).toFixed(settings.app.precision)) + b)
-        : (a.match(/e-?\d+/) ? parseFloat(Number(a.split('e')[0]).toFixed(settings.app.precision)) + 'e' + answer.split('e')[1] + b : strip(answer))
+    return answer
+  }
 
-      return formattedAnswer
+  function formatAnswer (answer) {
+    answer = String(answer)
+    const a = answer.trim().split(' ')[0]
+    const b = answer.replace(a, '')
+    const digits = {
+      maximumFractionDigits: settings.app.precision
     }
+    const formattedAnswer = !a.includes('e') && !isNaN(a)
+      ? (settings.app.thouSep
+        ? Number(a).toLocaleString(undefined, digits) + b
+        : parseFloat(Number(a).toFixed(settings.app.precision)) + b)
+      : (a.match(/e-?\d+/)
+        ? parseFloat(Number(a.split('e')[0]).toFixed(settings.app.precision)) + 'e' + answer.split('e')[1] + b
+        : stripAnswer(answer))
+
+    return formattedAnswer
   }
 
   // User defined functions and units
@@ -433,6 +436,7 @@
     udfInput.setValue(udf)
     uduInput.setValue(udu)
   })
+
   UIkit.util.on('#dialog-udfu', 'shown', () => {
     udfInput.refresh()
     uduInput.refresh()
@@ -572,7 +576,7 @@
     }
   })
   cm.on('update', () => {
-    const funcs = document.getElementsByClassName('cm-function')
+    const funcs = $('.cm-function', true)
     if (funcs.length > 0 && settings.app.keywordTips) {
       for (const f of funcs) {
         try {
@@ -591,7 +595,7 @@
       }
     }
 
-    const udfs = document.getElementsByClassName('cm-udf')
+    const udfs = $('.cm-udf', true)
     if (udfs.length > 0 && settings.app.keywordTips) {
       for (const f of udfs) {
         UIkit.tooltip(f, {
@@ -601,7 +605,7 @@
       }
     }
 
-    const udus = document.getElementsByClassName('cm-udu')
+    const udus = $('.cm-udu', true)
     if (udus.length > 0 && settings.app.keywordTips) {
       for (const u of udus) {
         UIkit.tooltip(u, {
@@ -611,7 +615,7 @@
       }
     }
 
-    const curr = document.getElementsByClassName('cm-currency')
+    const curr = $('.cm-currency', true)
     if (curr.length > 0 && settings.app.keywordTips) {
       for (const c of curr) {
         try {
@@ -630,7 +634,7 @@
       }
     }
 
-    const units = document.getElementsByClassName('cm-unit')
+    const units = $('.cm-unit', true)
     if (units.length > 0 && settings.app.keywordTips) {
       for (const u of units) {
         UIkit.tooltip(u, {
@@ -640,13 +644,13 @@
       }
     }
 
-    const lineNos = document.getElementsByClassName('cm-lineNo')
+    const lineNos = $('.cm-lineNo', true)
     if (lineNos.length > 0 && settings.app.keywordTips) {
       for (const ln of lineNos) {
         let scopeTooltip
 
         try {
-          scopeTooltip = math.evaluate(ln.innerText, mathScope)
+          scopeTooltip = formatAnswer(math.evaluate(ln.innerText, mathScope))
         } catch (e) {
           scopeTooltip = 'Undefined'
         }
@@ -672,7 +676,7 @@
       ipc.send('setTheme', settings.app.theme)
     }
 
-    const elements = document.querySelectorAll('.panelFont, .CodeMirror')
+    const elements = $('.panelFont, .CodeMirror', true)
     for (const el of elements) {
       el.style.fontSize = settings.app.fontSize
       el.style.fontWeight = settings.app.fontWeight
@@ -925,11 +929,9 @@
         store.set('settings', settings)
         plot()
         break
-
       case 'restartButton': // Restart to update
         ipc.send('updateApp')
         break
-
       case 'demoButton': // Load demo
         cm.setValue(demo)
         calculate()
@@ -1272,7 +1274,7 @@
   let inputScroll = false
   let outputScroll = false
 
-  const leftSide = document.getElementsByClassName('CodeMirror-scroll')[0]
+  const leftSide = $('.CodeMirror-scroll')
   const rightSide = $('#output')
 
   leftSide.addEventListener('scroll', () => {
@@ -1307,7 +1309,7 @@
   Object.entries(traps).forEach(([b, c]) => {
     Mousetrap.bindGlobal(c, (e) => {
       e.preventDefault()
-      if (document.getElementsByClassName('uk-open').length === 0) {
+      if ($('.uk-open', true).length === 0) {
         $(b).click()
       }
     })
@@ -1362,8 +1364,6 @@
     f(x) = 2x^2 + 3x - 5
     `).replace(/^ +/gm, '')
 
-  window.addEventListener('load', () => {
-    setTimeout(() => { document.getElementsByClassName('CodeMirror-code')[0].lastChild.scrollIntoView() }, 250)
-    setTimeout(() => { cm.focus() }, 500)
-  })
+  setTimeout(() => { $('.CodeMirror-code').lastChild.scrollIntoView() }, 250)
+  setTimeout(() => { cm.focus() }, 500)
 })()
