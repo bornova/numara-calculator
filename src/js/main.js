@@ -39,11 +39,6 @@ const light = '#ffffff'
 const dark = '#1f1f1f'
 const bg = theme === 'system' ? nativeTheme.shouldUseDarkColors ? dark : light : theme === 'dark' ? dark : light
 
-require('electron-context-menu')({
-  prepend: (params, browserWindow) => [],
-  showSearchWithGoogle: false
-})
-
 let win
 
 function appWindow () {
@@ -181,6 +176,34 @@ ipcMain.on('resetApp', () => {
     app.relaunch()
     app.exit()
   })
+})
+
+ipcMain.on('contextMenu', (event, isEmpty, isLine, isSelection) => {
+  const contextMenuTemplate = [
+    { label: isSelection ? 'Cut selection' : isLine ? 'Cut Line' : 'Cut', role: 'cut', enabled: isLine || isSelection },
+    { type: 'separator' },
+    { label: isSelection ? 'Copy selection' : isLine ? 'Copy Line' : 'Copy', role: 'copy', enabled: isLine || isSelection },
+    { label: 'Copy Answer', enabled: isLine && !isSelection, click: () => { event.sender.send('copyLineAnswer') } },
+    { label: 'Copy Line + Answer', enabled: isLine && !isSelection, click: () => { event.sender.send('copyLineWithAnswer') } },
+    { label: 'Copy All Calculations', enabled: !isEmpty, click: () => { event.sender.send('copyCalculations') } },
+    { type: 'separator' },
+    { role: 'paste' },
+    ...(is.development ? [{ type: 'separator' }, { role: 'toggleDevTools' }] : [{}])
+  ]
+
+  const contextMenu = Menu.buildFromTemplate(contextMenuTemplate)
+  contextMenu.popup()
+})
+
+ipcMain.on('altContextMenu', (event) => {
+  const contextMenuTemplate = [
+    { role: 'cut' },
+    { role: 'copy' },
+    { role: 'paste' }
+  ]
+
+  const contextMenu = Menu.buildFromTemplate(contextMenuTemplate)
+  contextMenu.popup()
 })
 
 nativeTheme.on('updated', () => {
