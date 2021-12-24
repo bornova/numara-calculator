@@ -45,7 +45,7 @@ fs.emptyDir(buildPath)
 
     const packages = [
       'node_modules/deep-diff/dist/deep-diff.min.js',
-      'node_modules/feather-icons/dist/feather.min.js',
+      'node_modules/lucide/dist/umd/lucide.min.js',
       'node_modules/luxon/build/global/luxon.min.js',
       'node_modules/mathjs/lib/browser/math.js',
       'node_modules/mousetrap/mousetrap.min.js',
