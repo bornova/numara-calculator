@@ -1,4 +1,4 @@
-/* global appInfo, CodeMirror, DeepDiff, feather, fetch, localStorage, location, luxon, math, Mousetrap, UIkit  */
+/* global appInfo, CodeMirror, DeepDiff, lucide, fetch, localStorage, location, luxon, math, Mousetrap, UIkit  */
 /* eslint no-new-func: 0 */
 
 (() => {
@@ -16,7 +16,7 @@
   const DateTime = luxon.DateTime
 
   // App action buttons
-  feather.replace()
+  lucide.createIcons()
 
   // Initialize input
   const cm = CodeMirror.fromTextArea($('#inputArea'), {
@@ -337,6 +337,7 @@
 
     $('#clearButton').className = cm.getValue() === '' ? 'noAction' : 'action'
     $('#printButton').className = cm.getValue() === '' ? 'noAction' : 'action'
+    $('#copyButton').className = cm.getValue() === '' ? 'noAction' : 'action'
     $('#saveButton').className = cm.getValue() === '' ? 'noAction' : 'action'
 
     store.set('input', cm.getValue())
@@ -773,7 +774,10 @@
           }
         }
         break
-      case 'saveButton': // Save calcualtions
+      case 'copyButton': // Copy calculations
+        copyCalculations()
+        break
+      case 'saveButton': // Save calculations
         if (cm.getValue() !== '') {
           $('#saveTitle').value = ''
           showModal('#dialog-save')
@@ -940,6 +944,55 @@
     }
   })
 
+  // Copy calculations
+  function copyLineAnswer () {
+    const index = cm.getCursor().line
+    const line = cm.getLine(index).trim()
+    const copiedAnswer = line && line.match(/^(#|\/\/)/)
+      ? $('#output').children[index].innerText
+      : ''
+
+    navigator.clipboard.writeText(copiedAnswer)
+    notify(`Copied Line${index + 1} answer to clipboard.`)
+  }
+
+  function copyLineWithAnswer () {
+    const index = cm.getCursor().line
+    const line = cm.getLine(index).trim()
+    const copiedLine = line
+      ? line.match(/^(#|\/\/)/)
+        ? `${line}`
+        : `${line} = ${$('#output').children[index].innerText}`
+      : ''
+
+    navigator.clipboard.writeText(copiedLine)
+    notify(`Copied Line${index + 1} with answer to clipboard.`)
+  }
+
+  function copyCalculations () {
+    if (cm.getValue() !== '') {
+      let copiedCalc = ''
+      cm.eachLine((line) => {
+        const index = cm.getLineNumber(line)
+        line = line.text.trim()
+        copiedCalc += line
+          ? line.match(/^(#|\/\/)/)
+            ? `${line}\n`
+            : `${line} = ${$('#output').children[index].innerText}\n`
+          : '\n'
+      })
+
+      navigator.clipboard.writeText(copiedCalc)
+      notify('Copied calculations to clipboard.')
+    }
+  }
+
+  if (isNode) {
+    ipc.on('copyLineAnswer', copyLineAnswer)
+    ipc.on('copyLineWithAnswer', copyLineWithAnswer)
+    ipc.on('copyCalculations', copyCalculations)
+  }
+
   // Open saved calculations dialog actions
   $('#dialog-open').addEventListener('click', (e) => {
     let pid
@@ -976,10 +1029,10 @@
               <div class="dialog-open-title">${val[0]}</div>
               <div class="dialog-open-date">${DateTime.fromFormat(id, 'yyyyMMddHHmmssSSS').toFormat('ff')}</div>
             </div>
-            <span class="dialog-open-delete" data-action="delete"><i data-feather="x-circle"></i></span>
+            <span class="dialog-open-delete" data-action="delete"><i icon-name="x-circle"></i></span>
           </div>`
       })
-      feather.replace()
+      lucide.createIcons()
     } else {
       $('#dialog-open-deleteAll').disabled = true
       $('#dialog-open-body').innerHTML = 'No saved calculations.'
@@ -1306,14 +1359,41 @@
     openButton: ['command+o', 'ctrl+o']
   }
 
-  Object.entries(traps).forEach(([b, c]) => {
+  for (const [b, c] of Object.entries(traps)) {
     Mousetrap.bindGlobal(c, (e) => {
       e.preventDefault()
       if ($('.uk-open', true).length === 0) {
-        $(b).click()
+        $('#' + b).click()
       }
     })
-  })
+  }
+
+  // Context menus
+  if (isNode) {
+    function mainContext () {
+      setTimeout(() => {
+        const isEmpty = cm.getValue() === ''
+        const isLine = cm.getLine(cm.getCursor().line).length > 0
+        const isSelection = cm.getSelection().length > 0
+
+        ipc.send('contextMenu', isEmpty, isLine, isSelection)
+      }, 20)
+    }
+
+    function altContext () {
+      setTimeout(() => {
+        ipc.send('altContextMenu')
+      }, 20)
+    }
+
+    cm.on('contextmenu', mainContext)
+    udfInput.on('contextmenu', altContext)
+    uduInput.on('contextmenu', altContext)
+
+    $('.textBox', true).forEach((el) => {
+      el.addEventListener('contextmenu', altContext)
+    })
+  }
 
   // Check for updates
   if (isNode) {
