@@ -59,7 +59,7 @@ function appWindow () {
       contextIsolation: false,
       nativeWindowOpen: true,
       spellcheck: false,
-      devTools: is.development
+      devTools: !app.isPackaged
     }
   })
   win.loadFile('build/index.html')
@@ -79,7 +79,7 @@ function appWindow () {
     win.webContents.send('isMax', false)
   })
   win.webContents.on('did-finish-load', () => {
-    if (dims.get('fullSize') & is.windows) {
+    if (dims.get('fullSize') & process.platform === "win32") {
       win.webContents.send('fullscreen', true)
     }
     win.setHasShadow(true)
@@ -90,15 +90,15 @@ function appWindow () {
     shell.openExternal(url)
   })
 
-  if (is.development) {
-    win.webContents.openDevTools()
-  } else {
+  if (app.isPackaged) {
     win.on('focus', () => {
       globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => { })
     })
     win.on('blur', () => {
       globalShortcut.unregisterAll()
     })
+  } else {
+    win.webContents.openDevTools()
   }
 }
 
@@ -168,7 +168,7 @@ ipcMain.on('updateApp', () => {
   })
 })
 ipcMain.on('checkUpdate', () => {
-  if (!is.development) {
+  if (app.isPackaged) {
     autoUpdater.checkForUpdatesAndNotify()
   }
 })
@@ -203,9 +203,9 @@ const commonContext = (event, index, isEmpty, isSelection, isMultiLine, hasAnswe
         { label: 'Copy Line with Answer', enabled: hasAnswer, click: () => { event.sender.send('copyLineWithAnswer', index, true) } }
       ]
 
-  const devTools = is.development
-    ? [{ type: 'separator' }, { role: 'toggleDevTools' }]
-    : [{ label: '', visible: false }]
+  const devTools = app.isPackaged
+    ? [{ label: '', visible: false }]
+    : [{ type: 'separator' }, { role: 'toggleDevTools' }]
 
   return [
     ...context,
@@ -334,4 +334,4 @@ const menuTemplate = [
   }
 ]
 
-Menu.setApplicationMenu(is.macos ? Menu.buildFromTemplate(menuTemplate) : null)
+Menu.setApplicationMenu(process.platform === "darvin" || process.platform === "linux" ? Menu.buildFromTemplate(menuTemplate) : null)
