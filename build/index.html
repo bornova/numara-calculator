@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="css/uikit.min.css">
   <link rel="stylesheet" href="css/codemirror.css">
   <link rel="stylesheet" href="css/numara.css">
-  <link rel="stylesheet" href="" id="mobile" >
+  <link rel="stylesheet" href="" id="mobile">
   <link rel="stylesheet" href="" id="style">
 </head>
 
@@ -41,17 +41,18 @@
 
     <div id="actions" class="actions">
       <div id="leftActions" class="leftActions">
-        <a id="clearButton" class="action clearButton" title="Clear" uk-tooltip><i data-feather="skip-back"></i></a>
-        <a id="printButton" class="action" title="Print" uk-tooltip><i data-feather="printer"></i></a>
-        <a id="saveButton" class="action" title="Save" uk-tooltip><i data-feather="save"></i></a>
-        <a id="openButton" class="action" uk-tooltip><i data-feather="folder"></i></a>
+        <a id="clearButton" class="action" title="Clear" uk-tooltip><i icon-name="skip-back"></i></a>
+        <a id="printButton" class="action" title="Print" uk-tooltip><i icon-name="printer"></i></a>
+        <a id="copyButton" class="action" title="Copy Calculations" uk-tooltip><i icon-name="copy"></i></a>
+        <a id="saveButton" class="action" title="Save" uk-tooltip><i icon-name="save"></i></a>
+        <a id="openButton" class="action" uk-tooltip><i icon-name="folder"></i></a>
       </div>
       <div id="rightActions" class="rightActions">
-        <a id="udfuButton" class="action" title="User functions and units" uk-tooltip><i data-feather="edit-3"></i></a>
-        <a id="settingsButton" class="action" title="Settings" uk-tooltip><i data-feather="settings"></i></a>
-        <a id="helpButton" class="action" title="Help" uk-tooltip><i data-feather="help-circle"></i></a>
-        <a id="aboutButton" class="action" title="Info" uk-tooltip><i data-feather="info"></i></a>
-        <span id="notificationDot" class="notificationDot"><i data-feather="circle"></i></span>
+        <a id="udfuButton" class="action" title="User functions and units" uk-tooltip><i icon-name="edit-3"></i></a>
+        <a id="settingsButton" class="action" title="Settings" uk-tooltip><i icon-name="settings"></i></a>
+        <a id="helpButton" class="action" title="Help" uk-tooltip><i icon-name="help-circle"></i></a>
+        <a id="aboutButton" class="action" title="Info" uk-tooltip><i icon-name="info"></i></a>
+        <span id="notificationDot" class="notificationDot"><i icon-name="circle"></i></span>
       </div>
     </div>
   </div>
@@ -195,7 +196,7 @@
           </div>
         </div>
         <div class="uk-child-width-expand" uk-grid>
-          <div class="padTop1">Numeric output<a id="bigNumWarn" class="warn-icon"><i data-feather="alert-circle"></i></a></div>
+          <div class="padTop1">Numeric output<a id="bigNumWarn" class="warn-icon"><i icon-name="alert-circle"></i></a></div>
           <div class="uk-text-right">
             <select id="numericOutput" class="uk-select settingItem"></select>
           </div>
