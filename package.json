@@ -27,7 +27,7 @@
     "electron-builder-notarize": "^1.2.0",
     "eslint": "^8.5.0",
     "fs-extra": "^10.0.0",
-    "lucide": "^0.16.22",
+    "lucide": "^0.16.23",
     "luxon": "^2.2.0",
     "mathjs": "^10.0.1",
     "mousetrap": "^1.6.5",
