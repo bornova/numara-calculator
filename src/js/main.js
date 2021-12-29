@@ -195,12 +195,12 @@ const contextHeader = (index, isMultiLine, hasAnswer) => {
 const commonContext = (event, index, isEmpty, isSelection, isMultiLine, hasAnswer) => {
   const context = isMultiLine
     ? [
-        { label: 'Copy Selected Answers', enabled: true, click: () => { event.sender.send('copySelectedAnswers', false) } },
-        { label: 'Copy Selected Lines with Answers', enabled: true, click: () => { event.sender.send('copySelectedLinesWithAnswers', true) } }]
+      { label: 'Copy Selected Answers', enabled: true, click: () => { event.sender.send('copySelectedAnswers', false) } },
+      { label: 'Copy Selected Lines with Answers', enabled: true, click: () => { event.sender.send('copySelectedLinesWithAnswers', true) } }]
     : [
-        { label: 'Copy Answer', enabled: hasAnswer, click: () => { event.sender.send('copyAnswer', index, false) } },
-        { label: 'Copy Line with Answer', enabled: hasAnswer, click: () => { event.sender.send('copyLineWithAnswer', index, true) } }
-      ]
+      { label: 'Copy Answer', enabled: hasAnswer, click: () => { event.sender.send('copyAnswer', index, false) } },
+      { label: 'Copy Line with Answer', enabled: hasAnswer, click: () => { event.sender.send('copyLineWithAnswer', index, true) } }
+    ]
 
   const devTools = app.isPackaged
     ? [{ label: '', visible: false }]
@@ -280,17 +280,7 @@ const menuTemplate = [
       { role: 'cut' },
       { role: 'copy' },
       { role: 'paste' },
-      { role: 'pasteAndMatchStyle' },
-      { role: 'delete' },
-      { role: 'selectAll' },
-      { type: 'separator' },
-      {
-        label: 'Speech',
-        submenu: [
-          { role: 'startspeaking' },
-          { role: 'stopspeaking' }
-        ]
-      }
+      { role: 'selectAll' }
     ]
   },
   {
@@ -310,10 +300,7 @@ const menuTemplate = [
       { role: 'minimize' },
       { role: 'zoom' },
       { role: 'togglefullscreen' },
-      {
-        label: 'Reset Size',
-        click: resetSize()
-      },
+      { label: 'Reset Size', click: resetSize() },
       { type: 'separator' },
       { role: 'front' },
       { type: 'separator' },
@@ -333,4 +320,4 @@ const menuTemplate = [
   }
 ]
 
-Menu.setApplicationMenu(process.platform === "darvin" || process.platform === "linux" ? Menu.buildFromTemplate(menuTemplate) : null)
+Menu.setApplicationMenu(process.platform === "darwin" || process.platform === "linux" ? Menu.buildFromTemplate(menuTemplate) : null)
