@@ -328,7 +328,7 @@
       }
 
       answers += `
-        <div style="height:${line.height}px">
+        <div line-no=${cmLineNo} style="height:${line.height}px">
           <span class="${answer && !answer.startsWith('<a') ? 'answer' : ''}" >${answer}</span>
         </div>`
     })
@@ -415,12 +415,12 @@
       maximumFractionDigits: settings.app.precision
     }
     const formattedAnswer = !a.includes('e') && !isNaN(a)
-      ? (settings.app.thouSep
+      ? settings.app.thouSep
         ? Number(a).toLocaleString(undefined, digits) + b
-        : parseFloat(Number(a).toFixed(settings.app.precision)) + b)
-      : (a.match(/e-?\d+/)
+        : parseFloat(Number(a).toFixed(settings.app.precision)) + b
+      : a.match(/e-?\d+/)
         ? parseFloat(Number(a.split('e')[0]).toFixed(settings.app.precision)) + 'e' + answer.split('e')[1] + b
-        : stripAnswer(answer))
+        : stripAnswer(answer)
 
     return formattedAnswer
   }
@@ -775,7 +775,7 @@
         }
         break
       case 'copyButton': // Copy calculations
-        copyCalculations()
+        copyAllCalculations()
         break
       case 'saveButton': // Save calculations
         if (cm.getValue() !== '') {
@@ -943,55 +943,6 @@
         break
     }
   })
-
-  // Copy calculations
-  function copyLineAnswer () {
-    const index = cm.getCursor().line
-    const line = cm.getLine(index).trim()
-    const copiedAnswer = line && line.match(/^(#|\/\/)/)
-      ? $('#output').children[index].innerText
-      : ''
-
-    navigator.clipboard.writeText(copiedAnswer)
-    notify(`Copied Line${index + 1} answer to clipboard.`)
-  }
-
-  function copyLineWithAnswer () {
-    const index = cm.getCursor().line
-    const line = cm.getLine(index).trim()
-    const copiedLine = line
-      ? line.match(/^(#|\/\/)/)
-        ? `${line}`
-        : `${line} = ${$('#output').children[index].innerText}`
-      : ''
-
-    navigator.clipboard.writeText(copiedLine)
-    notify(`Copied Line${index + 1} with answer to clipboard.`)
-  }
-
-  function copyCalculations () {
-    if (cm.getValue() !== '') {
-      let copiedCalc = ''
-      cm.eachLine((line) => {
-        const index = cm.getLineNumber(line)
-        line = line.text.trim()
-        copiedCalc += line
-          ? line.match(/^(#|\/\/)/)
-            ? `${line}\n`
-            : `${line} = ${$('#output').children[index].innerText}\n`
-          : '\n'
-      })
-
-      navigator.clipboard.writeText(copiedCalc)
-      notify('Copied calculations to clipboard.')
-    }
-  }
-
-  if (isNode) {
-    ipc.on('copyLineAnswer', copyLineAnswer)
-    ipc.on('copyLineWithAnswer', copyLineWithAnswer)
-    ipc.on('copyCalculations', copyCalculations)
-  }
 
   // Open saved calculations dialog actions
   $('#dialog-open').addEventListener('click', (e) => {
@@ -1372,12 +1323,27 @@
   if (isNode) {
     function mainContext () {
       setTimeout(() => {
-        const isEmpty = cm.getValue() === ''
-        const isLine = cm.getLine(cm.getCursor().line).length > 0
-        const isSelection = cm.getSelection().length > 0
+        const index = cm.getCursor().line
+        const line = cm.getLine(index)
+        const answer = $('#output').children[index].innerText
 
-        ipc.send('contextMenu', isEmpty, isLine, isSelection)
+        const isEmpty = cm.getValue() === ''
+        const isLine = line.length > 0
+        const isSelection = cm.somethingSelected()
+        const isMultiLine = cm.listSelections().length > 1 || cm.listSelections()[0].anchor.line !== cm.listSelections()[0].head.line
+        const hasAnswer = answer !== '' && answer !== 'Error' && answer !== 'Plot'
+
+        ipc.send('mainContextMenu', index, isEmpty, isLine, isSelection, isMultiLine, hasAnswer)
       }, 20)
+    }
+
+    function outputContext (e) {
+      const index = e.srcElement.getAttribute('line-no') || e.srcElement.parentElement.getAttribute('line-no')
+      const answer = e.srcElement.innerText
+      const isEmpty = cm.getValue() === ''
+      const hasAnswer = index !== null && answer !== '' && answer !== 'Error' && answer !== 'Plot'
+
+      ipc.send('outputContextMenu', index, isEmpty, hasAnswer)
     }
 
     function altContext () {
@@ -1390,9 +1356,72 @@
     udfInput.on('contextmenu', altContext)
     uduInput.on('contextmenu', altContext)
 
+    $('#output').addEventListener('contextmenu', outputContext)
+
     $('.textBox', true).forEach((el) => {
       el.addEventListener('contextmenu', altContext)
     })
+
+    ipc.on('copyAnswer', copyAnswer)
+    ipc.on('copyLineWithAnswer', copyAnswer)
+    ipc.on('copySelectedAnswers', copySelectedAnswers)
+    ipc.on('copySelectedLinesWithAnswers', copySelectedAnswers)
+    ipc.on('copyAllCalculations', copyAllCalculations)
+  }
+
+  // Copy calculations
+  function copyAnswer (event, index, withLines) {
+    index = +index
+    const line = cm.getLine(index).trim()
+    const answer = $('#output').children[index].innerText
+    const copiedText = withLines
+      ? `${line} = ${answer}`
+      : `${answer}`
+
+    navigator.clipboard.writeText(copiedText)
+    notify(withLines ? `Copied Line${index + 1} with answer to clipboard.` : `Copied '${answer}' to clipboard.`)
+  }
+
+  function copySelectedAnswers (event, withLines) {
+    const selections = cm.listSelections()
+    let copiedLines = ''
+
+    selections.forEach(s => {
+      const range = [s.anchor.line, s.head.line]
+      const start = Math.min(...range)
+      const end = Math.max(...range) + 1
+
+      for (let i = start; i < end; i++) {
+        const line = cm.getLine(i).trim()
+        const answer = $('#output').children[i].innerText
+        copiedLines += line
+          ? line.match(/^(#|\/\/)/)
+            ? withLines ? `${line}\n` : ''
+            : withLines ? `${line} = ${answer}\n` : `${answer}\n`
+          : ''
+      }
+    })
+
+    navigator.clipboard.writeText(copiedLines)
+    notify(withLines ? 'Copied selected lines with answers to clipboard.' : 'Copied selected answers to clipboard.')
+  }
+
+  function copyAllCalculations () {
+    if (cm.getValue() !== '') {
+      let copiedCalc = ''
+      cm.eachLine((line) => {
+        const index = cm.getLineNumber(line)
+        line = line.text.trim()
+        copiedCalc += line
+          ? line.match(/^(#|\/\/)/)
+            ? `${line}\n`
+            : `${line} = ${$('#output').children[index].innerText}\n`
+          : '\n'
+      })
+
+      navigator.clipboard.writeText(copiedCalc)
+      notify('Copied all calculations to clipboard.')
+    }
   }
 
   // Check for updates

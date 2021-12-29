@@ -90,7 +90,9 @@ function appWindow () {
     shell.openExternal(url)
   })
 
-  if (!is.development) {
+  if (is.development) {
+    win.webContents.openDevTools()
+  } else {
     win.on('focus', () => {
       globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => { })
     })
@@ -178,19 +180,60 @@ ipcMain.on('resetApp', () => {
   })
 })
 
-ipcMain.on('contextMenu', (event, isEmpty, isLine, isSelection) => {
+const contextHeader = (index, isMultiLine, hasAnswer) => {
+  if (hasAnswer || index !== null) {
+    return [
+      { label: isMultiLine ? 'Multiple lines:' : `Line ${+index + 1}:`, enabled: false, click: () => { } },
+      { type: 'separator' }
+    ]
+  } else {
+    return [
+      { label: '', visible: false }
+    ]
+  }
+}
+
+const commonContext = (event, index, isEmpty, isSelection, isMultiLine, hasAnswer) => {
+  const context = isMultiLine
+    ? [
+        { label: 'Copy Selected Answers', enabled: true, click: () => { event.sender.send('copySelectedAnswers', false) } },
+        { label: 'Copy Selected Lines with Answers', enabled: true, click: () => { event.sender.send('copySelectedLinesWithAnswers', true) } }]
+    : [
+        { label: 'Copy Answer', enabled: hasAnswer, click: () => { event.sender.send('copyAnswer', index, false) } },
+        { label: 'Copy Line with Answer', enabled: hasAnswer, click: () => { event.sender.send('copyLineWithAnswer', index, true) } }
+      ]
+
+  const devTools = is.development
+    ? [{ type: 'separator' }, { role: 'toggleDevTools' }]
+    : [{ label: '', visible: false }]
+
+  return [
+    ...context,
+    { type: 'separator' },
+    { label: 'Copy All Calculations', enabled: !isEmpty, click: () => { event.sender.send('copyAllCalculations') } },
+    ...devTools
+  ]
+}
+
+ipcMain.on('mainContextMenu', (event, index, isEmpty, isLine, isSelection, isMultiLine, hasAnswer) => {
   const contextMenuTemplate = [
-    { label: isSelection ? 'Cut selection' : isLine ? 'Cut Line' : 'Cut', role: 'cut', enabled: isLine || isSelection },
-    { type: 'separator' },
-    { label: isSelection ? 'Copy selection' : isLine ? 'Copy Line' : 'Copy', role: 'copy', enabled: isLine || isSelection },
-    { label: 'Copy Answer', enabled: isLine && !isSelection, click: () => { event.sender.send('copyLineAnswer') } },
-    { label: 'Copy Line + Answer', enabled: isLine && !isSelection, click: () => { event.sender.send('copyLineWithAnswer') } },
-    { label: 'Copy All Calculations', enabled: !isEmpty, click: () => { event.sender.send('copyCalculations') } },
-    { type: 'separator' },
+    ...contextHeader(index, isMultiLine, hasAnswer),
+    { label: isSelection ? 'Cut Selection' : isLine ? 'Cut Line' : 'Cut', role: 'cut', enabled: isLine || isSelection },
+    { label: isSelection ? 'Copy Selection' : isLine ? 'Copy Line' : 'Copy', role: 'copy', enabled: isLine || isSelection },
     { role: 'paste' },
-    ...(is.development ? [{ type: 'separator' }, { role: 'toggleDevTools' }] : [{}])
+    { type: 'separator' },
+    ...commonContext(event, index, isEmpty, isSelection, isMultiLine, hasAnswer)
   ]
 
+  const contextMenu = Menu.buildFromTemplate(contextMenuTemplate)
+  contextMenu.popup()
+})
+
+ipcMain.on('outputContextMenu', (event, index, isEmpty, hasAnswer) => {
+  const contextMenuTemplate = [
+    ...contextHeader(index, false, hasAnswer),
+    ...commonContext(event, index, isEmpty, false, false, hasAnswer)
+  ]
   const contextMenu = Menu.buildFromTemplate(contextMenuTemplate)
   contextMenu.popup()
 })
