@@ -9,7 +9,6 @@ const {
   shell
 } = require('electron')
 const autoUpdater = require('electron-updater').autoUpdater
-const is = require('electron-util').is
 const Store = require('electron-store')
 const schema = {
   appHeight: {
