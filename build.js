@@ -113,13 +113,13 @@ fs.emptyDir(buildPath)
     const cleanNumara = {}
     const cleanCodemirror = {}
 
-    numaraCss.forEach((item, index) => {
+    numaraCss.forEach((item) => {
       cleanNumara[item] = {
         styles: fs.readFileSync(item, 'utf-8')
       }
     })
 
-    codemirrorCss.forEach((item, index) => {
+    codemirrorCss.forEach((item) => {
       cleanCodemirror[item] = {
         styles: fs.readFileSync(item, 'utf-8')
       }
