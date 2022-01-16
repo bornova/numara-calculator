@@ -1,4 +1,4 @@
-/* global appInfo, CodeMirror, DeepDiff, lucide, fetch, localStorage, location, luxon, math, Mousetrap, UIkit  */
+/* global appInfo, CodeMirror, DeepDiff, lucide, luxon, math, Mousetrap, UIkit  */
 /* eslint no-new-func: 0 */
 
 (() => {
@@ -497,7 +497,7 @@
   // Codemirror syntax templates
   CodeMirror.defineMode('numara', () => {
     return {
-      token: (stream, state) => {
+      token: (stream) => {
         if (stream.match(/\/\/.*/) || stream.match(/#.*/)) return 'comment'
         if (stream.match(/\d/)) return 'number'
         if (stream.match(/(?:\+|-|\*|\/|,|;|\.|:|@|~|=|>|<|&|\||_|`|'|\^|\?|!|%)/)) return 'operator'
@@ -509,6 +509,7 @@
 
         try {
           if (math.unit(cmStream).units.length > 0) return 'unit'
+        // eslint-disable-next-line no-empty
         } catch (e) { }
 
         if (udfList.includes(cmStream)) return 'udf'
@@ -532,7 +533,7 @@
 
   CodeMirror.defineMode('plain', () => {
     return {
-      token: (stream, state) => {
+      token: (stream) => {
         stream.next()
         return 'text'
       }
@@ -571,7 +572,7 @@
 
   // Codemirror handlers
   cm.on('changes', calculate)
-  cm.on('inputRead', (cm, event) => {
+  cm.on('inputRead', (cm) => {
     if (settings.app.autocomplete) {
       CodeMirror.commands.autocomplete(cm)
     }
@@ -844,7 +845,7 @@
   document.addEventListener('keydown', (e) => {
     refreshCM = !e.repeat
   })
-  document.addEventListener('keyup', (e) => {
+  document.addEventListener('keyup', () => {
     refreshCM = true
   })
 
@@ -1320,38 +1321,38 @@
   }
 
   // Context menus
-  if (isNode) {
-    function mainContext () {
-      setTimeout(() => {
-        const index = cm.getCursor().line
-        const line = cm.getLine(index)
-        const answer = $('#output').children[index].innerText
+  function mainContext () {
+    setTimeout(() => {
+      const index = cm.getCursor().line
+      const line = cm.getLine(index)
+      const answer = $('#output').children[index].innerText
 
-        const isEmpty = cm.getValue() === ''
-        const isLine = line.length > 0
-        const isSelection = cm.somethingSelected()
-        const isMultiLine = cm.listSelections().length > 1 || cm.listSelections()[0].anchor.line !== cm.listSelections()[0].head.line
-        const hasAnswer = answer !== '' && answer !== 'Error' && answer !== 'Plot'
-
-        ipc.send('mainContextMenu', index, isEmpty, isLine, isSelection, isMultiLine, hasAnswer)
-      }, 20)
-    }
-
-    function outputContext (e) {
-      const index = e.srcElement.getAttribute('line-no') || e.srcElement.parentElement.getAttribute('line-no')
-      const answer = e.srcElement.innerText
       const isEmpty = cm.getValue() === ''
-      const hasAnswer = index !== null && answer !== '' && answer !== 'Error' && answer !== 'Plot'
+      const isLine = line.length > 0
+      const isSelection = cm.somethingSelected()
+      const isMultiLine = cm.listSelections().length > 1 || cm.listSelections()[0].anchor.line !== cm.listSelections()[0].head.line
+      const hasAnswer = answer !== '' && answer !== 'Error' && answer !== 'Plot'
 
-      ipc.send('outputContextMenu', index, isEmpty, hasAnswer)
-    }
+      ipc.send('mainContextMenu', index, isEmpty, isLine, isSelection, isMultiLine, hasAnswer)
+    }, 20)
+  }
 
-    function altContext () {
-      setTimeout(() => {
-        ipc.send('altContextMenu')
-      }, 20)
-    }
+  function outputContext (e) {
+    const index = e.srcElement.getAttribute('line-no') || e.srcElement.parentElement.getAttribute('line-no')
+    const answer = e.srcElement.innerText
+    const isEmpty = cm.getValue() === ''
+    const hasAnswer = index !== null && answer !== '' && answer !== 'Error' && answer !== 'Plot'
 
+    ipc.send('outputContextMenu', index, isEmpty, hasAnswer)
+  }
+
+  function altContext () {
+    setTimeout(() => {
+      ipc.send('altContextMenu')
+    }, 20)
+  }
+
+  if (isNode) {
     cm.on('contextmenu', mainContext)
     udfInput.on('contextmenu', altContext)
     uduInput.on('contextmenu', altContext)
@@ -1427,7 +1428,7 @@
   // Check for updates
   if (isNode) {
     ipc.send('checkUpdate')
-    ipc.on('notifyUpdate', (event) => {
+    ipc.on('notifyUpdate', () => {
       notify('Updating Numara... <a class="notificationLink" onclick="document.querySelector(`#aboutButton`).click()">View update status</a>')
       $('#notificationDot').style.display = 'block'
     })
