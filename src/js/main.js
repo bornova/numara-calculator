@@ -237,7 +237,7 @@ ipcMain.on('outputContextMenu', (event, index, isEmpty, hasAnswer) => {
   contextMenu.popup()
 })
 
-ipcMain.on('altContextMenu', (event) => {
+ipcMain.on('altContextMenu', () => {
   const contextMenuTemplate = [
     { role: 'cut' },
     { role: 'copy' },
