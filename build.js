@@ -18,8 +18,7 @@ appInfo = {
     homepage: '${pj.homepage}',
     licence: '${pj.license}',
     website: 'https://numara.io'
-};
-`
+}`
 
 const t0 = performance.now()
 
@@ -34,14 +33,9 @@ fs.emptyDir(buildPath)
     fs.copy('src/index.html', buildPath + '/index.html')
 
     // Build JS files
-    const plot = [
-      'src/js/d3.js',
-      'src/js/plot.js'
-    ]
+    const plot = ['src/js/d3.js', 'src/js/plot.js']
 
-    const numara = [
-      'src/js/numara.js'
-    ]
+    const numara = ['src/js/numara.js']
 
     const packages = [
       'node_modules/deep-diff/dist/deep-diff.min.js',
@@ -84,24 +78,21 @@ fs.emptyDir(buildPath)
       terseCodemirror[index] = fs.readFileSync(item, 'utf-8')
     })
 
-    terser.minify(tersePlot).then(js => {
+    terser.minify(tersePlot).then((js) => {
       fs.outputFileSync(buildPath + '/js/plot.js', js.code)
     })
-    terser.minify(terseNumara).then(js => {
+    terser.minify(terseNumara).then((js) => {
       fs.outputFileSync(buildPath + '/js/numara.js', js.code)
     })
-    terser.minify(tersePackages).then(js => {
+    terser.minify(tersePackages).then((js) => {
       fs.outputFileSync(buildPath + '/js/packages.js', js.code)
     })
-    terser.minify(terseCodemirror).then(js => {
+    terser.minify(terseCodemirror).then((js) => {
       fs.outputFileSync(buildPath + '/js/codemirror.js', js.code)
     })
 
     // Build CSS files
-    const numaraCss = [
-      'src/css/app.css',
-      'src/css/print.css'
-    ]
+    const numaraCss = ['src/css/app.css', 'src/css/print.css']
 
     const codemirrorCss = [
       'node_modules/codemirror/lib/codemirror.css',
@@ -146,7 +137,7 @@ fs.emptyDir(buildPath)
   })
   .then(() => {
     // Prepend app info
-    fs.readFile(buildPath + '/js/numara.js', 'utf-8').then(numarajs => {
+    fs.readFile(buildPath + '/js/numara.js', 'utf-8').then((numarajs) => {
       fs.writeFile(buildPath + '/js/numara.js', header + numarajs)
     })
   })

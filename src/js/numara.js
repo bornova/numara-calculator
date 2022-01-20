@@ -1,9 +1,7 @@
-/* global appInfo, CodeMirror, DeepDiff, lucide, luxon, math, Mousetrap, UIkit  */
-/* eslint no-new-func: 0 */
-
-(() => {
+// eslint-disable-next-line no-extra-semi
+;(() => {
   // Get element by id
-  const $ = (selector, all) => all ? document.querySelectorAll(selector) : document.querySelector(selector)
+  const $ = (selector, all) => (all ? document.querySelectorAll(selector) : document.querySelector(selector))
 
   // localStorage
   const store = {
@@ -29,12 +27,14 @@
   cm.setValue(store.get('input') || '')
   cm.execCommand('goDocEnd')
 
-  $('#udfInput').setAttribute('placeholder', (
+  $('#udfInput').setAttribute(
+    'placeholder',
     `// Define new functions and variables:
     myvalue: 42,
     hello: (name) => {
     \treturn "hello, " + name + "!"
-    }`).replace(/^ +/gm, ''))
+    }`.replace(/^ +/gm, '')
+  )
 
   const udfInput = CodeMirror.fromTextArea($('#udfInput'), {
     mode: 'javascript',
@@ -42,7 +42,8 @@
     smartIndent: false
   })
 
-  $('#uduInput').setAttribute('placeholder', (
+  $('#uduInput').setAttribute(
+    'placeholder',
     `// Define new units:
     foo: {
     \tprefixes: "long",
@@ -52,7 +53,8 @@
     baz: {
     \tdefinition: "1 bar/hour",
     \tprefixes: "long"
-    }`).replace(/^ +/gm, ''))
+    }`.replace(/^ +/gm, '')
+  )
 
   const uduInput = CodeMirror.fromTextArea($('#uduInput'), {
     mode: 'javascript',
@@ -90,11 +92,9 @@
     })
   } else {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .register('./sw.js')
-        .catch(() => {
-          console.log('Service worker registration failed')
-        })
+      navigator.serviceWorker.register('./sw.js').catch(() => {
+        console.log('Service worker registration failed')
+      })
     }
   }
 
@@ -141,7 +141,7 @@
     }
   }
 
-  function toggleMax () {
+  function toggleMax() {
     ipc.send(ipc.sendSync('isMaximized') ? 'unmaximize' : 'maximize')
   }
 
@@ -201,7 +201,7 @@
 
   let currencyRates = {}
 
-  function getRates () {
+  function getRates() {
     const url = 'https://www.floatrates.com/widget/1030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json'
     if (navigator.onLine) {
       $('#lastUpdated').innerHTML = '<div uk-spinner="ratio: 0.3"></div>'
@@ -211,17 +211,22 @@
           currencyRates = rates
           const dups = ['cup']
           Object.keys(rates).forEach((currency) => {
-            math.createUnit(rates[currency].code, {
-              definition: math.unit(rates[currency].inverseRate + 'USD'),
-              aliases: [dups.includes(rates[currency].code.toLowerCase()) ? '' : rates[currency].code.toLowerCase()]
-            }, {
-              override: true
-            })
+            math.createUnit(
+              rates[currency].code,
+              {
+                definition: math.unit(rates[currency].inverseRate + 'USD'),
+                aliases: [dups.includes(rates[currency].code.toLowerCase()) ? '' : rates[currency].code.toLowerCase()]
+              },
+              {
+                override: true
+              }
+            )
             store.set('rateDate', rates[currency].date)
           })
           applySettings()
           $('#lastUpdated').innerHTML = store.get('rateDate')
-        }).catch((e) => {
+        })
+        .catch((e) => {
           $('#lastUpdated').innerHTML = 'n/a'
           notify('Failed to get exchange rates (' + e + ')', 'warning')
         })
@@ -234,7 +239,7 @@
   // Calculate
   let mathScope
 
-  function calculate () {
+  function calculate() {
     const avgs = []
     const totals = []
     const subtotals = []
@@ -258,9 +263,8 @@
 
       if (cmLine) {
         try {
-          cmLine = lineNo > 1 && cmLine.charAt(0).match(/[+\-*/]/) && cm.getLine(lineNo - 2).length > 0 && settings.app.contPrevLine
-            ? mathScope.ans + cmLine
-            : cmLine
+          cmLine =
+            lineNo > 1 && cmLine.charAt(0).match(/[+\-*/]/) && cm.getLine(lineNo - 2).length > 0 && settings.app.contPrevLine ? mathScope.ans + cmLine : cmLine
 
           try {
             answer = math.evaluate(cmLine, mathScope)
@@ -301,10 +305,12 @@
               subtotals.push(answer)
             }
 
-            answer = formatAnswer(math.format(answer, {
-              lowerExp: -12,
-              upperExp: 12
-            }))
+            answer = formatAnswer(
+              math.format(answer, {
+                lowerExp: -12,
+                upperExp: 12
+              })
+            )
 
             if (answer.match(/\w\(x\)/)) {
               const plotAns = /\w\(x\)$/.test(answer) ? cmLine.trim() : answer.trim()
@@ -342,7 +348,7 @@
 
     store.set('input', cm.getValue())
 
-    function solveLine (line) {
+    function solveLine(line) {
       const avg = math.evaluate(avgs.length > 0 ? '(' + math.mean(avgs) + ')' : 0)
       const total = math.evaluate(totals.length > 0 ? '(' + totals.join('+') + ')' : 0)
       const subtotal = math.evaluate(subtotals.length > 0 ? '(' + subtotals.join('+') + ')' : 0)
@@ -395,7 +401,7 @@
     }
   }
 
-  function stripAnswer (answer) {
+  function stripAnswer(answer) {
     let t = answer.length
     if (answer.charAt(0) === '"') {
       answer = answer.substring(1, t--)
@@ -407,18 +413,19 @@
     return answer
   }
 
-  function formatAnswer (answer) {
+  function formatAnswer(answer) {
     answer = String(answer)
     const a = answer.trim().split(' ')[0]
     const b = answer.replace(a, '')
     const digits = {
       maximumFractionDigits: settings.app.precision
     }
-    const formattedAnswer = !a.includes('e') && !isNaN(a)
-      ? settings.app.thouSep
-        ? Number(a).toLocaleString(undefined, digits) + b
-        : parseFloat(Number(a).toFixed(settings.app.precision)) + b
-      : a.match(/e-?\d+/)
+    const formattedAnswer =
+      !a.includes('e') && !isNaN(a)
+        ? settings.app.thouSep
+          ? Number(a).toLocaleString(undefined, digits) + b
+          : parseFloat(Number(a).toFixed(settings.app.precision)) + b
+        : a.match(/e-?\d+/)
         ? parseFloat(Number(a.split('e')[0]).toFixed(settings.app.precision)) + 'e' + answer.split('e')[1] + b
         : stripAnswer(answer)
 
@@ -443,7 +450,7 @@
     uduInput.refresh()
   })
 
-  function applyUdf (udf) {
+  function applyUdf(udf) {
     try {
       const loadUdf = new Function(`'use strict'; math.import({${udf}}, {override: true})`)
       loadUdf()
@@ -463,7 +470,7 @@
     }
   }
 
-  function applyUdu (udu) {
+  function applyUdu(udu) {
     try {
       const loadUdu = new Function(`'use strict'; math.createUnit({${udu}}, {override: true})`)
       loadUdu()
@@ -509,8 +516,8 @@
 
         try {
           if (math.unit(cmStream).units.length > 0) return 'unit'
-        // eslint-disable-next-line no-empty
-        } catch (e) { }
+          // eslint-disable-next-line no-empty
+        } catch (e) {}
 
         if (udfList.includes(cmStream)) return 'udf'
         if (uduList.includes(cmStream)) return 'udu'
@@ -553,8 +560,12 @@
     const cmCursorLine = editor.getLine(cmCursor.line)
     let start = cmCursor.ch
     let end = start
-    while (end < cmCursorLine.length && /[\w$]/.test(cmCursorLine.charAt(end))) { ++end }
-    while (start && /[\w$]/.test(cmCursorLine.charAt(start - 1))) { --start }
+    while (end < cmCursorLine.length && /[\w$]/.test(cmCursorLine.charAt(end))) {
+      ++end
+    }
+    while (start && /[\w$]/.test(cmCursorLine.charAt(start - 1))) {
+      --start
+    }
     const curWord = start !== end && cmCursorLine.slice(start, end)
     const curWordRegex = new RegExp('^' + curWord, 'i')
     return {
@@ -666,13 +677,21 @@
   })
 
   // Apply settings
-  function applySettings () {
+  function applySettings() {
     settings = store.get('settings')
 
-    $('#style').setAttribute('href',
+    $('#style').setAttribute(
+      'href',
       settings.app.theme === 'system'
-        ? (isNode ? (ipc.sendSync('isDark') ? 'css/dark.css' : 'css/light.css') : 'css/light.css')
-        : settings.app.theme === 'light' ? 'css/light.css' : 'css/dark.css')
+        ? isNode
+          ? ipc.sendSync('isDark')
+            ? 'css/dark.css'
+            : 'css/light.css'
+          : 'css/light.css'
+        : settings.app.theme === 'light'
+        ? 'css/light.css'
+        : 'css/dark.css'
+    )
 
     if (isNode) {
       ipc.send('setTheme', settings.app.theme)
@@ -694,9 +713,16 @@
     cm.setOption('autoCloseBrackets', settings.app.closeBrackets)
     cm.setOption('matchBrackets', settings.app.syntax && settings.app.matchBrackets ? { maxScanLines: 1 } : false)
 
-    const theme = settings.app.theme === 'system'
-      ? (isNode ? (ipc.sendSync('isDark') ? 'material-darker' : 'default') : 'default')
-      : (settings.app.theme === 'light' ? 'default' : 'material-darker')
+    const theme =
+      settings.app.theme === 'system'
+        ? isNode
+          ? ipc.sendSync('isDark')
+            ? 'material-darker'
+            : 'default'
+          : 'default'
+        : settings.app.theme === 'light'
+        ? 'default'
+        : 'material-darker'
 
     udfInput.setOption('theme', theme)
     uduInput.setOption('theme', theme)
@@ -717,28 +743,35 @@
   }
 
   // Tooltip defaults
-  UIkit.mixin({
-    data: {
-      delay: 500,
-      offset: 5
-    }
-  }, 'tooltip')
+  UIkit.mixin(
+    {
+      data: {
+        delay: 500,
+        offset: 5
+      }
+    },
+    'tooltip'
+  )
 
   // Show modal dialog
-  function showModal (id) {
+  function showModal(id) {
     UIkit.modal(id, {
       bgClose: false,
       stack: true
     }).show()
   }
 
-  UIkit.util.on('.modal', 'hidden', () => { cm.focus() })
-  UIkit.util.on('.uk-switcher', 'show', () => { cm.getInputField().blur() })
+  UIkit.util.on('.modal', 'hidden', () => {
+    cm.focus()
+  })
+  UIkit.util.on('.uk-switcher', 'show', () => {
+    cm.getInputField().blur()
+  })
 
   // Update open button count
   const savedCount = () => Object.keys(store.get('saved') || {}).length
 
-  function updateSavedCount () {
+  function updateSavedCount() {
     UIkit.tooltip('#openButton', {
       title: 'Open (' + savedCount() + ')'
     })
@@ -911,9 +944,12 @@
         syntaxToggle()
         break
       case 'bigNumWarn': // BigNumber warning
-        showError(`Using the BigNumber may break function plotting and is not compatible with some math functions. 
+        showError(
+          `Using the BigNumber may break function plotting and is not compatible with some math functions. 
           It may also cause unexpected behavior and affect overall performance.<br><br>
-          <a target="_blank" href="https://mathjs.org/docs/datatypes/bignumbers.html">Read more on BigNumbers</a>`, 'Caution: BigNumber Limitations')
+          <a target="_blank" href="https://mathjs.org/docs/datatypes/bignumbers.html">Read more on BigNumbers</a>`,
+          'Caution: BigNumber Limitations'
+        )
         break
       case 'currencyButton': // Enable currency rates
         $('#currencyUpdate').style.visibility = $('#currencyButton').checked ? 'visible' : 'hidden'
@@ -968,7 +1004,7 @@
   // Populate saved calculation
   UIkit.util.on('#dialog-open', 'beforeshow', populateSaved)
 
-  function populateSaved () {
+  function populateSaved() {
     const savedObj = store.get('saved') || {}
     const savedItems = Object.entries(savedObj)
     $('#dialog-open-body').innerHTML = ''
@@ -1002,7 +1038,7 @@
     cm.focus()
   })
 
-  function prepSettings () {
+  function prepSettings() {
     const dateFormats = ['M/d/yyyy', 'd/M/yyyy', 'MMM d, yyyy']
     const timeFormats = ['h:mm a', 'H:mm']
     const matrixTypes = ['Matrix', 'Array']
@@ -1058,15 +1094,15 @@
     checkWindowSize()
   }
 
-  function checkDefaultSettings () {
+  function checkDefaultSettings() {
     $('#defaultSettingsButton').style.display = DeepDiff.diff(settings.app, defaultSettings.app) ? 'inline' : 'none'
   }
 
-  function checkWindowSize () {
+  function checkWindowSize() {
     $('#resetSizeButton').style.display = isNode ? (ipc.sendSync('isResized') && !ipc.sendSync('isMaximized') ? 'block' : 'none') : 'none'
   }
 
-  function syntaxToggle () {
+  function syntaxToggle() {
     $('#keywordTipsButton').disabled = !$('#syntaxButton').checked
     $('#matchBracketsButton').disabled = !$('#syntaxButton').checked
 
@@ -1074,7 +1110,7 @@
     $('#matchBracketsButton').parentNode.style.opacity = $('#syntaxButton').checked ? '1' : '0.5'
   }
 
-  function bigNumberWarning () {
+  function bigNumberWarning() {
     $('#bigNumWarn').style.display = $('#numericOutput').value === 'BigNumber' ? 'inline-block' : 'none'
   }
 
@@ -1083,7 +1119,7 @@
     $('#precision-label').innerHTML = $('#precisionRange').value
   })
 
-  function saveSettings () {
+  function saveSettings() {
     settings.app.theme = $('#themeList').value
     settings.app.fontSize = $('#fontSize').value
     settings.app.fontWeight = $('#fontWeight').value
@@ -1162,7 +1198,7 @@
     if (isResizing) {
       const offset = settings.app.lineNumbers ? 12 : 27
       const pointerRelativeXpos = e.clientX - panel.offsetLeft - offset
-      const iWidth = pointerRelativeXpos / panel.clientWidth * 100
+      const iWidth = (pointerRelativeXpos / panel.clientWidth) * 100
       const inputWidth = iWidth < 0 ? 0 : iWidth > 100 ? 100 : iWidth
 
       $('#input').style.width = inputWidth + '%'
@@ -1173,7 +1209,7 @@
     }
   })
 
-  function resetDivider () {
+  function resetDivider() {
     settings.inputWidth = defaultSettings.inputWidth
     store.set('settings', settings)
     applySettings()
@@ -1185,13 +1221,16 @@
 
   const numaraPlot = window.functionPlot
 
-  function plot () {
+  function plot() {
     $('#plotTitle').innerHTML = func
 
     const f = func.split('=')[1]
-    let domain = math.abs(math.evaluate(f, {
-      x: 0
-    })) * 2
+    let domain =
+      math.abs(
+        math.evaluate(f, {
+          x: 0
+        })
+      ) * 2
 
     if (domain === Infinity || domain === 0) {
       domain = 10
@@ -1215,11 +1254,13 @@
         yLine: settings.plot.plotCross
       },
       grid: settings.plot.plotGrid,
-      data: [{
-        fn: f,
-        graphType: 'polyline',
-        closed: settings.plot.plotArea
-      }],
+      data: [
+        {
+          fn: f,
+          graphType: 'polyline',
+          closed: settings.plot.plotArea
+        }
+      ],
       plugins: [numaraPlot.plugins.zoomBox()]
     })
   }
@@ -1241,7 +1282,7 @@
   })
 
   // Show confirmation dialog
-  function confirm (msg, action) {
+  function confirm(msg, action) {
     $('#confirmMsg').innerHTML = msg
     showModal('#dialog-confirm')
     const yesAction = (e) => {
@@ -1257,7 +1298,7 @@
   }
 
   // Show error dialog
-  function showError (e, title) {
+  function showError(e, title) {
     UIkit.util.on('#dialog-error', 'beforeshow', () => {
       $('#errTitle').innerHTML = title || 'Error'
       $('#errMsg').innerHTML = e
@@ -1266,7 +1307,7 @@
   }
 
   // Show app messages
-  function notify (msg, stat) {
+  function notify(msg, stat) {
     UIkit.notification({
       message: msg,
       status: stat || 'primary',
@@ -1321,7 +1362,7 @@
   }
 
   // Context menus
-  function mainContext () {
+  function mainContext() {
     setTimeout(() => {
       const index = cm.getCursor().line
       const line = cm.getLine(index)
@@ -1337,7 +1378,7 @@
     }, 20)
   }
 
-  function outputContext (e) {
+  function outputContext(e) {
     const index = e.srcElement.getAttribute('line-no') || e.srcElement.parentElement.getAttribute('line-no')
     const answer = e.srcElement.innerText
     const isEmpty = cm.getValue() === ''
@@ -1346,7 +1387,7 @@
     ipc.send('outputContextMenu', index, isEmpty, hasAnswer)
   }
 
-  function altContext () {
+  function altContext() {
     setTimeout(() => {
       ipc.send('altContextMenu')
     }, 20)
@@ -1371,23 +1412,21 @@
   }
 
   // Copy calculations
-  function copyAnswer (event, index, withLines) {
+  function copyAnswer(event, index, withLines) {
     index = +index
     const line = cm.getLine(index).trim()
     const answer = $('#output').children[index].innerText
-    const copiedText = withLines
-      ? `${line} = ${answer}`
-      : `${answer}`
+    const copiedText = withLines ? `${line} = ${answer}` : `${answer}`
 
     navigator.clipboard.writeText(copiedText)
     notify(withLines ? `Copied Line${index + 1} with answer to clipboard.` : `Copied '${answer}' to clipboard.`)
   }
 
-  function copySelectedAnswers (event, withLines) {
+  function copySelectedAnswers(event, withLines) {
     const selections = cm.listSelections()
     let copiedLines = ''
 
-    selections.forEach(s => {
+    selections.forEach((s) => {
       const range = [s.anchor.line, s.head.line]
       const start = Math.min(...range)
       const end = Math.max(...range) + 1
@@ -1395,11 +1434,7 @@
       for (let i = start; i < end; i++) {
         const line = cm.getLine(i).trim()
         const answer = $('#output').children[i].innerText
-        copiedLines += line
-          ? line.match(/^(#|\/\/)/)
-            ? withLines ? `${line}\n` : ''
-            : withLines ? `${line} = ${answer}\n` : `${answer}\n`
-          : ''
+        copiedLines += line ? (line.match(/^(#|\/\/)/) ? (withLines ? `${line}\n` : '') : withLines ? `${line} = ${answer}\n` : `${answer}\n`) : ''
       }
     })
 
@@ -1407,17 +1442,13 @@
     notify(withLines ? 'Copied selected lines with answers to clipboard.' : 'Copied selected answers to clipboard.')
   }
 
-  function copyAllCalculations () {
+  function copyAllCalculations() {
     if (cm.getValue() !== '') {
       let copiedCalc = ''
       cm.eachLine((line) => {
         const index = cm.getLineNumber(line)
         line = line.text.trim()
-        copiedCalc += line
-          ? line.match(/^(#|\/\/)/)
-            ? `${line}\n`
-            : `${line} = ${$('#output').children[index].innerText}\n`
-          : '\n'
+        copiedCalc += line ? (line.match(/^(#|\/\/)/) ? `${line}\n` : `${line} = ${$('#output').children[index].innerText}\n`) : '\n'
       })
 
       navigator.clipboard.writeText(copiedCalc)
@@ -1445,8 +1476,7 @@
     })
   }
 
-  const demo = (
-    `1+2
+  const demo = `1+2
 
     # In addition to mathjs functions, you can do:
     ans // Get last answer
@@ -1472,8 +1502,12 @@
     # Plot functions
     f(x) = sin(x)
     f(x) = 2x^2 + 3x - 5
-    `).replace(/^ +/gm, '')
+    `.replace(/^ +/gm, '')
 
-  setTimeout(() => { $('.CodeMirror-code').lastChild.scrollIntoView() }, 250)
-  setTimeout(() => { cm.focus() }, 500)
+  setTimeout(() => {
+    $('.CodeMirror-code').lastChild.scrollIntoView()
+  }, 250)
+  setTimeout(() => {
+    cm.focus()
+  }, 500)
 })()

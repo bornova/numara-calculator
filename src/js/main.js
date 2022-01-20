@@ -1,13 +1,4 @@
-const {
-  app,
-  BrowserWindow,
-  globalShortcut,
-  ipcMain,
-  Menu,
-  nativeTheme,
-  session,
-  shell
-} = require('electron')
+const { app, BrowserWindow, globalShortcut, ipcMain, Menu, nativeTheme, session, shell } = require('electron')
 const autoUpdater = require('electron-updater').autoUpdater
 const Store = require('electron-store')
 const schema = {
@@ -36,29 +27,29 @@ const dims = new Store({
 const theme = dims.get('theme')
 const light = '#ffffff'
 const dark = '#1f1f1f'
-const bg = theme === 'system' ? nativeTheme.shouldUseDarkColors ? dark : light : theme === 'dark' ? dark : light
+const bg = theme === 'system' ? (nativeTheme.shouldUseDarkColors ? dark : light) : theme === 'dark' ? dark : light
 
 let win
 
-function appWindow () {
+function appWindow() {
   win = new BrowserWindow({
     height: parseInt(dims.get('appHeight')),
     width: parseInt(dims.get('appWidth')),
-    minHeight: 420,
-    minWidth: 420,
     backgroundColor: bg,
     frame: false,
     hasShadow: true,
+    minHeight: 420,
+    minWidth: 420,
     paintWhenInitiallyHidden: false,
     show: false,
     titleBarStyle: 'hiddenInset',
     useContentSize: true,
     webPreferences: {
-      nodeIntegration: true,
       contextIsolation: false,
+      devTools: !app.isPackaged,
       nativeWindowOpen: true,
-      spellcheck: false,
-      devTools: !app.isPackaged
+      nodeIntegration: true,
+      spellcheck: false
     }
   })
   win.loadFile('build/index.html')
@@ -78,7 +69,7 @@ function appWindow () {
     win.webContents.send('isMax', false)
   })
   win.webContents.on('did-finish-load', () => {
-    if (dims.get('fullSize') & process.platform === "win32") {
+    if (dims.get('fullSize') & (process.platform === 'win32')) {
       win.webContents.send('fullscreen', true)
     }
     win.setHasShadow(true)
@@ -91,7 +82,7 @@ function appWindow () {
 
   if (app.isPackaged) {
     win.on('focus', () => {
-      globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => { })
+      globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {})
     })
     win.on('blur', () => {
       globalShortcut.unregisterAll()
@@ -124,7 +115,7 @@ autoUpdater.on('update-not-available', () => {
 autoUpdater.on('error', () => {
   win.webContents.send('updateStatus', 'Error checking for update.')
 })
-autoUpdater.on('download-progress', progress => {
+autoUpdater.on('download-progress', (progress) => {
   win.webContents.send('updateStatus', 'Downloading latest version... (' + Math.round(progress.percent) + '%)')
 })
 autoUpdater.on('update-downloaded', () => {
@@ -143,22 +134,22 @@ ipcMain.on('maximize', () => {
 ipcMain.on('unmaximize', () => {
   win.unmaximize()
 })
-ipcMain.on('isMaximized', event => {
+ipcMain.on('isMaximized', (event) => {
   event.returnValue = win.isMaximized()
 })
-ipcMain.on('isResized', event => {
+ipcMain.on('isResized', (event) => {
   event.returnValue = win.getSize()[0] !== schema.appWidth.default || win.getSize()[1] !== schema.appHeight.default
 })
 ipcMain.on('resetSize', resetSize)
-ipcMain.on('print', event => {
-  win.webContents.print({}, success => {
+ipcMain.on('print', (event) => {
+  win.webContents.print({}, (success) => {
     event.sender.send('printReply', success ? 'Sent to printer' : false)
   })
 })
 ipcMain.on('setTheme', (event, mode) => {
   dims.set('theme', mode)
 })
-ipcMain.on('isDark', event => {
+ipcMain.on('isDark', (event) => {
   event.returnValue = nativeTheme.shouldUseDarkColors
 })
 ipcMain.on('updateApp', () => {
@@ -181,35 +172,59 @@ ipcMain.on('resetApp', () => {
 
 const contextHeader = (index, isMultiLine, hasAnswer) => {
   if (hasAnswer || index !== null) {
-    return [
-      { label: isMultiLine ? 'Multiple lines:' : `Line ${+index + 1}:`, enabled: false, click: () => { } },
-      { type: 'separator' }
-    ]
+    return [{ label: isMultiLine ? 'Multiple lines:' : `Line ${+index + 1}:`, enabled: false, click: () => {} }, { type: 'separator' }]
   } else {
-    return [
-      { label: '', visible: false }
-    ]
+    return [{ label: '', visible: false }]
   }
 }
 
 const commonContext = (event, index, isEmpty, isSelection, isMultiLine, hasAnswer) => {
   const context = isMultiLine
     ? [
-      { label: 'Copy Selected Answers', enabled: true, click: () => { event.sender.send('copySelectedAnswers', false) } },
-      { label: 'Copy Selected Lines with Answers', enabled: true, click: () => { event.sender.send('copySelectedLinesWithAnswers', true) } }]
+        {
+          label: 'Copy Selected Answers',
+          enabled: true,
+          click: () => {
+            event.sender.send('copySelectedAnswers', false)
+          }
+        },
+        {
+          label: 'Copy Selected Lines with Answers',
+          enabled: true,
+          click: () => {
+            event.sender.send('copySelectedLinesWithAnswers', true)
+          }
+        }
+      ]
     : [
-      { label: 'Copy Answer', enabled: hasAnswer, click: () => { event.sender.send('copyAnswer', index, false) } },
-      { label: 'Copy Line with Answer', enabled: hasAnswer, click: () => { event.sender.send('copyLineWithAnswer', index, true) } }
-    ]
+        {
+          label: 'Copy Answer',
+          enabled: hasAnswer,
+          click: () => {
+            event.sender.send('copyAnswer', index, false)
+          }
+        },
+        {
+          label: 'Copy Line with Answer',
+          enabled: hasAnswer,
+          click: () => {
+            event.sender.send('copyLineWithAnswer', index, true)
+          }
+        }
+      ]
 
-  const devTools = app.isPackaged
-    ? [{ label: '', visible: false }]
-    : [{ type: 'separator' }, { role: 'toggleDevTools' }]
+  const devTools = app.isPackaged ? [{ label: '', visible: false }] : [{ type: 'separator' }, { role: 'toggleDevTools' }]
 
   return [
     ...context,
     { type: 'separator' },
-    { label: 'Copy All Calculations', enabled: !isEmpty, click: () => { event.sender.send('copyAllCalculations') } },
+    {
+      label: 'Copy All Calculations',
+      enabled: !isEmpty,
+      click: () => {
+        event.sender.send('copyAllCalculations')
+      }
+    },
     ...devTools
   ]
 }
@@ -229,20 +244,13 @@ ipcMain.on('mainContextMenu', (event, index, isEmpty, isLine, isSelection, isMul
 })
 
 ipcMain.on('outputContextMenu', (event, index, isEmpty, hasAnswer) => {
-  const contextMenuTemplate = [
-    ...contextHeader(index, false, hasAnswer),
-    ...commonContext(event, index, isEmpty, false, false, hasAnswer)
-  ]
+  const contextMenuTemplate = [...contextHeader(index, false, hasAnswer), ...commonContext(event, index, isEmpty, false, false, hasAnswer)]
   const contextMenu = Menu.buildFromTemplate(contextMenuTemplate)
   contextMenu.popup()
 })
 
 ipcMain.on('altContextMenu', () => {
-  const contextMenuTemplate = [
-    { role: 'cut' },
-    { role: 'copy' },
-    { role: 'paste' }
-  ]
+  const contextMenuTemplate = [{ role: 'cut' }, { role: 'copy' }, { role: 'paste' }]
 
   const contextMenu = Menu.buildFromTemplate(contextMenuTemplate)
   contextMenu.popup()
@@ -252,7 +260,7 @@ nativeTheme.on('updated', () => {
   win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors)
 })
 
-function resetSize () {
+function resetSize() {
   if (win) {
     win.setSize(schema.appWidth.default, schema.appHeight.default)
   }
@@ -261,38 +269,15 @@ function resetSize () {
 const menuTemplate = [
   {
     label: app.name,
-    submenu: [
-      { role: 'about' },
-      { type: 'separator' },
-      { role: 'hide' },
-      { role: 'hideothers' },
-      { role: 'unhide' },
-      { type: 'separator' },
-      { role: 'quit' }
-    ]
+    submenu: [{ role: 'about' }, { type: 'separator' }, { role: 'hide' }, { role: 'hideothers' }, { role: 'unhide' }, { type: 'separator' }, { role: 'quit' }]
   },
   {
     label: 'Edit',
-    submenu: [
-      { role: 'undo' },
-      { role: 'redo' },
-      { type: 'separator' },
-      { role: 'cut' },
-      { role: 'copy' },
-      { role: 'paste' },
-      { role: 'selectAll' }
-    ]
+    submenu: [{ role: 'undo' }, { role: 'redo' }, { type: 'separator' }, { role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'selectAll' }]
   },
   {
     label: 'View',
-    submenu: [
-      { role: 'reload' },
-      { type: 'separator' },
-      { role: 'resetzoom' },
-      { role: 'zoomin' },
-      { role: 'zoomout' },
-      { type: 'separator' }
-    ]
+    submenu: [{ role: 'reload' }, { type: 'separator' }, { role: 'resetzoom' }, { role: 'zoomin' }, { role: 'zoomout' }, { type: 'separator' }]
   },
   {
     label: 'Window',
@@ -320,4 +305,4 @@ const menuTemplate = [
   }
 ]
 
-Menu.setApplicationMenu(process.platform === "darwin" || process.platform === "linux" ? Menu.buildFromTemplate(menuTemplate) : null)
+Menu.setApplicationMenu(process.platform === 'darwin' || process.platform === 'linux' ? Menu.buildFromTemplate(menuTemplate) : null)

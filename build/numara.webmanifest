@@ -1,18 +1,18 @@
 {
-  "short_name": "Numara",
-  "name": "Numara Calculator",
-  "start_url": ".",
   "display": "standalone",
   "icons": [
     {
+      "sizes": "192x192",
       "src": "assets/icon-192.png",
-      "type": "image/png",
-      "sizes": "192x192"
+      "type": "image/png"
     },
     {
+      "sizes": "512x512",
       "src": "assets/icon-512.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "type": "image/png"
     }
-  ]
+  ],
+  "name": "Numara Calculator",
+  "short_name": "Numara",
+  "start_url": "."
 }
