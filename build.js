@@ -18,7 +18,8 @@ appInfo = {
     homepage: '${pj.homepage}',
     licence: '${pj.license}',
     website: 'https://numara.io'
-}`
+};
+`
 
 const t0 = performance.now()
 
