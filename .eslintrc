@@ -3,8 +3,21 @@
     "browser": true,
     "node": true
   },
+  "extends": "eslint:recommended",
+  "globals": {
+    "appInfo": "readonly",
+    "CodeMirror": "readonly",
+    "DeepDiff": "readonly",
+    "lucide": "readonly",
+    "luxon": "readonly",
+    "math": "readonly",
+    "Mousetrap": "readonly",
+    "UIkit": "readonly"
+  },
   "parserOptions": {
     "ecmaVersion": "latest"
   },
-  "extends": "eslint:recommended"
+  "rules": {
+    "no-new-func": "off"
+  }
 }
