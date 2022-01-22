@@ -37,7 +37,7 @@ input {
   font-size: inherit;
 }
 
-input[type=range]::-webkit-slider-runnable-track {
+input[type='range']::-webkit-slider-runnable-track {
   background-color: #999999;
   border: none;
   border-radius: 3px;
@@ -46,7 +46,7 @@ input[type=range]::-webkit-slider-runnable-track {
   width: 300px;
 }
 
-input[type=range]::-webkit-slider-thumb {
+input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   background-color: #1e87f0;
   border: none;
@@ -56,7 +56,7 @@ input[type=range]::-webkit-slider-thumb {
   width: 14px;
 }
 
-input[type=range]:focus::-webkit-slider-runnable-track {
+input[type='range']:focus::-webkit-slider-runnable-track {
   background-color: #999999;
 }
 
@@ -191,7 +191,7 @@ text {
   overflow: scroll;
 }
 
-.output>div {
+.output > div {
   display: block;
   height: 28px;
   width: 100%;
@@ -254,7 +254,7 @@ text {
   left: 15px;
 }
 
-.actions>div {
+.actions > div {
   flex: auto;
 }
 
@@ -302,7 +302,7 @@ text {
   bottom: 18px;
 }
 
-.notificationDot>svg {
+.notificationDot > svg {
   height: 5px;
   width: 5px;
   fill: #1e87f0;
@@ -350,7 +350,7 @@ text {
   width: 16px;
 }
 
-.dialog-open-delete>svg {
+.dialog-open-delete > svg {
   height: 16px;
   stroke-width: 1.5px;
   width: 16px;
@@ -367,7 +367,7 @@ text {
 
 /* Settings */
 #dialog-settings .uk-width-medium {
-  width: 380px;
+  width: 385px;
 }
 
 .dialog-settings-body {
@@ -400,11 +400,13 @@ text {
   padding-top: 2px;
 }
 
-.precision {
+.precision,
+.expLower,
+.expUpper {
   background-color: transparent;
   padding: 1px 0 0 0;
   text-align: center;
-  width: 24px;
+  width: 25px;
 }
 
 .warn-icon {
@@ -467,7 +469,7 @@ text {
   display: flex;
 }
 
-.dialog-about-links>div {
+.dialog-about-links > div {
   line-height: 30px;
   width: 100%;
 }
@@ -478,7 +480,7 @@ text {
   text-align: center;
 }
 
-.versionCtnr>div {
+.versionCtnr > div {
   display: inline-block;
   margin: 8px 3px 3px 3px;
   text-align: center;
@@ -527,13 +529,13 @@ text {
   overflow: auto;
 }
 
-.searchResults>div {
+.searchResults > div {
   flex: 1 1 calc(100% - 80px);
   margin-bottom: 5px;
   user-select: text;
 }
 
-.searchResults>div:nth-child(odd) {
+.searchResults > div:nth-child(odd) {
   flex: 0 0 80px;
   font-weight: 600;
 }
@@ -646,18 +648,18 @@ text {
   right: 0;
   bottom: 0;
   left: 0;
-  -webkit-transition: .2s;
-  transition: .2s;
+  -webkit-transition: 0.2s;
+  transition: 0.2s;
 }
 
 .slider:before {
-  content: "";
+  content: '';
   height: 12px;
   position: absolute;
   bottom: 2px;
   left: 2px;
-  -webkit-transition: .2s;
-  transition: .2s;
+  -webkit-transition: 0.2s;
+  transition: 0.2s;
   width: 12px;
 }
 
@@ -669,11 +671,11 @@ text {
   border-radius: 50%;
 }
 
-input:checked+.slider {
+input:checked + .slider {
   background-color: #1e87f0;
 }
 
-input:checked+.slider:before {
+input:checked + .slider:before {
   -webkit-transform: translateX(12px);
   transform: translateX(12px);
 }
@@ -693,12 +695,12 @@ input:checked+.slider:before {
 }
 
 .uk-modal {
-  background-color: rgba(0, 0, 0, .6);
+  background-color: rgba(0, 0, 0, 0.6);
   padding: 40px !important;
 }
 
 .uk-modal-full {
-  background-color: rgba(0, 0, 0, .5);
+  background-color: rgba(0, 0, 0, 0.5);
   padding-left: 20px;
   padding-right: 20px;
 }
@@ -722,7 +724,7 @@ input:checked+.slider:before {
   padding: 15px;
 }
 
-.uk-grid+.uk-grid {
+.uk-grid + .uk-grid {
   margin-top: 10px;
 }
 
@@ -748,15 +750,15 @@ input:checked+.slider:before {
   margin: 0 -15px 15px -35px;
 }
 
-.uk-tab>* {
+.uk-tab > * {
   padding-left: 0px;
 }
 
-.uk-tab>*:first-child {
+.uk-tab > *:first-child {
   padding-left: 20px;
 }
 
-.uk-tab>*>a {
+.uk-tab > * > a {
   display: inline-block;
   font-size: 1rem;
   font-weight: 600;
@@ -815,7 +817,6 @@ input:checked+.slider:before {
 .uk-range {
   min-height: 1.6em;
   padding-top: 2px;
-  width: 92%;
 }
 
 .uk-tooltip {
@@ -839,6 +840,16 @@ input:checked+.slider:before {
 
   .uk-notification-bottom-center {
     margin-left: calc(50vw - 205px);
+  }
+}
+
+.uk-grid > * {
+  padding-left: 30px;
+}
+
+@media (min-width: 1200px) {
+  .uk-grid {
+    margin-left: -30px;
   }
 }
 

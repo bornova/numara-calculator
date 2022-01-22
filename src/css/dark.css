@@ -132,7 +132,7 @@ body {
   color: #a0d3ff;
 }
 
-.precision {
+.precision, .expLower, .expUpper {
   border: 1px solid #333333;
   color: #e6e6e6;
 }

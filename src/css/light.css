@@ -137,7 +137,7 @@ body {
   color: rgb(29, 63, 92);
 }
 
-.precision {
+.precision, .expLower, .expUpper {
   border: 1px solid #e5e5e5;
   color: #333333;
 }
