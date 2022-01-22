@@ -172,7 +172,10 @@ ipcMain.on('resetApp', () => {
 
 const contextHeader = (index, isMultiLine, hasAnswer) => {
   if (hasAnswer || index !== null) {
-    return [{ label: isMultiLine ? 'Multiple lines:' : `Line ${+index + 1}:`, enabled: false, click: () => {} }, { type: 'separator' }]
+    return [
+      { label: isMultiLine ? 'Multiple lines:' : `Line ${+index + 1}:`, enabled: false, click: () => {} },
+      { type: 'separator' }
+    ]
   } else {
     return [{ label: '', visible: false }]
   }
@@ -213,7 +216,9 @@ const commonContext = (event, index, isEmpty, isSelection, isMultiLine, hasAnswe
         }
       ]
 
-  const devTools = app.isPackaged ? [{ label: '', visible: false }] : [{ type: 'separator' }, { role: 'toggleDevTools' }]
+  const devTools = app.isPackaged
+    ? [{ label: '', visible: false }]
+    : [{ type: 'separator' }, { role: 'toggleDevTools' }]
 
   return [
     ...context,
@@ -233,7 +238,11 @@ ipcMain.on('mainContextMenu', (event, index, isEmpty, isLine, isSelection, isMul
   const contextMenuTemplate = [
     ...contextHeader(index, isMultiLine, hasAnswer),
     { label: isSelection ? 'Cut Selection' : isLine ? 'Cut Line' : 'Cut', role: 'cut', enabled: isLine || isSelection },
-    { label: isSelection ? 'Copy Selection' : isLine ? 'Copy Line' : 'Copy', role: 'copy', enabled: isLine || isSelection },
+    {
+      label: isSelection ? 'Copy Selection' : isLine ? 'Copy Line' : 'Copy',
+      role: 'copy',
+      enabled: isLine || isSelection
+    },
     { role: 'paste' },
     { type: 'separator' },
     ...commonContext(event, index, isEmpty, isSelection, isMultiLine, hasAnswer)
@@ -244,7 +253,10 @@ ipcMain.on('mainContextMenu', (event, index, isEmpty, isLine, isSelection, isMul
 })
 
 ipcMain.on('outputContextMenu', (event, index, isEmpty, hasAnswer) => {
-  const contextMenuTemplate = [...contextHeader(index, false, hasAnswer), ...commonContext(event, index, isEmpty, false, false, hasAnswer)]
+  const contextMenuTemplate = [
+    ...contextHeader(index, false, hasAnswer),
+    ...commonContext(event, index, isEmpty, false, false, hasAnswer)
+  ]
   const contextMenu = Menu.buildFromTemplate(contextMenuTemplate)
   contextMenu.popup()
 })
@@ -269,15 +281,38 @@ function resetSize() {
 const menuTemplate = [
   {
     label: app.name,
-    submenu: [{ role: 'about' }, { type: 'separator' }, { role: 'hide' }, { role: 'hideothers' }, { role: 'unhide' }, { type: 'separator' }, { role: 'quit' }]
+    submenu: [
+      { role: 'about' },
+      { type: 'separator' },
+      { role: 'hide' },
+      { role: 'hideothers' },
+      { role: 'unhide' },
+      { type: 'separator' },
+      { role: 'quit' }
+    ]
   },
   {
     label: 'Edit',
-    submenu: [{ role: 'undo' }, { role: 'redo' }, { type: 'separator' }, { role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'selectAll' }]
+    submenu: [
+      { role: 'undo' },
+      { role: 'redo' },
+      { type: 'separator' },
+      { role: 'cut' },
+      { role: 'copy' },
+      { role: 'paste' },
+      { role: 'selectAll' }
+    ]
   },
   {
     label: 'View',
-    submenu: [{ role: 'reload' }, { type: 'separator' }, { role: 'resetzoom' }, { role: 'zoomin' }, { role: 'zoomout' }, { type: 'separator' }]
+    submenu: [
+      { role: 'reload' },
+      { type: 'separator' },
+      { role: 'resetzoom' },
+      { role: 'zoomin' },
+      { role: 'zoomout' },
+      { type: 'separator' }
+    ]
   },
   {
     label: 'Window',
@@ -305,4 +340,6 @@ const menuTemplate = [
   }
 ]
 
-Menu.setApplicationMenu(process.platform === 'darwin' || process.platform === 'linux' ? Menu.buildFromTemplate(menuTemplate) : null)
+Menu.setApplicationMenu(
+  process.platform === 'darwin' || process.platform === 'linux' ? Menu.buildFromTemplate(menuTemplate) : null
+)
