@@ -183,8 +183,20 @@
         </div>
         <h3>Calculator</h3>
         <div class="uk-child-width-expand" uk-grid>
-          <div class="uk-width-2-5 pr-lh">Precision</div>
-          <div class="uk-text-right uk-width-3-5">
+          <div class="padTop1">Numeric output<a id="bigNumWarn" class="warn-icon"><i icon-name="alert-circle"></i></a></div>
+          <div class="uk-text-right">
+            <select id="numericOutput" class="uk-select settingItem"></select>
+          </div>
+        </div>
+        <div class="uk-child-width-expand" uk-grid>
+          <div class="padTop1">Matrix type</div>
+          <div class="uk-text-right">
+            <select id="matrixType" class="uk-select settingItem"></select>
+          </div>
+        </div>
+        <div class="uk-child-width-expand" uk-grid>
+          <div class="uk-width-1-2 pr-lh">Precision</div>
+          <div class="uk-text-right uk-width-1-2">
             <div class="uk-child-width-expand" uk-grid>
               <div class="uk-text-right uk-width-1-5">
                 <span id="precision-label" class="uk-label precision"></span>
@@ -196,15 +208,38 @@
           </div>
         </div>
         <div class="uk-child-width-expand" uk-grid>
-          <div class="padTop1">Numeric output<a id="bigNumWarn" class="warn-icon"><i icon-name="alert-circle"></i></a></div>
-          <div class="uk-text-right">
-            <select id="numericOutput" class="uk-select settingItem"></select>
+          <div class="uk-width-1-2 pr-lh">Upper exponent limit</div>
+          <div class="uk-text-right uk-width-1-2">
+            <div class="uk-child-width-expand" uk-grid>
+              <div class="uk-text-right uk-width-1-5">
+                <span id="expUpper-label" class="uk-label expUpper"></span>
+              </div>
+              <div class="uk-text-right range uk-width-4-5">
+                <input id="expUpperRange" class="uk-range settingItem" type="range" min="0" max="16" step="1">
+              </div>
+            </div>
           </div>
         </div>
         <div class="uk-child-width-expand" uk-grid>
-          <div class="padTop1">Matrix type</div>
+          <div class="uk-width-1-2 pr-lh">Lower exponent limit</div>
+          <div class="uk-text-right uk-width-1-2">
+            <div class="uk-child-width-expand" uk-grid>
+              <div class="uk-text-right uk-width-1-5">
+                <span id="expLower-label" class="uk-label expLower"></span>
+              </div>
+              <div class="uk-text-right range uk-width-4-5">
+                <input id="expLowerRange" class="uk-range settingItem" type="range" min="-16" max="0" step="1">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="uk-child-width-expand" uk-grid>
+          <div>Always use exponential notation</div>
           <div class="uk-text-right">
-            <select id="matrixType" class="uk-select settingItem"></select>
+            <label class="switch">
+              <input id="expNotationButton" type="checkbox" class="settingItem">
+              <span class="slider round"></span>
+            </label>
           </div>
         </div>
         <div class="uk-child-width-expand" uk-grid>

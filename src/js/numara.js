@@ -157,6 +157,9 @@
       dateDay: false,
       dateFormat: 'M/d/yyyy',
       divider: true,
+      expNotation: false,
+      expLower: '-12',
+      expUpper: '12',
       fontSize: '1.1rem',
       fontWeight: '400',
       keywordTips: true,
@@ -264,7 +267,12 @@
       if (cmLine) {
         try {
           cmLine =
-            lineNo > 1 && cmLine.charAt(0).match(/[+\-*/]/) && cm.getLine(lineNo - 2).length > 0 && settings.app.contPrevLine ? mathScope.ans + cmLine : cmLine
+            lineNo > 1 &&
+            cmLine.charAt(0).match(/[+\-*/]/) &&
+            cm.getLine(lineNo - 2).length > 0 &&
+            settings.app.contPrevLine
+              ? mathScope.ans + cmLine
+              : cmLine
 
           try {
             answer = math.evaluate(cmLine, mathScope)
@@ -307,8 +315,9 @@
 
             answer = formatAnswer(
               math.format(answer, {
-                lowerExp: -12,
-                upperExp: 12
+                notation: settings.app.expNotation ? 'exponential' : 'auto',
+                lowerExp: settings.app.expLower,
+                upperExp: settings.app.expUpper
               })
             )
 
@@ -324,7 +333,9 @@
           }
         } catch (e) {
           const errStr = String(e).replace(/'|"/g, '`')
-          answer = settings.app.lineErrors ? `<a class="lineError" data-line="${lineNo}" data-error="${errStr}">Error</a>` : ''
+          answer = settings.app.lineErrors
+            ? `<a class="lineError" data-line="${lineNo}" data-error="${errStr}">Error</a>`
+            : ''
           if (settings.app.lineErrors) {
             cm.addLineClass(cmLineNo, 'gutter', 'lineNoError')
           }
@@ -353,7 +364,9 @@
       const total = math.evaluate(totals.length > 0 ? '(' + totals.join('+') + ')' : 0)
       const subtotal = math.evaluate(subtotals.length > 0 ? '(' + subtotals.join('+') + ')' : 0)
 
-      mathScope.now = DateTime.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat)
+      mathScope.now = DateTime.local().toFormat(
+        (settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat
+      )
       mathScope.today = DateTime.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat)
 
       line = line
@@ -371,7 +384,8 @@
         })
       }
 
-      const dateTimeReg = /'millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia'/g
+      const dateTimeReg =
+        /'millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia'/g
       if (line.match(dateTimeReg)) {
         const lineDate = line.split(/[+-]/)[0]
         const lineDateLeft = lineDate.replace(/[A-Za-z]+,/, '').trim()
@@ -386,7 +400,9 @@
 
         if (lineDateTime) {
           const isToday = lineDateTime.toFormat(settings.app.dateFormat + 'hh:mm:ss:SSS').endsWith('12:00:00:000')
-          line = `"${lineDateTime.plus({ hours: durHrs }).toFormat((settings.app.dateDay ? 'ccc, ' : '') + (isToday ? todayFormat : nowFormat))}"`
+          line = `"${lineDateTime
+            .plus({ hours: durHrs })
+            .toFormat((settings.app.dateDay ? 'ccc, ' : '') + (isToday ? todayFormat : nowFormat))}"`
         } else {
           return 'Invalid Date'
         }
@@ -512,7 +528,8 @@
         stream.eatWhile(/\w/)
         const cmStream = stream.current()
 
-        if (settings.app.currencies && (cmStream.toLowerCase() in currencyRates || cmStream.toLowerCase() === 'usd')) return 'currency'
+        if (settings.app.currencies && (cmStream.toLowerCase() in currencyRates || cmStream.toLowerCase() === 'usd'))
+          return 'currency'
 
         try {
           if (math.unit(cmStream).units.length > 0) return 'unit'
@@ -522,7 +539,8 @@
         if (udfList.includes(cmStream)) return 'udf'
         if (uduList.includes(cmStream)) return 'udu'
 
-        if (typeof math[cmStream] === 'function' && Object.getOwnPropertyNames(math[cmStream]).includes('signatures')) return 'function'
+        if (typeof math[cmStream] === 'function' && Object.getOwnPropertyNames(math[cmStream]).includes('signatures'))
+          return 'function'
         if (cmStream.match(/\b(?:ans|total|subtotal|avg|today|now)\b/)) return 'scope'
         if (cmStream.match(/\b(?:line\d+)\b/)) return 'lineNo'
 
@@ -897,7 +915,9 @@
         UIkit.modal('#dialog-save').hide()
         $('#openButton').className = 'action'
         updateSavedCount()
-        notify(`Saved as '${title}' <a class="notificationLink" onclick="document.querySelector('#openButton').click()">View saved calculations</a>`)
+        notify(
+          `Saved as '${title}' <a class="notificationLink" onclick="document.querySelector('#openButton').click()">View saved calculations</a>`
+        )
         break
       }
       case 'dialog-open-deleteAll': // Delete all saved calculations
@@ -1064,6 +1084,11 @@
     $('#matchBracketsButton').checked = settings.app.matchBrackets
     $('#precisionRange').value = settings.app.precision
     $('#precision-label').innerHTML = settings.app.precision
+    $('#expLowerRange').value = settings.app.expLower
+    $('#expLower-label').innerHTML = settings.app.expLower
+    $('#expUpperRange').value = settings.app.expUpper
+    $('#expUpper-label').innerHTML = settings.app.expUpper
+    $('#expNotationButton').checked = settings.app.expNotation
     $('#numericOutput').innerHTML = ''
     for (const n of numericOutputs) {
       $('#numericOutput').innerHTML += `<option value="${n}">${n.charAt(0).toUpperCase() + n.slice(1)}</option>`
@@ -1099,7 +1124,11 @@
   }
 
   function checkWindowSize() {
-    $('#resetSizeButton').style.display = isNode ? (ipc.sendSync('isResized') && !ipc.sendSync('isMaximized') ? 'block' : 'none') : 'none'
+    $('#resetSizeButton').style.display = isNode
+      ? ipc.sendSync('isResized') && !ipc.sendSync('isMaximized')
+        ? 'block'
+        : 'none'
+      : 'none'
   }
 
   function syntaxToggle() {
@@ -1118,6 +1147,12 @@
   $('#precisionRange').addEventListener('input', () => {
     $('#precision-label').innerHTML = $('#precisionRange').value
   })
+  $('#expLowerRange').addEventListener('input', () => {
+    $('#expLower-label').innerHTML = $('#expLowerRange').value
+  })
+  $('#expUpperRange').addEventListener('input', () => {
+    $('#expUpper-label').innerHTML = $('#expUpperRange').value
+  })
 
   function saveSettings() {
     settings.app.theme = $('#themeList').value
@@ -1130,6 +1165,9 @@
     settings.app.keywordTips = $('#keywordTipsButton').checked
     settings.app.matchBrackets = $('#matchBracketsButton').checked
     settings.app.precision = $('#precisionRange').value
+    settings.app.expLower = $('#expLowerRange').value
+    settings.app.expUpper = $('#expUpperRange').value
+    settings.app.expNotation = $('#expNotationButton').checked
     settings.app.numericOutput = $('#numericOutput').value
     settings.app.contPrevLine = $('#contPrevLineButton').checked
     settings.app.matrixType = $('#matrixType').value
@@ -1371,7 +1409,8 @@
       const isEmpty = cm.getValue() === ''
       const isLine = line.length > 0
       const isSelection = cm.somethingSelected()
-      const isMultiLine = cm.listSelections().length > 1 || cm.listSelections()[0].anchor.line !== cm.listSelections()[0].head.line
+      const isMultiLine =
+        cm.listSelections().length > 1 || cm.listSelections()[0].anchor.line !== cm.listSelections()[0].head.line
       const hasAnswer = answer !== '' && answer !== 'Error' && answer !== 'Plot'
 
       ipc.send('mainContextMenu', index, isEmpty, isLine, isSelection, isMultiLine, hasAnswer)
@@ -1434,7 +1473,15 @@
       for (let i = start; i < end; i++) {
         const line = cm.getLine(i).trim()
         const answer = $('#output').children[i].innerText
-        copiedLines += line ? (line.match(/^(#|\/\/)/) ? (withLines ? `${line}\n` : '') : withLines ? `${line} = ${answer}\n` : `${answer}\n`) : ''
+        copiedLines += line
+          ? line.match(/^(#|\/\/)/)
+            ? withLines
+              ? `${line}\n`
+              : ''
+            : withLines
+            ? `${line} = ${answer}\n`
+            : `${answer}\n`
+          : ''
       }
     })
 
@@ -1448,7 +1495,11 @@
       cm.eachLine((line) => {
         const index = cm.getLineNumber(line)
         line = line.text.trim()
-        copiedCalc += line ? (line.match(/^(#|\/\/)/) ? `${line}\n` : `${line} = ${$('#output').children[index].innerText}\n`) : '\n'
+        copiedCalc += line
+          ? line.match(/^(#|\/\/)/)
+            ? `${line}\n`
+            : `${line} = ${$('#output').children[index].innerText}\n`
+          : '\n'
       })
 
       navigator.clipboard.writeText(copiedCalc)
@@ -1460,7 +1511,9 @@
   if (isNode) {
     ipc.send('checkUpdate')
     ipc.on('notifyUpdate', () => {
-      notify('Updating Numara... <a class="notificationLink" onclick="document.querySelector(`#aboutButton`).click()">View update status</a>')
+      notify(
+        'Updating Numara... <a class="notificationLink" onclick="document.querySelector(`#aboutButton`).click()">View update status</a>'
+      )
       $('#notificationDot').style.display = 'block'
     })
     ipc.on('updateStatus', (event, status) => {
@@ -1468,7 +1521,9 @@
         $('#dialog-about-updateStatus').innerHTML = 'Restart Numara to finish updating.'
         $('#restartButton').style.display = 'inline-block'
         if (!$('#dialog-about').classList.contains('uk-open')) {
-          notify('Restart Numara to finish updating. <a class="notificationLink" onclick="document.querySelector(`#restartButton`).click()">Restart Now</a>')
+          notify(
+            'Restart Numara to finish updating. <a class="notificationLink" onclick="document.querySelector(`#restartButton`).click()">Restart Now</a>'
+          )
         }
       } else {
         $('#dialog-about-updateStatus').innerHTML = status
