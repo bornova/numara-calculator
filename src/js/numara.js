@@ -255,6 +255,12 @@
 
     mathScope = {}
 
+    mathScope.now = DateTime.local().toFormat(
+      (settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat
+    )
+
+    mathScope.today = DateTime.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat)
+
     cm.eachLine((line) => {
       const cmLineNo = cm.getLineNumber(line)
       const lineNo = cmLineNo + 1
@@ -363,11 +369,6 @@
       const avg = math.evaluate(avgs.length > 0 ? '(' + math.mean(avgs) + ')' : 0)
       const total = math.evaluate(totals.length > 0 ? '(' + totals.join('+') + ')' : 0)
       const subtotal = math.evaluate(subtotals.length > 0 ? '(' + subtotals.join('+') + ')' : 0)
-
-      mathScope.now = DateTime.local().toFormat(
-        (settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat + ' ' + settings.app.timeFormat
-      )
-      mathScope.today = DateTime.local().toFormat((settings.app.dateDay ? 'ccc, ' : '') + settings.app.dateFormat)
 
       line = line
         .replace(/\bans\b/g, mathScope.ans)
