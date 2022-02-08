@@ -1208,7 +1208,7 @@ function localeWarning() {
 }
 
 function bigNumberWarning() {
-  $('#bigNumWarn').style.display = $('#numericOutput').value === 'BigNumber' ? 'inline-block' : 'none'
+  $('#bigNumWarn').style.display = settings.app.numericOutput === 'BigNumber' ? 'inline-block' : 'none'
 }
 
 function syntaxToggle() {
@@ -1236,7 +1236,6 @@ function saveSettings() {
   settings.app.fontSize = $('#fontSize').value
   settings.app.fontWeight = $('#fontWeight').value
   settings.app.locale = $('#locale').value
-  localeWarning()
   settings.app.dateDay = $('#dateDay').checked
   settings.app.syntax = $('#syntaxButton').checked
   settings.app.keywordTips = $('#keywordTipsButton').checked
@@ -1246,7 +1245,6 @@ function saveSettings() {
   settings.app.expUpper = $('#expUpperRange').value
   settings.app.expNotation = $('#expNotationButton').checked
   settings.app.numericOutput = $('#numericOutput').value
-  bigNumberWarning()
   settings.app.contPrevLine = $('#contPrevLineButton').checked
   settings.app.matrixType = $('#matrixType').value
   settings.app.predictable = $('#predictableButton').checked
@@ -1268,6 +1266,10 @@ function saveSettings() {
   settings.app.lineWrap = $('#lineWrapButton').checked
 
   store.set('settings', settings)
+
+  localeWarning()
+  bigNumberWarning()
+
   checkDefaultSettings()
   applySettings()
 }
