@@ -1136,10 +1136,8 @@ function prepSettings() {
     $('#locale').innerHTML += `<option value="${l[1]}">${l[0]}</option>`
   }
   $('#locale').value = settings.app.locale
-  localeWarning()
   $('#dateDay').checked = settings.app.dateDay
   $('#syntaxButton').checked = settings.app.syntax
-  syntaxToggle()
   $('#keywordTipsButton').checked = settings.app.keywordTips
   $('#matchBracketsButton').checked = settings.app.matchBrackets
   $('#precisionRange').value = settings.app.precision
@@ -1154,7 +1152,6 @@ function prepSettings() {
     $('#numericOutput').innerHTML += `<option value="${n}">${n.charAt(0).toUpperCase() + n.slice(1)}</option>`
   }
   $('#numericOutput').value = settings.app.numericOutput
-  bigNumberWarning()
   $('#contPrevLineButton').checked = settings.app.contPrevLine
   $('#matrixType').innerHTML = ''
   for (const m of matrixTypes) {
@@ -1173,6 +1170,10 @@ function prepSettings() {
   $('#lineErrorButton').checked = settings.app.lineErrors
   $('#lineWrapButton').checked = settings.app.lineWrap
 
+  localeWarning()
+  bigNumberWarning()
+  syntaxToggle()
+
   checkDefaultSettings()
   checkWindowSize()
 }
@@ -1187,18 +1188,6 @@ function checkWindowSize() {
       ? 'block'
       : 'none'
     : 'none'
-}
-
-function syntaxToggle() {
-  $('#keywordTipsButton').disabled = !$('#syntaxButton').checked
-  $('#matchBracketsButton').disabled = !$('#syntaxButton').checked
-
-  $('#keywordTipsButton').parentNode.style.opacity = $('#syntaxButton').checked ? '1' : '0.5'
-  $('#matchBracketsButton').parentNode.style.opacity = $('#syntaxButton').checked ? '1' : '0.5'
-}
-
-function bigNumberWarning() {
-  $('#bigNumWarn').style.display = $('#numericOutput').value === 'BigNumber' ? 'inline-block' : 'none'
 }
 
 function checkLocale() {
@@ -1216,6 +1205,18 @@ function checkLocale() {
 
 function localeWarning() {
   $('#localeWarn').style.display = checkLocale() ? 'inline-block' : 'none'
+}
+
+function bigNumberWarning() {
+  $('#bigNumWarn').style.display = $('#numericOutput').value === 'BigNumber' ? 'inline-block' : 'none'
+}
+
+function syntaxToggle() {
+  $('#keywordTipsButton').disabled = !$('#syntaxButton').checked
+  $('#matchBracketsButton').disabled = !$('#syntaxButton').checked
+
+  $('#keywordTipsButton').parentNode.style.opacity = $('#syntaxButton').checked ? '1' : '0.5'
+  $('#matchBracketsButton').parentNode.style.opacity = $('#syntaxButton').checked ? '1' : '0.5'
 }
 
 $('#precisionRange').addEventListener('input', () => {
