@@ -1132,18 +1132,11 @@ function prepSettings() {
   $('#fontSize').value = settings.app.fontSize
   $('#fontWeight').value = settings.app.fontWeight
   $('#locale').innerHTML = ''
-
   for (const l of locales) {
     $('#locale').innerHTML += `<option value="${l[1]}">${l[0]}</option>`
   }
-
-  localeWarning()
   $('#locale').value = settings.app.locale
-
-  if (settings.app.locale === 'BigNumber') {
-    bigNumberWarning()
-  }
-
+  localeWarning()
   $('#dateDay').checked = settings.app.dateDay
   $('#syntaxButton').checked = settings.app.syntax
   syntaxToggle()
@@ -1157,24 +1150,16 @@ function prepSettings() {
   $('#expUpper-label').innerHTML = settings.app.expUpper
   $('#expNotationButton').checked = settings.app.expNotation
   $('#numericOutput').innerHTML = ''
-
   for (const n of numericOutputs) {
     $('#numericOutput').innerHTML += `<option value="${n}">${n.charAt(0).toUpperCase() + n.slice(1)}</option>`
   }
-
   $('#numericOutput').value = settings.app.numericOutput
-
-  if (settings.app.numericOutput === 'BigNumber') {
-    bigNumberWarning()
-  }
-
+  bigNumberWarning()
   $('#contPrevLineButton').checked = settings.app.contPrevLine
   $('#matrixType').innerHTML = ''
-
   for (const m of matrixTypes) {
     $('#matrixType').innerHTML += `<option value="${m}">${m}</option>`
   }
-
   $('#matrixType').value = settings.app.matrixType
   $('#predictableButton').checked = settings.app.predictable
   $('#thouSepButton').checked = settings.app.thouSep
