@@ -60,8 +60,8 @@ body {
 
 .lineError,
 .lineError:hover,
-.lineError>div,
-.lineNoError>div {
+.lineError > div,
+.lineNoError > div {
   color: #7e1818;
 }
 
@@ -85,7 +85,7 @@ body {
   color: #17586b;
 }
 
-.output>span::selection {
+.output > span::selection {
   background-color: rgba(231, 243, 255, 0.98) !important;
   color: inherit;
 }
@@ -137,7 +137,9 @@ body {
   color: rgb(29, 63, 92);
 }
 
-.precision, .expLower, .expUpper {
+.precision,
+.expLower,
+.expUpper {
   border: 1px solid #e5e5e5;
   color: #333333;
 }
@@ -165,7 +167,7 @@ text {
 
 /* UIkit Overrides */
 .uk-modal {
-  background-color: rgba(0, 0, 0, .6);
+  background-color: rgba(0, 0, 0, 0.6);
 }
 
 .uk-button-default {

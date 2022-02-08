@@ -59,8 +59,8 @@ body {
 
 .lineError,
 .lineError:hover,
-.lineError>div,
-.lineNoError>div {
+.lineError > div,
+.lineNoError > div {
   color: #bd2e2e;
 }
 
@@ -80,7 +80,7 @@ body {
   color: #1eb5f0;
 }
 
-.output>span::selection {
+.output > span::selection {
   background-color: rgba(21, 21, 21, 0.98) !important;
 }
 
@@ -132,7 +132,9 @@ body {
   color: #a0d3ff;
 }
 
-.precision, .expLower, .expUpper {
+.precision,
+.expLower,
+.expUpper {
   border: 1px solid #333333;
   color: #e6e6e6;
 }
@@ -156,7 +158,7 @@ body {
 }
 
 text {
-  fill: #e6e6e6
+  fill: #e6e6e6;
 }
 
 line {
@@ -174,7 +176,7 @@ line {
 
 /* UIkit Overrides */
 .uk-modal {
-  background-color: rgba(0, 0, 0, .8);
+  background-color: rgba(0, 0, 0, 0.8);
 }
 
 .uk-modal-dialog {
@@ -237,15 +239,15 @@ line {
   color: #999999;
 }
 
-.uk-tab>*>a {
+.uk-tab > * > a {
   color: #666666;
 }
 
-.uk-tab>*>a:hover {
+.uk-tab > * > a:hover {
   color: #777777;
 }
 
-.uk-tab>.uk-active>a {
+.uk-tab > .uk-active > a {
   color: #b2cfdd;
 }
 
