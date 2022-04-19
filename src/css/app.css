@@ -180,7 +180,6 @@ text {
   flex: 1;
   font-weight: 400;
   min-width: 120px;
-  user-select: text;
   white-space: nowrap;
 }
 
@@ -199,9 +198,11 @@ text {
 
 .answer {
   border-radius: 5px;
+  cursor: default;
   height: 28px;
   margin: 0 5px;
   padding: 2px 5px;
+  user-select: text;
 }
 
 .panelFont {

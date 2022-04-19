@@ -796,7 +796,7 @@ UIkit.mixin(
   {
     data: {
       delay: 500,
-      offset: 5
+      offset: -5
     }
   },
   'tooltip'
