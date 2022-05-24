@@ -36,7 +36,6 @@
     "uikit": "^3.14.1"
   },
   "dependencies": {
-    "electon": "^0.0.1-security",
     "electron-store": "^8.0.1",
     "electron-updater": "^5.0.1"
   },
