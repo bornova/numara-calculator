@@ -548,6 +548,20 @@ text {
   vertical-align: middle;
 }
 
+.exportButton,
+.importButton {
+  float: left;
+  line-height: 30px;
+  vertical-align: middle;
+  font-size: 0.875rem;
+}
+
+.exportButton > svg,
+.importButton > svg {
+  height: 16px;
+  margin-top: -3px;
+}
+
 .demoButton {
   float: left;
   line-height: 30px;
