@@ -14,7 +14,7 @@
     "Mousetrap": "readonly",
     "UIkit": "readonly"
   },
-  "ignorePatterns": ["d3.js", "plot.js"],
+  "ignorePatterns": ["build", "dist", "d3.js", "plot.js"],
   "parserOptions": {
     "ecmaVersion": "latest"
   },
