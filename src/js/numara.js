@@ -835,8 +835,6 @@ $('#actions').addEventListener('click', (e) => {
     case 'printButton': // Print calculations
       UIkit.tooltip('#printButton').hide()
 
-      console.log($('#nada').value)
-
       $('#print-title').innerHTML = appInfo.productName
       $('#printBox').innerHTML = $('#panel').innerHTML
 
