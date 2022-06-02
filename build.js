@@ -1,22 +1,23 @@
 const fs = require('fs-extra')
-const pj = require('./package.json')
 const terser = require('terser')
 const CleanCSS = require('clean-css')
 const performance = require('perf_hooks').performance
+const pkj = require('./package.json')
+
 const buildPath = 'build'
 const header = `/**
- * @copyright ${new Date().getFullYear()} ${pj.author.name}
- * @homepage ${pj.homepage}
- * @license ${pj.license} - ${pj.homepage}/blob/master/LICENSE
+ * @copyright ${new Date().getFullYear()} ${pkj.author.name}
+ * @homepage ${pkj.homepage}
+ * @license ${pkj.license} - ${pkj.homepage}/blob/master/LICENSE
  */
 
-appInfo = {
-    productName: '${pj.productName}',
-    description:'${pj.description}',
-    version: '${pj.version}',
-    author: '${pj.author.name}',
-    homepage: '${pj.homepage}',
-    licence: '${pj.license}',
+const appInfo = {
+    productName: '${pkj.productName}',
+    description:'${pkj.description}',
+    version: '${pkj.version}',
+    author: '${pkj.author.name}',
+    homepage: '${pkj.homepage}',
+    licence: '${pkj.license}',
     website: 'https://numara.io'
 }
 `
@@ -66,28 +67,44 @@ fs.emptyDir(buildPath)
     const tersePackages = {}
     const terseCodemirror = {}
 
+    // Prep files to minify
     plot.forEach((item, index) => {
       tersePlot[index] = fs.readFileSync(item, 'utf-8')
     })
+
     numara.forEach((item, index) => {
       terseNumara[index] = fs.readFileSync(item, 'utf-8')
     })
+
     packages.forEach((item, index) => {
       tersePackages[index] = fs.readFileSync(item, 'utf-8')
     })
+
     codemirror.forEach((item, index) => {
       terseCodemirror[index] = fs.readFileSync(item, 'utf-8')
     })
 
+    // Minify files
     terser.minify(tersePlot).then((js) => {
       fs.outputFileSync(buildPath + '/js/plot.js', js.code)
     })
-    terser.minify(terseNumara).then((js) => {
-      fs.outputFileSync(buildPath + '/js/numara.js', js.code)
-    })
+
+    terser
+      .minify(terseNumara, {
+        format: { preamble: header },
+        sourceMap: {
+          url: 'numara.js.map'
+        }
+      })
+      .then((js) => {
+        fs.outputFileSync(buildPath + '/js/numara.js', js.code)
+        fs.outputFileSync(buildPath + '/js/numara.js.map', js.map)
+      })
+
     terser.minify(tersePackages).then((js) => {
       fs.outputFileSync(buildPath + '/js/packages.js', js.code)
     })
+
     terser.minify(terseCodemirror).then((js) => {
       fs.outputFileSync(buildPath + '/js/codemirror.js', js.code)
     })
@@ -121,26 +138,23 @@ fs.emptyDir(buildPath)
       if (error) throw error
       fs.outputFileSync(buildPath + '/css/numara.css', css.styles)
     })
+
     new CleanCSS().minify([cleanCodemirror], (error, css) => {
       if (error) throw error
       fs.outputFileSync(buildPath + '/css/codemirror.css', css.styles)
     })
+
     new CleanCSS().minify(['src/css/dark.css'], (error, css) => {
       if (error) throw error
       fs.outputFileSync(buildPath + '/css/dark.css', css.styles)
     })
+
     new CleanCSS().minify(['src/css/light.css'], (error, css) => {
       if (error) throw error
       fs.outputFileSync(buildPath + '/css/light.css', css.styles)
     })
 
-    fs.copy('node_modules/uikit/dist/css/uikit.min.css', buildPath + '/css/uikit.min.css')
-  })
-  .then(() => {
-    // Prepend app info
-    fs.readFile(buildPath + '/js/numara.js', 'utf-8').then((numarajs) => {
-      fs.writeFile(buildPath + '/js/numara.js', header + numarajs)
-    })
+    fs.copySync('node_modules/uikit/dist/css/uikit.min.css', buildPath + '/css/uikit.min.css')
   })
   .then(() => {
     const t1 = performance.now()
