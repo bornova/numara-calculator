@@ -168,7 +168,6 @@ text {
 
 .input {
   min-width: 120px;
-  padding-right: 10px;
   width: 60%;
 }
 
@@ -176,11 +175,16 @@ text {
   user-select: text;
 }
 
+.noRuler {
+  border-bottom: 1px solid transparent;
+}
+
 .output {
   flex: 1;
   font-weight: 400;
   min-width: 120px;
   white-space: nowrap;
+  padding: 0 10px 0 0;
 }
 
 .inputArea,
@@ -192,7 +196,7 @@ text {
 
 .output > div {
   display: block;
-  height: 28px;
+  height: 27px;
   width: 100%;
   user-select: text;
 }
@@ -200,20 +204,20 @@ text {
 .answer {
   border-radius: 5px;
   cursor: default;
-  height: 28px;
-  margin: 0 5px;
+  height: 27px;
+  margin: 0 8px 0 0;
   padding: 2px 5px;
   user-select: text;
 }
 
 .panelFont {
   font-family: 'Roboto Mono', monospace;
-  line-height: 28px;
+  line-height: 27px;
 }
 
 .lineError,
 .plotButton {
-  margin: 0 10px;
+  margin: 0 5px;
 }
 
 .lineError:hover {
@@ -228,6 +232,7 @@ text {
   cursor: ew-resize;
   flex: 0 0 auto;
   height: calc(100% - 8px);
+  margin: 0 8px;
   width: 5px;
 }
 
@@ -902,7 +907,7 @@ pre {
 }
 
 .cm-s-numara .CodeMirror-lines {
-  line-height: 28px !important;
+  line-height: 27px !important;
   padding: 0 !important;
 }
 
@@ -932,6 +937,7 @@ pre {
 
 .cm-s-numara .CodeMirror-sizer {
   padding-bottom: 8px !important;
+  padding-right: 0 !important;
 }
 
 .cm-s-numara .CodeMirror-search-hint {

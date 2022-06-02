@@ -57,6 +57,10 @@ body {
   color: #e6e6e6;
 }
 
+.ruler {
+  border-bottom: 1px solid #303030;
+}
+
 .lineError,
 .lineError:hover,
 .lineError > div,

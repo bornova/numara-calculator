@@ -168,6 +168,7 @@ const defaultSettings = {
     numericOutput: 'number',
     precision: '4',
     predictable: false,
+    rulers: false,
     syntax: true,
     theme: 'system',
     thouSep: true
@@ -266,7 +267,15 @@ function calculate() {
     const cmLineNo = cm.getLineNumber(line)
     const lineNo = cmLineNo + 1
 
-    cm.removeLineClass(cmLineNo, 'gutter', 'lineNoError')
+    if (settings.app.rulers) {
+      cm.removeLineClass(line, 'wrap', 'noRuler')
+      cm.addLineClass(line, 'wrap', 'ruler')
+    } else {
+      cm.removeLineClass(line, 'wrap', 'ruler')
+      cm.addLineClass(line, 'wrap', 'noRuler')
+    }
+
+    cm.removeLineClass(line, 'gutter', 'lineNoError')
 
     let answer = ''
     let cmLine = line.text.trim().split('//')[0].split('#')[0]
@@ -357,7 +366,7 @@ function calculate() {
     }
 
     answers += `
-      <div line-no=${cmLineNo} style="height:${line.height}px">
+      <div class="${settings.app.rulers ? 'ruler' : 'noRuler'}" line-no=${cmLineNo} style="height:${line.height - 1}px">
         <span class="${answer && !answer.startsWith('<a') ? 'answer' : ''}" >${answer}</span>
       </div>`
   })
@@ -1187,6 +1196,7 @@ function prepSettings() {
   $('#closeBracketsButton').checked = settings.app.closeBrackets
   $('#dividerButton').checked = settings.app.divider
   $('#lineNoButton').checked = settings.app.lineNumbers
+  $('#rulersButton').checked = settings.app.rulers
   $('#lineErrorButton').checked = settings.app.lineErrors
   $('#lineWrapButton').checked = settings.app.lineWrap
 
@@ -1282,6 +1292,7 @@ function saveSettings() {
   settings.app.closeBrackets = $('#closeBracketsButton').checked
   settings.app.divider = $('#dividerButton').checked
   settings.app.lineNumbers = $('#lineNoButton').checked
+  settings.app.rulers = $('#rulersButton').checked
   settings.app.lineErrors = $('#lineErrorButton').checked
   settings.app.lineWrap = $('#lineWrapButton').checked
 
