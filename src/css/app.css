@@ -194,6 +194,7 @@ text {
   display: block;
   height: 28px;
   width: 100%;
+  user-select: text;
 }
 
 .answer {
