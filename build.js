@@ -93,7 +93,7 @@ fs.emptyDir(buildPath)
       .minify(terseNumara, {
         format: { preamble: header },
         sourceMap: {
-          url: '/js/numara.js.map'
+          url: 'numara.js.map'
         }
       })
       .then((js) => {
