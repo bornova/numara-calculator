@@ -89,17 +89,9 @@ fs.emptyDir(buildPath)
       fs.outputFileSync(buildPath + '/js/plot.js', js.code)
     })
 
-    terser
-      .minify(terseNumara, {
-        format: { preamble: header },
-        sourceMap: {
-          url: 'numara.js.map'
-        }
-      })
-      .then((js) => {
-        fs.outputFileSync(buildPath + '/js/numara.js', js.code)
-        fs.outputFileSync(buildPath + '/js/numara.js.map', js.map)
-      })
+    terser.minify(terseNumara, { format: { preamble: header } }).then((js) => {
+      fs.outputFileSync(buildPath + '/js/numara.js', js.code)
+    })
 
     terser.minify(tersePackages).then((js) => {
       fs.outputFileSync(buildPath + '/js/packages.js', js.code)
