@@ -145,8 +145,6 @@ function toggleMax() {
 }
 
 // App settings
-let settings
-
 const defaultSettings = {
   app: {
     autocomplete: true,
@@ -182,7 +180,7 @@ const defaultSettings = {
   }
 }
 
-settings = store.get('settings')
+let settings = store.get('settings')
 
 if (settings) {
   // Check for and apply changes
@@ -365,11 +363,6 @@ function calculate() {
   })
 
   $('#output').innerHTML = answers
-
-  $('#clearButton').className = cm.getValue() === '' ? 'noAction' : 'action'
-  $('#printButton').className = cm.getValue() === '' ? 'noAction' : 'action'
-  $('#copyButton').className = cm.getValue() === '' ? 'noAction' : 'action'
-  $('#saveButton').className = cm.getValue() === '' ? 'noAction' : 'action'
 
   store.set('input', cm.getValue())
 
@@ -813,6 +806,7 @@ function showModal(id) {
 UIkit.util.on('.modal', 'hidden', () => {
   cm.focus()
 })
+
 UIkit.util.on('.uk-switcher', 'show', () => {
   cm.getInputField().blur()
 })
@@ -825,9 +819,8 @@ function updateSavedCount() {
     title: 'Open (' + savedCount() + ')'
   })
 }
-updateSavedCount()
 
-$('#openButton').className = savedCount() > 0 ? 'action' : 'noAction'
+updateSavedCount()
 
 // App button actions
 $('#actions').addEventListener('click', (e) => {
@@ -842,38 +835,34 @@ $('#actions').addEventListener('click', (e) => {
     case 'printButton': // Print calculations
       UIkit.tooltip('#printButton').hide()
 
-      if (cm.getValue() !== '') {
-        $('#print-title').innerHTML = appInfo.productName
-        $('#printBox').innerHTML = $('#panel').innerHTML
+      console.log($('#nada').value)
 
-        if (isNode) {
-          ipc.send('print')
-          ipc.on('printReply', (event, response) => {
-            if (response) {
-              notify(response)
-            }
+      $('#print-title').innerHTML = appInfo.productName
+      $('#printBox').innerHTML = $('#panel').innerHTML
 
-            $('#printBox').innerHTML = ''
-          })
-        } else {
-          window.print()
-        }
+      if (isNode) {
+        ipc.send('print')
+        ipc.on('printReply', (event, response) => {
+          if (response) {
+            notify(response)
+          }
+
+          $('#printBox').innerHTML = ''
+        })
+      } else {
+        window.print()
       }
       break
     case 'copyButton': // Copy calculations
       copyAllCalculations()
       break
     case 'saveButton': // Save calculations
-      if (cm.getValue() !== '') {
-        $('#saveTitle').value = ''
-        showModal('#dialog-save')
-        $('#saveTitle').focus()
-      }
+      $('#saveTitle').value = ''
+      showModal('#dialog-save')
+      $('#saveTitle').focus()
       break
     case 'openButton': // Open saved calculations
-      if (Object.keys(store.get('saved') || {}).length > 0) {
-        showModal('#dialog-open')
-      }
+      showModal('#dialog-open')
       break
     case 'udfuButton': // Open custom functions dialog
       showModal('#dialog-udfu')
@@ -891,6 +880,40 @@ $('#actions').addEventListener('click', (e) => {
   }
   e.stopPropagation()
 })
+
+if (isNode) {
+  // Export calculations to file
+  $('#dialog-save-export').addEventListener('click', () => {
+    ipc.send('export', $('#saveTitle').value, cm.getValue())
+  })
+
+  ipc.on('exportData', (event, msg) => {
+    UIkit.modal('#dialog-save').hide()
+    notify(msg, 'success')
+  })
+
+  ipc.on('exportDataError', (event, err) => {
+    notify(err, 'danger')
+  })
+
+  // Import calculations from file
+  $('#dialog-save-import').addEventListener('click', () => {
+    ipc.send('import')
+  })
+
+  ipc.on('importData', (event, data, msg) => {
+    UIkit.modal('#dialog-open').hide()
+    cm.setValue(data)
+    notify(msg, 'success')
+  })
+
+  ipc.on('importDataError', (event, err) => {
+    notify(err, 'danger')
+  })
+} else {
+  $('#dialog-save-export').remove()
+  $('#dialog-save-import').remove()
+}
 
 // Output actions
 $('#output').addEventListener('click', (e) => {
@@ -931,6 +954,7 @@ $('#output').addEventListener('mousedown', () => {
 document.addEventListener('keydown', (e) => {
   refreshCM = !e.repeat
 })
+
 document.addEventListener('keyup', () => {
   refreshCM = true
 })
@@ -948,7 +972,6 @@ document.addEventListener('click', (e) => {
       savedItems[id] = [title, data]
       store.set('saved', savedItems)
       UIkit.modal('#dialog-save').hide()
-      $('#openButton').className = 'action'
       updateSavedCount()
       notify(
         `Saved as '${title}' <a class="notificationLink" onclick="document.querySelector('#openButton').click()">View saved calculations</a>`
@@ -959,8 +982,6 @@ document.addEventListener('click', (e) => {
       confirm('All saved calculations will be deleted.', () => {
         localStorage.removeItem('saved')
         populateSaved()
-        UIkit.modal('#dialog-open').hide()
-        notify('Deleted all saved calculations')
       })
       break
     case 'dialog-udfu-save-f': // Save custom functions
@@ -1092,7 +1113,6 @@ function populateSaved() {
   } else {
     $('#dialog-open-deleteAll').disabled = true
     $('#dialog-open-body').innerHTML = 'No saved calculations.'
-    $('#openButton').className = 'noAction'
   }
 
   updateSavedCount()
@@ -1102,7 +1122,9 @@ function populateSaved() {
 UIkit.util.on('#setswitch', 'beforeshow', (e) => {
   e.stopPropagation()
 })
+
 UIkit.util.on('#dialog-settings', 'beforeshow', prepSettings)
+
 UIkit.util.on('#dialog-settings', 'hidden', () => {
   cm.focus()
 })
@@ -1391,6 +1413,7 @@ function plot() {
 }
 
 UIkit.util.on('#dialog-plot', 'shown', plot)
+
 UIkit.util.on('#dialog-plot', 'hide', () => {
   activePlot = false
 })
@@ -1585,7 +1608,9 @@ function copySelectedAnswers(event, withLines) {
 }
 
 function copyAllCalculations() {
-  if (cm.getValue() !== '') {
+  if (cm.getValue() === '') {
+    notify('Nothing to copy.')
+  } else {
     let copiedCalc = ''
 
     cm.eachLine((line) => {

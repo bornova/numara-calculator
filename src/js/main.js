@@ -1,5 +1,6 @@
-const { app, BrowserWindow, globalShortcut, ipcMain, Menu, nativeTheme, session, shell } = require('electron')
+const { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, nativeTheme, session, shell } = require('electron')
 const autoUpdater = require('electron-updater').autoUpdater
+const fs = require('fs')
 const Store = require('electron-store')
 const schema = {
   appHeight: {
@@ -52,7 +53,9 @@ function appWindow() {
       spellcheck: false
     }
   })
+
   win.loadFile('build/index.html')
+
   win.on('close', () => {
     if (win.isMaximized()) {
       dims.set('fullSize', true)
@@ -62,12 +65,15 @@ function appWindow() {
       dims.set('fullSize', false)
     }
   })
+
   win.on('maximize', () => {
     win.webContents.send('isMax', true)
   })
+
   win.on('unmaximize', () => {
     win.webContents.send('isMax', false)
   })
+
   win.webContents.on('did-finish-load', () => {
     if (dims.get('fullSize') & (process.platform === 'win32')) {
       win.webContents.send('fullscreen', true)
@@ -75,6 +81,7 @@ function appWindow() {
     win.setHasShadow(true)
     win.show()
   })
+
   win.webContents.on('new-window', (event, url) => {
     event.preventDefault()
     shell.openExternal(url)
@@ -84,6 +91,7 @@ function appWindow() {
     win.on('focus', () => {
       globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {})
     })
+
     win.on('blur', () => {
       globalShortcut.unregisterAll()
     })
@@ -106,18 +114,23 @@ app.whenReady().then(appWindow)
 autoUpdater.on('checking-for-update', () => {
   win.webContents.send('updateStatus', 'Checking for update...')
 })
+
 autoUpdater.on('update-available', () => {
   win.webContents.send('notifyUpdate')
 })
+
 autoUpdater.on('update-not-available', () => {
   win.webContents.send('updateStatus', app.name + ' is up to date.')
 })
+
 autoUpdater.on('error', () => {
   win.webContents.send('updateStatus', 'Error checking for update.')
 })
+
 autoUpdater.on('download-progress', (progress) => {
   win.webContents.send('updateStatus', 'Downloading latest version... (' + Math.round(progress.percent) + '%)')
 })
+
 autoUpdater.on('update-downloaded', () => {
   win.webContents.send('updateStatus', 'ready')
 })
@@ -125,49 +138,99 @@ autoUpdater.on('update-downloaded', () => {
 ipcMain.on('close', () => {
   app.quit()
 })
+
 ipcMain.on('minimize', () => {
   win.minimize()
 })
+
 ipcMain.on('maximize', () => {
   win.maximize()
 })
+
 ipcMain.on('unmaximize', () => {
   win.unmaximize()
 })
+
 ipcMain.on('isMaximized', (event) => {
   event.returnValue = win.isMaximized()
 })
+
 ipcMain.on('isResized', (event) => {
   event.returnValue = win.getSize()[0] !== schema.appWidth.default || win.getSize()[1] !== schema.appHeight.default
 })
+
 ipcMain.on('resetSize', resetSize)
+
 ipcMain.on('print', (event) => {
   win.webContents.print({}, (success) => {
     event.sender.send('printReply', success ? 'Sent to printer' : false)
   })
 })
+
 ipcMain.on('setTheme', (event, mode) => {
   dims.set('theme', mode)
 })
+
 ipcMain.on('isDark', (event) => {
   event.returnValue = nativeTheme.shouldUseDarkColors
 })
+
 ipcMain.on('updateApp', () => {
   setImmediate(() => {
     autoUpdater.quitAndInstall(true, true)
   })
 })
+
 ipcMain.on('checkUpdate', () => {
   if (app.isPackaged) {
     autoUpdater.checkForUpdatesAndNotify()
   }
 })
+
 ipcMain.on('resetApp', () => {
   session.defaultSession.clearStorageData().then(() => {
     dims.clear()
     app.relaunch()
     app.exit()
   })
+})
+
+ipcMain.on('export', (event, fileName, content) => {
+  let file = dialog.showSaveDialogSync(win, {
+    title: 'Save Calculations',
+    defaultPath: fileName,
+    filters: [{ name: 'Numara', extensions: ['numara'] }]
+  })
+
+  if (file) {
+    fs.writeFile(file, content, (err) => {
+      if (err) {
+        event.sender.send('exportDataError', err)
+        return
+      }
+
+      event.sender.send('exportData', 'Exported to: ' + file)
+    })
+  }
+})
+
+ipcMain.on('import', (event) => {
+  let file = dialog.showOpenDialogSync(win, {
+    title: 'Open Calculations',
+    properties: ['OpenFile'],
+    filters: [{ name: 'Numara', extensions: ['numara'] }]
+  })
+
+  if (file) {
+    fs.readFile(file[0], 'utf8', (err, data) => {
+      if (err) {
+        event.sender.send('importDataError', err)
+        return
+      }
+
+      event.sender.send('importData', data, 'Imported from: ' + file[0])
+    })
+  }
 })
 
 const contextHeader = (index, isMultiLine, hasAnswer) => {
