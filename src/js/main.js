@@ -217,7 +217,7 @@ ipcMain.on('export', (event, fileName, content) => {
 ipcMain.on('import', (event) => {
   let file = dialog.showOpenDialogSync(win, {
     title: 'Open Calculations',
-    properties: ['OpenFile'],
+    properties: ['openFile'],
     filters: [{ name: 'Numara', extensions: ['numara'] }]
   })
 
