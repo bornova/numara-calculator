@@ -707,6 +707,26 @@ cm.on('update', () => {
     }
   }
 
+  const vars = $('.cm-variable', true)
+  if (vars.length > 0 && settings.app.keywordTips) {
+    for (const v of vars) {
+      if (mathScope[v.innerText] && typeof mathScope[v.innerText] !== 'function') {
+        let varTooltip
+
+        try {
+          varTooltip = formatAnswer(math.evaluate(v.innerText, mathScope))
+        } catch (e) {
+          varTooltip = 'Undefined'
+        }
+
+        UIkit.tooltip(v, {
+          title: varTooltip,
+          pos: 'top-left'
+        })
+      }
+    }
+  }
+
   const lineNos = $('.cm-lineNo', true)
   if (lineNos.length > 0 && settings.app.keywordTips) {
     for (const ln of lineNos) {
@@ -798,7 +818,7 @@ UIkit.mixin(
   {
     data: {
       delay: 500,
-      offset: -5
+      offset: 5
     }
   },
   'tooltip'
