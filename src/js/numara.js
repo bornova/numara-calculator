@@ -66,7 +66,6 @@ const isNode = navigator.userAgent.toLowerCase().includes('electron')
 const ipc = isNode ? require('electron').ipcRenderer : null
 
 // Set app info
-document.title = appInfo.description
 $('#dialog-about-title').innerHTML = appInfo.description
 $('#dialog-about-copyright').innerHTML = `Copyright ©️ ${DateTime.local().year} ${appInfo.author}`
 $('#dialog-about-appVersion').innerHTML = isNode
