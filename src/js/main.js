@@ -135,6 +135,10 @@ autoUpdater.on('update-downloaded', () => {
   win.webContents.send('updateStatus', 'ready')
 })
 
+ipcMain.on('setOnTop', (event, bool) => {
+  win.setAlwaysOnTop(bool)
+})
+
 ipcMain.on('close', () => {
   app.quit()
 })

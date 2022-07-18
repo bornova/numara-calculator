@@ -212,7 +212,6 @@ text {
 
 .panelFont {
   font-family: 'Roboto Mono', monospace;
-  line-height: 27px;
 }
 
 .lineError,
@@ -818,6 +817,10 @@ input:checked + .slider:before {
   width: 350px;
 }
 
+#dialog-settings > .uk-width-medium {
+  width: 480px;
+}
+
 .uk-width-large {
   width: 600px;
 }
@@ -907,13 +910,7 @@ pre {
 }
 
 .cm-s-numara .CodeMirror-lines {
-  line-height: 27px !important;
   padding: 0 !important;
-}
-
-.cm-s-numara .CodeMirror-cursor {
-  height: 15px !important;
-  margin: 7px 0 6px 0;
 }
 
 .cm-s-numara .CodeMirror-vscrollbar {

@@ -19,7 +19,8 @@ const cm = CodeMirror.fromTextArea($('#inputArea'), {
   theme: 'numara',
   coverGutterNextToScrollbar: true,
   inputStyle: 'textarea',
-  viewportMargin: Infinity
+  viewportMargin: Infinity,
+  singleCursorHeightPerLine: false
 })
 
 cm.setValue(store.get('input') || '')
@@ -146,6 +147,7 @@ function toggleMax() {
 // App settings
 const defaultSettings = {
   app: {
+    alwaysOnTop: false,
     autocomplete: true,
     closeBrackets: true,
     contPrevLine: true,
@@ -157,6 +159,7 @@ const defaultSettings = {
     expUpper: '12',
     fontSize: '1.1rem',
     fontWeight: '400',
+    lineHeight: '2em',
     keywordTips: true,
     lineErrors: true,
     lineNumbers: true,
@@ -591,42 +594,47 @@ CodeMirror.defineMode('plain', () => {
 })
 
 // Codemirror autocomplete hints
-const numaraHints = ['ans', 'now', 'today', 'total', 'subtotal', 'avg']
-Object.getOwnPropertyNames(math).forEach((f) => {
-  if (typeof math[f] === 'function' && Object.getOwnPropertyNames(math[f]).includes('signatures')) {
-    numaraHints.push(f)
-  }
-})
+function registerHints() {
+  const numaraHints = ['ans', 'now', 'today', 'total', 'subtotal', 'avg']
 
-CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
-  const cmCursor = editor.getCursor()
-  const cmCursorLine = editor.getLine(cmCursor.line)
-  let start = cmCursor.ch
-  let end = start
+  Object.getOwnPropertyNames(math).forEach((f) => {
+    if (typeof math[f] === 'function' && Object.getOwnPropertyNames(math[f]).includes('signatures')) {
+      numaraHints.push(f)
+    }
+  })
 
-  while (end < cmCursorLine.length && /[\w$]/.test(cmCursorLine.charAt(end))) {
-    ++end
+  CodeMirror.commands.autocomplete = (cm) => {
+    CodeMirror.showHint(cm, CodeMirror.hint.numaraHints, {
+      completeSingle: false
+    })
   }
 
-  while (start && /[\w$]/.test(cmCursorLine.charAt(start - 1))) {
-    --start
-  }
+  CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
+    const cmCursor = editor.getCursor()
+    const cmCursorLine = editor.getLine(cmCursor.line)
+    let start = cmCursor.ch
+    let end = start
 
-  const curWord = start !== end && cmCursorLine.slice(start, end)
-  const curWordRegex = new RegExp('^' + curWord, 'i')
+    while (end < cmCursorLine.length && /[\w$]/.test(cmCursorLine.charAt(end))) {
+      ++end
+    }
 
-  return {
-    list: (!curWord ? [] : numaraHints.filter((item) => item.match(curWordRegex))).sort(),
-    from: CodeMirror.Pos(cmCursor.line, start),
-    to: CodeMirror.Pos(cmCursor.line, end)
-  }
-})
+    while (start && /[\w$]/.test(cmCursorLine.charAt(start - 1))) {
+      --start
+    }
 
-CodeMirror.commands.autocomplete = (cm) => {
-  CodeMirror.showHint(cm, CodeMirror.hint.numaraHints, {
-    completeSingle: false
+    const curWord = start !== end && cmCursorLine.slice(start, end)
+    const curWordRegex = new RegExp('^' + curWord, 'i')
+
+    return {
+      list: (!curWord ? [] : numaraHints.filter((item) => item.match(curWordRegex))).sort(),
+      from: CodeMirror.Pos(cmCursor.line, start),
+      to: CodeMirror.Pos(cmCursor.line, end)
+    }
   })
 }
+
+registerHints()
 
 // Codemirror handlers
 cm.on('changes', calculate)
@@ -764,6 +772,7 @@ function applySettings() {
 
   if (isNode) {
     ipc.send('setTheme', settings.app.theme)
+    ipc.send('setOnTop', settings.app.alwaysOnTop)
   }
 
   const elements = $('.panelFont, .CodeMirror', true)
@@ -771,6 +780,7 @@ function applySettings() {
   for (const el of elements) {
     el.style.fontSize = settings.app.fontSize
     el.style.fontWeight = settings.app.fontWeight
+    el.style.setProperty('line-height', settings.app.lineHeight, 'important')
   }
 
   $('#input').style.width = (settings.app.divider ? settings.inputWidth : defaultSettings.inputWidth) + '%'
@@ -1177,8 +1187,10 @@ function prepSettings() {
   const numericOutputs = ['number', 'BigNumber', 'Fraction']
 
   $('#themeList').value = settings.app.theme
+  $('#alwaysOnTop').checked = settings.app.alwaysOnTop
   $('#fontSize').value = settings.app.fontSize
   $('#fontWeight').value = settings.app.fontWeight
+  $('#lineHeight').value = settings.app.lineHeight
   $('#locale').innerHTML = ''
   for (const l of locales) {
     $('#locale').innerHTML += `<option value="${l[1]}">${l[0]}</option>`
@@ -1282,8 +1294,10 @@ $('#expUpperRange').addEventListener('input', () => {
 
 function saveSettings() {
   settings.app.theme = $('#themeList').value
+  settings.app.alwaysOnTop = $('#alwaysOnTop').checked
   settings.app.fontSize = $('#fontSize').value
   settings.app.fontWeight = $('#fontWeight').value
+  settings.app.lineHeight = $('#lineHeight').value
   settings.app.locale = $('#locale').value
   settings.app.dateDay = $('#dateDay').checked
   settings.app.syntax = $('#syntaxButton').checked
