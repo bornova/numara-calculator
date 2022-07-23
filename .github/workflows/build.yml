@@ -2,7 +2,7 @@ name: Build/release Numara
 
 on:
   release:
-    types: [published]
+    types: [released]
 
 jobs:
   release:
@@ -37,3 +37,11 @@ jobs:
         env:
           API_KEY_ID: ${{ secrets.api_key_id }}
           API_KEY_ISSUER_ID: ${{ secrets.api_key_issuer_id }}
+  release-winget:
+    needs: release
+    runs-on: windows-latest
+    steps:
+      - uses: vedantmgoyal2009/winget-releaser@latest
+        with:
+          identifier: bornova.numara
+          token: ${{ secrets.WINGET_TOKEN }}
