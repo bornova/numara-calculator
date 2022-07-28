@@ -378,9 +378,9 @@ function calculate() {
   store.set('input', cm.getValue())
 
   function solveLine(line) {
-    const avg = math.evaluate(avgs.length > 0 ? '(' + math.mean(avgs) + ')' : 0)
-    const total = math.evaluate(totals.length > 0 ? '(' + totals.join('+') + ')' : 0)
-    const subtotal = math.evaluate(subtotals.length > 0 ? '(' + subtotals.join('+') + ')' : 0)
+    const avg = math.evaluate(avgs.length > 0 ? '(' + math.mean(avgs) + ')' : '0')
+    const total = math.evaluate(totals.length > 0 ? '(' + totals.join('+') + ')' : '0')
+    const subtotal = math.evaluate(subtotals.length > 0 ? '(' + subtotals.join('+') + ')' : '0')
 
     line = line
       .replace(/\bans\b/g, mathScope.ans)
