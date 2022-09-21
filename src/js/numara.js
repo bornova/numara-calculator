@@ -466,7 +466,7 @@ function formatAnswer(answer) {
     !a.includes('e') && !isNaN(a)
       ? Number(a).toLocaleString(settings.app.locale, digits) + b
       : a.match(/e[+-]?\d+/)
-      ? Number(a.split('e')[0]).toLocaleString(settings.app.locale, digits) + 'e' + answer.split('e')[1] + b
+      ? Number(a.split('e')[0]).toLocaleString(settings.app.locale, digits) + 'e' + answer.split('e')[1]
       : stripAnswer(answer)
 
   return formattedAnswer
@@ -560,7 +560,9 @@ CodeMirror.defineMode('numara', () => {
         return 'currency'
 
       try {
-        if (math.unit(cmStream).units.length > 0) return 'unit'
+        const val = math.evaluate(cmStream)
+        if (val.units && val.value) return 'constant'
+        if (val.units && !val.value) return 'unit'
         // eslint-disable-next-line no-empty
       } catch (e) {}
 
@@ -709,6 +711,16 @@ cm.on('update', () => {
     for (const u of units) {
       UIkit.tooltip(u, {
         title: `Unit '${u.innerText}'`,
+        pos: 'top-left'
+      })
+    }
+  }
+
+  const constants = $('.cm-constant', true)
+  if (constants.length > 0 && settings.app.keywordTips) {
+    for (const c of constants) {
+      UIkit.tooltip(c, {
+        title: math.help(c.innerText).doc.description + ' constant',
         pos: 'top-left'
       })
     }
