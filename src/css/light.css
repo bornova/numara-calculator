@@ -250,6 +250,10 @@ li.CodeMirror-hint-active {
   color: #009688 !important;
 }
 
+.cm-s-numara .cm-constant {
+  color: #9c27b0 !important;
+}
+
 .cm-s-numara .cm-unit {
   color: #005cc5 !important;
 }

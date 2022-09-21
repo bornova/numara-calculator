@@ -325,6 +325,10 @@ line {
   color: #009688 !important;
 }
 
+.cm-s-numara .cm-constant {
+  color: #eaa1f6 !important;
+}
+
 .cm-s-numara .cm-unit {
   color: #4d87c9 !important;
 }

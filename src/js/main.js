@@ -82,9 +82,9 @@ function appWindow() {
     win.show()
   })
 
-  win.webContents.on('new-window', (event, url) => {
-    event.preventDefault()
+  win.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url)
+    return { action: 'deny' }
   })
 
   if (app.isPackaged) {
