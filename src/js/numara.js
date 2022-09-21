@@ -720,7 +720,7 @@ cm.on('update', () => {
   if (constants.length > 0 && settings.app.keywordTips) {
     for (const c of constants) {
       UIkit.tooltip(c, {
-        title: math.help(c.innerText).doc.description + ' constant',
+        title: math.help(c.innerText).doc.description + ' (Constant)',
         pos: 'top-left'
       })
     }
