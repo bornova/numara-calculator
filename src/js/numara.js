@@ -1,5 +1,6 @@
-// Get element by id
-const $ = (selector, all) => (all ? document.querySelectorAll(selector) : document.querySelector(selector))
+// Get element(s) query selector
+const $ = (selector) => document.querySelector(selector)
+const $all = (selector) => document.querySelectorAll(selector)
 
 // localStorage
 const store = {
@@ -559,18 +560,20 @@ CodeMirror.defineMode('numara', () => {
       if (settings.app.currencies && (cmStream.toLowerCase() in currencyRates || cmStream.toLowerCase() === 'usd'))
         return 'currency'
 
+      if (typeof math[cmStream] === 'function' && Object.getOwnPropertyNames(math[cmStream]).includes('signatures'))
+        return 'function'
+
       try {
         const val = math.evaluate(cmStream)
-        if (val.units && val.value) return 'constant'
-        if (val.units && !val.value) return 'unit'
+        const par = math.parse(cmStream)
+        if (val.units && val) return 'unit'
+        if (par.isSymbolNode && val) return 'constant'
         // eslint-disable-next-line no-empty
       } catch (e) {}
 
       if (udfList.includes(cmStream)) return 'udf'
       if (uduList.includes(cmStream)) return 'udu'
 
-      if (typeof math[cmStream] === 'function' && Object.getOwnPropertyNames(math[cmStream]).includes('signatures'))
-        return 'function'
       if (cmStream.match(/\b(?:ans|total|subtotal|avg|today|now)\b/)) return 'scope'
       if (cmStream.match(/\b(?:line\d+)\b/)) return 'lineNo'
 
@@ -607,7 +610,8 @@ function registerHints() {
 
   CodeMirror.commands.autocomplete = (cm) => {
     CodeMirror.showHint(cm, CodeMirror.hint.numaraHints, {
-      completeSingle: false
+      completeSingle: false,
+      extraKeys: { Enter: 'newline' }
     })
   }
 
@@ -648,7 +652,7 @@ cm.on('inputRead', (cm) => {
 })
 
 cm.on('update', () => {
-  const funcs = $('.cm-function', true)
+  const funcs = $all('.cm-function')
   if (funcs.length > 0 && settings.app.keywordTips) {
     for (const f of funcs) {
       try {
@@ -667,7 +671,7 @@ cm.on('update', () => {
     }
   }
 
-  const udfs = $('.cm-udf', true)
+  const udfs = $all('.cm-udf')
   if (udfs.length > 0 && settings.app.keywordTips) {
     for (const f of udfs) {
       UIkit.tooltip(f, {
@@ -677,7 +681,7 @@ cm.on('update', () => {
     }
   }
 
-  const udus = $('.cm-udu', true)
+  const udus = $all('.cm-udu')
   if (udus.length > 0 && settings.app.keywordTips) {
     for (const u of udus) {
       UIkit.tooltip(u, {
@@ -687,7 +691,7 @@ cm.on('update', () => {
     }
   }
 
-  const curr = $('.cm-currency', true)
+  const curr = $all('.cm-currency')
   if (curr.length > 0 && settings.app.keywordTips) {
     for (const c of curr) {
       try {
@@ -706,7 +710,7 @@ cm.on('update', () => {
     }
   }
 
-  const units = $('.cm-unit', true)
+  const units = $all('.cm-unit')
   if (units.length > 0 && settings.app.keywordTips) {
     for (const u of units) {
       UIkit.tooltip(u, {
@@ -716,7 +720,7 @@ cm.on('update', () => {
     }
   }
 
-  const constants = $('.cm-constant', true)
+  const constants = $all('.cm-constant')
   if (constants.length > 0 && settings.app.keywordTips) {
     for (const c of constants) {
       UIkit.tooltip(c, {
@@ -726,7 +730,7 @@ cm.on('update', () => {
     }
   }
 
-  const vars = $('.cm-variable', true)
+  const vars = $all('.cm-variable')
   if (vars.length > 0 && settings.app.keywordTips) {
     for (const v of vars) {
       if (mathScope[v.innerText] && typeof mathScope[v.innerText] !== 'function') {
@@ -746,14 +750,18 @@ cm.on('update', () => {
     }
   }
 
-  const lineNos = $('.cm-lineNo', true)
+  const lineNos = $all('.cm-lineNo')
   if (lineNos.length > 0 && settings.app.keywordTips) {
     for (const ln of lineNos) {
       let scopeTooltip
 
       try {
-        scopeTooltip = formatAnswer(math.evaluate(ln.innerText, mathScope))
+        scopeTooltip =
+          typeof mathScope[ln.innerText] === 'function'
+            ? 'Function'
+            : formatAnswer(math.evaluate(ln.innerText, mathScope))
       } catch (e) {
+        console.log(e)
         scopeTooltip = 'Undefined'
       }
 
@@ -787,7 +795,7 @@ function applySettings() {
     ipc.send('setOnTop', settings.app.alwaysOnTop)
   }
 
-  const elements = $('.panelFont, .CodeMirror', true)
+  const elements = $all('.panelFont, .CodeMirror')
 
   for (const el of elements) {
     el.style.fontSize = settings.app.fontSize
@@ -972,6 +980,7 @@ $('#output').addEventListener('click', (e) => {
       break
     case 'plotButton': // Plot function
       func = e.target.getAttribute('data-func')
+      func = func.startsWith('line') ? mathScope[func] : func
 
       try {
         $('#plotGrid').checked = settings.plot.plotGrid
@@ -1565,7 +1574,7 @@ const traps = {
 for (const [b, c] of Object.entries(traps)) {
   Mousetrap.bindGlobal(c, (e) => {
     e.preventDefault()
-    if ($('.uk-open', true).length === 0) {
+    if ($all('.uk-open').length === 0) {
       $('#' + b).click()
     }
   })
@@ -1611,7 +1620,7 @@ if (isNode) {
 
   $('#output').addEventListener('contextmenu', outputContext)
 
-  $('.textBox', true).forEach((el) => {
+  $all('.textBox').forEach((el) => {
     el.addEventListener('contextmenu', altContext)
   })
 
