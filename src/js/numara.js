@@ -1751,4 +1751,5 @@ setTimeout(() => {
 
 setTimeout(() => {
   cm.focus()
+  cm.refresh()
 }, 500)
