@@ -761,7 +761,6 @@ cm.on('update', () => {
             ? 'Function'
             : formatAnswer(math.evaluate(ln.innerText, mathScope))
       } catch (e) {
-        console.log(e)
         scopeTooltip = 'Undefined'
       }
 
