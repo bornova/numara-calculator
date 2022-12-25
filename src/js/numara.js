@@ -563,6 +563,12 @@ CodeMirror.defineMode('numara', () => {
       if (typeof math[cmStream] === 'function' && Object.getOwnPropertyNames(math[cmStream]).includes('signatures'))
         return 'function'
 
+      if (udfList.includes(cmStream)) return 'udf'
+      if (uduList.includes(cmStream)) return 'udu'
+
+      if (cmStream.match(/\b(?:ans|total|subtotal|avg|today|now)\b/)) return 'scope'
+      if (cmStream.match(/\b(?:line\d+)\b/)) return 'lineNo'
+
       try {
         const val = math.evaluate(cmStream)
         const par = math.parse(cmStream)
@@ -570,12 +576,6 @@ CodeMirror.defineMode('numara', () => {
         if (par.isSymbolNode && val) return 'constant'
         // eslint-disable-next-line no-empty
       } catch (e) {}
-
-      if (udfList.includes(cmStream)) return 'udf'
-      if (uduList.includes(cmStream)) return 'udu'
-
-      if (cmStream.match(/\b(?:ans|total|subtotal|avg|today|now)\b/)) return 'scope'
-      if (cmStream.match(/\b(?:line\d+)\b/)) return 'lineNo'
 
       try {
         math.evaluate(cmStream)
