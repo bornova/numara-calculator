@@ -1,5 +1,5 @@
 /**
- * @copyright 2022 Timur Atalay
+ * @copyright 2023 Timur Atalay
  * @homepage https://github.com/bornova/numara-calculator
  * @license MIT - https://github.com/bornova/numara-calculator/blob/master/LICENSE
  */
@@ -7,7 +7,7 @@
 const appInfo = {
     productName: 'Numara',
     description:'Numara Calculator',
-    version: '3.16.9',
+    version: '3.16.10',
     author: 'Timur Atalay',
     homepage: 'https://github.com/bornova/numara-calculator',
     licence: 'MIT',
