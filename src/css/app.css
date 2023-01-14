@@ -656,6 +656,11 @@ text {
   vertical-align: text-bottom;
 }
 
+.subSwitchIcon {
+  margin: -5px 5px 0 0;
+  width: 14px;
+}
+
 .plotSwitches {
   margin-top: 5px;
 }

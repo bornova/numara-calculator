@@ -208,10 +208,10 @@
               </select>
             </div>
           </div>
-          <h3>Date & Time</h3>
+          <h3>Locale</h3>
           <div class="uk-child-width-expand" uk-grid>
             <div class="padTop1">
-              Locale<a id="localeWarn" class="warn-icon"><i icon-name="alert-circle"></i></a>
+              User locale<a id="localeWarn" class="warn-icon"><i icon-name="alert-circle"></i></a>
             </div>
             <div class="uk-text-right">
               <select id="locale" class="uk-select settingItem"></select>
@@ -222,6 +222,24 @@
             <div class="uk-text-right">
               <label class="switch">
                 <input id="dateDay" type="checkbox" class="settingItem" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div>Thousand separator</div>
+            <div class="uk-text-right">
+              <label class="switch">
+                <input id="thouSepButton" type="checkbox" class="settingItem" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div><i class="subSwitchIcon" icon-name="corner-down-right"></i>Copy answer with separator</div>
+            <div class="uk-text-right">
+              <label class="switch">
+                <input id="copyThouSepButton" type="checkbox" class="settingItem" />
                 <span class="slider round"></span>
               </label>
             </div>
@@ -303,15 +321,6 @@
             <div class="uk-text-right">
               <label class="switch">
                 <input id="contPrevLineButton" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div>Thousands separator</div>
-            <div class="uk-text-right">
-              <label class="switch">
-                <input id="thouSepButton" type="checkbox" class="settingItem" />
                 <span class="slider round"></span>
               </label>
             </div>

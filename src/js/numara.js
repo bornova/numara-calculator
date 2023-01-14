@@ -174,7 +174,8 @@ const defaultSettings = {
     rulers: false,
     syntax: true,
     theme: 'system',
-    thouSep: true
+    thouSep: true,
+    copyThouSep: false
   },
   inputWidth: 60,
   plot: {
@@ -251,6 +252,7 @@ function calculate() {
   const subtotals = []
 
   let answers = ''
+  let answerCopy = ''
 
   if (refreshCM) {
     cm.refresh()
@@ -336,13 +338,16 @@ function calculate() {
             subtotals.push(answer)
           }
 
-          answer = formatAnswer(
-            math.format(answer, {
-              notation: settings.app.expNotation ? 'exponential' : 'auto',
-              lowerExp: settings.app.expLower,
-              upperExp: settings.app.expUpper
-            })
-          )
+          answer = math.format(answer, {
+            notation: settings.app.expNotation ? 'exponential' : 'auto',
+            lowerExp: settings.app.expLower,
+            upperExp: settings.app.expUpper
+          })
+
+          answerCopy = answer
+
+          answer = formatAnswer(answer, false)
+          answerCopy = formatAnswer(answerCopy, true)
 
           if (answer.match(/\w\(x\)/)) {
             const plotAns = /\w\(x\)$/.test(answer) ? cmLine.trim() : answer.trim()
@@ -370,7 +375,7 @@ function calculate() {
 
     answers += `
       <div class="${settings.app.rulers ? 'ruler' : 'noRuler'}" line-no=${cmLineNo} style="height:${line.height - 1}px">
-        <span class="${answer && !answer.startsWith('<a') ? 'answer' : ''}" >${answer}</span>
+        <span class="${answer && !answer.startsWith('<a') ? 'answer' : ''}" data-copy="${answerCopy}">${answer}</span>
       </div>`
   })
 
@@ -453,14 +458,14 @@ function stripAnswer(answer) {
   return answer
 }
 
-function formatAnswer(answer) {
+function formatAnswer(answer, forCopy) {
   answer = String(answer)
 
   const a = answer.trim().split(' ')[0]
   const b = answer.replace(a, '')
   const digits = {
     maximumFractionDigits: settings.app.precision,
-    useGrouping: settings.app.thouSep
+    useGrouping: forCopy ? settings.app.copyThouSep : settings.app.thouSep
   }
 
   const formattedAnswer =
@@ -974,8 +979,8 @@ if (isNode) {
 $('#output').addEventListener('click', (e) => {
   switch (e.target.className) {
     case 'answer':
-      navigator.clipboard.writeText(e.target.innerText)
-      notify(`Copied '${e.target.innerText}' to clipboard.`)
+      navigator.clipboard.writeText(e.target.dataset.copy)
+      notify(`Copied '${e.target.dataset.copy}' to clipboard.`)
       break
     case 'plotButton': // Plot function
       func = e.target.getAttribute('data-func')
@@ -1075,7 +1080,10 @@ document.addEventListener('click', (e) => {
       }
       break
     case 'syntaxButton':
-      syntaxToggle()
+      toggleSubMenus()
+      break
+    case 'thouSepButton':
+      toggleSubMenus()
       break
     case 'localeWarn': // BigNumber warning
       showError(
@@ -1240,6 +1248,7 @@ function prepSettings() {
   $('#matrixType').value = settings.app.matrixType
   $('#predictableButton').checked = settings.app.predictable
   $('#thouSepButton').checked = settings.app.thouSep
+  $('#copyThouSepButton').checked = settings.app.copyThouSep
   $('#currencyButton').checked = settings.app.currencies
   $('#lastUpdated').innerHTML = settings.app.currencies ? store.get('rateDate') : ''
   $('#currencyUpdate').style.display = settings.app.currencies ? 'block' : 'none'
@@ -1253,7 +1262,7 @@ function prepSettings() {
 
   localeWarning()
   bigNumberWarning()
-  syntaxToggle()
+  toggleSubMenus()
 
   checkDefaultSettings()
   checkWindowSize()
@@ -1292,12 +1301,14 @@ function bigNumberWarning() {
   $('#bigNumWarn').style.display = settings.app.numericOutput === 'BigNumber' ? 'inline-block' : 'none'
 }
 
-function syntaxToggle() {
+function toggleSubMenus() {
   $('#keywordTipsButton').disabled = !$('#syntaxButton').checked
   $('#matchBracketsButton').disabled = !$('#syntaxButton').checked
+  $('#copyThouSepButton').disabled = !$('#thouSepButton').checked
 
   $('#keywordTipsButton').parentNode.style.opacity = $('#syntaxButton').checked ? '1' : '0.5'
   $('#matchBracketsButton').parentNode.style.opacity = $('#syntaxButton').checked ? '1' : '0.5'
+  $('#copyThouSepButton').parentNode.style.opacity = $('#thouSepButton').checked ? '1' : '0.5'
 }
 
 $('#precisionRange').addEventListener('input', () => {
@@ -1332,6 +1343,7 @@ function saveSettings() {
   settings.app.matrixType = $('#matrixType').value
   settings.app.predictable = $('#predictableButton').checked
   settings.app.thouSep = $('#thouSepButton').checked
+  settings.app.copyThouSep = $('#copyThouSepButton').checked
 
   if (!settings.app.currencies && $('#currencyButton').checked) {
     getRates()
@@ -1634,7 +1646,7 @@ if (isNode) {
 function copyAnswer(event, index, withLines) {
   index = +index
   const line = cm.getLine(index).trim()
-  const answer = $('#output').children[index].innerText
+  const answer = $('#output').children[index].children[0].dataset.copy
   const copiedText = withLines ? `${line} = ${answer}` : `${answer}`
 
   navigator.clipboard.writeText(copiedText)
