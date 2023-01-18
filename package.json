@@ -2,7 +2,7 @@
   "name": "numara",
   "productName": "Numara",
   "description": "Numara Calculator",
-  "version": "3.17.0",
+  "version": "3.18.0",
   "author": {
     "name": "Timur Atalay",
     "email": "mail@numara.io"
@@ -29,9 +29,9 @@
     "electron": "^22.0.2",
     "electron-builder": "^23.6.0",
     "electron-builder-notarize": "^1.5.0",
-    "eslint": "^8.31.0",
+    "eslint": "^8.32.0",
     "fs-extra": "^11.1.0",
-    "lucide": "^0.104.0",
+    "lucide": "^0.105.0",
     "luxon": "^3.2.1",
     "mathjs": "^11.5.0",
     "mousetrap": "^1.6.5",
@@ -46,7 +46,7 @@
   },
   "build": {
     "appId": "com.numara.app",
-    "artifactName": "${productName}-${version}.${ext}",
+    "artifactName": "${productName}-${version}-${arch}.${ext}",
     "afterSign": "electron-builder-notarize",
     "publish": [
       {
@@ -57,7 +57,14 @@
     "mac": {
       "entitlements": "src/entitlements.mac.plist",
       "entitlementsInherit": "src/entitlements.mac.plist",
-      "hardenedRuntime": true
+      "hardenedRuntime": true,
+      "target": {
+        "target": "default",
+        "arch": [
+          "x64",
+          "arm64"
+        ]
+      }
     },
     "win": {
       "target": "nsis-web"
