@@ -1540,7 +1540,7 @@ function notify(msg, stat) {
     message: msg,
     status: stat || 'primary',
     pos: 'bottom-center',
-    timeout: 3000
+    timeout: 5000
   })
 }
 
