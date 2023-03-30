@@ -854,24 +854,6 @@ input:checked + .slider:before {
   z-index: 1000000;
 }
 
-.uk-notification {
-  width: 390px;
-}
-
-.uk-notification-bottom-center {
-  margin-left: -205px;
-}
-
-@media (max-width: 639px) {
-  .uk-notification {
-    width: 390px;
-  }
-
-  .uk-notification-bottom-center {
-    margin-left: calc(50vw - 205px);
-  }
-}
-
 .uk-grid > * {
   padding-left: 30px;
 }
@@ -880,6 +862,11 @@ input:checked + .slider:before {
   .uk-grid {
     margin-left: -30px;
   }
+}
+
+.uk-notification {
+  margin-top: 40px;
+  margin-bottom: 40px;
 }
 
 .uk-notification-message {

@@ -261,6 +261,7 @@ line {
 
 .uk-notification-message {
   background-color: #252525;
+  border: 1px solid #333333;
 }
 
 .uk-notification-message-primary {

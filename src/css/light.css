@@ -210,6 +210,10 @@ text {
   color: #444444;
 }
 
+.uk-notification-message {
+  border: 1px solid #efefef;
+}
+
 .uk-notification-message-primary {
   color: #2196f3;
 }

@@ -169,6 +169,8 @@ const defaultSettings = {
     matchBrackets: true,
     matrixType: 'Matrix',
     numericOutput: 'number',
+    notifyLocation: 'bottom-center',
+    notifyDuration: '5000',
     precision: '4',
     predictable: false,
     rulers: false,
@@ -1167,7 +1169,7 @@ function populateSaved() {
           <div class="dialog-open-wrapper" id="${id}">
             <div data-action="load">
               <div class="dialog-open-title">${val[0]}</div>
-              <div class="dialog-open-date">${DateTime.fromFormat(id, 'yyyyMMddHHmmssSSS').toFormat('ff')}</div>
+              <div class="dialog-open-date">${DateTime.fromFormat(id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
             </div>
             <span class="dialog-open-delete" data-action="delete"><i icon-name="x-circle"></i></span>
           </div>`
@@ -1216,6 +1218,8 @@ function prepSettings() {
 
   $('#themeList').value = settings.app.theme
   $('#alwaysOnTop').checked = settings.app.alwaysOnTop
+  $('#notifyLocation').value = settings.app.notifyLocation
+  $('#notifyDuration').value = settings.app.notifyDuration
   $('#fontSize').value = settings.app.fontSize
   $('#fontWeight').value = settings.app.fontWeight
   $('#lineHeight').value = settings.app.lineHeight
@@ -1326,6 +1330,8 @@ $('#expUpperRange').addEventListener('input', () => {
 function saveSettings() {
   settings.app.theme = $('#themeList').value
   settings.app.alwaysOnTop = $('#alwaysOnTop').checked
+  settings.app.notifyLocation = $('#notifyLocation').value
+  settings.app.notifyDuration = $('#notifyDuration').value
   settings.app.fontSize = $('#fontSize').value
   settings.app.fontWeight = $('#fontWeight').value
   settings.app.lineHeight = $('#lineHeight').value
@@ -1539,8 +1545,8 @@ function notify(msg, stat) {
   UIkit.notification({
     message: msg,
     status: stat || 'primary',
-    pos: 'bottom-center',
-    timeout: 5000
+    pos: settings.app.notifyLocation,
+    timeout: +settings.app.notifyDuration
   })
 }
 
