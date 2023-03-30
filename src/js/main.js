@@ -95,8 +95,6 @@ function appWindow() {
     win.on('blur', () => {
       globalShortcut.unregisterAll()
     })
-  } else {
-    win.webContents.openDevTools()
   }
 }
 
