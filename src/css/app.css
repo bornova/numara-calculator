@@ -129,7 +129,7 @@ text {
 .header-mac {
   -webkit-app-region: drag !important;
   display: none;
-  height: 50px;
+  height: 40px;
   position: fixed;
   top: 0;
   right: 0;
@@ -157,7 +157,7 @@ text {
   position: fixed;
   top: 50px;
   right: 8px;
-  bottom: 42px;
+  bottom: 40px;
   left: 20px;
 }
 
@@ -865,8 +865,18 @@ input:checked + .slider:before {
 }
 
 .uk-notification {
-  margin-top: 40px;
-  margin-bottom: 40px;
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+.uk-notification-top-left,
+.uk-notification-bottom-left {
+  left: 25px;
+}
+
+.uk-notification-top-right,
+.uk-notification-bottom-right {
+  right: 25px;
 }
 
 .uk-notification-message {
@@ -883,6 +893,24 @@ input:checked + .slider:before {
 .uk-notification-close svg {
   height: 10px;
   width: 10px;
+}
+
+@media (max-width: 639px) {
+  .uk-notification {
+    left: 25px;
+    right: 25px;
+  }
+}
+
+@media (min-width: 640px) {
+  .uk-notification {
+    width: 590px;
+  }
+
+  .uk-notification-bottom-center,
+  .uk-notification-top-center {
+    margin-left: -295px;
+  }
 }
 
 pre {
