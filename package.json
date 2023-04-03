@@ -33,7 +33,7 @@
     "fs-extra": "^11.1.1",
     "lucide": "^0.125.0",
     "luxon": "^3.3.0",
-    "mathjs": "^11.7.0",
+    "mathjs": "^11.8.0",
     "mousetrap": "^1.6.5",
     "mousetrap-global-bind": "^1.1.0",
     "prettier": "^2.8.7",
