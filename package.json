@@ -55,8 +55,8 @@
       }
     ],
     "mac": {
-      "entitlements": "src/entitlements.mac.plist",
-      "entitlementsInherit": "src/entitlements.mac.plist",
+      "entitlements": "entitlements.mac.plist",
+      "entitlementsInherit": "entitlements.mac.plist",
       "hardenedRuntime": true,
       "target": {
         "target": "default",
