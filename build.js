@@ -37,7 +37,7 @@ fs.emptyDir(buildPath)
     // Build JS files
     const plot = ['src/js/d3.js', 'src/js/plot.js']
 
-    const numara = ['src/js/numara.js']
+    const numara = ['src/js/app.js']
 
     const packages = [
       'node_modules/deep-diff/dist/deep-diff.min.js',
