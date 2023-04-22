@@ -53,6 +53,10 @@ body {
   color: #616161;
 }
 
+.activeLine > div {
+  color: #e6e6e6;
+}
+
 .input {
   color: #e6e6e6;
 }
@@ -65,11 +69,11 @@ body {
 .lineError:hover,
 .lineError > div,
 .lineNoError > div {
-  color: #bd2e2e;
+  color: #cf0101;
 }
 
 .errTitle {
-  color: #bd2e2e;
+  color: #cf0101;
 }
 
 .msgBox {
@@ -116,7 +120,7 @@ body {
 }
 
 .dialog-open-delete:hover {
-  color: #bd2e2e;
+  color: #cf0101;
 }
 
 .dialog-about-title {
@@ -175,7 +179,7 @@ line {
 }
 
 .syntaxError {
-  color: #bd2e2e;
+  color: #cf0101;
 }
 
 /* UIkit Overrides */
@@ -220,13 +224,13 @@ line {
 .uk-button-danger:focus {
   background-color: #333333;
   border-color: #333333;
-  color: #bd2e2e;
+  color: #cf0101;
 }
 
 .uk-button-danger:hover {
   background-color: #444444;
   border-color: rgba(189, 46, 46, 0.3);
-  color: #bd2e2e;
+  color: #cf0101;
 }
 
 .uk-button-danger:active {

@@ -658,6 +658,19 @@ cm.on('inputRead', (cm) => {
   }
 })
 
+cm.on('cursorActivity', (cm) => {
+  cm.eachLine((line) => {
+    const cmLineNo = cm.getLineNumber(line)
+    const activeLine = cm.getCursor().line
+
+    if (cmLineNo === activeLine) {
+      cm.addLineClass(cmLineNo, 'gutter', 'activeLine')
+    } else {
+      cm.removeLineClass(cmLineNo, 'gutter', 'activeLine')
+    }
+  })
+})
+
 cm.on('update', () => {
   const funcs = $all('.cm-function')
   if (funcs.length > 0 && settings.app.keywordTips) {
@@ -1417,6 +1430,18 @@ $('#divider').addEventListener('mousedown', (e) => {
   isResizing = e.target === divider
 })
 
+function resetDivider() {
+  settings.inputWidth = defaultSettings.inputWidth
+  store.set('settings', settings)
+  applySettings()
+  dividerTooltip()
+}
+
+function dividerTooltip() {
+  divider.title =
+    $('#input').style.width === defaultSettings.inputWidth + '%' ? 'Drag to resize' : 'Double click to reset position'
+}
+
 $('#panel').addEventListener('mouseup', () => {
   isResizing = false
 })
@@ -1434,13 +1459,9 @@ $('#panel').addEventListener('mousemove', (e) => {
     clearTimeout(resizeDelay)
     resizeDelay = setTimeout(calculate, 10)
   }
-})
 
-function resetDivider() {
-  settings.inputWidth = defaultSettings.inputWidth
-  store.set('settings', settings)
-  applySettings()
-}
+  dividerTooltip()
+})
 
 // Plot
 let func
@@ -1488,8 +1509,7 @@ function plot() {
         graphType: 'polyline',
         closed: settings.plot.plotArea
       }
-    ],
-    plugins: [numaraPlot.plugins.zoomBox()]
+    ]
   })
 }
 
@@ -1765,7 +1785,8 @@ const demo = `1+2
     `.replace(/^ +/gm, '')
 
 setTimeout(() => {
-  $('.CodeMirror-code').lastChild.scrollIntoView()
+  cm.execCommand('goLineEnd')
+  $('.CodeMirror-code').lastChild.scrollIntoView(false)
 }, 250)
 
 setTimeout(() => {

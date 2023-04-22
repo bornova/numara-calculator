@@ -54,6 +54,10 @@ body {
   color: #c8c8c8;
 }
 
+.activeLine > div {
+  color: #444444;
+}
+
 .input {
   color: #444444;
 }
@@ -66,15 +70,15 @@ body {
 .lineError:hover,
 .lineError > div,
 .lineNoError > div {
-  color: #7e1818;
+  color: #cf0101;
 }
 
 .syntaxError {
-  color: #7e1818;
+  color: #cf0101;
 }
 
 .errTitle {
-  color: #7e1818;
+  color: #cf0101;
 }
 
 .msgBox {
@@ -121,7 +125,7 @@ body {
 }
 
 .dialog-open-delete:hover {
-  color: #7e1818;
+  color: #cf0101;
 }
 
 .dialog-about-title {
