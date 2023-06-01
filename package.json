@@ -24,12 +24,12 @@
   },
   "devDependencies": {
     "clean-css": "^5.3.2",
-    "codemirror": "^5.65.12",
+    "codemirror": "^5.65.13",
     "deep-diff": "^1.0.2",
-    "electron": "^24.1.2",
+    "electron": "^24.4.1",
     "electron-builder": "^23.6.0",
     "electron-builder-notarize": "^1.5.1",
-    "eslint": "^8.39.0",
+    "eslint": "^8.41.0",
     "fs-extra": "^11.1.1",
     "lucide": "^0.130.1",
     "luxon": "^3.3.0",
@@ -37,8 +37,8 @@
     "mousetrap": "^1.6.5",
     "mousetrap-global-bind": "^1.1.0",
     "prettier": "^2.8.8",
-    "terser": "^5.17.1",
-    "uikit": "^3.16.15"
+    "terser": "^5.17.7",
+    "uikit": "^3.16.19"
   },
   "dependencies": {
     "electron-store": "^8.1.0",
