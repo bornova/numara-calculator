@@ -21,13 +21,17 @@ jobs:
         with:
           node-version: 18
 
+      - name: Bundle Numara app
+        run: npm run build
+
       - name: Build/release Electron app
-        uses: samuelmeuli/action-electron-builder@v1
+        run: electron-builder --publish always
         with:
           github_token: ${{ secrets.github_token }}
-          mac_certs: ${{ secrets.mac_certs }}
-          mac_certs_password: ${{ secrets.mac_certs_password }}
           release: ${{ startsWith(github.ref, 'refs/tags/v') }}
         env:
           APPLE_ID: ${{ secrets.apple_id }}
           APPLE_ID_PASSWORD: ${{ secrets.apple_id_password }}
+          CSC_LINK: ${{ secrets.MAC_CERTS }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERTS_PASSWORD }}
+          PROD: true
