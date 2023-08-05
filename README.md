@@ -2,11 +2,12 @@
 
 [![Build/release Numara](https://github.com/bornova/numara-calculator/actions/workflows/build.yml/badge.svg)](https://github.com/bornova/numara-calculator/actions/workflows/build.yml)
 
-Simple notepad calculator built on [Electron](https://github.com/electron/electron), powered by [Math.js](https://github.com/josdejong/mathjs)
+A simple but powerful notepad calculator which evaluates expressions as you type.
 
-Available for Windows, MacOS, Linux and on the web.
+Built on [Electron](https://github.com/electron/electron), powered by [Math.js](https://github.com/josdejong/mathjs).
 
-See it in action at https://numara.io (mobile friendly)
+Available for Windows, MacOS, Linux and on the web at https://numara.io
 
-<img src="http://numara.io/assets/numara-light.png" width="500">
-<img src="http://numara.io/assets/numara-dark.png" width="500">
+![Screen Shot 2023-08-05 at 3 37 12 PM](https://github.com/bornova/numara-calculator/assets/35872220/eaafdd94-c8b2-4cc3-9234-33a47d42f20a)![Screen Shot 2023-08-05 at 3 37 37 PM](https://github.com/bornova/numara-calculator/assets/35872220/870e70ce-6433-4591-9964-0b097997c5e9)
+
+Visit the [documentation page](https://github.com/bornova/numara-calculator/wiki/Documentation) to learn more about the features.

@@ -1,4 +1,7 @@
 {
+  "name": "Numara Calculator",
+  "short_name": "Numara",
+  "start_url": ".",
   "display": "standalone",
   "icons": [
     {
@@ -11,8 +14,5 @@
       "src": "assets/icon-512.png",
       "type": "image/png"
     }
-  ],
-  "name": "Numara Calculator",
-  "short_name": "Numara",
-  "start_url": "."
+  ]
 }

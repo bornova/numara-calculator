@@ -3,22 +3,10 @@
     "browser": true,
     "node": true
   },
-  "extends": "eslint:recommended",
-  "globals": {
-    "appInfo": "readonly",
-    "CodeMirror": "readonly",
-    "DeepDiff": "readonly",
-    "lucide": "readonly",
-    "luxon": "readonly",
-    "math": "readonly",
-    "Mousetrap": "readonly",
-    "UIkit": "readonly"
-  },
-  "ignorePatterns": ["build", "dist", "d3.js", "plot.js"],
+  "extends": ["eslint:recommended", "prettier"],
+  "ignorePatterns": ["build", "dist"],
   "parserOptions": {
-    "ecmaVersion": "latest"
-  },
-  "rules": {
-    "no-new-func": "off"
+    "ecmaVersion": "latest",
+    "sourceType": "module"
   }
 }

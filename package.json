@@ -2,63 +2,84 @@
   "name": "numara",
   "productName": "Numara",
   "description": "Numara Calculator",
-  "version": "3.20.2",
+  "version": "4.0.0",
   "author": {
     "name": "Timur Atalay",
-    "email": "mail@numara.io"
+    "email": "mail@numara.io",
+    "url": "https://numara.io"
   },
   "license": "MIT",
   "homepage": "https://github.com/bornova/numara-calculator",
-  "main": "src/js/main.js",
+  "main": "src/js/main.cjs",
+  "type": "module",
   "scripts": {
     "prebuild": "npm run prettier && npm run lint",
-    "build": "node build",
-    "dist": "npm run build && electron-builder",
-    "dist-all": "npm run build && electron-builder -mwl",
+    "build": "rollup -c",
+    "dist": "electron-builder",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write .",
-    "publish": "npm run build && electron-builder -mwl -p always",
-    "test": "npm run build && electron ."
+    "publish": "electron-builder -p always",
+    "test": "electron ."
   },
   "devDependencies": {
+    "@electron/notarize": "^2.1.0",
+    "@rollup/plugin-commonjs": "^25.0.3",
+    "@rollup/plugin-json": "^6.0.0",
+    "@rollup/plugin-node-resolve": "^15.1.0",
+    "@rollup/plugin-terser": "^0.4.3",
+    "builder-util": "^24.5.0",
     "clean-css": "^5.3.2",
-    "codemirror": "^5.65.13",
+    "codemirror": "^5.65.14",
     "deep-diff": "^1.0.2",
-    "electron": "^25.2.0",
-    "electron-builder": "^24.4.0",
-    "electron-builder-notarize": "^1.5.1",
-    "eslint": "^8.43.0",
+    "dotenv": "^16.3.1",
+    "electron": "^25.4.0",
+    "electron-builder": "^24.6.3",
+    "eslint": "^8.46.0",
+    "eslint-config-prettier": "^9.0.0",
     "fs-extra": "^11.1.1",
-    "lucide": "^0.130.1",
+    "function-plot": "^1.23.3",
+    "js-yaml": "^4.1.0",
+    "lucide": "^0.263.0",
     "luxon": "^3.3.0",
-    "mathjs": "^11.8.2",
+    "mathjs": "^11.9.1",
     "mousetrap": "^1.6.5",
     "mousetrap-global-bind": "^1.1.0",
-    "prettier": "^2.8.8",
-    "terser": "^5.18.1",
-    "uikit": "^3.16.22"
+    "prettier": "^3.0.1",
+    "rollup": "^3.27.2",
+    "rollup-plugin-polyfill-node": "^0.12.0",
+    "uikit": "^3.16.24"
   },
   "dependencies": {
     "electron-store": "^8.1.0",
-    "electron-updater": "^6.1.1",
-    "function-plot": "^1.23.2"
+    "electron-updater": "^6.1.1"
   },
   "build": {
     "appId": "com.numara.app",
     "artifactName": "${productName}-${version}-${arch}.${ext}",
-    "afterSign": "electron-builder-notarize",
     "publish": [
       {
         "provider": "github",
         "releaseType": "release"
       }
     ],
+    "directories": {
+      "buildResources": "build/assets",
+      "output": "dist/${version}/${os}"
+    },
+    "files": [
+      "build",
+      "src/js/main.cjs"
+    ],
     "mac": {
-      "entitlements": "entitlements.mac.plist",
-      "entitlementsInherit": "entitlements.mac.plist",
+      "category": "public.app-category.utilities",
+      "entitlements": "src/misc/entitlements.mac.plist",
+      "entitlementsInherit": "src/misc/entitlements.mac.plist",
       "hardenedRuntime": true,
+      "notarize": {
+        "teamId": "2VP53YFAQP"
+      },
       "target": {
         "target": "default",
         "arch": [
@@ -75,18 +96,11 @@
       "oneClick": false
     },
     "linux": {
+      "category": "Utility",
       "target": [
         "AppImage",
         "deb"
       ]
-    },
-    "directories": {
-      "buildResources": "build/assets",
-      "output": "dist/${version}/${os}"
-    },
-    "files": [
-      "build",
-      "src/js/main.js"
-    ]
+    }
   }
 }

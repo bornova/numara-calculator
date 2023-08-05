@@ -7,7 +7,7 @@ body {
 ::-webkit-scrollbar,
 ::-webkit-scrollbar-track,
 ::-webkit-scrollbar-corner {
-  background-color: #1f1f1f;
+  background-color: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -18,7 +18,8 @@ body {
   background-color: #444444;
 }
 
-.header-win-title {
+.header-win-title,
+.header-mac-title {
   color: #e6e6e6;
 }
 
@@ -44,17 +45,12 @@ body {
   background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTIgMTIiIGZpbGw9InJnYigyNTUsIDI1NSwgMjU1KSIgc2hhcGUtcmVuZGVyaW5nPSJjcmlzcEVkZ2VzIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik02LjI3OSA1LjVMMTEgMTAuMjIxbC0uNzc5Ljc3OUw1LjUgNi4yNzkuNzc5IDExIDAgMTAuMjIxIDQuNzIxIDUuNSAwIC43NzkuNzc5IDAgNS41IDQuNzIxIDEwLjIyMSAwIDExIC43NzkgNi4yNzkgNS41eiIgLz48L3N2Zz4=');
 }
 
-/* Mac Header */
-.header-mac-title {
-  color: #e6e6e6;
-}
-
 .lineNo {
   color: #616161;
 }
 
 .activeLine > div {
-  color: #e6e6e6;
+  color: #bebebe;
 }
 
 .input {
@@ -69,11 +65,11 @@ body {
 .lineError:hover,
 .lineError > div,
 .lineNoError > div {
-  color: #cf0101;
+  color: #d41111;
 }
 
 .errTitle {
-  color: #cf0101;
+  color: #d41111;
 }
 
 .msgBox {
@@ -98,11 +94,11 @@ body {
 
 .action,
 .noAction {
-  color: #607d8b;
+  color: #7b9dc5;
 }
 
 .noAction:hover {
-  color: #607d8b;
+  color: #7b9dc5;
 }
 
 .dialog-open-wrapper {
@@ -120,7 +116,7 @@ body {
 }
 
 .dialog-open-delete:hover {
-  color: #cf0101;
+  color: #d41111;
 }
 
 .dialog-about-title {
@@ -138,6 +134,11 @@ body {
 /* Settings menu items */
 #dialog-settings h3 {
   color: #a0d3ff;
+}
+
+#dialog-settings .settingMod,
+#dialog-settings .settingModToggle {
+  color: #dd9359;
 }
 
 .precision,
@@ -179,7 +180,7 @@ line {
 }
 
 .syntaxError {
-  color: #cf0101;
+  color: #d41111;
 }
 
 /* UIkit Overrides */
@@ -224,13 +225,13 @@ line {
 .uk-button-danger:focus {
   background-color: #333333;
   border-color: #333333;
-  color: #cf0101;
+  color: #f0506e;
 }
 
 .uk-button-danger:hover {
   background-color: #444444;
   border-color: rgba(189, 46, 46, 0.3);
-  color: #cf0101;
+  color: #ff7373;
 }
 
 .uk-button-danger:active {
@@ -257,10 +258,6 @@ line {
 
 .uk-tab > .uk-active > a {
   color: #b2cfdd;
-}
-
-.uk-tab::before {
-  border-bottom: 1px solid #333333;
 }
 
 .uk-notification-message {
@@ -334,7 +331,8 @@ line {
   color: #eaa1f6 !important;
 }
 
-.cm-s-numara .cm-unit {
+.cm-s-numara .cm-unit,
+.cm-s-numara .cm-udu {
   color: #4d87c9 !important;
 }
 
@@ -376,4 +374,8 @@ line {
 
 .dialog-udfu .CodeMirror {
   border: 1px solid #333333 !important;
+}
+
+.CodeMirror-linenumber {
+  color: #666;
 }

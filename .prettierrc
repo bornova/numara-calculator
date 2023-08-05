@@ -1,8 +1,8 @@
 {
-  "trailingComma": "none",
-  "tabWidth": 2,
+  "endOfLine": "auto",
+  "printWidth": 120,
   "semi": false,
   "singleQuote": true,
-  "printWidth": 120,
-  "endOfLine": "auto"
+  "tabWidth": 2,
+  "trailingComma": "none"
 }

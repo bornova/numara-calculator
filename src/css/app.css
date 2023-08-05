@@ -8,6 +8,7 @@
   outline: none;
   padding: 0;
   resize: none;
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -63,6 +64,7 @@ input[type='range']:focus::-webkit-slider-runnable-track {
 textarea {
   box-sizing: border-box;
   width: 100%;
+  tab-size: 2;
 }
 
 text {
@@ -82,9 +84,10 @@ text {
 
 .header-win-title {
   float: left;
-  font-weight: 600;
+  font-family: 'Numara';
+  font-size: 1.1em;
+  font-weight: 700;
   margin: 5px 0 0 8px;
-  text-transform: capitalize;
 }
 
 .header-win-icon {
@@ -137,10 +140,10 @@ text {
 }
 
 .header-mac-title {
-  font-weight: 600;
+  font-family: 'Numara';
+  font-size: 1.1em;
   padding-top: 10px;
   text-align: center;
-  text-transform: capitalize;
 }
 
 /* Content */
@@ -157,7 +160,7 @@ text {
   position: fixed;
   top: 50px;
   right: 8px;
-  bottom: 40px;
+  bottom: 42px;
   left: 20px;
 }
 
@@ -184,7 +187,7 @@ text {
   font-weight: 400;
   min-width: 120px;
   white-space: nowrap;
-  padding: 0 10px 0 0;
+  padding: 0;
 }
 
 .inputArea,
@@ -216,7 +219,7 @@ text {
 
 .lineError,
 .plotButton {
-  margin: 0 5px;
+  margin: 0 12px 0 5px;
 }
 
 .lineError:hover {
@@ -322,7 +325,7 @@ text {
 
 .dialog-buttons {
   display: block;
-  margin-top: 20px;
+  margin-top: 15px;
 }
 
 .dialog-open-wrapper {
@@ -351,15 +354,15 @@ text {
   font-weight: 600;
   height: 16px;
   position: absolute;
-  top: 5px;
+  top: 15px;
   right: 5px;
   width: 16px;
 }
 
 .dialog-open-delete > svg {
-  height: 16px;
+  height: 15px;
   stroke-width: 1.5px;
-  width: 16px;
+  width: 15px;
   pointer-events: none;
 }
 
@@ -396,6 +399,28 @@ text {
 
 #dialog-settings h3:first-of-type {
   margin: 0px 0 12px 0;
+}
+
+#dialog-settings .settingMod,
+#dialog-settings .settingModToggle {
+  color: #dd9359;
+  cursor: pointer;
+  display: none;
+  position: absolute;
+}
+
+#dialog-settings .settingMod {
+  margin-left: -15px;
+}
+
+#dialog-settings .settingModToggle {
+  margin-left: -18px;
+  margin-top: -2px;
+}
+
+#dialog-settings .settingMod > svg,
+#dialog-settings .settingModToggle > svg {
+  width: 12px;
 }
 
 .set1 {
@@ -448,7 +473,11 @@ text {
 .dialog-about-header {
   display: inline-block;
   font-weight: 600;
-  margin: 10px auto 10px auto;
+  margin: 0 auto;
+}
+
+.dialog-about-header img {
+  width: 128px;
 }
 
 .dialog-about-title {
@@ -482,17 +511,17 @@ text {
 
 .dialog-about-appVersion {
   display: block;
-  margin: 0 0 8px 0;
+  margin-bottom: 8px;
   text-align: center;
 }
 
 .versionCtnr > div {
-  display: inline-block;
   margin: 8px 3px 3px 3px;
   text-align: center;
 }
 
 .dialog-about-updateStatus {
+  display: block;
   text-align: center;
 }
 
@@ -515,35 +544,6 @@ text {
 .plotOptions {
   line-height: 30px;
   margin: 0 10px 0 10px;
-}
-
-/* Help dialog Items */
-.helpBox {
-  margin-bottom: 10px;
-  padding-bottom: 10px;
-}
-
-.searchWrapper {
-  height: calc(100vh - 235px);
-  max-height: 400px;
-  overflow: auto;
-}
-
-.searchResults {
-  display: flex;
-  flex-wrap: wrap;
-  overflow: auto;
-}
-
-.searchResults > div {
-  flex: 1 1 calc(100% - 80px);
-  margin-bottom: 5px;
-  user-select: text;
-}
-
-.searchResults > div:nth-child(odd) {
-  flex: 0 0 80px;
-  font-weight: 600;
 }
 
 .defButton {
@@ -590,7 +590,9 @@ text {
 /* Messages */
 .msg {
   opacity: 0;
-  transition: visibility 0.3s linear, opacity 0.3s linear;
+  transition:
+    visibility 0.3s linear,
+    opacity 0.3s linear;
 }
 
 .range {
@@ -652,7 +654,7 @@ text {
 .switchText {
   display: inline-block;
   line-height: 17px;
-  margin: 0 20px 0 2px;
+  margin: 0 12px 0 2px;
   vertical-align: text-bottom;
 }
 
@@ -720,12 +722,10 @@ input:checked + .slider:before {
 }
 
 .uk-modal {
-  background-color: rgba(0, 0, 0, 0.6);
-  padding: 40px !important;
+  padding: 0 30px !important;
 }
 
 .uk-modal-full {
-  background-color: rgba(0, 0, 0, 0.5);
   padding-left: 20px;
   padding-right: 20px;
 }
@@ -772,7 +772,7 @@ input:checked + .slider:before {
 }
 
 .uk-tab {
-  margin: 0 -15px 15px -35px;
+  margin: 0px -20px;
 }
 
 .uk-tab > * {
@@ -781,6 +781,10 @@ input:checked + .slider:before {
 
 .uk-tab > *:first-child {
   padding-left: 20px;
+}
+
+.uk-tab::before {
+  border: none;
 }
 
 .uk-tab > * > a {
@@ -815,7 +819,7 @@ input:checked + .slider:before {
 }
 
 .uk-width-small {
-  width: 250px;
+  width: 280px;
 }
 
 .uk-width-medium {
@@ -849,7 +853,7 @@ input:checked + .slider:before {
 }
 
 .uk-tooltip {
-  background-color: #535353;
+  background-color: #4a4a4a;
   word-break: break-word;
   z-index: 1000000;
 }
@@ -988,11 +992,67 @@ pre {
   font-size: 1rem !important;
 }
 
-.dialog-udfu .CodeMirror {
-  height: calc(100vh - 240px) !important;
-  max-height: 600px;
+#dialog-udfu .CodeMirror {
+  font-size: 1.1em;
+  height: calc(100vh - 220px);
+  max-height: 800px;
+  padding: 5px;
 }
 
-.dialog-udfu .CodeMirror-placeholder {
-  opacity: 0.4;
+/* Print style */
+.printArea {
+  display: none;
+}
+
+@media print {
+  .wrapper {
+    display: none;
+  }
+
+  .print-icon {
+    float: left;
+    margin: 0 0 15px 0;
+  }
+
+  .print-icon img {
+    height: 16px;
+    width: 16px;
+  }
+
+  .print-title {
+    color: #384859;
+    font-family: 'Numara';
+    font-size: 1.1em;
+    font-weight: 700;
+    text-align: center;
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .printArea {
+    display: block;
+    position: absolute;
+    top: 10px;
+    right: 0px;
+    left: 0px;
+  }
+
+  .printHeader {
+    display: block;
+    margin-bottom: 20px;
+    width: 100%;
+  }
+
+  .printBox {
+    display: flex;
+    margin-top: 20px;
+    padding-top: 20px;
+  }
+
+  .output {
+    border-left: 1px solid #e9e9e9;
+    padding-left: 10px;
+  }
 }

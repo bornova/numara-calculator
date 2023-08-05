@@ -8,7 +8,7 @@ body {
 ::-webkit-scrollbar,
 ::-webkit-scrollbar-track,
 ::-webkit-scrollbar-corner {
-  background-color: #ffffff;
+  background-color: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -19,8 +19,9 @@ body {
   background-color: #dadada;
 }
 
-.header-win-title {
-  color: #223541;
+.header-win-title,
+.header-mac-title {
+  color: #384859;
 }
 
 .min-btn-win:hover,
@@ -45,17 +46,12 @@ body {
   background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTIgMTIiIGZpbGw9InJnYig2OCwgNjgsIDY4KSIgc2hhcGUtcmVuZGVyaW5nPSJjcmlzcEVkZ2VzIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik02LjI3OSA1LjVMMTEgMTAuMjIxbC0uNzc5Ljc3OUw1LjUgNi4yNzkuNzc5IDExIDAgMTAuMjIxIDQuNzIxIDUuNSAwIC43NzkuNzc5IDAgNS41IDQuNzIxIDEwLjIyMSAwIDExIC43NzkgNi4yNzkgNS41eiIgLz48L3N2Zz4=');
 }
 
-/* Mac Header */
-.header-mac-title {
-  color: #333333;
-}
-
 .lineNo {
   color: #c8c8c8;
 }
 
 .activeLine > div {
-  color: #444444;
+  color: #7a7a7a;
 }
 
 .input {
@@ -70,15 +66,15 @@ body {
 .lineError:hover,
 .lineError > div,
 .lineNoError > div {
-  color: #cf0101;
+  color: #b10e0e;
 }
 
 .syntaxError {
-  color: #cf0101;
+  color: #b10e0e;
 }
 
 .errTitle {
-  color: #cf0101;
+  color: #b10e0e;
 }
 
 .msgBox {
@@ -125,7 +121,7 @@ body {
 }
 
 .dialog-open-delete:hover {
-  color: #cf0101;
+  color: #b10e0e;
 }
 
 .dialog-about-title {
@@ -143,6 +139,11 @@ body {
 /* Settings menu items */
 #dialog-settings h3 {
   color: rgb(29, 63, 92);
+}
+
+#dialog-settings .settingMod,
+#dialog-settings .settingModToggle {
+  color: #dd9359;
 }
 
 .precision,
@@ -223,6 +224,10 @@ text {
 }
 
 /* CodeMirror Overrides */
+.CodeMirror-linenumber {
+  color: #ccc;
+}
+
 .cm-s-numara .CodeMirror-selected {
   background: #c9e0f7 !important;
 }
@@ -262,7 +267,8 @@ li.CodeMirror-hint-active {
   color: #9c27b0 !important;
 }
 
-.cm-s-numara .cm-unit {
+.cm-s-numara .cm-unit,
+.cm-s-numara .cm-udu {
   color: #005cc5 !important;
 }
 
@@ -304,4 +310,8 @@ li.CodeMirror-hint-active {
 
 .dialog-udfu .CodeMirror {
   border: 1px solid #eaeaea !important;
+}
+
+.cm-s-default {
+  background-color: #f9f9f9;
 }
