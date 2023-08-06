@@ -679,7 +679,7 @@ $('#dialog-about-appVersion').innerHTML = isNode
 $('#gitLink').setAttribute('href', pkg.homepage)
 $('#webLink').setAttribute('href', pkg.author.url)
 $('#licenseLink').setAttribute('href', pkg.homepage + '/blob/master/LICENSE')
-$('#helpLink').setAttribute('href', pkg.homepage + '#readme')
+$('#helpLink').setAttribute('href', pkg.homepage + '/wiki/Documentation')
 
 window.onload = () => {
   applyUdf(store.get('udf'))
