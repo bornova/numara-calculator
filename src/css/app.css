@@ -87,17 +87,7 @@ text {
   font-family: 'Numara';
   font-size: 1.1em;
   font-weight: 700;
-  margin: 5px 0 0 8px;
-}
-
-.header-win-icon {
-  float: left;
-  margin: 3px 0 0 10px;
-}
-
-.header-win-icon img {
-  height: 16px;
-  width: 16px;
+  margin: 5px 0 0 12px;
 }
 
 .winButtons {
