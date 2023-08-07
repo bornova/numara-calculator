@@ -267,7 +267,9 @@ const commonContext = (event, index, isEmpty, isSelection, isMultiLine, hasAnswe
     }
   ]
 
-  const devTools = app.isPackaged ? [{}] : [{ type: 'separator' }, { role: 'toggleDevTools' }]
+  const devTools = app.isPackaged
+    ? [{ label: '', visible: false }]
+    : [{ type: 'separator' }, { role: 'toggleDevTools' }]
 
   return [
     ...context,
