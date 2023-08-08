@@ -12,6 +12,7 @@ import 'codemirror/addon/hint/show-hint.js'
 import 'codemirror/addon/search/jump-to-line.js'
 import 'codemirror/addon/search/search.js'
 import 'codemirror/addon/search/searchcursor.js'
+
 import 'codemirror/mode/javascript/javascript.js'
 
 /** CodeMirror input panel. */
@@ -38,84 +39,81 @@ export const udfInput = CodeMirror.fromTextArea($('#udfInput'), udOptions)
 export const uduInput = CodeMirror.fromTextArea($('#uduInput'), udOptions)
 
 // Codemirror syntax templates
-CodeMirror.defineMode('numara', () => {
-  return {
-    token: (stream) => {
-      if (stream.match(/\/\/.*/) || stream.match(/#.*/)) {
-        return 'comment'
-      }
-
-      if (stream.match(/\d/)) {
-        return 'number'
-      }
-
-      if (stream.match(/(?:\+|-|\*|\/|,|;|\.|:|@|~|=|>|<|&|\||_|`|'|\^|\?|!|%)/)) {
-        return 'operator'
-      }
-
-      stream.eatWhile(/\w/)
-
-      const cmStream = stream.current()
-
-      if (app.settings.currency && (cmStream.toLowerCase() in app.currencyRates || cmStream.toLowerCase() === 'usd')) {
-        return 'currency'
-      }
-
-      if (typeof math[cmStream] === 'function' && Object.getOwnPropertyNames(math[cmStream]).includes('signatures')) {
-        return 'function'
-      }
-
-      if (app.udfList.includes(cmStream)) {
-        return 'udf'
-      }
-      if (app.uduList.includes(cmStream)) {
-        return 'udu'
-      }
-
-      if (cmStream.match(/\b(?:ans|total|subtotal|avg|today|now)\b/)) {
-        return 'scope'
-      }
-
-      if (cmStream.match(/\b(?:line\d+)\b/)) {
-        return 'lineNo'
-      }
-
-      try {
-        const val = math.evaluate(cmStream)
-        const par = math.parse(cmStream)
-
-        if (val.units && val) {
-          return 'unit'
-        }
-
-        if (par.isSymbolNode && val) {
-          return 'constant'
-        }
-        // eslint-disable-next-line no-empty
-      } catch (e) {}
-
-      try {
-        math.evaluate(cmStream)
-      } catch (e) {
-        return 'variable'
-      }
-
-      stream.next()
-
-      return 'space'
+CodeMirror.defineMode('numara', () => ({
+  token: (stream) => {
+    if (stream.match(/\/\/.*/) || stream.match(/#.*/)) {
+      return 'comment'
     }
-  }
-})
 
-CodeMirror.defineMode('plain', () => {
-  return {
-    token: (stream) => {
-      stream.next()
-
-      return 'text'
+    if (stream.match(/\d/)) {
+      return 'number'
     }
+
+    if (stream.match(/(?:\+|-|\*|\/|,|;|\.|:|@|~|=|>|<|&|\||_|`|'|\^|\?|!|%)/)) {
+      return 'operator'
+    }
+
+    stream.eatWhile(/\w/)
+
+    const cmStream = stream.current()
+
+    if (app.settings.currency && (cmStream.toLowerCase() in app.currencyRates || cmStream.toLowerCase() === 'usd')) {
+      return 'currency'
+    }
+
+    if (typeof math[cmStream] === 'function' && Object.getOwnPropertyNames(math[cmStream]).includes('signatures')) {
+      return 'function'
+    }
+
+    if (app.udfList.includes(cmStream)) {
+      return 'udf'
+    }
+    if (app.uduList.includes(cmStream)) {
+      return 'udu'
+    }
+
+    if (cmStream.match(/\b(?:ans|total|subtotal|avg|today|now)\b/)) {
+      return 'scope'
+    }
+
+    if (cmStream.match(/\b(?:line\d+)\b/)) {
+      return 'lineNo'
+    }
+
+    try {
+      const val = math.evaluate(cmStream)
+      const par = math.parse(cmStream)
+
+      if (val.units && val) {
+        return 'unit'
+      }
+
+      if (par.isSymbolNode && val) {
+        return 'constant'
+      }
+    } catch (e) {
+      /** Ignore catch */
+    }
+
+    try {
+      math.evaluate(cmStream)
+    } catch (e) {
+      return 'variable'
+    }
+
+    stream.next()
+
+    return 'space'
   }
-})
+}))
+
+CodeMirror.defineMode('plain', () => ({
+  token: (stream) => {
+    stream.next()
+
+    return 'text'
+  }
+}))
 
 // Codemirror autocomplete hints
 const numaraHints = ['ans', 'avg', 'now', 'subtotal', 'today', 'total']
