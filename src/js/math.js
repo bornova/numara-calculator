@@ -109,7 +109,7 @@ export function calculate() {
             upperExp: app.settings.expUpper
           })
 
-          let answerCopyInit = answer
+          const answerCopyInit = answer
 
           answer = formatAnswer(answer, false)
           answerCopy = formatAnswer(answerCopyInit, true)
