@@ -69,7 +69,7 @@ const buildConfig = {
       plugins: [terser({ format: { preamble: banner } })]
     }
   ],
-  plugins: [json(), resolve(), commonjs(), nodePolyfills()]
+  plugins: [commonjs(), json(), nodePolyfills(), resolve()]
 }
 
 export default buildConfig
