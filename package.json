@@ -42,7 +42,7 @@
     "function-plot": "^1.23.3",
     "js-yaml": "^4.1.0",
     "lucide": "^0.263.0",
-    "luxon": "^3.3.0",
+    "luxon": "^3.4.0",
     "mathjs": "^11.9.1",
     "mousetrap": "^1.6.5",
     "mousetrap-global-bind": "^1.1.0",
