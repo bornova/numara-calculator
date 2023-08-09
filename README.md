@@ -10,4 +10,4 @@ Available for Windows, MacOS, Linux and on the web at https://numara.io
 
 ![Screen Shot 2023-08-05 at 3 37 12 PM](https://github.com/bornova/numara-calculator/assets/35872220/eaafdd94-c8b2-4cc3-9234-33a47d42f20a)![Screen Shot 2023-08-05 at 3 37 37 PM](https://github.com/bornova/numara-calculator/assets/35872220/870e70ce-6433-4591-9964-0b097997c5e9)
 
-Visit the [documentation page](https://github.com/bornova/numara-calculator/wiki/Documentation) to learn more about the features.
+Visit the [Wiki page](https://github.com/bornova/numara-calculator/wiki) to learn more about the features.
