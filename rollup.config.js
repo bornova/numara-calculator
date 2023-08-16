@@ -59,16 +59,14 @@ fs.emptyDir(buildPath).then(() => {
 
 const buildConfig = {
   input: 'src/js/app.js',
-  output: [
-    {
-      file: buildPath + '/js/numara.js',
-      name: 'numara',
-      format: 'iife',
-      compact: true,
-      sourcemap: !process.env.PROD,
-      plugins: [terser({ format: { preamble: banner } })]
-    }
-  ],
+  output: {
+    file: buildPath + '/js/numara.js',
+    name: 'numara',
+    format: 'iife',
+    compact: true,
+    sourcemap: !process.env.PROD,
+    plugins: [terser({ format: { preamble: banner } })]
+  },
   plugins: [commonjs(), json(), nodePolyfills(), resolve()]
 }
 
