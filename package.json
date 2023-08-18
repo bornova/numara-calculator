@@ -27,7 +27,7 @@
     "@electron/notarize": "^2.1.0",
     "@rollup/plugin-commonjs": "^25.0.4",
     "@rollup/plugin-json": "^6.0.0",
-    "@rollup/plugin-node-resolve": "^15.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.0",
     "@rollup/plugin-terser": "^0.4.3",
     "builder-util": "^24.5.0",
     "clean-css": "^5.3.2",
