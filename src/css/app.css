@@ -165,6 +165,7 @@ text {
 }
 
 .inputArea {
+  -webkit-user-select: text;
   user-select: text;
 }
 
@@ -191,6 +192,7 @@ text {
   display: block;
   height: 27px;
   width: 100%;
+  -webkit-user-select: text;
   user-select: text;
 }
 
@@ -200,6 +202,7 @@ text {
   height: 27px;
   margin: 0 8px 0 0;
   padding: 2px 5px;
+  -webkit-user-select: text;
   user-select: text;
 }
 
