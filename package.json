@@ -2,7 +2,7 @@
   "name": "numara",
   "productName": "Numara",
   "description": "Numara Calculator",
-  "version": "4.0.8",
+  "version": "4.1.0",
   "author": {
     "name": "Timur Atalay",
     "email": "mail@numara.io",
@@ -10,46 +10,38 @@
   },
   "license": "MIT",
   "homepage": "https://github.com/bornova/numara-calculator",
-  "main": "src/js/main.cjs",
+  "main": "src/main.cjs",
   "type": "module",
   "scripts": {
     "prebuild": "npm run prettier && npm run lint",
-    "build": "rollup -c",
+    "build": "node build.js",
     "dist": "electron-builder",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "publish": "electron-builder -p always",
-    "test": "electron ."
+    "test": "npm run build && electron .",
+    "wiki": "node src/misc/wiki.js"
   },
   "devDependencies": {
-    "@electron/notarize": "^2.1.0",
-    "@rollup/plugin-commonjs": "^25.0.4",
-    "@rollup/plugin-json": "^6.0.0",
-    "@rollup/plugin-node-resolve": "^15.2.1",
-    "@rollup/plugin-terser": "^0.4.3",
-    "builder-util": "^24.5.0",
-    "clean-css": "^5.3.2",
     "codemirror": "^5.65.15",
     "deep-diff": "^1.0.2",
-    "dotenv": "^16.3.1",
-    "electron": "^26.2.4",
+    "electron": "^27.0.0",
     "electron-builder": "^24.6.4",
-    "eslint": "^8.50.0",
+    "esbuild": "^0.19.4",
+    "esbuild-plugin-polyfill-node": "^0.3.0",
+    "eslint": "^8.51.0",
     "eslint-config-prettier": "^9.0.0",
     "fs-extra": "^11.1.1",
     "function-plot": "^1.23.3",
-    "js-yaml": "^4.1.0",
-    "lucide": "^0.279.0",
+    "lucide": "^0.284.0",
     "luxon": "^3.4.3",
-    "mathjs": "^11.11.1",
+    "mathjs": "^11.11.2",
     "mousetrap": "^1.6.5",
     "mousetrap-global-bind": "^1.1.0",
     "prettier": "^3.0.3",
-    "rollup": "^3.29.4",
-    "rollup-plugin-polyfill-node": "^0.12.0",
-    "uikit": "^3.17.0"
+    "uikit": "^3.17.1"
   },
   "dependencies": {
     "electron-store": "^8.1.0",
@@ -70,7 +62,7 @@
     },
     "files": [
       "build",
-      "src/js/main.cjs"
+      "src/main.cjs"
     ],
     "mac": {
       "category": "public.app-category.utilities",
