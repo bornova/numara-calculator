@@ -1,3 +1,13 @@
+/* UIKit CSS */
+@import url('./../../node_modules/uikit/dist/css/uikit.min.css');
+
+/* Codemirror CSS */
+@import url('./../../node_modules/codemirror/lib/codemirror.css');
+@import url('./../../node_modules/codemirror/addon/dialog/dialog.css');
+@import url('./../../node_modules/codemirror/addon/hint/show-hint.css');
+@import url('./../../node_modules/codemirror/theme/material-darker.css');
+
+/* Numara CSS */
 * {
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
