@@ -198,6 +198,7 @@ export function calculate() {
           .toFormat(
             lineDateNow.isValid ? (app.settings.dateDay ? 'ccc, D t' : 'D t') : app.settings.dateDay ? 'ccc, D' : 'D'
           )
+
         line = `"${dtLine}"`
       } else {
         return 'Invalid Date'
