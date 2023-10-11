@@ -7,12 +7,12 @@ import { confirm, notify, showError, showModal } from './modal.js'
 import { plot } from './plot.js'
 import { settings } from './settings.js'
 import { applyUdf, applyUdu } from './userDefined.js'
-import { checkSize, isMac, isNode, ipc, toggleMinMax } from './utils.js'
+import { checkSize, isMac, isElectron, ipc, toggleMinMax } from './utils.js'
 
 import { DateTime } from 'luxon'
 
 import * as context from './context.js'
-import * as pkg from './../../package.json'
+import { name, version, author, homepage } from './../../package.json'
 
 import UIkit from 'uikit'
 
@@ -20,7 +20,7 @@ import Mousetrap from 'mousetrap'
 import 'mousetrap-global-bind'
 
 // Set theme and maximize if needed
-if (isNode) {
+if (isElectron) {
   ipc.on('themeUpdate', settings.apply)
   ipc.on('fullscreen', (event, isFullscreen) => {
     if (isFullscreen) {
@@ -37,10 +37,10 @@ if (isNode) {
 }
 
 // Set headers
-if (isNode && !isMac) {
+if (isElectron && !isMac) {
   $('#header-mac').remove()
   $('#header-win').style.display = 'block'
-  $('#header-win-title').innerHTML = pkg.name
+  $('#header-win-title').innerHTML = name
 
   $('#max').style.display = ipc.sendSync('isMaximized') ? 'none' : 'block'
   $('#unmax').style.display = ipc.sendSync('isMaximized') ? 'block' : 'none'
@@ -77,9 +77,9 @@ if (isNode && !isMac) {
 } else {
   $('#header-win').remove()
   $('#header-mac').style.display = 'block'
-  $('#header-mac-title').innerHTML = pkg.name
+  $('#header-mac-title').innerHTML = name
 
-  if (isNode) {
+  if (isElectron) {
     $('#header-mac').addEventListener('dblclick', toggleMinMax)
   }
 }
@@ -125,10 +125,10 @@ $('#actions').addEventListener('click', (e) => {
     case 'printButton':
       UIkit.tooltip('#printButton').hide()
 
-      $('#print-title').innerHTML = pkg.name
+      $('#print-title').innerHTML = name
       $('#printBox').innerHTML = $('#panel').innerHTML
 
-      if (isNode) {
+      if (isElectron) {
         ipc.send('print')
         ipc.on('printReply', (event, response) => {
           if (response) {
@@ -176,7 +176,7 @@ $('#actions').addEventListener('click', (e) => {
   UIkit.tooltip('#' + e.target.id).hide()
 })
 
-if (isNode) {
+if (isElectron) {
   // Export calculations to file
   $('#dialog-save-export').addEventListener('click', () => {
     ipc.send('export', $('#saveTitle').value, cm.getValue())
@@ -317,7 +317,7 @@ document.addEventListener('click', (e) => {
       break
     case 'dialog-settings-reset':
       confirm('All user settings and data will be lost.', () => {
-        if (isNode) {
+        if (isElectron) {
           ipc.send('resetApp')
         } else {
           localStorage.clear()
@@ -327,7 +327,7 @@ document.addEventListener('click', (e) => {
 
       break
     case 'resetSizeButton':
-      if (isNode) {
+      if (isElectron) {
         ipc.send('resetSize')
       }
 
@@ -375,6 +375,7 @@ document.addEventListener('click', (e) => {
       break
     case 'resetPlot':
       app.activePlot = null
+
       plot()
 
       break
@@ -476,7 +477,7 @@ document.querySelectorAll('.settingItem').forEach((el) => {
 })
 
 // Prepare user defined dialog inputs
-UIkit.util.on('#dialog-udfu', 'beforeshow', () => {
+UIkit.util.on('#dialog-udfu', 'shown', () => {
   const udf = store.get('udf').trim()
   const udu = store.get('udu').trim()
 
@@ -618,7 +619,7 @@ for (const [button, command] of Object.entries(traps)) {
 }
 
 // Context menus
-if (isNode) {
+if (isElectron) {
   cm.on('contextmenu', context.inputContext)
 
   udfInput.on('contextmenu', context.textboxContext)
@@ -639,7 +640,7 @@ if (isNode) {
 }
 
 // Check for updates.
-if (isNode) {
+if (isElectron) {
   ipc.send('checkUpdate')
 
   ipc.on('notifyUpdate', () => {
@@ -667,19 +668,19 @@ if (isNode) {
 }
 
 // Set app info
-$('#dialog-about-copyright').innerHTML = `Copyright ©️ ${DateTime.local().year} ${pkg.author.name}`
-$('#dialog-about-appVersion').innerHTML = isNode
-  ? `Version ${pkg.version}`
-  : `Version ${pkg.version}
+$('#dialog-about-copyright').innerHTML = `Copyright ©️ ${DateTime.local().year} ${author.name}`
+$('#dialog-about-appVersion').innerHTML = isElectron
+  ? `Version ${version}`
+  : `Version ${version}
       <div class="versionCtnr">
         <div>
           <a href="https://github.com/bornova/numara-calculator/releases" target="_blank">Download desktop version</a>
         </div>
       </div>`
-$('#gitLink').setAttribute('href', pkg.homepage)
-$('#webLink').setAttribute('href', pkg.author.url)
-$('#licenseLink').setAttribute('href', pkg.homepage + '/blob/master/LICENSE')
-$('#helpLink').setAttribute('href', pkg.homepage + '/wiki')
+$('#gitLink').setAttribute('href', homepage)
+$('#webLink').setAttribute('href', author.url)
+$('#licenseLink').setAttribute('href', homepage + '/blob/master/LICENSE')
+$('#helpLink').setAttribute('href', homepage + '/wiki')
 
 window.onload = () => {
   applyUdf(store.get('udf'))
