@@ -3,11 +3,11 @@ import { $, app } from './common.js'
 /** Check if app is running on MacOS. */
 export const isMac = navigator.userAgent.toLowerCase().includes('mac')
 
-/** Check if app is running on Node (Electron). */
-export const isNode = navigator.userAgent.toLowerCase().includes('electron')
+/** Check if app is running in Electron. */
+export const isElectron = navigator.userAgent.toLowerCase().includes('electron')
 
-/** IPC Renderer process if running on Node */
-export const ipc = isNode ? require('electron').ipcRenderer : null
+/** IPC Renderer process if running in Electron */
+export const ipc = isElectron ? window.require('electron').ipcRenderer : null
 
 /** Check user locale for thousands separator. */
 export function checkLocale() {
@@ -25,7 +25,7 @@ export function checkLocale() {
 
 /** Check window size. */
 export function checkSize() {
-  $('#resetSizeButton').style.display = isNode
+  $('#resetSizeButton').style.display = isElectron
     ? ipc.sendSync('isResized') && !ipc.sendSync('isMaximized')
       ? 'block'
       : 'none'

@@ -2,7 +2,7 @@ import { $, $all, app, store } from './common.js'
 import { cm, udfInput, uduInput } from './editor.js'
 import { getRates } from './forex.js'
 import { calculate, math } from './math.js'
-import { checkLocale, checkSize, isNode, ipc } from './utils.js'
+import { checkLocale, checkSize, isElectron, ipc } from './utils.js'
 
 import DeepDiff from 'deep-diff'
 
@@ -190,7 +190,7 @@ export const settings = {
   apply: () => {
     const appTheme =
       app.settings.theme === 'system'
-        ? isNode
+        ? isElectron
           ? ipc.sendSync('isDark')
             ? 'dark'
             : 'light'
@@ -204,7 +204,7 @@ export const settings = {
 
     const udfuTheme =
       app.settings.theme === 'system'
-        ? isNode
+        ? isElectron
           ? ipc.sendSync('isDark')
             ? 'material-darker'
             : 'default'
@@ -216,7 +216,7 @@ export const settings = {
     udfInput.setOption('theme', udfuTheme)
     uduInput.setOption('theme', udfuTheme)
 
-    if (isNode) {
+    if (isElectron) {
       ipc.send('setTheme', app.settings.theme)
       ipc.send('setOnTop', app.settings.alwaysOnTop)
     }
