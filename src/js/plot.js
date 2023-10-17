@@ -18,7 +18,7 @@ export function plot() {
   const xDomain = app.activePlot ? app.activePlot.meta.xScale.domain() : [-domain, domain]
   const yDomain = app.activePlot ? app.activePlot.meta.yScale.domain() : [-domain, domain]
 
-  app.activePlot = functionPlot({
+  app.activePlot = functionPlot.default({
     data: [{ fn: f, graphType: 'polyline', sampler: 'builtIn' }],
     target: '#plot',
     height: $('#plot').clientHeight,
