@@ -1,4 +1,5 @@
 import { $, app } from './common.js'
+import { notify } from './modal.js'
 
 /** Check if app is running on MacOS. */
 export const isMac = navigator.userAgent.toLowerCase().includes('mac')
@@ -35,4 +36,34 @@ export function checkSize() {
 /** Minimize/maximize window. */
 export function toggleMinMax() {
   ipc.send(ipc.sendSync('isMaximized') ? 'unmaximize' : 'maximize')
+}
+
+/** Check for app updates */
+export function checkUpdates() {
+  if (isElectron) {
+    ipc.send('checkUpdate')
+
+    ipc.on('notifyUpdate', () => {
+      notify(
+        'Updating Numara... <a class="notificationLink" onclick="document.querySelector(`#aboutButton`).click()">View update status</a>'
+      )
+
+      $('#notificationDot').style.display = 'block'
+    })
+
+    ipc.on('updateStatus', (event, status) => {
+      if (status === 'ready') {
+        $('#dialog-about-updateStatus').innerHTML = 'Restart Numara to finish updating.'
+        $('#restartButton').style.display = 'inline-block'
+
+        if (!$('#dialog-about').classList.contains('uk-open')) {
+          notify(
+            'Restart Numara to finish updating. <a class="notificationLink" onclick="document.querySelector(`#restartButton`).click()">Restart Now</a>'
+          )
+        }
+      } else {
+        $('#dialog-about-updateStatus').innerHTML = status
+      }
+    })
+  }
 }

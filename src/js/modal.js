@@ -32,8 +32,8 @@ export function showError(title, err) {
 export function notify(msg, stat) {
   UIkit.notification({
     message: msg,
-    status: stat || 'primary',
     pos: app.settings.notifyLocation,
+    status: stat || 'primary',
     timeout: +app.settings.notifyDuration
   })
 }

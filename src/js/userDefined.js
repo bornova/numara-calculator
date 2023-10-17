@@ -4,42 +4,28 @@ import { showError } from './modal.js'
 
 import UIkit from 'uikit'
 
-/** User defined functions */
-export function applyUdf(udf) {
+/**
+ * User defined functions and units.
+ *
+ * @param {*} input User defined function or unit to apply.
+ * @param {string} type 'func' | 'unit'
+ */
+export function applyUdfu(input, type) {
   try {
-    const loadUdf = new Function(`'use strict'; numara.math.import({${udf}}, {override: true})`)
-    const udfFunc = new Function(`'use strict'; return {${udf}}`)
-    const udfObj = udfFunc()
+    const loadUD =
+      type === 'func'
+        ? new Function(`'use strict'; numara.math.import({${input}}, {override: true})`)
+        : new Function(`'use strict'; numara.math.createUnit({${input}}, {override: true})`)
 
-    loadUdf()
+    const UDFunc = new Function(`'use strict'; return {${input}}`)
+    const UDObj = UDFunc()
 
-    store.set('udf', udf)
+    loadUD()
 
-    for (const f in udfObj) {
-      app.udfList.push(f)
-    }
+    store.set(type === 'func' ? 'udf' : 'udu', input)
 
-    calculate()
-
-    UIkit.modal('#dialog-udfu').hide()
-  } catch (e) {
-    showError(e.name, e.message)
-  }
-}
-
-/** User defined units */
-export function applyUdu(udu) {
-  try {
-    const loadUdu = new Function(`'use strict'; numara.math.createUnit({${udu}}, {override: true})`)
-    const uduFunc = new Function(`'use strict'; return {${udu}}`)
-    const uduObj = uduFunc()
-
-    loadUdu()
-
-    store.set('udu', udu)
-
-    for (const f in uduObj) {
-      app.uduList.push(f)
+    for (const f in UDObj) {
+      app[type === 'func' ? 'udfList' : 'uduList'].push(f)
     }
 
     calculate()

@@ -1,7 +1,7 @@
-import { $ } from './common.js'
-import { cm } from './editor.js'
+import { $, $all } from './common.js'
+import { cm, udfInput, uduInput } from './editor.js'
 import { notify } from './modal.js'
-import { ipc } from './utils.js'
+import { ipc, isElectron } from './utils.js'
 
 /** Main context menus */
 export function inputContext() {
@@ -44,7 +44,7 @@ export function copyLine(event, index) {
   const line = cm.getLine(index).trim()
 
   navigator.clipboard.writeText(line).then(() => {
-    notify(`Copied Line${index + 1} to clipboard.`)
+    notify(`Copied Line ${index + 1} to clipboard.`)
   })
 }
 
@@ -57,7 +57,7 @@ export function copyAnswer(event, index, withLines) {
   const copiedText = withLines ? `${line} = ${answer}` : `${answer}`
 
   navigator.clipboard.writeText(copiedText).then(() => {
-    notify(withLines ? `Copied Line${index + 1} with answer to clipboard.` : `Copied '${answer}' to clipboard.`)
+    notify(withLines ? `Copied Line ${index + 1} with answer to clipboard.` : `Copied '${answer}' to clipboard.`)
   })
 }
 
@@ -114,4 +114,25 @@ export function copyAll() {
       notify('Copied all calculations to clipboard.')
     })
   }
+}
+
+// Context menus
+if (isElectron) {
+  cm.on('contextmenu', inputContext)
+
+  udfInput.on('contextmenu', textboxContext)
+  uduInput.on('contextmenu', textboxContext)
+
+  $('#output').addEventListener('contextmenu', outputContext)
+
+  $all('.textBox').forEach((el) => {
+    el.addEventListener('contextmenu', textboxContext)
+  })
+
+  ipc.on('copyLine', copyLine)
+  ipc.on('copyAnswer', copyAnswer)
+  ipc.on('copyLineWithAnswer', copyAnswer)
+  ipc.on('copyAllLines', copyAllLines)
+  ipc.on('copyAllAnswers', copyAllAnswers)
+  ipc.on('copyAll', copyAll)
 }

@@ -1,4 +1,5 @@
 import { $, $all, app, store } from './common.js'
+import { copyAll } from './context.js'
 import { cm, udfInput, uduInput } from './editor.js'
 import { getRates } from './forex.js'
 import { generateIcons } from './icons.js'
@@ -6,18 +7,32 @@ import { calculate } from './math.js'
 import { confirm, notify, showError, showModal } from './modal.js'
 import { plot } from './plot.js'
 import { settings } from './settings.js'
-import { applyUdf, applyUdu } from './userDefined.js'
-import { checkSize, isMac, isElectron, ipc, toggleMinMax } from './utils.js'
+import { applyUdfu } from './userDefined.js'
+import { checkSize, checkUpdates, ipc, isMac, isElectron, toggleMinMax } from './utils.js'
+
+import { author, homepage, name, version } from './../../package.json'
 
 import { DateTime } from 'luxon'
-
-import * as context from './context.js'
-import { name, version, author, homepage } from './../../package.json'
 
 import UIkit from 'uikit'
 
 import Mousetrap from 'mousetrap'
 import 'mousetrap-global-bind'
+
+// Set app info
+$('#dialog-about-copyright').innerHTML = `Copyright ©️ ${DateTime.local().year} ${author.name}`
+$('#dialog-about-appVersion').innerHTML = isElectron
+  ? `Version ${version}`
+  : `Version ${version}
+      <div class="versionCtnr">
+        <div>
+          <a href="https://github.com/bornova/numara-calculator/releases" target="_blank">Download desktop version</a>
+        </div>
+      </div>`
+$('#gitLink').setAttribute('href', homepage)
+$('#webLink').setAttribute('href', author.url)
+$('#licenseLink').setAttribute('href', homepage + '/blob/master/LICENSE')
+$('#helpLink').setAttribute('href', homepage + '/wiki')
 
 // Set theme and maximize if needed
 if (isElectron) {
@@ -143,7 +158,7 @@ $('#actions').addEventListener('click', (e) => {
 
       break
     case 'copyButton':
-      context.copyAll()
+      copyAll()
 
       break
     case 'saveButton':
@@ -296,11 +311,11 @@ document.addEventListener('click', (e) => {
 
       break
     case 'dialog-udfu-save-f':
-      applyUdf(udfInput.getValue().trim())
+      applyUdfu(udfInput.getValue().trim(), 'func')
 
       break
     case 'dialog-udfu-save-u':
-      applyUdu(uduInput.getValue().trim())
+      applyUdfu(uduInput.getValue().trim(), 'unit')
 
       break
     case 'defaultSettingsButton':
@@ -418,10 +433,8 @@ function populateSaved() {
 $('#dialog-open').addEventListener('click', (e) => {
   const saved = store.get('saved')
 
-  let pid
-
   if (e.target.parentNode.getAttribute('data-action') === 'load') {
-    pid = e.target.parentNode.parentNode.id
+    let pid = e.target.parentNode.parentNode.id
 
     cm.setValue(saved[pid][1])
 
@@ -431,7 +444,7 @@ $('#dialog-open').addEventListener('click', (e) => {
   }
 
   if (e.target.getAttribute('data-action') === 'delete') {
-    pid = e.target.parentNode.id
+    let pid = e.target.parentNode.id
 
     confirm('Calculation "' + saved[pid][0] + '" will be deleted.', () => {
       delete saved[pid]
@@ -618,73 +631,12 @@ for (const [button, command] of Object.entries(traps)) {
   })
 }
 
-// Context menus
-if (isElectron) {
-  cm.on('contextmenu', context.inputContext)
-
-  udfInput.on('contextmenu', context.textboxContext)
-  uduInput.on('contextmenu', context.textboxContext)
-
-  $('#output').addEventListener('contextmenu', context.outputContext)
-
-  $all('.textBox').forEach((el) => {
-    el.addEventListener('contextmenu', context.textboxContext)
-  })
-
-  ipc.on('copyLine', context.copyLine)
-  ipc.on('copyAnswer', context.copyAnswer)
-  ipc.on('copyLineWithAnswer', context.copyAnswer)
-  ipc.on('copyAllLines', context.copyAllLines)
-  ipc.on('copyAllAnswers', context.copyAllAnswers)
-  ipc.on('copyAll', context.copyAll)
-}
-
 // Check for updates.
-if (isElectron) {
-  ipc.send('checkUpdate')
-
-  ipc.on('notifyUpdate', () => {
-    notify(
-      'Updating Numara... <a class="notificationLink" onclick="document.querySelector(`#aboutButton`).click()">View update status</a>'
-    )
-
-    $('#notificationDot').style.display = 'block'
-  })
-
-  ipc.on('updateStatus', (event, status) => {
-    if (status === 'ready') {
-      $('#dialog-about-updateStatus').innerHTML = 'Restart Numara to finish updating.'
-      $('#restartButton').style.display = 'inline-block'
-
-      if (!$('#dialog-about').classList.contains('uk-open')) {
-        notify(
-          'Restart Numara to finish updating. <a class="notificationLink" onclick="document.querySelector(`#restartButton`).click()">Restart Now</a>'
-        )
-      }
-    } else {
-      $('#dialog-about-updateStatus').innerHTML = status
-    }
-  })
-}
-
-// Set app info
-$('#dialog-about-copyright').innerHTML = `Copyright ©️ ${DateTime.local().year} ${author.name}`
-$('#dialog-about-appVersion').innerHTML = isElectron
-  ? `Version ${version}`
-  : `Version ${version}
-      <div class="versionCtnr">
-        <div>
-          <a href="https://github.com/bornova/numara-calculator/releases" target="_blank">Download desktop version</a>
-        </div>
-      </div>`
-$('#gitLink').setAttribute('href', homepage)
-$('#webLink').setAttribute('href', author.url)
-$('#licenseLink').setAttribute('href', homepage + '/blob/master/LICENSE')
-$('#helpLink').setAttribute('href', homepage + '/wiki')
+checkUpdates()
 
 window.onload = () => {
-  applyUdf(store.get('udf'))
-  applyUdu(store.get('udu'))
+  applyUdfu(store.get('udf'), 'func')
+  applyUdfu(store.get('udu'), 'unit')
 
   cm.execCommand('goDocEnd')
   cm.execCommand('goLineEnd')
