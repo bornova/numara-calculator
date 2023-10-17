@@ -29,19 +29,19 @@
     "deep-diff": "^1.0.2",
     "electron": "^27.0.0",
     "electron-builder": "^24.6.4",
-    "esbuild": "^0.19.4",
+    "esbuild": "^0.19.5",
     "esbuild-plugin-polyfill-node": "^0.3.0",
     "eslint": "^8.51.0",
     "eslint-config-prettier": "^9.0.0",
     "fs-extra": "^11.1.1",
     "function-plot": "^1.23.3",
-    "lucide": "^0.284.0",
+    "lucide": "^0.287.0",
     "luxon": "^3.4.3",
     "mathjs": "^11.11.2",
     "mousetrap": "^1.6.5",
     "mousetrap-global-bind": "^1.1.0",
     "prettier": "^3.0.3",
-    "uikit": "^3.17.1"
+    "uikit": "^3.17.3"
   },
   "dependencies": {
     "electron-store": "^8.1.0",
