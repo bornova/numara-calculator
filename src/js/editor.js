@@ -184,17 +184,16 @@ cm.on('update', () => {
   if (funcs.length > 0 && app.settings.keywordTips) {
     for (const f of funcs) {
       try {
-        const res = JSON.stringify(math.help(f.innerText).toJSON())
-        const obj = JSON.parse(res)
+        const obj = JSON.parse(JSON.stringify(math.help(f.innerText).toJSON()))
 
         UIkit.tooltip(f, {
-          title: obj.description,
-          pos: 'top-left'
+          pos: 'top-left',
+          title: obj.description
         })
       } catch (e) {
         UIkit.tooltip(f, {
-          title: 'Description not available.',
-          pos: 'top-left'
+          pos: 'top-left',
+          title: 'Description not available.'
         })
       }
     }
@@ -205,8 +204,8 @@ cm.on('update', () => {
   if (udfs.length > 0 && app.settings.keywordTips) {
     for (const f of udfs) {
       UIkit.tooltip(f, {
-        title: 'User defined function.',
-        pos: 'top-left'
+        pos: 'top-left',
+        title: 'User defined function.'
       })
     }
   }
@@ -216,8 +215,8 @@ cm.on('update', () => {
   if (udus.length > 0 && app.settings.keywordTips) {
     for (const u of udus) {
       UIkit.tooltip(u, {
-        title: 'User defined unit.',
-        pos: 'top-left'
+        pos: 'top-left',
+        title: 'User defined unit.'
       })
     }
   }
@@ -231,13 +230,13 @@ cm.on('update', () => {
         const currencyName = currency === 'usd' ? 'U.S. Dollar' : app.currencyRates[currency].name
 
         UIkit.tooltip(c, {
-          title: currencyName,
-          pos: 'top-left'
+          pos: 'top-left',
+          title: currencyName
         })
       } catch (e) {
         UIkit.tooltip(c, {
-          title: 'Description not available.',
-          pos: 'top-left'
+          pos: 'top-left',
+          title: 'Description not available.'
         })
       }
     }
@@ -248,8 +247,8 @@ cm.on('update', () => {
   if (units.length > 0 && app.settings.keywordTips) {
     for (const u of units) {
       UIkit.tooltip(u, {
-        title: `Unit '${u.innerText}'`,
-        pos: 'top-left'
+        pos: 'top-left',
+        title: `Unit '${u.innerText}'`
       })
     }
   }
@@ -259,8 +258,8 @@ cm.on('update', () => {
   if (constants.length > 0 && app.settings.keywordTips) {
     for (const c of constants) {
       UIkit.tooltip(c, {
-        title: math.help(c.innerText).doc.description + ' (Constant)',
-        pos: 'top-left'
+        pos: 'top-left',
+        title: math.help(c.innerText).doc.description + ' (Constant)'
       })
     }
   }
@@ -279,8 +278,8 @@ cm.on('update', () => {
         }
 
         UIkit.tooltip(v, {
-          title: varTooltip,
-          pos: 'top-left'
+          pos: 'top-left',
+          title: varTooltip
         })
       }
     }
@@ -302,8 +301,8 @@ cm.on('update', () => {
       }
 
       UIkit.tooltip(ln, {
-        title: scopeTooltip,
-        pos: 'top-left'
+        pos: 'top-left',
+        title: scopeTooltip
       })
     }
   }

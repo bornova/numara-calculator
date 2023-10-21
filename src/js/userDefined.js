@@ -17,16 +17,15 @@ export function applyUdfu(input, type) {
         ? new Function(`'use strict'; numara.math.import({${input}}, {override: true})`)
         : new Function(`'use strict'; numara.math.createUnit({${input}}, {override: true})`)
 
-    const UDFunc = new Function(`'use strict'; return {${input}}`)
-    const UDObj = UDFunc()
-
     loadUD()
 
-    store.set(type === 'func' ? 'udf' : 'udu', input)
+    const UDFunc = new Function(`'use strict'; return {${input}}`)
 
-    for (const f in UDObj) {
+    for (const f in UDFunc()) {
       app[type === 'func' ? 'udfList' : 'uduList'].push(f)
     }
+
+    store.set(type === 'func' ? 'udf' : 'udu', input)
 
     calculate()
 
