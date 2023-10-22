@@ -8,6 +8,8 @@ Built on [Electron](https://github.com/electron/electron), powered by [Math.js](
 
 Available for Windows, MacOS, Linux and on the web at https://numara.io
 
-![Screen Shot 2023-08-05 at 3 37 12 PM](https://github.com/bornova/numara-calculator/assets/35872220/eaafdd94-c8b2-4cc3-9234-33a47d42f20a)![Screen Shot 2023-08-05 at 3 37 37 PM](https://github.com/bornova/numara-calculator/assets/35872220/870e70ce-6433-4591-9964-0b097997c5e9)
+<img src='https://github.com/bornova/numara-calculator/assets/35872220/fcb5689d-a733-46eb-9b7e-32eae66b4282' width='500'>
+<img src='https://github.com/bornova/numara-calculator/assets/35872220/0bb9051e-7d1d-4ed4-bf4c-87e63ada3195' width='500'>
+
 
 Visit the [Wiki page](https://github.com/bornova/numara-calculator/wiki) to learn more about the features.
