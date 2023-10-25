@@ -7,6 +7,7 @@ import { create, all } from 'mathjs'
 
 export const math = create(all)
 
+// Expose math to global scope for use in function-plot.
 window.math = math
 
 /** Calculate answers. */
