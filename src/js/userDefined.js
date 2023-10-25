@@ -14,8 +14,8 @@ export function applyUdfu(input, type) {
   try {
     const loadUD =
       type === 'func'
-        ? new Function(`'use strict'; numara.math.import({${input}}, {override: true})`)
-        : new Function(`'use strict'; numara.math.createUnit({${input}}, {override: true})`)
+        ? new Function(`'use strict'; math.import({${input}}, {override: true})`)
+        : new Function(`'use strict'; math.createUnit({${input}}, {override: true})`)
 
     loadUD()
 
