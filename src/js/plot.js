@@ -19,7 +19,16 @@ export function plot() {
   const yDomain = app.activePlot ? app.activePlot.meta.yScale.domain() : [-domain, domain]
 
   app.activePlot = functionPlot.default({
-    data: [{ fn: f, graphType: 'polyline', sampler: 'builtIn' }],
+    data: [
+      {
+        fn: f,
+        graphType: 'polyline',
+        sampler: 'builtIn',
+        derivative: app.settings.plotDerivative
+          ? { fn: math.derivative(f, 'x').toString(), updateOnMouseMove: true }
+          : false
+      }
+    ],
     target: '#plot',
     height: $('#plot').clientHeight,
     width: $('#plot').clientWidth,

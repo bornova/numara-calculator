@@ -243,8 +243,9 @@ $('#output').addEventListener('click', (e) => {
       app.func = func.startsWith('line') ? app.mathScope[func] : func
 
       try {
-        $('#plotGridModal').checked = app.settings.plotGrid
         $('#plotCrossModal').checked = app.settings.plotCross
+        $('#plotDerivativeModal').checked = app.settings.plotDerivative
+        $('#plotGridModal').checked = app.settings.plotGrid
 
         plot()
 
@@ -372,16 +373,24 @@ document.addEventListener('click', (e) => {
 
       break
     // Plot settings
-    case 'plotGridModal':
-      app.settings.plotGrid = $('#plotGridModal').checked
+    case 'plotCrossModal':
+      app.settings.plotCross = $('#plotCrossModal').checked
 
       store.set('settings', app.settings)
 
       plot()
 
       break
-    case 'plotCrossModal':
-      app.settings.plotCross = $('#plotCrossModal').checked
+    case 'plotDerivativeModal':
+      app.settings.plotDerivative = $('#plotDerivativeModal').checked
+
+      store.set('settings', app.settings)
+
+      plot()
+
+      break
+    case 'plotGridModal':
+      app.settings.plotGrid = $('#plotGridModal').checked
 
       store.set('settings', app.settings)
 
@@ -647,5 +656,3 @@ window.onload = () => {
     cm.focus()
   }, 200)
 }
-
-export { math } from './math.js'

@@ -66,6 +66,7 @@ export const settings = {
     notifyLocation: 'bottom-center',
     numericOutput: 'number',
     plotCross: false,
+    plotDerivative: false,
     plotGrid: false,
     precision: '4',
     predictable: false,
