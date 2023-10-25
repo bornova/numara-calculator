@@ -7,6 +7,8 @@ import { create, all } from 'mathjs'
 
 export const math = create(all)
 
+window.math = math
+
 /** Calculate answers. */
 export function calculate() {
   const avgs = []
