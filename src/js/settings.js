@@ -1,8 +1,8 @@
-import { $, $all, app, store } from './common.js'
-import { cm, udfInput, uduInput } from './editor.js'
-import { getRates } from './forex.js'
-import { calculate, math } from './math.js'
-import { checkLocale, checkSize, isElectron, ipc } from './utils.js'
+import { $, $all, app, store } from './common'
+import { cm, udfInput, uduInput } from './editor'
+import { getRates } from './forex'
+import { calculate, math } from './math'
+import { checkLocale, checkSize, isElectron, ipc } from './utils'
 
 import DeepDiff from 'deep-diff'
 

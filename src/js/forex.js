@@ -1,7 +1,7 @@
-import { $, app, store } from './common.js'
-import { cm } from './editor.js'
-import { calculate, math } from './math.js'
-import { notify } from './modal.js'
+import { $, app, store } from './common'
+import { cm } from './editor'
+import { calculate, math } from './math'
+import { notify } from './modal'
 
 math.createUnit('USD', { aliases: ['usd'] })
 

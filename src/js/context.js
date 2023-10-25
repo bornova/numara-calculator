@@ -1,7 +1,7 @@
-import { $, $all } from './common.js'
-import { cm, udfInput, uduInput } from './editor.js'
-import { notify } from './modal.js'
-import { ipc, isElectron } from './utils.js'
+import { $, $all } from './common'
+import { cm, udfInput, uduInput } from './editor'
+import { notify } from './modal'
+import { ipc, isElectron } from './utils'
 
 /** Main context menus */
 export function inputContext() {

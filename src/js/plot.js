@@ -1,5 +1,5 @@
-import { $, app } from './common.js'
-import { math } from './math.js'
+import { $, app } from './common'
+import { math } from './math'
 
 import functionPlot from 'function-plot'
 

@@ -1,6 +1,6 @@
-import { $, app, store } from './common.js'
-import { cm } from './editor.js'
-import { checkLocale } from './utils.js'
+import { $, app, store } from './common'
+import { cm } from './editor'
+import { checkLocale } from './utils'
 
 import { DateTime } from 'luxon'
 import { create, all } from 'mathjs'

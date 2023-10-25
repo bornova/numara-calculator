@@ -1,14 +1,14 @@
-import { $, $all, app, store } from './common.js'
-import { copyAll } from './context.js'
-import { cm, udfInput, uduInput } from './editor.js'
-import { getRates } from './forex.js'
-import { generateIcons } from './icons.js'
-import { calculate } from './math.js'
-import { confirm, notify, showError, showModal } from './modal.js'
-import { plot } from './plot.js'
-import { settings } from './settings.js'
-import { applyUdfu } from './userDefined.js'
-import { checkSize, checkUpdates, ipc, isMac, isElectron, toggleMinMax } from './utils.js'
+import { $, $all, app, store } from './common'
+import { copyAll } from './context'
+import { cm, udfInput, uduInput } from './editor'
+import { getRates } from './forex'
+import { generateIcons } from './icons'
+import { calculate } from './math'
+import { confirm, notify, showError, showModal } from './modal'
+import { plot } from './plot'
+import { settings } from './settings'
+import { applyUdfu } from './userDefined'
+import { checkSize, checkUpdates, ipc, isMac, isElectron, toggleMinMax } from './utils'
 
 import { author, homepage, name, version } from './../../package.json'
 
@@ -45,7 +45,7 @@ if (isElectron) {
 } else {
   // Register service worker
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(() => {
+    navigator.serviceWorker.register('./sw').catch(() => {
       console.log('Service worker registration failed')
     })
   }

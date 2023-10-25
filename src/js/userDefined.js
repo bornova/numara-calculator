@@ -1,6 +1,6 @@
-import { app, store } from './common.js'
-import { calculate } from './math.js'
-import { showError } from './modal.js'
+import { app, store } from './common'
+import { calculate } from './math'
+import { showError } from './modal'
 
 import UIkit from 'uikit'
 

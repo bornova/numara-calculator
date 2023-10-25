@@ -1,5 +1,5 @@
-import { $, app } from './common.js'
-import { notify } from './modal.js'
+import { $, app } from './common'
+import { notify } from './modal'
 
 /** Check if app is running on MacOS. */
 export const isMac = navigator.userAgent.toLowerCase().includes('mac')

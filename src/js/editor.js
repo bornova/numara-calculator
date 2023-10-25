@@ -1,19 +1,19 @@
-import { $, $all, app } from './common.js'
-import { calculate, formatAnswer, math } from './math.js'
+import { $, $all, app } from './common'
+import { calculate, formatAnswer, math } from './math'
 
 import UIkit from 'uikit'
 import CodeMirror from 'codemirror'
 
-import 'codemirror/addon/dialog/dialog.js'
-import 'codemirror/addon/display/placeholder.js'
-import 'codemirror/addon/edit/closebrackets.js'
-import 'codemirror/addon/edit/matchbrackets.js'
-import 'codemirror/addon/hint/show-hint.js'
-import 'codemirror/addon/search/jump-to-line.js'
-import 'codemirror/addon/search/search.js'
-import 'codemirror/addon/search/searchcursor.js'
+import 'codemirror/addon/dialog/dialog'
+import 'codemirror/addon/display/placeholder'
+import 'codemirror/addon/edit/closebrackets'
+import 'codemirror/addon/edit/matchbrackets'
+import 'codemirror/addon/hint/show-hint'
+import 'codemirror/addon/search/jump-to-line'
+import 'codemirror/addon/search/search'
+import 'codemirror/addon/search/searchcursor'
 
-import 'codemirror/mode/javascript/javascript.js'
+import 'codemirror/mode/javascript/javascript'
 
 /** CodeMirror input panel. */
 export const cm = CodeMirror.fromTextArea($('#inputArea'), {
