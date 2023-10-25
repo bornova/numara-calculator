@@ -10,7 +10,7 @@ import { settings } from './settings'
 import { applyUdfu } from './userDefined'
 import { checkSize, checkUpdates, ipc, isMac, isElectron, toggleMinMax } from './utils'
 
-import { author, homepage, name, version } from './../../package.json'
+import { author, description, homepage, name, version } from './../../package.json'
 
 import { DateTime } from 'luxon'
 
@@ -20,6 +20,8 @@ import Mousetrap from 'mousetrap'
 import 'mousetrap-global-bind'
 
 // Set app info
+document.title = description
+
 $('#dialog-about-copyright').innerHTML = `Copyright ©️ ${DateTime.local().year} ${author.name}`
 $('#dialog-about-appVersion').innerHTML = isElectron
   ? `Version ${version}`
