@@ -2,7 +2,7 @@ import { $, $all, app, store } from './common'
 import { cm, udfInput, uduInput } from './editor'
 import { getRates } from './forex'
 import { calculate, math } from './math'
-import { checkLocale, checkSize, isElectron, ipc } from './utils'
+import { checkLocale, checkSize, isElectron } from './utils'
 
 import DeepDiff from 'deep-diff'
 
@@ -192,7 +192,7 @@ export const settings = {
     const appTheme =
       app.settings.theme === 'system'
         ? isElectron
-          ? ipc.sendSync('isDark')
+          ? numara.isDark()
             ? 'dark'
             : 'light'
           : 'light'
@@ -206,7 +206,7 @@ export const settings = {
     const udfuTheme =
       app.settings.theme === 'system'
         ? isElectron
-          ? ipc.sendSync('isDark')
+          ? numara.isDark()
             ? 'material-darker'
             : 'default'
           : 'default'
@@ -218,8 +218,8 @@ export const settings = {
     uduInput.setOption('theme', udfuTheme)
 
     if (isElectron) {
-      ipc.send('setTheme', app.settings.theme)
-      ipc.send('setOnTop', app.settings.alwaysOnTop)
+      numara.setTheme(app.settings.theme)
+      numara.setOnTop(app.settings.alwaysOnTop)
     }
 
     const elements = $all('.panelFont, .input .CodeMirror')

@@ -8,7 +8,7 @@ import { confirm, notify, showError, showModal } from './modal'
 import { plot } from './plot'
 import { settings } from './settings'
 import { applyUdfu } from './userDefined'
-import { checkSize, checkUpdates, ipc, isMac, isElectron, toggleMinMax } from './utils'
+import { checkSize, checkUpdates, isMac, isElectron, toggleMinMax } from './utils'
 
 import { author, description, homepage, name, version } from './../../package.json'
 
@@ -38,12 +38,8 @@ $('#helpLink').setAttribute('href', homepage + '/wiki')
 
 // Set theme and maximize if needed
 if (isElectron) {
-  ipc.on('themeUpdate', settings.apply)
-  ipc.on('fullscreen', (event, isFullscreen) => {
-    if (isFullscreen) {
-      ipc.send('maximize')
-    }
-  })
+  numara.themeUpdate(settings.apply)
+  numara.fullscreen()
 } else {
   // Register service worker
   if ('serviceWorker' in navigator) {
@@ -59,25 +55,25 @@ if (isElectron && !isMac) {
   $('#header-win').style.display = 'block'
   $('#header-win-title').innerHTML = name
 
-  $('#max').style.display = ipc.sendSync('isMaximized') ? 'none' : 'block'
-  $('#unmax').style.display = ipc.sendSync('isMaximized') ? 'block' : 'none'
+  $('#max').style.display = numara.isMaximized() ? 'none' : 'block'
+  $('#unmax').style.display = numara.isMaximized() ? 'block' : 'none'
 
   $('#winButtons').addEventListener('click', (e) => {
     switch (e.target.id) {
       case 'min':
-        ipc.send('minimize')
+        numara.minimize()
 
         break
       case 'max':
-        ipc.send('maximize')
+        numara.maximize()
 
         break
       case 'unmax':
-        ipc.send('unmaximize')
+        numara.unmaximize()
 
         break
       case 'close':
-        ipc.send('close')
+        numara.close()
 
         break
     }
@@ -85,7 +81,7 @@ if (isElectron && !isMac) {
     e.stopPropagation()
   })
 
-  ipc.on('isMax', (event, isMax) => {
+  numara.isMax((event, isMax) => {
     $('#unmax').style.display = isMax ? 'block' : 'none'
     $('#max').style.display = isMax ? 'none' : 'block'
   })
@@ -146,8 +142,9 @@ $('#actions').addEventListener('click', (e) => {
       $('#printBox').innerHTML = $('#panel').innerHTML
 
       if (isElectron) {
-        ipc.send('print')
-        ipc.on('printReply', (event, response) => {
+        numara.print()
+
+        numara.printReply((event, response) => {
           if (response) {
             notify(response)
           }
@@ -196,25 +193,25 @@ $('#actions').addEventListener('click', (e) => {
 if (isElectron) {
   // Export calculations to file
   $('#dialog-save-export').addEventListener('click', () => {
-    ipc.send('export', $('#saveTitle').value, cm.getValue())
+    numara.export($('#saveTitle').value, cm.getValue())
   })
 
-  ipc.on('exportData', (event, msg) => {
+  numara.exportData((event, msg) => {
     UIkit.modal('#dialog-save').hide()
 
     notify(msg, 'success')
   })
 
-  ipc.on('exportDataError', (event, err) => {
+  numara.exportDataError((event, err) => {
     notify(err, 'danger')
   })
 
   // Import calculations from file
   $('#dialog-save-import').addEventListener('click', () => {
-    ipc.send('import')
+    numara.import()
   })
 
-  ipc.on('importData', (event, data, msg) => {
+  numara.importData((event, data, msg) => {
     UIkit.modal('#dialog-open').hide()
 
     cm.setValue(data)
@@ -222,7 +219,7 @@ if (isElectron) {
     notify(msg, 'success')
   })
 
-  ipc.on('importDataError', (event, err) => {
+  numara.importDataError((event, err) => {
     notify(err, 'danger')
   })
 } else {
@@ -336,7 +333,7 @@ document.addEventListener('click', (e) => {
     case 'dialog-settings-reset':
       confirm('All user settings and data will be lost.', () => {
         if (isElectron) {
-          ipc.send('resetApp')
+          numara.resetApp()
         } else {
           localStorage.clear()
           location.reload()
@@ -346,7 +343,7 @@ document.addEventListener('click', (e) => {
       break
     case 'resetSizeButton':
       if (isElectron) {
-        ipc.send('resetSize')
+        numara.resetSize()
       }
 
       break
@@ -406,7 +403,7 @@ document.addEventListener('click', (e) => {
 
       break
     case 'restartButton': // Restart to update
-      ipc.send('updateApp')
+      numara.updateApp()
 
       break
   }

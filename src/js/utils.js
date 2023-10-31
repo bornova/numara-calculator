@@ -7,9 +7,6 @@ export const isMac = navigator.userAgent.toLowerCase().includes('mac')
 /** Check if app is running in Electron. */
 export const isElectron = navigator.userAgent.toLowerCase().includes('electron')
 
-/** IPC Renderer process if running in Electron */
-export const ipc = isElectron ? window.require('electron').ipcRenderer : null
-
 /** Check user locale for thousands separator. */
 export function checkLocale() {
   const locale =
@@ -27,7 +24,7 @@ export function checkLocale() {
 /** Check window size. */
 export function checkSize() {
   $('#resetSizeButton').style.display = isElectron
-    ? ipc.sendSync('isResized') && !ipc.sendSync('isMaximized')
+    ? numara.isResized() && !numara.isMaximized()
       ? 'block'
       : 'none'
     : 'none'
@@ -35,15 +32,19 @@ export function checkSize() {
 
 /** Minimize/maximize window. */
 export function toggleMinMax() {
-  ipc.send(ipc.sendSync('isMaximized') ? 'unmaximize' : 'maximize')
+  if (numara.isMaximized()) {
+    numara.unmaximize()
+  } else {
+    numara.maximize()
+  }
 }
 
 /** Check for app updates */
 export function checkUpdates() {
   if (isElectron) {
-    ipc.send('checkUpdate')
+    numara.checkUpdate()
 
-    ipc.on('notifyUpdate', () => {
+    numara.notifyUpdate(() => {
       notify(
         'Updating Numara... <a class="notificationLink" onclick="document.querySelector(`#aboutButton`).click()">View update status</a>'
       )
@@ -51,7 +52,7 @@ export function checkUpdates() {
       $('#notificationDot').style.display = 'block'
     })
 
-    ipc.on('updateStatus', (event, status) => {
+    numara.updateStatus((event, status) => {
       if (status === 'ready') {
         $('#dialog-about-updateStatus').innerHTML = 'Restart Numara to finish updating.'
         $('#restartButton').style.display = 'inline-block'

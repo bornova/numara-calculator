@@ -1,7 +1,7 @@
 import { $, $all } from './common'
 import { cm, udfInput, uduInput } from './editor'
 import { notify } from './modal'
-import { ipc, isElectron } from './utils'
+import { isElectron } from './utils'
 
 /** Main context menus */
 export function inputContext() {
@@ -16,7 +16,7 @@ export function inputContext() {
       cm.listSelections().length > 1 || cm.listSelections()[0].anchor.line !== cm.listSelections()[0].head.line
     const hasAnswer = answer !== '' && answer !== 'Error' && answer !== 'Plot'
 
-    ipc.send('inputContextMenu', index, isEmpty, isLine, isSelection, isMultiLine, hasAnswer)
+    numara.inputContextMenu(index, isEmpty, isLine, isSelection, isMultiLine, hasAnswer)
   }, 20)
 }
 
@@ -27,13 +27,13 @@ export function outputContext(e) {
   const isEmpty = cm.getValue() === ''
   const hasAnswer = index !== null && answer !== '' && answer !== 'Error' && answer !== 'Plot'
 
-  ipc.send('outputContextMenu', index, isEmpty, hasAnswer)
+  numara.outputContextMenu(index, isEmpty, hasAnswer)
 }
 
 /** Textbox context menu. */
 export function textboxContext() {
   setTimeout(() => {
-    ipc.send('textboxContextMenu')
+    numara.textboxContextMenu()
   }, 20)
 }
 
@@ -129,10 +129,10 @@ if (isElectron) {
     el.addEventListener('contextmenu', textboxContext)
   })
 
-  ipc.on('copyLine', copyLine)
-  ipc.on('copyAnswer', copyAnswer)
-  ipc.on('copyLineWithAnswer', copyAnswer)
-  ipc.on('copyAllLines', copyAllLines)
-  ipc.on('copyAllAnswers', copyAllAnswers)
-  ipc.on('copyAll', copyAll)
+  numara.copyLine(copyLine)
+  numara.copyAnswer(copyAnswer)
+  numara.copyLineWithAnswer(copyAnswer)
+  numara.copyAllLines(copyAllLines)
+  numara.copyAllAnswers(copyAllAnswers)
+  numara.copyAll(copyAll)
 }

@@ -1,7 +1,8 @@
 const { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, nativeTheme, session, shell } = require('electron')
 const autoUpdater = require('electron-updater').autoUpdater
 const Store = require('electron-store')
-const fs = require('fs')
+const path = require('node:path')
+const fs = require('node:fs')
 
 const schema = {
   appHeight: { type: 'number', default: 480 },
@@ -25,11 +26,11 @@ let win
 
 function appWindow() {
   win = new BrowserWindow({
-    height: parseInt(dims.get('appHeight')),
-    width: parseInt(dims.get('appWidth')),
     backgroundColor: bg,
     frame: false,
     hasShadow: true,
+    height: parseInt(dims.get('appHeight')),
+    width: parseInt(dims.get('appWidth')),
     minHeight: 420,
     minWidth: 420,
     paintWhenInitiallyHidden: false,
@@ -37,9 +38,8 @@ function appWindow() {
     titleBarStyle: 'hiddenInset',
     useContentSize: true,
     webPreferences: {
-      contextIsolation: false,
+      preload: path.join(__dirname, 'preload.cjs'),
       devTools: !app.isPackaged,
-      nodeIntegration: true,
       spellcheck: false
     }
   })
@@ -71,6 +71,8 @@ function appWindow() {
 
     win.setHasShadow(true)
     win.show()
+
+    win.webContents.openDevTools()
   })
 
   win.webContents.setWindowOpenHandler(({ url }) => {
