@@ -426,6 +426,10 @@ text {
   width: 12px;
 }
 
+#dialog-settings .range .settingMod {
+  margin-left: -55px;
+}
+
 .set1 {
   padding-top: 1px;
 }
