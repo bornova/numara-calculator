@@ -4,6 +4,9 @@
     "node": true
   },
   "extends": ["eslint:recommended", "prettier"],
+  "globals": {
+    "numara": "readonly"
+  },
   "ignorePatterns": ["build", "dist"],
   "parserOptions": {
     "ecmaVersion": "latest",
