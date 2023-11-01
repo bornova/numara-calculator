@@ -40,6 +40,7 @@ contextBridge.exposeInMainWorld('numara', {
   close: () => {
     ipcRenderer.send('close')
   },
+
   // Print
   print: () => {
     ipcRenderer.send('print')
@@ -47,6 +48,7 @@ contextBridge.exposeInMainWorld('numara', {
   printReply: (callback) => {
     callback()
   },
+
   // Import calculations
   import: () => {
     ipcRenderer.send('import')
@@ -57,6 +59,7 @@ contextBridge.exposeInMainWorld('numara', {
   importDataError: (callback) => {
     ipcRenderer.on('importDataError', callback)
   },
+
   //Export calculations
   export: (arg1, arg2) => {
     ipcRenderer.send('export', arg1, arg2)
@@ -110,6 +113,7 @@ contextBridge.exposeInMainWorld('numara', {
   updateStatus: (callback) => {
     ipcRenderer.on('updateStatus', callback)
   },
+
   // Reset
   resetApp: () => {
     ipcRenderer.send('resetApp')
