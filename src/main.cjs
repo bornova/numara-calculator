@@ -72,7 +72,9 @@ function appWindow() {
     win.setHasShadow(true)
     win.show()
 
-    win.webContents.openDevTools()
+    if (!app.isPackaged) {
+      win.webContents.openDevTools()
+    }
   })
 
   win.webContents.setWindowOpenHandler(({ url }) => {
