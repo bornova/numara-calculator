@@ -71,22 +71,12 @@ function appWindow() {
     }
   })
 
-  win.on('maximize', () => {
-    win.webContents.send('isMax', true)
-  })
-
-  win.on('unmaximize', () => {
-    win.webContents.send('isMax', false)
-  })
+  win.on('maximize', () => win.webContents.send('isMax', true))
+  win.on('unmaximize', () => win.webContents.send('isMax', false))
 
   if (app.isPackaged) {
-    win.on('focus', () => {
-      globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {})
-    })
-
-    win.on('blur', () => {
-      globalShortcut.unregisterAll()
-    })
+    win.on('focus', () => globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {}))
+    win.on('blur', () => globalShortcut.unregisterAll())
   }
 }
 
@@ -97,55 +87,26 @@ app.setAppUserModelId(app.name)
 if (!app.requestSingleInstanceLock()) {
   app.quit()
 } else {
-  app.on('second-instance', () => {
-    win.focus()
-  })
+  app.on('second-instance', () => win.focus())
 }
 
-ipcMain.on('isDark', (event) => {
-  event.returnValue = nativeTheme.shouldUseDarkColors
-})
+ipcMain.on('isDark', (event) => (event.returnValue = nativeTheme.shouldUseDarkColors))
+ipcMain.on('setTheme', (event, mode) => config.set('theme', mode))
+nativeTheme.on('updated', () => win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors))
 
-ipcMain.on('setTheme', (event, mode) => {
-  config.set('theme', mode)
-})
+ipcMain.on('setOnTop', (event, bool) => win.setAlwaysOnTop(bool))
 
-nativeTheme.on('updated', () => {
-  win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors)
-})
-
-ipcMain.on('setOnTop', (event, bool) => {
-  win.setAlwaysOnTop(bool)
-})
-
-ipcMain.on('close', () => {
-  app.quit()
-})
-
-ipcMain.on('minimize', () => {
-  win.minimize()
-})
-
-ipcMain.on('maximize', () => {
-  win.maximize()
-})
-
-ipcMain.on('unmaximize', () => {
-  win.unmaximize()
-})
-
-ipcMain.on('isMaximized', (event) => {
-  event.returnValue = win.isMaximized()
-})
-
+ipcMain.on('close', () => app.quit())
+ipcMain.on('minimize', () => win.minimize())
+ipcMain.on('maximize', () => win.maximize())
+ipcMain.on('unmaximize', () => win.unmaximize())
+ipcMain.on('isMaximized', (event) => (event.returnValue = win.isMaximized()))
 ipcMain.on('isResized', (event) => {
   event.returnValue = win.getSize()[0] !== schema.appWidth.default || win.getSize()[1] !== schema.appHeight.default
 })
 
 ipcMain.on('print', (event) => {
-  win.webContents.print({}, (success) => {
-    event.sender.send('printReply', success ? 'Sent to printer' : false)
-  })
+  win.webContents.print({}, (success) => event.sender.send('printReply', success ? 'Sent to printer' : false))
 })
 
 ipcMain.on('resetApp', () => {
@@ -214,23 +175,17 @@ const commonContext = (event, index, isEmpty, isSelection, isMultiLine, hasAnswe
     {
       label: 'Copy line',
       enabled: hasAnswer && !isMultiLine,
-      click: () => {
-        event.sender.send('copyLine', index, false)
-      }
+      click: () => event.sender.send('copyLine', index, false)
     },
     {
       label: 'Copy answer',
       enabled: hasAnswer && !isMultiLine,
-      click: () => {
-        event.sender.send('copyAnswer', index, false)
-      }
+      click: () => event.sender.send('copyAnswer', index, false)
     },
     {
       label: 'Copy line with answer',
       enabled: hasAnswer && !isMultiLine,
-      click: () => {
-        event.sender.send('copyLineWithAnswer', index, true)
-      }
+      click: () => event.sender.send('copyLineWithAnswer', index, true)
     }
   ]
 
@@ -244,23 +199,17 @@ const commonContext = (event, index, isEmpty, isSelection, isMultiLine, hasAnswe
     {
       label: 'Copy all lines',
       enabled: !isEmpty,
-      click: () => {
-        event.sender.send('copyAllLines')
-      }
+      click: () => event.sender.send('copyAllLines')
     },
     {
       label: 'Copy all answers',
       enabled: !isEmpty,
-      click: () => {
-        event.sender.send('copyAllAnswers')
-      }
+      click: () => event.sender.send('copyAllAnswers')
     },
     {
       label: 'Copy all lines and answers',
       enabled: !isEmpty,
-      click: () => {
-        event.sender.send('copyAll')
-      }
+      click: () => event.sender.send('copyAll')
     },
     ...devTools
   ]
@@ -301,34 +250,14 @@ ipcMain.on('checkUpdate', () => {
   }
 })
 
-ipcMain.on('updateApp', () => {
-  setImmediate(() => {
-    autoUpdater.quitAndInstall(true, true)
-  })
-})
-
-autoUpdater.on('checking-for-update', () => {
-  win.webContents.send('updateStatus', 'Checking for update...')
-})
-
-autoUpdater.on('update-available', () => {
-  win.webContents.send('notifyUpdate')
-})
-
-autoUpdater.on('update-not-available', () => {
-  win.webContents.send('updateStatus', app.name + ' is up to date.')
-})
-
-autoUpdater.on('error', () => {
-  win.webContents.send('updateStatus', 'Error checking for update.')
-})
-
+ipcMain.on('updateApp', () => setImmediate(() => autoUpdater.quitAndInstall(true, true)))
+autoUpdater.on('checking-for-update', () => win.webContents.send('updateStatus', 'Checking for update...'))
+autoUpdater.on('update-available', () => win.webContents.send('notifyUpdate'))
+autoUpdater.on('update-not-available', () => win.webContents.send('updateStatus', app.name + ' is up to date.'))
+autoUpdater.on('error', () => win.webContents.send('updateStatus', 'Error checking for update.'))
+autoUpdater.on('update-downloaded', () => win.webContents.send('updateStatus', 'ready'))
 autoUpdater.on('download-progress', (progress) => {
   win.webContents.send('updateStatus', 'Downloading latest version... (' + Math.round(progress.percent) + '%)')
-})
-
-autoUpdater.on('update-downloaded', () => {
-  win.webContents.send('updateStatus', 'ready')
 })
 
 function resetSize() {
@@ -393,9 +322,7 @@ const menuTemplate = [
     submenu: [
       {
         label: 'Learn More',
-        click: () => {
-          shell.openExternal('https://github.com/bornova/numara-calculator')
-        }
+        click: () => shell.openExternal('https://github.com/bornova/numara-calculator')
       }
     ]
   }
