@@ -11,26 +11,23 @@ const schema = {
   theme: { type: 'string', default: 'system' }
 }
 
-const dims = new Store({
-  schema,
-  fileExtension: '',
-  clearInvalidConfig: true
-})
+const config = new Store({ schema, clearInvalidConfig: true, fileExtension: '' })
 
-const theme = dims.get('theme')
-const light = '#ffffff'
+const theme = config.get('theme')
+
 const dark = '#1f1f1f'
-const bg = theme === 'system' ? (nativeTheme.shouldUseDarkColors ? dark : light) : theme === 'dark' ? dark : light
+const light = '#ffffff'
 
 let win
 
 function appWindow() {
   win = new BrowserWindow({
-    backgroundColor: bg,
+    backgroundColor:
+      theme === 'system' ? (nativeTheme.shouldUseDarkColors ? dark : light) : theme === 'dark' ? dark : light,
     frame: false,
     hasShadow: true,
-    height: parseInt(dims.get('appHeight')),
-    width: parseInt(dims.get('appWidth')),
+    height: parseInt(config.get('appHeight')),
+    width: parseInt(config.get('appWidth')),
     minHeight: 420,
     minWidth: 420,
     paintWhenInitiallyHidden: false,
@@ -38,34 +35,16 @@ function appWindow() {
     titleBarStyle: 'hiddenInset',
     useContentSize: true,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.cjs'),
       devTools: !app.isPackaged,
+      preload: path.join(__dirname, 'preload.cjs'),
       spellcheck: false
     }
   })
 
   win.loadFile('build/index.html')
 
-  win.on('close', () => {
-    if (win.isMaximized()) {
-      dims.set('fullSize', true)
-    } else {
-      dims.set('fullSize', false)
-      dims.set('appWidth', win.getSize()[0])
-      dims.set('appHeight', win.getSize()[1])
-    }
-  })
-
-  win.on('maximize', () => {
-    win.webContents.send('isMax', true)
-  })
-
-  win.on('unmaximize', () => {
-    win.webContents.send('isMax', false)
-  })
-
   win.webContents.on('did-finish-load', () => {
-    if (dims.get('fullSize') & (process.platform === 'win32')) {
+    if (config.get('fullSize') & (process.platform === 'win32')) {
       win.webContents.send('fullscreen', true)
     }
 
@@ -83,6 +62,23 @@ function appWindow() {
     return { action: 'deny' }
   })
 
+  win.on('close', () => {
+    config.set('fullSize', win.isMaximized())
+
+    if (!win.isMaximized()) {
+      config.set('appWidth', win.getSize()[0])
+      config.set('appHeight', win.getSize()[1])
+    }
+  })
+
+  win.on('maximize', () => {
+    win.webContents.send('isMax', true)
+  })
+
+  win.on('unmaximize', () => {
+    win.webContents.send('isMax', false)
+  })
+
   if (app.isPackaged) {
     win.on('focus', () => {
       globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {})
@@ -94,6 +90,10 @@ function appWindow() {
   }
 }
 
+app.whenReady().then(appWindow)
+
+app.setAppUserModelId(app.name)
+
 if (!app.requestSingleInstanceLock()) {
   app.quit()
 } else {
@@ -102,44 +102,16 @@ if (!app.requestSingleInstanceLock()) {
   })
 }
 
-app.setAppUserModelId(app.name)
-
-app.whenReady().then(appWindow)
-
-autoUpdater.on('checking-for-update', () => {
-  win.webContents.send('updateStatus', 'Checking for update...')
+ipcMain.on('isDark', (event) => {
+  event.returnValue = nativeTheme.shouldUseDarkColors
 })
 
-autoUpdater.on('update-available', () => {
-  win.webContents.send('notifyUpdate')
+ipcMain.on('setTheme', (event, mode) => {
+  config.set('theme', mode)
 })
 
-autoUpdater.on('update-not-available', () => {
-  win.webContents.send('updateStatus', app.name + ' is up to date.')
-})
-
-autoUpdater.on('error', () => {
-  win.webContents.send('updateStatus', 'Error checking for update.')
-})
-
-autoUpdater.on('download-progress', (progress) => {
-  win.webContents.send('updateStatus', 'Downloading latest version... (' + Math.round(progress.percent) + '%)')
-})
-
-autoUpdater.on('update-downloaded', () => {
-  win.webContents.send('updateStatus', 'ready')
-})
-
-ipcMain.on('updateApp', () => {
-  setImmediate(() => {
-    autoUpdater.quitAndInstall(true, true)
-  })
-})
-
-ipcMain.on('checkUpdate', () => {
-  if (app.isPackaged) {
-    autoUpdater.checkForUpdatesAndNotify()
-  }
+nativeTheme.on('updated', () => {
+  win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors)
 })
 
 ipcMain.on('setOnTop', (event, bool) => {
@@ -170,54 +142,25 @@ ipcMain.on('isResized', (event) => {
   event.returnValue = win.getSize()[0] !== schema.appWidth.default || win.getSize()[1] !== schema.appHeight.default
 })
 
-ipcMain.on('resetSize', resetSize)
-
 ipcMain.on('print', (event) => {
   win.webContents.print({}, (success) => {
     event.sender.send('printReply', success ? 'Sent to printer' : false)
   })
 })
 
-ipcMain.on('setTheme', (event, mode) => {
-  dims.set('theme', mode)
-})
-
-ipcMain.on('isDark', (event) => {
-  event.returnValue = nativeTheme.shouldUseDarkColors
-})
-
 ipcMain.on('resetApp', () => {
   session.defaultSession.clearStorageData().then(() => {
-    dims.clear()
+    config.clear()
     app.relaunch()
     app.exit()
   })
 })
 
-ipcMain.on('export', (event, fileName, content) => {
-  const file = dialog.showSaveDialogSync(win, {
-    title: 'Save Calculations',
-    defaultPath: fileName,
-    filters: [{ name: 'Numara', extensions: ['numara'] }]
-  })
-
-  if (file) {
-    fs.writeFile(file, content, (err) => {
-      if (err) {
-        event.sender.send('exportDataError', err)
-        return
-      }
-
-      event.sender.send('exportData', 'Exported to: ' + file)
-    })
-  }
-})
-
 ipcMain.on('import', (event) => {
   const file = dialog.showOpenDialogSync(win, {
-    title: 'Open Calculations',
+    filters: [{ name: 'Numara', extensions: ['numara'] }],
     properties: ['openFile'],
-    filters: [{ name: 'Numara', extensions: ['numara'] }]
+    title: 'Open Calculations'
   })
 
   if (file) {
@@ -229,6 +172,25 @@ ipcMain.on('import', (event) => {
       }
 
       event.sender.send('importData', data, 'Imported from: ' + file[0])
+    })
+  }
+})
+
+ipcMain.on('export', (event, fileName, content) => {
+  const file = dialog.showSaveDialogSync(win, {
+    defaultPath: fileName,
+    filters: [{ name: 'Numara', extensions: ['numara'] }],
+    title: 'Save Calculations'
+  })
+
+  if (file) {
+    fs.writeFile(file, content, (err) => {
+      if (err) {
+        event.sender.send('exportDataError', err)
+        return
+      }
+
+      event.sender.send('exportData', 'Exported to: ' + file)
     })
   }
 })
@@ -333,8 +295,40 @@ ipcMain.on('textboxContextMenu', () => {
   contextMenu.popup()
 })
 
-nativeTheme.on('updated', () => {
-  win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors)
+ipcMain.on('checkUpdate', () => {
+  if (app.isPackaged) {
+    autoUpdater.checkForUpdatesAndNotify()
+  }
+})
+
+ipcMain.on('updateApp', () => {
+  setImmediate(() => {
+    autoUpdater.quitAndInstall(true, true)
+  })
+})
+
+autoUpdater.on('checking-for-update', () => {
+  win.webContents.send('updateStatus', 'Checking for update...')
+})
+
+autoUpdater.on('update-available', () => {
+  win.webContents.send('notifyUpdate')
+})
+
+autoUpdater.on('update-not-available', () => {
+  win.webContents.send('updateStatus', app.name + ' is up to date.')
+})
+
+autoUpdater.on('error', () => {
+  win.webContents.send('updateStatus', 'Error checking for update.')
+})
+
+autoUpdater.on('download-progress', (progress) => {
+  win.webContents.send('updateStatus', 'Downloading latest version... (' + Math.round(progress.percent) + '%)')
+})
+
+autoUpdater.on('update-downloaded', () => {
+  win.webContents.send('updateStatus', 'ready')
 })
 
 function resetSize() {
@@ -342,6 +336,8 @@ function resetSize() {
     win.setSize(schema.appWidth.default, schema.appHeight.default)
   }
 }
+
+ipcMain.on('resetSize', resetSize)
 
 const menuTemplate = [
   {
