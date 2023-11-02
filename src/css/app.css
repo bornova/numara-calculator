@@ -720,6 +720,7 @@ input:checked + .slider:before {
   right: 2px;
   bottom: 35px;
   width: 10px;
+  cursor: pointer;
 }
 
 /* UIkit Overrides */
