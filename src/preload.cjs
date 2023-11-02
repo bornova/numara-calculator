@@ -25,7 +25,7 @@ contextBridge.exposeInMainWorld('numara', {
 
   // Print
   print: () => ipcRenderer.send('print'),
-  printReply: (callback) => callback(),
+  printReply: (callback) => ipcRenderer.on('printReply', callback),
 
   // Import
   import: () => ipcRenderer.send('import'),
