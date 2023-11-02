@@ -62,7 +62,8 @@
     },
     "files": [
       "build",
-      "src/main.cjs"
+      "src/main.cjs",
+      "src/preload.cjs"
     ],
     "mac": {
       "category": "public.app-category.utilities",
