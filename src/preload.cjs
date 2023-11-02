@@ -10,11 +10,6 @@ contextBridge.exposeInMainWorld('numara', {
     ipcRenderer.on('themeUpdate', callback)
   },
 
-  // Always on top
-  setOnTop: (callback) => {
-    ipcRenderer.send('setOnTop', callback)
-  },
-
   // Window controls
   fullscreen: () => {
     ipcRenderer.on('fullscreen', (event, isFullscreen) => {
@@ -23,10 +18,11 @@ contextBridge.exposeInMainWorld('numara', {
       }
     })
   },
-  isResized: () => ipcRenderer.sendSync('isResized'),
-  isMaximized: () => ipcRenderer.sendSync('isMaximized'),
-  isMax: (callback) => {
-    ipcRenderer.on('isMax', callback)
+  setOnTop: (callback) => {
+    ipcRenderer.send('setOnTop', callback)
+  },
+  close: () => {
+    ipcRenderer.send('close')
   },
   minimize: () => {
     ipcRenderer.send('minimize')
@@ -37,8 +33,13 @@ contextBridge.exposeInMainWorld('numara', {
   unmaximize: () => {
     ipcRenderer.send('unmaximize')
   },
-  close: () => {
-    ipcRenderer.send('close')
+  isMax: (callback) => {
+    ipcRenderer.on('isMax', callback)
+  },
+  isMaximized: () => ipcRenderer.sendSync('isMaximized'),
+  isResized: () => ipcRenderer.sendSync('isResized'),
+  resetSize: () => {
+    ipcRenderer.send('resetSize')
   },
 
   // Print
@@ -49,7 +50,7 @@ contextBridge.exposeInMainWorld('numara', {
     callback()
   },
 
-  // Import calculations
+  // Import
   import: () => {
     ipcRenderer.send('import')
   },
@@ -60,7 +61,7 @@ contextBridge.exposeInMainWorld('numara', {
     ipcRenderer.on('importDataError', callback)
   },
 
-  //Export calculations
+  //Export
   export: (arg1, arg2) => {
     ipcRenderer.send('export', arg1, arg2)
   },
@@ -81,6 +82,7 @@ contextBridge.exposeInMainWorld('numara', {
   textboxContextMenu: () => {
     ipcRenderer.send('textboxContextMenu')
   },
+
   copyLine: (callback) => {
     ipcRenderer.on('copyLine', callback)
   },
@@ -117,8 +119,5 @@ contextBridge.exposeInMainWorld('numara', {
   // Reset
   resetApp: () => {
     ipcRenderer.send('resetApp')
-  },
-  resetSize: () => {
-    ipcRenderer.send('resetSize')
   }
 })
