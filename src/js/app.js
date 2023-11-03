@@ -43,7 +43,7 @@ if (isElectron) {
 } else {
   // Register service worker
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw').catch(() => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {
       console.log('Service worker registration failed')
     })
   }
