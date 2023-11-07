@@ -90,12 +90,11 @@ if (!app.requestSingleInstanceLock()) {
   app.on('second-instance', () => win.focus())
 }
 
-ipcMain.on('isDark', (event) => (event.returnValue = nativeTheme.shouldUseDarkColors))
-ipcMain.on('setTheme', (event, mode) => config.set('theme', mode))
 nativeTheme.on('updated', () => win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors))
 
+ipcMain.on('isDark', (event) => (event.returnValue = nativeTheme.shouldUseDarkColors))
+ipcMain.on('setTheme', (event, mode) => config.set('theme', mode))
 ipcMain.on('setOnTop', (event, bool) => win.setAlwaysOnTop(bool))
-
 ipcMain.on('close', () => app.quit())
 ipcMain.on('minimize', () => win.minimize())
 ipcMain.on('maximize', () => win.maximize())
@@ -251,6 +250,7 @@ ipcMain.on('checkUpdate', () => {
 })
 
 ipcMain.on('updateApp', () => setImmediate(() => autoUpdater.quitAndInstall(true, true)))
+
 autoUpdater.on('checking-for-update', () => win.webContents.send('updateStatus', 'Checking for update...'))
 autoUpdater.on('update-available', () => win.webContents.send('notifyUpdate'))
 autoUpdater.on('update-not-available', () => win.webContents.send('updateStatus', app.name + ' is up to date.'))

@@ -10,28 +10,31 @@ export const math = create(all)
 // Expose math to global scope for use in function-plot.
 window.math = math
 
+const nowFormat = 'D t'
+const nowWithDayFormat = 'ccc, D t'
+
+const todayFormat = 'D'
+const todayWithDayFormat = 'ccc, D'
+
 /** Calculate answers. */
 export function calculate() {
-  const avgs = []
-  const totals = []
-  const subtotals = []
-
-  let answers = ''
-  let answerCopy = ''
-
   if (app.refreshCM) {
     cm.refresh()
   }
 
+  let answers = ''
+  let answerCopy = ''
+
+  const dateTime = DateTime.now().setLocale(app.settings.locale)
+
   app.mathScope = {}
 
-  app.mathScope.now = app.settings.dateDay
-    ? DateTime.now().setLocale(app.settings.locale).toFormat('ccc, D t')
-    : DateTime.now().setLocale(app.settings.locale).toFormat('D t')
+  app.mathScope.now = dateTime.toFormat(app.settings.dateDay ? nowWithDayFormat : nowFormat)
+  app.mathScope.today = dateTime.toFormat(app.settings.dateDay ? todayWithDayFormat : todayFormat)
 
-  app.mathScope.today = app.settings.dateDay
-    ? DateTime.now().setLocale(app.settings.locale).toFormat('ccc, D')
-    : DateTime.now().setLocale(app.settings.locale).toFormat('D')
+  app.mathScope.avgs = []
+  app.mathScope.totals = []
+  app.mathScope.subtotals = []
 
   cm.eachLine((line) => {
     const cmLineNo = cm.getLineNumber(line)
@@ -101,9 +104,9 @@ export function calculate() {
           app.mathScope['line' + lineNo] = answer
 
           if (!isNaN(answer)) {
-            avgs.push(answer)
-            totals.push(answer)
-            subtotals.push(answer)
+            app.mathScope.avgs.push(answer)
+            app.mathScope.totals.push(answer)
+            app.mathScope.subtotals.push(answer)
           }
 
           answer = math.format(answer, {
@@ -126,7 +129,7 @@ export function calculate() {
             app.mathScope['line' + lineNo] = plotAns
           }
         } else {
-          subtotals.length = 0
+          app.mathScope.subtotals.length = 0
 
           answer = ''
         }
@@ -142,7 +145,7 @@ export function calculate() {
         }
       }
     } else {
-      subtotals.length = 0
+      app.mathScope.subtotals.length = 0
     }
 
     answers += `
@@ -154,67 +157,74 @@ export function calculate() {
   $('#output').innerHTML = answers
 
   store.set('input', cm.getValue())
+}
 
-  function solveLine(line) {
-    const avg = math.evaluate(avgs.length > 0 ? '(' + math.mean(avgs) + ')' : '0')
-    const total = math.evaluate(totals.length > 0 ? '(' + totals.join('+') + ')' : '0')
-    const subtotal = math.evaluate(subtotals.length > 0 ? '(' + subtotals.join('+') + ')' : '0')
+function solveLine(line) {
+  const avg = math.evaluate(app.mathScope.avgs.length > 0 ? '(' + math.mean(app.mathScope.avgs) + ')' : '0')
+  const total = math.evaluate(app.mathScope.totals.length > 0 ? '(' + app.mathScope.totals.join('+') + ')' : '0')
+  const subtotal = math.evaluate(
+    app.mathScope.subtotals.length > 0 ? '(' + app.mathScope.subtotals.join('+') + ')' : '0'
+  )
 
-    line = line
-      .replace(/\bans\b/g, app.mathScope.ans)
-      .replace(/\bnow\b/g, app.mathScope.now)
-      .replace(/\btoday\b/g, app.mathScope.today)
-      .replace(/\bavg\b/g, avg)
-      .replace(/\btotal\b/g, total)
-      .replace(/\bsubtotal\b/g, subtotal)
+  line = line
+    .replace(/\bans\b/g, app.mathScope.ans)
+    .replace(/\bnow\b/g, app.mathScope.now)
+    .replace(/\btoday\b/g, app.mathScope.today)
+    .replace(/\bavg\b/g, avg)
+    .replace(/\btotal\b/g, total)
+    .replace(/\bsubtotal\b/g, subtotal)
 
-    const lineNoMatch = line.match(/\bline\d+\b/g)
+  const lineNoMatch = line.match(/\bline\d+\b/g)
 
-    if (lineNoMatch) {
-      lineNoMatch.forEach((n) => {
-        line = app.mathScope[n] ? line.replace(n, app.mathScope[n]) : n
-      })
-    }
-
-    const dateTimeReg =
-      /[+-] * .* *(millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia)s?/g
-
-    if (line.match(dateTimeReg)) {
-      const lineDate = line.replace(dateTimeReg, '').trim()
-      const lineDateRight = line.replace(lineDate, '').trim()
-
-      const lineDateNow = app.settings.dateDay
-        ? DateTime.fromFormat(lineDate, 'ccc, D t', { locale: app.settings.locale })
-        : DateTime.fromFormat(lineDate, 'D t', { locale: app.settings.locale })
-
-      const lineDateToday = app.settings.dateDay
-        ? DateTime.fromFormat(lineDate, 'ccc, D', { locale: app.settings.locale })
-        : DateTime.fromFormat(lineDate, 'D', { locale: app.settings.locale })
-
-      const lineDateTime = lineDateNow.isValid ? lineDateNow : lineDateToday.isValid ? lineDateToday : null
-      const rightOfDate = String(math.evaluate(lineDateRight + ' to hours', app.mathScope))
-      const durHrs = Number(rightOfDate.split(' ')[0])
-
-      if (lineDateTime) {
-        const dtLine = lineDateTime
-          .plus({ hours: durHrs })
-          .toFormat(
-            lineDateNow.isValid ? (app.settings.dateDay ? 'ccc, D t' : 'D t') : app.settings.dateDay ? 'ccc, D' : 'D'
-          )
-
-        line = `"${dtLine}"`
-      } else {
-        return 'Invalid Date'
-      }
-    }
-
-    const pcntOfReg = /%[ ]*of[ ]*/g
-    const pcntOfValReg = /[\w.]*%[ ]*of[ ]*/g
-
-    line = line.match(pcntOfValReg) ? line.replace(pcntOfReg, '/100*') : line
-
-    return math.evaluate(line, app.mathScope)
+  if (lineNoMatch) {
+    lineNoMatch.forEach((n) => {
+      line = app.mathScope[n] ? line.replace(n, app.mathScope[n]) : n
+    })
   }
+
+  const dateTimeReg =
+    /[+-] * .* *(millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia)s?/g
+
+  if (line.match(dateTimeReg)) {
+    const lineDate = line.replace(dateTimeReg, '').trim()
+    const lineDateRight = line.replace(lineDate, '').trim()
+
+    const locale = { locale: app.settings.locale }
+
+    const lineDateNow = DateTime.fromFormat(lineDate, app.settings.dateDay ? nowWithDayFormat : nowFormat, locale)
+    const lineDateToday = DateTime.fromFormat(lineDate, app.settings.dateDay ? todayWithDayFormat : todayFormat, locale)
+
+    const lineDateTime = lineDateNow.isValid ? lineDateNow : lineDateToday.isValid ? lineDateToday : false
+    const rightOfDate = String(math.evaluate(lineDateRight + ' to hours', app.mathScope))
+    const durHrs = Number(rightOfDate.split(' ')[0])
+
+    if (lineDateTime) {
+      const dtLine = lineDateTime
+        .plus({ hours: durHrs })
+        .toFormat(
+          lineDateNow.isValid
+            ? app.settings.dateDay
+              ? nowWithDayFormat
+              : nowFormat
+            : app.settings.dateDay
+            ? todayWithDayFormat
+            : todayFormat
+        )
+
+      line = `"${dtLine}"`
+    } else {
+      return 'Invalid Date'
+    }
+  }
+
+  const pcntOfReg = /%[ ]*of[ ]*/g
+  const pcntOfValReg = /[\w.]*%[ ]*of[ ]*/g
+
+  if (line.match(pcntOfValReg)) {
+    line = line.replace(pcntOfReg, '/100*')
+  }
+
+  return math.evaluate(line, app.mathScope)
 }
 
 function stripAnswer(answer) {

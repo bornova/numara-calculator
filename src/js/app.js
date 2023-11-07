@@ -474,10 +474,6 @@ UIkit.util.on('#setswitch', 'beforeshow', (e) => {
 
 UIkit.util.on('#dialog-settings', 'beforeshow', settings.prep)
 
-UIkit.util.on('#dialog-settings', 'hidden', () => {
-  cm.focus()
-})
-
 $('#precision').addEventListener('input', () => {
   $('#precision-label').innerHTML = $('#precision').value
 })
@@ -513,7 +509,9 @@ UIkit.util.on('.uk-switcher', 'show', () => {
 
 // Focus on input when dialog is closed
 UIkit.util.on('.modal', 'hidden', () => {
-  cm.focus()
+  setTimeout(() => {
+    cm.focus()
+  }, 100)
 })
 
 // Plot dialog
@@ -614,11 +612,13 @@ outputPanel.addEventListener('scroll', () => {
   }
 
   outputScroll = false
-  $('#scrollTop').style.display = $('#output').scrollTop > 50 ? 'block' : 'none'
+
+  $('#scrollTop').style.display = outputPanel.scrollTop > 50 ? 'block' : 'none'
 })
 
 $('#scrollTop').addEventListener('click', () => {
-  $('#output').scrollTop = 0
+  inputPanel.scrollTop = 0
+  outputPanel.scrollTop = 0
 })
 
 // Mousetrap

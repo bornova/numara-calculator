@@ -4,6 +4,8 @@ import { calculate, formatAnswer, math } from './math'
 import UIkit from 'uikit'
 import CodeMirror from 'codemirror'
 
+import 'codemirror/mode/javascript/javascript'
+
 import 'codemirror/addon/dialog/dialog'
 import 'codemirror/addon/display/placeholder'
 import 'codemirror/addon/edit/closebrackets'
@@ -12,8 +14,6 @@ import 'codemirror/addon/hint/show-hint'
 import 'codemirror/addon/search/jump-to-line'
 import 'codemirror/addon/search/search'
 import 'codemirror/addon/search/searchcursor'
-
-import 'codemirror/mode/javascript/javascript'
 
 /** CodeMirror input panel. */
 export const cm = CodeMirror.fromTextArea($('#inputArea'), {
