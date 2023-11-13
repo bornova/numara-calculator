@@ -138,9 +138,6 @@ $('#actions').addEventListener('click', (e) => {
     case 'printButton':
       UIkit.tooltip('#printButton').hide()
 
-      $('#print-title').innerHTML = name
-      $('#printBox').innerHTML = $('#panel').innerHTML
-
       if (isElectron) {
         numara.print()
 
@@ -148,8 +145,6 @@ $('#actions').addEventListener('click', (e) => {
           if (response) {
             notify(response)
           }
-
-          $('#printBox').innerHTML = ''
         })
       } else {
         window.print()

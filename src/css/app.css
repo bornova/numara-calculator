@@ -157,6 +157,7 @@ text {
 
 .panel {
   display: flex;
+  align-content: flex-start;
   position: fixed;
   top: 50px;
   right: 8px;
@@ -1008,59 +1009,28 @@ pre {
 }
 
 /* Print style */
-.printArea {
-  display: none;
+@media print {
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .wrapper,
+  .panel {
+    position: inherit;
+  }
+
+  .divider {
+    height: auto;
+  }
+
+  [class*='header-'],
+  .actions,
+  .scrollTop {
+    display: none !important;
+  }
 }
 
-@media print {
-  .wrapper {
-    display: none;
-  }
-
-  .print-icon {
-    float: left;
-    margin: 0 0 15px 0;
-  }
-
-  .print-icon img {
-    height: 16px;
-    width: 16px;
-  }
-
-  .print-title {
-    color: #384859;
-    font-family: 'Numara';
-    font-size: 1.1em;
-    font-weight: 700;
-    text-align: center;
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
-
-  .printArea {
-    display: block;
-    position: absolute;
-    top: 10px;
-    right: 0px;
-    left: 0px;
-  }
-
-  .printHeader {
-    display: block;
-    margin-bottom: 20px;
-    width: 100%;
-  }
-
-  .printBox {
-    display: flex;
-    margin-top: 20px;
-    padding-top: 20px;
-  }
-
-  .output {
-    border-left: 1px solid #e9e9e9;
-    padding-left: 10px;
-  }
+@page {
+  margin: 15mm auto;
 }
