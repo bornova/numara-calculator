@@ -207,8 +207,8 @@ function solveLine(line) {
               ? nowWithDayFormat
               : nowFormat
             : app.settings.dateDay
-            ? todayWithDayFormat
-            : todayFormat
+              ? todayWithDayFormat
+              : todayFormat
         )
 
       line = `"${dtLine}"`
@@ -261,8 +261,8 @@ export function formatAnswer(answer, forCopy) {
     !a.includes('e') && !isNaN(a)
       ? Number(a).toLocaleString(app.settings.locale, digits) + b
       : a.match(/e[+-]?\d+/) && !isNaN(a.split('e')[0])
-      ? Number(a.split('e')[0]).toLocaleString(app.settings.locale, digits) + 'e' + answer.split('e')[1]
-      : stripAnswer(answer)
+        ? Number(a.split('e')[0]).toLocaleString(app.settings.locale, digits) + 'e' + answer.split('e')[1]
+        : stripAnswer(answer)
 
   return formattedAnswer
 }

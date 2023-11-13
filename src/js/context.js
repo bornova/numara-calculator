@@ -22,10 +22,10 @@ export function inputContext() {
 
 /** Output panel context menu. */
 export function outputContext(e) {
-  const index = e.srcElement.getAttribute('line-no') || e.srcElement.parentElement.getAttribute('line-no')
   const answer = e.srcElement.innerText
-  const isEmpty = cm.getValue() === ''
+  const index = e.srcElement.getAttribute('line-no') || e.srcElement.parentElement.getAttribute('line-no')
   const hasAnswer = index !== null && answer !== '' && answer !== 'Error' && answer !== 'Plot'
+  const isEmpty = cm.getValue() === ''
 
   numara.outputContextMenu(index, isEmpty, hasAnswer)
 }
@@ -43,9 +43,7 @@ export function copyLine(event, index) {
 
   const line = cm.getLine(index).trim()
 
-  navigator.clipboard.writeText(line).then(() => {
-    notify(`Copied Line ${index + 1} to clipboard.`)
-  })
+  navigator.clipboard.writeText(line).then(notify(`Copied Line ${index + 1} to clipboard.`))
 }
 
 /** Copy line answer. */
@@ -56,9 +54,9 @@ export function copyAnswer(event, index, withLines) {
   const answer = $('#output').children[index].children[0].dataset.copy
   const copiedText = withLines ? `${line} = ${answer}` : `${answer}`
 
-  navigator.clipboard.writeText(copiedText).then(() => {
-    notify(withLines ? `Copied Line ${index + 1} with answer to clipboard.` : `Copied '${answer}' to clipboard.`)
-  })
+  navigator.clipboard
+    .writeText(copiedText)
+    .then(notify(withLines ? `Copied Line ${index + 1} with answer to clipboard.` : `Copied '${answer}' to clipboard.`))
 }
 
 /** Copy all inputs. */
@@ -66,9 +64,7 @@ export function copyAllLines() {
   if (cm.getValue() === '') {
     notify('Nothing to copy.')
   } else {
-    navigator.clipboard.writeText(cm.getValue()).then(() => {
-      notify('Copied all lines to clipboard.')
-    })
+    navigator.clipboard.writeText(cm.getValue()).then(notify('Copied all lines to clipboard.'))
   }
 }
 
@@ -85,9 +81,7 @@ export function copyAllAnswers() {
       copiedOutputs += `${$('#output').children[index].innerText}\n`
     })
 
-    navigator.clipboard.writeText(copiedOutputs).then(() => {
-      notify('Copied all answers to clipboard.')
-    })
+    navigator.clipboard.writeText(copiedOutputs).then(notify('Copied all answers to clipboard.'))
   }
 }
 
@@ -110,9 +104,7 @@ export function copyAll() {
         : '\n'
     })
 
-    navigator.clipboard.writeText(copiedCalc).then(() => {
-      notify('Copied all calculations to clipboard.')
-    })
+    navigator.clipboard.writeText(copiedCalc).then(notify('Copied all calculations to clipboard.'))
   }
 }
 

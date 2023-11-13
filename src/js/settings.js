@@ -197,8 +197,8 @@ export const settings = {
             : 'light'
           : 'light'
         : app.settings.theme === 'light'
-        ? 'light'
-        : 'dark'
+          ? 'light'
+          : 'dark'
 
     $('#style').setAttribute('href', 'css/' + appTheme + '.css')
     $('#numaraLogo').setAttribute('src', 'assets/logo-' + appTheme + '.png')
@@ -211,8 +211,8 @@ export const settings = {
             : 'default'
           : 'default'
         : app.settings.theme === 'light'
-        ? 'default'
-        : 'material-darker'
+          ? 'default'
+          : 'material-darker'
 
     udfInput.setOption('theme', udfuTheme)
     uduInput.setOption('theme', udfuTheme)
