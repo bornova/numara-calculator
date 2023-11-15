@@ -1025,6 +1025,7 @@ pre {
   .printTitle {
     font-family: 'Numara';
     font-size: 1.1em;
+    padding-bottom: 10px;
     text-align: center;
   }
 
@@ -1070,5 +1071,5 @@ pre {
 }
 
 @page {
-  margin: 15mm auto;
+  margin: 10mm auto;
 }
