@@ -1009,23 +1009,61 @@ pre {
 }
 
 /* Print style */
+.printArea {
+  display: none;
+}
+
 @media print {
-  * {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+  .wrapper {
+    display: none;
   }
 
-  .wrapper,
-  .panel {
-    position: inherit;
+  .printArea {
+    display: block;
   }
 
-  .divider {
-    height: auto;
+  .printTitle {
+    font-family: 'Numara';
+    font-size: 1.1em;
+    text-align: center;
   }
 
-  [class*='header-'],
-  .actions,
+  .printTable {
+    font-family: 'Roboto Mono', monospace;
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .printTable tr:nth-child(3) {
+    text-align: right;
+  }
+
+  .printAlignLeft {
+    border-left: 1px solid #eaeaea;
+  }
+
+  .printAlignRight {
+    text-align: right;
+  }
+
+  .printTable tr td {
+    padding: 0px 10px;
+    vertical-align: top;
+  }
+
+  .printTable tr td:nth-child(1) {
+    padding: 3px 0;
+    width: auto;
+  }
+
+  .printTable tr td:nth-child(2) {
+    padding: 3px 10px;
+  }
+
+  .printTable tr td:nth-child(3) {
+    padding: 3px 10px;
+  }
+
   .scrollTop {
     display: none !important;
   }

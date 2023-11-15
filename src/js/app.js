@@ -125,6 +125,8 @@ UIkit.mixin({ data: { delay: 500, offset: 5 } }, 'tooltip')
 
 // App button actions
 $('#actions').addEventListener('click', (e) => {
+  UIkit.tooltip('#' + e.target.id).hide()
+
   switch (e.target.id) {
     case 'clearButton':
       if (cm.getValue() !== '') {
@@ -136,19 +138,34 @@ $('#actions').addEventListener('click', (e) => {
 
       break
     case 'printButton':
-      UIkit.tooltip('#printButton').hide()
+      $('#printArea').innerHTML = `<div id="printTitle" class="printTitle">${name}</div>
+        <table id="printTable"
+          class="printTable"
+          style="
+            font-size: ${app.settings.fontSize};
+            font-weight: ${app.settings.fontWeight};
+            line-height: ${app.settings.lineHeight};"
+        >`
 
-      if (isElectron) {
-        numara.print()
+      cm.eachLine((line) => {
+        const lineNo = cm.getLineNumber(line)
+        const input = cm.getLine(lineNo)
+        const answer = $('#output').children[lineNo].innerText
 
-        numara.printReply((event, response) => {
-          if (response) {
-            notify(response)
-          }
-        })
-      } else {
-        window.print()
-      }
+        let row = `<tr>
+          ${app.settings.lineNumbers ? '<td>' + (lineNo + 1) + '</td>' : ''}
+          <td style="width:${app.settings.inputWidth}%;">${input}</td>
+          <td class="printAlign${app.settings.divider ? 'Left' : 'Right'}">${answer}</td>
+        </tr>`
+
+        $('#printTable').innerHTML += row
+      })
+
+      $('#printArea').innerHTML += `</table>`
+
+      window.print()
+
+      //$('#printArea').innerHTML = ''
 
       break
     case 'copyButton':
@@ -181,8 +198,6 @@ $('#actions').addEventListener('click', (e) => {
   }
 
   e.stopPropagation()
-
-  UIkit.tooltip('#' + e.target.id).hide()
 })
 
 if (isElectron) {
@@ -495,6 +510,10 @@ UIkit.util.on('#dialog-udfu', 'shown', () => {
 
   udfInput.setValue(udf)
   uduInput.setValue(udu)
+
+  setTimeout(() => {
+    UIkit.switcher('#udfuSwitcher').index() === 0 ? udfInput.focus() : uduInput.focus()
+  }, 100)
 })
 
 // Blur input when user defined switcher is shown

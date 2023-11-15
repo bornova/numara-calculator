@@ -372,10 +372,10 @@ line {
   color: #96b4c4 !important;
 }
 
-.dialog-udfu .CodeMirror {
-  border: 1px solid #333333 !important;
-}
-
 .CodeMirror-linenumber {
   color: #666;
+}
+
+.CodeMirror.cm-s-material-darker {
+  border: 1px solid #666666;
 }
