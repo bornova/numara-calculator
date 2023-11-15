@@ -1035,34 +1035,35 @@ pre {
     border-collapse: collapse;
   }
 
-  .printTable tr:nth-child(3) {
-    text-align: right;
-  }
-
-  .printAlignLeft {
-    border-left: 1px solid #eaeaea;
-  }
-
-  .printAlignRight {
-    text-align: right;
-  }
-
   .printTable tr td {
-    padding: 0px 10px;
+    padding-top: 3px;
+    padding-bottom: 3px;
     vertical-align: top;
   }
 
+  .printLineNumCol {
+    width: 1px;
+    color: #ccc !important;
+  }
+
+  .printAnswerLeft {
+    border-left: 1px solid #eaeaea;
+  }
+
+  .printAnswerRight {
+    text-align: right;
+  }
+
   .printTable tr td:nth-child(1) {
-    padding: 3px 0;
-    width: auto;
+    padding-right: 10px;
   }
 
-  .printTable tr td:nth-child(2) {
-    padding: 3px 10px;
+  .printTable tr td:last-child {
+    padding-left: 10px;
   }
 
-  .printTable tr td:nth-child(3) {
-    padding: 3px 10px;
+  .printRulers tr td {
+    border-bottom: 1px solid #eaeaea;
   }
 
   .scrollTop {
@@ -1071,5 +1072,5 @@ pre {
 }
 
 @page {
-  margin: 10mm auto;
+  margin: 15mm auto;
 }
