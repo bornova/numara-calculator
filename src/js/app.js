@@ -140,7 +140,7 @@ $('#actions').addEventListener('click', (e) => {
     case 'printButton':
       $('#printArea').innerHTML = `<div id="printTitle" class="printTitle">${name}</div>
         <table id="printTable"
-          class="printTable"
+          class="printTable ${app.settings.rulers ? 'printRulers' : ''}"
           style="
             font-size: ${app.settings.fontSize};
             font-weight: ${app.settings.fontWeight};
@@ -153,9 +153,9 @@ $('#actions').addEventListener('click', (e) => {
         const answer = $('#output').children[lineNo].innerText
 
         let row = `<tr>
-          ${app.settings.lineNumbers ? '<td>' + (lineNo + 1) + '</td>' : ''}
+          ${app.settings.lineNumbers ? '<td class="printLineNumCol">' + (lineNo + 1) + '</td>' : ''}
           <td style="width:${app.settings.inputWidth}%;">${input}</td>
-          <td class="printAlign${app.settings.divider ? 'Left' : 'Right'}">${answer}</td>
+          <td class="printAnswer${app.settings.divider ? 'Left' : 'Right'}">${answer}</td>
         </tr>`
 
         $('#printTable').innerHTML += row
@@ -165,7 +165,7 @@ $('#actions').addEventListener('click', (e) => {
 
       window.print()
 
-      //$('#printArea').innerHTML = ''
+      $('#printArea').innerHTML = ''
 
       break
     case 'copyButton':
@@ -406,6 +406,23 @@ document.addEventListener('click', (e) => {
       plot()
 
       break
+    case 'downloadPlot': {
+      $('.function-plot').setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+      const svgData = $('.function-plot').outerHTML
+      const preface = '<?xml version="1.0" standalone="no"?>\r\n'
+      const svgBlob = new Blob([preface, svgData], { type: 'image/svg+xml;charset=utf-8' })
+      var svgUrl = URL.createObjectURL(svgBlob)
+      var downloadLink = document.createElement('a')
+      downloadLink.href = svgUrl
+      downloadLink.download = name
+      $('#dialog-plot').appendChild(downloadLink)
+      downloadLink.click()
+      $('#dialog-plot').removeChild(downloadLink)
+
+      plot()
+
+      break
+    }
     case 'resetPlot':
       app.activePlot = null
 
