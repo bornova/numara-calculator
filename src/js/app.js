@@ -273,6 +273,13 @@ $('#output').addEventListener('click', (e) => {
   e.stopPropagation()
 })
 
+// Save calculation on Enter key
+$('#saveTitle').addEventListener('keyup', (e) => {
+  if (e.key === 'Enter' || e.keyCode === 13) {
+    $('#dialog-save-save').click()
+  }
+})
+
 // Clear input selections when clicked in output panel
 $('#output').addEventListener('mousedown', () => {
   const sels = document.getElementsByClassName('CodeMirror-selected')
@@ -492,6 +499,11 @@ $('#dialog-open').addEventListener('click', (e) => {
       populateSaved()
     })
   }
+})
+
+// Save dialog title focus on shown
+UIkit.util.on('#dialog-save', 'shown', () => {
+  $('#saveTitle').focus()
 })
 
 // Populate saved calculation
