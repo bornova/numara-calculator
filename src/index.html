@@ -46,14 +46,14 @@
       </div>
 
       <div id="actions" class="actions">
-        <div id="leftActions" class="leftActions">
+        <div id="leftActions" class="leftActions uk-flex-left">
           <a id="clearButton" class="action" title="Clear" uk-tooltip><i data-lucide="eraser"></i></a>
           <a id="printButton" class="action" title="Print" uk-tooltip><i data-lucide="printer"></i></a>
           <a id="copyButton" class="action" title="Copy calculations" uk-tooltip><i data-lucide="copy"></i></a>
           <a id="saveButton" class="action" title="Save" uk-tooltip><i data-lucide="save"></i></a>
           <a id="openButton" class="action" title="Open" uk-tooltip><i data-lucide="folder"></i></a>
         </div>
-        <div id="rightActions" class="rightActions">
+        <div id="rightActions" class="rightActions uk-flex-right">
           <a id="udfuButton" class="action" title="User functions and units" uk-tooltip><i data-lucide="braces"></i></a>
           <a id="settingsButton" class="action" title="Settings" uk-tooltip><i data-lucide="settings"></i></a>
           <a id="aboutButton" class="action" title="Info" uk-tooltip><i data-lucide="info"></i></a>
@@ -66,14 +66,13 @@
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
         <h2 class="uk-modal-title uk-text-center">Save Calculation</h2>
         <div><input id="saveTitle" class="textBox" type="text" maxlength="36" placeholder="Title (Optional)" /></div>
-        <div class="dialog-buttons uk-text-right"></div>
         <div uk-grid>
-          <div class="dialog-buttons uk-width-1-2 uk-text-left">
+          <div class="dialog-buttons uk-width-1-2 uk-flex-left">
             <a id="dialog-save-export" class="exportButton" title="Export Calculations" uk-tooltip>
               <i data-lucide="file-output"></i>Export
             </a>
           </div>
-          <div class="dialog-buttons uk-width-1-2 uk-text-right">
+          <div class="dialog-buttons uk-width-1-2 uk-flex-right">
             <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
             <button id="dialog-save-save" class="uk-button uk-button-primary uk-button-small">Save</button>
           </div>
@@ -85,14 +84,14 @@
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
         <h2 class="uk-modal-title uk-text-center">Open Calculation</h2>
         <div id="dialog-open-body" class="dialog-open-body uk-overflow-auto"></div>
-        <div class="dialog-buttons uk-text-right"></div>
+        <div class="dialog-buttons uk-flex-right"></div>
         <div uk-grid>
-          <div class="dialog-buttons uk-width-1-2 uk-text-left">
+          <div class="dialog-buttons uk-width-1-2 uk-flex-left">
             <a id="dialog-save-import" class="importButton" title="Import Calculations" uk-tooltip>
               <i data-lucide="file-input"></i>Import
             </a>
           </div>
-          <div class="dialog-buttons uk-width-1-2 uk-text-right">
+          <div class="dialog-buttons uk-width-1-2 uk-flex-right">
             <button id="dialog-open-deleteAll" class="uk-button uk-button-danger uk-button-small">Delete All</button>
             <button class="uk-button uk-button-primary uk-modal-close uk-button-small">Close</button>
           </div>
@@ -113,8 +112,8 @@
               <textarea id="udfInput" class="udfInput"></textarea>
             </div>
             <div uk-grid>
-              <div class="dialog-buttons uk-width-1-2 uk-text-left"></div>
-              <div class="dialog-buttons uk-width-1-2 uk-text-right">
+              <div class="dialog-buttons uk-width-1-2 uk-flex-left"></div>
+              <div class="dialog-buttons uk-width-1-2 uk-flex-right">
                 <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
                 <button id="dialog-udfu-save-f" class="uk-button uk-button-primary uk-button-small">Save</button>
               </div>
@@ -125,8 +124,8 @@
               <textarea id="uduInput" class="uduInput"></textarea>
             </div>
             <div uk-grid>
-              <div class="dialog-buttons uk-width-1-2 uk-text-left"></div>
-              <div class="dialog-buttons uk-width-1-2 uk-text-right">
+              <div class="dialog-buttons uk-width-1-2 uk-flex-left"></div>
+              <div class="dialog-buttons uk-width-1-2 uk-flex-right">
                 <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
                 <button id="dialog-udfu-save-u" class="uk-button uk-button-primary uk-button-small">Save</button>
               </div>
@@ -284,10 +283,10 @@
             <div class="uk-width-1-2 pr-lh">Precision</div>
             <div class="uk-text-right uk-width-1-2">
               <div class="uk-child-width-expand" uk-grid>
-                <div class="uk-text-right uk-width-1-5">
+                <div class="uk-text-right uk-width-1-6">
                   <span id="precision-label" class="uk-label precision"></span>
                 </div>
-                <div class="uk-text-right range uk-width-4-5 uk-position-relative">
+                <div class="uk-text-right range uk-width-5-6 uk-position-relative">
                   <input id="precision" class="uk-range settingItem" type="range" min="0" max="16" step="1" />
                 </div>
               </div>
@@ -297,10 +296,10 @@
             <div class="uk-width-1-2 pr-lh">Upper exponent limit</div>
             <div class="uk-text-right uk-width-1-2">
               <div class="uk-child-width-expand" uk-grid>
-                <div class="uk-text-right uk-width-1-5">
+                <div class="uk-text-right uk-width-1-6">
                   <span id="expUpper-label" class="uk-label expUpper"></span>
                 </div>
-                <div class="uk-text-right range uk-width-4-5 uk-position-relative">
+                <div class="uk-text-right range uk-width-5-6 uk-position-relative">
                   <input id="expUpper" class="uk-range settingItem" type="range" min="0" max="16" step="1" />
                 </div>
               </div>
@@ -310,10 +309,10 @@
             <div class="uk-width-1-2 pr-lh">Lower exponent limit</div>
             <div class="uk-text-right uk-width-1-2">
               <div class="uk-child-width-expand" uk-grid>
-                <div class="uk-text-right uk-width-1-5">
+                <div class="uk-text-right uk-width-1-6">
                   <span id="expLower-label" class="uk-label expLower"></span>
                 </div>
-                <div class="uk-text-right range uk-width-4-5 uk-position-relative">
+                <div class="uk-text-right range uk-width-5-6 uk-position-relative">
                   <input id="expLower" class="uk-range settingItem" type="range" min="-16" max="0" step="1" />
                 </div>
               </div>
@@ -487,13 +486,13 @@
         </div>
 
         <div uk-grid>
-          <div class="dialog-buttons uk-width-2-3 uk-text-left">
+          <div class="dialog-buttons uk-width-2-3 uk-flex-left">
             <span class="resetLabel">Reset:</span>
             <a id="dialog-settings-reset" class="resetButton" title="Reset all app settings and data" uk-tooltip>App</a>
             <a id="defaultSettingsButton" class="defButton" title="Restore default settings" uk-tooltip>Defaults</a>
             <a id="resetSizeButton" class="defButton" title="Restore window size" uk-tooltip>Size</a>
           </div>
-          <div class="dialog-buttons uk-width-1-3 uk-text-right">
+          <div class="dialog-buttons uk-width-1-3 uk-flex-right">
             <button class="uk-button uk-button-primary uk-modal-close uk-button-small">Close</button>
           </div>
         </div>
@@ -524,7 +523,7 @@
               <div><a id="helpLink" target="_blank">Help</a></div>
             </div>
           </div>
-          <div class="dialog-buttons uk-width-1-5 uk-text-right">
+          <div class="dialog-buttons uk-width-1-5 uk-flex-right">
             <button class="uk-button uk-button-primary uk-modal-close uk-button-small infoOK">OK</button>
           </div>
         </div>
@@ -533,33 +532,33 @@
 
     <div id="dialog-plot" class="modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-2xlarge">
-        <h2 id="plotTitle" class="uk-modal-title uk-text-center"></h2>
+        <h2 id="plotTitle" class="uk-modal-title uk-text-center plotTitle"></h2>
+
+        <div class="plotSwitches">
+          <label class="switch">
+            <input id="plotCrossModal" type="checkbox" />
+            <span class="slider round"></span>
+          </label>
+          <span class="switchText">Cross</span>
+          <label class="switch">
+            <input id="plotDerivativeModal" type="checkbox" />
+            <span class="slider round"></span>
+          </label>
+          <span class="switchText">Derivative</span>
+          <label class="switch">
+            <input id="plotGridModal" type="checkbox" />
+            <span class="slider round"></span>
+          </label>
+          <span class="switchText">Grid</span>
+        </div>
+
         <div id="plot"></div>
         <div uk-grid>
-          <div class="dialog-buttons uk-width-3-4 uk-text-left">
-            <div class="plotSwitches">
-              <label class="switch">
-                <input id="plotCrossModal" type="checkbox" />
-                <span class="slider round"></span>
-              </label>
-              <span class="switchText">Cross</span>
-              <label class="switch">
-                <input id="plotDerivativeModal" type="checkbox" />
-                <span class="slider round"></span>
-              </label>
-              <span class="switchText">Derivative</span>
-              <label class="switch">
-                <input id="plotGridModal" type="checkbox" />
-                <span class="slider round"></span>
-              </label>
-              <span class="switchText">Grid</span>
-              <span class="switchText">
-                <a id="resetPlot" title="Reset plot viewport" uk-tooltip>Reset Scale</a>
-              </span>
-            </div>
+          <div class="dialog-buttons uk-width-1-2 uk-flex-left uk-flex-middle">
+            <a id="resetPlot" title="Reset plot viewport" uk-tooltip>Reset Scale</a>
           </div>
-          <div class="dialog-buttons uk-width-1-4 uk-text-right">
-            <button id="downloadPlot" class="uk-button uk-button-default uk-button-small">Download SVG</button>
+          <div class="dialog-buttons uk-width-1-2 uk-flex-right">
+            <button id="exportPlot" class="uk-button uk-button-default uk-button-small">Export SVG</button>
             <button class="uk-button uk-button-primary uk-modal-close uk-button-small">Close</button>
           </div>
         </div>
@@ -570,7 +569,7 @@
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
         <h2 id="errTitle" class="errTitle"></h2>
         <span id="errMsg" class="errMsg"></span>
-        <div class="dialog-buttons uk-text-right">
+        <div class="dialog-buttons uk-flex-right">
           <button class="uk-button uk-button-primary uk-modal-close uk-button-small">OK</button>
         </div>
       </div>
@@ -580,7 +579,7 @@
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
         <h2 class="uk-modal-title">Are you sure?</h2>
         <span id="confirmMsg"></span>
-        <div class="dialog-buttons uk-text-right">
+        <div class="dialog-buttons uk-flex-right">
           <button id="confirm-yes" class="uk-button uk-button-primary uk-button-small">Yes</button>
           <button class="uk-button uk-button-primary uk-modal-close uk-button-small">No</button>
         </div>

@@ -272,7 +272,7 @@ text {
 }
 
 .leftActions {
-  display: block;
+  display: flex;
   min-width: 120px;
 }
 
@@ -281,9 +281,8 @@ text {
 }
 
 .rightActions {
-  display: block;
+  display: flex;
   min-width: 120px;
-  text-align: right;
 }
 
 .rightActions a {
@@ -328,7 +327,7 @@ text {
 }
 
 .dialog-buttons {
-  display: block;
+  display: flex;
   margin-top: 15px;
 }
 
@@ -428,7 +427,7 @@ text {
 }
 
 #dialog-settings .range .settingMod {
-  margin-left: -62px;
+  margin-left: -55px;
 }
 
 .set1 {
@@ -510,6 +509,7 @@ text {
 
 .dialog-about-links {
   display: flex;
+  flex: auto;
 }
 
 .dialog-about-links > div {
@@ -603,10 +603,6 @@ text {
     opacity 0.3s linear;
 }
 
-.range {
-  padding-left: 10px;
-}
-
 .pr-lh {
   line-height: 22px;
 }
@@ -671,8 +667,12 @@ text {
   width: 14px;
 }
 
+.plotTitle {
+  margin: 0;
+}
+
 .plotSwitches {
-  margin-top: 5px;
+  margin: 5px 0;
 }
 
 .slider {
@@ -808,7 +808,7 @@ input:checked + .slider:before {
 .uk-button {
   border-radius: 3px;
   line-height: 28px;
-  margin-left: 2px;
+  margin-left: 3px;
   padding: 0 10px;
   transition: 0s ease-in-out;
 }
@@ -865,16 +865,6 @@ input:checked + .slider:before {
   background-color: #4a4a4a;
   word-break: break-word;
   z-index: 1000000;
-}
-
-.uk-grid > * {
-  padding-left: 30px;
-}
-
-@media (min-width: 1200px) {
-  .uk-grid {
-    margin-left: -30px;
-  }
 }
 
 .uk-notification {
