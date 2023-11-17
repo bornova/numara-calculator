@@ -41,7 +41,7 @@
     "mousetrap": "^1.6.5",
     "mousetrap-global-bind": "^1.1.0",
     "prettier": "^3.1.0",
-    "uikit": "^3.17.9"
+    "uikit": "^3.17.8"
   },
   "dependencies": {
     "electron-store": "^8.1.0",
