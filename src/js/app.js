@@ -137,8 +137,11 @@ $('#actions').addEventListener('click', (e) => {
       }
 
       break
-    case 'printButton':
-      $('#printArea').innerHTML = `<div id="printTitle" class="printTitle">${name}</div>
+    case 'printButton': {
+      const printArea = document.createElement('div')
+
+      printArea.className = 'printArea'
+      printArea.innerHTML = `<div id="printTitle" class="printTitle">${name}</div>
         <table id="printTable"
           class="printTable ${app.settings.rulers ? 'printRulers' : ''}"
           style="
@@ -146,6 +149,8 @@ $('#actions').addEventListener('click', (e) => {
             font-weight: ${app.settings.fontWeight};
             line-height: ${app.settings.lineHeight};"
         >`
+
+      document.body.appendChild(printArea)
 
       cm.eachLine((line) => {
         const lineNo = cm.getLineNumber(line)
@@ -161,13 +166,14 @@ $('#actions').addEventListener('click', (e) => {
         $('#printTable').innerHTML += row
       })
 
-      $('#printArea').innerHTML += `</table>`
+      printArea.innerHTML += `</table>`
 
       window.print()
 
-      $('#printArea').innerHTML = ''
+      printArea.remove()
 
       break
+    }
     case 'copyButton':
       copyAll()
 
