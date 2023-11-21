@@ -223,6 +223,11 @@ text {
   color: #2196f3;
 }
 
+.uk-tooltip {
+  background-color: #eaeaea;
+  color: #000;
+}
+
 /* CodeMirror Overrides */
 .CodeMirror-linenumber {
   color: #ccc;

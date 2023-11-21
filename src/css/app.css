@@ -546,7 +546,7 @@ text {
 
 .dialog-about-copyright {
   display: block;
-  margin-top: 15px;
+  margin: 15px 0;
 }
 
 .plotOptions {
@@ -668,11 +668,11 @@ text {
 }
 
 .plotTitle {
-  margin: 0;
+  margin: 0 0 5px 0;
 }
 
 .plotSwitches {
-  margin: 5px 0;
+  margin: 0;
 }
 
 .slider {
@@ -862,7 +862,6 @@ input:checked + .slider:before {
 }
 
 .uk-tooltip {
-  background-color: #4a4a4a;
   word-break: break-word;
   z-index: 1000000;
 }

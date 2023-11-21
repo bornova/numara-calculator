@@ -269,6 +269,10 @@ line {
   color: #2196f3;
 }
 
+.uk-tooltip {
+  background-color: #000;
+}
+
 /* CodeMirror Overrides */
 .cm-s-numara {
   color: #e6e6e6 !important;
