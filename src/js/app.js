@@ -121,7 +121,7 @@ if (!store.get('udu')) {
 }
 
 // Tooltip defaults
-UIkit.mixin({ data: { delay: 500, offset: 5 } }, 'tooltip')
+UIkit.mixin({ data: { offset: 5 } }, 'tooltip')
 
 // App button actions
 $('#actions').addEventListener('click', (e) => {
