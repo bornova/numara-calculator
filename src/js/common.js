@@ -18,8 +18,8 @@ export const store = {
 export const app = {
   activePlot: null,
   currencyRates: {},
-  func: null,
   mathScope: {},
+  plotFunction: null,
   refreshCM: true,
   settings: null,
   udfList: [],
