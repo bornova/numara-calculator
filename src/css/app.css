@@ -277,7 +277,7 @@ text {
 }
 
 .leftActions a {
-  margin-right: 8px;
+  margin-right: 10px;
 }
 
 .rightActions {
@@ -286,7 +286,7 @@ text {
 }
 
 .rightActions a {
-  margin-left: 8px;
+  margin-left: 10px;
 }
 
 .leftActions a svg,
