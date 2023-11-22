@@ -255,7 +255,7 @@ $('#output').addEventListener('click', (e) => {
 
       break
     case 'plotButton': // Plot function
-      app.func = func.startsWith('line') ? app.mathScope[func] : func
+      app.plotFunction = func.startsWith('line') ? app.mathScope[func] : func
 
       try {
         $('#plotCrossModal').checked = app.settings.plotCross
@@ -420,22 +420,34 @@ document.addEventListener('click', (e) => {
 
       break
     case 'exportPlot': {
-      $('.function-plot').setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+      const exportPlot = async () => {
+        $('.function-plot').setAttribute('xmlns', 'http://www.w3.org/2000/svg')
 
-      const preface = '<?xml version="1.0" standalone="no"?>\r\n'
-      const svgData = $('.function-plot').outerHTML
-      const svgBlob = new Blob([preface, svgData], { type: 'image/svg+xml;charset=utf-8' })
-      const svgUrl = URL.createObjectURL(svgBlob)
-      const downloadLink = document.createElement('a')
+        const fileName = name + '_plot_' + app.plotFunction
+        const preface = '<?xml version="1.0" standalone="no"?>\r\n'
+        const svgData = $('.function-plot').outerHTML
+        const svgBlob = new Blob([preface, svgData], { type: 'image/svg+xml;charset=utf-8' })
 
-      downloadLink.href = svgUrl
-      downloadLink.download = name + '_plot'
+        if (window.showSaveFilePicker) {
+          const options = { suggestedName: fileName, types: [{ accept: { 'image/svg+xml': ['.svg'] } }] }
+          const handle = await window.showSaveFilePicker(options)
+          const writable = await handle.createWritable()
 
-      $('#dialog-plot').appendChild(downloadLink)
-      downloadLink.click()
-      $('#dialog-plot').removeChild(downloadLink)
+          await writable.write(svgBlob)
 
-      plot()
+          writable.close()
+        } else {
+          const downloadLink = document.createElement('a')
+
+          downloadLink.href = URL.createObjectURL(svgBlob)
+          downloadLink.download = fileName
+          downloadLink.click()
+
+          setTimeout(() => URL.revokeObjectURL(downloadLink.href), 60000)
+        }
+      }
+
+      exportPlot()
 
       break
     }
@@ -464,13 +476,13 @@ function populateSaved() {
 
     savedItems.forEach(([id, val]) => {
       $('#dialog-open-body').innerHTML += `
-          <div class="dialog-open-wrapper" id="${id}">
-            <div data-action="load">
-              <div class="dialog-open-title">${val[0]}</div>
-              <div class="dialog-open-date">${DateTime.fromFormat(id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
-            </div>
-            <span class="dialog-open-delete" data-action="delete"><i data-lucide="trash"></i></span>
-          </div>`
+        <div class="dialog-open-wrapper" id="${id}">
+          <div data-action="load">
+            <div class="dialog-open-title">${val[0]}</div>
+            <div class="dialog-open-date">${DateTime.fromFormat(id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
+          </div>
+          <span class="dialog-open-delete" data-action="delete"><i data-lucide="trash"></i></span>
+        </div>`
     })
 
     generateIcons()
