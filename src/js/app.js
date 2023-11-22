@@ -422,8 +422,8 @@ document.addEventListener('click', (e) => {
     case 'exportPlot': {
       $('.function-plot').setAttribute('xmlns', 'http://www.w3.org/2000/svg')
 
-      const svgData = $('.function-plot').outerHTML
       const preface = '<?xml version="1.0" standalone="no"?>\r\n'
+      const svgData = $('.function-plot').outerHTML
       const svgBlob = new Blob([preface, svgData], { type: 'image/svg+xml;charset=utf-8' })
       const svgUrl = URL.createObjectURL(svgBlob)
       const downloadLink = document.createElement('a')
