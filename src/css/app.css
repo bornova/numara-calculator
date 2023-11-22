@@ -813,6 +813,10 @@ input:checked + .slider:before {
   transition: 0s ease-in-out;
 }
 
+.uk-button:enabled:active {
+  transform: scale(0.98);
+}
+
 .uk-button-default,
 .uk-button-default:hover {
   color: inherit;
