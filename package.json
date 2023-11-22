@@ -27,7 +27,7 @@
   "devDependencies": {
     "codemirror": "^5.65.16",
     "deep-diff": "^1.0.2",
-    "electron": "^27.1.0",
+    "electron": "^27.1.2",
     "electron-builder": "^24.6.4",
     "esbuild": "^0.19.7",
     "esbuild-plugin-polyfill-node": "^0.3.0",
