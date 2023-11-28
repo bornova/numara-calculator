@@ -429,13 +429,17 @@ document.addEventListener('click', (e) => {
         const svgBlob = new Blob([preface, svgData], { type: 'image/svg+xml;charset=utf-8' })
 
         if (window.showSaveFilePicker) {
-          const options = { suggestedName: fileName, types: [{ accept: { 'image/svg+xml': ['.svg'] } }] }
-          const handle = await window.showSaveFilePicker(options)
-          const writable = await handle.createWritable()
+          try {
+            const options = { suggestedName: fileName, types: [{ accept: { 'image/svg+xml': ['.svg'] } }] }
+            const handle = await window.showSaveFilePicker(options)
+            const writable = await handle.createWritable()
 
-          await writable.write(svgBlob)
+            await writable.write(svgBlob)
 
-          writable.close()
+            writable.close()
+          } catch {
+            /* Ignore catch */
+          }
         } else {
           const downloadLink = document.createElement('a')
 
