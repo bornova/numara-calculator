@@ -10,7 +10,7 @@ import { settings } from './settings'
 import { applyUdfu } from './userDefined'
 import { checkSize, checkUpdates, isMac, isElectron, toggleMinMax } from './utils'
 
-import { author, description, homepage, name, version } from './../../package.json'
+import { author, description, homepage, name, productName, version } from './../../package.json'
 
 import { DateTime } from 'luxon'
 
@@ -423,7 +423,7 @@ document.addEventListener('click', (e) => {
       const exportPlot = async () => {
         $('.function-plot').setAttribute('xmlns', 'http://www.w3.org/2000/svg')
 
-        const fileName = name + '_plot_' + app.plotFunction
+        const fileName = productName + ' Plot ' + app.plotFunction
         const preface = '<?xml version="1.0" standalone="no"?>\r\n'
         const svgData = $('.function-plot').outerHTML
         const svgBlob = new Blob([preface, svgData], { type: 'image/svg+xml;charset=utf-8' })
