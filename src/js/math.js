@@ -98,7 +98,9 @@ export function calculate() {
           answerCopy = formatAnswer(answerCopyInit, true)
 
           if (answer.match(/\w\(x\)/)) {
-            let plotAns = (/\w\(x\)$/.test(answer) && line !== 'ans' ? line.trim() : answer.trim()).replace(/\s+/g, '')
+            let plotAns = (
+              /\w\(x\)$/.test(answer) && line !== 'ans' && !/\b(?:line\d+)\b/.test(line) ? line : answer
+            ).replace(/\s+/g, '')
 
             app.mathScope.ans = plotAns
             app.mathScope['line' + lineNo] = plotAns
