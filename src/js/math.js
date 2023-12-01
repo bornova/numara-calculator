@@ -125,7 +125,7 @@ export function calculate() {
 
     answers += `<div
         class="${app.settings.rulers ? 'ruler' : 'noRuler'}"
-        data-lineNo="${cmLineNo}"
+        data-line="${cmLineNo}"
         style="height:${cmLine.height - 1}px"
       >
         <span class="${answer && !answer.startsWith('<a') ? 'answer' : ''}" data-copy="${answerCopy}">${answer}</span>
