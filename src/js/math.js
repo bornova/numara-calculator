@@ -76,7 +76,7 @@ export function calculate() {
           answer = evaluate(line)
         }
 
-        if (answer !== undefined) {
+        if (answer || answer === 0) {
           app.mathScope.ans = answer
           app.mathScope['line' + lineNo] = answer
 
@@ -98,7 +98,7 @@ export function calculate() {
           answerCopy = formatAnswer(answerCopyInit, true)
 
           if (answer.match(/\w\(x\)/)) {
-            const plotAns = /\w\(x\)$/.test(answer) ? line.trim() : answer.trim()
+            let plotAns = (/\w\(x\)$/.test(answer) && line !== 'ans' ? line.trim() : answer.trim()).replace(/\s+/g, '')
 
             app.mathScope.ans = plotAns
             app.mathScope['line' + lineNo] = plotAns
@@ -111,12 +111,10 @@ export function calculate() {
           answer = ''
         }
       } catch (e) {
-        const errStr = String(e).replace(/'|"/g, '`')
-
         if (app.settings.lineErrors) {
           cm.addLineClass(cmLineNo, 'gutter', 'lineNoError')
 
-          answer = `<a class="lineError" data-line="${lineNo}" data-error="${errStr}">Error</a>`
+          answer = `<a class="lineError" data-line="${lineNo}" data-error="${String(e).replace(/'|"/g, '`')}">Error</a>`
         }
       }
     } else {
@@ -137,6 +135,7 @@ export function calculate() {
   store.set('input', cm.getValue())
 }
 
+/** Secondary evaluate method to try if math.evaluate fails */
 function evaluate(line) {
   if (line.match(/:/)) {
     try {
@@ -206,18 +205,19 @@ function stripAnswer(answer) {
 
 /**
  * Format answer.
+ *
  * @param {*} answer Value to format.
- * @param {boolean} forCopy Include thousands separator - True|False
+ * @param {boolean} separator Include thousands separator - True|False
  * @returns
  */
-export function formatAnswer(answer, forCopy) {
+export function formatAnswer(answer, separator) {
   answer = String(answer)
 
   const a = answer.trim().split(' ')[0]
   const b = answer.replace(a, '')
   const digits = {
     maximumFractionDigits: app.settings.precision,
-    useGrouping: forCopy ? app.settings.copyThouSep : app.settings.thouSep
+    useGrouping: separator ? app.settings.copyThouSep : app.settings.thouSep
   }
 
   const formattedAnswer =
