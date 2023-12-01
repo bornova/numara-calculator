@@ -4,6 +4,7 @@ import UIkit from 'uikit'
 
 /**
  * Show modal dialog for given id.
+ *
  * @param {string} id Modal Id.
  */
 export function showModal(id) {
@@ -12,6 +13,7 @@ export function showModal(id) {
 
 /**
  * Show error dialog.
+ *
  * @param {string} title Title of dialog box.
  * @param {string} e Error message to show.
  */
@@ -26,6 +28,7 @@ export function showError(title, err) {
 
 /**
  * Show app notifications.
+ *
  * @param {string} msg Notification to show.
  * @param {string} stat Notification status: primary | success | warning | danger
  */
@@ -40,6 +43,7 @@ export function notify(msg, stat) {
 
 /**
  * Show confirmation dialog.
+ *
  * @param {string} msg Confirmation message to show.
  * @param {function} action Function to run upon selecting Yes.
  */
