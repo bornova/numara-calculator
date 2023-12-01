@@ -245,8 +245,6 @@ if (isElectron) {
 
 // Output actions
 $('#output').addEventListener('click', (e) => {
-  const func = e.target.getAttribute('data-func')
-
   switch (e.target.className) {
     case 'answer':
       navigator.clipboard.writeText(e.target.dataset.copy)
@@ -255,18 +253,22 @@ $('#output').addEventListener('click', (e) => {
 
       break
     case 'plotButton': // Plot function
-      app.plotFunction = func.startsWith('line') ? app.mathScope[func] : func
+      {
+        const func = e.target.getAttribute('data-func')
 
-      try {
-        $('#plotCrossModal').checked = app.settings.plotCross
-        $('#plotDerivativeModal').checked = app.settings.plotDerivative
-        $('#plotGridModal').checked = app.settings.plotGrid
+        app.plotFunction = func.startsWith('line') ? app.mathScope[func] : func
 
-        plot()
+        try {
+          $('#plotCrossModal').checked = app.settings.plotCross
+          $('#plotDerivativeModal').checked = app.settings.plotDerivative
+          $('#plotGridModal').checked = app.settings.plotGrid
 
-        showModal('#dialog-plot')
-      } catch (error) {
-        showError('Error', error)
+          plot()
+
+          showModal('#dialog-plot')
+        } catch (error) {
+          showError('Error', error)
+        }
       }
 
       break
@@ -420,38 +422,20 @@ document.addEventListener('click', (e) => {
 
       break
     case 'exportPlot': {
-      const exportPlot = async () => {
-        $('.function-plot').setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+      $('.function-plot').setAttribute('xmlns', 'http://www.w3.org/2000/svg')
 
-        const fileName = productName + ' Plot ' + app.plotFunction
-        const preface = '<?xml version="1.0" standalone="no"?>\r\n'
-        const svgData = $('.function-plot').outerHTML
-        const svgBlob = new Blob([preface, svgData], { type: 'image/svg+xml;charset=utf-8' })
+      const fileName = productName + ' Plot ' + app.plotFunction.replace(/\s+/g, '')
+      const preface = '<?xml version="1.0" standalone="no"?>\r\n'
+      const svgData = $('.function-plot').outerHTML
+      const svgBlob = new Blob([preface, svgData], { type: 'image/svg+xml;charset=utf-8' })
 
-        if (window.showSaveFilePicker) {
-          try {
-            const options = { suggestedName: fileName, types: [{ accept: { 'image/svg+xml': ['.svg'] } }] }
-            const handle = await window.showSaveFilePicker(options)
-            const writable = await handle.createWritable()
+      const downloadLink = document.createElement('a')
 
-            await writable.write(svgBlob)
+      downloadLink.href = URL.createObjectURL(svgBlob)
+      downloadLink.download = fileName
+      downloadLink.click()
 
-            writable.close()
-          } catch {
-            /* Ignore catch */
-          }
-        } else {
-          const downloadLink = document.createElement('a')
-
-          downloadLink.href = URL.createObjectURL(svgBlob)
-          downloadLink.download = fileName
-          downloadLink.click()
-
-          setTimeout(() => URL.revokeObjectURL(downloadLink.href), 60000)
-        }
-      }
-
-      exportPlot()
+      setTimeout(() => URL.revokeObjectURL(downloadLink.href), 60000)
 
       break
     }

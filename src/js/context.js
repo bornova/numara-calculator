@@ -23,7 +23,7 @@ export function inputContext() {
 /** Output panel context menu. */
 export function outputContext(e) {
   const answer = e.srcElement.innerText
-  const index = e.srcElement.getAttribute('line-no') || e.srcElement.parentElement.getAttribute('line-no')
+  const index = e.srcElement.dataset.lineNo || e.srcElement.parentElement.dataset.lineNo
   const hasAnswer = index !== null && answer !== '' && answer !== 'Error' && answer !== 'Plot'
   const isEmpty = cm.getValue() === ''
 
