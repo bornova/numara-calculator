@@ -80,9 +80,9 @@ function appWindow() {
   }
 }
 
-app.whenReady().then(appWindow)
-
 app.setAppUserModelId(app.name)
+
+app.whenReady().then(appWindow)
 
 if (!app.requestSingleInstanceLock()) {
   app.quit()
@@ -147,6 +147,7 @@ ipcMain.on('export', (event, fileName, content) => {
     fs.writeFile(file, content, (err) => {
       if (err) {
         event.sender.send('exportDataError', err)
+
         return
       }
 
@@ -155,19 +156,16 @@ ipcMain.on('export', (event, fileName, content) => {
   }
 })
 
-const contextHeader = (index, isMultiLine, hasAnswer) => {
-  if (hasAnswer || index !== null) {
-    return [
-      { label: isMultiLine ? 'Multiple lines:' : `Line ${+index + 1}:`, enabled: false, click: () => {} },
-      { type: 'separator' },
-      { role: 'copy' },
-      { role: 'paste' },
-      { type: 'separator' }
-    ]
-  } else {
-    return [{ label: '', visible: false }]
-  }
-}
+const contextHeader = (index, isMultiLine, hasAnswer) =>
+  hasAnswer || index !== null
+    ? [
+        { label: isMultiLine ? 'Multiple lines:' : `Line ${+index + 1}:`, enabled: false, click: () => {} },
+        { type: 'separator' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { type: 'separator' }
+      ]
+    : [{ label: '', visible: false }]
 
 const commonContext = (event, index, isEmpty, isSelection, isMultiLine, hasAnswer) => {
   const context = [

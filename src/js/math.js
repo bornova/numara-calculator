@@ -39,6 +39,11 @@ export function calculate() {
     const cmLineNo = cm.getLineNumber(cmLine)
     const lineNo = cmLineNo + 1
 
+    let answer = ''
+    let line = cmLine.text.trim().split('//')[0].split('#')[0]
+
+    cm.removeLineClass(cmLine, 'gutter', 'lineNoError')
+
     if (app.settings.rulers) {
       cm.removeLineClass(cmLine, 'wrap', 'noRuler')
       cm.addLineClass(cmLine, 'wrap', 'ruler')
@@ -46,11 +51,6 @@ export function calculate() {
       cm.removeLineClass(cmLine, 'wrap', 'ruler')
       cm.addLineClass(cmLine, 'wrap', 'noRuler')
     }
-
-    cm.removeLineClass(cmLine, 'gutter', 'lineNoError')
-
-    let answer = ''
-    let line = cmLine.text.trim().split('//')[0].split('#')[0]
 
     if (line) {
       try {
@@ -140,7 +140,7 @@ function evaluate(line) {
   if (line.match(/:/)) {
     try {
       math.evaluate(line.split(':')[0])
-    } catch (e) {
+    } catch {
       line = line.substring(line.indexOf(':') + 1)
     }
   }

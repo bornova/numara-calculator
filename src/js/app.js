@@ -97,11 +97,11 @@ if (isElectron && !isMac) {
   }
 }
 
-// Initialize settings
-settings.initialize()
-
 // Generate app icons
 generateIcons()
+
+// Initialize settings
+settings.initialize()
 
 // Get exchange rates
 if (app.settings.currency) {
@@ -156,12 +156,12 @@ $('#actions').addEventListener('click', (e) => {
         const lineNo = cm.getLineNumber(line)
         const input = cm.getLine(lineNo)
         const answer = $('#output').children[lineNo].innerText
-
-        let row = `<tr>
-          ${app.settings.lineNumbers ? '<td class="printLineNumCol">' + (lineNo + 1) + '</td>' : ''}
-          <td style="width:${app.settings.inputWidth}%;">${input}</td>
-          <td class="printAnswer${app.settings.divider ? 'Left' : 'Right'}">${answer}</td>
-        </tr>`
+        const row = `
+          <tr>
+            ${app.settings.lineNumbers ? '<td class="printLineNumCol">' + (lineNo + 1) + '</td>' : ''}
+            <td style="width:${app.settings.inputWidth}%;">${input}</td>
+            <td class="printAnswer${app.settings.divider ? 'Left' : 'Right'}">${answer}</td>
+          </tr>`
 
         $('#printTable').innerHTML += row
       })
@@ -189,7 +189,7 @@ $('#actions').addEventListener('click', (e) => {
       showModal('#dialog-open')
 
       break
-    case 'udfuButton': // Open custom functions dialog
+    case 'udfuButton':
       showModal('#dialog-udfu')
 
       break
@@ -252,27 +252,26 @@ $('#output').addEventListener('click', (e) => {
       notify(`Copied '${e.target.dataset.copy}' to clipboard.`)
 
       break
-    case 'plotButton': // Plot function
-      {
-        const func = e.target.getAttribute('data-func')
+    case 'plotButton': {
+      const func = e.target.getAttribute('data-func')
 
-        app.plotFunction = func.startsWith('line') ? app.mathScope[func] : func
+      app.plotFunction = func.startsWith('line') ? app.mathScope[func] : func
 
-        try {
-          $('#plotCrossModal').checked = app.settings.plotCross
-          $('#plotDerivativeModal').checked = app.settings.plotDerivative
-          $('#plotGridModal').checked = app.settings.plotGrid
+      try {
+        $('#plotCrossModal').checked = app.settings.plotCross
+        $('#plotDerivativeModal').checked = app.settings.plotDerivative
+        $('#plotGridModal').checked = app.settings.plotGrid
 
-          plot()
+        plot()
 
-          showModal('#dialog-plot')
-        } catch (error) {
-          showError('Error', error)
-        }
+        showModal('#dialog-plot')
+      } catch (error) {
+        showError('Error', error)
       }
 
       break
-    case 'lineError': // Show line error
+    }
+    case 'lineError':
       showError('Error on Line ' + e.target.getAttribute('data-line'), e.target.getAttribute('data-error'))
 
       break
@@ -327,6 +326,7 @@ document.addEventListener('click', (e) => {
 
       break
     }
+
     case 'dialog-open-deleteAll':
       confirm('All saved calculations will be deleted.', () => {
         localStorage.removeItem('saved')
@@ -335,14 +335,17 @@ document.addEventListener('click', (e) => {
       })
 
       break
+
     case 'dialog-udfu-save-f':
       applyUdfu(udfInput.getValue().trim(), 'func')
 
       break
+
     case 'dialog-udfu-save-u':
       applyUdfu(uduInput.getValue().trim(), 'unit')
 
       break
+
     case 'defaultSettingsButton':
       confirm('All settings will revert back to defaults.', () => {
         app.settings = JSON.parse(JSON.stringify(settings.defaults))
@@ -355,6 +358,7 @@ document.addEventListener('click', (e) => {
       })
 
       break
+
     case 'dialog-settings-reset':
       confirm('All user settings and data will be lost.', () => {
         if (isElectron) {
@@ -366,20 +370,24 @@ document.addEventListener('click', (e) => {
       })
 
       break
+
     case 'resetSizeButton':
       if (isElectron) {
         numara.resetSize()
       }
 
       break
+
     case 'syntax':
       settings.toggleSubs()
 
       break
+
     case 'thouSep':
       settings.toggleSubs()
 
       break
+
     case 'localeWarn':
       showError(
         'Caution: Locale',
@@ -387,6 +395,7 @@ document.addEventListener('click', (e) => {
       )
 
       break
+
     case 'bigNumWarn':
       showError(
         'Caution: BigNumber Limitations',
@@ -396,6 +405,7 @@ document.addEventListener('click', (e) => {
       )
 
       break
+
     // Plot settings
     case 'plotCrossModal':
       app.settings.plotCross = $('#plotCrossModal').checked
@@ -405,6 +415,7 @@ document.addEventListener('click', (e) => {
       plot()
 
       break
+
     case 'plotDerivativeModal':
       app.settings.plotDerivative = $('#plotDerivativeModal').checked
 
@@ -413,6 +424,7 @@ document.addEventListener('click', (e) => {
       plot()
 
       break
+
     case 'plotGridModal':
       app.settings.plotGrid = $('#plotGridModal').checked
 
@@ -421,14 +433,14 @@ document.addEventListener('click', (e) => {
       plot()
 
       break
+
     case 'exportPlot': {
       $('.function-plot').setAttribute('xmlns', 'http://www.w3.org/2000/svg')
 
-      const fileName = productName + ' Plot ' + app.plotFunction.replace(/\s+/g, '')
+      const fileName = productName + ' Plot ' + app.plotFunction
       const preface = '<?xml version="1.0" standalone="no"?>\r\n'
       const svgData = $('.function-plot').outerHTML
       const svgBlob = new Blob([preface, svgData], { type: 'image/svg+xml;charset=utf-8' })
-
       const downloadLink = document.createElement('a')
 
       downloadLink.href = URL.createObjectURL(svgBlob)
@@ -439,13 +451,15 @@ document.addEventListener('click', (e) => {
 
       break
     }
+
     case 'resetPlot':
       app.activePlot = null
 
       plot()
 
       break
-    case 'restartButton': // Restart to update
+
+    case 'restartButton':
       numara.updateApp()
 
       break

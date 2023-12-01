@@ -16,9 +16,7 @@ export function checkLocale() {
         : navigator.language
       : app.settings.locale
 
-  const test = (1.11).toLocaleString(locale)
-
-  return test.match(/[,]/)
+  return (1.11).toLocaleString(locale).match(/[,]/)
 }
 
 /** Check window size. */
