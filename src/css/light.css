@@ -233,84 +233,88 @@ text {
   color: #ccc;
 }
 
-.cm-s-numara .CodeMirror-selected {
+.CodeMirror-selected {
   background: #c9e0f7 !important;
 }
 
-.cm-s-numara .CodeMirror-linenumber {
+.CodeMirror-linenumber {
   background-color: #ffffff !important;
 }
 
-.cm-s-numara .CodeMirror-scrollbar-filler,
-.cm-s-numara .CodeMirror-gutter-filler {
+.CodeMirror-scrollbar-filler,
+.CodeMirror-gutter-filler {
   background-color: #ffffff !important;
 }
 
-.cm-s-numara .CodeMirror-dialog-top {
+.CodeMirror-dialog-top {
   background-color: #ffffff !important;
 }
 
-.cm-s-numara .CodeMirror-matchingbracket {
+.CodeMirror-matchingbracket {
   color: #999999 !important;
 }
 
 .CodeMirror-hint:hover {
-  background-color: #eaeaea;
-  color: #162e44;
+  background-color: #eaeaea !important;
+  color: #162e44 !important;
 }
 
 li.CodeMirror-hint-active {
   background-color: #367ea1;
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
-.cm-s-numara .cm-currency {
+.cm-currency {
   color: #009688 !important;
 }
 
-.cm-s-numara .cm-constant {
+.cm-constant {
   color: #9c27b0 !important;
 }
 
-.cm-s-numara .cm-unit,
-.cm-s-numara .cm-udu {
+.cm-unit,
+.cm-udu {
   color: #005cc5 !important;
 }
 
-.cm-s-numara .cm-scope {
+.cm-scope {
   color: #be6317 !important;
 }
 
-.cm-s-numara .cm-lineNo {
+.cm-lineNo {
   color: #e06c75 !important;
 }
 
-.cm-s-numara .cm-number {
+.cm-number {
   color: #333333 !important;
 }
 
-.cm-s-numara .cm-operator {
+.cm-operator {
   color: #888888 !important;
 }
 
-.cm-s-numara .cm-comment {
+.cm-comment {
   color: #bebebe !important;
 }
 
-.cm-s-numara .cm-function {
+.cm-function {
   color: #6f42c1 !important;
 }
 
-.cm-s-numara .cm-udf {
+.cm-udf {
   color: #6f42c1 !important;
 }
 
-.cm-s-numara .cm-text {
+.cm-text {
   color: #333333 !important;
 }
 
-.cm-s-numara .cm-variable {
+.cm-variable {
   color: #57707c !important;
+}
+
+.cm-excel {
+  color: #197b43 !important;
 }
 
 .dialog-udfu .CodeMirror {
