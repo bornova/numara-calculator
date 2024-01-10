@@ -1,10 +1,10 @@
 import { $, $all, app } from './common'
 import { calculate, formatAnswer, math } from './math'
 
-import * as formulajs from '@formulajs/formulajs'
-
 import UIkit from 'uikit'
 import CodeMirror from 'codemirror'
+
+import * as formulajs from '@formulajs/formulajs'
 
 import 'codemirror/mode/javascript/javascript'
 
@@ -123,14 +123,13 @@ CodeMirror.defineMode('plain', () => ({
 }))
 
 // Codemirror autocomplete hints
-const numaraHints = [
-  { text: 'ans', className: 'cm-scope' },
-  { text: 'avg', className: 'cm-scope' },
-  { text: 'now', className: 'cm-scope' },
-  { text: 'subtotal', className: 'cm-scope' },
-  { text: 'today', className: 'cm-scope' },
-  { text: 'total', className: 'cm-scope' }
-]
+const numaraHints = []
+
+const scopeList = ['ans', 'avg', 'now', 'subtotal', 'today', 'total']
+
+scopeList.forEach((scope) => {
+  numaraHints.push({ text: scope, className: 'cm-scope' })
+})
 
 Object.getOwnPropertyNames(math).forEach((f) => {
   if (typeof math[f] === 'function' && Object.getOwnPropertyNames(math[f]).includes('signatures')) {
