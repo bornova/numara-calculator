@@ -4,6 +4,8 @@ import { calculate, formatAnswer, math } from './math'
 import UIkit from 'uikit'
 import CodeMirror from 'codemirror'
 
+import * as formulajs from '@formulajs/formulajs'
+
 import 'codemirror/mode/javascript/javascript'
 
 import 'codemirror/addon/dialog/dialog'
@@ -18,6 +20,7 @@ import 'codemirror/addon/search/searchcursor'
 /** CodeMirror input panel. */
 export const cm = CodeMirror.fromTextArea($('#inputArea'), {
   autofocus: true,
+  extraKeys: { 'Ctrl-Space': 'autocomplete' },
   inputStyle: 'textarea',
   mode: 'numara',
   singleCursorHeightPerLine: false,
@@ -80,6 +83,10 @@ CodeMirror.defineMode('numara', () => ({
       return 'lineNo'
     }
 
+    if (typeof formulajs[cmStream] === 'function') {
+      return 'excel'
+    }
+
     try {
       const val = math.evaluate(cmStream)
       const par = math.parse(cmStream)
@@ -116,12 +123,22 @@ CodeMirror.defineMode('plain', () => ({
 }))
 
 // Codemirror autocomplete hints
-const numaraHints = ['ans', 'avg', 'now', 'subtotal', 'today', 'total']
+const numaraHints = []
+
+const scopeList = ['ans', 'avg', 'now', 'subtotal', 'today', 'total']
+
+scopeList.forEach((scope) => {
+  numaraHints.push({ text: scope, className: 'cm-scope' })
+})
 
 Object.getOwnPropertyNames(math).forEach((f) => {
   if (typeof math[f] === 'function' && Object.getOwnPropertyNames(math[f]).includes('signatures')) {
-    numaraHints.push(f)
+    numaraHints.push({ text: f, className: 'cm-function' })
   }
+})
+
+Object.keys(formulajs).forEach((f) => {
+  numaraHints.push({ text: f, className: 'cm-excel' })
 })
 
 CodeMirror.commands.autocomplete = (cm) => {
@@ -150,7 +167,9 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
   const curWordRegex = new RegExp('^' + curWord, 'i')
 
   return {
-    list: (!curWord ? [] : numaraHints.filter((item) => item.match(curWordRegex))).sort(),
+    list: !curWord
+      ? []
+      : numaraHints.filter(({ text }) => text.match(curWordRegex)).sort((a, b) => a.text.localeCompare(b.text)),
     from: CodeMirror.Pos(cmCursor.line, start),
     to: CodeMirror.Pos(cmCursor.line, end)
   }
@@ -179,131 +198,146 @@ cm.on('cursorActivity', (cm) => {
 })
 
 cm.on('update', () => {
-  const funcs = $all('.cm-function')
+  try {
+    const funcs = $all('.cm-function')
 
-  if (funcs.length > 0 && app.settings.keywordTips) {
-    for (const f of funcs) {
-      try {
-        const obj = JSON.parse(JSON.stringify(math.help(f.innerText).toJSON()))
+    if (funcs.length > 0 && app.settings.keywordTips) {
+      for (const f of funcs) {
+        try {
+          const obj = JSON.parse(JSON.stringify(math.help(f.innerText).toJSON()))
 
+          UIkit.tooltip(f, {
+            pos: f.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
+            title: obj.description
+          })
+        } catch (e) {
+          UIkit.tooltip(f, {
+            pos: f.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
+            title: 'Description not available'
+          })
+        }
+      }
+    }
+
+    const udfs = $all('.cm-udf')
+
+    if (udfs.length > 0 && app.settings.keywordTips) {
+      for (const f of udfs) {
         UIkit.tooltip(f, {
-          pos: 'top-left',
-          title: obj.description
-        })
-      } catch (e) {
-        UIkit.tooltip(f, {
-          pos: 'top-left',
-          title: 'Description not available.'
+          pos: f.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
+          title: 'User defined function'
         })
       }
     }
-  }
 
-  const udfs = $all('.cm-udf')
+    const udus = $all('.cm-udu')
 
-  if (udfs.length > 0 && app.settings.keywordTips) {
-    for (const f of udfs) {
-      UIkit.tooltip(f, {
-        pos: 'top-left',
-        title: 'User defined function.'
-      })
-    }
-  }
-
-  const udus = $all('.cm-udu')
-
-  if (udus.length > 0 && app.settings.keywordTips) {
-    for (const u of udus) {
-      UIkit.tooltip(u, {
-        pos: 'top-left',
-        title: 'User defined unit.'
-      })
-    }
-  }
-
-  const currencies = $all('.cm-currency')
-
-  if (currencies.length > 0 && app.settings.keywordTips) {
-    for (const c of currencies) {
-      try {
-        const currency = c.innerText.toLowerCase()
-        const currencyName = currency === 'usd' ? 'U.S. Dollar' : app.currencyRates[currency].name
-
-        UIkit.tooltip(c, {
-          pos: 'top-left',
-          title: currencyName
-        })
-      } catch (e) {
-        UIkit.tooltip(c, {
-          pos: 'top-left',
-          title: 'Description not available.'
+    if (udus.length > 0 && app.settings.keywordTips) {
+      for (const u of udus) {
+        UIkit.tooltip(u, {
+          pos: u.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
+          title: 'User defined unit'
         })
       }
     }
-  }
 
-  const units = $all('.cm-unit')
+    const currencies = $all('.cm-currency')
 
-  if (units.length > 0 && app.settings.keywordTips) {
-    for (const u of units) {
-      UIkit.tooltip(u, {
-        pos: 'top-left',
-        title: `Unit '${u.innerText}'`
-      })
+    if (currencies.length > 0 && app.settings.keywordTips) {
+      for (const c of currencies) {
+        try {
+          const currency = c.innerText.toLowerCase()
+          const currencyName = currency === 'usd' ? 'U.S. Dollar' : app.currencyRates[currency].name
+
+          UIkit.tooltip(c, {
+            pos: c.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
+            title: currencyName
+          })
+        } catch (e) {
+          UIkit.tooltip(c, {
+            pos: c.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
+            title: 'Description not available'
+          })
+        }
+      }
     }
-  }
 
-  const constants = $all('.cm-constant')
+    const units = $all('.cm-unit')
 
-  if (constants.length > 0 && app.settings.keywordTips) {
-    for (const c of constants) {
-      UIkit.tooltip(c, {
-        pos: 'top-left',
-        title: math.help(c.innerText).doc.description + ' (Constant)'
-      })
+    if (units.length > 0 && app.settings.keywordTips) {
+      for (const u of units) {
+        UIkit.tooltip(u, {
+          pos: u.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
+          title: `Unit '${u.innerText}'`
+        })
+      }
     }
-  }
 
-  const vars = $all('.cm-variable')
+    const constants = $all('.cm-constant')
 
-  if (vars.length > 0 && app.settings.keywordTips) {
-    for (const v of vars) {
-      if (app.mathScope[v.innerText] && typeof app.mathScope[v.innerText] !== 'function') {
-        let varTooltip
+    if (constants.length > 0 && app.settings.keywordTips) {
+      for (const c of constants) {
+        UIkit.tooltip(c, {
+          pos: c.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
+          title: math.help(c.innerText).doc.description + ' (Constant)'
+        })
+      }
+    }
+
+    const vars = $all('.cm-variable')
+
+    if (vars.length > 0 && app.settings.keywordTips) {
+      for (const v of vars) {
+        if (app.mathScope[v.innerText] && typeof app.mathScope[v.innerText] !== 'function') {
+          let varTooltip
+
+          try {
+            varTooltip = formatAnswer(math.evaluate(v.innerText, app.mathScope))
+          } catch (e) {
+            varTooltip = 'Undefined'
+          }
+
+          UIkit.tooltip(v, {
+            pos: v.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
+            title: varTooltip
+          })
+        }
+      }
+    }
+
+    const lineNos = $all('.cm-lineNo')
+
+    if (lineNos.length > 0 && app.settings.keywordTips) {
+      for (const ln of lineNos) {
+        let scopeTooltip
 
         try {
-          varTooltip = formatAnswer(math.evaluate(v.innerText, app.mathScope))
+          scopeTooltip =
+            typeof app.mathScope[ln.innerText] === 'function'
+              ? 'Function'
+              : formatAnswer(math.evaluate(ln.innerText, app.mathScope))
         } catch (e) {
-          varTooltip = 'Undefined'
+          scopeTooltip = 'Undefined'
         }
 
-        UIkit.tooltip(v, {
-          pos: 'top-left',
-          title: varTooltip
+        UIkit.tooltip(ln, {
+          pos: ln.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
+          title: scopeTooltip
         })
       }
     }
-  }
 
-  const lineNos = $all('.cm-lineNo')
+    const excel = $all('.cm-excel')
 
-  if (lineNos.length > 0 && app.settings.keywordTips) {
-    for (const ln of lineNos) {
-      let scopeTooltip
-
-      try {
-        scopeTooltip =
-          typeof app.mathScope[ln.innerText] === 'function'
-            ? 'Function'
-            : formatAnswer(math.evaluate(ln.innerText, app.mathScope))
-      } catch (e) {
-        scopeTooltip = 'Undefined'
+    if (excel.length > 0 && app.settings.keywordTips) {
+      for (const x of excel) {
+        UIkit.tooltip(x, {
+          pos: x.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
+          title: 'Excel function'
+        })
       }
-
-      UIkit.tooltip(ln, {
-        pos: 'top-left',
-        title: scopeTooltip
-      })
     }
+  } catch (e) {
+    /* No action */
   }
 })

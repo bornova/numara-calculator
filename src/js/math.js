@@ -5,7 +5,12 @@ import { checkLocale } from './utils'
 import { DateTime } from 'luxon'
 import { create, all } from 'mathjs'
 
+import * as formulajs from '@formulajs/formulajs'
+
 export const math = create(all)
+
+// Import Formula.js into MathJs
+math.import(formulajs, { silent: true, wrap: true })
 
 // Expose math to global scope for use in function-plot.
 window.math = math

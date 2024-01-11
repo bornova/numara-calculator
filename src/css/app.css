@@ -866,8 +866,13 @@ input:checked + .slider:before {
 }
 
 .uk-tooltip {
+  max-width: 50vw !important;
   word-break: break-word;
   z-index: 1000000;
+}
+
+.uk-tooltip > * {
+  width: 100% !important;
 }
 
 .uk-notification {
