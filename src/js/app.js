@@ -562,10 +562,6 @@ UIkit.util.on('#dialog-udfu', 'shown', () => {
 
   udfInput.setValue(udf)
   uduInput.setValue(udu)
-
-  setTimeout(() => {
-    UIkit.switcher('#udfuSwitcher').index() === 0 ? udfInput.focus() : uduInput.focus()
-  }, 100)
 })
 
 // Blur input when user defined switcher is shown
