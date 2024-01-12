@@ -1,10 +1,10 @@
 import { $, $all, app } from './common'
 import { calculate, formatAnswer, math } from './math'
 
+import * as formulajs from '@formulajs/formulajs'
+
 import UIkit from 'uikit'
 import CodeMirror from 'codemirror'
-
-import * as formulajs from '@formulajs/formulajs'
 
 import 'codemirror/mode/javascript/javascript'
 
