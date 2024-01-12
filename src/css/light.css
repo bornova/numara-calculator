@@ -233,24 +233,24 @@ text {
   color: #ccc;
 }
 
-.CodeMirror-selected {
+.cm-s-numara .CodeMirror-selected {
   background: #c9e0f7 !important;
 }
 
-.CodeMirror-linenumber {
+.cm-s-numara .CodeMirror-linenumber {
   background-color: #ffffff !important;
 }
 
-.CodeMirror-scrollbar-filler,
-.CodeMirror-gutter-filler {
+.cm-s-numara .CodeMirror-scrollbar-filler,
+.cm-s-numara .CodeMirror-gutter-filler {
   background-color: #ffffff !important;
 }
 
-.CodeMirror-dialog-top {
+.cm-s-numara .CodeMirror-dialog-top {
   background-color: #ffffff !important;
 }
 
-.CodeMirror-matchingbracket {
+.cm-s-numara .CodeMirror-matchingbracket {
   color: #999999 !important;
 }
 

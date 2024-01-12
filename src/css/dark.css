@@ -278,34 +278,34 @@ line {
   color: #e6e6e6 !important;
 }
 
-.CodeMirror-cursor {
+.cm-s-numara .CodeMirror-cursor {
   border-left: 1px solid #e6e6e6 !important;
 }
 
-.CodeMirror-selected {
+.cm-s-numara .CodeMirror-selected {
   background: #193552 !important;
 }
 
-.CodeMirror-linenumber {
+.cm-s-numara .CodeMirror-linenumber {
   background-color: #1f1f1f !important;
 }
 
-.CodeMirror-scrollbar-filler,
-.CodeMirror-gutter-filler {
+.cm-s-numara .CodeMirror-scrollbar-filler,
+.cm-s-numara .CodeMirror-gutter-filler {
   background-color: #1f1f1f !important;
 }
 
-.CodeMirror-dialog-top {
+.cm-s-numara .CodeMirror-dialog-top {
   background-color: #1f1f1f !important;
   border-color: #666666;
   color: #e6e6e6 !important;
 }
 
-button {
+.cm-s-numara button {
   color: #e6e6e6 !important;
 }
 
-.CodeMirror-matchingbracket {
+.cm-s-numara .CodeMirror-matchingbracket {
   color: #999999 !important;
 }
 
