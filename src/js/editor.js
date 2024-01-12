@@ -125,10 +125,18 @@ CodeMirror.defineMode('plain', () => ({
 // Codemirror autocomplete hints
 const numaraHints = []
 
-const scopeList = ['ans', 'avg', 'now', 'subtotal', 'today', 'total']
+const scopeList = [
+  { text: 'ans', desc: 'Answer from last calculated line' },
+  { text: 'avg', desc: 'Average of previous line values.  Numbers only.' },
+  { text: 'now', desc: 'Current date and time' },
+  { text: 'subtotal', desc: 'Total of all lines in previous block.  Numbers only.' },
+  { text: 'today', desc: 'Current date' },
+  { text: 'total', desc: 'Total of previous line values.  NUmbers only.' }
+]
 
 scopeList.forEach((scope) => {
-  numaraHints.push({ text: scope, className: 'cm-scope' })
+  scope.className = 'cm-scope'
+  numaraHints.push(scope)
 })
 
 Object.getOwnPropertyNames(math).forEach((f) => {
@@ -197,147 +205,156 @@ cm.on('cursorActivity', (cm) => {
   })
 })
 
+const ttPos = (el) => (el.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left')
+
 cm.on('update', () => {
-  try {
-    const funcs = $all('.cm-function')
+  const funcs = $all('.cm-function')
 
-    if (funcs.length > 0 && app.settings.keywordTips) {
-      for (const f of funcs) {
-        try {
-          const obj = JSON.parse(JSON.stringify(math.help(f.innerText).toJSON()))
+  if (funcs.length > 0 && app.settings.keywordTips) {
+    for (const f of funcs) {
+      try {
+        const obj = JSON.parse(JSON.stringify(math.help(f.innerText).toJSON()))
 
-          UIkit.tooltip(f, {
-            pos: f.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
-            title: obj.description
-          })
-        } catch (e) {
-          UIkit.tooltip(f, {
-            pos: f.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
-            title: 'Description not available'
-          })
-        }
-      }
-    }
-
-    const udfs = $all('.cm-udf')
-
-    if (udfs.length > 0 && app.settings.keywordTips) {
-      for (const f of udfs) {
         UIkit.tooltip(f, {
-          pos: f.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
-          title: 'User defined function'
+          pos: ttPos(f),
+          title: obj.description
+        })
+      } catch (e) {
+        UIkit.tooltip(f, {
+          pos: ttPos(f),
+          title: 'Description not available'
         })
       }
     }
+  }
 
-    const udus = $all('.cm-udu')
+  const udfs = $all('.cm-udf')
 
-    if (udus.length > 0 && app.settings.keywordTips) {
-      for (const u of udus) {
-        UIkit.tooltip(u, {
-          pos: u.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
-          title: 'User defined unit'
-        })
-      }
+  if (udfs.length > 0 && app.settings.keywordTips) {
+    for (const f of udfs) {
+      UIkit.tooltip(f, {
+        pos: ttPos(f),
+        title: 'User defined function'
+      })
     }
+  }
 
-    const currencies = $all('.cm-currency')
+  const udus = $all('.cm-udu')
 
-    if (currencies.length > 0 && app.settings.keywordTips) {
-      for (const c of currencies) {
-        try {
-          const currency = c.innerText.toLowerCase()
-          const currencyName = currency === 'usd' ? 'U.S. Dollar' : app.currencyRates[currency].name
-
-          UIkit.tooltip(c, {
-            pos: c.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
-            title: currencyName
-          })
-        } catch (e) {
-          UIkit.tooltip(c, {
-            pos: c.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
-            title: 'Description not available'
-          })
-        }
-      }
+  if (udus.length > 0 && app.settings.keywordTips) {
+    for (const u of udus) {
+      UIkit.tooltip(u, {
+        pos: ttPos(u),
+        title: 'User defined unit'
+      })
     }
+  }
 
-    const units = $all('.cm-unit')
+  const currencies = $all('.cm-currency')
 
-    if (units.length > 0 && app.settings.keywordTips) {
-      for (const u of units) {
-        UIkit.tooltip(u, {
-          pos: u.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
-          title: `Unit '${u.innerText}'`
-        })
-      }
-    }
+  if (currencies.length > 0 && app.settings.keywordTips) {
+    for (const c of currencies) {
+      try {
+        const currency = c.innerText.toLowerCase()
+        const currencyName = currency === 'usd' ? 'U.S. Dollar' : app.currencyRates[currency].name
 
-    const constants = $all('.cm-constant')
-
-    if (constants.length > 0 && app.settings.keywordTips) {
-      for (const c of constants) {
         UIkit.tooltip(c, {
-          pos: c.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
-          title: math.help(c.innerText).doc.description + ' (Constant)'
+          pos: ttPos(c),
+          title: currencyName
+        })
+      } catch (e) {
+        UIkit.tooltip(c, {
+          pos: ttPos(c),
+          title: 'Description not available'
         })
       }
     }
+  }
 
-    const vars = $all('.cm-variable')
+  const units = $all('.cm-unit')
 
-    if (vars.length > 0 && app.settings.keywordTips) {
-      for (const v of vars) {
-        if (app.mathScope[v.innerText] && typeof app.mathScope[v.innerText] !== 'function') {
-          let varTooltip
-
-          try {
-            varTooltip = formatAnswer(math.evaluate(v.innerText, app.mathScope))
-          } catch (e) {
-            varTooltip = 'Undefined'
-          }
-
-          UIkit.tooltip(v, {
-            pos: v.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
-            title: varTooltip
-          })
-        }
-      }
+  if (units.length > 0 && app.settings.keywordTips) {
+    for (const u of units) {
+      UIkit.tooltip(u, {
+        pos: ttPos(u),
+        title: `Unit '${u.innerText}'`
+      })
     }
+  }
 
-    const lineNos = $all('.cm-lineNo')
+  const constants = $all('.cm-constant')
 
-    if (lineNos.length > 0 && app.settings.keywordTips) {
-      for (const ln of lineNos) {
-        let scopeTooltip
+  if (constants.length > 0 && app.settings.keywordTips) {
+    for (const c of constants) {
+      UIkit.tooltip(c, {
+        pos: ttPos(c),
+        title: math.help(c.innerText).doc.description + ' (Constant)'
+      })
+    }
+  }
+
+  const vars = $all('.cm-variable')
+
+  if (vars.length > 0 && app.settings.keywordTips) {
+    for (const v of vars) {
+      if (app.mathScope[v.innerText] && typeof app.mathScope[v.innerText] !== 'function') {
+        let varTooltip
 
         try {
-          scopeTooltip =
-            typeof app.mathScope[ln.innerText] === 'function'
-              ? 'Function'
-              : formatAnswer(math.evaluate(ln.innerText, app.mathScope))
+          varTooltip = formatAnswer(math.evaluate(v.innerText, app.mathScope))
         } catch (e) {
-          scopeTooltip = 'Undefined'
+          varTooltip = 'Undefined'
         }
 
-        UIkit.tooltip(ln, {
-          pos: ln.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
-          title: scopeTooltip
+        UIkit.tooltip(v, {
+          pos: ttPos(v),
+          title: varTooltip
         })
       }
     }
+  }
 
-    const excel = $all('.cm-excel')
+  const lineNos = $all('.cm-lineNo')
 
-    if (excel.length > 0 && app.settings.keywordTips) {
-      for (const x of excel) {
-        UIkit.tooltip(x, {
-          pos: x.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left',
-          title: 'Excel function'
-        })
+  if (lineNos.length > 0 && app.settings.keywordTips) {
+    for (const ln of lineNos) {
+      let scopeTooltip
+
+      try {
+        scopeTooltip =
+          typeof app.mathScope[ln.innerText] === 'function'
+            ? 'Function'
+            : formatAnswer(math.evaluate(ln.innerText, app.mathScope))
+      } catch (e) {
+        scopeTooltip = 'Undefined'
       }
+
+      UIkit.tooltip(ln, {
+        pos: ttPos(ln),
+        title: scopeTooltip
+      })
     }
-  } catch (e) {
-    /* No action */
+  }
+
+  const scope = $all('.cm-scope')
+
+  if (scope.length > 0 && app.settings.keywordTips) {
+    for (const s of scope) {
+      UIkit.tooltip(s, {
+        pos: ttPos(s),
+        title: scopeList.filter((scope) => s.innerText === scope.text)[0].desc
+      })
+    }
+  }
+
+  const excel = $all('.cm-excel')
+
+  if (excel.length > 0 && app.settings.keywordTips) {
+    for (const x of excel) {
+      UIkit.tooltip(x, {
+        pos: ttPos(x),
+        title: 'Excel function'
+      })
+    }
   }
 })
