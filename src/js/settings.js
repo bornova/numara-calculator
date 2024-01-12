@@ -1,6 +1,7 @@
 import { $, $all, app, store } from './common'
 import { cm, udfInput, uduInput } from './editor'
 import { getRates } from './forex'
+import { generateIcons } from './icons'
 import { calculate, math } from './math'
 import { checkLocale, checkSize, isElectron } from './utils'
 
@@ -100,6 +101,8 @@ export const settings = {
       span.setAttribute('class', item.getAttribute('type') === 'checkbox' ? 'settingModToggle' : 'settingMod')
 
       span.appendChild(icon)
+
+      generateIcons()
 
       span.addEventListener('click', () => {
         const key = item.getAttribute('id')
