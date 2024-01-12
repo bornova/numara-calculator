@@ -1006,6 +1006,10 @@ pre {
   padding: 5px;
 }
 
+.CodeMirror-hints {
+  font-family: 'Roboto Mono', monospace;
+}
+
 /* Print style */
 .printArea {
   display: none;
