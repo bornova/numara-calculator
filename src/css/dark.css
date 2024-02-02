@@ -77,7 +77,11 @@ body {
 }
 
 .divider::before {
-  background-color: #333333 !important;
+  background-color: #3b3b3b !important;
+}
+
+.divider:hover::before {
+  background-color: #405062 !important;
 }
 
 .output {

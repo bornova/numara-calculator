@@ -84,6 +84,9 @@ body {
 .divider::before {
   background-color: #eaeaea !important;
 }
+.divider:hover::before {
+  background-color: #c9dce7 !important;
+}
 
 .output {
   color: #17586b;
