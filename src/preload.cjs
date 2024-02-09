@@ -55,6 +55,7 @@ contextBridge.exposeInMainWorld('numara', {
   checkUpdate: () => ipcRenderer.send('checkUpdate'),
   notifyUpdate: (callback) => ipcRenderer.on('notifyUpdate', callback),
   updateStatus: (callback) => ipcRenderer.on('updateStatus', callback),
+  updateError: (callback) => ipcRenderer.on('updateError', callback),
 
   // Developer Tools
   openDevTools: () => ipcRenderer.send('openDevTools'),
