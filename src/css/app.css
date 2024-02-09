@@ -413,12 +413,12 @@ text {
 }
 
 #dialog-settings .settingMod {
-  margin-left: -15px;
+  margin-left: -18px;
 }
 
 #dialog-settings .settingModToggle {
   margin-left: -18px;
-  margin-top: -2px;
+  margin-top: -1px;
 }
 
 #dialog-settings .settingMod > svg,
@@ -427,7 +427,7 @@ text {
 }
 
 #dialog-settings .range .settingMod {
-  margin-left: -55px;
+  margin-left: -50px;
 }
 
 .set1 {
@@ -840,7 +840,7 @@ input:checked + .slider:before {
 }
 
 #dialog-settings > .uk-width-medium {
-  width: 480px;
+  width: 420px;
 }
 
 .uk-width-large {
