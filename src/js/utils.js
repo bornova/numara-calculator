@@ -64,5 +64,9 @@ export function checkUpdates() {
         $('#dialog-about-updateStatus').innerHTML = status
       }
     })
+
+    numara.updateError((event, error) => {
+      console.log(error)
+    })
   }
 }
