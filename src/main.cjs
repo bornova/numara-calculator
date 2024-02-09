@@ -35,7 +35,6 @@ function appWindow() {
     titleBarStyle: 'hiddenInset',
     useContentSize: true,
     webPreferences: {
-      devTools: !app.isPackaged,
       preload: path.join(__dirname, 'preload.cjs'),
       spellcheck: false
     }
@@ -50,10 +49,6 @@ function appWindow() {
 
     win.setHasShadow(true)
     win.show()
-
-    if (!app.isPackaged) {
-      win.webContents.openDevTools()
-    }
   })
 
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -124,9 +119,9 @@ ipcMain.on('import', (event) => {
   })
 
   if (file) {
-    fs.readFile(file[0], 'utf8', (err, data) => {
-      if (err) {
-        event.sender.send('importDataError', err)
+    fs.readFile(file[0], 'utf8', (error, data) => {
+      if (error) {
+        event.sender.send('importDataError', error)
 
         return
       }
@@ -144,9 +139,9 @@ ipcMain.on('export', (event, fileName, content) => {
   })
 
   if (file) {
-    fs.writeFile(file, content, (err) => {
-      if (err) {
-        event.sender.send('exportDataError', err)
+    fs.writeFile(file, content, (error) => {
+      if (error) {
+        event.sender.send('exportDataError', error)
 
         return
       }
@@ -252,11 +247,16 @@ ipcMain.on('updateApp', () => setImmediate(() => autoUpdater.quitAndInstall(true
 autoUpdater.on('checking-for-update', () => win.webContents.send('updateStatus', 'Checking for update...'))
 autoUpdater.on('update-available', () => win.webContents.send('notifyUpdate'))
 autoUpdater.on('update-not-available', () => win.webContents.send('updateStatus', app.name + ' is up to date.'))
-autoUpdater.on('error', () => win.webContents.send('updateStatus', 'Error checking for update.'))
+autoUpdater.on('error', (error) => {
+  win.webContents.send('updateStatus', 'Error checking for update.')
+  win.webContents.send('logMessage', error)
+})
 autoUpdater.on('update-downloaded', () => win.webContents.send('updateStatus', 'ready'))
 autoUpdater.on('download-progress', (progress) => {
   win.webContents.send('updateStatus', 'Downloading latest version... (' + Math.round(progress.percent) + '%)')
 })
+
+ipcMain.on('openDevTools', () => win.webContents.openDevTools())
 
 function resetSize() {
   if (win) {

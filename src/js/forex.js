@@ -38,10 +38,10 @@ export function getRates() {
 
         calculate()
       })
-      .catch((e) => {
+      .catch((error) => {
         $('#lastUpdated').innerHTML = 'n/a'
 
-        notify('Failed to get exchange rates (' + e + ')', 'warning')
+        notify('Failed to get exchange rates (' + error + ')', 'warning')
       })
   } else {
     $('#lastUpdated').innerHTML = 'No internet connection.'

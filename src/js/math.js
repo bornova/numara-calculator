@@ -77,7 +77,7 @@ export function calculate() {
 
         try {
           answer = math.evaluate(line, app.mathScope)
-        } catch (e) {
+        } catch {
           answer = evaluate(line)
         }
 
@@ -92,9 +92,9 @@ export function calculate() {
           }
 
           answer = math.format(answer, {
-            notation: app.settings.expNotation ? 'exponential' : 'auto',
-            lowerExp: app.settings.expLower,
-            upperExp: app.settings.expUpper
+            notation: app.settings.notation,
+            lowerExp: +app.settings.expLower,
+            upperExp: +app.settings.expUpper
           })
 
           const answerCopyInit = answer
@@ -117,11 +117,11 @@ export function calculate() {
 
           answer = ''
         }
-      } catch (e) {
+      } catch (error) {
         if (app.settings.lineErrors) {
           cm.addLineClass(cmLineNo, 'gutter', 'lineNoError')
 
-          answer = `<a class="lineError" data-line="${lineNo}" data-error="${String(e).replace(/'|"/g, '`')}">Error</a>`
+          answer = `<a class="lineError" data-line="${lineNo}" data-error="${String(error).replace(/'|"/g, '`')}">Error</a>`
         }
       }
     } else {
@@ -219,6 +219,10 @@ function stripAnswer(answer) {
  */
 export function formatAnswer(answer, separator) {
   answer = String(answer)
+
+  if (['bin', 'hex', 'oct'].includes(app.settings.notation)) {
+    return stripAnswer(answer)
+  }
 
   const a = answer.trim().split(' ')[0]
   const b = answer.replace(a, '')

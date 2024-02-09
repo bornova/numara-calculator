@@ -55,7 +55,7 @@
         <div id="rightActions" class="rightActions uk-flex-right">
           <a id="udfuButton" class="action" title="User functions and units" uk-tooltip><i data-lucide="braces"></i></a>
           <a id="settingsButton" class="action" title="Settings" uk-tooltip><i data-lucide="settings"></i></a>
-          <a id="aboutButton" class="action" title="Info" uk-tooltip><i data-lucide="info"></i></a>
+          <a id="aboutButton" class="action" title="About" uk-tooltip><i data-lucide="info"></i></a>
           <span id="notificationDot" class="notificationDot" uk-tooltip><i data-lucide="circle"></i></span>
         </div>
       </div>
@@ -271,9 +271,9 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">Matrix type</div>
+            <div class="padTop1">Notation</div>
             <div class="uk-text-right uk-position-relative">
-              <select id="matrixType" class="uk-select settingItem"></select>
+              <select id="notation" class="uk-select settingItem"></select>
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
@@ -283,7 +283,7 @@
                 <div class="uk-text-right uk-width-1-6">
                   <span id="precision-label" class="uk-label precision"></span>
                 </div>
-                <div class="uk-text-right range uk-width-5-6 uk-position-relative">
+                <div class="uk-text-right range uk-position-relative">
                   <input id="precision" class="uk-range settingItem" type="range" min="0" max="16" step="1" />
                 </div>
               </div>
@@ -296,7 +296,7 @@
                 <div class="uk-text-right uk-width-1-6">
                   <span id="expUpper-label" class="uk-label expUpper"></span>
                 </div>
-                <div class="uk-text-right range uk-width-5-6 uk-position-relative">
+                <div class="uk-text-right range uk-position-relative">
                   <input id="expUpper" class="uk-range settingItem" type="range" min="0" max="16" step="1" />
                 </div>
               </div>
@@ -309,21 +309,19 @@
                 <div class="uk-text-right uk-width-1-6">
                   <span id="expLower-label" class="uk-label expLower"></span>
                 </div>
-                <div class="uk-text-right range uk-width-5-6 uk-position-relative">
+                <div class="uk-text-right range uk-position-relative">
                   <input id="expLower" class="uk-range settingItem" type="range" min="-16" max="0" step="1" />
                 </div>
               </div>
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div>Always use exponential notation</div>
+            <div class="padTop1">Matrix type</div>
             <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="expNotation" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
+              <select id="matrixType" class="uk-select settingItem"></select>
             </div>
           </div>
+
           <div class="uk-child-width-expand" uk-grid>
             <div>Predictable output</div>
             <div class="uk-text-right uk-position-relative">

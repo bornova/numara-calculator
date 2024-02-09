@@ -50,7 +50,6 @@ export const settings = {
     dateDay: false,
     divider: true,
     expLower: '-12',
-    expNotation: false,
     expUpper: '12',
     fontSize: '1.1rem',
     fontWeight: '400',
@@ -63,6 +62,7 @@ export const settings = {
     locale: 'system',
     matchBrackets: true,
     matrixType: 'Matrix',
+    notation: 'auto',
     notifyDuration: '5000',
     notifyLocation: 'bottom-center',
     numericOutput: 'number',
@@ -143,6 +143,7 @@ export const settings = {
 
     const matrixTypes = ['Matrix', 'Array']
     const numericOutputs = ['number', 'BigNumber', 'Fraction']
+    const notations = ['auto', 'engineering', 'exponential', 'fixed', '-', 'bin', 'hex', 'oct']
 
     $('#locale').innerHTML = ''
 
@@ -153,10 +154,20 @@ export const settings = {
     $('#precision-label').innerHTML = app.settings.precision
     $('#expLower-label').innerHTML = app.settings.expLower
     $('#expUpper-label').innerHTML = app.settings.expUpper
+
     $('#numericOutput').innerHTML = ''
 
     for (const n of numericOutputs) {
       $('#numericOutput').innerHTML += `<option value="${n}">${n.charAt(0).toUpperCase() + n.slice(1)}</option>`
+    }
+
+    $('#notation').innerHTML = ''
+
+    for (const n of notations) {
+      $('#notation').innerHTML +=
+        n === '-'
+          ? '<option disabled>-</option>'
+          : `<option value="${n}">${n.charAt(0).toUpperCase() + n.slice(1)}</option>`
     }
 
     $('#matrixType').innerHTML = ''
@@ -280,25 +291,35 @@ export const settings = {
     localeWarning()
     bigNumberWarning()
 
+    settings.toggleSubs()
+
     store.set('settings', app.settings)
   },
 
   /** Toggle settings sliders to enabled/disabled based on parent setting. */
   toggleSubs: () => {
-    $('#keywordTips').disabled = !$('#syntax').checked
-    $('#matchBrackets').disabled = !$('#syntax').checked
-    $('#copyThouSep').disabled = !$('#thouSep').checked
+    $('#expUpper').disabled = app.settings.notation !== 'auto'
+    $('#expLower').disabled = app.settings.notation !== 'auto'
+    $('#keywordTips').disabled = !app.settings.syntax
+    $('#matchBrackets').disabled = !app.settings.syntax
+    $('#copyThouSep').disabled = !app.settings.thouSep
 
-    $('#keywordTips').parentNode.style.opacity = $('#syntax').checked ? '1' : '0.5'
-    $('#matchBrackets').parentNode.style.opacity = $('#syntax').checked ? '1' : '0.5'
-    $('#copyThouSep').parentNode.style.opacity = $('#thouSep').checked ? '1' : '0.5'
+    $('#expUpper').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
+    $('#expLower').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
+    $('#keywordTips').parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
+    $('#matchBrackets').parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
+    $('#copyThouSep').parentNode.style.opacity = app.settings.thouSep ? '1' : '0.5'
 
-    $('#keywordTipsMod').style.pointerEvents = $('#syntax').checked ? 'auto' : 'none'
-    $('#matchBracketsMod').style.pointerEvents = $('#syntax').checked ? 'auto' : 'none'
-    $('#copyThouSepMod').style.pointerEvents = $('#thouSep').checked ? 'auto' : 'none'
+    $('#expUpperMod').style.pointerEvents = app.settings.notation === 'auto' ? 'auto' : 'none'
+    $('#expLowerMod').style.pointerEvents = app.settings.notation === 'auto' ? 'auto' : 'none'
+    $('#keywordTipsMod').style.pointerEvents = app.settings.syntax ? 'auto' : 'none'
+    $('#matchBracketsMod').style.pointerEvents = app.settings.syntax ? 'auto' : 'none'
+    $('#copyThouSepMod').style.pointerEvents = app.settings.thouSep ? 'auto' : 'none'
 
-    $('#keywordTipsMod').parentNode.style.opacity = $('#syntax').checked ? '1' : '0.5'
-    $('#matchBracketsMod').parentNode.style.opacity = $('#syntax').checked ? '1' : '0.5'
-    $('#copyThouSepMod').parentNode.style.opacity = $('#thouSep').checked ? '1' : '0.5'
+    $('#expUpperMod').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
+    $('#expLowerMod').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
+    $('#keywordTipsMod').parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
+    $('#matchBracketsMod').parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
+    $('#copyThouSepMod').parentNode.style.opacity = app.settings.thouSep ? '1' : '0.5'
   }
 }

@@ -2,7 +2,7 @@
   "name": "numara",
   "productName": "Numara",
   "description": "Numara Calculator",
-  "version": "4.4.3",
+  "version": "4.5.0",
   "author": {
     "name": "Timur Atalay",
     "email": "mail@numara.io",
@@ -28,21 +28,21 @@
     "@formulajs/formulajs": "^4.4.0",
     "codemirror": "^5.65.16",
     "deep-diff": "^1.0.2",
-    "electron": "^28.2.1",
+    "electron": "^28.2.2",
     "electron-builder": "^24.9.1",
     "esbuild": "^0.20.0",
     "esbuild-plugin-polyfill-node": "^0.3.0",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "fs-extra": "^11.2.0",
-    "function-plot": "^1.24.0",
+    "function-plot": "^1.24.3",
     "lucide": "^0.321.0",
     "luxon": "^3.4.4",
-    "mathjs": "^12.3.1",
+    "mathjs": "^12.3.2",
     "mousetrap": "^1.6.5",
     "mousetrap-global-bind": "^1.1.0",
-    "prettier": "^3.2.4",
-    "uikit": "^3.18.0"
+    "prettier": "^3.2.5",
+    "uikit": "^3.18.1"
   },
   "dependencies": {
     "electron-store": "^8.1.0",
@@ -83,9 +83,9 @@
       }
     },
     "win": {
-      "target": "nsis-web"
+      "target": "nsis"
     },
-    "nsisWeb": {
+    "nsis": {
       "deleteAppDataOnUninstall": true,
       "oneClick": false
     },
