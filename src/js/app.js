@@ -26,11 +26,11 @@ $('#dialog-about-copyright').innerHTML = `Copyright ©️ ${DateTime.local().yea
 $('#dialog-about-appVersion').innerHTML = isElectron
   ? `Version ${version}`
   : `Version ${version}
-      <div class="versionCtnr">
-        <div>
-          <a href="https://github.com/bornova/numara-calculator/releases" target="_blank">Download desktop version</a>
-        </div>
-      </div>`
+    <div class="versionCtnr">
+      <div>
+        <a href="https://github.com/bornova/numara-calculator/releases" target="_blank">Download desktop version</a>
+      </div>
+    </div>`
 $('#gitLink').setAttribute('href', homepage)
 $('#webLink').setAttribute('href', author.url)
 $('#licenseLink').setAttribute('href', homepage + '/blob/master/LICENSE')
@@ -44,7 +44,7 @@ if (isElectron) {
   // Register service worker
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(() => {
-      console.log('Service worker registration failed')
+      console.log('Service worker registration failed.')
     })
   }
 }
@@ -58,8 +58,8 @@ if (isElectron && !isMac) {
   $('#max').style.display = numara.isMaximized() ? 'none' : 'block'
   $('#unmax').style.display = numara.isMaximized() ? 'block' : 'none'
 
-  $('#winButtons').addEventListener('click', (e) => {
-    switch (e.target.id) {
+  $('#winButtons').addEventListener('click', (event) => {
+    switch (event.target.id) {
       case 'min':
         numara.minimize()
 
@@ -78,7 +78,7 @@ if (isElectron && !isMac) {
         break
     }
 
-    e.stopPropagation()
+    event.stopPropagation()
   })
 
   numara.isMax((event, isMax) => {
@@ -124,10 +124,10 @@ if (!store.get('udu')) {
 UIkit.mixin({ data: { offset: 5 } }, 'tooltip')
 
 // App button actions
-$('#actions').addEventListener('click', (e) => {
-  UIkit.tooltip('#' + e.target.id).hide()
+$('#actions').addEventListener('click', (event) => {
+  UIkit.tooltip('#' + event.target.id).hide()
 
-  switch (e.target.id) {
+  switch (event.target.id) {
     case 'clearButton':
       if (cm.getValue() !== '') {
         cm.setValue('')
@@ -203,7 +203,7 @@ $('#actions').addEventListener('click', (e) => {
       break
   }
 
-  e.stopPropagation()
+  event.stopPropagation()
 })
 
 if (isElectron) {
@@ -218,8 +218,8 @@ if (isElectron) {
     notify(msg, 'success')
   })
 
-  numara.exportDataError((event, err) => {
-    notify(err, 'danger')
+  numara.exportDataError((event, error) => {
+    notify(error, 'danger')
   })
 
   // Import calculations from file
@@ -235,8 +235,8 @@ if (isElectron) {
     notify(msg, 'success')
   })
 
-  numara.importDataError((event, err) => {
-    notify(err, 'danger')
+  numara.importDataError((event, error) => {
+    notify(error, 'danger')
   })
 } else {
   $('#dialog-save-export').remove()
@@ -244,16 +244,16 @@ if (isElectron) {
 }
 
 // Output actions
-$('#output').addEventListener('click', (e) => {
-  switch (e.target.className) {
+$('#output').addEventListener('click', (event) => {
+  switch (event.target.className) {
     case 'answer':
-      navigator.clipboard.writeText(e.target.dataset.copy)
+      navigator.clipboard.writeText(event.target.dataset.copy)
 
-      notify(`Copied '${e.target.dataset.copy}' to clipboard.`)
+      notify(`Copied '${event.target.dataset.copy}' to clipboard.`)
 
       break
     case 'plotButton': {
-      const func = e.target.getAttribute('data-func')
+      const func = event.target.getAttribute('data-func')
 
       app.plotFunction = func.startsWith('line') ? app.mathScope[func] : func
 
@@ -272,17 +272,17 @@ $('#output').addEventListener('click', (e) => {
       break
     }
     case 'lineError':
-      showError('Error on Line ' + e.target.getAttribute('data-line'), e.target.getAttribute('data-error'))
+      showError('Error on Line ' + event.target.getAttribute('data-line'), event.target.getAttribute('data-error'))
 
       break
   }
 
-  e.stopPropagation()
+  event.stopPropagation()
 })
 
 // Save calculation on Enter key
-$('#saveTitle').addEventListener('keyup', (e) => {
-  if (e.key === 'Enter' || e.keyCode === 13) {
+$('#saveTitle').addEventListener('keyup', (event) => {
+  if (event.key === 'Enter' || event.keyCode === 13) {
     $('#dialog-save-save').click()
   }
 })
@@ -297,8 +297,8 @@ $('#output').addEventListener('mousedown', () => {
 })
 
 // Prevent CM refresh if keydown
-document.addEventListener('keydown', (e) => {
-  app.refreshCM = !e.repeat
+document.addEventListener('keydown', (event) => {
+  app.refreshCM = !event.repeat
 })
 
 document.addEventListener('keyup', () => {
@@ -306,8 +306,8 @@ document.addEventListener('keyup', () => {
 })
 
 // Dialog button actions
-document.addEventListener('click', (e) => {
-  switch (e.target.id) {
+document.addEventListener('click', (event) => {
+  switch (event.target.id) {
     case 'dialog-save-save': {
       const id = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
       const savedItems = store.get('saved') || {}
@@ -375,16 +375,6 @@ document.addEventListener('click', (e) => {
       if (isElectron) {
         numara.resetSize()
       }
-
-      break
-
-    case 'syntax':
-      settings.toggleSubs()
-
-      break
-
-    case 'thouSep':
-      settings.toggleSubs()
 
       break
 
@@ -495,11 +485,11 @@ function populateSaved() {
 }
 
 // Open saved calculations dialog actions
-$('#dialog-open').addEventListener('click', (e) => {
+$('#dialog-open').addEventListener('click', (event) => {
   const saved = store.get('saved')
 
-  if (e.target.parentNode.getAttribute('data-action') === 'load') {
-    let pid = e.target.parentNode.parentNode.id
+  if (event.target.parentNode.getAttribute('data-action') === 'load') {
+    let pid = event.target.parentNode.parentNode.id
 
     cm.setValue(saved[pid][1])
 
@@ -508,8 +498,8 @@ $('#dialog-open').addEventListener('click', (e) => {
     UIkit.modal('#dialog-open').hide()
   }
 
-  if (e.target.getAttribute('data-action') === 'delete') {
-    let pid = e.target.parentNode.id
+  if (event.target.getAttribute('data-action') === 'delete') {
+    let pid = event.target.parentNode.id
 
     confirm('Calculation "' + saved[pid][0] + '" will be deleted.', () => {
       delete saved[pid]
@@ -530,8 +520,8 @@ UIkit.util.on('#dialog-save', 'shown', () => {
 UIkit.util.on('#dialog-open', 'beforeshow', populateSaved)
 
 // Initiate settings dialog
-UIkit.util.on('#setswitch', 'beforeshow', (e) => {
-  e.stopPropagation()
+UIkit.util.on('#setswitch', 'beforeshow', (event) => {
+  event.stopPropagation()
 })
 
 UIkit.util.on('#dialog-settings', 'beforeshow', settings.prep)
@@ -606,18 +596,18 @@ divider.addEventListener('dblclick', () => {
   dividerTooltip()
 })
 
-divider.addEventListener('mousedown', (e) => {
-  isResizing = e.target === divider
+divider.addEventListener('mousedown', (event) => {
+  isResizing = event.target === divider
 })
 
 $('#panel').addEventListener('mouseup', () => {
   isResizing = false
 })
 
-$('#panel').addEventListener('mousemove', (e) => {
+$('#panel').addEventListener('mousemove', (event) => {
   if (isResizing) {
     const offset = app.settings.lineNumbers ? 12 : 27
-    const pointerRelativeXpos = e.clientX - panel.offsetLeft - offset
+    const pointerRelativeXpos = event.clientX - panel.offsetLeft - offset
     const iWidth = (pointerRelativeXpos / panel.clientWidth) * 100
     const inputWidth = iWidth < 0 ? 0 : iWidth > 100 ? 100 : iWidth
 
@@ -692,8 +682,8 @@ const traps = {
 }
 
 for (const [button, command] of Object.entries(traps)) {
-  Mousetrap.bindGlobal(command, (e) => {
-    e.preventDefault()
+  Mousetrap.bindGlobal(command, (event) => {
+    event.preventDefault()
 
     if ($all('.uk-open').length === 0) {
       $('#' + button).click()
@@ -703,6 +693,15 @@ for (const [button, command] of Object.entries(traps)) {
 
 // Check for updates.
 checkUpdates()
+
+// Developer Tools
+if (isElectron) {
+  $('#dialog-about-appVersion').addEventListener('click', (event) => {
+    if (event.detail === 9) {
+      numara.openDevTools()
+    }
+  })
+}
 
 window.onload = () => {
   applyUdfu(store.get('udf'), 'func')
