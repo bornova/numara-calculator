@@ -30,7 +30,7 @@ export function applyUdfu(input, type) {
     calculate()
 
     UIkit.modal('#dialog-udfu').hide()
-  } catch (e) {
-    showError(e.name, e.message)
+  } catch (error) {
+    showError(error.name, error.message)
   }
 }

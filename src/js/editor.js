@@ -98,13 +98,13 @@ CodeMirror.defineMode('numara', () => ({
       if (par.isSymbolNode && val) {
         return 'constant'
       }
-    } catch (e) {
+    } catch {
       /** Ignore catch */
     }
 
     try {
       math.evaluate(cmStream)
-    } catch (e) {
+    } catch {
       return 'variable'
     }
 
@@ -126,12 +126,12 @@ CodeMirror.defineMode('plain', () => ({
 const numaraHints = []
 
 const scopeList = [
-  { text: 'ans', desc: 'Answer from last calculated line' },
-  { text: 'avg', desc: 'Average of previous line values.  Numbers only.' },
-  { text: 'now', desc: 'Current date and time' },
-  { text: 'subtotal', desc: 'Total of all lines in previous block.  Numbers only.' },
-  { text: 'today', desc: 'Current date' },
-  { text: 'total', desc: 'Total of previous line values.  NUmbers only.' }
+  { text: 'ans', desc: 'Answer from last calculated line.' },
+  { text: 'avg', desc: 'Average of previous line values. Numbers only.' },
+  { text: 'now', desc: 'Current date and time.' },
+  { text: 'subtotal', desc: 'Total of all lines in previous block. Numbers only.' },
+  { text: 'today', desc: 'Current date.' },
+  { text: 'total', desc: 'Total of previous line values. Numbers only.' }
 ]
 
 scopeList.forEach((scope) => {
@@ -219,7 +219,7 @@ cm.on('update', () => {
           pos: ttPos(f),
           title: obj.description
         })
-      } catch (e) {
+      } catch {
         UIkit.tooltip(f, {
           pos: ttPos(f),
           title: 'Description not available'
@@ -262,7 +262,7 @@ cm.on('update', () => {
           pos: ttPos(c),
           title: currencyName
         })
-      } catch (e) {
+      } catch {
         UIkit.tooltip(c, {
           pos: ttPos(c),
           title: 'Description not available'
@@ -302,7 +302,7 @@ cm.on('update', () => {
 
         try {
           varTooltip = formatAnswer(math.evaluate(v.innerText, app.mathScope))
-        } catch (e) {
+        } catch {
           varTooltip = 'Undefined'
         }
 
@@ -325,7 +325,7 @@ cm.on('update', () => {
           typeof app.mathScope[ln.innerText] === 'function'
             ? 'Function'
             : formatAnswer(math.evaluate(ln.innerText, app.mathScope))
-      } catch (e) {
+      } catch {
         scopeTooltip = 'Undefined'
       }
 

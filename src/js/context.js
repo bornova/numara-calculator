@@ -21,9 +21,9 @@ export function inputContext() {
 }
 
 /** Output panel context menu. */
-export function outputContext(e) {
-  const answer = e.srcElement.innerText
-  const index = e.srcElement.dataset.line || e.srcElement.parentElement.dataset.line
+export function outputContext(event) {
+  const answer = event.srcElement.innerText
+  const index = event.srcElement.dataset.line || event.srcElement.parentElement.dataset.line
   const hasAnswer = index !== null && answer !== '' && answer !== 'Error' && answer !== 'Plot'
   const isEmpty = cm.getValue() === ''
 
