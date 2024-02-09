@@ -249,7 +249,7 @@ autoUpdater.on('update-available', () => win.webContents.send('notifyUpdate'))
 autoUpdater.on('update-not-available', () => win.webContents.send('updateStatus', app.name + ' is up to date.'))
 autoUpdater.on('error', (error) => {
   win.webContents.send('updateStatus', 'Error checking for update.')
-  win.webContents.send('updateError', error)
+  win.webContents.send('logMessage', error)
 })
 autoUpdater.on('update-downloaded', () => win.webContents.send('updateStatus', 'ready'))
 autoUpdater.on('download-progress', (progress) => {

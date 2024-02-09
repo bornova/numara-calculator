@@ -64,9 +64,12 @@ export function checkUpdates() {
         $('#dialog-about-updateStatus').innerHTML = status
       }
     })
-
-    numara.updateError((event, error) => {
-      console.log(error)
-    })
   }
+}
+
+// Electron console logger
+if (isElectron) {
+  numara.logMessage((event, message) => {
+    console.log(message)
+  })
 }
