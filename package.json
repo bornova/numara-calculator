@@ -83,10 +83,9 @@
       }
     },
     "win": {
-      "target": "nsis-web",
-      "verifyUpdateCodeSignature": false
+      "target": "nsis"
     },
-    "nsisWeb": {
+    "nsis": {
       "deleteAppDataOnUninstall": true,
       "oneClick": false
     },
