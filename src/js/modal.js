@@ -17,10 +17,10 @@ export function showModal(id) {
  * @param {string} title Title of dialog box.
  * @param {string} e Error message to show.
  */
-export function showError(title, err) {
+export function showError(title, error) {
   UIkit.util.on('#dialog-error', 'beforeshow', () => {
     $('#errTitle').innerHTML = title
-    $('#errMsg').innerHTML = err
+    $('#errMsg').innerHTML = error
   })
 
   showModal('#dialog-error')
@@ -52,10 +52,10 @@ export function confirm(msg, action) {
 
   showModal('#dialog-confirm')
 
-  const yesAction = (e) => {
+  const yesAction = (event) => {
     action()
 
-    e.stopPropagation()
+    event.stopPropagation()
 
     UIkit.modal('#dialog-confirm').hide()
 
