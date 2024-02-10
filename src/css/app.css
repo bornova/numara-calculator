@@ -328,6 +328,7 @@ text {
 
 .dialog-buttons {
   display: flex;
+  align-items: center;
   margin-top: 15px;
 }
 
@@ -547,13 +548,6 @@ text {
   margin: 0 10px 0 10px;
 }
 
-.defButton {
-  float: left;
-  line-height: 30px;
-  margin-left: 10px;
-  vertical-align: middle;
-}
-
 .exportButton,
 .importButton {
   float: left;
@@ -568,24 +562,30 @@ text {
   margin-top: -3px;
 }
 
-.demoButton {
-  float: left;
-  line-height: 30px;
-  vertical-align: middle;
+.resetButtons svg {
+  width: 14px;
+  pointer-events: none;
 }
 
 .resetButton {
-  color: #cd5c5c;
+  color: #b33333;
   float: left;
-  line-height: 30px;
-  vertical-align: middle;
 }
 
 .resetLabel {
   float: left;
-  line-height: 30px;
-  vertical-align: middle;
   margin-right: 10px;
+}
+
+.defSettingsButton {
+  color: #dd9359;
+  float: left;
+  margin-left: 10px;
+}
+
+.resetSizeButton {
+  float: left;
+  margin-left: 10px;
 }
 
 /* Messages */

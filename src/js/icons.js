@@ -11,10 +11,13 @@ import {
   FileOutput,
   Folder,
   Info,
+  ListRestart,
   Printer,
   Save,
+  Scaling,
   Settings,
   Trash,
+  UndoDot,
   X
 } from 'lucide'
 
@@ -30,10 +33,13 @@ const iconList = {
   FileOutput,
   Folder,
   Info,
+  ListRestart,
   Printer,
   Save,
+  Scaling,
   Settings,
   Trash,
+  UndoDot,
   X
 }
 
