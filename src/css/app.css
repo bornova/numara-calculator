@@ -409,25 +409,18 @@ text {
   color: #dd9359;
   cursor: pointer;
   display: none;
+  margin-left: -20px;
+  margin-top: -3px;
   position: absolute;
-}
-
-#dialog-settings .settingMod {
-  margin-left: -18px;
-}
-
-#dialog-settings .settingModToggle {
-  margin-left: -18px;
-  margin-top: -1px;
 }
 
 #dialog-settings .settingMod > svg,
 #dialog-settings .settingModToggle > svg {
-  width: 12px;
+  width: 24px;
 }
 
 #dialog-settings .range .settingMod {
-  margin-left: -50px;
+  margin-left: -54px;
 }
 
 .set1 {
