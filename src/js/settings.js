@@ -95,7 +95,7 @@ export const settings = {
       const span = document.createElement('span')
       const icon = document.createElement('span')
 
-      icon.setAttribute('data-lucide', 'undo-2')
+      icon.setAttribute('data-lucide', 'dot')
 
       span.setAttribute('id', item.getAttribute('id') + 'Mod')
       span.setAttribute('class', item.getAttribute('type') === 'checkbox' ? 'settingModToggle' : 'settingMod')
