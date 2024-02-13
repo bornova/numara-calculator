@@ -25,7 +25,7 @@
     "wiki": "node src/misc/wiki.js"
   },
   "devDependencies": {
-    "@formulajs/formulajs": "^4.4.0",
+    "@formulajs/formulajs": "^4.4.1",
     "codemirror": "^5.65.16",
     "deep-diff": "^1.0.2",
     "electron": "^28.2.2",
