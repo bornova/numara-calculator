@@ -49,6 +49,10 @@ function appWindow() {
 
     win.setHasShadow(true)
     win.show()
+
+    if (!app.isPackaged) {
+      win.webContents.openDevTools()
+    }
   })
 
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -103,14 +107,6 @@ ipcMain.on('print', (event) => {
   win.webContents.print({}, (success) => event.sender.send('printReply', success ? 'Sent to printer' : false))
 })
 
-ipcMain.on('resetApp', () => {
-  session.defaultSession.clearStorageData().then(() => {
-    config.clear()
-    app.relaunch()
-    app.exit()
-  })
-})
-
 ipcMain.on('import', (event) => {
   const file = dialog.showOpenDialogSync(win, {
     filters: [{ name: 'Numara', extensions: ['numara'] }],
@@ -151,6 +147,24 @@ ipcMain.on('export', (event, fileName, content) => {
   }
 })
 
+function resetSize() {
+  if (win) {
+    win.setSize(schema.appWidth.default, schema.appHeight.default)
+  }
+}
+
+ipcMain.on('resetSize', resetSize)
+
+ipcMain.on('resetApp', () => {
+  session.defaultSession.clearStorageData().then(() => {
+    config.clear()
+    app.relaunch()
+    app.exit()
+  })
+})
+
+ipcMain.on('openDevTools', () => win.webContents.openDevTools())
+
 const contextHeader = (index, isMultiLine, hasAnswer) =>
   hasAnswer || index !== null
     ? [
@@ -181,10 +195,6 @@ const commonContext = (event, index, isEmpty, isSelection, isMultiLine, hasAnswe
     }
   ]
 
-  const devTools = app.isPackaged
-    ? [{ label: '', visible: false }]
-    : [{ type: 'separator' }, { role: 'toggleDevTools' }]
-
   return [
     ...context,
     { type: 'separator' },
@@ -202,8 +212,7 @@ const commonContext = (event, index, isEmpty, isSelection, isMultiLine, hasAnswe
       label: 'Copy all lines and answers',
       enabled: !isEmpty,
       click: () => event.sender.send('copyAll')
-    },
-    ...devTools
+    }
   ]
 }
 
@@ -255,16 +264,6 @@ autoUpdater.on('update-downloaded', () => win.webContents.send('updateStatus', '
 autoUpdater.on('download-progress', (progress) => {
   win.webContents.send('updateStatus', 'Downloading latest version... (' + Math.round(progress.percent) + '%)')
 })
-
-ipcMain.on('openDevTools', () => win.webContents.openDevTools())
-
-function resetSize() {
-  if (win) {
-    win.setSize(schema.appWidth.default, schema.appHeight.default)
-  }
-}
-
-ipcMain.on('resetSize', resetSize)
 
 const menuTemplate = [
   {

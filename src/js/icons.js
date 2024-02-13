@@ -5,16 +5,19 @@ import {
   Circle,
   Copy,
   CornerDownRight,
+  Dot,
   Eraser,
   FileInput,
   FileOutput,
   Folder,
   Info,
+  ListRestart,
   Printer,
   Save,
+  Scaling,
   Settings,
   Trash,
-  Undo2,
+  UndoDot,
   X
 } from 'lucide'
 
@@ -24,16 +27,19 @@ const iconList = {
   Circle,
   Copy,
   CornerDownRight,
+  Dot,
   Eraser,
   FileInput,
   FileOutput,
   Folder,
   Info,
+  ListRestart,
   Printer,
   Save,
+  Scaling,
   Settings,
   Trash,
-  Undo2,
+  UndoDot,
   X
 }
 
