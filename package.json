@@ -83,7 +83,9 @@
       }
     },
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "publisherName": "Timur Atalay",
+      "verifyUpdateCodeSignature": false
     },
     "nsis": {
       "deleteAppDataOnUninstall": true,
