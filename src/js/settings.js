@@ -102,8 +102,6 @@ export const settings = {
 
       span.appendChild(icon)
 
-      generateIcons()
-
       span.addEventListener('click', () => {
         const key = item.getAttribute('id')
 
@@ -119,6 +117,8 @@ export const settings = {
       } else {
         item.before(span)
       }
+
+      generateIcons()
     })
   },
 
