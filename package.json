@@ -28,7 +28,7 @@
     "@formulajs/formulajs": "^4.4.1",
     "codemirror": "^5.65.16",
     "deep-diff": "^1.0.2",
-    "electron": "^29.0.1",
+    "electron": "^29.1.0",
     "electron-builder": "^24.12.0",
     "esbuild": "^0.20.1",
     "esbuild-plugin-polyfill-node": "^0.3.0",
