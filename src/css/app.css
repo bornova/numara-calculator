@@ -751,6 +751,14 @@ input:checked + .slider:before {
   padding: 15px;
 }
 
+.uk-grid {
+  margin-left: -30px !important;
+}
+
+.uk-grid > * {
+  padding-left: 30px !important;
+}
+
 .uk-grid + .uk-grid {
   margin-top: 10px;
 }
