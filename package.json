@@ -84,7 +84,6 @@
       }
     },
     "win": {
-      "target": "nsis",
       "publisherName": "Timur Atalay",
       "verifyUpdateCodeSignature": false
     },
