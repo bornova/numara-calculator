@@ -70,13 +70,14 @@
       "category": "Utility",
       "target": [
         "AppImage",
-        "deb",
-        "rpm",
-        "snap"
-      ],
-      "arch": [
-        "x64",
-        "arm64"
+        {
+          "target": "deb",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        "rpm"
       ]
     },
     "mac": {
@@ -88,6 +89,7 @@
         "teamId": "2VP53YFAQP"
       },
       "target": {
+        "target": "default",
         "arch": [
           "x64",
           "arm64"
@@ -95,6 +97,7 @@
       }
     },
     "win": {
+      "target": "nsis",
       "publisherName": "Timur Atalay",
       "verifyUpdateCodeSignature": false
     },
