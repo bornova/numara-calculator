@@ -66,6 +66,21 @@
       "src/main.cjs",
       "src/preload.cjs"
     ],
+    "linux": {
+      "category": "Utility",
+      "target": {
+        "target": [
+          "AppImage",
+          "deb",
+          "rpm",
+          "snap"
+        ],
+        "arch": [
+          "x64",
+          "arm64"
+        ]
+      }
+    },
     "mac": {
       "category": "public.app-category.utilities",
       "entitlements": "src/misc/entitlements.mac.plist",
@@ -75,7 +90,6 @@
         "teamId": "2VP53YFAQP"
       },
       "target": {
-        "target": "default",
         "arch": [
           "x64",
           "arm64"
@@ -83,21 +97,12 @@
       }
     },
     "win": {
-      "target": "nsis",
       "publisherName": "Timur Atalay",
       "verifyUpdateCodeSignature": false
     },
     "nsis": {
       "deleteAppDataOnUninstall": true,
       "oneClick": false
-    },
-    "linux": {
-      "category": "Utility",
-      "target": [
-        "AppImage",
-        "deb",
-        "rpm"
-      ]
     }
   }
 }
