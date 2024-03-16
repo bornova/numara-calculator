@@ -321,6 +321,23 @@ text {
   stroke: #1e87f0;
 }
 
+.uk-offcanvas-bar {
+  width: 250px;
+  padding: 0;
+}
+
+.tabItem {
+  display: inline;
+}
+
+.activeTabIndicator,
+.inactiveTabIndicator {
+  width: 5px;
+  height: 5px;
+  margin-top: -17px;
+  border-radius: 5px;
+}
+
 /* Dialogs */
 .dialogs {
   display: none;
@@ -334,7 +351,8 @@ text {
 
 .dialog-open-wrapper {
   cursor: pointer;
-  margin: 0 5px 5px 0;
+  display: flex;
+  padding: 5px;
   position: relative;
 }
 
@@ -357,10 +375,7 @@ text {
   cursor: pointer;
   font-weight: 600;
   height: 16px;
-  position: absolute;
-  top: 15px;
-  right: 5px;
-  width: 16px;
+  margin-right: 5px;
 }
 
 .dialog-open-delete > svg {

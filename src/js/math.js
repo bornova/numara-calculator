@@ -139,7 +139,15 @@ export function calculate() {
 
   $('#output').innerHTML = answers
 
-  store.set('input', cm.getValue())
+  if (app.activeTab) {
+    const tabs = store.get('tabs')
+
+    tabs.find((tab) => tab.id === app.activeTab).data = cm.getValue()
+
+    store.set('tabs', tabs)
+  } else {
+    store.set('input', cm.getValue())
+  }
 }
 
 /** Secondary evaluate method to try if math.evaluate fails */

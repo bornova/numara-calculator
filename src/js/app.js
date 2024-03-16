@@ -112,6 +112,11 @@ if (app.settings.currency) {
 cm.setValue(store.get('input') || '')
 
 // Set user defined values
+if (!store.get('tabs')) {
+  store.set('tabs', [])
+}
+
+// Set user defined values
 if (!store.get('udf')) {
   store.set('udf', '')
 }
@@ -310,13 +315,16 @@ document.addEventListener('click', (event) => {
   switch (event.target.id) {
     case 'dialog-save-save': {
       const id = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
-      const savedItems = store.get('saved') || {}
-      const data = cm.getValue()
+      const tabs = store.get('tabs') || []
       const title = $('#saveTitle').value.replace(/<|>/g, '').trim() || 'No title'
 
-      savedItems[id] = [title, data]
+      app.activeTab = id
 
-      store.set('saved', savedItems)
+      tabs.push({ id, title, data: '' })
+
+      store.set('tabs', tabs)
+
+      cm.setValue('')
 
       UIkit.modal('#dialog-save').hide()
 
@@ -329,9 +337,11 @@ document.addEventListener('click', (event) => {
 
     case 'dialog-open-deleteAll':
       confirm('All saved calculations will be deleted.', () => {
-        localStorage.removeItem('saved')
+        localStorage.removeItem('tabs')
 
-        populateSaved()
+        app.activeTab = null
+
+        populateTabs()
       })
 
       break
@@ -457,56 +467,63 @@ document.addEventListener('click', (event) => {
 })
 
 /** Get all saved calculations and prepare list. */
-function populateSaved() {
-  const savedObj = store.get('saved') || {}
-  const savedItems = Object.entries(savedObj)
+function populateTabs() {
+  const tabs = store.get('tabs') || []
 
-  $('#dialog-open-body').innerHTML = ''
+  $('#tabList').innerHTML = ''
 
-  if (savedItems.length > 0) {
+  if (tabs.length > 0) {
     $('#dialog-open-deleteAll').disabled = false
 
-    savedItems.forEach(([id, val]) => {
-      $('#dialog-open-body').innerHTML += `
-        <div class="dialog-open-wrapper" id="${id}">
-          <div data-action="load">
-            <div class="dialog-open-title">${val[0]}</div>
-            <div class="dialog-open-date">${DateTime.fromFormat(id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
+    tabs.forEach((tab) => {
+      $('#tabList').innerHTML += `
+        <div class="dialog-open-wrapper uk-flex uk-flex-middle" id="${tab.id}">
+          <div
+            id="activeTabIndicator"
+            class="${app.activeTab === tab.id ? 'activeTabIndicator' : 'inactiveTabIndicator'}"
+          ></div>
+          <div class="uk-flex-1" data-action="load">
+            <div class="dialog-open-title">${tab.title}</div>
+            <div class="dialog-open-date">${DateTime.fromFormat(tab.id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
           </div>
-          <span class="dialog-open-delete" data-action="delete"><i data-lucide="trash"></i></span>
+          <div class="dialog-open-delete" data-action="delete"><i data-lucide="x"></i></div>
         </div>`
     })
 
     generateIcons()
   } else {
     $('#dialog-open-deleteAll').disabled = true
-    $('#dialog-open-body').innerHTML = 'No saved calculations.'
+    $('#tabList').innerHTML = 'No saved calculations.'
   }
 }
 
 // Open saved calculations dialog actions
-$('#dialog-open').addEventListener('click', (event) => {
-  const saved = store.get('saved')
+$('#tabList').addEventListener('click', (event) => {
+  let tabs = store.get('tabs')
 
   if (event.target.parentNode.getAttribute('data-action') === 'load') {
     let pid = event.target.parentNode.parentNode.id
 
-    cm.setValue(saved[pid][1])
+    app.activeTab = pid
 
-    calculate()
+    cm.setValue(tabs.find((tab) => tab.id === pid).data)
 
-    UIkit.modal('#dialog-open').hide()
+    UIkit.offcanvas('#sidePanel').hide()
   }
 
   if (event.target.getAttribute('data-action') === 'delete') {
     let pid = event.target.parentNode.id
 
-    confirm('Calculation "' + saved[pid][0] + '" will be deleted.', () => {
-      delete saved[pid]
+    confirm('Calculation "' + tabs.find((tab) => tab.id === pid).title + '" will be deleted.', () => {
+      tabs = tabs.filter((tab) => tab.id !== pid)
 
-      store.set('saved', saved)
+      store.set('tabs', tabs)
 
-      populateSaved()
+      app.activeTab = null
+
+      cm.setValue(store.get('input'))
+
+      populateTabs()
     })
   }
 })
@@ -517,7 +534,7 @@ UIkit.util.on('#dialog-save', 'shown', () => {
 })
 
 // Populate saved calculation
-UIkit.util.on('#dialog-open', 'beforeshow', populateSaved)
+UIkit.util.on('#sidePanel', 'beforeshow', populateTabs)
 
 // Initiate settings dialog
 UIkit.util.on('#setswitch', 'beforeshow', (event) => {

@@ -46,6 +46,9 @@
 
       <div id="actions" class="actions">
         <div id="leftActions" class="leftActions uk-flex-left">
+          <a id="panelButton" class="action" title="Side panel" uk-toggle="target: #sidePanel" uk-tooltip>
+            <i data-lucide="panel-left"></i>
+          </a>
           <a id="clearButton" class="action" title="Clear" uk-tooltip><i data-lucide="eraser"></i></a>
           <a id="printButton" class="action" title="Print" uk-tooltip><i data-lucide="printer"></i></a>
           <a id="copyButton" class="action" title="Copy calculations" uk-tooltip><i data-lucide="copy"></i></a>
@@ -58,6 +61,14 @@
           <a id="aboutButton" class="action" title="About" uk-tooltip><i data-lucide="info"></i></a>
           <span id="notificationDot" class="notificationDot" uk-tooltip><i data-lucide="circle"></i></span>
         </div>
+      </div>
+    </div>
+
+    <div id="sidePanel" uk-offcanvas="overlay: true">
+      <div class="uk-offcanvas-bar">
+        <button class="uk-offcanvas-close" type="button" uk-close></button>
+        <div>Tabs</div>
+        <div id="tabList" uk-sortable></div>
       </div>
     </div>
 

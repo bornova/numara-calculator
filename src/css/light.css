@@ -110,9 +110,21 @@ body {
   color: #607d8b;
 }
 
+.uk-offcanvas-bar {
+  color: #333;
+  background: #fff;
+}
+
+.uk-offcanvas-bar .uk-close {
+  color: #333;
+}
+
+.activeTabIndicator {
+  background: #619c5a;
+}
+
 .dialog-open-wrapper {
-  background-color: rgba(244, 244, 244, 0.3);
-  border: 1px solid #eaeaea;
+  border-bottom: 1px solid #eaeaea;
 }
 
 .dialog-open-wrapper:hover {
