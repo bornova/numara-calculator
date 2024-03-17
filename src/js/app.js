@@ -3,10 +3,11 @@ import { copyAll } from './context'
 import { cm, udfInput, uduInput } from './editor'
 import { getRates } from './forex'
 import { generateIcons } from './icons'
-import { calculate } from './math'
+import { calculate } from './calculate'
 import { confirm, notify, showError, showModal } from './modal'
 import { plot } from './plot'
 import { settings } from './settings'
+import { defaultTab, lastTab, newTab, populateTabs } from './tabs'
 import { applyUdfu } from './userDefined'
 import { checkSize, checkUpdates, isMac, isElectron, toggleMinMax } from './utils'
 
@@ -108,12 +109,12 @@ if (app.settings.currency) {
   getRates()
 }
 
-// Set initial input value
-cm.setValue(store.get('input') || '')
-
 // Set user defined values
 if (!store.get('tabs')) {
-  store.set('tabs', [])
+  defaultTab()
+} else {
+  app.activeTab = lastTab()
+  cm.setValue(store.get('tabs').find((tab) => tab.id === lastTab()).data || '')
 }
 
 // Set user defined values
@@ -129,6 +130,24 @@ if (!store.get('udu')) {
 UIkit.mixin({ data: { offset: 5 } }, 'tooltip')
 
 // App button actions
+$('#tabsPanelActions').addEventListener('click', (event) => {
+  UIkit.tooltip('#' + event.target.id).hide()
+
+  switch (event.target.id) {
+    case 'closetabsPanelButton':
+      UIkit.offcanvas('#tabsPanel').hide()
+
+      break
+    case 'newTabButton':
+      $('#saveTitle').value = ''
+      $('#saveTitle').focus()
+
+      showModal('#dialog-save')
+
+      break
+  }
+})
+
 $('#actions').addEventListener('click', (event) => {
   UIkit.tooltip('#' + event.target.id).hide()
 
@@ -147,13 +166,13 @@ $('#actions').addEventListener('click', (event) => {
 
       printArea.className = 'printArea'
       printArea.innerHTML = `<div id="printTitle" class="printTitle">${name}</div>
-        <table id="printTable"
-          class="printTable ${app.settings.rulers ? 'printRulers' : ''}"
-          style="
-            font-size: ${app.settings.fontSize};
-            font-weight: ${app.settings.fontWeight};
-            line-height: ${app.settings.lineHeight};"
-        >`
+          <table id="printTable"
+            class="printTable ${app.settings.rulers ? 'printRulers' : ''}"
+            style="
+              font-size: ${app.settings.fontSize};
+              font-weight: ${app.settings.fontWeight};
+              line-height: ${app.settings.lineHeight};"
+          >`
 
       document.body.appendChild(printArea)
 
@@ -162,11 +181,11 @@ $('#actions').addEventListener('click', (event) => {
         const input = cm.getLine(lineNo)
         const answer = $('#output').children[lineNo].innerText
         const row = `
-          <tr>
-            ${app.settings.lineNumbers ? '<td class="printLineNumCol">' + (lineNo + 1) + '</td>' : ''}
-            <td style="width:${app.settings.inputWidth}%;">${input}</td>
-            <td class="printAnswer${app.settings.divider ? 'Left' : 'Right'}">${answer}</td>
-          </tr>`
+            <tr>
+              ${app.settings.lineNumbers ? '<td class="printLineNumCol">' + (lineNo + 1) + '</td>' : ''}
+              <td style="width:${app.settings.inputWidth}%;">${input}</td>
+              <td class="printAnswer${app.settings.divider ? 'Left' : 'Right'}">${answer}</td>
+            </tr>`
 
         $('#printTable').innerHTML += row
       })
@@ -181,13 +200,6 @@ $('#actions').addEventListener('click', (event) => {
     }
     case 'copyButton':
       copyAll()
-
-      break
-    case 'saveButton':
-      $('#saveTitle').value = ''
-      $('#saveTitle').focus()
-
-      showModal('#dialog-save')
 
       break
     case 'openButton':
@@ -314,28 +326,11 @@ document.addEventListener('keyup', () => {
 document.addEventListener('click', (event) => {
   switch (event.target.id) {
     case 'dialog-save-save': {
-      const id = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
-      const tabs = store.get('tabs') || []
-      const title = $('#saveTitle').value.replace(/<|>/g, '').trim() || 'No title'
-
-      app.activeTab = id
-
-      tabs.push({ id, title, data: '' })
-
-      store.set('tabs', tabs)
-
-      cm.setValue('')
-
-      UIkit.modal('#dialog-save').hide()
-
-      notify(
-        `Saved as '${title}' <a class="notificationLink" onclick="document.querySelector('#openButton').click()">View saved calculations</a>`
-      )
-
+      newTab()
       break
     }
 
-    case 'dialog-open-deleteAll':
+    case 'deleteAllTabsButton':
       confirm('All saved calculations will be deleted.', () => {
         localStorage.removeItem('tabs')
 
@@ -466,75 +461,13 @@ document.addEventListener('click', (event) => {
   }
 })
 
-/** Get all saved calculations and prepare list. */
-function populateTabs() {
-  const tabs = store.get('tabs') || []
-
-  $('#tabList').innerHTML = ''
-
-  if (tabs.length > 0) {
-    $('#dialog-open-deleteAll').disabled = false
-
-    tabs.forEach((tab) => {
-      $('#tabList').innerHTML += `
-        <div class="dialog-open-wrapper uk-flex uk-flex-middle" id="${tab.id}">
-          <div
-            id="activeTabIndicator"
-            class="${app.activeTab === tab.id ? 'activeTabIndicator' : 'inactiveTabIndicator'}"
-          ></div>
-          <div class="uk-flex-1" data-action="load">
-            <div class="dialog-open-title">${tab.title}</div>
-            <div class="dialog-open-date">${DateTime.fromFormat(tab.id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
-          </div>
-          <div class="dialog-open-delete" data-action="delete"><i data-lucide="x"></i></div>
-        </div>`
-    })
-
-    generateIcons()
-  } else {
-    $('#dialog-open-deleteAll').disabled = true
-    $('#tabList').innerHTML = 'No saved calculations.'
-  }
-}
-
-// Open saved calculations dialog actions
-$('#tabList').addEventListener('click', (event) => {
-  let tabs = store.get('tabs')
-
-  if (event.target.parentNode.getAttribute('data-action') === 'load') {
-    let pid = event.target.parentNode.parentNode.id
-
-    app.activeTab = pid
-
-    cm.setValue(tabs.find((tab) => tab.id === pid).data)
-
-    UIkit.offcanvas('#sidePanel').hide()
-  }
-
-  if (event.target.getAttribute('data-action') === 'delete') {
-    let pid = event.target.parentNode.id
-
-    confirm('Calculation "' + tabs.find((tab) => tab.id === pid).title + '" will be deleted.', () => {
-      tabs = tabs.filter((tab) => tab.id !== pid)
-
-      store.set('tabs', tabs)
-
-      app.activeTab = null
-
-      cm.setValue(store.get('input'))
-
-      populateTabs()
-    })
-  }
-})
-
 // Save dialog title focus on shown
 UIkit.util.on('#dialog-save', 'shown', () => {
   $('#saveTitle').focus()
 })
 
 // Populate saved calculation
-UIkit.util.on('#sidePanel', 'beforeshow', populateTabs)
+UIkit.util.on('#tabsPanel', 'beforeshow', populateTabs)
 
 // Initiate settings dialog
 UIkit.util.on('#setswitch', 'beforeshow', (event) => {

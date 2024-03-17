@@ -1,6 +1,6 @@
 import { $, app, store } from './common'
 import { cm } from './editor'
-import { calculate, math } from './math'
+import { calculate, math } from './calculate'
 import { notify } from './modal'
 
 math.createUnit('USD', { aliases: ['usd'] })

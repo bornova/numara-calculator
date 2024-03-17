@@ -46,14 +46,12 @@
 
       <div id="actions" class="actions">
         <div id="leftActions" class="leftActions uk-flex-left">
-          <a id="panelButton" class="action" title="Side panel" uk-toggle="target: #sidePanel" uk-tooltip>
+          <a id="tabsPanelButton" class="action" title="Tabs" uk-toggle="target: #tabsPanel" uk-tooltip>
             <i data-lucide="panel-left"></i>
           </a>
           <a id="clearButton" class="action" title="Clear" uk-tooltip><i data-lucide="eraser"></i></a>
           <a id="printButton" class="action" title="Print" uk-tooltip><i data-lucide="printer"></i></a>
-          <a id="copyButton" class="action" title="Copy calculations" uk-tooltip><i data-lucide="copy"></i></a>
-          <a id="saveButton" class="action" title="Save" uk-tooltip><i data-lucide="save"></i></a>
-          <a id="openButton" class="action" title="Open" uk-tooltip><i data-lucide="folder"></i></a>
+          <a id="copyButton" class="action" title="Copy tab calculations" uk-tooltip><i data-lucide="copy"></i></a>
         </div>
         <div id="rightActions" class="rightActions uk-flex-right">
           <a id="udfuButton" class="action" title="User functions and units" uk-tooltip><i data-lucide="braces"></i></a>
@@ -64,11 +62,24 @@
       </div>
     </div>
 
-    <div id="sidePanel" uk-offcanvas="overlay: true">
-      <div class="uk-offcanvas-bar">
-        <button class="uk-offcanvas-close" type="button" uk-close></button>
-        <div>Tabs</div>
-        <div id="tabList" uk-sortable></div>
+    <div id="tabsPanel" uk-offcanvas="overlay: true">
+      <div class="uk-offcanvas-bar uk-flex uk-flex-column">
+        <div class="tabListHeader"></div>
+        <div id="tabList" class="uk-flex-1" uk-sortable></div>
+        <div id="tabsPanelFooter" class="tabsPanelFooter uk-flex-bottom">
+          <div id="tabsPanelActions" class="tabsPanelActions uk-flex">
+            <div class="tabsPanelActionsLeft uk-width-1-3">
+              <a id="closetabsPanelButton" class="action" title="Close" uk-tooltip
+                ><i data-lucide="panel-left-close"></i
+              ></a>
+            </div>
+            <div class="tabsPanelActionsLeft uk-width-2-3 uk-text-right">
+              <a id="newTabButton" class="action newTabButton" title="New tab" uk-tooltip>
+                <i data-lucide="plus-square"></i>
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -101,7 +112,7 @@
             </a>
           </div>
           <div class="dialog-buttons uk-width-2-3 uk-flex-right">
-            <button id="dialog-open-deleteAll" class="uk-button uk-button-danger uk-button-small">Delete All</button>
+            <button id="deleteAllTabsButton" class="uk-button uk-button-danger uk-button-small">Delete All</button>
             <button class="uk-button uk-button-primary uk-modal-close uk-button-small">Close</button>
           </div>
         </div>

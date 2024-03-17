@@ -2,7 +2,7 @@ import { $, $all, app, store } from './common'
 import { cm, udfInput, uduInput } from './editor'
 import { getRates } from './forex'
 import { generateIcons } from './icons'
-import { calculate, math } from './math'
+import { calculate, math } from './calculate'
 import { checkLocale, checkSize, isElectron } from './utils'
 
 import DeepDiff from 'deep-diff'

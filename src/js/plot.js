@@ -1,5 +1,5 @@
 import { $, app } from './common'
-import { math } from './math'
+import { math } from './calculate'
 
 import functionPlot from 'function-plot'
 

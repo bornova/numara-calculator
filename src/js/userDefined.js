@@ -1,5 +1,5 @@
 import { app, store } from './common'
-import { calculate } from './math'
+import { calculate } from './calculate'
 import { showError } from './modal'
 
 import UIkit from 'uikit'

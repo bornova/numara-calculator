@@ -1,5 +1,5 @@
 import { $, $all, app } from './common'
-import { calculate, formatAnswer, math } from './math'
+import { calculate, formatAnswer, math } from './calculate'
 
 import * as formulajs from '@formulajs/formulajs'
 
