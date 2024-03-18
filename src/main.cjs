@@ -103,10 +103,6 @@ ipcMain.on('isResized', (event) => {
   event.returnValue = win.getSize()[0] !== schema.appWidth.default || win.getSize()[1] !== schema.appHeight.default
 })
 
-ipcMain.on('print', (event) => {
-  win.webContents.print({}, (success) => event.sender.send('printReply', success ? 'Sent to printer' : false))
-})
-
 ipcMain.on('import', (event) => {
   const file = dialog.showOpenDialogSync(win, {
     filters: [{ name: 'Numara', extensions: ['numara'] }],

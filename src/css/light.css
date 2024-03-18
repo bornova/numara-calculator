@@ -103,16 +103,24 @@ body {
 
 .action,
 .noAction {
-  color: #607d8b !important;
+  color: #607d8b;
 }
 
 .noAction:hover {
-  color: #607d8b !important;
+  color: #607d8b;
 }
 
 .uk-offcanvas-bar {
   background: #fff;
   color: #333;
+}
+
+.uk-offcanvas-bar a {
+  color: #607d8b;
+}
+
+.uk-offcanvas-bar a:hover {
+  color: #0f6ecd;
 }
 
 .uk-offcanvas-bar .uk-close {
@@ -127,15 +135,12 @@ body {
   border-bottom: 1px solid #eaeaea;
 }
 
-.activeTabIndicator {
-  background: #619c5a;
-}
-
 .tabListItem {
   border-bottom: 1px solid #eaeaea;
 }
 
-.tabListItem:hover {
+.tabListItem:hover,
+.activeTab {
   background-color: #f4f4f4;
 }
 
@@ -145,6 +150,10 @@ body {
 
 .deleteTabButton:hover {
   color: #b10e0e;
+}
+
+.renameTabButton:hover {
+  color: #005cc5;
 }
 
 .dialog-about-title {

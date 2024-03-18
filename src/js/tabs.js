@@ -1,25 +1,12 @@
 import { $, $all, app, store } from './common'
 import { cm } from './editor'
-import { confirm, notify } from './modal'
+import { confirm, notify, showModal } from './modal'
 import { generateIcons } from './icons'
+import { isElectron } from './utils'
 
 import UIkit from 'uikit'
 
 import { DateTime } from 'luxon'
-
-$('#tabList').addEventListener('click', (event) => {
-  if (event.target.parentNode.getAttribute('data-action') === 'load') {
-    let tabId = event.target.parentNode.parentNode.id
-
-    loadTab(tabId)
-  }
-
-  if (event.target.getAttribute('data-action') === 'delete') {
-    let tabId = event.target.parentNode.id
-
-    deleteTab(tabId)
-  }
-})
 
 export function defaultTab() {
   const tabId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
@@ -39,7 +26,7 @@ export function lastTab() {
 export function newTab() {
   const id = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
   const tabs = store.get('tabs')
-  const title = $('#saveTitle').value.replace(/<|>/g, '').trim() || 'New tab'
+  const title = $('#newTabTitleInput').value.replace(/<|>/g, '').trim() || 'New tab'
 
   app.activeTab = id
 
@@ -49,15 +36,13 @@ export function newTab() {
 
   cm.setValue('')
 
-  UIkit.modal('#dialog-save').hide()
+  populateTabs()
 
-  notify(
-    `Saved as '${title}' <a class="notificationLink" onclick="document.querySelector('#openButton').click()">View saved calculations</a>`
-  )
+  UIkit.modal('#dialog-newTab').hide()
 }
 
 export function populateTabs() {
-  let tabs = store.get('tabs')
+  const tabs = store.get('tabs')
 
   if (!tabs || tabs.length === 0) {
     defaultTab()
@@ -65,21 +50,15 @@ export function populateTabs() {
 
   $('#tabList').innerHTML = ''
 
-  $('#deleteAllTabsButton').disabled = false
-
   tabs.forEach((tab) => {
     $('#tabList').innerHTML += `
-      <div class="tabListItem uk-flex" id="${tab.id}">
-        <div
-          id="activeTabIndicator"
-          class="${app.activeTab === tab.id ? 'activeTabIndicator' : 'inactiveTabIndicator'}"
-        ></div>
+      <div class="tabListItem uk-flex ${app.activeTab === tab.id ? 'activeTab' : ''}" id="${tab.id}">
         <div class="uk-flex-1" data-action="load">
-          <div class="tabListItemTitle" contenteditable="true">${tab.title}</div>
+          <div id="tab-${tab.id}"class="tabListItemTitle" title="${tab.title}">${tab.title}</div>
           <div class="dialog-open-date">${DateTime.fromFormat(tab.id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
         </div>
-        <div class="deleteTabButton" data-action="rename"><i data-lucide="text-cursor-input"></i></div>
-        <div class="deleteTabButton" data-action="delete"><i data-lucide="x"></i></div>
+        <div class="renameTabButton" data-action="rename" title="Rename" ><i data-lucide="text-cursor-input"></i></div>
+        <div class="deleteTabButton" data-action="delete" title="Delete" ><i data-lucide="x"></i></div>
       </div>`
   })
 
@@ -94,22 +73,18 @@ export function loadTab(tabId) {
   store.set('lastTab', tabId)
 
   cm.setValue(store.get('tabs').find((tab) => tab.id === tabId).data)
-
-  UIkit.offcanvas('#tabsPanel').hide()
 }
 
 export function deleteTab(tabId) {
   let tabs = store.get('tabs')
 
-  confirm('Calculation "' + tabs.find((tab) => tab.id === tabId).title + '" will be deleted.', () => {
+  confirm('"' + tabs.find((tab) => tab.id === tabId).title + '" will be deleted.', () => {
     tabs = tabs.filter((tab) => tab.id !== tabId)
 
     store.set('tabs', tabs)
 
     if (tabs.length === 0) {
       defaultTab()
-
-      UIkit.offcanvas('#tabsPanel').hide()
     } else if (tabId === app.activeTab) {
       loadTab(tabs.pop().id)
     }
@@ -119,8 +94,8 @@ export function deleteTab(tabId) {
 }
 
 export function sortTabs() {
-  let tabs = store.get('tabs')
-  let tabList = $all('#tabList > div')
+  const tabs = store.get('tabs')
+  const tabList = $all('#tabList > div')
 
   let sortedTabs = [...tabList].reduce((a, i) => {
     a.push(tabs.find((tab) => tab.id === i.getAttribute('id')))
@@ -130,10 +105,103 @@ export function sortTabs() {
   store.set('tabs', sortedTabs)
 }
 
-UIkit.util.on('#tabList', 'moved', () => {
-  sortTabs()
+export function renameTab(tabId) {
+  const tabs = store.get('tabs')
+  const tab = tabs.find((tab) => tab.id === tabId)
+
+  $('#renameTabTitleInput').value = tab.title
+
+  showModal('#dialog-renameTab')
+
+  function rename() {
+    tab.title = $('#renameTabTitleInput').value.replace(/<|>/g, '').trim() || 'Untitled tab'
+
+    store.set('tabs', tabs)
+
+    populateTabs()
+
+    UIkit.modal('#dialog-renameTab').hide()
+
+    $('#dialog-renameTab-save').removeEventListener('click', rename)
+  }
+
+  $('#dialog-renameTab-save').addEventListener('click', rename)
+}
+
+$('#tabList').addEventListener('click', (event) => {
+  if (event.target.parentNode.getAttribute('data-action') === 'load') {
+    let tabId = event.target.parentNode.parentNode.id
+
+    loadTab(tabId)
+
+    UIkit.offcanvas('#tabsPanel').hide()
+  }
+
+  if (event.target.getAttribute('data-action') === 'rename') {
+    renameTab(event.target.parentNode.id)
+  }
+
+  if (event.target.getAttribute('data-action') === 'delete') {
+    deleteTab(event.target.parentNode.id)
+  }
 })
 
-export function renameTab() {}
+$('#closetabsPanelButton').addEventListener('click', () => {
+  UIkit.offcanvas('#tabsPanel').hide()
+})
 
-export function deleteAllTabs() {}
+$('#newTabButton').addEventListener('click', () => {
+  $('#newTabTitleInput').value = ''
+  $('#newTabTitleInput').focus()
+
+  showModal('#dialog-newTab')
+})
+
+$('#dialog-newTab-save').addEventListener('click', newTab)
+
+$('#newTabTitleInput').addEventListener('keyup', (event) => {
+  if (event.key === 'Enter' || event.keyCode === 13) {
+    $('#dialog-newTab-save').click()
+  }
+})
+
+$('#renameTabTitleInput').addEventListener('keyup', (event) => {
+  if (event.key === 'Enter' || event.keyCode === 13) {
+    $('#dialog-renameTab-save').click()
+  }
+})
+
+if (isElectron) {
+  // Import calculations from file
+  $('#importButton').addEventListener('click', () => {
+    numara.import()
+  })
+
+  numara.importData((event, data, msg) => {
+    newTab()
+
+    cm.setValue(data)
+
+    notify(msg, 'success')
+  })
+
+  numara.importDataError((event, error) => {
+    notify(error, 'danger')
+  })
+
+  // Export calculations to file
+  $('#exportButton').addEventListener('click', () => {
+    numara.export($('#newTabTitleInput').value, cm.getValue())
+  })
+
+  numara.exportData((event, msg) => {
+    notify(msg, 'success')
+  })
+
+  numara.exportDataError((event, error) => {
+    notify(error, 'danger')
+  })
+} else {
+  $('#exportButton').remove()
+  $('#importButton').remove()
+}

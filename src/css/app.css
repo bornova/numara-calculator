@@ -281,6 +281,11 @@ text {
   margin-right: 10px;
 }
 
+.leftActions a:hover,
+.tabsPanelActions a:hover {
+  text-decoration: none;
+}
+
 .rightActions {
   display: flex;
   min-width: 120px;
@@ -291,11 +296,20 @@ text {
 }
 
 .tabsPanelActionsLeft {
-  margin: 0 15px 12px 15px;
+  margin: 0 15px 15px 15px;
 }
 
 .tabsPanelActionsRight {
   margin: 0 15px 12px 0;
+}
+
+.closetabsPanelButton svg {
+  width: 18px;
+  height: 18px;
+}
+
+.tabList {
+  overflow-y: auto;
 }
 
 .leftActions a svg,
@@ -309,7 +323,6 @@ text {
 
 .newTabButton {
   margin-right: 0 !important;
-  margin-left: 10px;
 }
 
 .action,
@@ -338,7 +351,7 @@ text {
 }
 
 .uk-offcanvas-bar {
-  padding: 25px 0 0 0;
+  padding: 0;
   width: 240px;
 }
 
@@ -398,7 +411,11 @@ text {
 
 .tabListItemTitle {
   padding: 5px 5px 2px 5px;
+  width: 160px;
+  overflow: hidden;
   font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dialog-open-date {
@@ -407,14 +424,16 @@ text {
   font-size: 0.9rem;
 }
 
-.deleteTabButton {
+.deleteTabButton,
+.renameTabButton {
   cursor: pointer;
   margin: 4px 5px 0 0;
   height: 16px;
   font-weight: 600;
 }
 
-.deleteTabButton > svg {
+.deleteTabButton > svg,
+.renameTabButton > svg {
   stroke-width: 1.6px;
   width: 16px;
   height: 16px;
@@ -597,20 +616,6 @@ text {
 .plotOptions {
   margin: 0 10px 0 10px;
   line-height: 30px;
-}
-
-.exportButton,
-.importButton {
-  vertical-align: middle;
-  float: left;
-  font-size: 0.875rem;
-  line-height: 30px;
-}
-
-.exportButton > svg,
-.importButton > svg {
-  margin-top: -3px;
-  height: 16px;
 }
 
 .resetButtons svg {

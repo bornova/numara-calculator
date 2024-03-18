@@ -105,13 +105,22 @@ body {
   color: #7b9dc5;
 }
 
+.uk-offcanvas-bar a {
+  color: #7b9dc5;
+}
+
+.uk-offcanvas-bar a:hover {
+  color: #0f6ecd;
+}
+
 .tabListItem {
   border: 1px solid #404040;
   background-color: #333333;
   color: #e6e6e6;
 }
 
-.tabListItem:hover {
+.tabListItem:hover,
+.activeTab {
   background-color: #444444;
 }
 
@@ -121,6 +130,10 @@ body {
 
 .deleteTabButton:hover {
   color: #d41111;
+}
+
+.renameTabButton:hover {
+  color: #2196f3;
 }
 
 .dialog-about-title {

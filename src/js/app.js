@@ -3,15 +3,16 @@ import { copyAll } from './context'
 import { cm, udfInput, uduInput } from './editor'
 import { getRates } from './forex'
 import { generateIcons } from './icons'
-import { calculate } from './calculate'
-import { confirm, notify, showError, showModal } from './modal'
+import { notify, showError, showModal } from './modal'
 import { plot } from './plot'
 import { settings } from './settings'
-import { defaultTab, lastTab, newTab, populateTabs } from './tabs'
+import { defaultTab, lastTab, populateTabs, sortTabs } from './tabs'
 import { applyUdfu } from './userDefined'
 import { checkSize, checkUpdates, isMac, isElectron, toggleMinMax } from './utils'
 
-import { author, description, homepage, name, productName, version } from './../../package.json'
+import { calculate } from './calculate'
+
+import { author, description, homepage, name, version } from './../../package.json'
 
 import { DateTime } from 'luxon'
 
@@ -59,28 +60,10 @@ if (isElectron && !isMac) {
   $('#max').style.display = numara.isMaximized() ? 'none' : 'block'
   $('#unmax').style.display = numara.isMaximized() ? 'block' : 'none'
 
-  $('#winButtons').addEventListener('click', (event) => {
-    switch (event.target.id) {
-      case 'min':
-        numara.minimize()
-
-        break
-      case 'max':
-        numara.maximize()
-
-        break
-      case 'unmax':
-        numara.unmaximize()
-
-        break
-      case 'close':
-        numara.close()
-
-        break
-    }
-
-    event.stopPropagation()
-  })
+  $('#min').addEventListener('click', numara.minimize)
+  $('#max').addEventListener('click', numara.maximize)
+  $('#unmax').addEventListener('click', numara.unmaximize)
+  $('#close').addEventListener('click', numara.close)
 
   numara.isMax((event, isMax) => {
     $('#unmax').style.display = isMax ? 'block' : 'none'
@@ -114,7 +97,7 @@ if (!store.get('tabs')) {
   defaultTab()
 } else {
   app.activeTab = lastTab()
-  cm.setValue(store.get('tabs').find((tab) => tab.id === lastTab()).data || '')
+  cm.setValue(store.get('tabs').find((tab) => tab.id === lastTab())?.data || '')
 }
 
 // Set user defined values
@@ -126,141 +109,40 @@ if (!store.get('udu')) {
   store.set('udu', '')
 }
 
-// Tooltip defaults
-UIkit.mixin({ data: { offset: 5 } }, 'tooltip')
+// Prevent CM refresh if keydown
+document.addEventListener('keydown', (event) => {
+  app.refreshCM = !event.repeat
+})
 
-// App button actions
-$('#tabsPanelActions').addEventListener('click', (event) => {
-  UIkit.tooltip('#' + event.target.id).hide()
+document.addEventListener('keyup', () => {
+  app.refreshCM = true
+})
 
-  switch (event.target.id) {
-    case 'closetabsPanelButton':
-      UIkit.offcanvas('#tabsPanel').hide()
+// Action buttons
+$('#clearButton').addEventListener('click', () => {
+  if (cm.getValue() !== '') {
+    cm.setValue('')
+    cm.focus()
 
-      break
-    case 'newTabButton':
-      $('#saveTitle').value = ''
-      $('#saveTitle').focus()
-
-      showModal('#dialog-save')
-
-      break
+    calculate()
   }
 })
 
-$('#actions').addEventListener('click', (event) => {
-  UIkit.tooltip('#' + event.target.id).hide()
+$('#copyButton').addEventListener('click', copyAll)
 
-  switch (event.target.id) {
-    case 'clearButton':
-      if (cm.getValue() !== '') {
-        cm.setValue('')
-        cm.focus()
-
-        calculate()
-      }
-
-      break
-    case 'printButton': {
-      const printArea = document.createElement('div')
-
-      printArea.className = 'printArea'
-      printArea.innerHTML = `<div id="printTitle" class="printTitle">${name}</div>
-          <table id="printTable"
-            class="printTable ${app.settings.rulers ? 'printRulers' : ''}"
-            style="
-              font-size: ${app.settings.fontSize};
-              font-weight: ${app.settings.fontWeight};
-              line-height: ${app.settings.lineHeight};"
-          >`
-
-      document.body.appendChild(printArea)
-
-      cm.eachLine((line) => {
-        const lineNo = cm.getLineNumber(line)
-        const input = cm.getLine(lineNo)
-        const answer = $('#output').children[lineNo].innerText
-        const row = `
-            <tr>
-              ${app.settings.lineNumbers ? '<td class="printLineNumCol">' + (lineNo + 1) + '</td>' : ''}
-              <td style="width:${app.settings.inputWidth}%;">${input}</td>
-              <td class="printAnswer${app.settings.divider ? 'Left' : 'Right'}">${answer}</td>
-            </tr>`
-
-        $('#printTable').innerHTML += row
-      })
-
-      printArea.innerHTML += `</table>`
-
-      window.print()
-
-      printArea.remove()
-
-      break
-    }
-    case 'copyButton':
-      copyAll()
-
-      break
-    case 'openButton':
-      showModal('#dialog-open')
-
-      break
-    case 'udfuButton':
-      showModal('#dialog-udfu')
-
-      break
-    case 'settingsButton':
-      showModal('#dialog-settings')
-
-      break
-    case 'aboutButton':
-      showModal('#dialog-about')
-
-      break
-  }
-
-  event.stopPropagation()
+$('#udfuButton').addEventListener('click', () => {
+  showModal('#dialog-udfu')
 })
 
-if (isElectron) {
-  // Export calculations to file
-  $('#dialog-save-export').addEventListener('click', () => {
-    numara.export($('#saveTitle').value, cm.getValue())
-  })
+$('#settingsButton').addEventListener('click', () => {
+  showModal('#dialog-settings')
+})
 
-  numara.exportData((event, msg) => {
-    UIkit.modal('#dialog-save').hide()
+$('#aboutButton').addEventListener('click', () => {
+  showModal('#dialog-about')
+})
 
-    notify(msg, 'success')
-  })
-
-  numara.exportDataError((event, error) => {
-    notify(error, 'danger')
-  })
-
-  // Import calculations from file
-  $('#dialog-save-import').addEventListener('click', () => {
-    numara.import()
-  })
-
-  numara.importData((event, data, msg) => {
-    UIkit.modal('#dialog-open').hide()
-
-    cm.setValue(data)
-
-    notify(msg, 'success')
-  })
-
-  numara.importDataError((event, error) => {
-    notify(error, 'danger')
-  })
-} else {
-  $('#dialog-save-export').remove()
-  $('#dialog-save-import').remove()
-}
-
-// Output actions
+// Output panel actions
 $('#output').addEventListener('click', (event) => {
   switch (event.target.className) {
     case 'answer':
@@ -297,13 +179,6 @@ $('#output').addEventListener('click', (event) => {
   event.stopPropagation()
 })
 
-// Save calculation on Enter key
-$('#saveTitle').addEventListener('keyup', (event) => {
-  if (event.key === 'Enter' || event.keyCode === 13) {
-    $('#dialog-save-save').click()
-  }
-})
-
 // Clear input selections when clicked in output panel
 $('#output').addEventListener('mousedown', () => {
   const sels = document.getElementsByClassName('CodeMirror-selected')
@@ -313,186 +188,14 @@ $('#output').addEventListener('mousedown', () => {
   }
 })
 
-// Prevent CM refresh if keydown
-document.addEventListener('keydown', (event) => {
-  app.refreshCM = !event.repeat
-})
-
-document.addEventListener('keyup', () => {
-  app.refreshCM = true
-})
-
-// Dialog button actions
-document.addEventListener('click', (event) => {
-  switch (event.target.id) {
-    case 'dialog-save-save': {
-      newTab()
-      break
-    }
-
-    case 'deleteAllTabsButton':
-      confirm('All saved calculations will be deleted.', () => {
-        localStorage.removeItem('tabs')
-
-        app.activeTab = null
-
-        populateTabs()
-      })
-
-      break
-
-    case 'dialog-udfu-save-f':
-      applyUdfu(udfInput.getValue().trim(), 'func')
-
-      break
-
-    case 'dialog-udfu-save-u':
-      applyUdfu(uduInput.getValue().trim(), 'unit')
-
-      break
-
-    case 'defaultSettingsButton':
-      confirm('All settings will revert back to defaults.', () => {
-        app.settings = JSON.parse(JSON.stringify(settings.defaults))
-
-        store.set('settings', app.settings)
-
-        settings.prep()
-        settings.save()
-        settings.apply()
-      })
-
-      break
-
-    case 'dialog-settings-reset':
-      confirm('All user settings and data will be lost.', () => {
-        if (isElectron) {
-          numara.resetApp()
-        } else {
-          localStorage.clear()
-          location.reload()
-        }
-      })
-
-      break
-
-    case 'resetSizeButton':
-      if (isElectron) {
-        numara.resetSize()
-      }
-
-      break
-
-    case 'localeWarn':
-      showError(
-        'Caution: Locale',
-        `Your locale (${app.settings.locale}) uses comma (,) as decimal separator.  Therefore, you must use semicolon (;) as argument separator when using functions.<br><br>Ex. sum(1;3) // 4`
-      )
-
-      break
-
-    case 'bigNumWarn':
-      showError(
-        'Caution: BigNumber Limitations',
-        `Using the BigNumber may break function plotting and is not compatible with some math functions. 
-          It may also cause unexpected behavior and affect overall performance.<br><br>
-          <a target="_blank" href="https://mathjs.org/docs/datatypes/bignumbers.html">Read more on BigNumbers</a>`
-      )
-
-      break
-
-    // Plot settings
-    case 'plotCrossModal':
-      app.settings.plotCross = $('#plotCrossModal').checked
-
-      store.set('settings', app.settings)
-
-      plot()
-
-      break
-
-    case 'plotDerivativeModal':
-      app.settings.plotDerivative = $('#plotDerivativeModal').checked
-
-      store.set('settings', app.settings)
-
-      plot()
-
-      break
-
-    case 'plotGridModal':
-      app.settings.plotGrid = $('#plotGridModal').checked
-
-      store.set('settings', app.settings)
-
-      plot()
-
-      break
-
-    case 'exportPlot': {
-      $('.function-plot').setAttribute('xmlns', 'http://www.w3.org/2000/svg')
-
-      const fileName = productName + ' Plot ' + app.plotFunction
-      const preface = '<?xml version="1.0" standalone="no"?>\r\n'
-      const svgData = $('.function-plot').outerHTML
-      const svgBlob = new Blob([preface, svgData], { type: 'image/svg+xml;charset=utf-8' })
-      const downloadLink = document.createElement('a')
-
-      downloadLink.href = URL.createObjectURL(svgBlob)
-      downloadLink.download = fileName
-      downloadLink.click()
-
-      setTimeout(() => URL.revokeObjectURL(downloadLink.href), 60000)
-
-      break
-    }
-
-    case 'resetPlot':
-      app.activePlot = null
-
-      plot()
-
-      break
-
-    case 'restartButton':
-      numara.updateApp()
-
-      break
-  }
-})
-
-// Save dialog title focus on shown
-UIkit.util.on('#dialog-save', 'shown', () => {
-  $('#saveTitle').focus()
-})
-
-// Populate saved calculation
-UIkit.util.on('#tabsPanel', 'beforeshow', populateTabs)
+// Tooltip defaults
+UIkit.mixin({ data: { offset: 5 } }, 'tooltip')
 
 // Initiate settings dialog
-UIkit.util.on('#setswitch', 'beforeshow', (event) => {
-  event.stopPropagation()
-})
-
 UIkit.util.on('#dialog-settings', 'beforeshow', settings.prep)
 
-$('#precision').addEventListener('input', () => {
-  $('#precision-label').innerHTML = $('#precision').value
-})
-
-$('#expLower').addEventListener('input', () => {
-  $('#expLower-label').innerHTML = $('#expLower').value
-})
-
-$('#expUpper').addEventListener('input', () => {
-  $('#expUpper-label').innerHTML = $('#expUpper').value
-})
-
-document.querySelectorAll('.settingItem').forEach((el) => {
-  el.addEventListener('change', () => {
-    settings.save()
-    settings.apply()
-  })
+UIkit.util.on('#setswitch', 'beforeshow', (event) => {
+  event.stopPropagation()
 })
 
 // Prepare user defined dialog inputs
@@ -518,10 +221,20 @@ UIkit.util.on('.modal', 'hidden', () => {
 
 // Plot dialog
 UIkit.util.on('#dialog-plot', 'shown', plot)
-
 UIkit.util.on('#dialog-plot', 'hide', () => {
   app.activePlot = false
 })
+
+// Save tab sort order after move
+UIkit.util.on('#tabList', 'moved', sortTabs)
+
+// Save dialog title focus on shown
+UIkit.util.on('#dialog-newTab', 'shown', () => {
+  $('#newTabTitleInput').focus()
+})
+
+// Populate saved calculation
+UIkit.util.on('#tabsPanel', 'beforeshow', populateTabs)
 
 // Panel resizer
 let resizeDelay
@@ -644,6 +357,11 @@ for (const [button, command] of Object.entries(traps)) {
 // Check for updates.
 checkUpdates()
 
+// Restart button if update is installed
+$('#restartButton').addEventListener('click', () => {
+  numara.updateApp()
+})
+
 // Developer Tools
 if (isElectron) {
   $('#dialog-about-appVersion').addEventListener('click', (event) => {
@@ -652,6 +370,46 @@ if (isElectron) {
     }
   })
 }
+
+// Print
+window.addEventListener('beforeprint', () => {
+  const printArea = document.createElement('div')
+
+  printArea.setAttribute('id', 'printArea')
+  printArea.className = 'printArea'
+  printArea.innerHTML = `<div id="printTitle" class="printTitle">${name}</div>
+          <table id="printTable"
+            class="printTable ${app.settings.rulers ? 'printRulers' : ''}"
+            style="
+              font-size: ${app.settings.fontSize};
+              font-weight: ${app.settings.fontWeight};
+              line-height: ${app.settings.lineHeight};"
+          >`
+
+  document.body.appendChild(printArea)
+
+  cm.eachLine((line) => {
+    const lineNo = cm.getLineNumber(line)
+    const input = cm.getLine(lineNo)
+    const answer = $('#output').children[lineNo].innerText
+    const row = `
+            <tr>
+              ${app.settings.lineNumbers ? '<td class="printLineNumCol">' + (lineNo + 1) + '</td>' : ''}
+              <td style="width:${app.settings.inputWidth}%;">${input}</td>
+              <td class="printAnswer${app.settings.divider ? 'Left' : 'Right'}">${answer}</td>
+            </tr>`
+
+    $('#printTable').innerHTML += row
+  })
+
+  printArea.innerHTML += `</table>`
+})
+
+window.addEventListener('afterprint', () => {
+  const printArea = $('#printArea')
+
+  printArea.remove()
+})
 
 window.onload = () => {
   applyUdfu(store.get('udf'), 'func')

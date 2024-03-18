@@ -23,10 +23,6 @@ contextBridge.exposeInMainWorld('numara', {
   isResized: () => ipcRenderer.sendSync('isResized'),
   resetSize: () => ipcRenderer.send('resetSize'),
 
-  // Print
-  print: () => ipcRenderer.send('print'),
-  printReply: (callback) => ipcRenderer.on('printReply', callback),
-
   // Import
   import: () => ipcRenderer.send('import'),
   importData: (callback) => ipcRenderer.on('importData', callback),
