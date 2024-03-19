@@ -425,11 +425,11 @@ text {
 
 .tabName {
   position: absolute;
-  top: 4px;
+  top: 3px;
   padding-left: 3px;
   width: 250px;
   overflow: hidden;
-  font-size: 0.875em;
+  font-size: 0.925em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
