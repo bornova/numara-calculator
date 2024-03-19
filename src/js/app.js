@@ -1,5 +1,4 @@
 import { $, $all, app, store } from './common'
-import { copyAll } from './context'
 import { cm, udfInput, uduInput } from './editor'
 import { getRates } from './forex'
 import { generateIcons } from './icons'
@@ -17,6 +16,8 @@ import { author, description, homepage, name, version } from './../../package.js
 import { DateTime } from 'luxon'
 
 import UIkit from 'uikit'
+
+import './context'
 
 import Mousetrap from 'mousetrap'
 import 'mousetrap-global-bind'
@@ -117,18 +118,6 @@ document.addEventListener('keydown', (event) => {
 document.addEventListener('keyup', () => {
   app.refreshCM = true
 })
-
-// Action buttons
-$('#clearButton').addEventListener('click', () => {
-  if (cm.getValue() !== '') {
-    cm.setValue('')
-    cm.focus()
-
-    calculate()
-  }
-})
-
-$('#copyButton').addEventListener('click', copyAll)
 
 $('#udfuButton').addEventListener('click', () => {
   showModal('#dialog-udfu')

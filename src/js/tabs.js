@@ -16,29 +16,13 @@ export function defaultTab() {
   store.set('lastTab', tabId)
   store.set('tabs', [{ id: tabId, title: 'New tab', data: '' }])
 
-  cm.setValue('')
+  cm.setValue(store.get('input') || '')
+
+  $('#tabName').innerHTML = 'New tab'
 }
 
 export function lastTab() {
   return store.get('lastTab')
-}
-
-export function newTab(isImport) {
-  const id = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
-  const tabs = store.get('tabs')
-  const title = $('#newTabTitleInput').value.replace(/<|>/g, '').trim() || (isImport ? 'Imported tab' : 'New tab')
-
-  app.activeTab = id
-
-  tabs.push({ id, title, data: '' })
-
-  store.set('tabs', tabs)
-
-  cm.setValue('')
-
-  populateTabs()
-
-  UIkit.modal('#dialog-newTab').hide()
 }
 
 export function populateTabs() {
@@ -92,6 +76,26 @@ export function populateTabs() {
   generateIcons()
 }
 
+export function newTab(isImport) {
+  const id = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
+  const tabs = store.get('tabs')
+  const title = $('#newTabTitleInput').value.replace(/<|>/g, '').trim() || (isImport ? 'Imported tab' : 'New tab')
+
+  app.activeTab = id
+
+  tabs.push({ id, title, data: '' })
+
+  store.set('tabs', tabs)
+
+  cm.setValue('')
+
+  populateTabs()
+
+  $('#tabName').innerHTML = title
+
+  UIkit.modal('#dialog-newTab').hide()
+}
+
 export function loadTab(tabId) {
   const tab = store.get('tabs').find((tab) => tab.id === tabId)
 
@@ -122,18 +126,6 @@ export function deleteTab(tabId) {
   })
 }
 
-export function sortTabs() {
-  const tabs = store.get('tabs')
-  const tabList = $all('#tabList > div')
-
-  let sortedTabs = [...tabList].reduce((a, i) => {
-    a.push(tabs.find((tab) => tab.id === i.getAttribute('id')))
-    return a
-  }, [])
-
-  store.set('tabs', sortedTabs)
-}
-
 export function renameTab(tabId) {
   const tabs = store.get('tabs')
   const tab = tabs.find((tab) => tab.id === tabId)
@@ -149,12 +141,26 @@ export function renameTab(tabId) {
 
     populateTabs()
 
+    $('#tabName').innerHTML = tab.title
+
     UIkit.modal('#dialog-renameTab').hide()
 
     $('#dialog-renameTab-save').removeEventListener('click', rename)
   }
 
   $('#dialog-renameTab-save').addEventListener('click', rename)
+}
+
+export function sortTabs() {
+  const tabs = store.get('tabs')
+  const tabList = $all('#tabList > div')
+
+  let sortedTabs = [...tabList].reduce((a, i) => {
+    a.push(tabs.find((tab) => tab.id === i.getAttribute('id')))
+    return a
+  }, [])
+
+  store.set('tabs', sortedTabs)
 }
 
 $('#tabList').addEventListener('click', (event) => {

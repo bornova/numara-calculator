@@ -141,7 +141,7 @@ body {
 
 .tabListItem:hover,
 .activeTab {
-  background-color: #f4f4f4;
+  background-color: #f9f9f9;
 }
 
 .deleteTabButton {

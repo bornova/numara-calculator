@@ -262,7 +262,7 @@ text {
 .actions {
   position: fixed;
   right: 15px;
-  bottom: 12px;
+  bottom: 15px;
   left: 15px;
 }
 
@@ -323,7 +323,6 @@ text {
 .action,
 .noAction {
   cursor: pointer;
-  padding-bottom: 2px;
 }
 
 .noAction {
@@ -425,8 +424,14 @@ text {
 }
 
 .tabName {
-  margin-top: 3px;
+  position: absolute;
+  top: 4px;
+  padding-left: 3px;
+  width: 250px;
+  overflow: hidden;
   font-size: 0.875em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Dialogs */
