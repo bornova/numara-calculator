@@ -113,15 +113,19 @@ body {
   color: #0f6ecd;
 }
 
+.tabListHeader {
+  border-bottom: 1px solid #111;
+}
+
 .tabListItem {
-  border: 1px solid #404040;
-  background-color: #333333;
+  border-bottom: 1px solid #111;
+  background-color: #222;
   color: #e6e6e6;
 }
 
 .tabListItem:hover,
 .activeTab {
-  background-color: #444444;
+  background-color: #333;
 }
 
 .deleteTabButton {
@@ -134,6 +138,10 @@ body {
 
 .renameTabButton:hover {
   color: #2196f3;
+}
+
+.tabName {
+  color: #627d9c;
 }
 
 .dialog-about-title {

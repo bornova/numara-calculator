@@ -260,20 +260,10 @@ text {
 
 /* Action item buttons */
 .actions {
-  display: flex;
   position: fixed;
   right: 15px;
   bottom: 12px;
   left: 15px;
-}
-
-.actions > div {
-  flex: auto;
-}
-
-.leftActions {
-  display: flex;
-  min-width: 120px;
 }
 
 .leftActions a,
@@ -286,9 +276,8 @@ text {
   text-decoration: none;
 }
 
-.rightActions {
-  display: flex;
-  min-width: 120px;
+.centerActions a {
+  margin: 0 5px;
 }
 
 .rightActions a {
@@ -312,11 +301,8 @@ text {
   height: 18px;
 }
 
-.tabList {
-  overflow-y: auto;
-}
-
 .leftActions a svg,
+.centerActions a svg,
 .rightActions a svg,
 .tabsPanelActions a svg {
   width: 14px;
@@ -379,13 +365,37 @@ text {
   stroke-width: 1.5;
 }
 
+.tabList {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
 .tabListHeader {
   padding: 10px;
   font-weight: 600;
 }
 
+.tabListItem {
+  display: flex;
+  position: relative;
+  cursor: pointer;
+}
+
+.tabListItem > div:first-child {
+  margin: 3px 0 3px 10px;
+}
+
 .tabItem {
   display: inline;
+}
+
+.tabListItemTitle {
+  padding: 5px 5px 2px 5px;
+  width: 160px;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .activeTabIndicator,
@@ -394,6 +404,29 @@ text {
   border-radius: 5px;
   width: 5px;
   height: 5px;
+}
+
+.deleteTabButton {
+  cursor: pointer;
+  margin: 0 10px 0 0;
+}
+
+.renameTabButton {
+  cursor: pointer;
+  margin: 0 5px 0 0;
+}
+
+.deleteTabButton > svg,
+.renameTabButton > svg {
+  stroke-width: 1.7px;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+}
+
+.tabName {
+  margin-top: 3px;
+  font-size: 0.875em;
 }
 
 /* Dialogs */
@@ -407,45 +440,14 @@ text {
   margin-top: 15px;
 }
 
-.tabListItem {
-  display: flex;
-  position: relative;
-  cursor: pointer;
-  padding: 3px 5px;
-}
-
 .dialog-open-body {
   margin-right: -5px;
-}
-
-.tabListItemTitle {
-  padding: 5px 5px 2px 5px;
-  width: 160px;
-  overflow: hidden;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .dialog-open-date {
   padding: 0 5px 5px 5px;
   color: #999999;
   font-size: 0.9rem;
-}
-
-.deleteTabButton,
-.renameTabButton {
-  cursor: pointer;
-  margin: 0 5px 0 0;
-  font-weight: 600;
-}
-
-.deleteTabButton > svg,
-.renameTabButton > svg {
-  stroke-width: 1.7px;
-  width: 16px;
-  height: 16px;
-  pointer-events: none;
 }
 
 .dialog-confirm {

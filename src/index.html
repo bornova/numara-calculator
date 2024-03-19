@@ -11,7 +11,6 @@
       name="keywords"
       content="numara, calculator, notepad, math, numbers, units, text calculator, expression, parser, mathjs, soulver, numi"
     />
-
     <link rel="icon" type="image/x-icon" href="assets/icon.ico" />
     <link rel="manifest" href="numara.webmanifest" />
     <link rel="stylesheet" href="assets/fonts/fonts.css" />
@@ -44,17 +43,14 @@
         <div id="output" class="output panelFont" name="sync"></div>
       </div>
 
-      <div id="actions" class="actions">
-        <div id="leftActions" class="leftActions uk-flex-left">
+      <div id="actions" class="actions uk-flex">
+        <div id="leftActions" class="leftActions uk-flex uk-flex-left uk-flex-1">
           <a id="tabsPanelButton" class="action" title="Tabs" uk-toggle="target: #tabsPanel" uk-tooltip>
             <i data-lucide="panel-left"></i>
           </a>
-          <a id="clearButton" class="action" title="Clear" uk-tooltip>
-            <i data-lucide="eraser"></i>
-          </a>
-          <a id="copyButton" class="action" title="Copy tab calculations" uk-tooltip><i data-lucide="copy"></i></a>
+          <span id="tabName" class="tabName uk-flex uk-flex-middle"></span>
         </div>
-        <div id="rightActions" class="rightActions uk-flex-right">
+        <div id="rightActions" class="rightActions uk-flex uk-flex-right uk-flex-1">
           <a id="udfuButton" class="action" title="User functions and units" uk-tooltip><i data-lucide="braces"></i></a>
           <a id="settingsButton" class="action" title="Settings" uk-tooltip><i data-lucide="settings"></i></a>
           <a id="aboutButton" class="action" title="About" uk-tooltip><i data-lucide="info"></i></a>
@@ -62,7 +58,7 @@
         </div>
       </div>
     </div>
-    `
+
     <div id="tabsPanel" uk-offcanvas="overlay: true">
       <div class="uk-offcanvas-bar uk-flex uk-flex-column">
         <div class="tabListHeader uk-text-right">

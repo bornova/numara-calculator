@@ -26,7 +26,7 @@ export function lastTab() {
 export function newTab(isImport) {
   const id = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
   const tabs = store.get('tabs')
-  const title = $('#newTabTitleInput').value.replace(/<|>/g, '').trim() || isImport ? 'Imported tab' : 'New tab'
+  const title = $('#newTabTitleInput').value.replace(/<|>/g, '').trim() || (isImport ? 'Imported tab' : 'New tab')
 
   app.activeTab = id
 
@@ -60,10 +60,10 @@ export function populateTabs() {
         <div id="tab-${tab.id}"class="tabListItemTitle" title="${tab.title}">${tab.title}</div>
         <div class="dialog-open-date">${DateTime.fromFormat(tab.id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
       </div>
-      <div class="renameTabButton uk-hidden" data-action="rename" title="Rename" >
+      <div class="renameTabButton uk-hidden" data-action="rename" title="Rename">
         <i data-lucide="text-cursor-input"></i>
       </div>
-      <div class="deleteTabButton uk-hidden" data-action="delete" title="Delete" >
+      <div class="deleteTabButton uk-hidden" data-action="delete" title="Delete">
         <i data-lucide="x"></i>
       </div>
     `
@@ -93,11 +93,15 @@ export function populateTabs() {
 }
 
 export function loadTab(tabId) {
+  const tab = store.get('tabs').find((tab) => tab.id === tabId)
+
   app.activeTab = tabId
 
   store.set('lastTab', tabId)
 
-  cm.setValue(store.get('tabs').find((tab) => tab.id === tabId).data)
+  cm.setValue(tab.data)
+
+  $('#tabName').innerHTML = tab.title
 }
 
 export function deleteTab(tabId) {
@@ -182,7 +186,9 @@ $('#newTabButton').addEventListener('click', () => {
   showModal('#dialog-newTab')
 })
 
-$('#dialog-newTab-save').addEventListener('click', newTab)
+$('#dialog-newTab-save').addEventListener('click', () => {
+  newTab()
+})
 
 $('#newTabTitleInput').addEventListener('keyup', (event) => {
   if (event.key === 'Enter' || event.keyCode === 13) {

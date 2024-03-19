@@ -6,7 +6,7 @@ import { generateIcons } from './icons'
 import { notify, showError, showModal } from './modal'
 import { plot } from './plot'
 import { settings } from './settings'
-import { defaultTab, lastTab, populateTabs, sortTabs } from './tabs'
+import { defaultTab, lastTab, loadTab, populateTabs, sortTabs } from './tabs'
 import { applyUdfu } from './userDefined'
 import { checkSize, checkUpdates, isMac, isElectron, toggleMinMax } from './utils'
 
@@ -97,7 +97,7 @@ if (!store.get('tabs')) {
   defaultTab()
 } else {
   app.activeTab = lastTab()
-  cm.setValue(store.get('tabs').find((tab) => tab.id === lastTab())?.data || '')
+  loadTab(lastTab())
 }
 
 // Set user defined values
