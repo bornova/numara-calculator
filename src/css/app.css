@@ -296,11 +296,15 @@ text {
 }
 
 .tabsPanelActionsLeft {
-  margin: 0 15px 15px 15px;
+  margin: 0 0 14px 14px;
 }
 
 .tabsPanelActionsRight {
   margin: 0 15px 12px 0;
+}
+
+.closetabsPanelButton {
+  -webkit-app-region: no-drag !important;
 }
 
 .closetabsPanelButton svg {
@@ -323,6 +327,11 @@ text {
 
 .newTabButton {
   margin-right: 0 !important;
+}
+
+.newTabButton svg {
+  width: 16px !important;
+  height: 16px !important;
 }
 
 .action,
@@ -427,14 +436,13 @@ text {
 .deleteTabButton,
 .renameTabButton {
   cursor: pointer;
-  margin: 4px 5px 0 0;
-  height: 16px;
+  margin: 0 5px 0 0;
   font-weight: 600;
 }
 
 .deleteTabButton > svg,
 .renameTabButton > svg {
-  stroke-width: 1.6px;
+  stroke-width: 1.7px;
   width: 16px;
   height: 16px;
   pointer-events: none;

@@ -23,10 +23,10 @@ export function lastTab() {
   return store.get('lastTab')
 }
 
-export function newTab() {
+export function newTab(isImport) {
   const id = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
   const tabs = store.get('tabs')
-  const title = $('#newTabTitleInput').value.replace(/<|>/g, '').trim() || 'New tab'
+  const title = $('#newTabTitleInput').value.replace(/<|>/g, '').trim() || isImport ? 'Imported tab' : 'New tab'
 
   app.activeTab = id
 
@@ -51,15 +51,40 @@ export function populateTabs() {
   $('#tabList').innerHTML = ''
 
   tabs.forEach((tab) => {
-    $('#tabList').innerHTML += `
-      <div class="tabListItem uk-flex ${app.activeTab === tab.id ? 'activeTab' : ''}" id="${tab.id}">
-        <div class="uk-flex-1" data-action="load">
-          <div id="tab-${tab.id}"class="tabListItemTitle" title="${tab.title}">${tab.title}</div>
-          <div class="dialog-open-date">${DateTime.fromFormat(tab.id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
-        </div>
-        <div class="renameTabButton" data-action="rename" title="Rename" ><i data-lucide="text-cursor-input"></i></div>
-        <div class="deleteTabButton" data-action="delete" title="Delete" ><i data-lucide="x"></i></div>
-      </div>`
+    const tabItem = document.createElement('div')
+
+    tabItem.id = tab.id
+    tabItem.classList.add('tabListItem', 'uk-flex-middle', app.activeTab === tab.id ? 'activeTab' : 'inactiveTab')
+    tabItem.innerHTML = `
+      <div class="uk-flex-1" data-action="load">
+        <div id="tab-${tab.id}"class="tabListItemTitle" title="${tab.title}">${tab.title}</div>
+        <div class="dialog-open-date">${DateTime.fromFormat(tab.id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
+      </div>
+      <div class="renameTabButton uk-hidden" data-action="rename" title="Rename" >
+        <i data-lucide="text-cursor-input"></i>
+      </div>
+      <div class="deleteTabButton uk-hidden" data-action="delete" title="Delete" >
+        <i data-lucide="x"></i>
+      </div>
+    `
+
+    tabItem.addEventListener('mouseenter', (event) => {
+      Array.from(event.target.children)
+        .slice(-2)
+        .forEach((el) => {
+          el.classList.remove('uk-hidden')
+        })
+    })
+
+    tabItem.addEventListener('mouseleave', (event) => {
+      Array.from(event.target.children)
+        .slice(-2)
+        .forEach((el) => {
+          el.classList.add('uk-hidden')
+        })
+    })
+
+    $('#tabList').appendChild(tabItem)
   })
 
   sortTabs()
@@ -129,7 +154,7 @@ export function renameTab(tabId) {
 }
 
 $('#tabList').addEventListener('click', (event) => {
-  if (event.target.parentNode.getAttribute('data-action') === 'load') {
+  if (event.target.parentNode.dataset.action === 'load') {
     let tabId = event.target.parentNode.parentNode.id
 
     loadTab(tabId)
@@ -178,7 +203,7 @@ if (isElectron) {
   })
 
   numara.importData((event, data, msg) => {
-    newTab()
+    newTab(true)
 
     cm.setValue(data)
 
