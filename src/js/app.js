@@ -327,10 +327,8 @@ $('#scrollTop').addEventListener('click', () => {
 
 // Mousetrap
 const traps = {
-  clearButton: ['command+d', 'ctrl+d'],
-  printButton: ['command+p', 'ctrl+p'],
-  saveButton: ['command+s', 'ctrl+s'],
-  openButton: ['command+o', 'ctrl+o']
+  tabsPanelButton: ['command+t', 'ctrl+t'],
+  printButton: ['command+p', 'ctrl+p']
 }
 
 for (const [button, command] of Object.entries(traps)) {

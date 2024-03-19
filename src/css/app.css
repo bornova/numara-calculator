@@ -262,7 +262,7 @@ text {
 .actions {
   position: fixed;
   right: 15px;
-  bottom: 15px;
+  bottom: 14px;
   left: 15px;
 }
 
@@ -417,21 +417,10 @@ text {
 
 .deleteTabButton > svg,
 .renameTabButton > svg {
-  stroke-width: 1.7px;
+  stroke-width: 1.5px;
   width: 16px;
   height: 16px;
   pointer-events: none;
-}
-
-.tabName {
-  position: absolute;
-  top: 3px;
-  padding-left: 3px;
-  width: 250px;
-  overflow: hidden;
-  font-size: 0.925em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* Dialogs */

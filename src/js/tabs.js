@@ -17,8 +17,6 @@ export function defaultTab() {
   store.set('tabs', [{ id: tabId, title: 'New tab', data: '' }])
 
   cm.setValue(store.get('input') || '')
-
-  $('#tabName').innerHTML = 'New tab'
 }
 
 export function lastTab() {
@@ -91,8 +89,6 @@ export function newTab(isImport) {
 
   populateTabs()
 
-  $('#tabName').innerHTML = title
-
   UIkit.modal('#dialog-newTab').hide()
 }
 
@@ -104,8 +100,6 @@ export function loadTab(tabId) {
   store.set('lastTab', tabId)
 
   cm.setValue(tab.data)
-
-  $('#tabName').innerHTML = tab.title
 }
 
 export function deleteTab(tabId) {
@@ -140,8 +134,6 @@ export function renameTab(tabId) {
     store.set('tabs', tabs)
 
     populateTabs()
-
-    $('#tabName').innerHTML = tab.title
 
     UIkit.modal('#dialog-renameTab').hide()
 
