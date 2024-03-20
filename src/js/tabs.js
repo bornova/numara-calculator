@@ -17,6 +17,8 @@ export function defaultTab() {
   store.set('tabs', [{ id: tabId, title: 'New tab', data: '' }])
 
   cm.setValue(store.get('input') || '')
+
+  $('#tabName').innerHTML = 'New tab'
 }
 
 export function lastTab() {
@@ -42,29 +44,13 @@ export function populateTabs() {
         <div id="tab-${tab.id}"class="tabListItemTitle" title="${tab.title}">${tab.title}</div>
         <div class="dialog-open-date">${DateTime.fromFormat(tab.id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
       </div>
-      <div class="renameTabButton uk-hidden" data-action="rename" title="Rename">
+      <div class="renameTabButton" data-action="rename" title="Rename">
         <i data-lucide="text-cursor-input"></i>
       </div>
-      <div class="deleteTabButton uk-hidden" data-action="delete" title="Delete">
+      <div class="deleteTabButton" data-action="delete" title="Delete">
         <i data-lucide="x"></i>
       </div>
     `
-
-    tabItem.addEventListener('mouseenter', (event) => {
-      Array.from(event.target.children)
-        .slice(-2)
-        .forEach((el) => {
-          el.classList.remove('uk-hidden')
-        })
-    })
-
-    tabItem.addEventListener('mouseleave', (event) => {
-      Array.from(event.target.children)
-        .slice(-2)
-        .forEach((el) => {
-          el.classList.add('uk-hidden')
-        })
-    })
 
     $('#tabList').appendChild(tabItem)
   })
@@ -89,6 +75,8 @@ export function newTab(isImport) {
 
   populateTabs()
 
+  $('#tabName').innerHTML = title
+
   UIkit.modal('#dialog-newTab').hide()
 }
 
@@ -100,6 +88,8 @@ export function loadTab(tabId) {
   store.set('lastTab', tabId)
 
   cm.setValue(tab.data)
+
+  $('#tabName').innerHTML = tab.title
 }
 
 export function deleteTab(tabId) {
@@ -134,6 +124,8 @@ export function renameTab(tabId) {
     store.set('tabs', tabs)
 
     populateTabs()
+
+    $('#tabName').innerHTML = tab.title
 
     UIkit.modal('#dialog-renameTab').hide()
 

@@ -105,6 +105,10 @@ body {
   color: #7b9dc5;
 }
 
+.uk-offcanvas-bar {
+  border-right: 1px solid #111;
+}
+
 .uk-offcanvas-bar a {
   color: #7b9dc5;
 }

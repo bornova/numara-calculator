@@ -43,13 +43,14 @@
         <div id="output" class="output panelFont" name="sync"></div>
       </div>
 
-      <div id="actions" class="actions uk-flex">
-        <div id="leftActions" class="leftActions uk-flex uk-flex-left uk-flex-1">
+      <div id="actions" class="actions uk-flex uk-flex-middle">
+        <div id="leftActions" class="leftActions uk-flex uk-flex-middle uk-flex-1">
           <a id="tabsPanelButton" class="action" title="Tabs" uk-toggle="target: #tabsPanel" uk-tooltip>
             <i data-lucide="panel-left"></i>
           </a>
+          <span id="tabName" class="tabName"></span>
         </div>
-        <div id="rightActions" class="rightActions uk-flex uk-flex-right uk-flex-1">
+        <div id="rightActions" class="rightActions uk-flex uk-flex-right">
           <a id="udfuButton" class="action" title="User functions and units" uk-tooltip><i data-lucide="braces"></i></a>
           <a id="settingsButton" class="action" title="Settings" uk-tooltip><i data-lucide="settings"></i></a>
           <a id="aboutButton" class="action" title="About" uk-tooltip><i data-lucide="info"></i></a>

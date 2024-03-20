@@ -423,6 +423,14 @@ text {
   pointer-events: none;
 }
 
+.tabName {
+  position: relative;
+  top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Dialogs */
 .dialogs {
   display: none;
