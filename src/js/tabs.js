@@ -25,6 +25,38 @@ export function lastTab() {
   return store.get('lastTab')
 }
 
+export function newTab(isImport) {
+  const id = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
+  const tabs = store.get('tabs')
+  const title = $('#newTabTitleInput').value.replace(/<|>/g, '').trim() || (isImport ? 'Imported tab' : 'New tab')
+
+  app.activeTab = id
+
+  tabs.push({ id, title, data: '' })
+
+  store.set('tabs', tabs)
+
+  cm.setValue('')
+
+  populateTabs()
+
+  $('#tabName').innerHTML = title
+
+  UIkit.modal('#dialog-newTab').hide()
+}
+
+export function loadTab(tabId) {
+  const tab = store.get('tabs').find((tab) => tab.id === tabId)
+
+  app.activeTab = tabId
+
+  store.set('lastTab', tabId)
+
+  $('#tabName').innerHTML = tab.title
+
+  cm.setValue(tab.data)
+}
+
 export function populateTabs() {
   const tabs = store.get('tabs')
 
@@ -58,38 +90,6 @@ export function populateTabs() {
   sortTabs()
 
   generateIcons()
-}
-
-export function newTab(isImport) {
-  const id = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
-  const tabs = store.get('tabs')
-  const title = $('#newTabTitleInput').value.replace(/<|>/g, '').trim() || (isImport ? 'Imported tab' : 'New tab')
-
-  app.activeTab = id
-
-  tabs.push({ id, title, data: '' })
-
-  store.set('tabs', tabs)
-
-  cm.setValue('')
-
-  populateTabs()
-
-  $('#tabName').innerHTML = title
-
-  UIkit.modal('#dialog-newTab').hide()
-}
-
-export function loadTab(tabId) {
-  const tab = store.get('tabs').find((tab) => tab.id === tabId)
-
-  app.activeTab = tabId
-
-  store.set('lastTab', tabId)
-
-  cm.setValue(tab.data)
-
-  $('#tabName').innerHTML = tab.title
 }
 
 export function deleteTab(tabId) {

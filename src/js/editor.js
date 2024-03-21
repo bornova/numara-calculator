@@ -1,4 +1,4 @@
-import { $, $all, app } from './common'
+import { $, $all, app, store } from './common'
 import { calculate, formatAnswer, math } from './calculate'
 
 import * as formulajs from '@formulajs/formulajs'
@@ -356,5 +356,22 @@ cm.on('update', () => {
         title: 'Excel function'
       })
     }
+  }
+})
+
+cm.on('blur', (cm) => {
+  const tabs = store.get('tabs')
+  const tab = tabs.find((tab) => tab.id == app.activeTab)
+
+  tab.cursor = cm.getCursor()
+
+  store.set('tabs', tabs)
+})
+
+cm.on('focus', (cm) => {
+  const cursor = store.get('tabs').find((tab) => tab.id == app.activeTab).cursor
+
+  if (cursor) {
+    cm.setCursor(cursor)
   }
 })

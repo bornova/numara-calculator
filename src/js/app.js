@@ -1,4 +1,5 @@
 import { $, $all, app, store } from './common'
+import { copyAll } from './context'
 import { cm, udfInput, uduInput } from './editor'
 import { getRates } from './forex'
 import { generateIcons } from './icons'
@@ -119,6 +120,19 @@ document.addEventListener('keyup', () => {
   app.refreshCM = true
 })
 
+$('#clearButton').addEventListener('click', () => {
+  if (cm.getValue() !== '') {
+    cm.setValue('')
+    cm.focus()
+
+    calculate()
+  }
+})
+
+$('#copyButton').addEventListener('click', () => {
+  copyAll()
+})
+
 $('#udfuButton').addEventListener('click', () => {
   showModal('#dialog-udfu')
 })
@@ -224,6 +238,12 @@ UIkit.util.on('#dialog-newTab', 'shown', () => {
 
 // Populate saved calculation
 UIkit.util.on('#tabsPanel', 'beforeshow', populateTabs)
+
+UIkit.util.on('#tabsPanel', 'hidden', () => {
+  setTimeout(() => {
+    cm.focus()
+  }, 100)
+})
 
 // Panel resizer
 let resizeDelay
@@ -401,11 +421,6 @@ window.addEventListener('afterprint', () => {
 window.onload = () => {
   applyUdfu(store.get('udf'), 'func')
   applyUdfu(store.get('udu'), 'unit')
-
-  cm.execCommand('goDocEnd')
-  cm.execCommand('goLineEnd')
-
-  $('.cm-s-numara .CodeMirror-code').lastChild.scrollIntoView()
 
   setTimeout(() => {
     cm.focus()

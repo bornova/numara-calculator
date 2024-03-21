@@ -86,7 +86,7 @@ function copyAllAnswers() {
 }
 
 /** Copy all calculations. */
-function copyAll() {
+export function copyAll() {
   if (cm.getValue() === '') {
     notify('Nothing to copy.')
   } else {

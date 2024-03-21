@@ -128,6 +128,9 @@ export function calculate() {
       subtotals.length = 0
     }
 
+    $('#clearButton').style.visibility = cm.getValue() ? 'visible' : 'hidden'
+    $('#copyButton').style.visibility = cm.getValue() ? 'visible' : 'hidden'
+
     answers += `<div
         class="${app.settings.rulers ? 'ruler' : 'noRuler'}"
         data-line="${cmLineNo}"
