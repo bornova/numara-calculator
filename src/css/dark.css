@@ -106,7 +106,7 @@ body {
 }
 
 .uk-offcanvas-bar {
-  border-right: 1px solid #111;
+  border-right: 1px solid #181818;
 }
 
 .uk-offcanvas-bar a {
@@ -118,11 +118,11 @@ body {
 }
 
 .tabListHeader {
-  border-bottom: 1px solid #111;
+  border-bottom: 1px solid #181818;
 }
 
 .tabListItem {
-  border-bottom: 1px solid #111;
+  border-bottom: 1px solid #181818;
   background-color: #222;
   color: #e6e6e6;
 }
