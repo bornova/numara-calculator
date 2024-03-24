@@ -117,34 +117,34 @@ body {
   color: #0f6ecd;
 }
 
-.tabListHeader {
+.pageListHeader {
   border-bottom: 1px solid #181818;
 }
 
-.tabListItem {
+.pageListItem {
   border-bottom: 1px solid #181818;
   background-color: #222;
   color: #e6e6e6;
 }
 
-.tabListItem:hover,
-.activeTab {
+.pageListItem:hover,
+.activePage {
   background-color: #333;
 }
 
-.deleteTabButton {
+.deletePageButton {
   color: #e6e6e6;
 }
 
-.deleteTabButton:hover {
+.deletePageButton:hover {
   color: #d41111;
 }
 
-.renameTabButton:hover {
+.renamePageButton:hover {
   color: #2196f3;
 }
 
-.tabName {
+.pageName {
   color: #627d9c;
 }
 

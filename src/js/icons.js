@@ -2,6 +2,7 @@ import {
   createIcons,
   AlertCircle,
   Braces,
+  ChevronDown,
   ChevronLeft,
   Circle,
   Copy,
@@ -24,6 +25,7 @@ import {
 const iconList = {
   AlertCircle,
   Braces,
+  ChevronDown,
   ChevronLeft,
   Circle,
   Copy,

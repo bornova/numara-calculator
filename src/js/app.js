@@ -6,7 +6,7 @@ import { generateIcons } from './icons'
 import { notify, showError, showModal } from './modal'
 import { plot } from './plot'
 import { settings } from './settings'
-import { defaultTab, lastTab, loadTab, populateTabs, sortTabs } from './tabs'
+import { defaultPage, lastPage, loadPage, populatePages, sortPages } from './pages'
 import { applyUdfu } from './userDefined'
 import { checkSize, checkUpdates, isMac, isElectron, toggleMinMax } from './utils'
 
@@ -95,11 +95,11 @@ if (app.settings.currency) {
 }
 
 // Set user defined values
-if (!store.get('tabs')) {
-  defaultTab()
+if (!store.get('pages')) {
+  defaultPage()
 } else {
-  app.activeTab = lastTab()
-  loadTab(lastTab())
+  app.activePage = lastPage()
+  loadPage(lastPage())
 }
 
 // Set user defined values
@@ -228,18 +228,18 @@ UIkit.util.on('#dialog-plot', 'hide', () => {
   app.activePlot = false
 })
 
-// Save tab sort order after move
-UIkit.util.on('#tabList', 'moved', sortTabs)
+// Save page sort order after move
+UIkit.util.on('#pageList', 'moved', sortPages)
 
 // Save dialog title focus on shown
-UIkit.util.on('#dialog-newTab', 'shown', () => {
-  $('#newTabTitleInput').focus()
+UIkit.util.on('#dialog-newPage', 'shown', () => {
+  $('#newPageTitleInput').focus()
 })
 
 // Populate saved calculation
-UIkit.util.on('#tabsPanel', 'beforeshow', populateTabs)
+UIkit.util.on('#pagesPanel', 'shown', populatePages)
 
-UIkit.util.on('#tabsPanel', 'hidden', () => {
+UIkit.util.on('#pagesPanel', 'hidden', () => {
   setTimeout(() => {
     cm.focus()
   }, 100)
@@ -347,7 +347,7 @@ $('#scrollTop').addEventListener('click', () => {
 
 // Mousetrap
 const traps = {
-  tabsPanelButton: ['command+t', 'ctrl+t'],
+  pagesPanelButton: ['command+t', 'ctrl+t'],
   printButton: ['command+p', 'ctrl+p']
 }
 
@@ -385,8 +385,8 @@ window.addEventListener('beforeprint', () => {
   printArea.setAttribute('id', 'printArea')
   printArea.className = 'printArea'
   printArea.innerHTML = `<div id="printTitle" class="printTitle">${name}</div>
-          <table id="printTable"
-            class="printTable ${app.settings.rulers ? 'printRulers' : ''}"
+          <table id="printPagele"
+            class="printPagele ${app.settings.rulers ? 'printRulers' : ''}"
             style="
               font-size: ${app.settings.fontSize};
               font-weight: ${app.settings.fontWeight};
@@ -406,7 +406,7 @@ window.addEventListener('beforeprint', () => {
               <td class="printAnswer${app.settings.divider ? 'Left' : 'Right'}">${answer}</td>
             </tr>`
 
-    $('#printTable').innerHTML += row
+    $('#printPagele').innerHTML += row
   })
 
   printArea.innerHTML += `</table>`

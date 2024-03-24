@@ -45,14 +45,14 @@
 
       <div id="actions" class="actions uk-flex uk-flex-middle">
         <div id="leftActions" class="leftActions uk-flex uk-flex-middle uk-flex-1">
-          <a id="tabsPanelButton" class="action" title="Tabs" uk-toggle="target: #tabsPanel" uk-tooltip>
+          <a id="pagesPanelButton" class="action" title="Pages" uk-toggle="target: #pagesPanel" uk-tooltip>
             <i data-lucide="panel-left"></i>
           </a>
-          <span id="tabName" class="tabName"></span>
+          <span id="pageName" class="pageName" title="Active page"></span>
         </div>
         <div id="centerActions" class="centerActions uk-flex uk-flex-middle">
-          <a id="clearButton" class="action" title="Clear" uk-tooltip><i data-lucide="eraser"></i></a>
-          <a id="copyButton" class="action" title="Copy tab calculations" uk-tooltip><i data-lucide="copy"></i></a>
+          <a id="clearButton" class="action" title="Clear page" uk-tooltip><i data-lucide="eraser"></i></a>
+          <a id="copyButton" class="action" title="Copy page" uk-tooltip><i data-lucide="copy"></i></a>
         </div>
         <div id="rightActions" class="rightActions uk-flex uk-flex-right uk-flex-1">
           <a id="udfuButton" class="action" title="User functions and units" uk-tooltip><i data-lucide="braces"></i></a>
@@ -63,20 +63,20 @@
       </div>
     </div>
 
-    <div id="tabsPanel" uk-offcanvas="overlay: true">
+    <div id="pagesPanel" uk-offcanvas="overlay: true">
       <div class="uk-offcanvas-bar uk-flex uk-flex-column">
-        <div class="tabListHeader uk-text-right">
-          <a id="closetabsPanelButton" class="action closetabsPanelButton"><i data-lucide="chevron-left"></i></a>
+        <div class="pageListHeader uk-text-right">
+          <a id="closepagesPanelButton" class="action closepagesPanelButton"><i data-lucide="chevron-left"></i></a>
         </div>
-        <div id="tabList" class="tabList uk-flex-1 uk-margin-small-bottom" uk-sortable></div>
-        <div id="tabsPanelFooter" class="tabsPanelFooter uk-flex-bottom">
-          <div id="tabsPanelActions" class="tabsPanelActions uk-flex">
-            <div class="tabsPanelActionsLeft uk-width-1-3">
-              <a id="newTabButton" class="action newTabButton" title="New tab" uk-tooltip>
+        <div id="pageList" class="pageList uk-flex-1 uk-margin-small-bottom" uk-sortable></div>
+        <div id="pagesPanelFooter" class="pagesPanelFooter uk-flex-bottom">
+          <div id="pagesPanelActions" class="pagesPanelActions uk-flex">
+            <div class="pagesPanelActionsLeft uk-width-1-3">
+              <a id="newPageButton" class="action newPageButton" title="New page" uk-tooltip>
                 <i data-lucide="plus"></i>
               </a>
             </div>
-            <div class="tabsPanelActionsLeft uk-width-2-3 uk-text-right">
+            <div class="pagesPanelActionsLeft uk-width-2-3 uk-text-right">
               <a id="importButton" class="action importButton" title="Import" uk-tooltip>
                 <i data-lucide="download"></i>
               </a>
@@ -89,27 +89,29 @@
       </div>
     </div>
 
-    <div id="dialog-newTab" class="modal" uk-modal>
+    <div id="dialog-newPage" class="modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
-        <h2 class="uk-modal-title">New tab</h2>
-        <div><input id="newTabTitleInput" class="textBox" type="text" maxlength="50" placeholder="New tab" /></div>
+        <h2 class="uk-modal-title">New page</h2>
+        <div>
+          <input id="newPageTitleInput" class="textBox" type="text" maxlength="50" placeholder="Untitled page" />
+        </div>
         <div uk-flex>
           <div class="dialog-buttons uk-flex-right">
             <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
-            <button id="dialog-newTab-save" class="uk-button uk-button-primary uk-button-small">Save</button>
+            <button id="dialog-newPage-save" class="uk-button uk-button-primary uk-button-small">Save</button>
           </div>
         </div>
       </div>
     </div>
 
-    <div id="dialog-renameTab" class="modal" uk-modal>
+    <div id="dialog-renamePage" class="modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
-        <h2 class="uk-modal-title">Rename tab</h2>
-        <div><input id="renameTabTitleInput" class="textBox" type="text" maxlength="50" /></div>
+        <h2 class="uk-modal-title">Rename page</h2>
+        <div><input id="renamePageTitleInput" class="textBox" type="text" maxlength="50" /></div>
         <div uk-flex>
           <div class="dialog-buttons uk-flex-right">
             <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
-            <button id="dialog-renameTab-save" class="uk-button uk-button-primary uk-button-small">Save</button>
+            <button id="dialog-renamePage-save" class="uk-button uk-button-primary uk-button-small">Save</button>
           </div>
         </div>
       </div>
@@ -339,7 +341,6 @@
               <select id="matrixType" class="uk-select settingItem"></select>
             </div>
           </div>
-
           <div class="uk-child-width-expand" uk-grid>
             <div>Predictable output</div>
             <div class="uk-text-right uk-position-relative">

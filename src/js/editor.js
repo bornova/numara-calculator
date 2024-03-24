@@ -360,16 +360,16 @@ cm.on('update', () => {
 })
 
 cm.on('blur', (cm) => {
-  const tabs = store.get('tabs')
-  const tab = tabs.find((tab) => tab.id == app.activeTab)
+  const pages = store.get('pages')
+  const page = pages.find((page) => page.id == app.activePage)
 
-  tab.cursor = cm.getCursor()
+  page.cursor = cm.getCursor()
 
-  store.set('tabs', tabs)
+  store.set('pages', pages)
 })
 
 cm.on('focus', (cm) => {
-  const cursor = store.get('tabs').find((tab) => tab.id == app.activeTab).cursor
+  const cursor = store.get('pages').find((page) => page.id == app.activePage).cursor
 
   if (cursor) {
     cm.setCursor(cursor)

@@ -85,7 +85,7 @@ function copyAllAnswers() {
   }
 }
 
-/** Copy all calculations. */
+/** Copy page. */
 export function copyAll() {
   if (cm.getValue() === '') {
     notify('Nothing to copy.')
@@ -104,7 +104,7 @@ export function copyAll() {
         : '\n'
     })
 
-    navigator.clipboard.writeText(copiedCalc).then(notify('Copied all calculations to clipboard.'))
+    navigator.clipboard.writeText(copiedCalc).then(notify('Copied page to clipboard.'))
   }
 }
 
