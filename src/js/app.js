@@ -350,8 +350,7 @@ $('#scrollTop').addEventListener('click', () => {
 
 // Mousetrap
 const traps = {
-  pagesPanelButton: ['command+t', 'ctrl+t'],
-  printButton: ['command+p', 'ctrl+p']
+  newPageButton: ['command+g', 'ctrl+g']
 }
 
 for (const [button, command] of Object.entries(traps)) {

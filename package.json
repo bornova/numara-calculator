@@ -20,7 +20,7 @@
     "lint:fix": "eslint --fix .",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write .",
-    "publish": "electron-builder -p always",
+    "publish": "electron-builder --x64 --arm64 -p always",
     "test": "npm run build && electron .",
     "wiki": "node src/misc/wiki.js"
   },
@@ -36,7 +36,7 @@
     "eslint-config-prettier": "^9.1.0",
     "fs-extra": "^11.2.0",
     "function-plot": "^1.24.4",
-    "lucide": "^0.359.0",
+    "lucide": "^0.321.0",
     "luxon": "^3.4.4",
     "mathjs": "^12.4.1",
     "mousetrap": "^1.6.5",
@@ -66,31 +66,6 @@
       "src/main.cjs",
       "src/preload.cjs"
     ],
-    "mac": {
-      "category": "public.app-category.utilities",
-      "entitlements": "src/misc/entitlements.mac.plist",
-      "entitlementsInherit": "src/misc/entitlements.mac.plist",
-      "hardenedRuntime": true,
-      "notarize": {
-        "teamId": "2VP53YFAQP"
-      },
-      "target": {
-        "target": "default",
-        "arch": [
-          "x64",
-          "arm64"
-        ]
-      }
-    },
-    "win": {
-      "target": "nsis",
-      "publisherName": "Timur Atalay",
-      "verifyUpdateCodeSignature": false
-    },
-    "nsis": {
-      "deleteAppDataOnUninstall": true,
-      "oneClick": false
-    },
     "linux": {
       "category": "Utility",
       "target": [
@@ -98,6 +73,23 @@
         "deb",
         "rpm"
       ]
+    },
+    "mac": {
+      "category": "public.app-category.utilities",
+      "entitlements": "src/misc/entitlements.mac.plist",
+      "entitlementsInherit": "src/misc/entitlements.mac.plist",
+      "hardenedRuntime": true,
+      "notarize": {
+        "teamId": "2VP53YFAQP"
+      }
+    },
+    "win": {
+      "publisherName": "Timur Atalay",
+      "verifyUpdateCodeSignature": false
+    },
+    "nsis": {
+      "deleteAppDataOnUninstall": true,
+      "oneClick": false
     }
   }
 }
