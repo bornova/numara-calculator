@@ -81,11 +81,12 @@ export function populatePages() {
         <div id="page-${page.id}"class="pageListItemTitle" title="${page.title}">${page.title}</div>
         <div class="dialog-open-date">${DateTime.fromFormat(page.id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
       </div>
-      <div class="renamePageButton" data-action="rename" title="Rename">
-        <i data-lucide="text-cursor-input"></i>
-      </div>
-      <div class="deletePageButton" data-action="delete" title="Delete">
-        <i data-lucide="x"></i>
+      <div class="uk-flex-right uk-margin-small-right">
+        <span uk-drop-parent-icon></span>
+        <div uk-dropdown="mode: click; pos: right-top;">
+          <div class="renamePageButton uk-margin-small-bottom" data-action="rename" title="Rename">Rename</div>
+          <div class="deletePageButton" data-action="delete" title="Delete">Delete</div>
+        </div>
       </div>
     `
 

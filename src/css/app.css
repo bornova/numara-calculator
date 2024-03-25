@@ -364,6 +364,11 @@ text {
   stroke-width: 1.5;
 }
 
+.uk-dropdown {
+  padding: 10px;
+  min-width: auto;
+}
+
 .pageList {
   overflow-x: hidden;
   overflow-y: auto;

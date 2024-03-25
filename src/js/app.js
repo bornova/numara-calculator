@@ -237,7 +237,7 @@ UIkit.util.on('#dialog-newPage', 'shown', () => {
 })
 
 // Populate saved calculation
-UIkit.util.on('#pagesPanel', 'shown', populatePages)
+populatePages()
 
 UIkit.util.on('#pagesPanel', 'hidden', () => {
   setTimeout(() => {
