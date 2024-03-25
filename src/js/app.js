@@ -229,7 +229,10 @@ UIkit.util.on('#dialog-plot', 'hide', () => {
 })
 
 // Save page sort order after move
-UIkit.util.on('#pageList', 'moved', sortPages)
+UIkit.util.on('#pageList', 'moved', () => {
+  sortPages()
+  populatePages()
+})
 
 // Save dialog title focus on shown
 UIkit.util.on('#dialog-newPage', 'shown', () => {

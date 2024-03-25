@@ -266,7 +266,10 @@ text {
   left: 15px;
 }
 
-.leftActions a,
+.leftActions a {
+  margin-right: 5px;
+}
+
 .pagesPanelActions a {
   margin-right: 10px;
 }
@@ -325,9 +328,11 @@ text {
   cursor: pointer;
 }
 
-.noAction {
+.noAction,
+.action[disabled='true'] {
   opacity: 0.4;
   cursor: default;
+  pointer-events: none;
 }
 
 .notificationDot {
@@ -365,7 +370,7 @@ text {
 }
 
 .uk-dropdown {
-  padding: 10px;
+  padding: 0px;
   min-width: auto;
 }
 
@@ -410,14 +415,19 @@ text {
   height: 5px;
 }
 
+.drop-parent-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
 .deletePageButton {
   cursor: pointer;
-  margin: 0 10px 0 0;
+  padding: 5px 10px;
 }
 
 .renamePageButton {
   cursor: pointer;
-  margin: 0 5px 0 0;
+  padding: 5px 10px;
 }
 
 .deletePageButton > svg,

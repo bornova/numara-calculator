@@ -40,6 +40,9 @@ export function calculate() {
   app.mathScope.now = dateTime.toFormat(app.settings.dateDay ? nowDayFormat : nowFormat)
   app.mathScope.today = dateTime.toFormat(app.settings.dateDay ? todayDayFormat : todayFormat)
 
+  $('#clearButton').setAttribute('disabled', cm.getValue() === '')
+  $('#copyButton').setAttribute('disabled', cm.getValue() === '')
+
   cm.eachLine((cmLine) => {
     const cmLineNo = cm.getLineNumber(cmLine)
     const lineNo = cmLineNo + 1

@@ -145,6 +145,14 @@ body {
   background-color: #f9f9f9;
 }
 
+.drop-parent-icon {
+  color: #607d8b;
+}
+
+.drop-parent-icon:hover {
+  color: #4682b4;
+}
+
 .deletePageButton {
   color: #666666;
 }
