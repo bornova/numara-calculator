@@ -190,6 +190,10 @@ body {
   color: #e6e6e6;
 }
 
+.subSwitchIcon {
+  color: #bbb;
+}
+
 .textBox {
   border: 1px solid #666666;
   color: #eaeaea;
