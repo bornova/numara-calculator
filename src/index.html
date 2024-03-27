@@ -45,7 +45,7 @@
 
       <div id="actions" class="actions uk-flex uk-flex-middle">
         <div id="leftActions" class="leftActions uk-flex uk-flex-middle uk-flex-1">
-          <a id="pagesPanelButton" class="action" title="Pages" uk-toggle="target: #pagesPanel" uk-tooltip>
+          <a id="sidePanelButton" class="action" title="Pages" uk-toggle="target: #sidePanel" uk-tooltip>
             <i data-lucide="panel-left"></i>
           </a>
           <span id="pageName" class="pageName" title="Active page"></span>
@@ -63,20 +63,20 @@
       </div>
     </div>
 
-    <div id="pagesPanel" uk-offcanvas="overlay: true">
+    <div id="sidePanel" uk-offcanvas="overlay: true">
       <div class="uk-offcanvas-bar uk-flex uk-flex-column">
         <div class="pageListHeader uk-text-right">
-          <a id="closepagesPanelButton" class="action closepagesPanelButton"><i data-lucide="chevron-left"></i></a>
+          <a id="closeSidePanelButton" class="action closeSidePanelButton"><i data-lucide="chevron-left"></i></a>
         </div>
         <div id="pageList" class="pageList uk-flex-1 uk-margin-small-bottom" uk-sortable></div>
-        <div id="pagesPanelFooter" class="pagesPanelFooter uk-flex-bottom">
-          <div id="pagesPanelActions" class="pagesPanelActions uk-flex">
-            <div class="pagesPanelActionsLeft uk-width-1-3">
+        <div id="sidePanelFooter" class="sidePanelFooter uk-flex-bottom">
+          <div id="sidePanelActions" class="sidePanelActions uk-flex">
+            <div class="sidePanelActionsLeft uk-width-1-3">
               <a id="newPageButton" class="action newPageButton" title="New page" uk-tooltip>
                 <i data-lucide="plus"></i>
               </a>
             </div>
-            <div class="pagesPanelActionsLeft uk-width-2-3 uk-text-right">
+            <div class="sidePanelActionsLeft uk-width-2-3 uk-text-right">
               <a id="importButton" class="action importButton" title="Import" uk-tooltip>
                 <i data-lucide="download"></i>
               </a>

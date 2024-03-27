@@ -153,7 +153,8 @@ body {
   color: #d41111;
 }
 
-.renamePageButton:hover {
+.renamePageButton:hover,
+.dupPageButton:hover {
   color: #2196f3;
 }
 

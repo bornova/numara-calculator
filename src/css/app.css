@@ -270,12 +270,12 @@ text {
   margin-right: 10px;
 }
 
-.pagesPanelActions a {
+.sidePanelActions a {
   margin-right: 10px;
 }
 
 .leftActions a:hover,
-.pagesPanelActions a:hover {
+.sidePanelActions a:hover {
   text-decoration: none;
 }
 
@@ -287,19 +287,19 @@ text {
   margin-left: 10px;
 }
 
-.pagesPanelActionsLeft {
+.sidePanelActionsLeft {
   margin: 0 0 14px 14px;
 }
 
-.pagesPanelActionsRight {
+.sidePanelActionsRight {
   margin: 0 15px 12px 0;
 }
 
-.closepagesPanelButton {
+.closeSidePanelButton {
   -webkit-app-region: no-drag !important;
 }
 
-.closepagesPanelButton svg {
+.closeSidePanelButton svg {
   width: 18px;
   height: 18px;
 }
@@ -307,7 +307,7 @@ text {
 .leftActions a svg,
 .centerActions a svg,
 .rightActions a svg,
-.pagesPanelActions a svg {
+.sidePanelActions a svg {
   width: 14px;
   height: 14px;
   pointer-events: none;
@@ -391,7 +391,7 @@ text {
 }
 
 .pageListItem > div:first-child {
-  margin: 3px 0 3px 10px;
+  padding: 3px 0 3px 10px;
 }
 
 .pageItem {
@@ -400,7 +400,7 @@ text {
 
 .pageListItemTitle {
   padding: 5px 5px 2px 5px;
-  width: 160px;
+  width: 180px;
   overflow: hidden;
   font-weight: 600;
   text-overflow: ellipsis;
@@ -420,22 +420,11 @@ text {
   height: 16px;
 }
 
+.renamePageButton,
+.dupPageButton,
 .deletePageButton {
   cursor: pointer;
   padding: 5px 10px;
-}
-
-.renamePageButton {
-  cursor: pointer;
-  padding: 5px 10px;
-}
-
-.deletePageButton > svg,
-.renamePageButton > svg {
-  stroke-width: 1.5px;
-  width: 16px;
-  height: 16px;
-  pointer-events: none;
 }
 
 .pageName {

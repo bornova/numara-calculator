@@ -359,19 +359,11 @@ cm.on('update', () => {
   }
 })
 
-cm.on('blur', (cm) => {
+cm.on('cursorActivity', (cm) => {
   const pages = store.get('pages')
   const page = pages.find((page) => page.id == app.activePage)
 
   page.cursor = cm.getCursor()
 
   store.set('pages', pages)
-})
-
-cm.on('focus', (cm) => {
-  const cursor = store.get('pages').find((page) => page.id == app.activePage).cursor
-
-  if (cursor) {
-    cm.setCursor(cursor)
-  }
 })

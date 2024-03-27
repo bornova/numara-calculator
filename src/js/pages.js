@@ -1,7 +1,7 @@
 import { $, $all, app, store } from './common'
 import { cm } from './editor'
-import { confirm, notify, showModal } from './modal'
 import { generateIcons } from './icons'
+import { confirm, notify, showModal } from './modal'
 import { isElectron } from './utils'
 
 import UIkit from 'uikit'
@@ -48,6 +48,7 @@ export function newPage(isImport) {
 
 export function loadPage(pageId) {
   const page = store.get('pages').find((page) => page.id === pageId)
+  const cursor = page.cursor
 
   app.activePage = pageId
 
@@ -56,6 +57,12 @@ export function loadPage(pageId) {
   $('#pageName').innerHTML = page.title
 
   cm.setValue(page.data)
+  cm.clearHistory()
+  cm.focus()
+
+  if (cursor) {
+    cm.setCursor(cursor)
+  }
 
   populatePages()
 }
@@ -87,6 +94,7 @@ export function populatePages() {
         <span class="drop-parent-icon"><i data-lucide="ellipsis-vertical"></i></span>
         <div uk-dropdown="mode: click; pos: left-top; offset: 0; bg-scroll: false; close-on-scroll: true">
           <div class="renamePageButton uk-flex uk-flex-column" data-action="rename" title="Rename">Rename</div>
+          <div class="dupPageButton uk-flex uk-flex-column" data-action="duplicate" title="Duplicate">Duplicate</div>
           <div class="deletePageButton uk-flex uk-flex-column" data-action="delete" title="Delete">Delete</div>
         </div>
       </div>
@@ -96,15 +104,19 @@ export function populatePages() {
       if (event.target.parentNode.dataset.action === 'load') {
         loadPage(page.id)
 
-        UIkit.offcanvas('#pagesPanel').hide()
+        UIkit.offcanvas('#sidePanel').hide()
       }
 
-      if (event.target.dataset.action === 'rename') {
-        renamePage(page.id)
-      }
-
-      if (event.target.dataset.action === 'delete') {
-        deletePage(page.id)
+      switch (event.target.dataset.action) {
+        case 'rename':
+          renamePage(page.id)
+          break
+        case 'delete':
+          deletePage(page.id)
+          break
+        case 'duplicate':
+          duplicatePage(page.id)
+          break
       }
     })
 
@@ -159,6 +171,27 @@ export function renamePage(pageId) {
   $('#dialog-renamePage-save').addEventListener('click', rename)
 }
 
+export function duplicatePage(pageId) {
+  const id = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
+  const pages = store.get('pages')
+  const dupPage = pages.find((page) => page.id === pageId)
+  const dupPageData = dupPage.data
+  const dupPageTitle = dupPage.title
+  const title = dupPageTitle + ' (copy)'
+
+  app.activePage = id
+
+  pages.push({ id, title, data: dupPageData })
+
+  store.set('pages', pages)
+
+  cm.setValue(dupPageData)
+
+  populatePages()
+
+  $('#pageName').innerHTML = title
+}
+
 export function sortPages() {
   const pages = store.get('pages')
   const pageList = $all('#pageList > div')
@@ -171,8 +204,8 @@ export function sortPages() {
   store.set('pages', sortedPages)
 }
 
-$('#closepagesPanelButton').addEventListener('click', () => {
-  UIkit.offcanvas('#pagesPanel').hide()
+$('#closeSidePanelButton').addEventListener('click', () => {
+  UIkit.offcanvas('#sidePanel').hide()
 })
 
 $('#newPageButton').addEventListener('click', () => {

@@ -242,10 +242,10 @@ UIkit.util.on('#dialog-newPage', 'shown', () => {
 // Populate saved calculation
 populatePages()
 
-UIkit.util.on('#pagesPanel', 'hidden', () => {
+UIkit.util.on('#sidePanel', 'hidden', () => {
   setTimeout(() => {
     cm.focus()
-  }, 100)
+  }, 20)
 })
 
 // Panel resizer
@@ -363,13 +363,13 @@ for (const [button, command] of Object.entries(traps)) {
   })
 }
 
-// Check for updates.
-checkUpdates()
-
 // Restart button if update is installed
 $('#restartButton').addEventListener('click', () => {
   numara.updateApp()
 })
+
+// Check for updates.
+checkUpdates()
 
 // Developer Tools
 if (isElectron) {
@@ -423,8 +423,4 @@ window.addEventListener('afterprint', () => {
 window.onload = () => {
   applyUdfu(store.get('udf'), 'func')
   applyUdfu(store.get('udu'), 'unit')
-
-  setTimeout(() => {
-    cm.focus()
-  }, 200)
 }
