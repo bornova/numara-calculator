@@ -2,45 +2,43 @@ import {
   createIcons,
   AlertCircle,
   Braces,
+  ChevronLeft,
   Circle,
   Copy,
   CornerDownRight,
   Dot,
+  Download,
+  EllipsisVertical,
   Eraser,
-  FileInput,
-  FileOutput,
-  Folder,
   Info,
   ListRestart,
-  Printer,
-  Save,
+  PanelLeft,
+  Plus,
   Scaling,
   Settings,
-  Trash,
   UndoDot,
-  X
+  Upload
 } from 'lucide'
 
 const iconList = {
   AlertCircle,
   Braces,
+  ChevronLeft,
   Circle,
   Copy,
   CornerDownRight,
   Dot,
+  Download,
+  EllipsisVertical,
   Eraser,
-  FileInput,
-  FileOutput,
-  Folder,
   Info,
   ListRestart,
-  Printer,
-  Save,
+  PanelLeft,
+  Plus,
   Scaling,
   Settings,
-  Trash,
   UndoDot,
-  X
+  Upload
 }
 
 /** Generate app icons. */

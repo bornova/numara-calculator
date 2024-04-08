@@ -110,21 +110,64 @@ body {
   color: #607d8b;
 }
 
-.dialog-open-wrapper {
-  background-color: rgba(244, 244, 244, 0.3);
-  border: 1px solid #eaeaea;
+.uk-offcanvas-bar {
+  border-right: 1px solid #eaeaea;
+  background: #fff;
+  color: #333;
 }
 
-.dialog-open-wrapper:hover {
-  background-color: #f4f4f4;
+.uk-offcanvas-bar a {
+  color: #607d8b;
 }
 
-.dialog-open-delete {
+.uk-offcanvas-bar a:hover {
+  color: #0f6ecd;
+}
+
+.uk-offcanvas-bar .uk-close {
+  color: #333;
+}
+
+.uk-offcanvas-bar .uk-close:hover {
+  color: #4682b4;
+}
+
+.pageListHeader {
+  border-bottom: 1px solid #eaeaea;
+}
+
+.pageListItem {
+  border-bottom: 1px solid #eaeaea;
+}
+
+.pageListItem:hover,
+.activePage {
+  background-color: #f9f9f9;
+}
+
+.drop-parent-icon {
+  color: #607d8b;
+}
+
+.drop-parent-icon:hover {
+  color: #4682b4;
+}
+
+.deletePageButton {
   color: #666666;
 }
 
-.dialog-open-delete:hover {
+.deletePageButton:hover {
   color: #b10e0e;
+}
+
+.renamePageButton:hover,
+.dupPageButton:hover {
+  color: #005cc5;
+}
+
+.pageName {
+  color: #687e89;
 }
 
 .dialog-about-title {
@@ -154,6 +197,10 @@ body {
 .expUpper {
   border: 1px solid #e5e5e5;
   color: #333333;
+}
+
+.subSwitchIcon {
+  color: #999;
 }
 
 .textBox {
@@ -193,14 +240,14 @@ text {
 
 .uk-button-danger,
 .uk-button-danger:focus {
-  background-color: #f5f5f5;
   border-color: #e5e5e5;
+  background-color: #f5f5f5;
   color: rgba(189, 46, 46, 0.9);
 }
 
 .uk-button-danger:hover {
-  background-color: #f5f5f5;
   border-color: rgba(189, 46, 46, 0.3);
+  background-color: #f5f5f5;
   color: rgba(189, 46, 46, 0.9);
 }
 
@@ -209,8 +256,8 @@ text {
 }
 
 .uk-button-danger:disabled:hover {
-  background-color: transparent;
   border-color: #e5e5e5;
+  background-color: transparent;
   color: #999999;
 }
 

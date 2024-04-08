@@ -72,9 +72,9 @@ export function generateFunctonsWiki() {
 export function generateUnitsWiki() {
   const units = Object.entries(math.Unit.UNITS).reduce((units, [u, value]) => {
     units.push({
-      unit: u,
       category: value.base.key,
-      pre: value.prefixes
+      pre: value.prefixes,
+      unit: u
     })
 
     return units

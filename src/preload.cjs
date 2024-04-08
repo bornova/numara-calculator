@@ -1,6 +1,13 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('numara', {
+  // Calls from main.cjs
+  main: {
+    import: (callback) => ipcRenderer.on('import', callback),
+    export: (callback) => ipcRenderer.on('export', callback),
+    print: (callback) => ipcRenderer.on('print', callback)
+  },
+
   // App theme
   isDark: () => ipcRenderer.sendSync('isDark'),
   setTheme: (theme) => ipcRenderer.send('setTheme', theme),
@@ -22,10 +29,6 @@ contextBridge.exposeInMainWorld('numara', {
   isMaximized: () => ipcRenderer.sendSync('isMaximized'),
   isResized: () => ipcRenderer.sendSync('isResized'),
   resetSize: () => ipcRenderer.send('resetSize'),
-
-  // Print
-  print: () => ipcRenderer.send('print'),
-  printReply: (callback) => ipcRenderer.on('printReply', callback),
 
   // Import
   import: () => ipcRenderer.send('import'),

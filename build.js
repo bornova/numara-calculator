@@ -20,13 +20,18 @@ fs.emptyDir(buildPath).then(() => {
   })
 
   const cssBanner = `/* ${pkg.description} ${pkg.version} */\n`
+  const cssConfig = { banner: { css: cssBanner }, bundle: true, minify: true }
 
   build({
-    banner: { css: cssBanner },
-    bundle: true,
-    entryPoints: ['src/css/app.css', 'src/css/light.css', 'src/css/dark.css'],
-    minify: true,
-    outdir: buildPath + '/css'
+    ...cssConfig,
+    entryPoints: ['src/css/app.css'],
+    outfile: buildPath + '/css/numara.css'
+  })
+
+  build({
+    ...cssConfig,
+    entryPoints: ['src/css/light.css', 'src/css/dark.css'],
+    outdir: buildPath + '/css/'
   })
 
   const jsBanner = `/**
@@ -44,7 +49,7 @@ fs.emptyDir(buildPath).then(() => {
     bundle: true,
     entryPoints: ['src/js/app.js'],
     minify: true,
-    outdir: buildPath + '/js',
+    outfile: buildPath + '/js/numara.js',
     plugins: [polyfillNode()],
     sourcemap: !process.env.PROD
   })
