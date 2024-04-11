@@ -8,18 +8,52 @@ import { DateTime } from 'luxon'
 
 import UIkit from 'uikit'
 
+export function getPageName() {
+  const pages = store.get('pages')
+  const regex = new RegExp(/\b(Page \d+)$\b/)
+
+  let pageNo = 1
+
+  if (pages) {
+    const pageNos = pages
+      .filter((page) => regex.test(page.name.trim()))
+      .map((page) => +page.name.split(' ')[1])
+      .sort((a, b) => a - b)
+
+    const min = Math.min(...pageNos)
+    const max = Math.max(...pageNos)
+
+    for (let i = 0; i < max; i++) {
+      if (min > 1) {
+        pageNo = 1
+        break
+      }
+
+      if (pageNos[i + 1] !== pageNos[i] + 1) {
+        pageNo = pageNos[i] + 1
+        break
+      }
+    }
+  }
+
+  return 'Page ' + pageNo
+}
+
 /** Generate default page */
 export function defaultPage() {
   const pageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
+  const pageName = getPageName()
 
   app.activePage = pageId
 
   store.set('lastPage', pageId)
-  store.set('pages', [{ id: pageId, title: 'Untitled page', data: '' }])
+  store.set('pages', [{ id: pageId, name: pageName, data: '' }])
 
   cm.setValue(store.get('input') || '')
 
-  $('#pageName').innerHTML = 'Untitled page'
+  $('#pageName').innerHTML = pageName
+
+  populatePages()
 }
 
 /** Get last page from store */
@@ -33,22 +67,23 @@ export function lastPage() {
  * @param {boolean} isImport Is the new page imported? true | false
  */
 export function newPage(isImport) {
-  const id = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
+  const pageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
   const pages = store.get('pages')
-  const title =
-    $('#newPageTitleInput').value.replace(/<|>/g, '').trim() || (isImport ? 'Imported page' : 'Untitled page')
+  const pageName =
+    $('#newPageTitleInput').value.replace(/<|>/g, '').trim() || (isImport ? 'Imported page' : getPageName())
 
-  app.activePage = id
+  app.activePage = pageId
 
-  pages.push({ id, title, data: '' })
+  pages.push({ id: pageId, name: pageName, data: '' })
 
   store.set('pages', pages)
+  store.set('lastPage', pageId)
 
   cm.setValue('')
 
   populatePages()
 
-  $('#pageName').innerHTML = title
+  $('#pageName').innerHTML = pageName
 
   UIkit.modal('#dialog-newPage').hide()
 }
@@ -66,11 +101,15 @@ export function loadPage(pageId) {
 
   store.set('lastPage', pageId)
 
-  $('#pageName').innerHTML = page.title
+  $('#pageName').innerHTML = page.name
 
   cm.setValue(page.data)
-  cm.setHistory(page?.history)
-  cm.focus()
+
+  cm.execCommand('goLineEnd')
+
+  if (page.history) {
+    cm.setHistory(page.history)
+  }
 
   if (cursor) {
     cm.setCursor(cursor)
@@ -100,7 +139,7 @@ export function populatePages() {
     )
     pageListItem.innerHTML = `
       <div class="uk-flex-1" data-action="load">
-        <div id="page-${page.id}"class="pageListItemTitle" title="${page.title}">${page.title}</div>
+        <div id="page-${page.id}"class="pageListItemTitle" title="${page.name}">${page.name}</div>
         <div class="dialog-open-date">${DateTime.fromFormat(page.id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
       </div>
       <div class="uk-flex-right uk-margin-small-right">
@@ -122,6 +161,7 @@ export function populatePages() {
 
       switch (event.target.dataset.action) {
         case 'rename':
+          UIkit.dropdown(event.target.parentNode).hide(0)
           renamePage(page.id)
           break
         case 'delete':
@@ -149,7 +189,7 @@ export function populatePages() {
 export function deletePage(pageId) {
   let pages = store.get('pages')
 
-  confirm('"' + pages.find((page) => page.id === pageId).title + '" will be deleted.', () => {
+  confirm('"' + pages.find((page) => page.id === pageId).name + '" will be deleted.', () => {
     pages = pages.filter((page) => page.id !== pageId)
 
     store.set('pages', pages)
@@ -173,18 +213,18 @@ export function renamePage(pageId) {
   const pages = store.get('pages')
   const page = pages.find((page) => page.id === pageId)
 
-  $('#renamePageTitleInput').value = page.title
+  $('#renamePageTitleInput').value = page.name
 
   showModal('#dialog-renamePage')
 
   function rename() {
-    page.title = $('#renamePageTitleInput').value.replace(/<|>/g, '').trim() || 'Untitled page'
+    page.name = $('#renamePageTitleInput').value.replace(/<|>/g, '').trim() || getPageName()
 
     store.set('pages', pages)
 
     populatePages()
 
-    $('#pageName').innerHTML = page.title
+    $('#pageName').innerHTML = page.name
 
     UIkit.modal('#dialog-renamePage').hide()
 
@@ -200,24 +240,19 @@ export function renamePage(pageId) {
  * @param {*} pageId Id of the page to duplicate
  */
 export function duplicatePage(pageId) {
-  const id = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
+  const dupPageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
   const pages = store.get('pages')
   const dupPage = pages.find((page) => page.id === pageId)
   const dupPageData = dupPage.data
-  const dupPageTitle = dupPage.title
-  const title = dupPageTitle + ' (copy)'
+  const dupPageName = dupPage.name + ' (copy)'
 
-  app.activePage = id
+  app.activePage = dupPageId
 
-  pages.push({ id, title, data: dupPageData })
+  pages.push({ id: dupPageId, name: dupPageName, data: dupPageData })
 
   store.set('pages', pages)
 
-  cm.setValue(dupPageData)
-
-  populatePages()
-
-  $('#pageName').innerHTML = title
+  loadPage(dupPageId)
 }
 
 /** Sort page list */
@@ -244,7 +279,9 @@ $('#newPageButton').addEventListener('click', () => {
   showModal('#dialog-newPage')
 })
 
-$('#dialog-newPage-save').addEventListener('click', newPage)
+$('#dialog-newPage-save').addEventListener('click', () => {
+  newPage(false)
+})
 
 $('#newPageTitleInput').addEventListener('keyup', (event) => {
   if (event.key === 'Enter' || event.keyCode === 13) {

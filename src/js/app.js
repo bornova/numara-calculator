@@ -7,7 +7,7 @@ import { generateIcons } from './icons'
 import { notify, showError, showModal } from './modal'
 import { plot } from './plot'
 import { settings } from './settings'
-import { defaultPage, lastPage, loadPage, populatePages, sortPages } from './pages'
+import { defaultPage, lastPage, loadPage, getPageName, populatePages, sortPages } from './pages'
 import { applyUdfu } from './userDefined'
 import { checkSize, checkUpdates, isMac, isElectron, toggleMinMax } from './utils'
 
@@ -236,6 +236,7 @@ UIkit.util.on('#pageList', 'moved', () => {
 
 // Save dialog title focus on shown
 UIkit.util.on('#dialog-newPage', 'shown', () => {
+  $('#newPageTitleInput').setAttribute('placeholder', getPageName())
   $('#newPageTitleInput').focus()
 })
 
