@@ -8,30 +8,27 @@ import { DateTime } from 'luxon'
 
 import UIkit from 'uikit'
 
+/** Get page name/number to use */
 export function getPageName() {
   const pages = store.get('pages')
-  const regex = new RegExp(/\b(Page \d+)$\b/)
 
   let pageNo = 1
 
   if (pages) {
+    const regex = new RegExp(/\b(Page \d+)$\b/)
     const pageNos = pages
       .filter((page) => regex.test(page.name.trim()))
       .map((page) => +page.name.split(' ')[1])
       .sort((a, b) => a - b)
 
-    const min = Math.min(...pageNos)
     const max = Math.max(...pageNos)
 
-    for (let i = 0; i < max; i++) {
-      if (min > 1) {
-        pageNo = 1
-        break
-      }
-
-      if (pageNos[i + 1] !== pageNos[i] + 1) {
-        pageNo = pageNos[i] + 1
-        break
+    if (pageNos[0] === 1) {
+      for (let i = 0; i < max; i++) {
+        if (pageNos[i + 1] !== pageNos[i] + 1) {
+          pageNo = pageNos[i] + 1
+          break
+        }
       }
     }
   }
@@ -39,84 +36,8 @@ export function getPageName() {
   return 'Page ' + pageNo
 }
 
-/** Generate default page */
-export function defaultPage() {
-  const pageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
-  const pageName = getPageName()
-
-  app.activePage = pageId
-
-  store.set('lastPage', pageId)
-  store.set('pages', [{ id: pageId, name: pageName, data: '' }])
-
-  cm.setValue(store.get('input') || '')
-
-  $('#pageName').innerHTML = pageName
-
-  populatePages()
-}
-
 /** Get last page from store */
-export function lastPage() {
-  return store.get('lastPage')
-}
-
-/**
- * Create new page
- *
- * @param {boolean} isImport Is the new page imported? true | false
- */
-export function newPage(isImport) {
-  const pageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
-  const pages = store.get('pages')
-  const pageName =
-    $('#newPageTitleInput').value.replace(/<|>/g, '').trim() || (isImport ? 'Imported page' : getPageName())
-
-  app.activePage = pageId
-
-  pages.push({ id: pageId, name: pageName, data: '' })
-
-  store.set('pages', pages)
-  store.set('lastPage', pageId)
-
-  cm.setValue('')
-
-  populatePages()
-
-  $('#pageName').innerHTML = pageName
-
-  UIkit.modal('#dialog-newPage').hide()
-}
-
-/**
- * Load page
- *
- * @param {*} pageId Id of the page to load
- */
-export function loadPage(pageId) {
-  const page = store.get('pages').find((page) => page.id === pageId)
-  const cursor = page.cursor
-
-  app.activePage = pageId
-
-  store.set('lastPage', pageId)
-
-  $('#pageName').innerHTML = page.name
-
-  cm.setValue(page.data)
-
-  cm.execCommand('goLineEnd')
-
-  if (page.history) {
-    cm.setHistory(page.history)
-  }
-
-  if (cursor) {
-    cm.setCursor(cursor)
-  }
-
-  populatePages()
-}
+export const lastPage = () => store.get('lastPage')
 
 /** Populate the page list in side bar */
 export function populatePages() {
@@ -179,6 +100,80 @@ export function populatePages() {
   sortPages()
 
   generateIcons()
+}
+
+/**
+ * Load page
+ *
+ * @param {*} pageId Id of the page to load
+ */
+export function loadPage(pageId) {
+  const page = store.get('pages').find((page) => page.id === pageId)
+  const cursor = page.cursor
+
+  app.activePage = pageId
+
+  store.set('lastPage', pageId)
+
+  $('#pageName').innerHTML = page.name
+
+  cm.setValue(page.data)
+
+  cm.execCommand('goLineEnd')
+
+  if (page.history) {
+    cm.setHistory(page.history)
+  }
+
+  if (cursor) {
+    cm.setCursor(cursor)
+  }
+
+  populatePages()
+}
+
+/** Generate default page */
+export function defaultPage() {
+  const pageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
+  const pageName = getPageName()
+
+  app.activePage = pageId
+
+  store.set('lastPage', pageId)
+  store.set('pages', [{ id: pageId, name: pageName, data: '' }])
+
+  cm.setValue(store.get('input') || '')
+
+  $('#pageName').innerHTML = pageName
+
+  populatePages()
+}
+
+/**
+ * Create new page
+ *
+ * @param {boolean} isImport Is the new page imported? true | false
+ */
+export function newPage(isImport) {
+  const pageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
+  const pages = store.get('pages')
+  const pageName =
+    $('#newPageTitleInput').value.replace(/<|>/g, '').trim() || (isImport ? 'Imported page' : getPageName())
+
+  app.activePage = pageId
+
+  pages.push({ id: pageId, name: pageName, data: '' })
+
+  store.set('pages', pages)
+  store.set('lastPage', pageId)
+
+  cm.setValue('')
+
+  populatePages()
+
+  $('#pageName').innerHTML = pageName
+
+  UIkit.modal('#dialog-newPage').hide()
 }
 
 /**
