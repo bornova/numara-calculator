@@ -7,7 +7,7 @@ import { generateIcons } from './icons'
 import { notify, showError, showModal } from './modal'
 import { plot } from './plot'
 import { settings } from './settings'
-import { defaultPage, lastPage, loadPage, getPageName, populatePages, sortPages } from './pages'
+import { defaultPage, lastPage, loadPage, getPageName, pageOrder, populatePages } from './pages'
 import { applyUdfu } from './userDefined'
 import { checkSize, checkUpdates, isMac, isElectron, toggleMinMax } from './utils'
 
@@ -230,7 +230,7 @@ UIkit.util.on('#dialog-plot', 'hide', () => {
 
 // Save page sort order after move
 UIkit.util.on('#pageList', 'moved', () => {
-  sortPages()
+  pageOrder()
   populatePages()
 })
 

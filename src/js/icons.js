@@ -1,6 +1,7 @@
 import {
   createIcons,
   AlertCircle,
+  ArrowUpDown,
   Braces,
   Circle,
   Copy,
@@ -23,6 +24,7 @@ import {
 
 const iconList = {
   AlertCircle,
+  ArrowUpDown,
   Braces,
   Circle,
   Copy,

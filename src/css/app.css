@@ -409,7 +409,8 @@ text {
 
 .renamePageButton,
 .dupPageButton,
-.deletePageButton {
+.deletePageButton,
+.sortListItem {
   cursor: pointer;
   padding: 5px 10px;
 }
@@ -421,6 +422,25 @@ text {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.pageListSort {
+  cursor: pointer;
+  margin: 10px;
+}
+
+.pageListSort svg {
+  width: 14px;
+  height: 14px;
+}
+
+.sortListItem {
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.sortListDivider {
+  margin: 5px 10px;
 }
 
 /* Dialogs */

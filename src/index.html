@@ -69,7 +69,22 @@
 
     <div id="sidePanel" uk-offcanvas="overlay: true">
       <div class="uk-offcanvas-bar uk-flex uk-flex-column">
-        <div class="pageListHeader uk-text-right"></div>
+        <div id="pageListHeader" class="pageListHeader">
+          <span id="pageListSort" class="pageListSort uk-float-right" title="Sort">
+            <i data-lucide="arrow-up-down"></i>
+          </span>
+          <div uk-dropdown="mode: click; pos: left-top; offset: 0; bg-scroll: false; close-on-scroll: true">
+            <div id="sortOldNew" class="sortListItem uk-flex uk-flex-column" title="Sort older to newer">
+              Older to newer
+            </div>
+            <div id="sortNewOld" class="sortListItem uk-flex uk-flex-column" title="Sort newer to older">
+              Newer to older
+            </div>
+            <hr class="sortListDivider" />
+            <div id="sortAZ" class="sortListItem uk-flex uk-flex-column" title="Sort A to Z">A to Z</div>
+            <div id="sortZA" class="sortListItem uk-flex uk-flex-column" title="Sort Z to A">Z to A</div>
+          </div>
+        </div>
         <div id="pageList" class="pageList uk-flex-1" uk-sortable></div>
         <div id="sidePanelFooter" class="sidePanelFooter uk-flex-bottom">
           <div id="sidePanelActions" class="sidePanelActions uk-flex">

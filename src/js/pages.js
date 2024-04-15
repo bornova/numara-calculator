@@ -97,7 +97,7 @@ export function populatePages() {
     $('#pageList').appendChild(pageListItem)
   })
 
-  sortPages()
+  pageOrder()
 
   generateIcons()
 }
@@ -123,12 +123,12 @@ export function loadPage(pageId) {
     cm.setHistory(page.history)
   }
 
+  cm.execCommand('goLineEnd')
+
   if (cursor) {
     cm.setCursor(cursor)
     cm.scrollIntoView(cursor)
   }
-
-  cm.execCommand('goLineEnd')
 
   populatePages()
 }
@@ -253,17 +253,42 @@ export function duplicatePage(pageId) {
   loadPage(dupPageId)
 }
 
-/** Sort page list */
-export function sortPages() {
+export function sortPages(by) {
+  const pages = store.get('pages')
+
+  let sortedPages
+
+  switch (by) {
+    case 'oldnew':
+      sortedPages = pages.sort((a, b) => a.id - b.id)
+      break
+    case 'newold':
+      sortedPages = pages.sort((a, b) => b.id - a.id)
+      break
+    case 'az':
+      sortedPages = pages.sort((a, b) => a.name.localeCompare(b.name))
+      break
+    case 'za':
+      sortedPages = pages.sort((a, b) => b.name.localeCompare(a.name))
+      break
+  }
+
+  store.set('pages', sortedPages)
+
+  populatePages()
+}
+
+/** Sort page list after drag */
+export function pageOrder() {
   const pages = store.get('pages')
   const pageList = $all('#pageList > div')
 
-  let sortedPages = [...pageList].reduce((a, i) => {
+  let newOrder = [...pageList].reduce((a, i) => {
     a.push(pages.find((page) => page.id === i.getAttribute('id')))
     return a
   }, [])
 
-  store.set('pages', sortedPages)
+  store.set('pages', newOrder)
 }
 
 export function deleteAllPages() {
@@ -302,6 +327,22 @@ $('#renamePageTitleInput').addEventListener('keyup', (event) => {
   if (event.key === 'Enter' || event.keyCode === 13) {
     $('#dialog-renamePage-save').click()
   }
+})
+
+$('#sortOldNew').addEventListener('click', () => {
+  sortPages('oldnew')
+})
+
+$('#sortNewOld').addEventListener('click', () => {
+  sortPages('newold')
+})
+
+$('#sortAZ').addEventListener('click', () => {
+  sortPages('az')
+})
+
+$('#sortZA').addEventListener('click', () => {
+  sortPages('za')
 })
 
 $('#closeSidePanelButton').addEventListener('click', () => {

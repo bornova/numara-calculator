@@ -152,11 +152,13 @@ body {
   background-color: #f9f9f9;
 }
 
-.drop-parent-icon {
+.drop-parent-icon,
+.pageListSort {
   color: #607d8b;
 }
 
-.drop-parent-icon:hover {
+.drop-parent-icon:hover,
+.pageListSort:hover {
   color: #4682b4;
 }
 
@@ -173,12 +175,17 @@ body {
 }
 
 .renamePageButton:hover,
-.dupPageButton:hover {
+.dupPageButton:hover,
+.sortListItem:hover {
   color: #005cc5;
 }
 
 .pageName {
   color: #687e89;
+}
+
+.sortListDivider {
+  border-top-color: #eaeaea !important;
 }
 
 .dialog-about-title {
