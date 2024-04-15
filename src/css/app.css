@@ -71,6 +71,10 @@ input[type='range']:focus::-webkit-slider-runnable-track {
   background-color: #999999;
 }
 
+pre {
+  font: inherit !important;
+}
+
 textarea {
   box-sizing: border-box;
   width: 100%;
@@ -79,6 +83,14 @@ textarea {
 
 text {
   font-size: 0.9rem;
+}
+
+.wrapper {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
 }
 
 /* Windows Header */
@@ -147,14 +159,6 @@ text {
 }
 
 /* Content */
-.wrapper {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-}
-
 .panel {
   display: flex;
   position: fixed;
@@ -163,11 +167,6 @@ text {
   bottom: 42px;
   left: 20px;
   align-content: flex-start;
-}
-
-.inputArea::-webkit-scrollbar {
-  width: 0px;
-  height: 8px;
 }
 
 .input {
@@ -180,8 +179,25 @@ text {
   user-select: text;
 }
 
-.noRuler {
-  border-bottom: 1px solid transparent;
+.inputArea::-webkit-scrollbar {
+  width: 0px;
+  height: 8px;
+}
+
+.divider {
+  flex: 0 0 auto;
+  cursor: ew-resize;
+  margin: 0 8px;
+  width: 5px;
+  height: calc(100% - 8px);
+}
+
+.divider::before {
+  display: block;
+  margin: 0 auto;
+  width: 1px;
+  height: 100%;
+  content: '';
 }
 
 .output {
@@ -207,6 +223,10 @@ text {
   user-select: text;
 }
 
+.panelFont {
+  font-family: 'Roboto Mono', monospace;
+}
+
 .answer {
   -webkit-user-select: text;
   cursor: default;
@@ -215,10 +235,6 @@ text {
   padding: 2px 5px;
   height: 27px;
   user-select: text;
-}
-
-.panelFont {
-  font-family: 'Roboto Mono', monospace;
 }
 
 .lineError,
@@ -234,20 +250,8 @@ text {
   word-break: break-word;
 }
 
-.divider {
-  flex: 0 0 auto;
-  cursor: ew-resize;
-  margin: 0 8px;
-  width: 5px;
-  height: calc(100% - 8px);
-}
-
-.divider::before {
-  display: block;
-  margin: 0 auto;
-  width: 1px;
-  height: 100%;
-  content: '';
+.noRuler {
+  border-bottom: 1px solid transparent;
 }
 
 .gutterBlock {
@@ -267,8 +271,22 @@ text {
   height: 25px;
 }
 
-.sidePanelActions {
-  margin: 15px 15px 13px 15px;
+.action,
+.noAction {
+  cursor: pointer;
+}
+
+.noAction,
+.action[disabled='true'] {
+  opacity: 0.4;
+  cursor: default;
+  pointer-events: none;
+}
+
+.actionDivider {
+  margin-top: 2px;
+  margin-right: 10px;
+  height: 20px;
 }
 
 .leftActions a {
@@ -280,21 +298,27 @@ text {
   text-decoration: none;
 }
 
+.newPageButton svg,
+.newPageButtonSP svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
 .centerActions a {
   margin: 0 5px;
 }
 
+.pageName {
+  position: relative;
+  top: 2px;
+  opacity: 0.8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .rightActions a {
   margin-left: 10px;
-}
-
-.closeSidePanelButton {
-  -webkit-app-region: no-drag !important;
-}
-
-.closeSidePanelButton svg {
-  width: 18px;
-  height: 18px;
 }
 
 .leftActions a svg,
@@ -305,30 +329,6 @@ text {
   height: 14px;
   pointer-events: none;
   color: inherit !important;
-}
-
-.actionDivider {
-  margin-top: 2px;
-  margin-right: 10px;
-  height: 20px;
-}
-
-.newPageButton svg,
-.newPageButtonSP svg {
-  width: 16px !important;
-  height: 16px !important;
-}
-
-.action,
-.noAction {
-  cursor: pointer;
-}
-
-.noAction,
-.action[disabled='true'] {
-  opacity: 0.4;
-  cursor: default;
-  pointer-events: none;
 }
 
 .notificationDot {
@@ -345,9 +345,23 @@ text {
   height: 5px;
 }
 
+/* Side panel */
 .uk-offcanvas-bar {
   padding: 0;
   width: 240px;
+}
+
+.sidePanelActions {
+  margin: 15px 15px 13px 15px;
+}
+
+.closeSidePanelButton {
+  -webkit-app-region: no-drag !important;
+}
+
+.closeSidePanelButton svg {
+  width: 18px;
+  height: 18px;
 }
 
 .uk-offcanvas-close {
@@ -370,13 +384,32 @@ text {
   min-width: auto;
 }
 
+.pageListHeader {
+  height: 40px;
+}
+
 .pageList {
   overflow-x: hidden;
   overflow-y: auto;
 }
 
-.pageListHeader {
-  height: 40px;
+.pageListSort {
+  cursor: pointer;
+  margin: 10px;
+}
+
+.pageListSort svg {
+  width: 14px;
+  height: 14px;
+}
+
+.sortListItem {
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.sortListDivider {
+  margin: 5px 10px;
 }
 
 .pageListItem {
@@ -387,10 +420,6 @@ text {
 
 .pageListItem > div:first-child {
   padding: 3px 0 3px 10px;
-}
-
-.pageItem {
-  display: inline;
 }
 
 .pageListItemTitle {
@@ -413,34 +442,6 @@ text {
 .sortListItem {
   cursor: pointer;
   padding: 5px 10px;
-}
-
-.pageName {
-  position: relative;
-  top: 2px;
-  opacity: 0.8;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.pageListSort {
-  cursor: pointer;
-  margin: 10px;
-}
-
-.pageListSort svg {
-  width: 14px;
-  height: 14px;
-}
-
-.sortListItem {
-  cursor: pointer;
-  padding: 5px 10px;
-}
-
-.sortListDivider {
-  margin: 5px 10px;
 }
 
 /* Dialogs */
@@ -627,11 +628,6 @@ text {
   margin: 15px 0;
 }
 
-.plotOptions {
-  margin: 0 10px 0 10px;
-  line-height: 30px;
-}
-
 .resetButtons svg {
   width: 14px;
   pointer-events: none;
@@ -640,11 +636,6 @@ text {
 .resetButton {
   float: left;
   color: #c95d71;
-}
-
-.resetLabel {
-  float: left;
-  margin-right: 10px;
 }
 
 .defSettingsButton {
@@ -993,10 +984,6 @@ input:checked + .slider:before {
   .uk-notification-top-center {
     margin-left: -295px;
   }
-}
-
-pre {
-  font: inherit !important;
 }
 
 /* CodeMirror Overrides */

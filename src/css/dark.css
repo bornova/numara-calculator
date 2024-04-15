@@ -61,14 +61,11 @@ body {
   border-bottom: 1px solid #303030;
 }
 
+.errTitle,
 .lineError,
 .lineError:hover,
 .lineError > div,
 .lineNoError > div {
-  color: #d41111;
-}
-
-.errTitle {
   color: #d41111;
 }
 
@@ -97,10 +94,7 @@ body {
 }
 
 .action,
-.noAction {
-  color: #7b9dc5;
-}
-
+.noAction,
 .noAction:hover {
   color: #7b9dc5;
 }
@@ -109,16 +103,8 @@ body {
   border-right: 1px solid #3b3b3b;
 }
 
-.uk-offcanvas-bar {
-  border-right: 1px solid #181818;
-}
-
-.uk-offcanvas-bar a {
-  color: #7b9dc5;
-}
-
-.uk-offcanvas-bar a:hover {
-  color: #0f6ecd;
+.pageName {
+  color: #627d9c;
 }
 
 .pageListHeader {
@@ -169,12 +155,8 @@ body {
   color: #2196f3;
 }
 
-.pageName {
-  color: #627d9c;
-}
-
 .sortListDivider {
-  border-top-color: #000 !important;
+  border-top-color: #444 !important;
 }
 
 .dialog-about-title {
@@ -333,6 +315,18 @@ line {
 
 .uk-tooltip {
   background-color: #000;
+}
+
+.uk-offcanvas-bar {
+  border-right: 1px solid #181818;
+}
+
+.uk-offcanvas-bar a {
+  color: #7b9dc5;
+}
+
+.uk-offcanvas-bar a:hover {
+  color: #0f6ecd;
 }
 
 /* CodeMirror Overrides */

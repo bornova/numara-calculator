@@ -97,8 +97,6 @@ export function populatePages() {
     $('#pageList').appendChild(pageListItem)
   })
 
-  pageOrder()
-
   generateIcons()
 }
 
@@ -253,6 +251,7 @@ export function duplicatePage(pageId) {
   loadPage(dupPageId)
 }
 
+/** Sort page list */
 export function sortPages(by) {
   const pages = store.get('pages')
 
@@ -285,12 +284,9 @@ export function pageOrder() {
   const pages = store.get('pages')
   const pageList = $all('#pageList > div')
 
-  let newOrder = [...pageList].reduce((a, i) => {
-    a.push(pages.find((page) => page.id === i.getAttribute('id')))
-    return a
-  }, [])
+  let orderedPages = [...pageList].map((i) => pages.find((page) => page.id === i.getAttribute('id')))
 
-  store.set('pages', newOrder)
+  store.set('pages', orderedPages)
 }
 
 export function deleteAllPages() {
@@ -311,6 +307,7 @@ function newPageDialog() {
 }
 
 $('#newPageButton').addEventListener('click', newPageDialog)
+
 $('#newPageButtonSP').addEventListener('click', newPageDialog)
 
 $('#dialog-newPage-save').addEventListener('click', () => {

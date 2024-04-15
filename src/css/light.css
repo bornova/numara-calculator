@@ -62,18 +62,12 @@ body {
   border-bottom: 1px solid #f1f1f1;
 }
 
+.errTitle,
 .lineError,
 .lineError:hover,
 .lineError > div,
-.lineNoError > div {
-  color: #b10e0e;
-}
-
+.lineNoError > div,
 .syntaxError {
-  color: #b10e0e;
-}
-
-.errTitle {
   color: #b10e0e;
 }
 
@@ -102,10 +96,7 @@ body {
 }
 
 .action,
-.noAction {
-  color: #607d8b;
-}
-
+.noAction,
 .noAction:hover {
   color: #607d8b;
 }
@@ -114,42 +105,21 @@ body {
   border-right: 1px solid #eaeaea;
 }
 
-.uk-offcanvas-bar {
-  border-right: 1px solid #eaeaea;
-  background: #fff;
-  color: #333;
+.pageName {
+  color: #687e89;
 }
 
-.uk-offcanvas-bar a {
-  color: #607d8b;
-}
-
-.uk-offcanvas-bar a:hover {
-  color: #0f6ecd;
-}
-
-.uk-offcanvas-bar .uk-close {
-  color: #333;
-}
-
-.uk-offcanvas-bar .uk-close:hover {
-  color: #4682b4;
-}
-
-.pageListHeader {
-  border-bottom: 1px solid #eaeaea;
-}
-
+.pageListHeader,
 .pageListItem {
   border-bottom: 1px solid #eaeaea;
 }
 
-.activePage {
-  background-color: #f5f5f5;
-}
-
 .pageListItem:hover {
   background-color: #f9f9f9;
+}
+
+.activePage {
+  background-color: #f5f5f5;
 }
 
 .drop-parent-icon,
@@ -178,10 +148,6 @@ body {
 .dupPageButton:hover,
 .sortListItem:hover {
   color: #005cc5;
-}
-
-.pageName {
-  color: #687e89;
 }
 
 .sortListDivider {
@@ -294,6 +260,28 @@ text {
 .uk-tooltip {
   background-color: #eaeaea;
   color: #000;
+}
+
+.uk-offcanvas-bar {
+  border-right: 1px solid #eaeaea;
+  background: #fff;
+  color: #333;
+}
+
+.uk-offcanvas-bar a {
+  color: #607d8b;
+}
+
+.uk-offcanvas-bar a:hover {
+  color: #0f6ecd;
+}
+
+.uk-offcanvas-bar .uk-close {
+  color: #333;
+}
+
+.uk-offcanvas-bar .uk-close:hover {
+  color: #4682b4;
 }
 
 /* CodeMirror Overrides */
