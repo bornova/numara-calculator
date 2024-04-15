@@ -73,7 +73,10 @@
           <span id="pageListSort" class="pageListSort uk-float-right" title="Sort">
             <i data-lucide="arrow-up-down"></i>
           </span>
-          <div uk-dropdown="mode: click; pos: left-top; offset: 0; bg-scroll: false; close-on-scroll: true">
+          <div
+            id="sortDropdown"
+            uk-dropdown="mode: click; pos: left-top; offset: 0; bg-scroll: false; close-on-scroll: true"
+          >
             <div id="sortOldNew" class="sortListItem uk-flex uk-flex-column" title="Sort older to newer">
               Older to newer
             </div>

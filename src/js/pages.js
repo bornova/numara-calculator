@@ -276,6 +276,8 @@ export function sortPages(by) {
   store.set('pages', sortedPages)
 
   populatePages()
+
+  UIkit.dropdown('#sortDropdown').hide(0)
 }
 
 /** Sort page list after drag */
