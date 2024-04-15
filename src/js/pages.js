@@ -284,7 +284,7 @@ export function pageOrder() {
   const pages = store.get('pages')
   const pageList = $all('#pageList > div')
 
-  let orderedPages = [...pageList].map((i) => pages.find((page) => page.id === i.getAttribute('id')))
+  let orderedPages = [...pageList].map((el) => pages.find((page) => page.id === el.getAttribute('id')))
 
   store.set('pages', orderedPages)
 }
