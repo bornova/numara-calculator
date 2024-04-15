@@ -138,16 +138,11 @@ export function defaultPage() {
   const pageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
   const pageName = getPageName()
 
-  app.activePage = pageId
+  store.set('pages', [{ id: pageId, name: pageName, data: store.get('input') || '' }])
 
-  store.set('lastPage', pageId)
-  store.set('pages', [{ id: pageId, name: pageName, data: '' }])
+  localStorage.removeItem('input')
 
-  cm.setValue(store.get('input') || '')
-
-  $('#pageName').innerHTML = pageName
-
-  populatePages()
+  loadPage(pageId)
 }
 
 /**
@@ -281,18 +276,15 @@ export function deleteAllPages() {
   })
 }
 
-$('#closeSidePanelButton').addEventListener('click', () => {
-  UIkit.offcanvas('#sidePanel').hide()
-})
-
-$('#newPageButton').addEventListener('click', () => {
+function newPageDialog() {
   $('#newPageTitleInput').value = ''
   $('#newPageTitleInput').focus()
 
   showModal('#dialog-newPage')
-})
+}
 
-$('#deleteAllPagesButton').addEventListener('click', deleteAllPages)
+$('#newPageButton').addEventListener('click', newPageDialog)
+$('#newPageButtonSP').addEventListener('click', newPageDialog)
 
 $('#dialog-newPage-save').addEventListener('click', () => {
   newPage(false)
@@ -304,10 +296,16 @@ $('#newPageTitleInput').addEventListener('keyup', (event) => {
   }
 })
 
+$('#deleteAllPagesButton').addEventListener('click', deleteAllPages)
+
 $('#renamePageTitleInput').addEventListener('keyup', (event) => {
   if (event.key === 'Enter' || event.keyCode === 13) {
     $('#dialog-renamePage-save').click()
   }
+})
+
+$('#closeSidePanelButton').addEventListener('click', () => {
+  UIkit.offcanvas('#sidePanel').hide()
 })
 
 if (isElectron) {

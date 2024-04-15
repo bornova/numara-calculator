@@ -267,11 +267,11 @@ text {
   height: 25px;
 }
 
-.leftActions a {
-  margin-right: 10px;
+.sidePanelActions {
+  margin: 15px 15px 13px 15px;
 }
 
-.sidePanelActions a {
+.leftActions a {
   margin-right: 10px;
 }
 
@@ -286,14 +286,6 @@ text {
 
 .rightActions a {
   margin-left: 10px;
-}
-
-.sidePanelActionsLeft {
-  margin: 0 0 14px 14px;
-}
-
-.sidePanelActionsRight {
-  margin: 0 15px 12px 0;
 }
 
 .closeSidePanelButton {
@@ -321,7 +313,8 @@ text {
   height: 20px;
 }
 
-.newPageButton svg {
+.newPageButton svg,
+.newPageButtonSP svg {
   width: 16px !important;
   height: 16px !important;
 }
@@ -409,14 +402,6 @@ text {
   white-space: nowrap;
 }
 
-.activePageIndicator,
-.inactivePageIndicator {
-  margin-top: 12px;
-  border-radius: 5px;
-  width: 5px;
-  height: 5px;
-}
-
 .drop-parent-icon svg {
   width: 16px;
   height: 16px;
@@ -432,7 +417,7 @@ text {
 .pageName {
   position: relative;
   top: 2px;
-  opacity: 0.7;
+  opacity: 0.8;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
