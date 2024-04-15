@@ -110,6 +110,10 @@ body {
   color: #607d8b;
 }
 
+.actionDivider {
+  border-right: 1px solid #eaeaea;
+}
+
 .uk-offcanvas-bar {
   border-right: 1px solid #eaeaea;
   background: #fff;
@@ -159,6 +163,10 @@ body {
 
 .deletePageButton:hover {
   color: #b10e0e;
+}
+
+.deleteAllPagesButton:hover {
+  color: #b10e0e !important;
 }
 
 .renamePageButton:hover,

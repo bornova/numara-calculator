@@ -123,7 +123,7 @@ ipcMain.on('export', (event, fileName, content) => {
   const file = dialog.showSaveDialogSync(win, {
     defaultPath: fileName,
     filters: [{ name: 'Numara', extensions: ['numara'] }],
-    title: 'Save Calculations'
+    title: 'Export Calculations'
   })
 
   if (file) {

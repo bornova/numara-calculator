@@ -262,8 +262,9 @@ text {
 .actions {
   position: fixed;
   right: 15px;
-  bottom: 14px;
+  bottom: 10px;
   left: 15px;
+  height: 25px;
 }
 
 .leftActions a {
@@ -314,8 +315,10 @@ text {
   color: inherit !important;
 }
 
-.newPageButton {
-  margin-right: 0 !important;
+.actionDivider {
+  margin-top: 2px;
+  margin-right: 10px;
+  height: 20px;
 }
 
 .newPageButton svg {
@@ -380,8 +383,7 @@ text {
 }
 
 .pageListHeader {
-  padding: 10px;
-  font-weight: 600;
+  height: 40px;
 }
 
 .pageListItem {
@@ -430,6 +432,7 @@ text {
 .pageName {
   position: relative;
   top: 2px;
+  opacity: 0.7;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

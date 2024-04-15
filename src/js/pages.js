@@ -119,15 +119,16 @@ export function loadPage(pageId) {
 
   cm.setValue(page.data)
 
-  cm.execCommand('goLineEnd')
-
   if (page.history) {
     cm.setHistory(page.history)
   }
 
   if (cursor) {
     cm.setCursor(cursor)
+    cm.scrollIntoView(cursor)
   }
+
+  cm.execCommand('goLineEnd')
 
   populatePages()
 }
@@ -159,6 +160,13 @@ export function newPage(isImport) {
   const pages = store.get('pages')
   const pageName =
     $('#newPageTitleInput').value.replace(/<|>/g, '').trim() || (isImport ? 'Imported page' : getPageName())
+
+  const pageNames = pages.map((p) => p.name)
+
+  if (pageNames.includes(pageName)) {
+    notify(`"${pageName}" already exists. Please choose a different page name.`, 'danger')
+    return
+  }
 
   app.activePage = pageId
 
@@ -263,6 +271,16 @@ export function sortPages() {
   store.set('pages', sortedPages)
 }
 
+export function deleteAllPages() {
+  confirm('All pages will be deleted permanently.', () => {
+    store.set('pages', [])
+
+    defaultPage()
+
+    populatePages()
+  })
+}
+
 $('#closeSidePanelButton').addEventListener('click', () => {
   UIkit.offcanvas('#sidePanel').hide()
 })
@@ -273,6 +291,8 @@ $('#newPageButton').addEventListener('click', () => {
 
   showModal('#dialog-newPage')
 })
+
+$('#deleteAllPagesButton').addEventListener('click', deleteAllPages)
 
 $('#dialog-newPage-save').addEventListener('click', () => {
   newPage(false)
@@ -310,7 +330,9 @@ if (isElectron) {
 
   // Export calculations to file
   $('#exportButton').addEventListener('click', () => {
-    numara.export($('#newPageTitleInput').value, cm.getValue())
+    const pages = store.get('pages')
+    const page = pages.find((page) => page.id === app.activePage).name
+    numara.export(page, cm.getValue())
   })
 
   numara.exportData((event, msg) => {

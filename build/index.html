@@ -48,11 +48,15 @@
           <a id="sidePanelButton" class="action" title="Pages" uk-toggle="target: #sidePanel" uk-tooltip>
             <i data-lucide="panel-left"></i>
           </a>
-          <span id="pageName" class="pageName" title="Active page"></span>
-        </div>
-        <div id="centerActions" class="centerActions uk-flex uk-flex-middle">
+          <a id="newPageButton" class="action newPageButton" title="New page" uk-tooltip>
+            <i data-lucide="plus"></i>
+          </a>
+          <span class="actionDivider"></span>
           <a id="clearButton" class="action" title="Clear page" uk-tooltip><i data-lucide="eraser"></i></a>
           <a id="copyButton" class="action" title="Copy page" uk-tooltip><i data-lucide="copy"></i></a>
+        </div>
+        <div id="centerActions" class="centerActions uk-flex uk-flex-middle">
+          <span id="pageName" class="pageName uk-text-center" title="Active page"></span>
         </div>
         <div id="rightActions" class="rightActions uk-flex uk-flex-right uk-flex-1">
           <a id="udfuButton" class="action" title="User functions and units" uk-tooltip><i data-lucide="braces"></i></a>
@@ -65,23 +69,26 @@
 
     <div id="sidePanel" uk-offcanvas="overlay: true">
       <div class="uk-offcanvas-bar uk-flex uk-flex-column">
-        <div class="pageListHeader uk-text-right">
-          <a id="closeSidePanelButton" class="action closeSidePanelButton"><i data-lucide="chevron-left"></i></a>
-        </div>
+        <div class="pageListHeader uk-text-right"></div>
         <div id="pageList" class="pageList uk-flex-1 uk-margin-small-bottom" uk-sortable></div>
         <div id="sidePanelFooter" class="sidePanelFooter uk-flex-bottom">
           <div id="sidePanelActions" class="sidePanelActions uk-flex">
             <div class="sidePanelActionsLeft uk-width-1-3">
-              <a id="newPageButton" class="action newPageButton" title="New page" uk-tooltip>
-                <i data-lucide="plus"></i>
+              <a id="closeSidePanelButton" class="action closeSidePanelButton">
+                <i data-lucide="panel-left-close"></i>
               </a>
             </div>
-            <div class="sidePanelActionsLeft uk-width-2-3 uk-text-right">
+            <div class="uk-width-1-3 uk-text-center">
               <a id="importButton" class="action importButton" title="Import" uk-tooltip>
                 <i data-lucide="download"></i>
               </a>
               <a id="exportButton" class="action exportButton" title="Export" uk-tooltip>
                 <i data-lucide="upload"></i>
+              </a>
+            </div>
+            <div class="sidePanelActionsLeft uk-width-1-3 uk-text-right">
+              <a id="deleteAllPagesButton" class="action deleteAllPagesButton" title="Delete all pages" uk-tooltip>
+                <i data-lucide="trash"></i>
               </a>
             </div>
           </div>

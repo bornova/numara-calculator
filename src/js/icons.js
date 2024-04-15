@@ -2,7 +2,6 @@ import {
   createIcons,
   AlertCircle,
   Braces,
-  ChevronLeft,
   Circle,
   Copy,
   CornerDownRight,
@@ -13,9 +12,11 @@ import {
   Info,
   ListRestart,
   PanelLeft,
+  PanelLeftClose,
   Plus,
   Scaling,
   Settings,
+  Trash,
   UndoDot,
   Upload
 } from 'lucide'
@@ -23,7 +24,6 @@ import {
 const iconList = {
   AlertCircle,
   Braces,
-  ChevronLeft,
   Circle,
   Copy,
   CornerDownRight,
@@ -34,9 +34,11 @@ const iconList = {
   Info,
   ListRestart,
   PanelLeft,
+  PanelLeftClose,
   Plus,
   Scaling,
   Settings,
+  Trash,
   UndoDot,
   Upload
 }
