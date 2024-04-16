@@ -311,7 +311,7 @@ text {
 .pageName {
   position: relative;
   top: 2px;
-  opacity: 0.8;
+  opacity: 0.9;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -385,6 +385,7 @@ text {
 }
 
 .pageListHeader {
+  -webkit-app-region: no-drag;
   height: 40px;
 }
 
