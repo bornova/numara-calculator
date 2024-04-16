@@ -111,15 +111,10 @@ if (!store.get('udu')) {
 applyUdfu(store.get('udf'), 'func')
 applyUdfu(store.get('udu'), 'unit')
 
-// Prevent CM refresh if keydown
-document.addEventListener('keydown', (event) => {
-  app.refreshCM = !event.repeat
-})
+// Populate saved calculation
+populatePages()
 
-document.addEventListener('keyup', () => {
-  app.refreshCM = true
-})
-
+// Action buttons
 $('#clearButton').addEventListener('click', () => {
   if (cm.getValue() !== '') {
     cm.setValue('')
@@ -191,64 +186,6 @@ $('#output').addEventListener('mousedown', () => {
   }
 })
 
-// Tooltip defaults
-UIkit.mixin({ data: { offset: 5 } }, 'tooltip')
-
-// Initiate settings dialog
-UIkit.util.on('#dialog-settings', 'beforeshow', settings.prep)
-
-UIkit.util.on('#setswitch', 'beforeshow', (event) => {
-  event.stopPropagation()
-})
-
-// Prepare user defined dialog inputs
-UIkit.util.on('#dialog-udfu', 'shown', () => {
-  const udf = store.get('udf').trim()
-  const udu = store.get('udu').trim()
-
-  udfInput.setValue(udf)
-  uduInput.setValue(udu)
-})
-
-// Blur input when user defined switcher is shown
-UIkit.util.on('.uk-switcher', 'show', () => {
-  cm.getInputField().blur()
-})
-
-// Focus on input when dialog is closed
-UIkit.util.on('.modal', 'hidden', () => {
-  setTimeout(() => {
-    cm.focus()
-  }, 100)
-})
-
-// Plot dialog
-UIkit.util.on('#dialog-plot', 'shown', plot)
-UIkit.util.on('#dialog-plot', 'hide', () => {
-  app.activePlot = false
-})
-
-// Save page sort order after move
-UIkit.util.on('#pageList', 'moved', () => {
-  pageOrder()
-  populatePages()
-})
-
-// Save dialog title focus on shown
-UIkit.util.on('#dialog-newPage', 'shown', () => {
-  $('#newPageTitleInput').setAttribute('placeholder', getPageName())
-  $('#newPageTitleInput').focus()
-})
-
-// Populate saved calculation
-populatePages()
-
-UIkit.util.on('#sidePanel', 'hidden', () => {
-  setTimeout(() => {
-    cm.focus()
-  }, 20)
-})
-
 // Panel resizer
 let resizeDelay
 let isResizing = false
@@ -299,6 +236,70 @@ $('#panel').addEventListener('mousemove', (event) => {
   }
 
   dividerTooltip()
+})
+
+// Tooltip defaults
+UIkit.mixin({ data: { offset: 5 } }, 'tooltip')
+
+// Initiate settings dialog
+UIkit.util.on('#dialog-settings', 'beforeshow', settings.prep)
+
+UIkit.util.on('#setswitch', 'beforeshow', (event) => {
+  event.stopPropagation()
+})
+
+// Prepare user defined dialog inputs
+UIkit.util.on('#dialog-udfu', 'shown', () => {
+  const udf = store.get('udf').trim()
+  const udu = store.get('udu').trim()
+
+  udfInput.setValue(udf)
+  uduInput.setValue(udu)
+})
+
+// Blur input when user defined switcher is shown
+UIkit.util.on('.uk-switcher', 'show', () => {
+  cm.getInputField().blur()
+})
+
+// Focus on input when dialog is closed
+UIkit.util.on('.modal', 'hidden', () => {
+  setTimeout(() => {
+    cm.focus()
+  }, 100)
+})
+
+// Plot dialog
+UIkit.util.on('#dialog-plot', 'shown', plot)
+UIkit.util.on('#dialog-plot', 'hide', () => {
+  app.activePlot = false
+})
+
+// Save page sort order after move
+UIkit.util.on('#pageList', 'moved', () => {
+  pageOrder()
+  populatePages()
+})
+
+// Save dialog title focus on shown
+UIkit.util.on('#dialog-newPage', 'shown', () => {
+  $('#newPageTitleInput').setAttribute('placeholder', getPageName())
+  $('#newPageTitleInput').focus()
+})
+
+UIkit.util.on('#sidePanel', 'hidden', () => {
+  setTimeout(() => {
+    cm.focus()
+  }, 20)
+})
+
+// Prevent CM refresh if keydown
+document.addEventListener('keydown', (event) => {
+  app.refreshCM = !event.repeat
+})
+
+document.addEventListener('keyup', () => {
+  app.refreshCM = true
 })
 
 // Relayout plot on window resize
