@@ -312,6 +312,7 @@ text {
   position: relative;
   top: 2px;
   opacity: 0.9;
+  width: calc(100vw - 280px);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
