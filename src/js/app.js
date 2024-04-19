@@ -287,6 +287,14 @@ UIkit.util.on('#dialog-newPage', 'shown', () => {
   $('#newPageTitleInput').focus()
 })
 
+// Focus rename input on show
+UIkit.util.on('#dialog-renamePage', 'shown', () => {
+  setTimeout(() => {
+    $('#renamePageTitleInput').focus()
+    $('#renamePageTitleInput').select()
+  }, 20)
+})
+
 UIkit.util.on('#sidePanel', 'hidden', () => {
   setTimeout(() => {
     cm.focus()
@@ -356,7 +364,8 @@ const traps = {
   clearButton: ['command+d', 'ctrl+d'],
   exportButton: ['command+e', 'ctrl+e'],
   importButton: ['command+i', 'ctrl+i'],
-  newPageButton: ['command+n', 'ctrl+n']
+  newPageButton: ['command+n', 'ctrl+n'],
+  sidePanelButton: ['tab']
 }
 
 for (const [button, command] of Object.entries(traps)) {

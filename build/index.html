@@ -121,7 +121,7 @@
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
         <h2 class="uk-modal-title">New page</h2>
         <div>
-          <input id="newPageTitleInput" class="textBox" type="text" maxlength="50" />
+          <input id="newPageTitleInput" class="textBox" type="text" maxlength="50" autocomplete="off" />
         </div>
         <div uk-flex>
           <div class="dialog-buttons uk-flex-right">
@@ -135,7 +135,9 @@
     <div id="dialog-renamePage" class="modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
         <h2 class="uk-modal-title">Rename page</h2>
-        <div><input id="renamePageTitleInput" class="textBox" type="text" maxlength="50" /></div>
+        <div>
+          <input id="renamePageTitleInput" class="textBox" type="text" maxlength="50" autocomplete="off" />
+        </div>
         <div uk-flex>
           <div class="dialog-buttons uk-flex-right">
             <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>

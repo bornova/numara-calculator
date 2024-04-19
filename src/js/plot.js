@@ -9,7 +9,7 @@ import functionPlot from 'function-plot'
 export function plot() {
   $('#plotTitle').innerHTML = app.plotFunction
 
-  const f = app.plotFunction.split('=')[1]
+  const f = math.simplify(app.plotFunction.split('=')[1], app.mathScope).toString()
 
   let domain = math.abs(math.evaluate(f, { x: 0 })) * 2
 
