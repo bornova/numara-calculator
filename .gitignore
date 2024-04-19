@@ -1,4 +1,5 @@
 # Directories
+.devcontainer
 dist
 node_modules
 wiki
