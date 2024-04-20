@@ -374,6 +374,8 @@ for (const [button, command] of Object.entries(traps)) {
 
     if ($all('.uk-open').length === 0) {
       $('#' + button).click()
+    } else if ($('#sidePanel').classList.contains('uk-open') && !$('#dialog-newPage').classList.contains('uk-open')) {
+      $('#closeSidePanelButton').click()
     }
   })
 }
