@@ -786,6 +786,10 @@ input:checked + .slider:before {
   outline: none;
 }
 
+.uk-offcanvas-bar-animation {
+  transition: left 0.2s ease-out;
+}
+
 .uk-modal {
   padding: 0 30px !important;
 }

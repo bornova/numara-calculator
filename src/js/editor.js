@@ -285,10 +285,14 @@ cm.on('update', () => {
 
   if (constants.length > 0 && app.settings.keywordTips) {
     for (const c of constants) {
-      UIkit.tooltip(c, {
-        pos: ttPos(c),
-        title: math.help(c.innerText).doc.description + ' (Constant)'
-      })
+      try {
+        UIkit.tooltip(c, {
+          pos: ttPos(c),
+          title: math.help(c.innerText).doc.description + ' (Constant)'
+        })
+      } catch {
+        /* No tooltip */
+      }
     }
   }
 
