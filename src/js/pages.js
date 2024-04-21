@@ -114,6 +114,7 @@ export function loadPage(pageId) {
   store.set('lastPage', pageId)
 
   $('#pageName').innerHTML = page.name
+  $('#pageName').title = page.name
 
   cm.setValue(page.data)
 
@@ -348,6 +349,10 @@ $('#closeSidePanelButton').addEventListener('click', () => {
   UIkit.offcanvas('#sidePanel').hide()
 })
 
+$('#printButton').addEventListener('click', () => {
+  window.print()
+})
+
 if (isElectron) {
   // Import calculations from file
   $('#importButton').addEventListener('click', numara.import)
@@ -387,6 +392,8 @@ if (isElectron) {
 
   // Print window from main
   numara.main.print(() => {
+    UIkit.offcanvas('#sidePanel').hide()
+
     window.print()
   })
 

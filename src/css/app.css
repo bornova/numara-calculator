@@ -265,9 +265,9 @@ text {
 /* Action item buttons */
 .actions {
   position: fixed;
-  right: 15px;
+  right: 10px;
   bottom: 10px;
-  left: 15px;
+  left: 10px;
   height: 25px;
 }
 
@@ -284,13 +284,15 @@ text {
 }
 
 .actionDivider {
+  margin: 0 5px;
   margin-top: 2px;
-  margin-right: 10px;
   height: 20px;
 }
 
-.leftActions a {
-  margin-right: 10px;
+.leftActions a,
+.centerActions a,
+.rightActions a {
+  margin: 0 5px;
 }
 
 .leftActions a:hover,
@@ -304,22 +306,14 @@ text {
   height: 16px !important;
 }
 
-.centerActions a {
-  margin: 0 5px;
-}
-
 .pageName {
   position: relative;
   top: 2px;
   opacity: 0.9;
-  width: calc(100vw - 280px);
+  width: calc(100vw - 300px);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.rightActions a {
-  margin-left: 10px;
 }
 
 .leftActions a svg,
@@ -353,7 +347,7 @@ text {
 }
 
 .sidePanelActions {
-  margin: 15px 15px 13px 15px;
+  margin: 15px 10px 11px 10px;
 }
 
 .closeSidePanelButton {
@@ -386,7 +380,6 @@ text {
 }
 
 .pageListHeader {
-  -webkit-app-region: no-drag;
   height: 40px;
 }
 
@@ -396,6 +389,7 @@ text {
 }
 
 .pageListSort {
+  -webkit-app-region: no-drag;
   cursor: pointer;
   margin: 10px;
 }
@@ -406,6 +400,7 @@ text {
 }
 
 .sortListItem {
+  -webkit-app-region: no-drag;
   cursor: pointer;
   padding: 5px 10px;
 }
@@ -1080,8 +1075,10 @@ input:checked + .slider:before {
 }
 
 @media print {
-  .wrapper {
-    display: none;
+  .wrapper,
+  .uk-open,
+  .uk-tooltip {
+    display: none !important;
   }
 
   .printArea {

@@ -56,7 +56,7 @@
           <a id="copyButton" class="action" title="Copy page" uk-tooltip><i data-lucide="copy"></i></a>
         </div>
         <div id="centerActions" class="centerActions uk-flex uk-flex-middle">
-          <span id="pageName" class="pageName uk-text-center" title="Active page"></span>
+          <span id="pageName" class="pageName uk-text-center"></span>
         </div>
         <div id="rightActions" class="rightActions uk-flex uk-flex-middle uk-flex-right uk-flex-1">
           <a id="udfuButton" class="action" title="User functions and units" uk-tooltip><i data-lucide="braces"></i></a>
@@ -92,7 +92,7 @@
         <div id="sidePanelFooter" class="sidePanelFooter uk-flex-bottom">
           <div id="sidePanelActions" class="sidePanelActions uk-flex">
             <div class="leftActions uk-flex uk-flex-middle uk-flex-1">
-              <a id="closeSidePanelButton" class="action closeSidePanelButton">
+              <a id="closeSidePanelButton" class="action closeSidePanelButton" title="Close" uk-tooltip>
                 <i data-lucide="panel-left-close"></i>
               </a>
               <a id="newPageButtonSP" class="action newPageButtonSP" title="New page" uk-tooltip>
@@ -106,8 +106,10 @@
               <a id="exportButton" class="action exportButton" title="Export" uk-tooltip>
                 <i data-lucide="upload"></i>
               </a>
+              <span class="actionDivider"></span>
+              <a id="printButton" class="action" title="Print page" uk-tooltip><i data-lucide="printer"></i></a>
             </div>
-            <div class="rightActions uk-flex uk-flex-right uk-flex-1 uk-text-right">
+            <div class="rightActions uk-flex uk-flex-middle uk-flex-right uk-flex-1 uk-text-right">
               <a id="deleteAllPagesButton" class="action deleteAllPagesButton" title="Delete all pages" uk-tooltip>
                 <i data-lucide="trash"></i>
               </a>

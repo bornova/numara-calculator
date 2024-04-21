@@ -365,6 +365,7 @@ const traps = {
   exportButton: ['command+e', 'ctrl+e'],
   importButton: ['command+i', 'ctrl+i'],
   newPageButton: ['command+n', 'ctrl+n'],
+  printButton: ['command+p', 'ctrl+p'],
   sidePanelButton: ['tab']
 }
 

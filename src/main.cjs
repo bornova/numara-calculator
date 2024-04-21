@@ -201,7 +201,7 @@ const commonContext = (event, index, isEmpty, isSelection, isMultiLine, hasAnswe
       click: () => event.sender.send('copyAllAnswers')
     },
     {
-      label: 'Copy all lines and answers',
+      label: 'Copy all lines with answers',
       enabled: !isEmpty,
       click: () => event.sender.send('copyAll')
     }
