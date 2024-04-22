@@ -284,8 +284,7 @@ export function sortPages(by) {
 export function pageOrder() {
   const pages = store.get('pages')
   const pageList = $all('#pageList > div')
-
-  let orderedPages = [...pageList].map((el) => pages.find((page) => page.id === el.getAttribute('id')))
+  const orderedPages = [...pageList].map((el) => pages.find((page) => page.id === el.getAttribute('id')))
 
   store.set('pages', orderedPages)
 }
@@ -402,6 +401,5 @@ if (isElectron) {
     console.log(message)
   })
 } else {
-  $('#exportButton').remove()
-  $('#importButton').remove()
+  $all('#exportButton, #importButton, #spDivider').forEach((el) => el.remove())
 }
