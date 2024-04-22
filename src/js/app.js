@@ -7,7 +7,7 @@ import { generateIcons } from './icons'
 import { notify, showError, showModal } from './modal'
 import { plot } from './plot'
 import { settings } from './settings'
-import { defaultPage, lastPage, loadPage, getPageName, pageOrder, populatePages } from './pages'
+import { defaultPage, lastPage, loadPage, migrateSaved, getPageName, pageOrder, populatePages } from './pages'
 import { applyUdfu } from './userDefined'
 import { checkSize, checkUpdates, isMac, isElectron, toggleMinMax } from './utils'
 
@@ -98,6 +98,8 @@ if (!store.get('pages')) {
   app.activePage = lastPage()
   loadPage(lastPage())
 }
+
+migrateSaved()
 
 // Set user defined values
 if (!store.get('udf')) {
