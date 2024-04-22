@@ -176,7 +176,7 @@ decimal.js/decimal.mjs:
 
 lucide/dist/esm/createElement.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -184,7 +184,7 @@ lucide/dist/esm/createElement.js:
 
 lucide/dist/esm/replaceElement.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -192,7 +192,7 @@ lucide/dist/esm/replaceElement.js:
 
 lucide/dist/esm/defaultAttributes.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -200,7 +200,7 @@ lucide/dist/esm/defaultAttributes.js:
 
 lucide/dist/esm/icons/arrow-up-down.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -208,7 +208,7 @@ lucide/dist/esm/icons/arrow-up-down.js:
 
 lucide/dist/esm/icons/braces.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -216,7 +216,7 @@ lucide/dist/esm/icons/braces.js:
 
 lucide/dist/esm/icons/circle-alert.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -224,7 +224,7 @@ lucide/dist/esm/icons/circle-alert.js:
 
 lucide/dist/esm/icons/circle.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -232,7 +232,7 @@ lucide/dist/esm/icons/circle.js:
 
 lucide/dist/esm/icons/copy.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -240,7 +240,7 @@ lucide/dist/esm/icons/copy.js:
 
 lucide/dist/esm/icons/corner-down-right.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -248,7 +248,7 @@ lucide/dist/esm/icons/corner-down-right.js:
 
 lucide/dist/esm/icons/dot.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -256,7 +256,7 @@ lucide/dist/esm/icons/dot.js:
 
 lucide/dist/esm/icons/download.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -264,7 +264,7 @@ lucide/dist/esm/icons/download.js:
 
 lucide/dist/esm/icons/ellipsis-vertical.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -272,7 +272,7 @@ lucide/dist/esm/icons/ellipsis-vertical.js:
 
 lucide/dist/esm/icons/eraser.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -280,7 +280,7 @@ lucide/dist/esm/icons/eraser.js:
 
 lucide/dist/esm/icons/info.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -288,7 +288,7 @@ lucide/dist/esm/icons/info.js:
 
 lucide/dist/esm/icons/list-restart.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -296,7 +296,7 @@ lucide/dist/esm/icons/list-restart.js:
 
 lucide/dist/esm/icons/panel-left-close.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -304,7 +304,7 @@ lucide/dist/esm/icons/panel-left-close.js:
 
 lucide/dist/esm/icons/panel-left.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -312,7 +312,7 @@ lucide/dist/esm/icons/panel-left.js:
 
 lucide/dist/esm/icons/plus.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -320,7 +320,7 @@ lucide/dist/esm/icons/plus.js:
 
 lucide/dist/esm/icons/printer.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -328,7 +328,7 @@ lucide/dist/esm/icons/printer.js:
 
 lucide/dist/esm/icons/scaling.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -336,7 +336,7 @@ lucide/dist/esm/icons/scaling.js:
 
 lucide/dist/esm/icons/settings.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -344,7 +344,7 @@ lucide/dist/esm/icons/settings.js:
 
 lucide/dist/esm/icons/trash.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -352,7 +352,7 @@ lucide/dist/esm/icons/trash.js:
 
 lucide/dist/esm/icons/undo-dot.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -360,7 +360,7 @@ lucide/dist/esm/icons/undo-dot.js:
 
 lucide/dist/esm/icons/upload.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
@@ -368,7 +368,7 @@ lucide/dist/esm/icons/upload.js:
 
 lucide/dist/esm/lucide.js:
   (**
-   * @license lucide v0.365.0 - ISC
+   * @license lucide v0.372.0 - ISC
    *
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
