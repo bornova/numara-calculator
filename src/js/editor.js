@@ -1,13 +1,13 @@
-import { $, $all, app } from './common'
-import { calculate, formatAnswer, math } from './math'
+import { $, $all, app, store } from './common'
+import { calculate, formatAnswer, math } from './eval'
 
 import * as formulajs from '@formulajs/formulajs'
 
 import UIkit from 'uikit'
+
 import CodeMirror from 'codemirror'
 
 import 'codemirror/mode/javascript/javascript'
-
 import 'codemirror/addon/dialog/dialog'
 import 'codemirror/addon/display/placeholder'
 import 'codemirror/addon/edit/closebrackets'
@@ -20,7 +20,7 @@ import 'codemirror/addon/search/searchcursor'
 /** CodeMirror input panel. */
 export const cm = CodeMirror.fromTextArea($('#inputArea'), {
   autofocus: true,
-  extraKeys: { 'Ctrl-Space': 'autocomplete' },
+  extraKeys: { 'Ctrl-Space': 'autocomplete', Tab: () => {} },
   inputStyle: 'textarea',
   mode: 'numara',
   singleCursorHeightPerLine: false,
@@ -33,8 +33,6 @@ export const cm = CodeMirror.fromTextArea($('#inputArea'), {
 const udOptions = {
   autoCloseBrackets: true,
   mode: 'javascript',
-  smartIndent: false,
-  singleCursorHeightPerLine: false,
   tabSize: 2
 }
 
@@ -71,6 +69,7 @@ CodeMirror.defineMode('numara', () => ({
     if (app.udfList.includes(cmStream)) {
       return 'udf'
     }
+
     if (app.uduList.includes(cmStream)) {
       return 'udu'
     }
@@ -286,10 +285,14 @@ cm.on('update', () => {
 
   if (constants.length > 0 && app.settings.keywordTips) {
     for (const c of constants) {
-      UIkit.tooltip(c, {
-        pos: ttPos(c),
-        title: math.help(c.innerText).doc.description + ' (Constant)'
-      })
+      try {
+        UIkit.tooltip(c, {
+          pos: ttPos(c),
+          title: math.help(c.innerText).doc.description + ' (Constant)'
+        })
+      } catch {
+        /* No tooltip */
+      }
     }
   }
 
@@ -357,4 +360,13 @@ cm.on('update', () => {
       })
     }
   }
+})
+
+cm.on('cursorActivity', (cm) => {
+  const pages = store.get('pages')
+  const page = pages.find((page) => page.id == app.activePage)
+
+  page.cursor = cm.getCursor()
+
+  store.set('pages', pages)
 })

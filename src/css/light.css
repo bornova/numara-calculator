@@ -62,18 +62,12 @@ body {
   border-bottom: 1px solid #f1f1f1;
 }
 
+.errTitle,
 .lineError,
 .lineError:hover,
 .lineError > div,
-.lineNoError > div {
-  color: #b10e0e;
-}
-
+.lineNoError > div,
 .syntaxError {
-  color: #b10e0e;
-}
-
-.errTitle {
   color: #b10e0e;
 }
 
@@ -102,29 +96,62 @@ body {
 }
 
 .action,
-.noAction {
-  color: #607d8b;
-}
-
+.noAction,
 .noAction:hover {
   color: #607d8b;
 }
 
-.dialog-open-wrapper {
-  background-color: rgba(244, 244, 244, 0.3);
-  border: 1px solid #eaeaea;
+.actionDivider {
+  border-right: 1px solid #eaeaea;
 }
 
-.dialog-open-wrapper:hover {
-  background-color: #f4f4f4;
+.pageName {
+  color: #687e89;
 }
 
-.dialog-open-delete {
+.pageListHeader,
+.pageListItem {
+  border-bottom: 1px solid #eaeaea;
+}
+
+.pageListItem:hover {
+  background-color: #f9f9f9;
+}
+
+.activePage {
+  background-color: #f5f5f5;
+}
+
+.drop-parent-icon,
+.pageListSort {
+  color: #607d8b;
+}
+
+.drop-parent-icon:hover,
+.pageListSort:hover {
+  color: #4682b4;
+}
+
+.deletePageButton {
   color: #666666;
 }
 
-.dialog-open-delete:hover {
+.deletePageButton:hover {
   color: #b10e0e;
+}
+
+.deleteAllPagesButton:hover {
+  color: #b10e0e !important;
+}
+
+.renamePageButton:hover,
+.dupPageButton:hover,
+.sortListItem:hover {
+  color: #005cc5;
+}
+
+.sortListDivider {
+  border-top-color: #eaeaea !important;
 }
 
 .dialog-about-title {
@@ -154,6 +181,10 @@ body {
 .expUpper {
   border: 1px solid #e5e5e5;
   color: #333333;
+}
+
+.subSwitchIcon {
+  color: #999;
 }
 
 .textBox {
@@ -193,14 +224,14 @@ text {
 
 .uk-button-danger,
 .uk-button-danger:focus {
-  background-color: #f5f5f5;
   border-color: #e5e5e5;
+  background-color: #f5f5f5;
   color: rgba(189, 46, 46, 0.9);
 }
 
 .uk-button-danger:hover {
-  background-color: #f5f5f5;
   border-color: rgba(189, 46, 46, 0.3);
+  background-color: #f5f5f5;
   color: rgba(189, 46, 46, 0.9);
 }
 
@@ -209,8 +240,8 @@ text {
 }
 
 .uk-button-danger:disabled:hover {
-  background-color: transparent;
   border-color: #e5e5e5;
+  background-color: transparent;
   color: #999999;
 }
 
@@ -229,6 +260,28 @@ text {
 .uk-tooltip {
   background-color: #eaeaea;
   color: #000;
+}
+
+.uk-offcanvas-bar {
+  border-right: 1px solid #eaeaea;
+  background: #fff;
+  color: #333;
+}
+
+.uk-offcanvas-bar a {
+  color: #607d8b;
+}
+
+.uk-offcanvas-bar a:hover {
+  color: #0f6ecd;
+}
+
+.uk-offcanvas-bar .uk-close {
+  color: #333;
+}
+
+.uk-offcanvas-bar .uk-close:hover {
+  color: #4682b4;
 }
 
 /* CodeMirror Overrides */

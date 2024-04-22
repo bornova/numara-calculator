@@ -1,8 +1,9 @@
 import { $, $all, app, store } from './common'
 import { cm, udfInput, uduInput } from './editor'
+import { calculate, math } from './eval'
 import { getRates } from './forex'
 import { generateIcons } from './icons'
-import { calculate, math } from './math'
+import { confirm, showError } from './modal'
 import { checkLocale, checkSize, isElectron } from './utils'
 
 import DeepDiff from 'deep-diff'
@@ -323,3 +324,65 @@ export const settings = {
     $('#copyThouSepMod').parentNode.style.opacity = app.settings.thouSep ? '1' : '0.5'
   }
 }
+
+$('#defaultSettingsButton').addEventListener('click', () => {
+  confirm('All settings will revert back to defaults.', () => {
+    app.settings = JSON.parse(JSON.stringify(settings.defaults))
+
+    store.set('settings', app.settings)
+
+    settings.prep()
+    settings.save()
+    settings.apply()
+  })
+})
+
+$('#dialog-settings-reset').addEventListener('click', () => {
+  confirm('All user settings and data will be lost.', () => {
+    if (isElectron) {
+      numara.resetApp()
+    } else {
+      localStorage.clear()
+      location.reload()
+    }
+  })
+})
+
+if (isElectron) {
+  $('#resetSizeButton').addEventListener('click', numara.resetSize)
+}
+
+$('#localeWarn').addEventListener('click', () => {
+  showError(
+    'Caution: Locale',
+    `Your locale (${app.settings.locale}) uses comma (,) as decimal separator.  Therefore, you must use semicolon (;) as argument separator when using functions.<br><br>Ex. sum(1;3) // 4`
+  )
+})
+
+$('#bigNumWarn').addEventListener('click', () => {
+  showError(
+    'Caution: BigNumber Limitations',
+    `Using the BigNumber may break function plotting and is not compatible with some math functions. 
+      It may also cause unexpected behavior and affect overall performance.<br><br>
+      <a target="_blank" href="https://mathjs.org/docs/datatypes/bignumbers.html">Read more on BigNumbers</a>`
+  )
+})
+
+$('#precision').addEventListener('input', () => {
+  $('#precision-label').innerHTML = $('#precision').value
+})
+
+$('#expLower').addEventListener('input', () => {
+  $('#expLower-label').innerHTML = $('#expLower').value
+})
+
+$('#expUpper').addEventListener('input', () => {
+  $('#expUpper-label').innerHTML = $('#expUpper').value
+})
+
+$all('.settingItem').forEach((el) => {
+  el.addEventListener('change', () => {
+    settings.save()
+    settings.apply()
+  })
+})

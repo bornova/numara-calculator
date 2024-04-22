@@ -17,6 +17,7 @@ export const store = {
 /** App globals. */
 export const app = {
   activePlot: null,
+  activePage: null,
   currencyRates: {},
   mathScope: {},
   plotFunction: null,

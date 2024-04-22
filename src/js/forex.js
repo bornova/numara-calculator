@@ -1,6 +1,6 @@
 import { $, app, store } from './common'
 import { cm } from './editor'
-import { calculate, math } from './math'
+import { calculate, math } from './eval'
 import { notify } from './modal'
 
 math.createUnit('USD', { aliases: ['usd'] })
@@ -23,8 +23,8 @@ export function getRates() {
           math.createUnit(
             rates[currency].code,
             {
-              definition: math.unit(rates[currency].inverseRate + 'USD'),
-              aliases: [dups.includes(rates[currency].code.toLowerCase()) ? '' : rates[currency].code.toLowerCase()]
+              aliases: [dups.includes(rates[currency].code.toLowerCase()) ? '' : rates[currency].code.toLowerCase()],
+              definition: math.unit(rates[currency].inverseRate + 'USD')
             },
             { override: true }
           )

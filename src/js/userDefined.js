@@ -1,5 +1,6 @@
-import { app, store } from './common'
-import { calculate } from './math'
+import { $, app, store } from './common'
+import { udfInput, uduInput } from './editor'
+import { calculate } from './eval'
 import { showError } from './modal'
 
 import UIkit from 'uikit'
@@ -34,3 +35,11 @@ export function applyUdfu(input, type) {
     showError(error.name, error.message)
   }
 }
+
+$('#dialog-udfu-save-f').addEventListener('click', () => {
+  applyUdfu(udfInput.getValue().trim(), 'func')
+})
+
+$('#dialog-udfu-save-u').addEventListener('click', () => {
+  applyUdfu(uduInput.getValue().trim(), 'unit')
+})

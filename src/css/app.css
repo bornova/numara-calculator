@@ -10,29 +10,29 @@
 /* Numara CSS */
 * {
   -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
   -webkit-tap-highlight-color: transparent;
-  background: none;
-  border: none;
+  -webkit-user-select: none;
+  backface-visibility: hidden;
   margin: 0;
   outline: none;
+  border: none;
+  background: none;
   padding: 0;
   resize: none;
-  -webkit-user-select: none;
   user-select: none;
 }
 
 /* UI defaults */
 html,
 body {
-  font-family: 'Open Sans', sans-serif;
-  font-size: 12px;
   height: 100%;
+  font-size: 12px;
+  font-family: 'Open Sans', sans-serif;
 }
 
 ::-webkit-scrollbar {
-  height: 8px;
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -44,31 +44,35 @@ h2 {
 }
 
 input {
-  font-family: inherit;
   font-size: inherit;
+  font-family: inherit;
 }
 
 input[type='range']::-webkit-slider-runnable-track {
-  background-color: #999999;
+  margin-top: 2px;
   border: none;
   border-radius: 3px;
-  height: 1px;
-  margin-top: 2px;
+  background-color: #999999;
   width: 300px;
+  height: 1px;
 }
 
 input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
-  background-color: #1e87f0;
+  margin-top: -7px;
   border: none;
   border-radius: 50%;
-  height: 14px;
-  margin-top: -7px;
+  background-color: #1e87f0;
   width: 14px;
+  height: 14px;
 }
 
 input[type='range']:focus::-webkit-slider-runnable-track {
   background-color: #999999;
+}
+
+pre {
+  font: inherit !important;
 }
 
 textarea {
@@ -81,23 +85,31 @@ text {
   font-size: 0.9rem;
 }
 
+.wrapper {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
 /* Windows Header */
 .header-win {
   -webkit-app-region: drag !important;
   display: none;
-  height: 30px;
   position: fixed;
   top: 5px;
   right: 0;
   left: 0;
+  height: 30px;
 }
 
 .header-win-title {
   float: left;
-  font-family: 'Numara';
-  font-size: 1.1em;
-  font-weight: 700;
   margin: 5px 0 0 15px;
+  font-weight: 700;
+  font-size: 1.1em;
+  font-family: 'Numara';
 }
 
 .winButtons {
@@ -115,64 +127,51 @@ text {
 .unmax-btn-win,
 .close-btn-win {
   -webkit-app-region: no-drag;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 11px 11px;
   float: right;
-  height: 30px;
+  background-position: center;
+  background-size: 11px 11px;
+  background-repeat: no-repeat;
   width: 46px;
+  height: 30px;
 }
 
 .close-btn-win:hover {
-  background-color: #ee1111;
   background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTIgMTIiIGZpbGw9InJnYigyNTUsIDI1NSwgMjU1KSIgc2hhcGUtcmVuZGVyaW5nPSJjcmlzcEVkZ2VzIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik02LjI3OSA1LjVMMTEgMTAuMjIxbC0uNzc5Ljc3OUw1LjUgNi4yNzkuNzc5IDExIDAgMTAuMjIxIDQuNzIxIDUuNSAwIC43NzkuNzc5IDAgNS41IDQuNzIxIDEwLjIyMSAwIDExIC43NzkgNi4yNzkgNS41eiIgLz48L3N2Zz4=');
+  background-color: #ee1111;
 }
 
 /* Mac Header */
 .header-mac {
   -webkit-app-region: drag !important;
   display: none;
-  height: 40px;
   position: fixed;
   top: 0;
   right: 0;
   left: 0;
+  height: 40px;
 }
 
 .header-mac-title {
-  font-family: 'Numara';
-  font-size: 1.1em;
   padding-top: 10px;
+  font-size: 1.1em;
+  font-family: 'Numara';
   text-align: center;
 }
 
 /* Content */
-.wrapper {
-  position: fixed;
-  bottom: 0;
-  top: 0;
-  right: 0;
-  left: 0;
-}
-
 .panel {
   display: flex;
-  align-content: flex-start;
   position: fixed;
   top: 50px;
   right: 8px;
   bottom: 42px;
   left: 20px;
-}
-
-.inputArea::-webkit-scrollbar {
-  height: 8px;
-  width: 0px;
+  align-content: flex-start;
 }
 
 .input {
-  min-width: 120px;
   width: 60%;
+  min-width: 120px;
 }
 
 .inputArea {
@@ -180,16 +179,33 @@ text {
   user-select: text;
 }
 
-.noRuler {
-  border-bottom: 1px solid transparent;
+.inputArea::-webkit-scrollbar {
+  width: 0px;
+  height: 8px;
+}
+
+.divider {
+  flex: 0 0 auto;
+  cursor: ew-resize;
+  margin: 0 8px;
+  width: 5px;
+  height: calc(100% - 8px);
+}
+
+.divider::before {
+  display: block;
+  margin: 0 auto;
+  width: 1px;
+  height: 100%;
+  content: '';
 }
 
 .output {
   flex: 1;
-  font-weight: 400;
-  min-width: 120px;
-  white-space: nowrap;
   padding: 0;
+  min-width: 120px;
+  font-weight: 400;
+  white-space: nowrap;
 }
 
 .inputArea,
@@ -200,25 +216,25 @@ text {
 }
 
 .output > div {
+  -webkit-user-select: text;
   display: block;
-  height: 27px;
   width: 100%;
-  -webkit-user-select: text;
-  user-select: text;
-}
-
-.answer {
-  border-radius: 5px;
-  cursor: default;
   height: 27px;
-  margin: 0 8px 0 0;
-  padding: 2px 5px;
-  -webkit-user-select: text;
   user-select: text;
 }
 
 .panelFont {
   font-family: 'Roboto Mono', monospace;
+}
+
+.answer {
+  -webkit-user-select: text;
+  cursor: default;
+  margin: 0 8px 0 0;
+  border-radius: 5px;
+  padding: 2px 5px;
+  height: 27px;
+  user-select: text;
 }
 
 .lineError,
@@ -234,77 +250,80 @@ text {
   word-break: break-word;
 }
 
-.divider {
-  cursor: ew-resize;
-  flex: 0 0 auto;
-  height: calc(100% - 8px);
-  margin: 0 8px;
-  width: 5px;
-}
-
-.divider::before {
-  content: '';
-  display: block;
-  height: 100%;
-  margin: 0 auto;
-  width: 1px;
+.noRuler {
+  border-bottom: 1px solid transparent;
 }
 
 .gutterBlock {
-  height: 8px;
   position: fixed;
   bottom: 50px;
   left: 0;
   z-index: 5;
+  height: 8px;
 }
 
 /* Action item buttons */
 .actions {
-  display: flex;
   position: fixed;
-  right: 15px;
-  bottom: 12px;
-  left: 15px;
-}
-
-.actions > div {
-  flex: auto;
-}
-
-.leftActions {
-  display: flex;
-  min-width: 120px;
-}
-
-.leftActions a {
-  margin-right: 10px;
-}
-
-.rightActions {
-  display: flex;
-  min-width: 120px;
-}
-
-.rightActions a {
-  margin-left: 10px;
-}
-
-.leftActions a svg,
-.rightActions a svg {
-  height: 14px;
-  pointer-events: none;
-  width: 14px;
+  right: 10px;
+  bottom: 10px;
+  left: 10px;
+  height: 25px;
 }
 
 .action,
 .noAction {
   cursor: pointer;
-  padding-bottom: 2px;
 }
 
-.noAction {
+.noAction,
+.action[disabled='true'] {
   opacity: 0.4;
   cursor: default;
+  pointer-events: none;
+}
+
+.actionDivider {
+  margin: 0 5px;
+  margin-top: 2px;
+  height: 20px;
+}
+
+.leftActions a,
+.centerActions a,
+.rightActions a {
+  margin: 0 5px;
+}
+
+.leftActions a:hover,
+.sidePanelActions a:hover {
+  text-decoration: none;
+}
+
+.newPageButton svg,
+.newPageButtonSP svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.pageName {
+  position: relative;
+  top: 2px;
+  opacity: 0.9;
+  width: calc(100vw - 300px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leftActions a svg,
+.centerActions a svg,
+.rightActions a svg,
+.sidePanelActions a svg {
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  color: inherit !important;
 }
 
 .notificationDot {
@@ -315,10 +334,111 @@ text {
 }
 
 .notificationDot > svg {
-  height: 5px;
-  width: 5px;
   fill: #1e87f0;
   stroke: #1e87f0;
+  width: 5px;
+  height: 5px;
+}
+
+/* Side panel */
+.uk-offcanvas-bar {
+  padding: 0;
+  width: 240px;
+}
+
+.sidePanelActions {
+  margin: 15px 10px 11px 10px;
+}
+
+.closeSidePanelButton {
+  -webkit-app-region: no-drag !important;
+}
+
+.closeSidePanelButton svg {
+  width: 18px;
+  height: 18px;
+}
+
+.uk-offcanvas-close {
+  -webkit-app-region: no-drag;
+  top: 9px;
+  right: 8px;
+}
+
+.uk-offcanvas-close svg {
+  width: 11px;
+  height: 11px;
+}
+
+.uk-offcanvas-close svg line {
+  stroke-width: 1.5;
+}
+
+.uk-dropdown {
+  padding: 0px;
+  min-width: auto;
+}
+
+.pageListHeader {
+  height: 40px;
+}
+
+.pageList {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.pageListSort {
+  -webkit-app-region: no-drag;
+  cursor: pointer;
+  margin: 10px;
+}
+
+.pageListSort svg {
+  width: 14px;
+  height: 14px;
+}
+
+.sortListItem {
+  -webkit-app-region: no-drag;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.sortListDivider {
+  margin: 5px 10px;
+}
+
+.pageListItem {
+  display: flex;
+  position: relative;
+  cursor: pointer;
+}
+
+.pageListItem > div:first-child {
+  padding: 3px 0 3px 10px;
+}
+
+.pageListItemTitle {
+  padding: 5px 5px 2px 5px;
+  width: 180px;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drop-parent-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.renamePageButton,
+.dupPageButton,
+.deletePageButton,
+.sortListItem {
+  cursor: pointer;
+  padding: 5px 10px;
 }
 
 /* Dialogs */
@@ -332,42 +452,14 @@ text {
   margin-top: 15px;
 }
 
-.dialog-open-wrapper {
-  cursor: pointer;
-  margin: 0 5px 5px 0;
-  position: relative;
-}
-
 .dialog-open-body {
   margin-right: -5px;
 }
 
-.dialog-open-title {
-  font-weight: 600;
-  padding: 5px 5px 2px 5px;
-}
-
 .dialog-open-date {
+  padding: 0 5px 5px 5px;
   color: #999999;
   font-size: 0.9rem;
-  padding: 0 5px 5px 5px;
-}
-
-.dialog-open-delete {
-  cursor: pointer;
-  font-weight: 600;
-  height: 16px;
-  position: absolute;
-  top: 15px;
-  right: 5px;
-  width: 16px;
-}
-
-.dialog-open-delete > svg {
-  height: 15px;
-  stroke-width: 1.5px;
-  width: 15px;
-  pointer-events: none;
 }
 
 .dialog-confirm {
@@ -384,10 +476,10 @@ text {
 }
 
 .dialog-settings-body {
-  height: calc(100vh - 185px);
-  max-height: 600px;
   margin-right: -8px;
   padding-right: 10px;
+  height: calc(100vh - 185px);
+  max-height: 600px;
   overflow: scroll;
 }
 
@@ -396,9 +488,9 @@ text {
 }
 
 #dialog-settings h3 {
-  font-size: 1rem;
-  font-weight: 500;
   margin: 25px 0 12px 0;
+  font-weight: 500;
+  font-size: 1rem;
 }
 
 #dialog-settings h3:first-of-type {
@@ -407,12 +499,12 @@ text {
 
 #dialog-settings .settingMod,
 #dialog-settings .settingModToggle {
-  color: #dd9359;
-  cursor: pointer;
   display: none;
-  margin-left: -20px;
-  margin-top: -3px;
   position: absolute;
+  cursor: pointer;
+  margin-top: -3px;
+  margin-left: -20px;
+  color: #dd9359;
 }
 
 #dialog-settings .settingMod > svg,
@@ -437,29 +529,29 @@ text {
 .expUpper {
   background-color: transparent;
   padding: 1px 0 0 0;
-  text-align: center;
   width: 25px;
+  text-align: center;
 }
 
 .warn-icon {
   display: none;
-  margin-left: 3px;
   vertical-align: middle;
+  margin-left: 3px;
 }
 
 .warn-icon svg {
-  height: 14px;
-  margin-top: -4px;
-  pointer-events: none;
   stroke: #faa05a;
+  margin-top: -4px;
   width: 14px;
+  height: 14px;
+  pointer-events: none;
 }
 
 .lastUpdated {
   display: inline-block;
-  font-size: 0.9rem;
-  margin-right: 3px;
   vertical-align: middle;
+  margin-right: 3px;
+  font-size: 0.9rem;
 }
 
 .updateRatesLink {
@@ -473,8 +565,8 @@ text {
 
 .dialog-about-header {
   display: inline-block;
-  font-weight: 600;
   margin: 0 auto;
+  font-weight: 600;
 }
 
 .dialog-about-header img {
@@ -482,23 +574,13 @@ text {
 }
 
 .dialog-about-title {
-  margin-left: 5px;
   vertical-align: middle;
+  margin-left: 5px;
 }
 
 .dialog-about p {
   clear: both;
   margin-top: 5px;
-}
-
-.dialog-about-icon {
-  float: left;
-  margin-top: -1px;
-}
-
-.dialog-about-icon img {
-  height: 16px;
-  width: 16px;
 }
 
 .dialog-about-links {
@@ -507,8 +589,8 @@ text {
 }
 
 .dialog-about-links > div {
-  line-height: 30px;
   width: 100%;
+  line-height: 30px;
 }
 
 .dialog-about-appVersion {
@@ -528,8 +610,8 @@ text {
 }
 
 .notificationLink {
-  color: #56b6c2;
   margin-left: 8px;
+  color: #56b6c2;
 }
 
 .restartButton {
@@ -543,44 +625,20 @@ text {
   margin: 15px 0;
 }
 
-.plotOptions {
-  line-height: 30px;
-  margin: 0 10px 0 10px;
-}
-
-.exportButton,
-.importButton {
-  float: left;
-  line-height: 30px;
-  vertical-align: middle;
-  font-size: 0.875rem;
-}
-
-.exportButton > svg,
-.importButton > svg {
-  height: 16px;
-  margin-top: -3px;
-}
-
 .resetButtons svg {
   width: 14px;
   pointer-events: none;
 }
 
 .resetButton {
-  color: #b34848;
   float: left;
-}
-
-.resetLabel {
-  float: left;
-  margin-right: 10px;
+  color: #c95d71;
 }
 
 .defSettingsButton {
-  color: #dd9359;
   float: left;
   margin-left: 10px;
+  color: #dd9359;
 }
 
 .resetSizeButton {
@@ -609,8 +667,8 @@ text {
 }
 
 .textBox {
-  border: 1px solid #cccccc;
   box-sizing: border-box;
+  border: 1px solid #cccccc;
   padding: 5px;
   width: 100%;
 }
@@ -632,10 +690,10 @@ text {
 /* Toggle buttons */
 .switch {
   display: inline-block;
-  height: 16px;
-  margin-top: 1px;
   position: relative;
+  margin-top: 1px;
   width: 28px;
+  height: 16px;
 }
 
 .switch:disabled {
@@ -643,16 +701,16 @@ text {
 }
 
 .switch input {
-  height: 0;
   opacity: 0;
   width: 0;
+  height: 0;
 }
 
 .switchText {
   display: inline-block;
-  line-height: 17px;
-  margin: 0 12px 0 2px;
   vertical-align: text-bottom;
+  margin: 0 12px 0 2px;
+  line-height: 17px;
 }
 
 .subSwitchIcon {
@@ -669,26 +727,26 @@ text {
 }
 
 .slider {
-  background-color: #cccccc;
-  cursor: pointer;
+  -webkit-transition: 0.2s;
   position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
-  -webkit-transition: 0.2s;
   transition: 0.2s;
+  cursor: pointer;
+  background-color: #cccccc;
 }
 
 .slider:before {
-  content: '';
-  height: 12px;
+  -webkit-transition: 0.2s;
   position: absolute;
   bottom: 2px;
   left: 2px;
-  -webkit-transition: 0.2s;
   transition: 0.2s;
   width: 12px;
+  height: 12px;
+  content: '';
 }
 
 .slider.round {
@@ -713,8 +771,8 @@ input:checked + .slider:before {
   position: fixed;
   right: 2px;
   bottom: 35px;
-  width: 10px;
   cursor: pointer;
+  width: 10px;
 }
 
 /* UIkit Overrides */
@@ -723,18 +781,22 @@ input:checked + .slider:before {
   outline: none;
 }
 
+.uk-offcanvas-bar-animation {
+  transition: left 0.2s ease-out;
+}
+
 .uk-modal {
   padding: 0 30px !important;
 }
 
 .uk-modal-full {
-  padding-left: 20px;
   padding-right: 20px;
+  padding-left: 20px;
 }
 
 .uk-modal-dialog {
-  border-radius: 3px;
   transition: 0s linear;
+  border-radius: 3px;
 }
 
 .uk-modal-body {
@@ -743,8 +805,8 @@ input:checked + .slider:before {
 
 .uk-modal-title,
 .errTitle {
-  font-size: 1rem;
   font-weight: 600;
+  font-size: 1rem;
 }
 
 .uk-modal-footer {
@@ -772,9 +834,9 @@ input:checked + .slider:before {
 }
 
 .uk-select:not([multiple]):not([size]) {
+  margin-top: 1px;
   border-width: 0 0 1px 0;
   height: auto;
-  margin-top: 1px;
 }
 
 .uk-switcher {
@@ -799,19 +861,19 @@ input:checked + .slider:before {
 
 .uk-tab > * > a {
   display: inline-block;
-  font-size: 1rem;
-  font-weight: 600;
   margin-right: 0px;
   padding: 0 15px 5px 15px;
+  font-weight: 600;
+  font-size: 1rem;
   text-transform: none;
 }
 
 .uk-button {
-  border-radius: 3px;
-  line-height: 28px;
-  margin-left: 3px;
-  padding: 0 10px;
   transition: 0s ease-in-out;
+  margin-left: 3px;
+  border-radius: 3px;
+  padding: 0 10px;
+  line-height: 28px;
 }
 
 .uk-button:enabled:active {
@@ -820,8 +882,8 @@ input:checked + .slider:before {
 
 .uk-button-default,
 .uk-button-default:hover {
-  color: inherit;
   cursor: pointer;
+  color: inherit;
 }
 
 .uk-input {
@@ -857,19 +919,19 @@ input:checked + .slider:before {
 }
 
 .uk-overflow-auto {
-  max-height: calc(100vh - 250px);
   min-height: 175px;
+  max-height: calc(100vh - 250px);
 }
 
 .uk-range {
-  min-height: 1.6em;
   padding-top: 2px;
+  min-height: 1.6em;
 }
 
 .uk-tooltip {
+  z-index: 1000000;
   max-width: 50vw !important;
   word-break: break-word;
-  z-index: 1000000;
 }
 
 .uk-tooltip > * {
@@ -892,8 +954,8 @@ input:checked + .slider:before {
 }
 
 .uk-notification-message {
-  font-size: 1rem;
   padding: 8px 35px 8px 10px;
+  font-size: 1rem;
 }
 
 .uk-notification-close {
@@ -903,14 +965,14 @@ input:checked + .slider:before {
 }
 
 .uk-notification-close svg {
-  height: 10px;
   width: 10px;
+  height: 10px;
 }
 
 @media (max-width: 639px) {
   .uk-notification {
-    left: 25px;
     right: 25px;
+    left: 25px;
   }
 }
 
@@ -925,20 +987,16 @@ input:checked + .slider:before {
   }
 }
 
-pre {
-  font: inherit !important;
-}
-
 /* CodeMirror Overrides */
 .cm-s-numara {
   background: none !important;
-  font-family: 'Roboto Mono' !important;
   height: 100% !important;
+  font-family: 'Roboto Mono' !important;
 }
 
 .cm-s-numara .CodeMirror-gutters {
-  background: none !important;
   border: none !important;
+  background: none !important;
 }
 
 .cm-s-numara .CodeMirror-lines {
@@ -952,8 +1010,8 @@ pre {
 .cm-s-numara .CodeMirror-hscrollbar,
 .cm-s-numara .CodeMirror-gutter-filler {
   display: block !important;
-  height: 8px !important;
   width: auto;
+  height: 8px !important;
 }
 
 .cm-s-numara .CodeMirror-hscrollbar {
@@ -965,8 +1023,8 @@ pre {
 }
 
 .cm-s-numara .CodeMirror-sizer {
-  padding-bottom: 8px !important;
   padding-right: 0 !important;
+  padding-bottom: 8px !important;
 }
 
 .cm-s-numara .CodeMirror-search-hint {
@@ -983,8 +1041,8 @@ pre {
 }
 
 .cm-s-numara button:hover {
-  color: #5286b9 !important;
   cursor: pointer !important;
+  color: #5286b9 !important;
   font-size: inherit !important;
 }
 
@@ -1001,10 +1059,10 @@ pre {
 }
 
 #dialog-udfu .CodeMirror {
-  font-size: 1.1em;
+  padding: 5px;
   height: calc(100vh - 220px);
   max-height: 800px;
-  padding: 5px;
+  font-size: 1.1em;
 }
 
 .CodeMirror-hints {
@@ -1017,8 +1075,10 @@ pre {
 }
 
 @media print {
-  .wrapper {
-    display: none;
+  .wrapper,
+  .uk-open,
+  .uk-tooltip {
+    display: none !important;
   }
 
   .printArea {
@@ -1026,22 +1086,22 @@ pre {
   }
 
   .printTitle {
-    font-family: 'Numara';
-    font-size: 1.1em;
     padding-bottom: 10px;
+    font-size: 1.1em;
+    font-family: 'Numara';
     text-align: center;
   }
 
-  .printTable {
-    font-family: 'Roboto Mono', monospace;
-    width: 100%;
+  .printPagele {
     border-collapse: collapse;
+    width: 100%;
+    font-family: 'Roboto Mono', monospace;
   }
 
-  .printTable tr td {
+  .printPagele tr td {
+    vertical-align: top;
     padding-top: 3px;
     padding-bottom: 3px;
-    vertical-align: top;
   }
 
   .printLineNumCol {
@@ -1057,11 +1117,11 @@ pre {
     text-align: right;
   }
 
-  .printTable tr td:nth-child(1) {
+  .printPagele tr td:nth-child(1) {
     padding-right: 10px;
   }
 
-  .printTable tr td:last-child {
+  .printPagele tr td:last-child {
     padding-left: 10px;
   }
 

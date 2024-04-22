@@ -4,7 +4,7 @@ import { notify } from './modal'
 import { isElectron } from './utils'
 
 /** Main context menus */
-export function inputContext() {
+function inputContext() {
   setTimeout(() => {
     const index = cm.getCursor().line
     const line = cm.getLine(index)
@@ -21,7 +21,7 @@ export function inputContext() {
 }
 
 /** Output panel context menu. */
-export function outputContext(event) {
+function outputContext(event) {
   const answer = event.srcElement.innerText
   const index = event.srcElement.dataset.line || event.srcElement.parentElement.dataset.line || cm.lastLine()
   const hasAnswer = index !== null && answer !== '' && answer !== 'Error' && answer !== 'Plot'
@@ -31,14 +31,14 @@ export function outputContext(event) {
 }
 
 /** Textbox context menu. */
-export function textboxContext() {
+function textboxContext() {
   setTimeout(() => {
     numara.textboxContextMenu()
   }, 20)
 }
 
 /** Copy line answer. */
-export function copyLine(event, index) {
+function copyLine(event, index) {
   index = +index
 
   const line = cm.getLine(index).trim()
@@ -47,7 +47,7 @@ export function copyLine(event, index) {
 }
 
 /** Copy line answer. */
-export function copyAnswer(event, index, withLines) {
+function copyAnswer(event, index, withLines) {
   index = +index
 
   const line = cm.getLine(index).trim()
@@ -60,7 +60,7 @@ export function copyAnswer(event, index, withLines) {
 }
 
 /** Copy all inputs. */
-export function copyAllLines() {
+function copyAllLines() {
   if (cm.getValue() === '') {
     notify('Nothing to copy.')
   } else {
@@ -69,7 +69,7 @@ export function copyAllLines() {
 }
 
 /** Copy all answers. */
-export function copyAllAnswers() {
+function copyAllAnswers() {
   if (cm.getValue() === '') {
     notify('Nothing to copy.')
   } else {
@@ -85,7 +85,7 @@ export function copyAllAnswers() {
   }
 }
 
-/** Copy all calculations. */
+/** Copy page. */
 export function copyAll() {
   if (cm.getValue() === '') {
     notify('Nothing to copy.')
@@ -104,7 +104,7 @@ export function copyAll() {
         : '\n'
     })
 
-    navigator.clipboard.writeText(copiedCalc).then(notify('Copied all calculations to clipboard.'))
+    navigator.clipboard.writeText(copiedCalc).then(notify('Copied page to clipboard.'))
   }
 }
 

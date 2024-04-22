@@ -99,10 +99,6 @@ ipcMain.on('isResized', (event) => {
   event.returnValue = win.getSize()[0] !== schema.appWidth.default || win.getSize()[1] !== schema.appHeight.default
 })
 
-ipcMain.on('print', (event) => {
-  win.webContents.print({}, (success) => event.sender.send('printReply', success ? 'Sent to printer' : false))
-})
-
 ipcMain.on('import', (event) => {
   const file = dialog.showOpenDialogSync(win, {
     filters: [{ name: 'Numara', extensions: ['numara'] }],
@@ -127,7 +123,7 @@ ipcMain.on('export', (event, fileName, content) => {
   const file = dialog.showSaveDialogSync(win, {
     defaultPath: fileName,
     filters: [{ name: 'Numara', extensions: ['numara'] }],
-    title: 'Save Calculations'
+    title: 'Export Calculations'
   })
 
   if (file) {
@@ -205,7 +201,7 @@ const commonContext = (event, index, isEmpty, isSelection, isMultiLine, hasAnswe
       click: () => event.sender.send('copyAllAnswers')
     },
     {
-      label: 'Copy all lines and answers',
+      label: 'Copy all lines with answers',
       enabled: !isEmpty,
       click: () => event.sender.send('copyAll')
     }
@@ -275,16 +271,32 @@ const menuTemplate = [
     ]
   },
   {
-    label: 'Edit',
+    label: 'File',
     submenu: [
-      { role: 'undo' },
-      { role: 'redo' },
+      {
+        label: 'Import',
+        click: () => {
+          win.webContents.send('import')
+        }
+      },
+      {
+        label: 'Export',
+        click: () => {
+          win.webContents.send('export')
+        }
+      },
       { type: 'separator' },
-      { role: 'cut' },
-      { role: 'copy' },
-      { role: 'paste' },
-      { role: 'selectAll' }
+      {
+        label: 'Print',
+        click: () => {
+          win.webContents.send('print')
+        }
+      }
     ]
+  },
+  {
+    label: 'Edit',
+    submenu: [{ role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'selectAll' }]
   },
   {
     label: 'View',
@@ -303,7 +315,12 @@ const menuTemplate = [
       { role: 'minimize' },
       { role: 'zoom' },
       { role: 'togglefullscreen' },
-      { label: 'Reset Size', click: resetSize() },
+      {
+        label: 'Reset Size',
+        click: () => {
+          resetSize()
+        }
+      },
       { type: 'separator' },
       { role: 'front' },
       { type: 'separator' },
@@ -316,7 +333,9 @@ const menuTemplate = [
       {
         label: 'Learn More',
         click: () => shell.openExternal('https://github.com/bornova/numara-calculator')
-      }
+      },
+      { type: 'separator' },
+      { role: 'toggleDevTools' }
     ]
   }
 ]
