@@ -36,7 +36,7 @@
     "eslint": "^9.1.0",
     "fs-extra": "^11.2.0",
     "function-plot": "^1.24.4",
-    "lucide": "^0.365.0",
+    "lucide": "^0.372.0",
     "luxon": "^3.4.4",
     "mathjs": "^12.4.1",
     "mousetrap": "^1.6.5",
