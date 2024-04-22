@@ -8,6 +8,22 @@ import { DateTime } from 'luxon'
 
 import UIkit from 'uikit'
 
+/** Migrate old saved calculations to pages */
+export function migrateSaved() {
+  const saved = store.get('saved')
+  const pages = store.get('pages')
+
+  if (saved) {
+    Object.entries(saved).forEach(([id, val]) => {
+      pages.push({ id, name: val[0], data: val[1] })
+    })
+
+    store.set('pages', pages)
+
+    localStorage.removeItem('saved')
+  }
+}
+
 /** Get page name/number to use */
 export function getPageName() {
   const pages = store.get('pages')
