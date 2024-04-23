@@ -88,7 +88,7 @@ export function calculate() {
           app.mathScope.ans = answer
           app.mathScope['line' + lineNo] = answer
 
-          if (!isNaN(answer)) {
+          if (typeof answer === 'number') {
             avgs.push(answer)
             totals.push(answer)
             subtotals.push(answer)
