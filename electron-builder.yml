@@ -1,0 +1,31 @@
+appId: com.numara.app
+artifactName: '${productName}-${version}-${arch}.${ext}'
+publish:
+  - provider: github
+    releaseType: release
+directories:
+  buildResources: build/assets
+  output: 'dist/${version}/${os}'
+files:
+  - build
+  - src/main.cjs
+  - src/preload.cjs
+linux:
+  category: Utility
+  target:
+    - AppImage
+    - deb
+    - rpm
+mac:
+  category: public.app-category.utilities
+  entitlements: src/misc/entitlements.mac.plist
+  entitlementsInherit: src/misc/entitlements.mac.plist
+  hardenedRuntime: true
+  notarize:
+    teamId: 2VP53YFAQP
+win:
+  publisherName: Timur Atalay
+  verifyUpdateCodeSignature: false
+nsis:
+  deleteAppDataOnUninstall: true
+  oneClick: false
