@@ -8,7 +8,7 @@ Built on [Electron](https://github.com/electron/electron), powered by [Math.js](
 
 Available for Windows, MacOS, Linux and on the web at https://numara.io
 
-<img src='https://github.com/bornova/numara-calculator/assets/35872220/47e489fb-2ae3-4ea6-bb83-ec9bb5004c3d' width='400'>
+<img src='https://github.com/bornova/numara-calculator/assets/35872220/c55faf10-38c8-47e4-8c20-7d3707f95034' width='387'>
 <img src='https://github.com/bornova/numara-calculator/assets/35872220/e7a41163-a1b3-4ae2-96eb-f2d5e9d9ce74' width='400'>
 
 ##
