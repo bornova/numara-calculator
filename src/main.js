@@ -1,8 +1,10 @@
-const { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, nativeTheme, session, shell } = require('electron')
-const autoUpdater = require('electron-updater').autoUpdater
-const Store = require('electron-store')
-const path = require('node:path')
-const fs = require('node:fs')
+import { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, nativeTheme, session, shell } from 'electron'
+import Store from 'electron-store'
+import updater from 'electron-updater'
+import * as path from 'node:path'
+import * as fs from 'node:fs'
+
+const { autoUpdater } = updater
 
 const schema = {
   appHeight: { type: 'number', default: 480 },
@@ -35,7 +37,7 @@ function appWindow() {
     titleBarStyle: 'hiddenInset',
     useContentSize: true,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.cjs'),
+      preload: path.join(import.meta.dirname, 'preload.cjs'),
       spellcheck: false
     }
   })
