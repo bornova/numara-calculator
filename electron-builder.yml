@@ -8,7 +8,7 @@ directories:
   output: 'dist/${version}/${os}'
 files:
   - build
-  - src/main.cjs
+  - src/main.js
   - src/preload.cjs
 linux:
   category: Utility
