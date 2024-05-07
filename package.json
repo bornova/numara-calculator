@@ -15,12 +15,12 @@
   "scripts": {
     "prebuild": "npm run prettier && npm run lint",
     "build": "node build.js",
-    "dist": "electron-builder",
+    "dist": "npm run build && electron-builder",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write .",
-    "publish": "electron-builder --x64 --arm64 -p always",
+    "publish": "npm run build && electron-builder --x64 --arm64 -p always",
     "test": "npm run build && electron .",
     "wiki": "node src/misc/wiki.js"
   },
@@ -31,7 +31,7 @@
     "deep-diff": "^1.0.2",
     "electron": "^30.0.2",
     "electron-builder": "^24.13.3",
-    "esbuild": "^0.21.0",
+    "esbuild": "^0.21.1",
     "esbuild-plugin-polyfill-node": "^0.3.0",
     "eslint": "^9.2.0",
     "fs-extra": "^11.2.0",

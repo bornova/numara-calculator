@@ -14,22 +14,17 @@ jobs:
 
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Install dependencies
         run: npm install
 
-      - name: Build Numara app
-        run: npm run build
-        env:
-          PROD: true
-
-      - name: Publish Numara app
+      - name: Build and Publish Numara
         run: npm run publish
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -38,3 +33,4 @@ jobs:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROD: true
