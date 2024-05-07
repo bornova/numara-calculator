@@ -1,7 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('numara', {
-  // Calls from main.cjs
+  // Calls from main.js
   main: {
     import: (callback) => ipcRenderer.on('import', callback),
     export: (callback) => ipcRenderer.on('export', callback),

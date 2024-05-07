@@ -10,7 +10,7 @@
   },
   "license": "MIT",
   "homepage": "https://github.com/bornova/numara-calculator",
-  "main": "src/main.cjs",
+  "main": "src/main.js",
   "type": "module",
   "scripts": {
     "prebuild": "npm run prettier && npm run lint",
