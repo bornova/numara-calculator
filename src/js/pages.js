@@ -411,11 +411,6 @@ if (isElectron) {
 
     window.print()
   })
-
-  // Log messages from main
-  numara.logMessage((event, message) => {
-    console.log(message)
-  })
 } else {
   $all('#exportButton, #importButton, #spDivider').forEach((el) => el.remove())
 }

@@ -1,10 +1,18 @@
 import { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, nativeTheme, session, shell } from 'electron'
+import log from 'electron-log'
 import Store from 'electron-store'
 import updater from 'electron-updater'
+
 import * as path from 'node:path'
 import * as fs from 'node:fs'
 
+log.initialize({ spyRendererConsole: true })
+log.errorHandler.startCatching()
+log.eventLogger.startLogging()
+
 const { autoUpdater } = updater
+
+autoUpdater.logger = log
 
 const schema = {
   appHeight: { type: 'number', default: 480 },
@@ -240,9 +248,7 @@ ipcMain.on('textboxContextMenu', () => {
 })
 
 ipcMain.on('checkUpdate', () => {
-  if (app.isPackaged) {
-    autoUpdater.checkForUpdatesAndNotify()
-  }
+  autoUpdater.checkForUpdatesAndNotify()
 })
 
 ipcMain.on('updateApp', () => setImmediate(() => autoUpdater.quitAndInstall(true, true)))
@@ -250,9 +256,8 @@ ipcMain.on('updateApp', () => setImmediate(() => autoUpdater.quitAndInstall(true
 autoUpdater.on('checking-for-update', () => win.webContents.send('updateStatus', 'Checking for update...'))
 autoUpdater.on('update-available', () => win.webContents.send('notifyUpdate'))
 autoUpdater.on('update-not-available', () => win.webContents.send('updateStatus', app.name + ' is up to date.'))
-autoUpdater.on('error', (error) => {
+autoUpdater.on('error', () => {
   win.webContents.send('updateStatus', 'Error checking for update.')
-  win.webContents.send('logMessage', error)
 })
 autoUpdater.on('update-downloaded', () => win.webContents.send('updateStatus', 'ready'))
 autoUpdater.on('download-progress', (progress) => {

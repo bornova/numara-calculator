@@ -66,10 +66,3 @@ export function checkUpdates() {
     })
   }
 }
-
-// Electron console logger
-if (isElectron) {
-  numara.logMessage((event, message) => {
-    console.log(message)
-  })
-}

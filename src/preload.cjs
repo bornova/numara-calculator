@@ -62,9 +62,6 @@ contextBridge.exposeInMainWorld('numara', {
   // Developer Tools
   openDevTools: () => ipcRenderer.send('openDevTools'),
 
-  // App console logger
-  logMessage: (callback) => ipcRenderer.on('logMessage', callback),
-
   // Reset
   resetApp: () => ipcRenderer.send('resetApp')
 })
