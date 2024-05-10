@@ -8,7 +8,7 @@ import * as fs from 'node:fs'
 
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 
-log.info('Starting Numara...')
+log.info(`Starting Numara... (${app.isPackaged ? 'Prod' : 'Dev'})`)
 log.initialize({ spyRendererConsole: true })
 log.errorHandler.startCatching()
 log.eventLogger.startLogging()
