@@ -6,6 +6,9 @@ import updater from 'electron-updater'
 import * as path from 'node:path'
 import * as fs from 'node:fs'
 
+process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
+
+log.info('Starting Numara...')
 log.initialize({ spyRendererConsole: true })
 log.errorHandler.startCatching()
 log.eventLogger.startLogging()
