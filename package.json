@@ -29,7 +29,7 @@
     "@formulajs/formulajs": "^4.4.4",
     "codemirror": "^5.65.16",
     "deep-diff": "^1.0.2",
-    "electron": "^30.0.2",
+    "electron": "^30.0.3",
     "electron-builder": "^24.13.3",
     "esbuild": "^0.21.1",
     "esbuild-plugin-polyfill-node": "^0.3.0",
@@ -42,7 +42,7 @@
     "mousetrap": "^1.6.5",
     "mousetrap-global-bind": "^1.1.0",
     "prettier": "^3.2.5",
-    "uikit": "^3.20.8"
+    "uikit": "^3.20.9"
   },
   "dependencies": {
     "electron-log": "^5.1.4",
