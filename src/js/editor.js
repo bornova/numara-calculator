@@ -50,7 +50,7 @@ CodeMirror.defineMode('numara', () => ({
       return 'number'
     }
 
-    if (stream.match(/(?:\+|-|\*|\/|,|;|\.|:|@|~|=|>|<|&|\||_|`|'|\^|\?|!|%)/)) {
+    if (stream.match(/(?:\+|-|\*|\/|,|;|\.|:|@|~|=|>|<|&|\||`|'|\^|\?|!|%)/)) {
       return 'operator'
     }
 
@@ -74,7 +74,7 @@ CodeMirror.defineMode('numara', () => ({
       return 'udu'
     }
 
-    if (cmStream.match(/\b(?:ans|total|subtotal|avg|today|now)\b/)) {
+    if (cmStream.match(/\b(?:_|ans|total|subtotal|avg|today|now)\b/)) {
       return 'scope'
     }
 
@@ -125,6 +125,7 @@ CodeMirror.defineMode('plain', () => ({
 const numaraHints = []
 
 const scopeList = [
+  { text: '_', desc: 'Answer from last calculated line.' },
   { text: 'ans', desc: 'Answer from last calculated line.' },
   { text: 'avg', desc: 'Average of previous line values. Numbers only.' },
   { text: 'now', desc: 'Current date and time.' },

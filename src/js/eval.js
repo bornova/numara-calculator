@@ -85,6 +85,7 @@ export function calculate() {
         }
 
         if (answer || answer === 0) {
+          app.mathScope._ = answer
           app.mathScope.ans = answer
           app.mathScope['line' + lineNo] = answer
 
