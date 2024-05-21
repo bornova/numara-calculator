@@ -21,7 +21,6 @@ import 'codemirror/addon/search/searchcursor'
 export const cm = CodeMirror.fromTextArea($('#inputArea'), {
   autofocus: true,
   extraKeys: { 'Ctrl-Space': 'autocomplete', Tab: () => {} },
-  inputStyle: 'textarea',
   mode: 'numara',
   singleCursorHeightPerLine: false,
   smartIndent: false,
@@ -31,8 +30,10 @@ export const cm = CodeMirror.fromTextArea($('#inputArea'), {
 
 // User defined functions and units editors
 const udOptions = {
+  autofocus: true,
   autoCloseBrackets: true,
   mode: 'javascript',
+  singleCursorHeightPerLine: false,
   tabSize: 2
 }
 
