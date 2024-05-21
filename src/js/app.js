@@ -251,16 +251,18 @@ UIkit.util.on('#setswitch', 'beforeshow', (event) => {
 })
 
 // Prepare user defined dialog inputs
-UIkit.util.on('#dialog-udfu', 'shown', () => {
-  const udf = store.get('udf').trim()
-  const udu = store.get('udu').trim()
+UIkit.util.on('#dialog-udfu', 'shown', (event) => {
+  if (event.target.id === 'dialog-udfu') {
+    const udf = store.get('udf').trim()
+    const udu = store.get('udu').trim()
 
-  udfInput.setValue(udf)
-  uduInput.setValue(udu)
+    udfInput.setValue(udf)
+    uduInput.setValue(udu)
+  }
 })
 
 // Blur input when user defined switcher is shown
-UIkit.util.on('.uk-switcher', 'show', () => {
+UIkit.util.on('#udfuSwitcher', 'shown', () => {
   cm.getInputField().blur()
 })
 
