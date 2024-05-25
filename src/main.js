@@ -16,6 +16,7 @@ log.eventLogger.startLogging()
 const { autoUpdater } = updater
 
 autoUpdater.logger = log
+autoUpdater.logger.transports.file.level = 'info'
 
 const schema = {
   appHeight: { type: 'number', default: 480 },
