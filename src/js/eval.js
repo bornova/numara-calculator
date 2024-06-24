@@ -3,14 +3,14 @@ import { cm } from './editor'
 import { checkLocale } from './utils'
 
 import { DateTime } from 'luxon'
-import { create, all } from 'mathjs'
+import { all, create, factory } from 'mathjs'
 
 import * as formulajs from '@formulajs/formulajs'
 
 export const math = create(all)
 
 // Import Formula.js into MathJs
-math.import(formulajs, { silent: true, wrap: true })
+math.import(factory('xls', [], () => formulajs))
 
 // Expose math to global scope for use in function-plot.
 window.math = math
