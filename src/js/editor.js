@@ -83,10 +83,6 @@ CodeMirror.defineMode('numara', () => ({
       return 'lineNo'
     }
 
-    if (typeof formulajs[cmStream] === 'function') {
-      return 'excel'
-    }
-
     try {
       const val = math.evaluate(cmStream)
       const par = math.parse(cmStream)
@@ -100,6 +96,10 @@ CodeMirror.defineMode('numara', () => ({
       }
     } catch {
       /** Ignore catch */
+    }
+
+    if (typeof formulajs[cmStream] === 'function') {
+      return 'excel'
     }
 
     try {
