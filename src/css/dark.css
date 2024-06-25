@@ -412,6 +412,7 @@ li.CodeMirror-hint-active {
   color: #5a5a5a !important;
 }
 
+.cm-formulajs,
 .cm-function {
   color: #cb82f5 !important;
 }

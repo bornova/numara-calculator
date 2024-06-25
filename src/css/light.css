@@ -353,6 +353,7 @@ li.CodeMirror-hint-active {
   color: #bebebe !important;
 }
 
+.cm-formulajs,
 .cm-function {
   color: #6f42c1 !important;
 }
