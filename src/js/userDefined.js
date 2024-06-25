@@ -1,9 +1,6 @@
 import { $, app, store } from './common'
 import { udfInput, uduInput } from './editor'
-import { calculate } from './eval'
 import { showError } from './modal'
-
-import UIkit from 'uikit'
 
 /**
  * User defined functions and units.
@@ -12,34 +9,46 @@ import UIkit from 'uikit'
  * @param {string} type 'func' | 'unit'
  */
 export function applyUdfu(input, type) {
-  try {
-    const loadUD =
-      type === 'func'
-        ? new Function(`'use strict'; let window; let numara; math.import({${input}}, {override: true})`)
-        : new Function(`'use strict'; let window; let numara; math.createUnit({${input}}, {override: true})`)
+  return new Promise(function (resolve, reject) {
+    try {
+      const loadUD =
+        type === 'func'
+          ? new Function(`'use strict'; let window; let numara; math.import({${input}}, {override: true})`)
+          : new Function(`'use strict'; let window; let numara; math.createUnit({${input}}, {override: true})`)
 
-    loadUD()
+      loadUD()
 
-    const UDFunc = new Function(`'use strict'; return {${input}}`)
+      const UDFunc = new Function(`'use strict'; return {${input}}`)
 
-    for (const f in UDFunc()) {
-      app[type === 'func' ? 'udfList' : 'uduList'].push(f)
+      for (const f in UDFunc()) {
+        app[type === 'func' ? 'udfList' : 'uduList'].push(f)
+      }
+
+      store.set(type === 'func' ? 'udf' : 'udu', input)
+
+      resolve()
+    } catch (error) {
+      reject(error)
     }
-
-    store.set(type === 'func' ? 'udf' : 'udu', input)
-
-    calculate()
-
-    UIkit.modal('#dialog-udfu').hide()
-  } catch (error) {
-    showError(error.name, error.message)
-  }
+  })
 }
 
 $('#dialog-udfu-save-f').addEventListener('click', () => {
   applyUdfu(udfInput.getValue().trim(), 'func')
+    .then(() => {
+      location.reload()
+    })
+    .catch((error) => {
+      showError(error.name, error.message)
+    })
 })
 
 $('#dialog-udfu-save-u').addEventListener('click', () => {
   applyUdfu(uduInput.getValue().trim(), 'unit')
+    .then(() => {
+      location.reload()
+    })
+    .catch((error) => {
+      showError(error.name, error.message)
+    })
 })

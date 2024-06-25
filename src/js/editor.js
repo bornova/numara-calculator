@@ -147,15 +147,8 @@ Object.getOwnPropertyNames(math).forEach((f) => {
 })
 
 Object.keys(formulajs).forEach((f) => {
-  numaraHints.push({ text: f, className: 'cm-excel' })
+  numaraHints.push({ text: 'xls.' + f, className: 'cm-excel' })
 })
-
-CodeMirror.commands.autocomplete = (cm) => {
-  CodeMirror.showHint(cm, CodeMirror.hint.numaraHints, {
-    completeSingle: false,
-    extraKeys: { Enter: 'newline' }
-  })
-}
 
 CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
   const cmCursor = editor.getCursor()
@@ -164,16 +157,20 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
   let start = cmCursor.ch
   let end = start
 
-  while (end < cmCursorLine.length && /[\w$]/.test(cmCursorLine.charAt(end))) {
+  while (end < cmCursorLine.length && /[\w.$]/.test(cmCursorLine.charAt(end))) {
     ++end
   }
 
-  while (start && /[\w$]/.test(cmCursorLine.charAt(start - 1))) {
+  while (start && /[\w.$]/.test(cmCursorLine.charAt(start - 1))) {
     --start
   }
 
-  const curWord = start !== end && cmCursorLine.slice(start, end)
+  let curStr = cmCursorLine.slice(start, end)
+  let curWord = start !== end && curStr
+
   const curWordRegex = new RegExp('^' + curWord, 'i')
+
+  curWord = !curStr.endsWith('.') || curStr === 'xls.'
 
   return {
     list: !curWord
@@ -183,6 +180,13 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
     to: CodeMirror.Pos(cmCursor.line, end)
   }
 })
+
+CodeMirror.commands.autocomplete = (cm) => {
+  CodeMirror.showHint(cm, CodeMirror.hint.numaraHints, {
+    completeSingle: false,
+    extraKeys: { Enter: 'newline', Tab: () => {} }
+  })
+}
 
 // Codemirror handlers
 cm.on('changes', calculate)
