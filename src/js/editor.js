@@ -55,6 +55,10 @@ CodeMirror.defineMode('numara', () => ({
       return 'operator'
     }
 
+    if (stream.match(/\b(?:xls.)\b/)) {
+      return 'formulajs'
+    }
+
     stream.eatWhile(/\w/)
 
     const cmStream = stream.current()
@@ -83,6 +87,10 @@ CodeMirror.defineMode('numara', () => ({
       return 'lineNo'
     }
 
+    if (typeof formulajs[cmStream] === 'function' && stream.string.startsWith('xls.')) {
+      return 'excel'
+    }
+
     try {
       const val = math.evaluate(cmStream)
       const par = math.parse(cmStream)
@@ -96,10 +104,6 @@ CodeMirror.defineMode('numara', () => ({
       }
     } catch {
       /** Ignore catch */
-    }
-
-    if (typeof formulajs[cmStream] === 'function') {
-      return 'excel'
     }
 
     try {
@@ -352,6 +356,17 @@ cm.on('update', () => {
       UIkit.tooltip(s, {
         pos: ttPos(s),
         title: scopeList.filter((scope) => s.innerText === scope.text)[0].desc
+      })
+    }
+  }
+
+  const formualjs = $all('.cm-formulajs')
+
+  if (formualjs.length > 0 && app.settings.keywordTips) {
+    for (const f of formualjs) {
+      UIkit.tooltip(f, {
+        pos: ttPos(f),
+        title: 'Formulajs'
       })
     }
   }
