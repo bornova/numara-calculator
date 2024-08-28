@@ -214,6 +214,12 @@ cm.on('cursorActivity', (cm) => {
   })
 })
 
+cm.on('gutterClick', (cm, line) => {
+  const lineNo = line + 1
+
+  cm.replaceSelection('line' + lineNo)
+})
+
 const ttPos = (el) => (el.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left')
 
 cm.on('update', () => {
