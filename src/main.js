@@ -63,6 +63,10 @@ function appWindow() {
 
     win.setHasShadow(true)
     win.show()
+
+    if (process.platform === 'darwin' && !app.isPackaged) {
+      win.webContents.openDevTools()
+    }
   })
 
   win.webContents.setWindowOpenHandler(({ url }) => {
