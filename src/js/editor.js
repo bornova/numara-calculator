@@ -24,8 +24,7 @@ export const cm = CodeMirror.fromTextArea($('#inputArea'), {
   mode: 'numara',
   singleCursorHeightPerLine: false,
   smartIndent: false,
-  theme: 'numara',
-  viewportMargin: Infinity
+  theme: 'numara'
 })
 
 // User defined functions and units editors
@@ -193,7 +192,11 @@ CodeMirror.commands.autocomplete = (cm) => {
 }
 
 // Codemirror handlers
-cm.on('changes', calculate)
+cm.on('changes', (cm) => {
+  cm.setOption('viewportMargin', cm.lineCount())
+
+  calculate()
+})
 
 cm.on('inputRead', (cm) => {
   if (app.settings.autocomplete) {
