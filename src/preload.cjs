@@ -9,7 +9,7 @@ contextBridge.exposeInMainWorld('numara', {
   },
 
   // App theme
-  isDark: () => ipcRenderer.send('isDark'),
+  isDark: () => ipcRenderer.sendSync('isDark'),
   setTheme: (theme) => ipcRenderer.send('setTheme', theme),
   themeUpdate: (callback) => ipcRenderer.on('themeUpdate', callback),
 
@@ -26,8 +26,8 @@ contextBridge.exposeInMainWorld('numara', {
   maximize: () => ipcRenderer.send('maximize'),
   unmaximize: () => ipcRenderer.send('unmaximize'),
   isMax: (callback) => ipcRenderer.on('isMax', callback),
-  isMaximized: () => ipcRenderer.send('isMaximized'),
-  isResized: () => ipcRenderer.send('isResized'),
+  isMaximized: () => ipcRenderer.sendSync('isMaximized'),
+  isResized: () => ipcRenderer.sendSync('isResized'),
   resetSize: () => ipcRenderer.send('resetSize'),
 
   // Import
