@@ -1,4 +1,4 @@
-import { $, $all, app, store } from './common'
+import { $, app, store } from './common'
 import { calculate, formatAnswer, math } from './eval'
 
 import * as formulajs from '@formulajs/formulajs'
@@ -24,7 +24,8 @@ export const cm = CodeMirror.fromTextArea($('#inputArea'), {
   mode: 'numara',
   singleCursorHeightPerLine: false,
   smartIndent: false,
-  theme: 'numara'
+  theme: 'numara',
+  viewportMargin: Infinity
 })
 
 // User defined functions and units editors
@@ -192,11 +193,7 @@ CodeMirror.commands.autocomplete = (cm) => {
 }
 
 // Codemirror handlers
-cm.on('changes', (cm) => {
-  cm.setOption('viewportMargin', cm.lineCount())
-
-  calculate()
-})
+cm.on('changes', calculate)
 
 cm.on('inputRead', (cm) => {
   if (app.settings.autocomplete) {
@@ -223,175 +220,6 @@ cm.on('gutterClick', (cm, line) => {
   cm.replaceSelection('line' + lineNo)
 })
 
-const ttPos = (el) => (el.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left')
-
-cm.on('update', () => {
-  const funcs = $all('.cm-function')
-
-  if (funcs.length > 0 && app.settings.keywordTips) {
-    for (const f of funcs) {
-      try {
-        const obj = JSON.parse(JSON.stringify(math.help(f.innerText).toJSON()))
-
-        UIkit.tooltip(f, {
-          pos: ttPos(f),
-          title: obj.description
-        })
-      } catch {
-        UIkit.tooltip(f, {
-          pos: ttPos(f),
-          title: 'Description not available'
-        })
-      }
-    }
-  }
-
-  const udfs = $all('.cm-udf')
-
-  if (udfs.length > 0 && app.settings.keywordTips) {
-    for (const f of udfs) {
-      UIkit.tooltip(f, {
-        pos: ttPos(f),
-        title: 'User defined function'
-      })
-    }
-  }
-
-  const udus = $all('.cm-udu')
-
-  if (udus.length > 0 && app.settings.keywordTips) {
-    for (const u of udus) {
-      UIkit.tooltip(u, {
-        pos: ttPos(u),
-        title: 'User defined unit'
-      })
-    }
-  }
-
-  const currencies = $all('.cm-currency')
-
-  if (currencies.length > 0 && app.settings.keywordTips) {
-    for (const c of currencies) {
-      try {
-        const currency = c.innerText.toLowerCase()
-        const currencyName = currency === 'usd' ? 'U.S. Dollar' : app.currencyRates[currency].name
-
-        UIkit.tooltip(c, {
-          pos: ttPos(c),
-          title: currencyName
-        })
-      } catch {
-        UIkit.tooltip(c, {
-          pos: ttPos(c),
-          title: 'Description not available'
-        })
-      }
-    }
-  }
-
-  const units = $all('.cm-unit')
-
-  if (units.length > 0 && app.settings.keywordTips) {
-    for (const u of units) {
-      UIkit.tooltip(u, {
-        pos: ttPos(u),
-        title: `Unit '${u.innerText}'`
-      })
-    }
-  }
-
-  const constants = $all('.cm-constant')
-
-  if (constants.length > 0 && app.settings.keywordTips) {
-    for (const c of constants) {
-      try {
-        UIkit.tooltip(c, {
-          pos: ttPos(c),
-          title: math.help(c.innerText).doc.description + ' (Constant)'
-        })
-      } catch {
-        /* No tooltip */
-      }
-    }
-  }
-
-  const vars = $all('.cm-variable')
-
-  if (vars.length > 0 && app.settings.keywordTips) {
-    for (const v of vars) {
-      if (app.mathScope[v.innerText] && typeof app.mathScope[v.innerText] !== 'function') {
-        let varTooltip
-
-        try {
-          varTooltip = formatAnswer(math.evaluate(v.innerText, app.mathScope))
-        } catch {
-          varTooltip = 'Undefined'
-        }
-
-        UIkit.tooltip(v, {
-          pos: ttPos(v),
-          title: varTooltip
-        })
-      }
-    }
-  }
-
-  const lineNos = $all('.cm-lineNo')
-
-  if (lineNos.length > 0 && app.settings.keywordTips) {
-    for (const ln of lineNos) {
-      let scopeTooltip
-
-      try {
-        scopeTooltip =
-          typeof app.mathScope[ln.innerText] === 'function'
-            ? 'Function'
-            : formatAnswer(math.evaluate(ln.innerText, app.mathScope))
-      } catch {
-        scopeTooltip = 'Undefined'
-      }
-
-      UIkit.tooltip(ln, {
-        pos: ttPos(ln),
-        title: scopeTooltip
-      })
-    }
-  }
-
-  const scope = $all('.cm-scope')
-
-  if (scope.length > 0 && app.settings.keywordTips) {
-    for (const s of scope) {
-      UIkit.tooltip(s, {
-        pos: ttPos(s),
-        title: scopeList.filter((scope) => s.innerText === scope.text)[0].desc
-      })
-    }
-  }
-
-  const formualjs = $all('.cm-formulajs')
-
-  if (formualjs.length > 0 && app.settings.keywordTips) {
-    for (const f of formualjs) {
-      UIkit.tooltip(f, {
-        pos: ttPos(f),
-        title: 'Formulajs'
-      })
-    }
-  }
-
-  const excel = $all('.cm-excel')
-
-  if (excel.length > 0 && app.settings.keywordTips) {
-    for (const x of excel) {
-      UIkit.tooltip(x, {
-        pos: ttPos(x),
-        title: 'Excel function'
-      })
-    }
-  }
-})
-
 cm.on('cursorActivity', (cm) => {
   const pages = store.get('pages')
   const page = pages.find((page) => page.id == app.activePage)
@@ -399,4 +227,148 @@ cm.on('cursorActivity', (cm) => {
   page.cursor = cm.getCursor()
 
   store.set('pages', pages)
+})
+
+// Tooltips
+const ttPos = (el) => (el.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left')
+
+$('.CodeMirror').addEventListener('mouseover', (event) => {
+  if (app.settings.keywordTips) {
+    switch (event.target.className) {
+      case 'cm-function':
+        try {
+          const tip = JSON.parse(JSON.stringify(math.help(event.target.innerText).toJSON()))
+
+          UIkit.tooltip(event.target, {
+            pos: ttPos(event.target),
+            title: tip.description
+          })
+        } catch {
+          UIkit.tooltip(event.target, {
+            pos: ttPos(event.target),
+            title: 'Description not available'
+          })
+        }
+
+        break
+
+      case 'cm-udf':
+        UIkit.tooltip(event.target, {
+          pos: ttPos(event.target),
+          title: 'User defined function'
+        })
+
+        break
+
+      case 'cm-udu':
+        UIkit.tooltip(event.target, {
+          pos: ttPos(event.target),
+          title: 'User defined unit'
+        })
+
+        break
+
+      case 'cm-currency':
+        try {
+          const currency = event.target.innerText.toLowerCase()
+          const currencyName = currency === 'usd' ? 'U.S. Dollar' : app.currencyRates[currency].name
+
+          UIkit.tooltip(event.target, {
+            pos: ttPos(event.target),
+            title: currencyName
+          })
+        } catch {
+          UIkit.tooltip(event.target, {
+            pos: ttPos(event.target),
+            title: 'Description not available'
+          })
+        }
+
+        break
+
+      case 'cm-unit':
+        UIkit.tooltip(event.target, {
+          pos: ttPos(event.target),
+          title: `Unit '${event.target.innerText}'`
+        })
+
+        break
+
+      case 'cm-constant':
+        try {
+          UIkit.tooltip(event.target, {
+            pos: ttPos(event.target),
+            title: math.help(event.target.innerText).doc.description + ' (Constant)'
+          })
+        } catch {
+          /* No tooltip */
+        }
+
+        break
+
+      case 'cm-variable':
+        if (app.mathScope[event.target.innerText] && typeof app.mathScope[event.target.innerText] !== 'function') {
+          let varTooltip
+
+          try {
+            varTooltip = formatAnswer(math.evaluate(event.target.innerText, app.mathScope))
+          } catch {
+            varTooltip = 'Undefined'
+          }
+
+          UIkit.tooltip(event.target, {
+            pos: ttPos(event.target),
+            title: varTooltip
+          })
+        }
+
+        break
+
+      case 'cm-lineNo': {
+        let scopeTooltip
+
+        try {
+          scopeTooltip =
+            typeof app.mathScope[event.target.innerText] === 'function'
+              ? 'Function'
+              : formatAnswer(math.evaluate(event.target.innerText, app.mathScope))
+        } catch {
+          scopeTooltip = 'Undefined'
+        }
+
+        UIkit.tooltip(event.target, {
+          pos: ttPos(event.target),
+          title: scopeTooltip
+        })
+
+        break
+      }
+
+      case 'cm-scope':
+        UIkit.tooltip(event.target, {
+          pos: ttPos(event.target),
+          title: scopeList.filter((scope) => event.target.innerText === scope.text)[0].desc
+        })
+
+        break
+
+      case 'cm-formulajs':
+        UIkit.tooltip(event.target, {
+          pos: ttPos(event.target),
+          title: 'Formulajs'
+        })
+
+        break
+
+      case 'cm-excel':
+        UIkit.tooltip(event.target, {
+          pos: ttPos(event.target),
+          title: 'Excel function'
+        })
+
+        break
+    }
+
+    UIkit.tooltip(event.target).show()
+  }
 })
