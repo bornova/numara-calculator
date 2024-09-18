@@ -14,11 +14,9 @@ import { checkSize, checkUpdates, isMac, isElectron, toggleMinMax } from './util
 import { author, description, homepage, name, version } from './../../package.json'
 
 import { DateTime } from 'luxon'
+import { tinykeys } from 'tinykeys'
 
 import UIkit from 'uikit'
-
-import Mousetrap from 'mousetrap'
-import 'mousetrap-global-bind'
 
 // Set app info
 document.title = description
@@ -359,28 +357,30 @@ outputPanel.addEventListener('scroll', () => {
 })
 
 $('#scrollTop').addEventListener('click', () => {
-  inputPanel.scrollTop = 0
-  outputPanel.scrollTop = 0
+  inputPanel.scroll({ top: 0, behavior: 'smooth' })
+  outputPanel.scroll({ top: 0, behavior: 'smooth' })
 })
 
-// Mousetrap
-const traps = {
-  clearButton: ['command+d', 'ctrl+d'],
-  exportButton: ['command+e', 'ctrl+e'],
-  importButton: ['command+i', 'ctrl+i'],
-  newPageButton: ['command+n', 'ctrl+n'],
-  printButton: ['command+p', 'ctrl+p'],
-  sidePanelButton: ['tab']
+// Keyboard shortcuts
+const keys = {
+  clearButton: ['$mod+D'],
+  exportButton: ['$mod+E'],
+  importButton: ['$mod+I'],
+  newPageButton: ['$mod+N'],
+  printButton: ['$mod+P'],
+  sidePanelButton: ['$mod+TAB']
 }
 
-for (const [button, command] of Object.entries(traps)) {
-  Mousetrap.bindGlobal(command, (event) => {
-    event.preventDefault()
+for (const [button, command] of Object.entries(keys)) {
+  tinykeys(window, {
+    [command]: (event) => {
+      event.preventDefault()
 
-    if ($all('.uk-open').length === 0) {
-      $('#' + button).click()
-    } else if ($('#sidePanel').classList.contains('uk-open') && !$('#dialog-newPage').classList.contains('uk-open')) {
-      $('#closeSidePanelButton').click()
+      if ($all('.uk-open').length === 0) {
+        $('#' + button).click()
+      } else if ($('#sidePanel').classList.contains('uk-open') && !$('#dialog-newPage').classList.contains('uk-open')) {
+        $('#closeSidePanelButton').click()
+      }
     }
   })
 }
