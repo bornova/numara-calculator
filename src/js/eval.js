@@ -1,5 +1,5 @@
 import { $, app, store } from './common'
-import { cm } from './editor'
+import { cm, numaraHints, scopeList } from './editor'
 import { checkLocale } from './utils'
 
 import { DateTime } from 'luxon'
@@ -140,6 +140,15 @@ export function calculate() {
   })
 
   $('#output').innerHTML = answers
+
+  const scopes = scopeList.map((scope) => scope.text)
+  const vars = Object.keys(app.mathScope).filter((key) => !scopes.includes(key))
+
+  vars.forEach((v) => {
+    if (!numaraHints.some((hint) => hint.text === v) && v !== 'line' + cm.lineCount()) {
+      numaraHints.push({ text: v, desc: 'Variable', className: 'cm-variable' })
+    }
+  })
 
   if (app.activePage) {
     const pages = store.get('pages')
