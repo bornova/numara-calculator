@@ -364,8 +364,6 @@ $('#scrollTop').addEventListener('click', () => {
 // Keyboard shortcuts
 const keys = {
   clearButton: ['$mod+D'],
-  exportButton: ['$mod+E'],
-  importButton: ['$mod+I'],
   newPageButton: ['$mod+N'],
   printButton: ['$mod+P'],
   sidePanelButton: ['$mod+TAB']
