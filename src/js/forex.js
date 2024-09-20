@@ -1,9 +1,11 @@
 import { $, app, store } from './common'
-import { cm } from './editor'
+import { cm, numaraHints } from './editor'
 import { calculate, math } from './eval'
 import { notify } from './modal'
 
-math.createUnit('USD', { aliases: ['usd'] })
+math.createUnit('USD')
+
+numaraHints.push({ text: 'USD', desc: 'U.S. Dollar', className: 'cm-currency' })
 
 /** Get exchange rates. */
 export function getRates() {
@@ -15,19 +17,18 @@ export function getRates() {
     fetch(url)
       .then((response) => response.json())
       .then((rates) => {
-        const dups = ['cup']
-
         app.currencyRates = rates
 
         Object.keys(rates).forEach((currency) => {
           math.createUnit(
             rates[currency].code,
-            {
-              aliases: [dups.includes(rates[currency].code.toLowerCase()) ? '' : rates[currency].code.toLowerCase()],
-              definition: math.unit(rates[currency].inverseRate + 'USD')
-            },
+            { definition: math.unit(rates[currency].inverseRate + 'USD') },
             { override: true }
           )
+
+          if (!numaraHints.some((hint) => hint.text === rates[currency].code)) {
+            numaraHints.push({ text: rates[currency].code, desc: rates[currency].name, className: 'cm-currency' })
+          }
 
           store.set('rateDate', rates[currency].date)
         })
