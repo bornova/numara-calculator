@@ -63,7 +63,10 @@ CodeMirror.defineMode('numara', () => ({
 
     const cmStream = stream.current()
 
-    if (app.settings.currency && (cmStream.toLowerCase() in app.currencyRates || cmStream.toLowerCase() === 'usd')) {
+    if (
+      app.settings.currency &&
+      (Object.keys(app.currencyRates).some((curr) => app.currencyRates[curr].code === cmStream) || cmStream === 'USD')
+    ) {
       return 'currency'
     }
 
@@ -91,13 +94,13 @@ CodeMirror.defineMode('numara', () => ({
       return 'excel'
     }
 
-    if (math.Unit.isValuelessUnit(cmStream)) {
-      return 'unit'
-    }
-
     try {
       const val = math.evaluate(cmStream)
       const par = math.parse(cmStream)
+
+      if (val.units && val) {
+        return 'unit'
+      }
 
       if (par.isSymbolNode && val) {
         return 'constant'
@@ -277,8 +280,8 @@ document.addEventListener('mouseover', (event) => {
 
       case 'cm-currency':
         try {
-          const currency = event.target.innerText.toLowerCase()
-          const currencyName = currency === 'usd' ? 'U.S. Dollar' : app.currencyRates[currency].name
+          const currency = event.target.innerText
+          const currencyName = currency === 'USD' ? 'U.S. Dollar' : app.currencyRates[currency.toLowerCase()].name
 
           UIkit.tooltip(event.target, {
             pos: ttPos(event.target),
