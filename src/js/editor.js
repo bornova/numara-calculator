@@ -189,7 +189,9 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
   curWord = !curStr.endsWith('.') || curStr === 'xls.'
 
   return {
-    list: !curWord ? [] : numaraHints.filter(({ text }) => text.match(curWordRegex)),
+    list: !curWord
+      ? []
+      : numaraHints.filter(({ text }) => text.match(curWordRegex)).sort((a, b) => a.text.localeCompare(b.text)),
     from: CodeMirror.Pos(cmCursor.line, start),
     to: CodeMirror.Pos(cmCursor.line, end)
   }
