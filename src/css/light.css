@@ -316,8 +316,7 @@ text {
 }
 
 li.CodeMirror-hint-active {
-  background-color: #367ea1;
-  color: #ffffff !important;
+  background-color: #eaeaea;
 }
 
 .cm-currency {

@@ -11,7 +11,6 @@ fs.emptyDir(buildPath).then(() => {
   const copyFiles = [
     { source: 'src/assets', target: buildPath + '/assets' },
     { source: 'src/index.html', target: buildPath + '/index.html' },
-    { source: 'src/misc/sw.js', target: buildPath + '/sw.js' },
     { source: 'src/misc/numara.webmanifest', target: buildPath + '/numara.webmanifest' }
   ]
 

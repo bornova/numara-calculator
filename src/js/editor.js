@@ -63,7 +63,10 @@ CodeMirror.defineMode('numara', () => ({
 
     const cmStream = stream.current()
 
-    if (app.settings.currency && (cmStream.toLowerCase() in app.currencyRates || cmStream.toLowerCase() === 'usd')) {
+    if (
+      app.settings.currency &&
+      (Object.keys(app.currencyRates).some((curr) => app.currencyRates[curr].code === cmStream) || cmStream === 'USD')
+    ) {
       return 'currency'
     }
 
@@ -127,15 +130,15 @@ CodeMirror.defineMode('plain', () => ({
 }))
 
 // Codemirror autocomplete hints
-const numaraHints = []
+export const numaraHints = []
 
-const scopeList = [
-  { text: '_', desc: 'Answer from last calculated line.' },
-  { text: 'ans', desc: 'Answer from last calculated line.' },
+export const scopeList = [
+  { text: '_', desc: 'Answer from last calculated line' },
+  { text: 'ans', desc: 'Answer from last calculated line' },
   { text: 'avg', desc: 'Average of previous line values. Numbers only.' },
-  { text: 'now', desc: 'Current date and time.' },
+  { text: 'now', desc: 'Current date and time' },
   { text: 'subtotal', desc: 'Total of all lines in previous block. Numbers only.' },
-  { text: 'today', desc: 'Current date.' },
+  { text: 'today', desc: 'Current date' },
   { text: 'total', desc: 'Total of previous line values. Numbers only.' }
 ]
 
@@ -152,6 +155,15 @@ Object.getOwnPropertyNames(math).forEach((f) => {
 
 Object.keys(formulajs).forEach((f) => {
   numaraHints.push({ text: 'xls.' + f, className: 'cm-excel' })
+})
+
+Object.values(math.Unit.UNITS).flatMap((unit) => {
+  Object.values(unit.prefixes).forEach((prefix) => {
+    const unitBase = unit.base.key.replaceAll('_', ' ').toLowerCase()
+    const unitCat = unitBase.charAt(0).toUpperCase() + unitBase.slice(1)
+
+    numaraHints.push({ text: prefix.name + unit.name, desc: unitCat + ' unit', className: 'cm-unit' })
+  })
 })
 
 CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
@@ -188,7 +200,7 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
 CodeMirror.commands.autocomplete = (cm) => {
   CodeMirror.showHint(cm, CodeMirror.hint.numaraHints, {
     completeSingle: false,
-    extraKeys: { Enter: 'newline', Tab: () => {} }
+    extraKeys: { Enter: 'newline' }
   })
 }
 
@@ -232,9 +244,9 @@ cm.on('cursorActivity', (cm) => {
 // Tooltips
 const ttPos = (el) => (el.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left')
 
-$('.CodeMirror').addEventListener('mouseover', (event) => {
-  if (app.settings.keywordTips) {
-    switch (event.target.className) {
+document.addEventListener('mouseover', (event) => {
+  if (app.settings.keywordTips && event.target.classList[0]?.startsWith('cm-')) {
+    switch (event.target.classList[0]) {
       case 'cm-function':
         try {
           const tip = JSON.parse(JSON.stringify(math.help(event.target.innerText).toJSON()))
@@ -270,8 +282,8 @@ $('.CodeMirror').addEventListener('mouseover', (event) => {
 
       case 'cm-currency':
         try {
-          const currency = event.target.innerText.toLowerCase()
-          const currencyName = currency === 'usd' ? 'U.S. Dollar' : app.currencyRates[currency].name
+          const currency = event.target.innerText
+          const currencyName = currency === 'USD' ? 'U.S. Dollar' : app.currencyRates[currency.toLowerCase()].name
 
           UIkit.tooltip(event.target, {
             pos: ttPos(event.target),
@@ -286,13 +298,14 @@ $('.CodeMirror').addEventListener('mouseover', (event) => {
 
         break
 
-      case 'cm-unit':
+      case 'cm-unit': {
         UIkit.tooltip(event.target, {
           pos: ttPos(event.target),
-          title: `Unit '${event.target.innerText}'`
+          title: numaraHints.find((hint) => hint.text === event.target.innerText).desc
         })
 
         break
+      }
 
       case 'cm-constant':
         try {

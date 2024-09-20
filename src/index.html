@@ -212,36 +212,7 @@
               </label>
             </div>
           </div>
-          <h3>Notifications</h3>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">Location</div>
-            <div class="uk-text-right uk-position-relative">
-              <select id="notifyLocation" class="uk-select settingItem">
-                <option value="top-left">Top Left</option>
-                <option value="top-center">Top Center</option>
-                <option value="top-right">Top Right</option>
-                <option disabled>-</option>
-                <option value="bottom-left">Bottom Left</option>
-                <option value="bottom-center">Bottom Center</option>
-                <option value="bottom-right">Bottom Right</option>
-              </select>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">Duration</div>
-            <div class="uk-text-right uk-position-relative">
-              <select id="notifyDuration" class="uk-select settingItem">
-                <option value="1000">1 second</option>
-                <option value="3000">3 seconds</option>
-                <option value="5000">5 seconds</option>
-                <option value="10000">10 seconds</option>
-                <option value="30000">30 seconds</option>
-                <option value="0">Close manualy</option>
-              </select>
-            </div>
-          </div>
 
-          <h3>Typography</h3>
           <div class="uk-child-width-expand" uk-grid>
             <div class="padTop1">Font size</div>
             <div class="uk-text-right uk-position-relative">
@@ -516,10 +487,39 @@
             </div>
           </div>
 
+          <h3>Notifications</h3>
+          <div class="uk-child-width-expand" uk-grid>
+            <div class="padTop1">Location</div>
+            <div class="uk-text-right uk-position-relative">
+              <select id="notifyLocation" class="uk-select settingItem">
+                <option value="top-left">Top Left</option>
+                <option value="top-center">Top Center</option>
+                <option value="top-right">Top Right</option>
+                <option disabled>-</option>
+                <option value="bottom-left">Bottom Left</option>
+                <option value="bottom-center">Bottom Center</option>
+                <option value="bottom-right">Bottom Right</option>
+              </select>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div class="padTop1">Duration</div>
+            <div class="uk-text-right uk-position-relative">
+              <select id="notifyDuration" class="uk-select settingItem">
+                <option value="1000">1 second</option>
+                <option value="3000">3 seconds</option>
+                <option value="5000">5 seconds</option>
+                <option value="10000">10 seconds</option>
+                <option value="30000">30 seconds</option>
+                <option value="0">Close manualy</option>
+              </select>
+            </div>
+          </div>
+
           <h3>Currency Conversion</h3>
           <div class="uk-child-width-expand" uk-grid>
             <div class="uk-width-4-5">
-              <div>Enabled</div>
+              <div>Enabled (Restart required)</div>
               <div id="currencyUpdate">
                 <span class="lastUpdated">Last update:</span>
                 <span id="lastUpdated" class="lastUpdated"></span>
