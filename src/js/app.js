@@ -39,13 +39,6 @@ $('#helpLink').setAttribute('href', homepage + '/wiki')
 if (isElectron) {
   numara.themeUpdate(settings.apply)
   numara.fullscreen()
-} else {
-  // Register service worker
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(() => {
-      console.log('Service worker registration failed.')
-    })
-  }
 }
 
 // Set headers
