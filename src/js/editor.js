@@ -133,12 +133,12 @@ CodeMirror.defineMode('plain', () => ({
 export const numaraHints = []
 
 export const scopeList = [
-  { text: '_', desc: 'Answer from last calculated line.' },
-  { text: 'ans', desc: 'Answer from last calculated line.' },
+  { text: '_', desc: 'Answer from last calculated line' },
+  { text: 'ans', desc: 'Answer from last calculated line' },
   { text: 'avg', desc: 'Average of previous line values. Numbers only.' },
-  { text: 'now', desc: 'Current date and time.' },
+  { text: 'now', desc: 'Current date and time' },
   { text: 'subtotal', desc: 'Total of all lines in previous block. Numbers only.' },
-  { text: 'today', desc: 'Current date.' },
+  { text: 'today', desc: 'Current date' },
   { text: 'total', desc: 'Total of previous line values. Numbers only.' }
 ]
 
