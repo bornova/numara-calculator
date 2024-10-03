@@ -1,5 +1,4 @@
 import { build } from 'esbuild'
-import { polyfillNode } from 'esbuild-plugin-polyfill-node'
 
 import fs from 'fs-extra'
 
@@ -49,7 +48,6 @@ fs.emptyDir(buildPath).then(() => {
     entryPoints: ['src/js/app.js'],
     minify: true,
     outfile: buildPath + '/js/numara.js',
-    plugins: [polyfillNode()],
     sourcemap: !process.env.PROD
   })
 })
