@@ -1003,6 +1003,15 @@ input:checked + .slider:before {
   padding: 0 !important;
 }
 
+.input .CodeMirror-wrap pre.CodeMirror-line,
+.input .CodeMirror-wrap pre.CodeMirror-line-like {
+  word-wrap: normal !important;
+}
+
+.cm-s-numara .CodeMirror-scroll {
+  width: calc(100% + 8px) !important;
+}
+
 .cm-s-numara .CodeMirror-vscrollbar {
   display: none !important;
 }
@@ -1023,6 +1032,7 @@ input:checked + .slider:before {
 }
 
 .cm-s-numara .CodeMirror-sizer {
+  border-right: 0px !important;
   padding-right: 0 !important;
   padding-bottom: 8px !important;
 }
