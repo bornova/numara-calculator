@@ -130,10 +130,12 @@ export function calculate() {
       subtotals.length = 0
     }
 
+    const lineHeight = cm.display.lineDiv.children[cmLineNo].clientHeight
+
     answers += `<div
         class="${app.settings.rulers ? 'ruler' : 'noRuler'} uk-display-block"
         data-line="${cmLineNo}"
-        style="height:${cmLine.height - 1}px"
+        style="height:${lineHeight}px"
       >
         <span class="${answer && !answer.startsWith('<a') ? 'answer' : ''}" data-copy="${answerCopy}">${answer}</span>
       </div>`
