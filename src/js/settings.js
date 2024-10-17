@@ -57,7 +57,7 @@ export const settings = {
     inputWidth: 60,
     keywordTips: true,
     lineErrors: true,
-    lineHeight: '2em',
+    lineHeight: '24px',
     lineNumbers: true,
     lineWrap: true,
     locale: 'system',
@@ -85,10 +85,32 @@ export const settings = {
     if (app.settings) {
       checkSchema()
     } else {
-      app.settings = app.settings = JSON.parse(JSON.stringify(settings.defaults))
-
       store.set('settings', settings.defaults)
     }
+
+    // Start required line height fix
+    if (app.settings.lineHeight.endsWith('em')) {
+      switch (app.settings.lineHeight) {
+        case '1.5em':
+          app.settings.lineHeight = '16px'
+          break
+        case '1.75em':
+          app.settings.lineHeight = '20px'
+          break
+        case '2em':
+          app.settings.lineHeight = '24px'
+          break
+        case '2.5em':
+          app.settings.lineHeight = '28px'
+          break
+        case '3em':
+          app.settings.lineHeight = '32px'
+          break
+      }
+
+      store.set('settings', app.settings)
+    }
+    // End fix
 
     settings.apply()
 
