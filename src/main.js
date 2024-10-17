@@ -15,6 +15,7 @@ log.eventLogger.startLogging()
 
 const { autoUpdater } = updater
 
+autoUpdater.autoInstallOnAppQuit = false
 autoUpdater.logger = log
 autoUpdater.logger.transports.file.level = 'info'
 
@@ -174,6 +175,9 @@ ipcMain.on('resetApp', () => {
 })
 
 ipcMain.on('openDevTools', () => win.webContents.openDevTools())
+ipcMain.on('openLogs', () => {
+  console.log(app.getPath('logs'))
+})
 
 const contextHeader = (index, isMultiLine, hasAnswer) =>
   hasAnswer || index !== null
