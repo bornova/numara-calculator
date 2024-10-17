@@ -614,7 +614,7 @@ text {
   color: #56b6c2;
 }
 
-.restartButton {
+.updateButton {
   display: none;
   margin-top: 10px;
   text-transform: capitalize;
