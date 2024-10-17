@@ -380,7 +380,7 @@ for (const [button, command] of Object.entries(keys)) {
 checkUpdates()
 
 // Restart button if update is installed
-$('#restartButton').addEventListener('click', () => {
+$('#updateButton').addEventListener('click', () => {
   numara.updateApp()
 })
 
@@ -431,3 +431,7 @@ window.addEventListener('beforeprint', () => {
 window.addEventListener('afterprint', () => {
   $('#printArea').remove()
 })
+
+setTimeout(() => {
+  cm.focus()
+}, 500)
