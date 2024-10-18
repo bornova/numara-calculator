@@ -15,6 +15,7 @@ log.eventLogger.startLogging()
 
 const { autoUpdater } = updater
 
+autoUpdater.autoInstallOnAppQuit = false
 autoUpdater.logger = log
 autoUpdater.logger.transports.file.level = 'info'
 
@@ -22,6 +23,7 @@ const schema = {
   appHeight: { type: 'number', default: 480 },
   appWidth: { type: 'number', default: 560 },
   fullSize: { type: 'boolean', default: false },
+  position: { type: 'array', items: { type: 'integer' } },
   theme: { type: 'string', default: 'system' }
 }
 
@@ -62,6 +64,11 @@ function appWindow() {
     }
 
     win.setHasShadow(true)
+
+    if (config.get('position')) {
+      win.setPosition(config.get('position')[0], config.get('position')[1])
+    }
+
     win.show()
 
     if (process.platform === 'darwin' && !app.isPackaged) {
@@ -77,6 +84,7 @@ function appWindow() {
 
   win.on('close', () => {
     config.set('fullSize', win.isMaximized())
+    config.set('position', win.getPosition())
 
     if (!win.isMaximized()) {
       config.set('appWidth', win.getSize()[0])
@@ -174,6 +182,9 @@ ipcMain.on('resetApp', () => {
 })
 
 ipcMain.on('openDevTools', () => win.webContents.openDevTools())
+ipcMain.on('openLogs', () => {
+  shell.openPath(path.join(app.getPath('logs'), 'main.log'))
+})
 
 const contextHeader = (index, isMultiLine, hasAnswer) =>
   hasAnswer || index !== null

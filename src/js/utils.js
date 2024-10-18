@@ -44,7 +44,7 @@ export function checkUpdates() {
 
     numara.notifyUpdate(() => {
       notify(
-        'Updating Numara... <a class="notificationLink" onclick="document.querySelector(`#aboutButton`).click()">View update status</a>'
+        'Downloading latest version... <a class="notificationLink" onclick="document.querySelector(`#aboutButton`).click()">View status</a>'
       )
 
       $('#notificationDot').style.display = 'block'
@@ -52,12 +52,12 @@ export function checkUpdates() {
 
     numara.updateStatus((event, status) => {
       if (status === 'ready') {
-        $('#dialog-about-updateStatus').innerHTML = 'Restart Numara to finish updating.'
-        $('#restartButton').style.display = 'inline-block'
+        $('#dialog-about-updateStatus').innerHTML = 'New version is ready to be installed.'
+        $('#updateButton').style.display = 'inline-block'
 
         if (!$('#dialog-about').classList.contains('uk-open')) {
           notify(
-            'Restart Numara to finish updating. <a class="notificationLink" onclick="document.querySelector(`#restartButton`).click()">Restart Now</a>'
+            'New version is ready to be installed. <a class="notificationLink" onclick="document.querySelector(`#updateButton`).click()">Install Now</a>'
           )
         }
       } else {
