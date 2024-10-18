@@ -66,9 +66,3 @@ export function checkUpdates() {
     })
   }
 }
-
-export function openLogs() {
-  if (isElectron) {
-    numara.openLogs()
-  }
-}
