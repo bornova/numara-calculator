@@ -593,6 +593,10 @@ text {
   line-height: 30px;
 }
 
+div:has(> #logsLink) {
+  display: none;
+}
+
 .dialog-about-appVersion {
   display: block;
   margin-bottom: 8px;
