@@ -35,6 +35,11 @@ $('#webLink').setAttribute('href', author.url)
 $('#licenseLink').setAttribute('href', homepage + '/blob/master/LICENSE')
 $('#helpLink').setAttribute('href', homepage + '/wiki')
 
+if (isElectron) {
+  $('#logsLink').parentElement.style.display = 'block'
+  $('#logsLink').addEventListener('click', numara.openLogs)
+}
+
 // Set theme and maximize if needed
 if (isElectron) {
   numara.themeUpdate(settings.apply)
