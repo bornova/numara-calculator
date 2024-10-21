@@ -20,9 +20,10 @@ import 'codemirror/addon/search/searchcursor'
 /** CodeMirror input panel. */
 export const cm = CodeMirror.fromTextArea($('#inputArea'), {
   autofocus: true,
-  extraKeys: { 'Ctrl-Space': 'autocomplete', Tab: () => {} },
+  coverGutterNextToScrollbar: true,
+  extraKeys: { 'Ctrl-Space': 'autocomplete' },
+  flattenSpans: true,
   mode: 'numara',
-  singleCursorHeightPerLine: false,
   smartIndent: false,
   theme: 'numara',
   viewportMargin: Infinity
@@ -204,6 +205,17 @@ CodeMirror.commands.autocomplete = (cm) => {
   })
 }
 
+// Force editor line bottom alignment
+function cmForceBottom() {
+  const lineTop = cm.display.lineDiv.children[cm.getCursor().line].getBoundingClientRect().top
+  const barTop = $('.CodeMirror-hscrollbar').getBoundingClientRect().top
+  const lineHeight = +app.settings.lineHeight.replace('px', '') + 1
+
+  if (barTop - lineTop < lineHeight) {
+    $('#output').scrollTop = $('#output').scrollTop + (lineHeight - (barTop - lineTop))
+  }
+}
+
 // Codemirror handlers
 cm.on('changes', calculate)
 
@@ -214,9 +226,10 @@ cm.on('inputRead', (cm) => {
 })
 
 cm.on('cursorActivity', (cm) => {
+  const activeLine = cm.getCursor().line
+
   cm.eachLine((line) => {
     const cmLineNo = cm.getLineNumber(line)
-    const activeLine = cm.getCursor().line
 
     if (cmLineNo === activeLine) {
       cm.addLineClass(cmLineNo, 'gutter', 'activeLine')
@@ -224,6 +237,15 @@ cm.on('cursorActivity', (cm) => {
       cm.removeLineClass(cmLineNo, 'gutter', 'activeLine')
     }
   })
+
+  setTimeout(cmForceBottom, 100)
+
+  const pages = store.get('pages')
+  const page = pages.find((page) => page.id == app.activePage)
+
+  page.cursor = cm.getCursor()
+
+  store.set('pages', pages)
 })
 
 cm.on('gutterClick', (cm, line) => {
@@ -232,14 +254,7 @@ cm.on('gutterClick', (cm, line) => {
   cm.replaceSelection('line' + lineNo)
 })
 
-cm.on('cursorActivity', (cm) => {
-  const pages = store.get('pages')
-  const page = pages.find((page) => page.id == app.activePage)
-
-  page.cursor = cm.getCursor()
-
-  store.set('pages', pages)
-})
+cm.on('scrollCursorIntoView', cmForceBottom)
 
 // Tooltips
 const ttPos = (el) => (el.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left')

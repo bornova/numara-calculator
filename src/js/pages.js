@@ -142,7 +142,14 @@ export function loadPage(pageId) {
 
   if (cursor) {
     cm.setCursor(cursor)
-    cm.scrollIntoView(cursor)
+
+    setTimeout(() => {
+      try {
+        cm.scrollIntoView({ ch: cursor.ch, line: cursor.line + 1 })
+      } catch {
+        cm.scrollIntoView(cursor)
+      }
+    }, 100)
   }
 
   populatePages()

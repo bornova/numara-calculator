@@ -334,8 +334,8 @@ line {
   color: #e6e6e6 !important;
 }
 
-.cm-s-numara .CodeMirror-cursor {
-  border-left: 1px solid #e6e6e6 !important;
+.CodeMirror-cursor:before {
+  background: #e6e6e6;
 }
 
 .cm-s-numara .CodeMirror-selected {
@@ -346,6 +346,7 @@ line {
   background-color: #1f1f1f !important;
 }
 
+.cm-s-numara .CodeMirror-hscrollbar,
 .cm-s-numara .CodeMirror-scrollbar-filler,
 .cm-s-numara .CodeMirror-gutter-filler {
   background-color: #1f1f1f !important;
