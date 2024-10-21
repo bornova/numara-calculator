@@ -20,9 +20,10 @@ import 'codemirror/addon/search/searchcursor'
 /** CodeMirror input panel. */
 export const cm = CodeMirror.fromTextArea($('#inputArea'), {
   autofocus: true,
-  extraKeys: { 'Ctrl-Space': 'autocomplete', Tab: () => {} },
+  coverGutterNextToScrollbar: true,
+  extraKeys: { 'Ctrl-Space': 'autocomplete' },
+  flattenSpans: true,
   mode: 'numara',
-  singleCursorHeightPerLine: false,
   smartIndent: false,
   theme: 'numara',
   viewportMargin: Infinity
@@ -214,9 +215,10 @@ cm.on('inputRead', (cm) => {
 })
 
 cm.on('cursorActivity', (cm) => {
+  const activeLine = cm.getCursor().line
+
   cm.eachLine((line) => {
     const cmLineNo = cm.getLineNumber(line)
-    const activeLine = cm.getCursor().line
 
     if (cmLineNo === activeLine) {
       cm.addLineClass(cmLineNo, 'gutter', 'activeLine')
@@ -224,21 +226,26 @@ cm.on('cursorActivity', (cm) => {
       cm.removeLineClass(cmLineNo, 'gutter', 'activeLine')
     }
   })
-})
 
-cm.on('gutterClick', (cm, line) => {
-  const lineNo = line + 1
+  if (activeLine === cm.lineCount() - 1) {
+    setTimeout(() => {
+      $('#output').scrollTop = $('#output').scrollHeight
+      $('.CodeMirror-scroll').scrollTop = $('.CodeMirror-scroll').scrollHeight
+    }, 100)
+  }
 
-  cm.replaceSelection('line' + lineNo)
-})
-
-cm.on('cursorActivity', (cm) => {
   const pages = store.get('pages')
   const page = pages.find((page) => page.id == app.activePage)
 
   page.cursor = cm.getCursor()
 
   store.set('pages', pages)
+})
+
+cm.on('gutterClick', (cm, line) => {
+  const lineNo = line + 1
+
+  cm.replaceSelection('line' + lineNo)
 })
 
 // Tooltips

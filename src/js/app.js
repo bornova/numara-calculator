@@ -439,4 +439,8 @@ window.addEventListener('afterprint', () => {
 
 setTimeout(() => {
   cm.focus()
+
+  if (cm.getCursor().line === cm.lineCount() - 1) {
+    $('#output').scrollTop = $('#output').scrollHeight
+  }
 }, 500)
