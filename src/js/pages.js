@@ -141,13 +141,15 @@ export function loadPage(pageId) {
   cm.execCommand('goLineEnd')
 
   if (cursor) {
-    try {
-      cm.scrollIntoView({ ch: cursor.ch, line: cursor.line + 1 })
-    } catch {
-      cm.scrollIntoView(cursor)
-    }
-
     cm.setCursor(cursor)
+
+    setTimeout(() => {
+      try {
+        cm.scrollIntoView({ ch: cursor.ch, line: cursor.line + 1 })
+      } catch {
+        cm.scrollIntoView(cursor)
+      }
+    }, 100)
   }
 
   populatePages()
