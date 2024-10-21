@@ -205,6 +205,17 @@ CodeMirror.commands.autocomplete = (cm) => {
   })
 }
 
+// Force editor line bottom alignment
+function cmForceBottom() {
+  const lineTop = cm.display.lineDiv.children[cm.getCursor().line].getBoundingClientRect().top
+  const barTop = $('.CodeMirror-hscrollbar').getBoundingClientRect().top
+  const lineHeight = +app.settings.lineHeight.replace('px', '') + 1
+
+  if (barTop - lineTop < lineHeight) {
+    $('#output').scrollTop = $('#output').scrollTop + (lineHeight - (barTop - lineTop))
+  }
+}
+
 // Codemirror handlers
 cm.on('changes', calculate)
 
@@ -227,12 +238,7 @@ cm.on('cursorActivity', (cm) => {
     }
   })
 
-  if (activeLine === cm.lineCount() - 1) {
-    setTimeout(() => {
-      $('#output').scrollTop = $('#output').scrollHeight
-      $('.CodeMirror-scroll').scrollTop = $('.CodeMirror-scroll').scrollHeight
-    }, 100)
-  }
+  setTimeout(cmForceBottom, 100)
 
   const pages = store.get('pages')
   const page = pages.find((page) => page.id == app.activePage)
@@ -247,6 +253,8 @@ cm.on('gutterClick', (cm, line) => {
 
   cm.replaceSelection('line' + lineNo)
 })
+
+cm.on('scrollCursorIntoView', cmForceBottom)
 
 // Tooltips
 const ttPos = (el) => (el.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left')
