@@ -1007,6 +1007,19 @@ input:checked + .slider:before {
   padding: 0 !important;
 }
 
+.CodeMirror-cursor {
+  border: none !important;
+}
+
+.CodeMirror-cursor:before {
+  position: absolute;
+  top: 10%;
+  right: 0;
+  width: 1px;
+  height: 80%;
+  content: '';
+}
+
 .cm-s-numara .CodeMirror-vscrollbar {
   display: none !important;
 }
