@@ -334,12 +334,8 @@ line {
   color: #e6e6e6 !important;
 }
 
-.cm-s-numara .CodeMirror-cursor {
-  border-left: 1px solid #e6e6e6 !important;
-}
-
 .CodeMirror-cursor:before {
-  background: #fff;
+  background: #e6e6e6;
 }
 
 .cm-s-numara .CodeMirror-selected {
