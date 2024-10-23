@@ -29,7 +29,7 @@
     "@formulajs/formulajs": "^4.4.7",
     "codemirror": "^5.65.18",
     "deep-diff": "^1.0.2",
-    "electron": "^33.0.1",
+    "electron": "^33.0.2",
     "electron-builder": "^25.1.8",
     "esbuild": "^0.24.0",
     "eslint": "^9.13.0",
