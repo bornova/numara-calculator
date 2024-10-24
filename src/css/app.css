@@ -1013,10 +1013,9 @@ input:checked + .slider:before {
 
 .CodeMirror-cursor:before {
   position: absolute;
-  top: 10%;
-  right: 0;
+  top: calc(12% + 1px);
   width: 1px;
-  height: 80%;
+  height: calc(76% - 1px);
   content: '';
 }
 
