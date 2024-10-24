@@ -31,10 +31,9 @@ export const cm = CodeMirror.fromTextArea($('#inputArea'), {
 
 // User defined functions and units editors
 const udOptions = {
-  autofocus: true,
   autoCloseBrackets: true,
+  autofocus: true,
   mode: 'javascript',
-  singleCursorHeightPerLine: false,
   tabSize: 2
 }
 

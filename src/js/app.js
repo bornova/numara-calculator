@@ -242,10 +242,6 @@ UIkit.mixin({ data: { offset: 5 } }, 'tooltip')
 // Initiate settings dialog
 UIkit.util.on('#dialog-settings', 'beforeshow', settings.prep)
 
-UIkit.util.on('#setswitch', 'beforeshow', (event) => {
-  event.stopPropagation()
-})
-
 // Prepare user defined dialog inputs
 UIkit.util.on('#dialog-udfu', 'shown', (event) => {
   if (event.target.id === 'dialog-udfu') {
@@ -257,9 +253,20 @@ UIkit.util.on('#dialog-udfu', 'shown', (event) => {
   }
 })
 
-// Blur input when user defined switcher is shown
-UIkit.util.on('#udfuSwitcher', 'shown', () => {
-  cm.getInputField().blur()
+UIkit.util.on('#udfTab', 'shown', () => {
+  udfInput.refresh()
+
+  setTimeout(() => {
+    udfInput.focus()
+  }, 100)
+})
+
+UIkit.util.on('#uduTab', 'shown', () => {
+  uduInput.refresh()
+
+  setTimeout(() => {
+    uduInput.focus()
+  }, 100)
 })
 
 // Focus on input when dialog is closed
