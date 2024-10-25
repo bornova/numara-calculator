@@ -5,7 +5,7 @@ import { showError } from './modal'
 /**
  * User defined functions and units.
  *
- * @param {*} input User defined function or unit to apply.
+ * @param {string} input User defined function or unit to apply.
  * @param {string} type 'func' | 'unit'
  */
 export function applyUdfu(input, type) {
