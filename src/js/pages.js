@@ -119,7 +119,7 @@ export function populatePages() {
 /**
  * Load page
  *
- * @param {*} pageId Id of the page to load
+ * @param {string} pageId Id of the page to load
  */
 export function loadPage(pageId) {
   const page = store.get('pages').find((page) => page.id === pageId)
@@ -204,7 +204,7 @@ export function newPage(isImport) {
 /**
  * Delete page
  *
- * @param {*} pageId Id of the page to delete
+ * @param {string} pageId Id of the page to delete
  */
 export function deletePage(pageId) {
   let pages = store.get('pages')
@@ -227,7 +227,7 @@ export function deletePage(pageId) {
 /**
  * Rename page
  *
- * @param {*} pageId Id of the page to rename
+ * @param {string} pageId Id of the page to rename
  */
 export function renamePage(pageId) {
   const pages = store.get('pages')
@@ -257,7 +257,7 @@ export function renamePage(pageId) {
 /**
  * Duplicate page
  *
- * @param {*} pageId Id of the page to duplicate
+ * @param {string} pageId Id of the page to duplicate
  */
 export function duplicatePage(pageId) {
   const dupPageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
@@ -275,7 +275,10 @@ export function duplicatePage(pageId) {
   loadPage(dupPageId)
 }
 
-/** Sort page list */
+/** Sort page list
+ *
+ * @param {string} by Sort by argument - oldnew | newold | az | za
+ */
 export function sortPages(by) {
   const pages = store.get('pages')
 
