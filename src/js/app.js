@@ -1,6 +1,6 @@
 import { $, $all, app, store } from './common'
 import { copyAll } from './context'
-import { cm, udfInput, uduInput } from './editor'
+import { cm, refreshEditor, udfInput, uduInput } from './editor'
 import { calculate } from './eval'
 import { getRates } from './forex'
 import { generateIcons } from './icons'
@@ -242,11 +242,15 @@ UIkit.mixin({ data: { offset: 5 } }, 'tooltip')
 // Initiate settings dialog
 UIkit.util.on('#dialog-settings', 'beforeshow', settings.prep)
 
+let udTab = 1
+
 // Prepare user defined dialog inputs
 UIkit.util.on('#dialog-udfu', 'shown', (event) => {
   if (event.target.id === 'dialog-udfu') {
     const udf = store.get('udf').trim()
     const udu = store.get('udu').trim()
+
+    refreshEditor(udTab === 1 ? udfInput : uduInput)
 
     udfInput.setValue(udf)
     uduInput.setValue(udu)
@@ -254,19 +258,13 @@ UIkit.util.on('#dialog-udfu', 'shown', (event) => {
 })
 
 UIkit.util.on('#udfTab', 'shown', () => {
-  udfInput.refresh()
-
-  setTimeout(() => {
-    udfInput.focus()
-  }, 100)
+  udTab = 1
+  refreshEditor(udfInput)
 })
 
 UIkit.util.on('#uduTab', 'shown', () => {
-  uduInput.refresh()
-
-  setTimeout(() => {
-    uduInput.focus()
-  }, 100)
+  udTab = 2
+  refreshEditor(uduInput)
 })
 
 // Focus on input when dialog is closed
@@ -371,7 +369,7 @@ const keys = {
   clearButton: ['$mod+D'],
   newPageButton: ['$mod+N'],
   printButton: ['$mod+P'],
-  sidePanelButton: ['$mod+TAB']
+  sidePanelButton: ['Shift+TAB']
 }
 
 for (const [button, command] of Object.entries(keys)) {
