@@ -2,7 +2,6 @@ import { $, $all, app, store } from './common'
 import { copyAll } from './context'
 import { cm, refreshEditor, udfInput, uduInput } from './editor'
 import { calculate } from './eval'
-import { getRates } from './forex'
 import { generateIcons } from './icons'
 import { notify, showError, showModal } from './modal'
 import { plot } from './plot'
@@ -81,11 +80,6 @@ generateIcons()
 
 // Initialize settings
 settings.initialize()
-
-// Get exchange rates
-if (app.settings.currency) {
-  getRates()
-}
 
 // Set user defined values
 if (!store.get('pages')) {
