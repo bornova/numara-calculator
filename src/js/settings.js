@@ -88,7 +88,13 @@ export const settings = {
     if (app.settings) {
       checkSchema()
     } else {
+      app.settings = settings.defaults
       store.set('settings', settings.defaults)
+    }
+
+    // Get exchange rates
+    if (app.settings.currency) {
+      getRates()
     }
 
     // Start required line height fix
@@ -289,10 +295,11 @@ export const settings = {
     if (app.settings.currency) {
       if (app.settings.currencyInterval === '0') {
         clearInterval(updateIterval)
-        getRates()
+        store.set('rateInterval', false)
       } else {
         clearInterval(updateIterval)
         updateIterval = setInterval(getRates, +app.settings.currencyInterval)
+        store.set('rateInterval', true)
       }
     }
 
