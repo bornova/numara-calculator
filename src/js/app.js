@@ -80,6 +80,7 @@ generateIcons()
 
 // Initialize settings
 settings.initialize()
+settings.apply()
 
 // Set user defined values
 if (!store.get('pages')) {

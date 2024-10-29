@@ -30,6 +30,8 @@ function checkMods(key) {
 
 /** Check for app settings schema changes. */
 function checkSchema() {
+  app.settings = store.get('settings')
+
   DeepDiff.observableDiff(app.settings, settings.defaults, (d) => {
     if (d.kind !== 'E') {
       DeepDiff.applyChange(app.settings, settings.defaults, d)
@@ -83,14 +85,13 @@ export const settings = {
 
   /** Initialize settings. */
   initialize: () => {
-    app.settings = store.get('settings')
-
-    if (app.settings) {
+    if (store.get('settings')) {
       checkSchema()
     } else {
-      app.settings = settings.defaults
       store.set('settings', settings.defaults)
     }
+
+    app.settings = store.get('settings')
 
     // Get exchange rates
     if (app.settings.currency) {
