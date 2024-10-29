@@ -536,12 +536,12 @@ text {
 .warn-icon {
   display: none;
   vertical-align: middle;
-  margin-left: 3px;
+  margin-left: 5px;
 }
 
 .warn-icon svg {
   stroke: #faa05a;
-  margin-top: -4px;
+  margin-top: -2px;
   width: 14px;
   height: 14px;
   pointer-events: none;
@@ -554,8 +554,9 @@ text {
   font-size: 0.9rem;
 }
 
-.updateRatesLink {
-  margin-left: 6px;
+#updateRatesLink[data-enabled='false'] {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 /* About dialog items */
