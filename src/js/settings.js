@@ -286,6 +286,16 @@ export const settings = {
       predictable: app.settings.predictable
     })
 
+    if (app.settings.currency) {
+      if (app.settings.currencyInterval === '0') {
+        clearInterval(updateIterval)
+        getRates()
+      } else {
+        clearInterval(updateIterval)
+        updateIterval = setInterval(getRates, +app.settings.currencyInterval)
+      }
+    }
+
     if (app.settings.currencyInterval === '0') {
       clearInterval(updateIterval)
     } else {
