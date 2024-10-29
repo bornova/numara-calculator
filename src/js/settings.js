@@ -39,6 +39,8 @@ function checkSchema() {
   })
 }
 
+let updateIterval
+
 export const settings = {
   /** Default settings. */
   defaults: {
@@ -48,6 +50,7 @@ export const settings = {
     contPrevLine: true,
     copyThouSep: false,
     currency: true,
+    currencyInterval: '0',
     dateDay: false,
     divider: true,
     expLower: '-12',
@@ -283,6 +286,13 @@ export const settings = {
       predictable: app.settings.predictable
     })
 
+    if (app.settings.currencyInterval === '0') {
+      clearInterval(updateIterval)
+    } else {
+      clearInterval(updateIterval)
+      updateIterval = setInterval(getRates, +app.settings.currencyInterval)
+    }
+
     setTimeout(calculate, 10)
   },
 
@@ -326,6 +336,7 @@ export const settings = {
     $('#keywordTips').disabled = !app.settings.syntax
     $('#matchBrackets').disabled = !app.settings.syntax
     $('#copyThouSep').disabled = !app.settings.thouSep
+    $('#currencyInterval').disabled = !app.settings.currency
 
     $('#expUpper').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
     $('#expLower').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
