@@ -256,7 +256,7 @@ cm.on('cursorActivity', (cm) => {
     }
   })
 
-  setTimeout(cmForceBottom, 100)
+  setTimeout(cmForceBottom, 20)
 
   const pages = store.get('pages')
   const page = pages.find((page) => page.id == app.activePage)
