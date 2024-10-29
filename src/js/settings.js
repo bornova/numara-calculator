@@ -333,6 +333,7 @@ export const settings = {
     }
 
     $('#currencyUpdate').style.visibility = $('#currency').checked ? 'visible' : 'hidden'
+    $('#currencyWarn').style.display = app.settings.currency ? 'none' : 'inline-block'
 
     if (!store.get('rateDate') && app.settings.currency) {
       getRates()
@@ -355,6 +356,7 @@ export const settings = {
     $('#matchBrackets').disabled = !app.settings.syntax
     $('#copyThouSep').disabled = !app.settings.thouSep
     $('#currencyInterval').disabled = !app.settings.currency
+    $('#updateRatesLink').dataset.enabled = app.settings.currency
 
     $('#expUpper').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
     $('#expLower').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
@@ -419,6 +421,10 @@ $('#bigNumWarn').addEventListener('click', () => {
   )
 })
 
+$('#currencyWarn').addEventListener('click', () => {
+  showError('App restart needed', `Currencies used in existing calculations will be removed after app restart.`)
+})
+
 $('#precision').addEventListener('input', () => {
   $('#precision-label').innerHTML = $('#precision').value
 })
@@ -430,6 +436,8 @@ $('#expLower').addEventListener('input', () => {
 $('#expUpper').addEventListener('input', () => {
   $('#expUpper-label').innerHTML = $('#expUpper').value
 })
+
+$('#updateRatesLink').addEventListener('click', getRates)
 
 $all('.settingItem').forEach((el) => {
   el.addEventListener('change', () => {
