@@ -23,7 +23,7 @@ import {
   Upload
 } from 'lucide'
 
-const iconList = {
+const icons = {
   AlertCircle,
   ArrowUpDown,
   Braces,
@@ -49,5 +49,5 @@ const iconList = {
 
 /** Generate app icons. */
 export const generateIcons = () => {
-  createIcons({ icons: iconList })
+  createIcons({ icons })
 }
