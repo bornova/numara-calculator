@@ -16,6 +16,7 @@ linux:
     - AppImage
     - deb
     - rpm
+    - snap
 rpm:
   depends:
     - '/usr/lib64/libuuid.so.1'

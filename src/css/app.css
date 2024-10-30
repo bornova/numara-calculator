@@ -535,13 +535,12 @@ text {
 
 .warn-icon {
   display: none;
-  vertical-align: middle;
-  margin-left: 3px;
+  margin-left: 5px;
 }
 
 .warn-icon svg {
   stroke: #faa05a;
-  margin-top: -4px;
+  margin-top: -3px;
   width: 14px;
   height: 14px;
   pointer-events: none;
@@ -554,8 +553,9 @@ text {
   font-size: 0.9rem;
 }
 
-.updateRatesLink {
-  margin-left: 6px;
+#updateRatesLink[data-enabled='false'] {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 /* About dialog items */
@@ -1013,10 +1013,9 @@ input:checked + .slider:before {
 
 .CodeMirror-cursor:before {
   position: absolute;
-  top: 10%;
-  right: 0;
+  top: calc(12% + 1px);
   width: 1px;
-  height: 80%;
+  height: calc(76% - 1px);
   content: '';
 }
 

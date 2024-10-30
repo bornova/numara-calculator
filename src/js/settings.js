@@ -30,6 +30,8 @@ function checkMods(key) {
 
 /** Check for app settings schema changes. */
 function checkSchema() {
+  app.settings = store.get('settings')
+
   DeepDiff.observableDiff(app.settings, settings.defaults, (d) => {
     if (d.kind !== 'E') {
       DeepDiff.applyChange(app.settings, settings.defaults, d)
@@ -38,6 +40,8 @@ function checkSchema() {
     }
   })
 }
+
+let updateIterval
 
 export const settings = {
   /** Default settings. */
@@ -48,6 +52,7 @@ export const settings = {
     contPrevLine: true,
     copyThouSep: false,
     currency: true,
+    currencyInterval: '0',
     dateDay: false,
     divider: true,
     expLower: '-12',
@@ -80,12 +85,17 @@ export const settings = {
 
   /** Initialize settings. */
   initialize: () => {
-    app.settings = store.get('settings')
-
-    if (app.settings) {
+    if (store.get('settings')) {
       checkSchema()
     } else {
       store.set('settings', settings.defaults)
+    }
+
+    app.settings = store.get('settings')
+
+    // Get exchange rates
+    if (app.settings.currency) {
+      getRates()
     }
 
     // Start required line height fix
@@ -283,6 +293,24 @@ export const settings = {
       predictable: app.settings.predictable
     })
 
+    if (app.settings.currency) {
+      if (app.settings.currencyInterval === '0') {
+        clearInterval(updateIterval)
+        store.set('rateInterval', false)
+      } else {
+        clearInterval(updateIterval)
+        updateIterval = setInterval(getRates, +app.settings.currencyInterval)
+        store.set('rateInterval', true)
+      }
+    }
+
+    if (app.settings.currencyInterval === '0') {
+      clearInterval(updateIterval)
+    } else {
+      clearInterval(updateIterval)
+      updateIterval = setInterval(getRates, +app.settings.currencyInterval)
+    }
+
     setTimeout(calculate, 10)
   },
 
@@ -305,6 +333,7 @@ export const settings = {
     }
 
     $('#currencyUpdate').style.visibility = $('#currency').checked ? 'visible' : 'hidden'
+    $('#currencyWarn').style.display = app.settings.currency ? 'none' : 'inline-block'
 
     if (!store.get('rateDate') && app.settings.currency) {
       getRates()
@@ -326,6 +355,8 @@ export const settings = {
     $('#keywordTips').disabled = !app.settings.syntax
     $('#matchBrackets').disabled = !app.settings.syntax
     $('#copyThouSep').disabled = !app.settings.thouSep
+    $('#currencyInterval').disabled = !app.settings.currency
+    $('#updateRatesLink').dataset.enabled = app.settings.currency
 
     $('#expUpper').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
     $('#expLower').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
@@ -390,6 +421,10 @@ $('#bigNumWarn').addEventListener('click', () => {
   )
 })
 
+$('#currencyWarn').addEventListener('click', () => {
+  showError('App restart needed', `Currencies used in existing calculations will be removed after app restart.`)
+})
+
 $('#precision').addEventListener('input', () => {
   $('#precision-label').innerHTML = $('#precision').value
 })
@@ -401,6 +436,8 @@ $('#expLower').addEventListener('input', () => {
 $('#expUpper').addEventListener('input', () => {
   $('#expUpper-label').innerHTML = $('#expUpper').value
 })
+
+$('#updateRatesLink').addEventListener('click', getRates)
 
 $all('.settingItem').forEach((el) => {
   el.addEventListener('change', () => {

@@ -379,6 +379,10 @@ li.CodeMirror-hint-active {
   background-color: #222222 !important;
 }
 
+.CodeMirror-placeholder {
+  color: #444444 !important;
+}
+
 .cm-currency {
   color: #009688 !important;
 }

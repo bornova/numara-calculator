@@ -31,15 +31,33 @@ export const cm = CodeMirror.fromTextArea($('#inputArea'), {
 
 // User defined functions and units editors
 const udOptions = {
-  autofocus: true,
   autoCloseBrackets: true,
+  autofocus: true,
   mode: 'javascript',
-  singleCursorHeightPerLine: false,
   tabSize: 2
 }
 
+const udfPlaceholder = 'xyz: (x, y, z) => {\n\treturn x+y+z\n},\n\nmyConstant: 123'
+const uduPlaceholder = 'foo: "18 foot",\nbar: "40 foo"'
+
+$('#udfInput').setAttribute('placeholder', udfPlaceholder)
+$('#uduInput').setAttribute('placeholder', uduPlaceholder)
+
 export const udfInput = CodeMirror.fromTextArea($('#udfInput'), udOptions)
 export const uduInput = CodeMirror.fromTextArea($('#uduInput'), udOptions)
+
+/**
+ * Refresh editor and focus.
+ *
+ * @param {CodeMirror} editor CodeMirror instance to refresh
+ */
+export function refreshEditor(editor) {
+  editor.refresh()
+
+  setTimeout(() => {
+    editor.focus()
+  }, 100)
+}
 
 // Codemirror syntax templates
 CodeMirror.defineMode('numara', () => ({
@@ -238,7 +256,7 @@ cm.on('cursorActivity', (cm) => {
     }
   })
 
-  setTimeout(cmForceBottom, 100)
+  setTimeout(cmForceBottom, 20)
 
   const pages = store.get('pages')
   const page = pages.find((page) => page.id == app.activePage)
