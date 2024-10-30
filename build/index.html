@@ -519,10 +519,8 @@
           <h3>Currency Conversion</h3>
           <div class="uk-child-width-expand" uk-grid>
             <div class="uk-width-4-5">
-              <div>Enabled (Restart required)</div>
-              <div id="currencyUpdate">
-                <span class="lastUpdated">Last update:</span>
-                <span id="lastUpdated" class="lastUpdated"></span>
+              <div>
+                Enabled<a id="currencyWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
               </div>
             </div>
             <div class="uk-text-right uk-width-1-5 uk-position-relative">
@@ -530,6 +528,25 @@
                 <input id="currency" type="checkbox" class="settingItem" />
                 <span class="slider round"></span>
               </label>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div class="uk-width-2-3">
+              <div class="padTop1">Rate update interval - <a id="updateRatesLink">Update now</a></div>
+              <div id="currencyUpdate">
+                <span class="lastUpdated">Last update:</span>
+                <span id="lastUpdated" class="lastUpdated"></span>
+              </div>
+            </div>
+
+            <div class="uk-text-right uk-width-1-3 uk-position-relative">
+              <select id="currencyInterval" class="uk-select settingItem">
+                <option value="0">On start</option>
+                <option value="3600000">1 hour</option>
+                <option value="10800000">3 hours</option>
+                <option value="21600000">6 hours</option>
+                <option value="43200000">12 hours</option>
+              </select>
             </div>
           </div>
         </div>
@@ -563,7 +580,7 @@
           <span id="dialog-about-updateStatus" class="dialog-about-updateStatus"></span>
           <span>
             <button id="updateButton" class="uk-button uk-button-primary uk-button-small updateButton">
-              Restart Now
+              Install Now
             </button>
           </span>
           <span id="dialog-about-copyright" class="dialog-about-copyright"></span>
