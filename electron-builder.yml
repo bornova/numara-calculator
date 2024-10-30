@@ -25,8 +25,6 @@ mac:
   entitlements: src/misc/entitlements.mac.plist
   entitlementsInherit: src/misc/entitlements.mac.plist
   hardenedRuntime: true
-  notarize:
-    teamId: 2VP53YFAQP
 win:
   publisherName: Timur Atalay
   verifyUpdateCodeSignature: false
