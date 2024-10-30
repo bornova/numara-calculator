@@ -535,13 +535,12 @@ text {
 
 .warn-icon {
   display: none;
-  vertical-align: middle;
   margin-left: 5px;
 }
 
 .warn-icon svg {
   stroke: #faa05a;
-  margin-top: -2px;
+  margin-top: -3px;
   width: 14px;
   height: 14px;
   pointer-events: none;
