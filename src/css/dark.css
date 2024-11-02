@@ -113,13 +113,18 @@ body {
 
 .pageListItem {
   border-bottom: 1px solid #181818;
-  background-color: #222;
+  background-color: #222222;
   color: #e6e6e6;
+}
+
+.pageListItemDrag {
+  border: 1px solid #181818;
+  background-color: #222222;
 }
 
 .pageListItem:hover,
 .activePage {
-  background-color: #333;
+  background-color: #333333;
 }
 
 .drop-parent-icon,
@@ -133,7 +138,7 @@ body {
 }
 
 .uk-dropdown {
-  background: #000;
+  background: #000000;
   color: inherit;
 }
 

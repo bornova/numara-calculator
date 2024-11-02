@@ -344,6 +344,7 @@ text {
 .uk-offcanvas-bar {
   padding: 0;
   width: 240px;
+  overflow: visible;
 }
 
 .sidePanelActions {
@@ -386,6 +387,10 @@ text {
 .pageList {
   overflow-x: hidden;
   overflow-y: auto;
+}
+
+.pageListFooter {
+  height: 48px;
 }
 
 .pageListSort {

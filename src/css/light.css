@@ -112,6 +112,11 @@ body {
 .pageListHeader,
 .pageListItem {
   border-bottom: 1px solid #eaeaea;
+  background-color: #ffffff;
+}
+
+.pageListItemDrag {
+  border: 1px solid #eaeaea;
 }
 
 .pageListItem:hover {
