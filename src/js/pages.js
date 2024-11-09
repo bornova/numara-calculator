@@ -1,7 +1,7 @@
 import { $, $all, app, store } from './common'
 import { cm } from './editor'
 import { generateIcons } from './icons'
-import { confirm, notify, showModal } from './modal'
+import { confirm, modal, notify } from './modal'
 import { isElectron } from './utils'
 
 import { DateTime } from 'luxon'
@@ -199,7 +199,7 @@ export function newPage(isImport) {
 
   $('#pageName').innerHTML = pageName
 
-  UIkit.modal('#dialog-newPage').hide()
+  modal.hide('#dialog-newPage')
 }
 
 /**
@@ -236,7 +236,7 @@ export function renamePage(pageId) {
 
   $('#renamePageTitleInput').value = page.name
 
-  showModal('#dialog-renamePage')
+  modal.show('#dialog-renamePage')
 
   function rename() {
     page.name = $('#renamePageTitleInput').value.replace(/<|>/g, '').trim() || getPageName()
@@ -247,7 +247,7 @@ export function renamePage(pageId) {
 
     $('#pageName').innerHTML = page.name
 
-    UIkit.modal('#dialog-renamePage').hide()
+    modal.hide('#dialog-renamePage')
 
     $('#dialog-renamePage-save').removeEventListener('click', rename)
   }
@@ -330,7 +330,7 @@ function newPageDialog() {
   $('#newPageTitleInput').value = ''
   $('#newPageTitleInput').focus()
 
-  showModal('#dialog-newPage')
+  modal.show('#dialog-newPage')
 }
 
 $('#newPageButton').addEventListener('click', newPageDialog)
