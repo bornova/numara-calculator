@@ -1,4 +1,4 @@
-import { $, app } from './common'
+import { $, app, store } from './common'
 import { notify } from './modal'
 
 /** Check if app is running on MacOS. */
@@ -6,6 +6,21 @@ export const isMac = navigator.userAgent.toLowerCase().includes('mac')
 
 /** Check if app is running in Electron. */
 export const isElectron = navigator.userAgent.toLowerCase().includes('electron')
+
+/** Get app theme */
+export function getTheme() {
+  app.settings = store.get('settings')
+
+  return app.settings?.theme === 'system'
+    ? isElectron
+      ? numara.isDark()
+        ? 'dark'
+        : 'light'
+      : 'light'
+    : app.settings?.theme === 'dark'
+      ? 'dark'
+      : 'light'
+}
 
 /** Check user locale for thousands separator. */
 export function checkLocale() {
