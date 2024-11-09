@@ -18,6 +18,7 @@ export const store = {
 export const app = {
   activePlot: null,
   activePage: null,
+  colors: null,
   currencyRates: {},
   mathScope: {},
   plotFunction: null,
