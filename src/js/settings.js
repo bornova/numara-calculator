@@ -1,10 +1,11 @@
+import { colors } from './colors'
 import { $, $all, app, store } from './common'
 import { cm, udfInput, uduInput } from './editor'
 import { calculate, math } from './eval'
 import { getRates } from './forex'
 import { generateIcons } from './icons'
 import { confirm, showError } from './modal'
-import { checkLocale, checkSize, isElectron } from './utils'
+import { checkLocale, checkSize, getTheme, isElectron } from './utils'
 
 import DeepDiff from 'deep-diff'
 
@@ -236,19 +237,14 @@ export const settings = {
 
   /** Apply settings. */
   apply: () => {
-    const appTheme =
-      app.settings.theme === 'system'
-        ? isElectron
-          ? numara.isDark()
-            ? 'dark'
-            : 'light'
-          : 'light'
-        : app.settings.theme === 'light'
-          ? 'light'
-          : 'dark'
+    const appTheme = getTheme()
 
     $('#style').setAttribute('href', 'css/' + appTheme + '.css')
     $('#numaraLogo').setAttribute('src', 'assets/logo-' + appTheme + '.png')
+
+    setTimeout(() => {
+      colors.apply()
+    }, 50)
 
     const udfuTheme =
       app.settings.theme === 'system'
@@ -381,8 +377,10 @@ export const settings = {
 $('#defaultSettingsButton').addEventListener('click', () => {
   confirm('All settings will revert back to defaults.', () => {
     app.settings = JSON.parse(JSON.stringify(settings.defaults))
+    app.colors = JSON.parse(JSON.stringify(colors.defaults))
 
     store.set('settings', app.settings)
+    store.set('colors', app.colors)
 
     settings.prep()
     settings.save()
