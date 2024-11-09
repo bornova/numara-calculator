@@ -102,7 +102,7 @@ CodeMirror.defineMode('numara', () => ({
     }
 
     if (cmStream.match(/\b(?:_|ans|total|subtotal|avg|today|now)\b/)) {
-      return 'scope'
+      return 'keyword'
     }
 
     if (cmStream.match(/\b(?:line\d+)\b/)) {
@@ -151,7 +151,7 @@ CodeMirror.defineMode('plain', () => ({
 // Codemirror autocomplete hints
 export const numaraHints = []
 
-export const scopeList = [
+export const keywords = [
   { text: '_', desc: 'Answer from last calculated line' },
   { text: 'ans', desc: 'Answer from last calculated line' },
   { text: 'avg', desc: 'Average of previous line values. Numbers only.' },
@@ -161,9 +161,9 @@ export const scopeList = [
   { text: 'total', desc: 'Total of previous line values. Numbers only.' }
 ]
 
-scopeList.forEach((scope) => {
-  scope.className = 'cm-scope'
-  numaraHints.push(scope)
+keywords.forEach((key) => {
+  key.className = 'cm-keyword'
+  numaraHints.push(key)
 })
 
 Object.getOwnPropertyNames(math).forEach((f) => {
@@ -371,29 +371,29 @@ document.addEventListener('mouseover', (event) => {
         break
 
       case 'cm-lineNo': {
-        let scopeTooltip
+        let tooltip
 
         try {
-          scopeTooltip =
+          tooltip =
             typeof app.mathScope[event.target.innerText] === 'function'
               ? 'Function'
               : formatAnswer(math.evaluate(event.target.innerText, app.mathScope))
         } catch {
-          scopeTooltip = 'Undefined'
+          tooltip = 'Undefined'
         }
 
         UIkit.tooltip(event.target, {
           pos: ttPos(event.target),
-          title: scopeTooltip
+          title: tooltip
         })
 
         break
       }
 
-      case 'cm-scope':
+      case 'cm-keyword':
         UIkit.tooltip(event.target, {
           pos: ttPos(event.target),
-          title: scopeList.filter((scope) => event.target.innerText === scope.text)[0].desc
+          title: keywords.filter((key) => event.target.innerText === key.text)[0].desc
         })
 
         break

@@ -1,5 +1,5 @@
 import { $, app, store } from './common'
-import { cm, numaraHints, scopeList } from './editor'
+import { cm, numaraHints, keywords } from './editor'
 import { checkLocale } from './utils'
 
 import { DateTime } from 'luxon'
@@ -143,8 +143,8 @@ export function calculate() {
 
   $('#output').innerHTML = answers
 
-  const scopes = scopeList.map((scope) => scope.text)
-  const vars = Object.keys(app.mathScope).filter((key) => !scopes.includes(key))
+  const scopeKeywords = keywords.map((key) => key.text)
+  const vars = Object.keys(app.mathScope).filter((scope) => !scopeKeywords.includes(scope))
 
   vars.forEach((v) => {
     if (!numaraHints.some((hint) => hint.text === v) && v !== 'line' + cm.lineCount()) {
