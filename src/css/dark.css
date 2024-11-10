@@ -61,11 +61,7 @@ body {
   border-bottom: 1px solid #303030;
 }
 
-.errTitle,
-.lineError,
-.lineError:hover,
-.lineError > div,
-.lineNoError > div {
+.errTitle {
   color: #d41111;
 }
 

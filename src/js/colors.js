@@ -42,6 +42,12 @@ export const colors = {
     comment: { title: 'Comments', class: '.cm-comment', dark: '#5a5a5a', light: '#bebebe' },
     constant: { title: 'Constants', class: '.cm-constant', dark: '#eaa1f6', light: '#9c27b0' },
     currency: { title: 'Currencies', class: '.cm-currency', dark: `#009688`, light: '#009688' },
+    error: {
+      title: 'Errors',
+      class: '.lineError, .lineError:hover, .lineError > div, .lineNoError > div',
+      dark: '#b10e0e',
+      light: '#d41111'
+    },
     excel: { title: 'Excel', class: '.cm-excel', dark: '#3cc383', light: '#197b43' },
     function: { title: 'Functions', class: '.cm-formulajs, .cm-function, .cm-udf', dark: '#cb82f5', light: '#6f42c1' },
     keyword: { title: 'Keywords', class: '.cm-keyword, .cm-lineNo', dark: '#be6317', light: '#be6317' },

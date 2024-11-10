@@ -63,10 +63,6 @@ body {
 }
 
 .errTitle,
-.lineError,
-.lineError:hover,
-.lineError > div,
-.lineNoError > div,
 .syntaxError {
   color: #b10e0e;
 }
