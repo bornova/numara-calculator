@@ -12,14 +12,16 @@ import {
   Eraser,
   Info,
   ListRestart,
+  Palette,
   PanelLeft,
   PanelLeftClose,
   Plus,
   Printer,
+  RefreshCcw,
+  RotateCcw,
   Scaling,
   Settings,
   Trash,
-  UndoDot,
   Upload
 } from 'lucide'
 
@@ -36,14 +38,16 @@ const icons = {
   Eraser,
   Info,
   ListRestart,
+  Palette,
   PanelLeft,
   PanelLeftClose,
   Plus,
   Printer,
+  RefreshCcw,
+  RotateCcw,
   Scaling,
   Settings,
   Trash,
-  UndoDot,
   Upload
 }
 

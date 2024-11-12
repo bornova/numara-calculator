@@ -2,13 +2,23 @@ import { $, app } from './common'
 
 import UIkit from 'uikit'
 
-/**
- * Show modal dialog for given id.
- *
- * @param {string} id Modal Id.
- */
-export function showModal(id) {
-  UIkit.modal(id, { bgClose: false, stack: true }).show()
+export const modal = {
+  /**
+   * Show modal dialog for given id.
+   *
+   * @param {string} id Modal Id.
+   */
+  show: (id) => {
+    UIkit.modal(id, { bgClose: false, stack: true }).show()
+  },
+  /**
+   * Hide modal dialog for given id.
+   *
+   * @param {string} id Modal Id.
+   */
+  hide: (id) => {
+    UIkit.modal(id).hide()
+  }
 }
 
 /**
@@ -23,7 +33,7 @@ export function showError(title, error) {
     $('#errMsg').innerHTML = error
   })
 
-  showModal('#dialog-error')
+  modal.show('#dialog-error')
 }
 
 /**
@@ -50,7 +60,7 @@ export function notify(msg, stat) {
 export function confirm(msg, action) {
   $('#confirmMsg').innerHTML = msg
 
-  showModal('#dialog-confirm')
+  modal.show('#dialog-confirm')
 
   const yesAction = (event) => {
     action()

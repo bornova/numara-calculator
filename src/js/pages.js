@@ -1,7 +1,7 @@
 import { $, $all, app, store } from './common'
 import { cm } from './editor'
 import { generateIcons } from './icons'
-import { confirm, notify, showModal } from './modal'
+import { confirm, modal, notify } from './modal'
 import { isElectron } from './utils'
 
 import { DateTime } from 'luxon'
@@ -71,17 +71,18 @@ export function populatePages() {
     pageListItem.id = page.id
     pageListItem.classList.add(
       'pageListItem',
+      'uk-flex',
       'uk-flex-middle',
       app.activePage === page.id ? 'activePage' : 'inactivePage'
     )
     pageListItem.innerHTML = `
       <div class="uk-flex-1" data-action="load">
-        <div id="page-${page.id}"class="pageListItemTitle" title="${page.name}">${page.name}</div>
+        <div id="page-${page.id}" class="pageListItemTitle" title="${page.name}">${page.name}</div>
         <div class="dialog-open-date">${DateTime.fromFormat(page.id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
       </div>
       <div class="uk-flex-right uk-margin-small-right">
         <span class="drop-parent-icon"><i data-lucide="ellipsis-vertical"></i></span>
-        <div uk-dropdown="mode: click; pos: left-top; offset: 0; bg-scroll: false; close-on-scroll: true">
+        <div uk-dropdown="mode: click; pos: right-top; bg-scroll: false; close-on-scroll: true">
           <div class="renamePageButton uk-flex uk-flex-column" data-action="rename" title="Rename">Rename</div>
           <div class="dupPageButton uk-flex uk-flex-column" data-action="duplicate" title="Duplicate">Duplicate</div>
           <div class="deletePageButton uk-flex uk-flex-column" data-action="delete" title="Delete">Delete</div>
@@ -198,7 +199,7 @@ export function newPage(isImport) {
 
   $('#pageName').innerHTML = pageName
 
-  UIkit.modal('#dialog-newPage').hide()
+  modal.hide('#dialog-newPage')
 }
 
 /**
@@ -235,7 +236,7 @@ export function renamePage(pageId) {
 
   $('#renamePageTitleInput').value = page.name
 
-  showModal('#dialog-renamePage')
+  modal.show('#dialog-renamePage')
 
   function rename() {
     page.name = $('#renamePageTitleInput').value.replace(/<|>/g, '').trim() || getPageName()
@@ -246,7 +247,7 @@ export function renamePage(pageId) {
 
     $('#pageName').innerHTML = page.name
 
-    UIkit.modal('#dialog-renamePage').hide()
+    modal.hide('#dialog-renamePage')
 
     $('#dialog-renamePage-save').removeEventListener('click', rename)
   }
@@ -329,7 +330,7 @@ function newPageDialog() {
   $('#newPageTitleInput').value = ''
   $('#newPageTitleInput').focus()
 
-  showModal('#dialog-newPage')
+  modal.show('#dialog-newPage')
 }
 
 $('#newPageButton').addEventListener('click', newPageDialog)

@@ -1,9 +1,10 @@
+import { checkColorChange, colors } from './colors'
 import { $, $all, app, store } from './common'
 import { copyAll } from './context'
 import { cm, refreshEditor, udfInput, uduInput } from './editor'
 import { calculate } from './eval'
 import { generateIcons } from './icons'
-import { notify, showError, showModal } from './modal'
+import { modal, notify, showError } from './modal'
 import { plot } from './plot'
 import { settings } from './settings'
 import { defaultPage, lastPage, loadPage, migrateSaved, getPageName, pageOrder, populatePages } from './pages'
@@ -12,32 +13,11 @@ import { checkSize, checkUpdates, isMac, isElectron, toggleMinMax } from './util
 
 import { author, description, homepage, name, version } from './../../package.json'
 
-import { DateTime } from 'luxon'
 import { tinykeys } from 'tinykeys'
 
 import UIkit from 'uikit'
 
-// Set app info
 document.title = description
-
-$('#dialog-about-copyright').innerHTML = `Copyright ©️ ${DateTime.local().year} ${author.name}`
-$('#dialog-about-appVersion').innerHTML = isElectron
-  ? `Version ${version}`
-  : `Version ${version}
-    <div class="versionCtnr">
-      <div>
-        <a href="https://github.com/bornova/numara-calculator/releases" target="_blank">Download desktop version</a>
-      </div>
-    </div>`
-$('#gitLink').setAttribute('href', homepage)
-$('#webLink').setAttribute('href', author.url)
-$('#licenseLink').setAttribute('href', homepage + '/blob/master/LICENSE')
-$('#helpLink').setAttribute('href', homepage + '/wiki')
-
-if (isElectron) {
-  $('#logsLink').parentElement.style.display = 'block'
-  $('#logsLink').addEventListener('click', numara.openLogs)
-}
 
 // Set theme and maximize if needed
 if (isElectron) {
@@ -77,6 +57,10 @@ if (isElectron && !isMac) {
 
 // Generate app icons
 generateIcons()
+
+// Initialize theme colors
+colors.initialize()
+colors.apply()
 
 // Initialize settings
 settings.initialize()
@@ -122,15 +106,35 @@ $('#copyButton').addEventListener('click', () => {
 })
 
 $('#udfuButton').addEventListener('click', () => {
-  showModal('#dialog-udfu')
+  modal.show('#dialog-udfu')
 })
 
 $('#settingsButton').addEventListener('click', () => {
-  showModal('#dialog-settings')
+  modal.show('#dialog-settings')
 })
 
+// Set app info
+$('#dialog-about-copyright').innerHTML = `Copyright ©️ ${new Date().getFullYear()} ${author.name}`
+$('#dialog-about-appVersion').innerHTML = isElectron
+  ? `Version ${version}`
+  : `Version ${version}
+    <div class="versionCtnr">
+      <div>
+        <a href="https://github.com/bornova/numara-calculator/releases" target="_blank">Download desktop version</a>
+      </div>
+    </div>`
+$('#gitLink').setAttribute('href', homepage)
+$('#webLink').setAttribute('href', author.url)
+$('#licenseLink').setAttribute('href', homepage + '/blob/master/LICENSE')
+$('#helpLink').setAttribute('href', homepage + '/wiki')
+
+if (isElectron) {
+  $('#logsLink').parentElement.style.display = 'block'
+  $('#logsLink').addEventListener('click', numara.openLogs)
+}
+
 $('#aboutButton').addEventListener('click', () => {
-  showModal('#dialog-about')
+  modal.show('#dialog-about')
 })
 
 // Output panel actions
@@ -154,7 +158,7 @@ $('#output').addEventListener('click', (event) => {
 
         plot()
 
-        showModal('#dialog-plot')
+        modal.show('#dialog-plot')
       } catch (error) {
         showError('Error', error)
       }
@@ -233,6 +237,9 @@ $('#panel').addEventListener('mousemove', (event) => {
 
 // Tooltip defaults
 UIkit.mixin({ data: { offset: 5 } }, 'tooltip')
+
+// Initiate theme dialog
+UIkit.util.on('#dialog-theme', 'shown', checkColorChange)
 
 // Initiate settings dialog
 UIkit.util.on('#dialog-settings', 'beforeshow', settings.prep)
@@ -406,8 +413,8 @@ window.addEventListener('beforeprint', () => {
   printArea.className = 'printArea'
   printArea.innerHTML = `
     <div id="printTitle" class="printTitle">${name}</div>
-    <table id="printPagele"
-      class="printPagele ${app.settings.rulers ? 'printRulers' : ''}"
+    <table id="printPage"
+      class="printPage ${app.settings.rulers ? 'printRulers' : ''}"
       style="
         font-size: ${app.settings.fontSize};
         font-weight: ${app.settings.fontWeight};
@@ -421,13 +428,17 @@ window.addEventListener('beforeprint', () => {
     const input = cm.getLine(lineNo)
     const answer = $('#output').children[lineNo].innerText
     const row = `
-      <tr>
+      <tr style="
+        height: ${app.settings.lineHeight};
+        font-size: "${app.settings.fontSize}";
+        font-weight: "${app.settings.fontWeight}";"
+      >
         ${app.settings.lineNumbers ? '<td class="printLineNumCol">' + (lineNo + 1) + '</td>' : ''}
         <td style="width:${app.settings.inputWidth}%;">${input}</td>
         <td class="printAnswer${app.settings.divider ? 'Left' : 'Right'}">${answer}</td>
       </tr>`
 
-    $('#printPagele').innerHTML += row
+    $('#printPage').innerHTML += row
   })
 
   printArea.innerHTML += `</table>`

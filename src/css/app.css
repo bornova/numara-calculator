@@ -7,6 +7,9 @@
 @import url('./../../node_modules/codemirror/addon/hint/show-hint.css');
 @import url('./../../node_modules/codemirror/theme/material-darker.css');
 
+/* Color picker */
+@import url('./../../node_modules/@melloware/coloris/dist/coloris.css');
+
 /* Numara CSS */
 * {
   -webkit-backface-visibility: hidden;
@@ -388,6 +391,10 @@ text {
   overflow-y: auto;
 }
 
+.pageListFooter {
+  height: 47px;
+}
+
 .pageListSort {
   -webkit-app-region: no-drag;
   cursor: pointer;
@@ -558,6 +565,12 @@ text {
   pointer-events: none;
 }
 
+.customizeThemeButton > svg,
+.updateRatesLink > svg {
+  width: 20px;
+  height: 20px;
+}
+
 /* About dialog items */
 .dialog-about {
   text-align: center;
@@ -634,15 +647,14 @@ div:has(> #logsLink) {
   pointer-events: none;
 }
 
-.resetButton {
-  float: left;
-  color: #c95d71;
+.defSettingsButton {
+  margin-right: 10px;
 }
 
-.defSettingsButton {
-  float: left;
-  margin-left: 10px;
-  color: #dd9359;
+#resetSize > svg {
+  margin: 10px 10px 0 0;
+  width: 14px;
+  height: 14px;
 }
 
 .resetSizeButton {
@@ -780,6 +792,10 @@ input:checked + .slider:before {
 }
 
 /* UIkit Overrides */
+.uk-text-secondary {
+  font-weight: 600 !important;
+}
+
 :focus:not([tabindex^='-']),
 :focus-visible {
   outline: none;
@@ -1091,6 +1107,75 @@ input:checked + .slider:before {
   content: ' ';
 }
 
+/* Color picker */
+.colorPickerContainer {
+  margin-right: -8px;
+  padding-right: 10px;
+  height: calc(100vh - 225px);
+  max-height: 390px;
+  overflow: scroll;
+}
+
+.colorPickerContainer .uk-first-column {
+  margin-top: 2px;
+}
+
+.colorInput {
+  cursor: pointer;
+  box-sizing: border-box;
+  padding: 2px 5px;
+  width: 80px;
+  height: 20px;
+}
+
+.clr-picker {
+  border-radius: 3px;
+  width: 160px;
+}
+
+.clr-gradient {
+  margin-bottom: 10px;
+  height: 80px;
+}
+
+.clr-hue,
+.clr-alpha {
+  margin: 5px 15px;
+  width: calc(100% - 30px);
+}
+
+.clr-preview {
+  margin: 10px auto 10px 10px;
+  width: 25px;
+  height: 25px;
+}
+
+input.clr-color {
+  margin: 10px auto 10px auto;
+  height: 25px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.clr-field button {
+  width: 20px;
+}
+
+.clr-field button:after {
+  box-shadow: none;
+}
+
+.clr-custom-reset {
+  order: 2;
+  cursor: pointer;
+  margin: auto 10px auto 5px;
+}
+
+.clr-custom-reset > svg {
+  width: 16px;
+  height: 16px;
+}
+
 /* Print style */
 .printArea {
   display: none;
@@ -1114,15 +1199,16 @@ input:checked + .slider:before {
     text-align: center;
   }
 
-  .printPagele {
+  .printPage {
     border-collapse: collapse;
     width: 100%;
     font-family: 'Roboto Mono', monospace;
   }
 
-  .printPagele tr td {
+  .printPage tr td {
     vertical-align: top;
     padding-top: 3px;
+    padding-right: 10px;
     padding-bottom: 3px;
   }
 
@@ -1143,7 +1229,7 @@ input:checked + .slider:before {
     padding-right: 10px;
   }
 
-  .printPagele tr td:last-child {
+  .printPage tr td:last-child {
     padding-left: 10px;
   }
 
@@ -1157,5 +1243,5 @@ input:checked + .slider:before {
 }
 
 @page {
-  margin: 15mm auto;
+  margin: 15mm 10mm;
 }

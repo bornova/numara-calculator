@@ -63,10 +63,6 @@ body {
 }
 
 .errTitle,
-.lineError,
-.lineError:hover,
-.lineError > div,
-.lineNoError > div,
 .syntaxError {
   color: #b10e0e;
 }
@@ -80,10 +76,6 @@ body {
 }
 .divider:hover::before {
   background-color: #b7d5e6 !important;
-}
-
-.output {
-  color: #17586b;
 }
 
 .output > span::selection {
@@ -112,6 +104,11 @@ body {
 .pageListHeader,
 .pageListItem {
   border-bottom: 1px solid #eaeaea;
+  background-color: #ffffff;
+}
+
+.pageListItemDrag {
+  border: 1px solid #eaeaea;
 }
 
 .pageListItem:hover {
@@ -168,7 +165,7 @@ body {
 
 /* Settings menu items */
 #dialog-settings h3 {
-  color: rgb(29, 63, 92);
+  color: #1d3f5c;
 }
 
 #dialog-settings .settingMod,
@@ -209,34 +206,38 @@ text {
 }
 
 /* UIkit Overrides */
+.uk-text-secondary {
+  color: #1d3f5c !important;
+}
+
 .uk-modal {
   background-color: rgba(0, 0, 0, 0.6);
 }
 
 .uk-button-default {
-  border-color: #e7eff7;
+  border-color: #c9dcef;
 }
 
 .uk-button-default:focus,
 .uk-button-default:hover {
-  border-color: #c9dcef;
+  border-color: #8eb3d8;
 }
 
 .uk-button-danger,
 .uk-button-danger:focus {
-  border-color: #e5e5e5;
-  background-color: #f5f5f5;
-  color: rgba(189, 46, 46, 0.9);
+  border-color: #c9dcef;
+  background-color: #ffffff;
+  color: #bd2e2e;
 }
 
 .uk-button-danger:hover {
-  border-color: rgba(189, 46, 46, 0.3);
-  background-color: #f5f5f5;
-  color: rgba(189, 46, 46, 0.9);
+  border-color: #bd2e2e;
+  background-color: #ffffff;
+  color: #bd2e2e;
 }
 
 .uk-button-danger:active {
-  background-color: #eeeeee;
+  background-color: #ffffff;
 }
 
 .uk-button-danger:disabled:hover {
@@ -322,64 +323,11 @@ text {
 
 li.CodeMirror-hint-active {
   background-color: #eaeaea;
+  color: initial !important;
 }
 
 .CodeMirror-placeholder {
   color: #eaeaea !important;
-}
-
-.cm-currency {
-  color: #009688 !important;
-}
-
-.cm-constant {
-  color: #9c27b0 !important;
-}
-
-.cm-unit,
-.cm-udu {
-  color: #005cc5 !important;
-}
-
-.cm-scope {
-  color: #be6317 !important;
-}
-
-.cm-lineNo {
-  color: #e06c75 !important;
-}
-
-.cm-number {
-  color: #333333 !important;
-}
-
-.cm-operator {
-  color: #888888 !important;
-}
-
-.cm-comment {
-  color: #bebebe !important;
-}
-
-.cm-formulajs,
-.cm-function {
-  color: #6f42c1 !important;
-}
-
-.cm-udf {
-  color: #6f42c1 !important;
-}
-
-.cm-text {
-  color: #333333 !important;
-}
-
-.cm-variable {
-  color: #57707c !important;
-}
-
-.cm-excel {
-  color: #197b43 !important;
 }
 
 .dialog-udfu .CodeMirror {
@@ -388,4 +336,14 @@ li.CodeMirror-hint-active {
 
 .cm-s-default {
   border: 1px solid #eaeaea;
+}
+
+/* Color picker */
+.clr-field button,
+.colorInput {
+  border: 1px solid #eaeaea;
+}
+
+.colorInput {
+  color: #333333;
 }

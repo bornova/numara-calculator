@@ -61,11 +61,7 @@ body {
   border-bottom: 1px solid #303030;
 }
 
-.errTitle,
-.lineError,
-.lineError:hover,
-.lineError > div,
-.lineNoError > div {
+.errTitle {
   color: #d41111;
 }
 
@@ -79,10 +75,6 @@ body {
 
 .divider:hover::before {
   background-color: #405062 !important;
-}
-
-.output {
-  color: #1eb5f0;
 }
 
 .output > span::selection {
@@ -113,13 +105,18 @@ body {
 
 .pageListItem {
   border-bottom: 1px solid #181818;
-  background-color: #222;
+  background-color: #222222;
   color: #e6e6e6;
+}
+
+.pageListItemDrag {
+  border: 1px solid #181818;
+  background-color: #222222;
 }
 
 .pageListItem:hover,
 .activePage {
-  background-color: #333;
+  background-color: #333333;
 }
 
 .drop-parent-icon,
@@ -133,7 +130,7 @@ body {
 }
 
 .uk-dropdown {
-  background: #000;
+  background: #000000;
   color: inherit;
 }
 
@@ -228,6 +225,10 @@ line {
 }
 
 /* UIkit Overrides */
+.uk-text-secondary {
+  color: #a0d3ff !important;
+}
+
 .uk-modal {
   background-color: rgba(0, 0, 0, 0.8);
 }
@@ -274,12 +275,8 @@ line {
 
 .uk-button-danger:hover {
   border-color: rgba(189, 46, 46, 0.3);
-  background-color: #444444;
+  background-color: #333333;
   color: #ff7373;
-}
-
-.uk-button-danger:active {
-  background-color: #444444;
 }
 
 .uk-button-danger:disabled {
@@ -383,64 +380,30 @@ li.CodeMirror-hint-active {
   color: #444444 !important;
 }
 
-.cm-currency {
-  color: #009688 !important;
-}
-
-.cm-constant {
-  color: #eaa1f6 !important;
-}
-
-.cm-unit,
-.cm-udu {
-  color: #4d87c9 !important;
-}
-
-.cm-scope {
-  color: #be6317 !important;
-}
-
-.cm-lineNo {
-  color: #e06c75 !important;
-}
-
-.cm-number {
-  color: #e6e6e6 !important;
-}
-
-.cm-operator {
-  color: #bbbbbb !important;
-}
-
-.cm-comment {
-  color: #5a5a5a !important;
-}
-
-.cm-formulajs,
-.cm-function {
-  color: #cb82f5 !important;
-}
-
-.cm-udf {
-  color: #cb82f5 !important;
-}
-
-.cm-text {
-  color: #e6e6e6 !important;
-}
-
-.cm-variable {
-  color: #96b4c4 !important;
-}
-
-.cm-excel {
-  color: #3cc383 !important;
-}
-
 .CodeMirror-linenumber {
-  color: #666;
+  color: #666666;
 }
 
 .CodeMirror.cm-s-material-darker {
   border: 1px solid #666666;
+}
+
+/* Color picker */
+.clr-field button,
+.colorInput {
+  border: 1px solid #666666;
+}
+
+.colorInput {
+  color: #e6e6e6;
+}
+
+.clr-picker,
+input.clr-color {
+  background: #333;
+  color: #e6e6e6;
+}
+
+.clr-preview button {
+  border: 1px solid #ffffff;
 }
