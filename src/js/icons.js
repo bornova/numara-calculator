@@ -22,7 +22,6 @@ import {
   Scaling,
   Settings,
   Trash,
-  UndoDot,
   Upload
 } from 'lucide'
 
@@ -49,7 +48,6 @@ const icons = {
   Scaling,
   Settings,
   Trash,
-  UndoDot,
   Upload
 }
 
