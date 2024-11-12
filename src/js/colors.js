@@ -45,8 +45,8 @@ export const colors = {
     error: {
       title: 'Errors',
       class: '.lineError, .lineError:hover, .lineError > div, .lineNoError > div',
-      dark: '#b10e0e',
-      light: '#d41111'
+      dark: '#d41111',
+      light: '#b10e0e'
     },
     excel: { title: 'Excel', class: '.cm-excel', dark: '#3cc383', light: '#197b43' },
     function: { title: 'Functions', class: '.cm-formulajs, .cm-function, .cm-udf', dark: '#cb82f5', light: '#6f42c1' },
