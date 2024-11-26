@@ -94,6 +94,7 @@ function appWindow() {
 
   win.on('maximize', () => win.webContents.send('isMax', true))
   win.on('unmaximize', () => win.webContents.send('isMax', false))
+  win.on('restore', () => win.webContents.send('restored', true))
 
   if (app.isPackaged) {
     win.on('focus', () => globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {}))

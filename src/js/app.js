@@ -23,6 +23,9 @@ document.title = description
 if (isElectron) {
   numara.themeUpdate(settings.apply)
   numara.fullscreen()
+  numara.restored(() => {
+    cm.focus()
+  })
 }
 
 // Set headers
