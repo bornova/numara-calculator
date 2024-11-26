@@ -41,15 +41,12 @@ function appWindow() {
     backgroundColor:
       theme === 'system' ? (nativeTheme.shouldUseDarkColors ? dark : light) : theme === 'dark' ? dark : light,
     frame: false,
-    hasShadow: true,
     height: parseInt(config.get('appHeight')),
     width: parseInt(config.get('appWidth')),
     minHeight: 360,
     minWidth: 420,
-    paintWhenInitiallyHidden: false,
     show: false,
     titleBarStyle: 'hiddenInset',
-    useContentSize: true,
     webPreferences: {
       preload: path.join(import.meta.dirname, 'preload.cjs'),
       spellcheck: false
