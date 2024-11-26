@@ -22,6 +22,7 @@ contextBridge.exposeInMainWorld('numara', {
     }),
   setOnTop: (callback) => ipcRenderer.send('setOnTop', callback),
   close: () => ipcRenderer.send('close'),
+  focus: () => ipcRenderer.send('focus'),
   minimize: () => ipcRenderer.send('minimize'),
   maximize: () => ipcRenderer.send('maximize'),
   unmaximize: () => ipcRenderer.send('unmaximize'),

@@ -115,6 +115,7 @@ ipcMain.on('isDark', (event) => (event.returnValue = nativeTheme.shouldUseDarkCo
 ipcMain.on('setTheme', (event, mode) => config.set('theme', mode))
 ipcMain.on('setOnTop', (event, bool) => win.setAlwaysOnTop(bool))
 ipcMain.on('close', () => app.quit())
+ipcMain.on('focus', () => win.focus())
 ipcMain.on('minimize', () => win.minimize())
 ipcMain.on('maximize', () => win.maximize())
 ipcMain.on('unmaximize', () => win.unmaximize())
@@ -146,7 +147,7 @@ ipcMain.on('import', (event) => {
 ipcMain.on('export', (event, fileName, content) => {
   const file = dialog.showSaveDialogSync(win, {
     defaultPath: fileName,
-    filters: [{ name: 'Numara', extensions: ['numara'] }],
+    filters: [{ name: 'text/plain', extensions: ['numara'] }],
     title: 'Export Calculations'
   })
 
