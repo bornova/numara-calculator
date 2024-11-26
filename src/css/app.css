@@ -950,7 +950,7 @@ input:checked + .slider:before {
 
 .uk-tooltip {
   z-index: 1000000;
-  max-width: 50vw !important;
+  max-width: 60vw !important;
   word-break: break-word;
 }
 
