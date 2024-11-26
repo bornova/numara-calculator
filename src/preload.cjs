@@ -29,6 +29,7 @@ contextBridge.exposeInMainWorld('numara', {
   isMaximized: () => ipcRenderer.sendSync('isMaximized'),
   isResized: () => ipcRenderer.sendSync('isResized'),
   resetSize: () => ipcRenderer.send('resetSize'),
+  restored: (callback) => ipcRenderer.on('restored', callback),
 
   // Import
   import: () => ipcRenderer.send('import'),
