@@ -30,7 +30,7 @@
     "@melloware/coloris": "^0.24.0",
     "codemirror": "^5.65.18",
     "deep-diff": "^1.0.2",
-    "electron": "^33.2.0",
+    "electron": "^33.2.1",
     "electron-builder": "^25.1.8",
     "esbuild": "^0.24.0",
     "eslint": "^9.15.0",
@@ -39,7 +39,7 @@
     "lucide": "^0.460.0",
     "luxon": "^3.5.0",
     "mathjs": "^14.0.0",
-    "prettier": "^3.3.3",
+    "prettier": "^3.4.1",
     "tinykeys": "^3.0.0",
     "uikit": "^3.21.16"
   },
