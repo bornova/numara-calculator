@@ -117,7 +117,7 @@ $('#settingsButton').addEventListener('click', () => {
 })
 
 // Set app info
-$('#dialog-about-copyright').innerHTML = `Copyright ©️ ${new Date().getFullYear()} ${author.name}`
+$('#dialog-about-copyright').innerHTML = `Copyright &copy; ${new Date().getFullYear()} ${author.name}`
 $('#dialog-about-appVersion').innerHTML = isElectron
   ? `Version ${version}`
   : `Version ${version}
