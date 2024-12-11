@@ -1,7 +1,5 @@
 import { $, app, store } from './common'
 import { calculate, formatAnswer, math } from './eval'
-import { confirm, notify } from './modal'
-import { isElectron } from './utils'
 
 import * as formulajs from '@formulajs/formulajs'
 
@@ -275,36 +273,6 @@ cm.on('gutterClick', (cm, line) => {
 })
 
 cm.on('scrollCursorIntoView', cmForceBottom)
-
-cm.on('drop', (cm, e) => {
-  e.preventDefault()
-
-  if (e.dataTransfer && e.dataTransfer.files.length > 0) {
-    const file = e.dataTransfer.files[0]
-
-    if (isElectron) {
-      numara.focus()
-    }
-
-    if (file.type.startsWith('text/plain') || file.name.endsWith('.numara')) {
-      confirm(
-        `You are about to import contents of "${file.name}".  This will replace the current calculations with contents of this imported file.`,
-        () => {
-          const reader = new FileReader()
-
-          reader.onload = (e) => {
-            cm.setValue(e.target.result)
-            cm.focus()
-          }
-
-          reader.readAsText(file)
-        }
-      )
-    } else {
-      notify('Invalid file.', 'warning')
-    }
-  }
-})
 
 // Tooltips
 const ttPos = (el) => (el.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left')
