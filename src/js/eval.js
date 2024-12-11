@@ -12,7 +12,7 @@ export const math = create(all)
 // Import Formula.js into MathJs
 math.import(factory('xls', [], () => formulajs))
 
-// Expose math to global scope for use in function-plot.
+// Expose math to global scope for use in user defined functions.
 window.math = math
 
 const nowFormat = 'D t'

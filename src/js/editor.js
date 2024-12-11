@@ -286,7 +286,8 @@ document.addEventListener('mouseover', (event) => {
 
           UIkit.tooltip(event.target, {
             pos: ttPos(event.target),
-            title: tip.description
+            title: `<div class="uk-margin-small-bottom">${tip.description}</div>
+                    <div>${tip.syntax.map((s) => '<code>' + s + '</code>').join(' ')}</div>`
           })
         } catch {
           UIkit.tooltip(event.target, {

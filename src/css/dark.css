@@ -225,6 +225,10 @@ line {
 }
 
 /* UIkit Overrides */
+:not(pre) > code {
+  background: #222222;
+}
+
 .uk-text-secondary {
   color: #a0d3ff !important;
 }

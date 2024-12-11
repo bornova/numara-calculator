@@ -123,8 +123,6 @@ export const settings = {
     }
     // End fix
 
-    settings.apply()
-
     $all('.settingItem').forEach((item) => {
       const span = document.createElement('span')
       const icon = document.createElement('span')
