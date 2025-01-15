@@ -66,7 +66,7 @@ export const settings = {
     lineHeight: '24px',
     lineNumbers: true,
     lineWrap: true,
-    locale: 'system',
+    locale: 'en-US',
     matchBrackets: true,
     matrixType: 'Matrix',
     notation: 'auto',
