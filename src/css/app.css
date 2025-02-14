@@ -791,6 +791,10 @@ input:checked + .slider:before {
   width: 10px;
 }
 
+.tooltipCode {
+  margin: 6px 0 3px 0;
+}
+
 /* UIkit Overrides */
 .uk-text-secondary {
   font-weight: 600 !important;
