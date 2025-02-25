@@ -117,7 +117,7 @@ CodeMirror.defineMode('numara', () => ({
       const val = math.evaluate(cmStream)
       const par = math.parse(cmStream)
 
-      if (val.units && val) {
+      if (val.units && !val.value) {
         return 'unit'
       }
 
@@ -166,11 +166,17 @@ keywords.forEach((key) => {
   numaraHints.push(key)
 })
 
-Object.getOwnPropertyNames(math).forEach((f) => {
+for (const f in math) {
   if (typeof math[f] === 'function' && Object.getOwnPropertyNames(math[f]).includes('signatures')) {
     numaraHints.push({ text: f, className: 'cm-function' })
   }
-})
+}
+
+for (const expr in math.expression.mathWithTransform) {
+  if (typeof math[expr] !== 'function' && (math[expr]?.value || !isNaN(math[expr]))) {
+    numaraHints.push({ text: expr, desc: math.help(expr).doc.description, className: 'cm-constant' })
+  }
+}
 
 Object.keys(formulajs).forEach((f) => {
   numaraHints.push({ text: 'xls.' + f, className: 'cm-excel' })
@@ -347,7 +353,7 @@ document.addEventListener('mouseover', (event) => {
         try {
           UIkit.tooltip(event.target, {
             pos: ttPos(event.target),
-            title: math.help(event.target.innerText).doc.description + ' (Constant)'
+            title: math.help(event.target.innerText).doc.description
           })
         } catch {
           /* No tooltip */

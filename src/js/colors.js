@@ -40,7 +40,7 @@ export const colors = {
   defaults: {
     answer: { title: 'Answers', class: '.output', dark: '#1eb5f0', light: '#17586b' },
     comment: { title: 'Comments', class: '.cm-comment', dark: '#5a5a5a', light: '#bebebe' },
-    constant: { title: 'Constants', class: '.cm-constant', dark: '#eaa1f6', light: '#9c27b0' },
+    constant: { title: 'Constants', class: '.cm-constant', dark: '#39baa0', light: '#2c917d' },
     currency: { title: 'Currencies', class: '.cm-currency', dark: `#009688`, light: '#009688' },
     error: {
       title: 'Errors',
