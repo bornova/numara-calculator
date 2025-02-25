@@ -173,10 +173,16 @@ for (const f in math) {
 }
 
 for (const expr in math.expression.mathWithTransform) {
-  if (typeof math[expr] !== 'function' && (math[expr]?.value || !isNaN(math[expr]))) {
+  if (
+    typeof math[expr] !== 'function' &&
+    typeof math[expr] !== 'boolean' &&
+    (math[expr]?.value || !isNaN(math[expr]))
+  ) {
     numaraHints.push({ text: expr, desc: math.help(expr).doc.description, className: 'cm-constant' })
   }
 }
+
+console.log(numaraHints)
 
 Object.keys(formulajs).forEach((f) => {
   numaraHints.push({ text: 'xls.' + f, className: 'cm-excel' })
