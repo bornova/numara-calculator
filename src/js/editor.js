@@ -182,8 +182,6 @@ for (const expr in math.expression.mathWithTransform) {
   }
 }
 
-console.log(numaraHints)
-
 Object.keys(formulajs).forEach((f) => {
   numaraHints.push({ text: 'xls.' + f, className: 'cm-excel' })
 })
