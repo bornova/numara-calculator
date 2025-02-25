@@ -182,6 +182,8 @@ for (const expr in math.expression.mathWithTransform) {
   }
 }
 
+console.log(numaraHints)
+
 Object.keys(formulajs).forEach((f) => {
   numaraHints.push({ text: 'xls.' + f, className: 'cm-excel' })
 })
@@ -211,7 +213,7 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
   }
 
   let curStr = cmCursorLine.slice(start, end)
-  let curWord = start !== end && curStr && curStr !== ' '
+  let curWord = start !== end && curStr
 
   const curWordRegex = new RegExp('^' + curWord, 'i')
 
