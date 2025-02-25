@@ -173,7 +173,11 @@ for (const f in math) {
 }
 
 for (const expr in math.expression.mathWithTransform) {
-  if (typeof math[expr] !== 'function' && (math[expr]?.value || !isNaN(math[expr]))) {
+  if (
+    typeof math[expr] !== 'function' &&
+    typeof math[expr] !== 'boolean' &&
+    (math[expr]?.value || !isNaN(math[expr]))
+  ) {
     numaraHints.push({ text: expr, desc: math.help(expr).doc.description, className: 'cm-constant' })
   }
 }
@@ -207,7 +211,7 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
   }
 
   let curStr = cmCursorLine.slice(start, end)
-  let curWord = start !== end && curStr
+  let curWord = start !== end && curStr && curStr !== ' '
 
   const curWordRegex = new RegExp('^' + curWord, 'i')
 
