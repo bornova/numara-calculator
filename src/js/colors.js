@@ -6,6 +6,10 @@ import { getTheme } from './utils'
 import Coloris from '@melloware/coloris'
 import DeepDiff from 'deep-diff'
 
+const BORDER_LIGHT = '1px solid #eaeaea'
+const BORDER_DARK = '1px solid #666666'
+const BORDER_CHANGED = '2px solid #dd9359'
+
 /** Check for color schema changes. */
 function checkDefaultColors() {
   app.colors = store.get('colors')
@@ -13,7 +17,6 @@ function checkDefaultColors() {
   DeepDiff.observableDiff(app.colors, colors.defaults, (d) => {
     if (d.kind !== 'E') {
       DeepDiff.applyChange(app.colors, colors.defaults, d)
-
       store.set('colors', app.colors)
     }
   })
@@ -25,12 +28,7 @@ export function checkColorChange() {
 
   pickers.forEach((picker) => {
     const isSame = picker.value === colors.defaults[picker.dataset.class][picker.dataset.theme]
-
-    picker.style.borderLeft = isSame
-      ? getTheme() === 'light'
-        ? '1px solid #eaeaea'
-        : '1px solid #666666'
-      : '2px solid #dd9359'
+    picker.style.borderLeft = isSame ? (getTheme() === 'light' ? BORDER_LIGHT : BORDER_DARK) : BORDER_CHANGED
   })
 }
 
@@ -41,7 +39,7 @@ export const colors = {
     answer: { title: 'Answers', class: '.output', dark: '#1eb5f0', light: '#17586b' },
     comment: { title: 'Comments', class: '.cm-comment', dark: '#5a5a5a', light: '#bebebe' },
     constant: { title: 'Constants', class: '.cm-constant', dark: '#39baa0', light: '#2c917d' },
-    currency: { title: 'Currencies', class: '.cm-currency', dark: `#009688`, light: '#009688' },
+    currency: { title: 'Currencies', class: '.cm-currency', dark: '#009688', light: '#009688' },
     error: {
       title: 'Errors',
       class: '.lineError, .lineError:hover, .lineError > div, .lineNoError > div',
@@ -74,7 +72,6 @@ export const colors = {
 
       picker.addEventListener('click', (event) => {
         activePicker = event.target
-
         checkColorChange()
       })
     })
@@ -99,14 +96,8 @@ export const colors = {
       button.classList.add('clr-custom-reset')
       button.innerHTML = '<i data-lucide="rotate-ccw"></i>'
       button.addEventListener('click', () => {
-        activePicker.value = colors.defaults[activePicker.dataset.class][activePicker.dataset.theme]
-        activePicker.dispatchEvent(new Event('input', { bubbles: true }))
-
-        $('#clr-color-value').value = colors.defaults[activePicker.dataset.class][activePicker.dataset.theme]
-        $('#clr-color-value').dispatchEvent(new Event('change'))
-
+        resetActivePickerColor()
         checkColorChange()
-
         colors.save()
       })
 
@@ -116,13 +107,12 @@ export const colors = {
 
   apply: () => {
     const appTheme = getTheme()
-
     let colorSheet = ''
 
     app.colors = store.get('colors')
 
     Object.values(app.colors).forEach((color) => {
-      colorSheet += color.class + ' { color: ' + color[appTheme] + '; }\n'
+      colorSheet += `${color.class} { color: ${color[appTheme]}; }\n`
     })
 
     $('#colorSheet').innerHTML = colorSheet
@@ -136,13 +126,11 @@ export const colors = {
     })
 
     store.set('colors', app.colors)
-
     colors.apply()
   },
 
   reset: () => {
     store.set('colors', colors.defaults)
-
     app.colors = store.get('colors')
 
     const pickers = $all('.colorInput')
@@ -153,9 +141,15 @@ export const colors = {
     })
 
     checkColorChange()
-
     colors.apply()
   }
+}
+
+function resetActivePickerColor() {
+  activePicker.value = colors.defaults[activePicker.dataset.class][activePicker.dataset.theme]
+  activePicker.dispatchEvent(new Event('input', { bubbles: true }))
+  $('#clr-color-value').value = colors.defaults[activePicker.dataset.class][activePicker.dataset.theme]
+  $('#clr-color-value').dispatchEvent(new Event('change'))
 }
 
 $('#customizeThemeButton').addEventListener('click', () => {

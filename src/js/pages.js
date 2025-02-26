@@ -8,7 +8,9 @@ import { DateTime } from 'luxon'
 
 import UIkit from 'uikit'
 
-/** Migrate old saved calculations to pages */
+/**
+ * Migrate old saved calculations to pages.
+ */
 export function migrateSaved() {
   const saved = store.get('saved')
   const pages = store.get('pages')
@@ -19,15 +21,16 @@ export function migrateSaved() {
     })
 
     store.set('pages', pages)
-
     localStorage.removeItem('saved')
   }
 }
 
-/** Get page name/number to use */
+/**
+ * Get page name/number to use.
+ * @returns {string} The page name.
+ */
 export function getPageName() {
   const pages = store.get('pages')
-
   let pageNo = 1
 
   if (pages) {
@@ -52,10 +55,15 @@ export function getPageName() {
   return 'Page ' + pageNo
 }
 
-/** Get last page from store */
+/**
+ * Get last page from store.
+ * @returns {string} The last page ID.
+ */
 export const lastPage = () => store.get('lastPage')
 
-/** Populate the page list in side bar */
+/**
+ * Populate the page list in side bar.
+ */
 export function populatePages() {
   const pages = store.get('pages')
 
@@ -93,7 +101,6 @@ export function populatePages() {
     pageListItem.addEventListener('click', (event) => {
       if (event.target.parentNode.dataset.action === 'load') {
         loadPage(page.id)
-
         UIkit.offcanvas('#sidePanel').hide()
       }
 
@@ -118,16 +125,15 @@ export function populatePages() {
 }
 
 /**
- * Load page
+ * Load page.
  *
- * @param {string} pageId Id of the page to load
+ * @param {string} pageId Id of the page to load.
  */
 export function loadPage(pageId) {
   const page = store.get('pages').find((page) => page.id === pageId)
   const cursor = page.cursor
 
   app.activePage = pageId
-
   store.set('lastPage', pageId)
 
   $('#pageName').innerHTML = page.name
@@ -156,20 +162,21 @@ export function loadPage(pageId) {
   populatePages()
 }
 
-/** Generate default page */
+/**
+ * Generate default page.
+ */
 export function defaultPage() {
   const pageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
   const pageName = getPageName()
 
   store.set('pages', [{ id: pageId, name: pageName, data: store.get('input') || '' }])
-
   localStorage.removeItem('input')
 
   loadPage(pageId)
 }
 
 /**
- * Create new page
+ * Create new page.
  *
  * @param {boolean} isImport Is the new page imported? true | false
  */
@@ -203,9 +210,9 @@ export function newPage(isImport) {
 }
 
 /**
- * Delete page
+ * Delete page.
  *
- * @param {string} pageId Id of the page to delete
+ * @param {string} pageId Id of the page to delete.
  */
 export function deletePage(pageId) {
   let pages = store.get('pages')
@@ -226,9 +233,9 @@ export function deletePage(pageId) {
 }
 
 /**
- * Rename page
+ * Rename page.
  *
- * @param {string} pageId Id of the page to rename
+ * @param {string} pageId Id of the page to rename.
  */
 export function renamePage(pageId) {
   const pages = store.get('pages')
@@ -256,9 +263,9 @@ export function renamePage(pageId) {
 }
 
 /**
- * Duplicate page
+ * Duplicate page.
  *
- * @param {string} pageId Id of the page to duplicate
+ * @param {string} pageId Id of the page to duplicate.
  */
 export function duplicatePage(pageId) {
   const dupPageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
@@ -276,7 +283,8 @@ export function duplicatePage(pageId) {
   loadPage(dupPageId)
 }
 
-/** Sort page list
+/**
+ * Sort page list.
  *
  * @param {string} by Sort by argument - oldnew | newold | az | za
  */
@@ -307,7 +315,9 @@ export function sortPages(by) {
   UIkit.dropdown('#sortDropdown').hide(0)
 }
 
-/** Sort page list after drag */
+/**
+ * Sort page list after drag.
+ */
 export function pageOrder() {
   const pages = store.get('pages')
   const pageList = $all('#pageList > div')
@@ -316,6 +326,9 @@ export function pageOrder() {
   store.set('pages', orderedPages)
 }
 
+/**
+ * Delete all pages.
+ */
 export function deleteAllPages() {
   confirm('All pages will be deleted permanently.', () => {
     store.set('pages', [])
@@ -326,6 +339,9 @@ export function deleteAllPages() {
   })
 }
 
+/**
+ * Show new page dialog.
+ */
 function newPageDialog() {
   $('#newPageTitleInput').value = ''
   $('#newPageTitleInput').focus()
@@ -333,48 +349,38 @@ function newPageDialog() {
   modal.show('#dialog-newPage')
 }
 
+// Event listeners
 $('#newPageButton').addEventListener('click', newPageDialog)
-
 $('#newPageButtonSP').addEventListener('click', newPageDialog)
-
 $('#dialog-newPage-save').addEventListener('click', () => {
   newPage(false)
 })
-
 $('#newPageTitleInput').addEventListener('keyup', (event) => {
   if (event.key === 'Enter' || event.keyCode === 13) {
     $('#dialog-newPage-save').click()
   }
 })
-
 $('#deleteAllPagesButton').addEventListener('click', deleteAllPages)
-
 $('#renamePageTitleInput').addEventListener('keyup', (event) => {
   if (event.key === 'Enter' || event.keyCode === 13) {
     $('#dialog-renamePage-save').click()
   }
 })
-
 $('#sortOldNew').addEventListener('click', () => {
   sortPages('oldnew')
 })
-
 $('#sortNewOld').addEventListener('click', () => {
   sortPages('newold')
 })
-
 $('#sortAZ').addEventListener('click', () => {
   sortPages('az')
 })
-
 $('#sortZA').addEventListener('click', () => {
   sortPages('za')
 })
-
 $('#closeSidePanelButton').addEventListener('click', () => {
   UIkit.offcanvas('#sidePanel').hide()
 })
-
 $('#printButton').addEventListener('click', () => {
   window.print()
 })
@@ -385,9 +391,7 @@ if (isElectron) {
 
   numara.importData((event, data, msg) => {
     newPage(true)
-
     cm.setValue(data)
-
     notify(msg, 'success')
   })
 
@@ -419,7 +423,6 @@ if (isElectron) {
   // Print window from main
   numara.main.print(() => {
     UIkit.offcanvas('#sidePanel').hide()
-
     window.print()
   })
 } else {

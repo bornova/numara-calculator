@@ -51,7 +51,9 @@ const icons = {
   Upload
 }
 
-/** Generate app icons. */
+/**
+ * Generate app icons.
+ */
 export const generateIcons = () => {
   createIcons({ icons })
 }

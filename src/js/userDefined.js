@@ -3,13 +3,14 @@ import { udfInput, uduInput } from './editor'
 import { showError } from './modal'
 
 /**
- * User defined functions and units.
+ * Apply user defined functions or units.
  *
  * @param {string} input User defined function or unit to apply.
  * @param {string} type 'func' | 'unit'
+ * @returns {Promise<void>}
  */
 export function applyUdfu(input, type) {
-  return new Promise(function (resolve, reject) {
+  return new Promise((resolve, reject) => {
     try {
       const loadUD =
         type === 'func'
@@ -33,7 +34,10 @@ export function applyUdfu(input, type) {
   })
 }
 
-$('#dialog-udfu-save-f').addEventListener('click', () => {
+/**
+ * Save user defined functions.
+ */
+function saveUserDefinedFunctions() {
   applyUdfu(udfInput.getValue().trim(), 'func')
     .then(() => {
       location.reload()
@@ -41,9 +45,12 @@ $('#dialog-udfu-save-f').addEventListener('click', () => {
     .catch((error) => {
       showError(error.name, error.message)
     })
-})
+}
 
-$('#dialog-udfu-save-u').addEventListener('click', () => {
+/**
+ * Save user defined units.
+ */
+function saveUserDefinedUnits() {
   applyUdfu(uduInput.getValue().trim(), 'unit')
     .then(() => {
       location.reload()
@@ -51,4 +58,8 @@ $('#dialog-udfu-save-u').addEventListener('click', () => {
     .catch((error) => {
       showError(error.name, error.message)
     })
-})
+}
+
+// Event listeners for saving user defined functions and units
+$('#dialog-udfu-save-f').addEventListener('click', saveUserDefinedFunctions)
+$('#dialog-udfu-save-u').addEventListener('click', saveUserDefinedUnits)

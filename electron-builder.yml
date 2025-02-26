@@ -1,32 +1,51 @@
+# Application ID
 appId: com.numara.app
+
+# Artifact name pattern
 artifactName: '${productName}-${version}-${arch}.${ext}'
+
+# Publish configuration
 publish:
   - provider: github
     releaseType: release
+
+# Directories configuration
 directories:
   buildResources: build/assets
   output: 'dist/${version}/${os}'
+
+# Files to include in the build
 files:
   - build
   - src/main.js
   - src/preload.cjs
+
+# Linux configuration
 linux:
   category: Utility
   target:
     - AppImage
     - deb
     - rpm
+
+# RPM specific configuration
 rpm:
   depends:
     - '/usr/lib64/libuuid.so.1'
+
+# macOS configuration
 mac:
   category: public.app-category.utilities
   entitlements: src/misc/entitlements.mac.plist
   entitlementsInherit: src/misc/entitlements.mac.plist
   hardenedRuntime: true
+
+# Windows configuration
 win:
   publisherName: Timur Atalay
   verifyUpdateCodeSignature: false
+
+# NSIS installer configuration
 nsis:
   deleteAppDataOnUninstall: true
   oneClick: false
