@@ -56,7 +56,7 @@ function appWindow() {
   win.loadFile('build/index.html')
 
   win.webContents.on('did-finish-load', () => {
-    if (config.get('fullSize') & (process.platform === 'win32')) {
+    if (config.get('fullSize') && (process.platform === 'win32')) {
       win.webContents.send('fullscreen', true)
     }
 
