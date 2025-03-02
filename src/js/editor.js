@@ -278,8 +278,11 @@ cm.on('cursorActivity', (cm) => {
 
 cm.on('gutterClick', (cm, line) => {
   const lineNo = line + 1
+  const activeLine = cm.getCursor().line + 1
 
-  cm.replaceSelection('line' + lineNo)
+  if (activeLine > lineNo) {
+    cm.replaceSelection('line' + lineNo)
+  }
 })
 
 cm.on('scrollCursorIntoView', cmForceBottom)
@@ -415,5 +418,16 @@ document.addEventListener('mouseover', (event) => {
         showTooltip(event.target, 'Excel function')
         break
     }
+  }
+
+  if (event.target.classList[0] === 'CodeMirror-linenumber') {
+    const activeLine = cm.getCursor().line + 1
+    const isValid = activeLine > +event.target.innerText
+
+    event.target.style.cursor = isValid ? 'pointer' : 'default'
+    event.target.setAttribute(
+      'title',
+      isValid && app.settings.keywordTips ? `Insert 'line${event.target.innerText}' to Line ${activeLine}` : ''
+    )
   }
 })
