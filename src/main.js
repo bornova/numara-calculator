@@ -255,6 +255,17 @@ const commonContext = (event, index, isEmpty, isSelection, isMultiLine, hasAnswe
   ]
 }
 
+/**
+ * Handles the input context menu event.
+ *
+ * @param {Electron.IpcMainEvent} event - The IPC event object.
+ * @param {number} index - The index of the line.
+ * @param {boolean} isEmpty - Is the input is empty.
+ * @param {boolean} isLine - Indicates if the current line is not empty.
+ * @param {boolean} isSelection - Indicates if there is a selection.
+ * @param {boolean} isMultiLine - Indicates if the selection spans multiple lines.
+ * @param {boolean} hasAnswer - Indicates if the line has an answer.
+ */
 ipcMain.on('inputContextMenu', (event, index, isEmpty, isLine, isSelection, isMultiLine, hasAnswer) => {
   const contextMenuTemplate = [
     ...contextHeader(index, isMultiLine, hasAnswer),
@@ -266,6 +277,14 @@ ipcMain.on('inputContextMenu', (event, index, isEmpty, isLine, isSelection, isMu
   contextMenu.popup()
 })
 
+/**
+ * Handles the output context menu event.
+ *
+ * @param {Electron.IpcMainEvent} event - The IPC event object.
+ * @param {number} index - The index of the line.
+ * @param {boolean} isEmpty - Indicates if the input is empty.
+ * @param {boolean} hasAnswer - Indicates if the line has an answer.
+ */
 ipcMain.on('outputContextMenu', (event, index, isEmpty, hasAnswer) => {
   const contextMenuTemplate = [
     ...contextHeader(index, false, hasAnswer),
