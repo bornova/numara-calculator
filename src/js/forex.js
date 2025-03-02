@@ -41,6 +41,7 @@ function updateCurrencyRates(rates) {
 
   Object.keys(rates).forEach((currency) => {
     const rate = rates[currency]
+
     math.createUnit(rate.code, { definition: math.unit(rate.inverseRate + USD_UNIT) }, { override: true })
 
     if (!numaraHints.some((hint) => hint.text === rate.code)) {

@@ -51,7 +51,9 @@ function textboxContext() {
  */
 function copyLine(event, index) {
   index = +index
+
   const line = cm.getLine(index).trim()
+
   navigator.clipboard.writeText(line).then(() => notify(`Copied Line ${index + 1} to clipboard.`))
 }
 
@@ -63,9 +65,11 @@ function copyLine(event, index) {
  */
 function copyAnswer(event, index, withLines) {
   index = +index
+
   const line = cm.getLine(index).trim()
   const answer = $('#output').children[index].children[0].dataset.copy
   const copiedText = withLines ? `${line} = ${answer}` : `${answer}`
+
   navigator.clipboard
     .writeText(copiedText)
     .then(() =>
@@ -92,10 +96,12 @@ function copyAllAnswers() {
     notify('Nothing to copy.')
   } else {
     let copiedOutputs = ''
+
     cm.eachLine((line) => {
       const index = cm.getLineNumber(line)
       copiedOutputs += `${$('#output').children[index].innerText}\n`
     })
+
     navigator.clipboard.writeText(copiedOutputs).then(() => notify('Copied all answers to clipboard.'))
   }
 }
@@ -108,9 +114,12 @@ export function copyAll() {
     notify('Nothing to copy.')
   } else {
     let copiedCalc = ''
+
     cm.eachLine((line) => {
       const index = cm.getLineNumber(line)
+
       line = line.text.trim()
+
       copiedCalc += line
         ? line.match(/^(#|\/\/)/)
           ? `${line}\n`
@@ -126,7 +135,9 @@ if (isElectron) {
   cm.on('contextmenu', inputContext)
   udfInput.on('contextmenu', textboxContext)
   uduInput.on('contextmenu', textboxContext)
+
   $('#output').addEventListener('contextmenu', outputContext)
+
   $all('.textBox').forEach((el) => {
     el.addEventListener('contextmenu', textboxContext)
   })

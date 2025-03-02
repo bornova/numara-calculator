@@ -76,6 +76,7 @@ const setupActionButtons = () => {
     if (cm.getValue() !== '') {
       cm.setValue('')
       cm.focus()
+
       calculate()
     }
   })
@@ -104,6 +105,7 @@ const setupOutputPanelActions = () => {
         break
       case 'plotButton': {
         const func = event.target.getAttribute('data-func')
+
         app.plotFunction = func.startsWith('line') ? app.mathScope[func] : func
 
         try {
@@ -112,6 +114,7 @@ const setupOutputPanelActions = () => {
           $('#plotGridModal').checked = app.settings.plotGrid
 
           plot()
+
           modal.show('#dialog-plot')
         } catch (error) {
           showError('Error', error)
@@ -127,6 +130,7 @@ const setupOutputPanelActions = () => {
 
   $('#output').addEventListener('mousedown', () => {
     const sels = document.getElementsByClassName('CodeMirror-selected')
+
     while (sels[0]) {
       sels[0].classList.remove('CodeMirror-selected')
     }
@@ -208,6 +212,7 @@ const setupKeyboardShortcuts = () => {
 const setupPrint = () => {
   window.addEventListener('beforeprint', () => {
     const printArea = document.createElement('div')
+
     printArea.setAttribute('id', 'printArea')
     printArea.className = 'printArea'
     printArea.innerHTML = `
@@ -250,9 +255,6 @@ const setupPrint = () => {
 
 let windowResizeDelay
 
-const inputPanel = $('.CodeMirror-scroll')
-const outputPanel = $('#output')
-
 const setupEventListeners = () => {
   document.addEventListener('keydown', (event) => {
     app.refreshCM = !event.repeat
@@ -271,14 +273,12 @@ const setupEventListeners = () => {
     windowResizeDelay = setTimeout(calculate, 10)
     checkSize()
   })
-
-  $('#scrollTop').addEventListener('click', () => {
-    inputPanel.scroll({ top: 0, behavior: 'smooth' })
-    outputPanel.scroll({ top: 0, behavior: 'smooth' })
-  })
 }
 
 const setupSyncScroll = () => {
+  const inputPanel = $('.CodeMirror-scroll')
+  const outputPanel = $('#output')
+
   let inputScroll = false
   let outputScroll = false
 
@@ -298,64 +298,14 @@ const setupSyncScroll = () => {
     outputScroll = false
     $('#scrollTop').style.display = outputPanel.scrollTop > 50 ? 'block' : 'none'
   })
+
+  $('#scrollTop').addEventListener('click', () => {
+    inputPanel.scroll({ top: 0, behavior: 'smooth' })
+    outputPanel.scroll({ top: 0, behavior: 'smooth' })
+  })
 }
 
-const initializeApp = () => {
-  // Set theme and maximize if needed
-  if (isElectron) {
-    numara.themeUpdate(settings.apply)
-    numara.fullscreen()
-    numara.restored(() => {
-      cm.focus()
-    })
-  }
-
-  setupElectronHeaders()
-  setupAppInfo()
-  setupActionButtons()
-  setupOutputPanelActions()
-  setupPanelResizer()
-  setupKeyboardShortcuts()
-  setupPrint()
-  setupEventListeners()
-  setupSyncScroll()
-
-  // Generate app icons
-  generateIcons()
-
-  // Initialize theme colors
-  colors.initialize()
-  colors.apply()
-
-  // Initialize settings
-  settings.initialize()
-  settings.apply()
-
-  // Set user defined values
-  if (!store.get('pages')) {
-    defaultPage()
-  } else {
-    app.activePage = lastPage()
-    loadPage(lastPage())
-  }
-
-  migrateSaved()
-
-  // Set user defined values
-  if (!store.get('udf')) {
-    store.set('udf', '')
-  }
-
-  if (!store.get('udu')) {
-    store.set('udu', '')
-  }
-
-  applyUdfu(store.get('udf'), 'func')
-  applyUdfu(store.get('udu'), 'unit')
-
-  // Populate saved calculation
-  populatePages()
-
+const setupUIkitUtils = () => {
   // Tooltip defaults
   UIkit.mixin({ data: { offset: 5 } }, 'tooltip')
 
@@ -428,23 +378,82 @@ const initializeApp = () => {
       cm.focus()
     }, 20)
   })
+}
 
-  // Check for updates
-  checkUpdates()
+const setupUserDefined = () => {
+  // Set user defined values
+  if (!store.get('udf')) {
+    store.set('udf', '')
+  }
 
-  // Restart button if update is installed
-  $('#updateButton').addEventListener('click', () => {
-    numara.updateApp()
-  })
+  if (!store.get('udu')) {
+    store.set('udu', '')
+  }
 
-  // Developer Tools
+  applyUdfu(store.get('udf'), 'func')
+  applyUdfu(store.get('udu'), 'unit')
+}
+
+const initializeApp = () => {
+  // Set theme and maximize if needed
   if (isElectron) {
+    numara.themeUpdate(settings.apply)
+    numara.fullscreen()
+    numara.restored(() => {
+      cm.focus()
+    })
+
+    // Check for updates
+    checkUpdates()
+
+    // Restart button if update is installed
+    $('#updateButton').addEventListener('click', () => {
+      numara.updateApp()
+    })
+
+    // Open developer Tools
     $('#dialog-about-appVersion').addEventListener('click', (event) => {
       if (event.detail === 9) {
         numara.openDevTools()
       }
     })
   }
+
+  setupElectronHeaders()
+  setupAppInfo()
+  setupActionButtons()
+  setupOutputPanelActions()
+  setupPanelResizer()
+  setupKeyboardShortcuts()
+  setupPrint()
+  setupEventListeners()
+  setupSyncScroll()
+  setupUIkitUtils()
+  setupUserDefined()
+
+  // Generate app icons
+  generateIcons()
+
+  // Initialize theme colors
+  colors.initialize()
+  colors.apply()
+
+  // Initialize settings
+  settings.initialize()
+  settings.apply()
+
+  // Set user defined values
+  if (!store.get('pages')) {
+    defaultPage()
+  } else {
+    app.activePage = lastPage()
+    loadPage(lastPage())
+  }
+
+  migrateSaved()
+
+  // Populate saved calculation
+  populatePages()
 
   setTimeout(() => {
     cm.focus()

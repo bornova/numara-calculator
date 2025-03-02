@@ -316,6 +316,7 @@ function showTooltip(target, title) {
 function handleFunctionTooltip(target) {
   try {
     const tip = JSON.parse(JSON.stringify(math.help(target.innerText).toJSON()))
+
     showTooltip(
       target,
       `<div>${tip.description}</div>
@@ -332,6 +333,7 @@ function handleCurrencyTooltip(target) {
   try {
     const currency = target.innerText
     const currencyName = currency === 'USD' ? 'U.S. Dollar' : app.currencyRates[currency.toLowerCase()].name
+
     showTooltip(target, currencyName)
   } catch {
     showTooltip(target, 'Description not available')
@@ -340,6 +342,7 @@ function handleCurrencyTooltip(target) {
 
 function handleUnitTooltip(target) {
   const hint = numaraHints.find((hint) => hint.text === target.innerText)
+
   showTooltip(target, hint.desc)
 }
 
@@ -354,17 +357,20 @@ function handleConstantTooltip(target) {
 function handleVariableTooltip(target) {
   if (app.mathScope[target.innerText] && typeof app.mathScope[target.innerText] !== 'function') {
     let varTooltip
+
     try {
       varTooltip = formatAnswer(math.evaluate(target.innerText, app.mathScope))
     } catch {
       varTooltip = 'Undefined'
     }
+
     showTooltip(target, varTooltip)
   }
 }
 
 function handleLineNoTooltip(target) {
   let tooltip
+
   try {
     tooltip =
       typeof app.mathScope[target.innerText] === 'function'
@@ -373,11 +379,13 @@ function handleLineNoTooltip(target) {
   } catch {
     tooltip = 'Undefined'
   }
+
   showTooltip(target, tooltip)
 }
 
 function handleKeywordTooltip(target) {
   const keyword = keywords.find((key) => target.innerText === key.text)
+
   showTooltip(target, keyword.desc)
 }
 

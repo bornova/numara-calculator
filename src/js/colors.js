@@ -148,6 +148,7 @@ export const colors = {
 function resetActivePickerColor() {
   activePicker.value = colors.defaults[activePicker.dataset.class][activePicker.dataset.theme]
   activePicker.dispatchEvent(new Event('input', { bubbles: true }))
+
   $('#clr-color-value').value = colors.defaults[activePicker.dataset.class][activePicker.dataset.theme]
   $('#clr-color-value').dispatchEvent(new Event('change'))
 }
