@@ -278,156 +278,164 @@ cm.on('cursorActivity', (cm) => {
 
 cm.on('gutterClick', (cm, line) => {
   const lineNo = line + 1
+  const activeLine = cm.getCursor().line + 1
 
-  cm.replaceSelection('line' + lineNo)
+  if (activeLine > lineNo) {
+    cm.replaceSelection('line' + lineNo)
+  }
 })
 
 cm.on('scrollCursorIntoView', cmForceBottom)
 
 // Tooltips
-const ttPos = (el) => (el.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left')
+const CLASS_NAMES = {
+  FUNCTION: 'cm-function',
+  UDF: 'cm-udf',
+  UDU: 'cm-udu',
+  CURRENCY: 'cm-currency',
+  UNIT: 'cm-unit',
+  CONSTANT: 'cm-constant',
+  VARIABLE: 'cm-variable',
+  LINE_NO: 'cm-lineNo',
+  KEYWORD: 'cm-keyword',
+  FORMULAJS: 'cm-formulajs',
+  EXCEL: 'cm-excel'
+}
+
+function getTooltipPosition(el) {
+  return el.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left'
+}
+
+function showTooltip(target, title) {
+  UIkit.tooltip(target, {
+    pos: getTooltipPosition(target),
+    title
+  }).show()
+}
+
+function handleFunctionTooltip(target) {
+  try {
+    const tip = JSON.parse(JSON.stringify(math.help(target.innerText).toJSON()))
+
+    showTooltip(
+      target,
+      `<div>${tip.description}</div>
+      <div class="tooltipCode">
+        ${tip.syntax.map((s) => '<code>' + s + '</code>').join(' ')}
+      </div>`
+    )
+  } catch {
+    showTooltip(target, 'Description not available')
+  }
+}
+
+function handleCurrencyTooltip(target) {
+  try {
+    const currency = target.innerText
+    const currencyName = currency === 'USD' ? 'U.S. Dollar' : app.currencyRates[currency.toLowerCase()].name
+
+    showTooltip(target, currencyName)
+  } catch {
+    showTooltip(target, 'Description not available')
+  }
+}
+
+function handleUnitTooltip(target) {
+  const hint = numaraHints.find((hint) => hint.text === target.innerText)
+
+  showTooltip(target, hint.desc)
+}
+
+function handleConstantTooltip(target) {
+  try {
+    showTooltip(target, math.help(target.innerText).doc.description)
+  } catch {
+    /* No tooltip */
+  }
+}
+
+function handleVariableTooltip(target) {
+  if (app.mathScope[target.innerText] && typeof app.mathScope[target.innerText] !== 'function') {
+    let varTooltip
+
+    try {
+      varTooltip = formatAnswer(math.evaluate(target.innerText, app.mathScope))
+    } catch {
+      varTooltip = 'Undefined'
+    }
+
+    showTooltip(target, varTooltip)
+  }
+}
+
+function handleLineNoTooltip(target) {
+  let tooltip
+
+  try {
+    tooltip =
+      typeof app.mathScope[target.innerText] === 'function'
+        ? 'Function'
+        : formatAnswer(math.evaluate(target.innerText, app.mathScope))
+  } catch {
+    tooltip = 'Undefined'
+  }
+
+  showTooltip(target, tooltip)
+}
+
+function handleKeywordTooltip(target) {
+  const keyword = keywords.find((key) => target.innerText === key.text)
+
+  showTooltip(target, keyword.desc)
+}
 
 document.addEventListener('mouseover', (event) => {
   if (app.settings.keywordTips && event.target.classList[0]?.startsWith('cm-')) {
     switch (event.target.classList[0]) {
-      case 'cm-function':
-        try {
-          const tip = JSON.parse(JSON.stringify(math.help(event.target.innerText).toJSON()))
-
-          UIkit.tooltip(event.target, {
-            pos: ttPos(event.target),
-            title: `<div>${tip.description}</div>
-                    <div class="tooltipCode">
-                      ${tip.syntax.map((s) => '<code>' + s + '</code>').join(' ')}
-                    </div>`
-          })
-        } catch {
-          UIkit.tooltip(event.target, {
-            pos: ttPos(event.target),
-            title: 'Description not available'
-          })
-        }
-
+      case CLASS_NAMES.FUNCTION:
+        handleFunctionTooltip(event.target)
         break
-
-      case 'cm-udf':
-        UIkit.tooltip(event.target, {
-          pos: ttPos(event.target),
-          title: 'User defined function'
-        })
-
+      case CLASS_NAMES.UDF:
+        showTooltip(event.target, 'User defined function')
         break
-
-      case 'cm-udu':
-        UIkit.tooltip(event.target, {
-          pos: ttPos(event.target),
-          title: 'User defined unit'
-        })
-
+      case CLASS_NAMES.UDU:
+        showTooltip(event.target, 'User defined unit')
         break
-
-      case 'cm-currency':
-        try {
-          const currency = event.target.innerText
-          const currencyName = currency === 'USD' ? 'U.S. Dollar' : app.currencyRates[currency.toLowerCase()].name
-
-          UIkit.tooltip(event.target, {
-            pos: ttPos(event.target),
-            title: currencyName
-          })
-        } catch {
-          UIkit.tooltip(event.target, {
-            pos: ttPos(event.target),
-            title: 'Description not available'
-          })
-        }
-
+      case CLASS_NAMES.CURRENCY:
+        handleCurrencyTooltip(event.target)
         break
-
-      case 'cm-unit': {
-        UIkit.tooltip(event.target, {
-          pos: ttPos(event.target),
-          title: numaraHints.find((hint) => hint.text === event.target.innerText).desc
-        })
-
+      case CLASS_NAMES.UNIT:
+        handleUnitTooltip(event.target)
         break
-      }
-
-      case 'cm-constant':
-        try {
-          UIkit.tooltip(event.target, {
-            pos: ttPos(event.target),
-            title: math.help(event.target.innerText).doc.description
-          })
-        } catch {
-          /* No tooltip */
-        }
-
+      case CLASS_NAMES.CONSTANT:
+        handleConstantTooltip(event.target)
         break
-
-      case 'cm-variable':
-        if (app.mathScope[event.target.innerText] && typeof app.mathScope[event.target.innerText] !== 'function') {
-          let varTooltip
-
-          try {
-            varTooltip = formatAnswer(math.evaluate(event.target.innerText, app.mathScope))
-          } catch {
-            varTooltip = 'Undefined'
-          }
-
-          UIkit.tooltip(event.target, {
-            pos: ttPos(event.target),
-            title: varTooltip
-          })
-        }
-
+      case CLASS_NAMES.VARIABLE:
+        handleVariableTooltip(event.target)
         break
-
-      case 'cm-lineNo': {
-        let tooltip
-
-        try {
-          tooltip =
-            typeof app.mathScope[event.target.innerText] === 'function'
-              ? 'Function'
-              : formatAnswer(math.evaluate(event.target.innerText, app.mathScope))
-        } catch {
-          tooltip = 'Undefined'
-        }
-
-        UIkit.tooltip(event.target, {
-          pos: ttPos(event.target),
-          title: tooltip
-        })
-
+      case CLASS_NAMES.LINE_NO:
+        handleLineNoTooltip(event.target)
         break
-      }
-
-      case 'cm-keyword':
-        UIkit.tooltip(event.target, {
-          pos: ttPos(event.target),
-          title: keywords.filter((key) => event.target.innerText === key.text)[0].desc
-        })
-
+      case CLASS_NAMES.KEYWORD:
+        handleKeywordTooltip(event.target)
         break
-
-      case 'cm-formulajs':
-        UIkit.tooltip(event.target, {
-          pos: ttPos(event.target),
-          title: 'Formulajs'
-        })
-
+      case CLASS_NAMES.FORMULAJS:
+        showTooltip(event.target, 'Formulajs')
         break
-
-      case 'cm-excel':
-        UIkit.tooltip(event.target, {
-          pos: ttPos(event.target),
-          title: 'Excel function'
-        })
-
+      case CLASS_NAMES.EXCEL:
+        showTooltip(event.target, 'Excel function')
         break
     }
+  }
 
-    UIkit.tooltip(event.target).show()
+  if (event.target.classList[0] === 'CodeMirror-linenumber') {
+    const activeLine = cm.getCursor().line + 1
+    const isValid = activeLine > +event.target.innerText
+
+    event.target.style.cursor = isValid ? 'pointer' : 'default'
+    event.target.setAttribute(
+      'title',
+      isValid && app.settings.keywordTips ? `Insert 'line${event.target.innerText}' to Line ${activeLine}` : ''
+    )
   }
 })

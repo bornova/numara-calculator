@@ -36,7 +36,10 @@ const light = '#ffffff'
 
 let win
 
-function appWindow() {
+/**
+ * Create the main application window.
+ */
+function createAppWindow() {
   win = new BrowserWindow({
     backgroundColor:
       theme === 'system' ? (nativeTheme.shouldUseDarkColors ? dark : light) : theme === 'dark' ? dark : light,
@@ -56,7 +59,7 @@ function appWindow() {
   win.loadFile('build/index.html')
 
   win.webContents.on('did-finish-load', () => {
-    if (config.get('fullSize') && (process.platform === 'win32')) {
+    if (config.get('fullSize') && process.platform === 'win32') {
       win.webContents.send('fullscreen', true)
     }
 
@@ -75,7 +78,6 @@ function appWindow() {
 
   win.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url)
-
     return { action: 'deny' }
   })
 
@@ -101,7 +103,7 @@ function appWindow() {
 
 app.setAppUserModelId(app.name)
 
-app.whenReady().then(appWindow)
+app.whenReady().then(createAppWindow)
 
 if (!app.requestSingleInstanceLock()) {
   app.quit()
@@ -134,7 +136,6 @@ ipcMain.on('import', (event) => {
     fs.readFile(file[0], 'utf8', (error, data) => {
       if (error) {
         event.sender.send('importDataError', error)
-
         return
       }
 
@@ -154,7 +155,6 @@ ipcMain.on('export', (event, fileName, content) => {
     fs.writeFile(file, content, (error) => {
       if (error) {
         event.sender.send('exportDataError', error)
-
         return
       }
 
@@ -163,6 +163,9 @@ ipcMain.on('export', (event, fileName, content) => {
   }
 })
 
+/**
+ * Reset window size to default.
+ */
 function resetSize() {
   if (win) {
     win.setSize(schema.appWidth.default, schema.appHeight.default)
@@ -184,6 +187,13 @@ ipcMain.on('openLogs', () => {
   shell.openPath(path.join(app.getPath('logs'), 'main.log'))
 })
 
+/**
+ * Generate context menu header.
+ * @param {number} index - The line index.
+ * @param {boolean} isMultiLine - Is it a multi-line selection.
+ * @param {boolean} hasAnswer - Does the line have an answer.
+ * @returns {Array} - The context menu header template.
+ */
 const contextHeader = (index, isMultiLine, hasAnswer) =>
   hasAnswer || index !== null
     ? [
@@ -195,6 +205,16 @@ const contextHeader = (index, isMultiLine, hasAnswer) =>
       ]
     : [{ label: '', visible: false }]
 
+/**
+ * Generate common context menu items.
+ * @param {Event} event - The event object.
+ * @param {number} index - The line index.
+ * @param {boolean} isEmpty - Is the input empty.
+ * @param {boolean} isSelection - Is there a selection.
+ * @param {boolean} isMultiLine - Is it a multi-line selection.
+ * @param {boolean} hasAnswer - Does the line have an answer.
+ * @returns {Array} - The common context menu template.
+ */
 const commonContext = (event, index, isEmpty, isSelection, isMultiLine, hasAnswer) => {
   const context = [
     {
@@ -235,6 +255,17 @@ const commonContext = (event, index, isEmpty, isSelection, isMultiLine, hasAnswe
   ]
 }
 
+/**
+ * Handles the input context menu event.
+ *
+ * @param {Electron.IpcMainEvent} event - The IPC event object.
+ * @param {number} index - The index of the line.
+ * @param {boolean} isEmpty - Is the input is empty.
+ * @param {boolean} isLine - Indicates if the current line is not empty.
+ * @param {boolean} isSelection - Indicates if there is a selection.
+ * @param {boolean} isMultiLine - Indicates if the selection spans multiple lines.
+ * @param {boolean} hasAnswer - Indicates if the line has an answer.
+ */
 ipcMain.on('inputContextMenu', (event, index, isEmpty, isLine, isSelection, isMultiLine, hasAnswer) => {
   const contextMenuTemplate = [
     ...contextHeader(index, isMultiLine, hasAnswer),
@@ -246,6 +277,14 @@ ipcMain.on('inputContextMenu', (event, index, isEmpty, isLine, isSelection, isMu
   contextMenu.popup()
 })
 
+/**
+ * Handles the output context menu event.
+ *
+ * @param {Electron.IpcMainEvent} event - The IPC event object.
+ * @param {number} index - The index of the line.
+ * @param {boolean} isEmpty - Indicates if the input is empty.
+ * @param {boolean} hasAnswer - Indicates if the line has an answer.
+ */
 ipcMain.on('outputContextMenu', (event, index, isEmpty, hasAnswer) => {
   const contextMenuTemplate = [
     ...contextHeader(index, false, hasAnswer),

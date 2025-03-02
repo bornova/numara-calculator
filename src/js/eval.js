@@ -21,7 +21,9 @@ const nowDayFormat = 'ccc, D t'
 const todayFormat = 'D'
 const todayDayFormat = 'ccc, D'
 
-/** Calculate answers. */
+/**
+ * Calculate answers.
+ */
 export function calculate() {
   if (app.refreshCM) {
     cm.refresh()
@@ -101,10 +103,8 @@ export function calculate() {
             upperExp: +app.settings.expUpper
           })
 
-          const answerCopyInit = answer
-
+          answerCopy = formatAnswer(answer, true)
           answer = formatAnswer(answer, false)
-          answerCopy = formatAnswer(answerCopyInit, true)
 
           if (answer.match(/\w\(x\)/)) {
             const plotAns = (/\w\(x\)$/.test(answer) && line !== 'ans' ? line : answer).replace(/\s+/g, '')
@@ -143,27 +143,18 @@ export function calculate() {
 
   $('#output').innerHTML = answers
 
-  const scopeKeywords = keywords.map((key) => key.text)
-  const vars = Object.keys(app.mathScope).filter((scope) => !scopeKeywords.includes(scope))
-
-  vars.forEach((v) => {
-    if (!numaraHints.some((hint) => hint.text === v) && v !== 'line' + cm.lineCount()) {
-      numaraHints.push({ text: v, desc: 'Variable', className: 'cm-variable' })
-    }
-  })
+  addScopeHints()
 
   if (app.activePage) {
-    const pages = store.get('pages')
-    const page = pages.find((page) => page.id === app.activePage)
-
-    page.data = cm.getValue()
-    page.history = cm.getHistory()
-
-    store.set('pages', pages)
+    savePageData()
   }
 }
 
-/** Secondary evaluate method to try if math.evaluate fails */
+/**
+ * Secondary evaluate method to try if math.evaluate fails.
+ * @param {string} line - The line to evaluate.
+ * @returns {*} - The evaluated result.
+ */
 function evaluate(line) {
   if (line.match(/:/)) {
     try {
@@ -217,6 +208,11 @@ function evaluate(line) {
   return math.evaluate(line, app.mathScope)
 }
 
+/**
+ * Strip quotes from the answer.
+ * @param {string} answer - The answer to strip.
+ * @returns {string} - The stripped answer.
+ */
 function stripAnswer(answer) {
   let t = answer.length
 
@@ -236,7 +232,7 @@ function stripAnswer(answer) {
  *
  * @param {*} answer Value to format.
  * @param {boolean} separator Include thousands separator - True|False
- * @returns
+ * @returns {string} - The formatted answer.
  */
 export function formatAnswer(answer, separator) {
   answer = String(answer)
@@ -260,4 +256,31 @@ export function formatAnswer(answer, separator) {
         : stripAnswer(answer)
 
   return formattedAnswer
+}
+
+/**
+ * Add scoped items to hints.
+ */
+function addScopeHints() {
+  const scopeKeywords = keywords.map((key) => key.text)
+  const vars = Object.keys(app.mathScope).filter((scope) => !scopeKeywords.includes(scope))
+
+  vars.forEach((v) => {
+    if (!numaraHints.some((hint) => hint.text === v) && v !== 'line' + cm.lineCount()) {
+      numaraHints.push({ text: v, desc: 'Variable', className: 'cm-variable' })
+    }
+  })
+}
+
+/**
+ * Save page data to store.
+ */
+function savePageData() {
+  const pages = store.get('pages')
+  const page = pages.find((page) => page.id === app.activePage)
+
+  page.data = cm.getValue()
+  page.history = cm.getHistory()
+
+  store.set('pages', pages)
 }

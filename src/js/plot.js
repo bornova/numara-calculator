@@ -1,11 +1,11 @@
 import { $, app, store } from './common'
 import { math } from './eval'
-
 import { productName } from './../../package.json'
-
 import functionPlot from 'function-plot'
 
-/** Plot function. */
+/**
+ * Plot function.
+ */
 export function plot() {
   $('#plotTitle').innerHTML = app.plotFunction
 
@@ -44,34 +44,37 @@ export function plot() {
   })
 }
 
-$('#plotCrossModal').addEventListener('click', () => {
-  app.settings.plotCross = $('#plotCrossModal').checked
-
+/**
+ * Update plot settings and re-plot.
+ * @param {string} setting - The setting to update.
+ * @param {boolean} value - The value to set.
+ */
+function updatePlotSetting(setting, value) {
+  app.settings[setting] = value
   store.set('settings', app.settings)
-
   plot()
+}
+
+// Event listeners for plot settings
+$('#plotCrossModal').addEventListener('click', () => {
+  updatePlotSetting('plotCross', $('#plotCrossModal').checked)
 })
 
 $('#plotDerivativeModal').addEventListener('click', () => {
-  app.settings.plotDerivative = $('#plotDerivativeModal').checked
-
-  store.set('settings', app.settings)
-
-  plot()
+  updatePlotSetting('plotDerivative', $('#plotDerivativeModal').checked)
 })
 
 $('#plotGridModal').addEventListener('click', () => {
-  app.settings.plotGrid = $('#plotGridModal').checked
-
-  store.set('settings', app.settings)
-
-  plot()
+  updatePlotSetting('plotGrid', $('#plotGridModal').checked)
 })
 
+/**
+ * Export plot as SVG.
+ */
 $('#exportPlot').addEventListener('click', () => {
   $('.function-plot').setAttribute('xmlns', 'http://www.w3.org/2000/svg')
 
-  const fileName = productName + ' Plot ' + app.plotFunction
+  const fileName = `${productName} Plot ${app.plotFunction}`
   const preface = '<?xml version="1.0" standalone="no"?>\r\n'
   const svgData = $('.function-plot').outerHTML
   const svgBlob = new Blob([preface, svgData], { type: 'image/svg+xml;charset=utf-8' })
@@ -84,8 +87,10 @@ $('#exportPlot').addEventListener('click', () => {
   setTimeout(() => URL.revokeObjectURL(downloadLink.href), 60000)
 })
 
+/**
+ * Reset plot to default state.
+ */
 $('#resetPlot').addEventListener('click', () => {
   app.activePlot = null
-
   plot()
 })

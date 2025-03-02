@@ -1,5 +1,4 @@
 import { $, app } from './common'
-
 import UIkit from 'uikit'
 
 export const modal = {
@@ -25,7 +24,7 @@ export const modal = {
  * Show error dialog.
  *
  * @param {string} title Title of dialog box.
- * @param {string} e Error message to show.
+ * @param {string} error Error message to show.
  */
 export function showError(title, error) {
   UIkit.util.on('#dialog-error', 'beforeshow', () => {
@@ -40,13 +39,13 @@ export function showError(title, error) {
  * Show app notifications.
  *
  * @param {string} msg Notification to show.
- * @param {string} stat Notification status: primary | success | warning | danger
+ * @param {string} [stat='primary'] Notification status: primary | success | warning | danger
  */
-export function notify(msg, stat) {
+export function notify(msg, stat = 'primary') {
   UIkit.notification({
     message: msg,
     pos: app.settings.notifyLocation,
-    status: stat || 'primary',
+    status: stat,
     timeout: +app.settings.notifyDuration
   })
 }
@@ -64,11 +63,8 @@ export function confirm(msg, action) {
 
   const yesAction = (event) => {
     action()
-
     event.stopPropagation()
-
     UIkit.modal('#dialog-confirm').hide()
-
     $('#confirm-yes').removeEventListener('click', yesAction)
   }
 

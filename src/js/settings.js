@@ -42,7 +42,7 @@ function checkSchema() {
   })
 }
 
-let updateIterval
+let updateInterval
 
 export const settings = {
   /** Default settings. */
@@ -289,20 +289,20 @@ export const settings = {
 
     if (app.settings.currency) {
       if (app.settings.currencyInterval === '0') {
-        clearInterval(updateIterval)
+        clearInterval(updateInterval)
         store.set('rateInterval', false)
       } else {
-        clearInterval(updateIterval)
-        updateIterval = setInterval(getRates, +app.settings.currencyInterval)
+        clearInterval(updateInterval)
+        updateInterval = setInterval(getRates, +app.settings.currencyInterval)
         store.set('rateInterval', true)
       }
     }
 
     if (app.settings.currencyInterval === '0') {
-      clearInterval(updateIterval)
+      clearInterval(updateInterval)
     } else {
-      clearInterval(updateIterval)
-      updateIterval = setInterval(getRates, +app.settings.currencyInterval)
+      clearInterval(updateInterval)
+      updateInterval = setInterval(getRates, +app.settings.currencyInterval)
     }
 
     setTimeout(calculate, 10)
