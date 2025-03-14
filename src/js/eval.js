@@ -97,14 +97,8 @@ export function calculate() {
             subtotals.push(answer)
           }
 
-          answer = math.format(answer, {
-            notation: app.settings.notation,
-            lowerExp: +app.settings.expLower,
-            upperExp: +app.settings.expUpper
-          })
-
-          answerCopy = formatAnswer(answer, true)
-          answer = formatAnswer(answer, false)
+          answerCopy = formatAnswer(answer, app.settings.thouSep && app.settings.copyThouSep)
+          answer = formatAnswer(answer, app.settings.thouSep)
 
           if (answer.match(/\w\(x\)/)) {
             const plotAns = (/\w\(x\)$/.test(answer) && line !== 'ans' ? line : answer).replace(/\s+/g, '')
@@ -231,31 +225,38 @@ function stripAnswer(answer) {
  * Format answer.
  *
  * @param {*} answer Value to format.
- * @param {boolean} separator Include thousands separator - True|False
+ * @param {boolean} useGrouping Include thousands separator - True|False
  * @returns {string} - The formatted answer.
  */
-export function formatAnswer(answer, separator) {
-  answer = String(answer)
+export function formatAnswer(answer, useGrouping) {
+  const notation = app.settings.notation
+  const lowerExp = +app.settings.expLower
+  const upperExp = +app.settings.expUpper
+  const locale = app.settings.locale
+  const maximumFractionDigits = app.settings.precision
 
-  if (['bin', 'hex', 'oct'].includes(app.settings.notation)) {
+  if (['bin', 'hex', 'oct'].includes(notation)) {
+    answer = math.format(answer, { notation })
+
     return stripAnswer(answer)
   }
 
-  const a = answer.trim().split(' ')[0]
-  const b = answer.replace(a, '')
-  const digits = {
-    maximumFractionDigits: app.settings.precision,
-    useGrouping: separator ? app.settings.copyThouSep : app.settings.thouSep
-  }
+  const formatOptions = { notation, lowerExp, upperExp }
+  const localeOptions = { maximumFractionDigits, useGrouping }
 
-  const formattedAnswer =
-    !a.includes('e') && !isNaN(a)
-      ? Number(a).toLocaleString(app.settings.locale, digits) + b
-      : a.match(/e[+-]?\d+/) && !isNaN(a.split('e')[0])
-        ? Number(a.split('e')[0]).toLocaleString(app.settings.locale, digits) + 'e' + answer.split('e')[1]
-        : stripAnswer(answer)
+  const formattedAnswer = math.format(answer, (value) => {
+    value = math.format(value, formatOptions)
 
-  return formattedAnswer
+    if (value.includes('e')) {
+      const [base, exponent] = value.split('e')
+
+      return (+base).toLocaleString(locale, localeOptions) + 'e' + exponent
+    }
+
+    return (+value).toLocaleString(locale, localeOptions)
+  })
+
+  return stripAnswer(formattedAnswer)
 }
 
 /**
