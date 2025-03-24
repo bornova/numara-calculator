@@ -25,15 +25,15 @@
     "wiki": "node src/misc/wiki.js"
   },
   "devDependencies": {
-    "@eslint/js": "^9.22.0",
+    "@eslint/js": "^9.23.0",
     "@formulajs/formulajs": "^4.4.11",
     "@melloware/coloris": "^0.24.0",
-    "codemirror": "^5.65.18",
+    "codemirror": "^5.65.19",
     "deep-diff": "^1.0.2",
-    "electron": "^35.0.2",
+    "electron": "^35.0.3",
     "electron-builder": "^25.1.8",
     "esbuild": "^0.25.1",
-    "eslint": "^9.22.0",
+    "eslint": "^9.23.0",
     "fs-extra": "^11.3.0",
     "function-plot": "^1.25.1",
     "lucide": "^0.482.0",
@@ -41,7 +41,7 @@
     "mathjs": "^14.3.1",
     "prettier": "^3.5.3",
     "tinykeys": "^3.0.0",
-    "uikit": "^3.23.2"
+    "uikit": "^3.23.3"
   },
   "dependencies": {
     "electron-log": "^5.3.2",
