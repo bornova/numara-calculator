@@ -4,6 +4,10 @@ appId: com.numara.app
 # Artifact name pattern
 artifactName: '${productName}-${version}-${arch}.${ext}'
 
+# Electron languages
+electronLanguages:
+  - en
+
 # Publish configuration
 publish:
   - provider: github
@@ -23,6 +27,7 @@ files:
 # Linux configuration
 linux:
   category: Utility
+  icon: build/assets/icon.png
   target:
     - AppImage
     - deb
@@ -39,10 +44,11 @@ mac:
   entitlements: src/misc/entitlements.mac.plist
   entitlementsInherit: src/misc/entitlements.mac.plist
   hardenedRuntime: true
+  icon: build/assets/icon.icns
 
 # Windows configuration
 win:
-  publisherName: Timur Atalay
+  icon: build/assets/icon.ico
   verifyUpdateCodeSignature: false
 
 # NSIS installer configuration
