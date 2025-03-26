@@ -4,9 +4,8 @@ appId: com.numara.app
 # Artifact name pattern
 artifactName: '${productName}-${version}-${arch}.${ext}'
 
-# Electron languages
-electronLanguages:
-  - en
+# Disable asar
+asar: false
 
 # Publish configuration
 publish:
@@ -15,7 +14,6 @@ publish:
 
 # Directories configuration
 directories:
-  buildResources: build/assets
   output: 'dist/${version}/${os}'
 
 # Files to include in the build
