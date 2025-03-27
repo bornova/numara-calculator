@@ -55,26 +55,30 @@ export function toggleMinMax() {
 /** Check for app updates */
 export function checkUpdates() {
   if (isElectron) {
+    let newVersion
+
     numara.checkUpdate()
 
     numara.notifyUpdate((event, version) => {
-      notify(
-        `Downloading latest version ${version}... <a class="notificationLink" onclick="document.querySelector('#aboutButton').click()">View status</a>`
-      )
+      newVersion = version
 
-      console.log(version)
+      notify(
+        `Downloading latest version ${newVersion}... <a class="notificationLink" onclick="document.querySelector('#aboutButton').click()">View status</a>`
+      )
 
       $('#notificationDot').style.display = 'block'
     })
 
     numara.updateStatus((event, status) => {
       if (status === 'ready') {
-        $('#dialog-about-updateStatus').innerHTML = 'New version is ready to be installed.'
+        let notice = `A new update is ready to install. (${newVersion})`
+
+        $('#dialog-about-updateStatus').innerHTML = notice
         $('#updateButton').style.display = 'inline-block'
 
         if (!$('#dialog-about').classList.contains('uk-open')) {
           notify(
-            'New version is ready to be installed. <a class="notificationLink" onclick="document.querySelector(`#updateButton`).click()">Install Now</a>'
+            `${notice} <a class="notificationLink" onclick="document.querySelector('#updateButton').click()">Install Now</a>`
           )
         }
       } else {
