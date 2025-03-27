@@ -57,10 +57,12 @@ export function checkUpdates() {
   if (isElectron) {
     numara.checkUpdate()
 
-    numara.notifyUpdate(() => {
+    numara.notifyUpdate((event, version) => {
       notify(
-        'Downloading latest version... <a class="notificationLink" onclick="document.querySelector(`#aboutButton`).click()">View status</a>'
+        `Downloading latest version ${version}... <a class="notificationLink" onclick="document.querySelector('#aboutButton').click()">View status</a>`
       )
+
+      console.log(version)
 
       $('#notificationDot').style.display = 'block'
     })
