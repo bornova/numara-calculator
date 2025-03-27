@@ -14,6 +14,7 @@ publish:
 
 # Directories configuration
 directories:
+  buildResources: build/assets
   output: 'dist/${version}/${os}'
 
 # Files to include in the build
@@ -25,7 +26,6 @@ files:
 # Linux configuration
 linux:
   category: Utility
-  icon: build/assets/icon.png
   target:
     - AppImage
     - deb
@@ -42,11 +42,9 @@ mac:
   entitlements: src/misc/entitlements.mac.plist
   entitlementsInherit: src/misc/entitlements.mac.plist
   hardenedRuntime: true
-  icon: build/assets/icon.icns
 
 # Windows configuration
 win:
-  icon: build/assets/icon.ico
   verifyUpdateCodeSignature: false
 
 # NSIS installer configuration
