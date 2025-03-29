@@ -27,6 +27,8 @@ function inputContext() {
  * @param {Event} event - The event object.
  */
 function outputContext(event) {
+  if (event.target.id === 'output') return
+
   const answer = event.target.innerText
   const index = event.target.dataset.line || event.target.parentElement.dataset.line || cm.lastLine()
   const hasAnswer = index !== null && answer !== '' && answer !== 'Error' && answer !== 'Plot'
