@@ -52,38 +52,59 @@ export function toggleMinMax() {
   }
 }
 
-/** Check for app updates */
-export function checkUpdates() {
-  if (isElectron) {
-    let newVersion
+/** Check for app update */
+export function checkUpdate() {
+  if (!isElectron) return
 
-    numara.checkUpdate()
+  const updateStatusMessage = (message) => {
+    $('#dialog-about-updateStatus').innerHTML = message
+  }
 
-    numara.notifyUpdate((event, version) => {
-      newVersion = version
+  numara.checkUpdate()
 
-      notify(
-        `Downloading latest version ${newVersion}... <a class="notificationLink" onclick="document.querySelector('#aboutButton').click()">View status</a>`
-      )
+  numara.updateStatus((event, status, version, progress) => {
+    switch (status) {
+      case 'checking':
+        updateStatusMessage('Checking for updates...')
+        break
 
-      $('#notificationDot').style.display = 'block'
-    })
+      case 'available':
+        notify(
+          `A new updated version ${version} is available. <a class="notificationLink" onclick="document.querySelector('#aboutButton').click()">Update status</a>`
+        )
+        break
 
-    numara.updateStatus((event, status) => {
-      if (status === 'ready') {
-        let notice = `A new update is ready to install. (${newVersion})`
+      case 'notAvailable':
+        updateStatusMessage('Numara is up to date.')
+        break
 
-        $('#dialog-about-updateStatus').innerHTML = notice
-        $('#updateButton').style.display = 'inline-block'
+      case 'downloading':
+        updateStatusMessage(`Downloading update... (${Math.round(progress.percent)}%)`)
+        break
+
+      case 'downloaded': {
+        const notice = `New version ${version} is ready to install.`
+
+        updateStatusMessage(notice)
 
         if (!$('#dialog-about').classList.contains('uk-open')) {
           notify(
             `${notice} <a class="notificationLink" onclick="document.querySelector('#updateButton').click()">Install Now</a>`
           )
         }
-      } else {
-        $('#dialog-about-updateStatus').innerHTML = status
+
+        $('#notificationDot').style.display = 'block'
+        $('#updateButton').style.display = 'inline-block'
+
+        break
       }
-    })
-  }
+
+      case 'error':
+        updateStatusMessage('Error while checking for updates.')
+        break
+
+      default:
+        updateStatusMessage('Unable to check for update.')
+    }
+  })
 }

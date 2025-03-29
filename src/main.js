@@ -304,21 +304,20 @@ ipcMain.on('textboxContextMenu', () => {
 })
 
 ipcMain.on('checkUpdate', () => {
-  autoUpdater.checkForUpdatesAndNotify()
+  autoUpdater.checkForUpdatesAndNotify({
+    title: 'A new update is ready to install',
+    body: '{appName} version {version} has been downloaded and is ready to install.'
+  })
 })
 
 ipcMain.on('updateApp', () => setImmediate(() => autoUpdater.quitAndInstall(true, true)))
 
-autoUpdater.on('checking-for-update', () => win.webContents.send('updateStatus', 'Checking for update...'))
-autoUpdater.on('update-available', (info) => win.webContents.send('notifyUpdate', info.version))
-autoUpdater.on('update-not-available', () => win.webContents.send('updateStatus', app.name + ' is up to date.'))
-autoUpdater.on('download-progress', (progress) => {
-  win.webContents.send('updateStatus', 'Downloading latest version... (' + Math.round(progress.percent) + '%)')
-})
-autoUpdater.on('update-downloaded', () => win.webContents.send('updateStatus', 'ready'))
-autoUpdater.on('error', () => {
-  win.webContents.send('updateStatus', 'Error checking for update.')
-})
+autoUpdater.on('checking-for-update', () => win.webContents.send('updateStatus', 'checking'))
+autoUpdater.on('update-available', (info) => win.webContents.send('updateStatus', 'available', info.version))
+autoUpdater.on('update-not-available', () => win.webContents.send('updateStatus', 'notAvailable'))
+autoUpdater.on('download-progress', (progress) => win.webContents.send('updateStatus', 'downloading', null, progress))
+autoUpdater.on('update-downloaded', (info) => win.webContents.send('updateStatus', 'downloaded', info.version))
+autoUpdater.on('error', () => win.webContents.send('updateStatus', 'error'))
 
 const menuTemplate = [
   {
