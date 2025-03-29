@@ -9,7 +9,7 @@ import { plot } from './plot'
 import { settings } from './settings'
 import { defaultPage, lastPage, loadPage, migrateSaved, getPageName, pageOrder, populatePages } from './pages'
 import { applyUdfu } from './userDefined'
-import { checkSize, checkUpdates, isMac, isElectron, toggleMinMax } from './utils'
+import { checkSize, checkUpdate, isMac, isElectron, toggleMinMax } from './utils'
 
 import { author, description, homepage, name, version } from './../../package.json'
 
@@ -404,7 +404,7 @@ const initializeApp = () => {
     })
 
     // Check for updates
-    checkUpdates()
+    checkUpdate()
 
     // Restart button if update is installed
     $('#updateButton').addEventListener('click', () => {
