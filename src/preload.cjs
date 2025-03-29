@@ -20,7 +20,6 @@ contextBridge.exposeInMainWorld('numara', {
         ipcRenderer.send('maximize')
       }
     }),
-  setOnTop: (callback) => ipcRenderer.send('setOnTop', callback),
   close: () => ipcRenderer.send('close'),
   minimize: () => ipcRenderer.send('minimize'),
   maximize: () => ipcRenderer.send('maximize'),
@@ -30,6 +29,7 @@ contextBridge.exposeInMainWorld('numara', {
   isResized: () => ipcRenderer.sendSync('isResized'),
   resetSize: () => ipcRenderer.send('resetSize'),
   restored: (callback) => ipcRenderer.on('restored', callback),
+  setOnTop: (callback) => ipcRenderer.send('setOnTop', callback),
 
   // Import
   import: () => ipcRenderer.send('import'),
@@ -57,7 +57,6 @@ contextBridge.exposeInMainWorld('numara', {
   // Update app
   updateApp: () => ipcRenderer.send('updateApp'),
   checkUpdate: () => ipcRenderer.send('checkUpdate'),
-  notifyUpdate: (callback) => ipcRenderer.on('notifyUpdate', callback),
   updateStatus: (callback) => ipcRenderer.on('updateStatus', callback),
 
   // Developer Tools
