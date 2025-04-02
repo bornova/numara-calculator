@@ -10,13 +10,13 @@ function inputContext() {
   setTimeout(() => {
     const index = cm.getCursor().line
     const line = cm.getLine(index)
-    const answer = $('#output').children[index].innerText
-    const isEmpty = cm.getValue() === ''
     const isLine = line.length > 0
+    const isEmpty = cm.getValue() === ''
     const isSelection = cm.somethingSelected()
+    const answer = $('#output').children[index].innerText
+    const hasAnswer = answer !== '' && answer !== 'Error' && answer !== 'Plot'
     const isMultiLine =
       cm.listSelections().length > 1 || cm.listSelections()[0].anchor.line !== cm.listSelections()[0].head.line
-    const hasAnswer = answer !== '' && answer !== 'Error' && answer !== 'Plot'
 
     numara.inputContextMenu(index, isEmpty, isLine, isSelection, isMultiLine, hasAnswer)
   }, 20)
@@ -27,8 +27,8 @@ function inputContext() {
  * @param {Event} event - The event object.
  */
 function outputContext(event) {
-  const answer = event.srcElement.innerText
-  const index = event.srcElement.dataset.line || event.srcElement.parentElement.dataset.line || cm.lastLine()
+  const answer = event.target.innerText
+  const index = event.target.dataset.line || event.target.parentElement.dataset.line || cm.lastLine()
   const hasAnswer = index !== null && answer !== '' && answer !== 'Error' && answer !== 'Plot'
   const isEmpty = cm.getValue() === ''
 
@@ -99,6 +99,7 @@ function copyAllAnswers() {
 
     cm.eachLine((line) => {
       const index = cm.getLineNumber(line)
+
       copiedOutputs += `${$('#output').children[index].innerText}\n`
     })
 
@@ -131,7 +132,9 @@ export function copyAll() {
 }
 
 // Context menus
-if (isElectron) {
+function initializeContextMenus() {
+  if (!isElectron) return
+
   cm.on('contextmenu', inputContext)
   udfInput.on('contextmenu', textboxContext)
   uduInput.on('contextmenu', textboxContext)
@@ -149,3 +152,5 @@ if (isElectron) {
   numara.copyAllAnswers(copyAllAnswers)
   numara.copyAll(copyAll)
 }
+
+initializeContextMenus()
