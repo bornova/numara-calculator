@@ -1,4 +1,5 @@
-import { $, app, store } from './common'
+import { app, store } from './common'
+import { dom } from './dom'
 import { math } from './eval'
 import { productName } from './../../package.json'
 import functionPlot from 'function-plot'
@@ -7,7 +8,7 @@ import functionPlot from 'function-plot'
  * Plot function.
  */
 export function plot() {
-  $('#plotTitle').innerHTML = app.plotFunction
+  dom.plotTitle.innerHTML = app.plotFunction
 
   const f = math.simplify(app.plotFunction.split('=')[1], app.mathScope).toString()
 
@@ -32,13 +33,13 @@ export function plot() {
       }
     ],
     grid: app.settings.plotGrid,
-    height: $('#plot').clientHeight,
+    height: dom.plot.clientHeight,
     target: '#plot',
     tip: {
       xLine: app.settings.plotCross,
       yLine: app.settings.plotCross
     },
-    width: $('#plot').clientWidth,
+    width: dom.plot.clientWidth,
     xAxis: { domain: xDomain },
     yAxis: { domain: yDomain }
   })
@@ -56,27 +57,27 @@ function updatePlotSetting(setting, value) {
 }
 
 // Event listeners for plot settings
-$('#plotCrossModal').addEventListener('click', () => {
-  updatePlotSetting('plotCross', $('#plotCrossModal').checked)
+dom.plotCrossModal.addEventListener('click', () => {
+  updatePlotSetting('plotCross', dom.plotCrossModal.checked)
 })
 
-$('#plotDerivativeModal').addEventListener('click', () => {
-  updatePlotSetting('plotDerivative', $('#plotDerivativeModal').checked)
+dom.plotDerivativeModal.addEventListener('click', () => {
+  updatePlotSetting('plotDerivative', dom.plotDerivativeModal.checked)
 })
 
-$('#plotGridModal').addEventListener('click', () => {
-  updatePlotSetting('plotGrid', $('#plotGridModal').checked)
+dom.plotGridModal.addEventListener('click', () => {
+  updatePlotSetting('plotGrid', dom.plotGridModal.checked)
 })
 
 /**
  * Export plot as SVG.
  */
-$('#exportPlot').addEventListener('click', () => {
-  $('.function-plot').setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+dom.exportPlot.addEventListener('click', () => {
+  dom.el('.function-plot').setAttribute('xmlns', 'http://www.w3.org/2000/svg')
 
   const fileName = `${productName} Plot ${app.plotFunction}`
   const preface = '<?xml version="1.0" standalone="no"?>\r\n'
-  const svgData = $('.function-plot').outerHTML
+  const svgData = dom.el('.function-plot').outerHTML
   const svgBlob = new Blob([preface, svgData], { type: 'image/svg+xml;charset=utf-8' })
   const downloadLink = document.createElement('a')
 
@@ -90,7 +91,7 @@ $('#exportPlot').addEventListener('click', () => {
 /**
  * Reset plot to default state.
  */
-$('#resetPlot').addEventListener('click', () => {
+dom.resetPlot.addEventListener('click', () => {
   app.activePlot = null
   plot()
 })
