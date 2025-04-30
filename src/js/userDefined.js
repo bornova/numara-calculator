@@ -1,10 +1,10 @@
-import { $, app, store } from './common'
+import { app, store } from './common'
+import { dom } from './dom'
 import { udfInput, uduInput } from './editor'
 import { showError } from './modal'
 
 /**
  * Apply user defined functions or units.
- *
  * @param {string} input User defined function or unit to apply.
  * @param {string} type 'func' | 'unit'
  * @returns {Promise<void>}
@@ -12,21 +12,24 @@ import { showError } from './modal'
 export function applyUdfu(input, type) {
   return new Promise((resolve, reject) => {
     try {
-      const loadUD =
-        type === 'func'
-          ? new Function(`'use strict'; let window; let numara; math.import({${input}}, {override: true})`)
-          : new Function(`'use strict'; let window; let numara; math.createUnit({${input}}, {override: true})`)
+      const isFunc = type === 'func'
+      const loadUD = new Function(
+        `'use strict'; 
+        let window; 
+        let numara; 
+        math.${isFunc ? 'import' : 'createUnit'}({${input}}, {override: true})`
+      )
 
       loadUD()
 
       const UDFunc = new Function(`'use strict'; return {${input}}`)
+      const list = isFunc ? 'udfList' : 'uduList'
 
       for (const f in UDFunc()) {
-        app[type === 'func' ? 'udfList' : 'uduList'].push(f)
+        app[list].push(f)
       }
 
-      store.set(type === 'func' ? 'udf' : 'udu', input)
-
+      store.set(isFunc ? 'udf' : 'udu', input)
       resolve()
     } catch (error) {
       reject(error)
@@ -35,31 +38,16 @@ export function applyUdfu(input, type) {
 }
 
 /**
- * Save user defined functions.
+ * Save user defined functions or units.
+ * @param {object} input Input element containing user defined function or unit.
+ * @param {string} type 'func' | 'unit'
  */
-function saveUserDefinedFunctions() {
-  applyUdfu(udfInput.getValue().trim(), 'func')
-    .then(() => {
-      location.reload()
-    })
-    .catch((error) => {
-      showError(error.name, error.message)
-    })
-}
-
-/**
- * Save user defined units.
- */
-function saveUserDefinedUnits() {
-  applyUdfu(uduInput.getValue().trim(), 'unit')
-    .then(() => {
-      location.reload()
-    })
-    .catch((error) => {
-      showError(error.name, error.message)
-    })
+function saveUserDefined(input, type) {
+  applyUdfu(input.getValue().trim(), type)
+    .then(() => location.reload())
+    .catch((error) => showError(error.name, error.message))
 }
 
 // Event listeners for saving user defined functions and units
-$('#dialog-udfu-save-f').addEventListener('click', saveUserDefinedFunctions)
-$('#dialog-udfu-save-u').addEventListener('click', saveUserDefinedUnits)
+dom.dialogUdfuSaveF.addEventListener('click', () => saveUserDefined(udfInput, 'func'))
+dom.dialogUdfuSaveU.addEventListener('click', () => saveUserDefined(uduInput, 'unit'))
