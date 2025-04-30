@@ -1,4 +1,5 @@
-import { $, app, store } from './common'
+import { app, store } from './common'
+import { dom } from './dom'
 import { cm, numaraHints } from './editor'
 import { calculate, math } from './eval'
 import { notify } from './modal'
@@ -14,13 +15,13 @@ numaraHints.push({ text: USD_UNIT, desc: 'U.S. Dollar', className: 'cm-currency'
  */
 export function getRates() {
   if (navigator.onLine) {
-    $('#lastUpdated').innerHTML = '<div uk-spinner="ratio: 0.3"></div>'
+    dom.lastUpdated.innerHTML = '<div uk-spinner="ratio: 0.3"></div>'
 
     fetch(EXCHANGE_RATE_URL)
       .then((response) => response.json())
       .then((rates) => {
         updateCurrencyRates(rates)
-        $('#lastUpdated').innerHTML = store.get('rateDate')
+        dom.lastUpdated.innerHTML = store.get('rateDate')
         cm.setOption('mode', app.settings.syntax ? 'numara' : 'plain')
         calculate()
       })
@@ -37,19 +38,27 @@ export function getRates() {
  * @param {Object} rates - The exchange rates data.
  */
 function updateCurrencyRates(rates) {
+  if (!rates || typeof rates !== 'object') return
+
   app.currencyRates = rates
 
-  Object.keys(rates).forEach((currency) => {
-    const rate = rates[currency]
+  let lastDate = null
 
-    math.createUnit(rate.code, { definition: math.unit(rate.inverseRate + USD_UNIT) }, { override: true })
+  for (const code in rates) {
+    const { code: rateCode, inverseRate, name, date } = rates[code]
 
-    if (!numaraHints.some((hint) => hint.text === rate.code)) {
-      numaraHints.push({ text: rate.code, desc: rate.name, className: 'cm-currency' })
+    math.createUnit(rateCode, { definition: math.unit(inverseRate + USD_UNIT) }, { override: true })
+
+    if (!numaraHints.some((hint) => hint.text === rateCode)) {
+      numaraHints.push({ text: rateCode, desc: name, className: 'cm-currency' })
     }
 
-    store.set('rateDate', rate.date)
-  })
+    lastDate = date
+  }
+
+  if (lastDate) {
+    store.set('rateDate', lastDate)
+  }
 }
 
 /**
@@ -57,14 +66,14 @@ function updateCurrencyRates(rates) {
  * @param {Error} error - The error object.
  */
 function handleFetchError(error) {
-  $('#lastUpdated').innerHTML = 'n/a'
+  dom.lastUpdated.innerHTML = 'n/a'
   notify('Failed to get exchange rates (' + error + ')', 'warning')
 }
 
 /**
- * Handle no internet connection scenario.
+ * Handle no internet connection.
  */
 function handleNoInternetConnection() {
-  $('#lastUpdated').innerHTML = 'No internet connection.'
+  dom.lastUpdated.innerHTML = 'No internet connection.'
   notify('No internet connection. Could not update exchange rates.', 'warning')
 }
