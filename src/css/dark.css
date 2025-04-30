@@ -18,8 +18,8 @@ body {
   background-color: #444444;
 }
 
-.header-win-title,
-.header-mac-title {
+.winHeaderTitle,
+.macHeaderTitle {
   color: #e6e6e6;
 }
 
@@ -164,17 +164,17 @@ body {
   border-top: 1px solid #333333;
 }
 
-.dialog-about-updateStatus {
+.dialogAboutUpdateStatus {
   color: #999999;
 }
 
 /* Settings menu items */
-#dialog-settings h3 {
+#dialogSettings h3 {
   color: #a0d3ff;
 }
 
-#dialog-settings .settingMod,
-#dialog-settings .settingModToggle {
+#dialogSettings .settingMod,
+#dialogSettings .settingModToggle {
   color: #dd9359;
 }
 
