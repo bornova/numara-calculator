@@ -371,8 +371,8 @@ const setupPrint = () => {
       const row = `
         <tr style="
           height: ${app.settings.lineHeight};
-          font-size: "${app.settings.fontSize}";
-          font-weight: "${app.settings.fontWeight}";"
+          font-size: ${app.settings.fontSize};
+          font-weight: ${app.settings.fontWeight};"
         >
           ${app.settings.lineNumbers ? '<td class="printLineNumCol">' + (lineNo + 1) + '</td>' : ''}
           <td style="width:${app.settings.inputWidth}%;">${input}</td>
