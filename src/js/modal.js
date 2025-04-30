@@ -1,10 +1,10 @@
-import { $, app } from './common'
+import { app } from './common'
+import { dom } from './dom'
 import UIkit from 'uikit'
 
 export const modal = {
   /**
    * Show modal dialog for given id.
-   *
    * @param {string} id Modal Id.
    */
   show: (id) => {
@@ -12,7 +12,6 @@ export const modal = {
   },
   /**
    * Hide modal dialog for given id.
-   *
    * @param {string} id Modal Id.
    */
   hide: (id) => {
@@ -20,24 +19,31 @@ export const modal = {
   }
 }
 
+// Track if error handler is already attached
+let errorHandlerAttached = false
+
 /**
  * Show error dialog.
- *
  * @param {string} title Title of dialog box.
  * @param {string} error Error message to show.
  */
 export function showError(title, error) {
-  UIkit.util.on('#dialog-error', 'beforeshow', () => {
-    $('#errTitle').innerHTML = title
-    $('#errMsg').innerHTML = error
-  })
+  if (!errorHandlerAttached) {
+    UIkit.util.on('#dialogError', 'beforeshow', () => {
+      dom.errTitle.innerHTML = title
+      dom.errMsg.innerHTML = error
+    })
+    errorHandlerAttached = true
+  } else {
+    dom.errTitle.innerHTML = title
+    dom.errMsg.innerHTML = error
+  }
 
-  modal.show('#dialog-error')
+  modal.show('#dialogError')
 }
 
 /**
  * Show app notifications.
- *
  * @param {string} msg Notification to show.
  * @param {string} [stat='primary'] Notification status: primary | success | warning | danger
  */
@@ -52,25 +58,35 @@ export function notify(msg, stat = 'primary') {
 
 /**
  * Show confirmation dialog.
- *
  * @param {string} msg Confirmation message to show.
  * @param {function} action Function to run upon selecting Yes.
  */
 export function confirm(msg, action) {
-  $('#confirmMsg').innerHTML = msg
+  dom.confirmMsg.innerHTML = msg
 
-  modal.show('#dialog-confirm')
+  modal.show('#dialogConfirm')
+
+  // Remove any previous handler before adding a new one
+  if (dom.confirmYes._yesAction) {
+    dom.confirmYes.removeEventListener('click', dom.confirmYes._yesAction)
+  }
 
   const yesAction = (event) => {
     action()
     event.stopPropagation()
-    UIkit.modal('#dialog-confirm').hide()
-    $('#confirm-yes').removeEventListener('click', yesAction)
+    UIkit.modal('#dialogConfirm').hide()
+    dom.confirmYes.removeEventListener('click', yesAction)
+    dom.confirmYes._yesAction = null
   }
 
-  $('#confirm-yes').addEventListener('click', yesAction)
+  dom.confirmYes._yesAction = yesAction
+  dom.confirmYes.addEventListener('click', yesAction)
 
-  UIkit.util.on('#dialog-confirm', 'hidden', () => {
-    $('#confirm-yes').removeEventListener('click', yesAction)
+  // Clean up handler on modal close
+  UIkit.util.on('#dialogConfirm', 'hidden', () => {
+    if (dom.confirmYes._yesAction) {
+      dom.confirmYes.removeEventListener('click', dom.confirmYes._yesAction)
+      dom.confirmYes._yesAction = null
+    }
   })
 }
