@@ -1,11 +1,13 @@
-import { $, app, store } from './common'
+import { app, store } from './common'
+import { dom } from './dom'
 import { notify } from './modal'
 
+// Cache user agent checks
+const userAgent = navigator.userAgent.toLowerCase()
 /** Check if app is running on MacOS. */
-export const isMac = navigator.userAgent.toLowerCase().includes('mac')
-
+export const isMac = userAgent.includes('mac')
 /** Check if app is running in Electron. */
-export const isElectron = navigator.userAgent.toLowerCase().includes('electron')
+export const isElectron = userAgent.includes('electron')
 
 /** Get app theme */
 export function getTheme() {
@@ -36,11 +38,7 @@ export function checkLocale() {
 
 /** Check window size. */
 export function checkSize() {
-  $('#resetSizeButton').style.display = isElectron
-    ? numara.isResized() && !numara.isMaximized()
-      ? 'block'
-      : 'none'
-    : 'none'
+  dom.resetSizeButton.style.display = isElectron && numara.isResized() && !numara.isMaximized() ? 'block' : 'none'
 }
 
 /** Minimize/maximize window. */
@@ -53,11 +51,11 @@ export function toggleMinMax() {
 }
 
 /** Check for app update */
-export function checkUpdate() {
+export function checkAppUpdate() {
   if (!isElectron) return
 
   const updateStatusMessage = (message) => {
-    $('#dialog-about-updateStatus').innerHTML = message
+    dom.dialogAboutUpdateStatus.innerHTML = message
   }
 
   numara.checkUpdate()
@@ -87,15 +85,17 @@ export function checkUpdate() {
 
         updateStatusMessage(notice)
 
-        if (!$('#dialog-about').classList.contains('uk-open')) {
+        if (!dom.dialogAbout.classList.contains('uk-open')) {
           notify(
             `${notice} <a class="notificationLink" onclick="document.querySelector('#updateButton').click()">Install Now</a>`
           )
         }
 
-        $('#notificationDot').style.display = 'block'
-        $('#updateButton').style.display = 'inline-block'
-
+        dom.notificationDot.style.display = 'block'
+        dom.updateButton.style.display = 'inline-block'
+        dom.updateButton.addEventListener('click', () => {
+          numara.updateApp()
+        })
         break
       }
 
