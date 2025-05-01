@@ -74,11 +74,7 @@ export const colors = {
   initialize: () => {
     const storedColors = store.get('colors')
 
-    if (storedColors) {
-      checkDefaultColors()
-    } else {
-      store.set('colors', colors.defaults)
-    }
+    storedColors ? checkDefaultColors() : store.set('colors', colors.defaults)
 
     app.colors = store.get('colors')
 
