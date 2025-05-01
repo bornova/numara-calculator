@@ -258,6 +258,7 @@ export function renamePage(pageId) {
 
     dom.pageName.innerHTML = page.name
     dom.dialogRenamePageSave.removeEventListener('click', newListener)
+
     modal.hide('#dialogRenamePage')
   }
 
@@ -414,6 +415,7 @@ if (isElectron) {
   dom.exportButton.addEventListener('click', () => {
     const pages = store.get('pages')
     const page = pages.find((page) => page.id === app.activePage).name
+
     numara.export(page, cm.getValue())
   })
 
