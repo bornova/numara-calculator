@@ -26,11 +26,8 @@ const schema = {
   position: { type: 'array', items: { type: 'integer' } },
   theme: { type: 'string', default: 'system' }
 }
-
 const config = new Store({ schema, clearInvalidConfig: true, fileExtension: '' })
-
 const theme = config.get('theme')
-
 const dark = '#1f1f1f'
 const light = '#ffffff'
 
@@ -102,14 +99,8 @@ function createAppWindow() {
 }
 
 app.setAppUserModelId(app.name)
-
 app.whenReady().then(createAppWindow)
-
-if (!app.requestSingleInstanceLock()) {
-  app.quit()
-} else {
-  app.on('second-instance', () => win.focus())
-}
+app.requestSingleInstanceLock() ? app.on('second-instance', () => win.focus()) : app.quit()
 
 nativeTheme.on('updated', () => win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors))
 

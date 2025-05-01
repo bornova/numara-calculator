@@ -97,7 +97,7 @@ text {
 }
 
 /* Windows Header */
-.header-win {
+.winHeader {
   -webkit-app-region: drag !important;
   display: none;
   position: fixed;
@@ -107,7 +107,7 @@ text {
   height: 30px;
 }
 
-.header-win-title {
+.winHeaderTitle {
   float: left;
   margin: 5px 0 0 15px;
   font-weight: 700;
@@ -144,7 +144,7 @@ text {
 }
 
 /* Mac Header */
-.header-mac {
+.macHeader {
   -webkit-app-region: drag !important;
   display: none;
   position: fixed;
@@ -154,7 +154,7 @@ text {
   height: 40px;
 }
 
-.header-mac-title {
+.macHeaderTitle {
   padding-top: 10px;
   font-size: 1.1em;
   font-family: 'Numara';
@@ -469,7 +469,7 @@ text {
   font-size: 0.9rem;
 }
 
-.dialog-confirm {
+.dialogConfirm {
   z-index: 10010;
 }
 
@@ -478,7 +478,7 @@ text {
 }
 
 /* Settings */
-#dialog-settings .uk-width-medium {
+#dialogSettings .uk-width-medium {
   width: 385px;
 }
 
@@ -490,22 +490,22 @@ text {
   overflow: scroll;
 }
 
-#dialog-settings .uk-overflow-auto {
+#dialogSettings .uk-overflow-auto {
   padding-right: 10px;
 }
 
-#dialog-settings h3 {
+#dialogSettings h3 {
   margin: 25px 0 12px 0;
   font-weight: 500;
   font-size: 1rem;
 }
 
-#dialog-settings h3:first-of-type {
+#dialogSettings h3:first-of-type {
   margin: 0px 0 12px 0;
 }
 
-#dialog-settings .settingMod,
-#dialog-settings .settingModToggle {
+#dialogSettings .settingMod,
+#dialogSettings .settingModToggle {
   display: none;
   position: absolute;
   cursor: pointer;
@@ -514,12 +514,12 @@ text {
   color: #dd9359;
 }
 
-#dialog-settings .settingMod > svg,
-#dialog-settings .settingModToggle > svg {
+#dialogSettings .settingMod > svg,
+#dialogSettings .settingModToggle > svg {
   width: 24px;
 }
 
-#dialog-settings .range .settingMod {
+#dialogSettings .range .settingMod {
   margin-left: -54px;
 }
 
@@ -572,7 +572,7 @@ text {
 }
 
 /* About dialog items */
-.dialog-about {
+.dialogAbout {
   text-align: center;
 }
 
@@ -591,7 +591,7 @@ text {
   margin-left: 5px;
 }
 
-.dialog-about p {
+.dialogAbout p {
   clear: both;
   margin-top: 5px;
 }
@@ -610,7 +610,7 @@ div:has(> #logsLink) {
   display: none;
 }
 
-.dialog-about-appVersion {
+.dialogAboutAppVersion {
   display: block;
   margin-bottom: 8px;
   text-align: center;
@@ -621,7 +621,7 @@ div:has(> #logsLink) {
   text-align: center;
 }
 
-.dialog-about-updateStatus {
+.dialogAboutUpdateStatus {
   display: block;
   text-align: center;
 }
@@ -637,7 +637,7 @@ div:has(> #logsLink) {
   text-transform: capitalize;
 }
 
-.dialog-about-copyright {
+.dialogAboutCopyright {
   display: block;
   margin: 15px 0;
 }
@@ -926,7 +926,7 @@ input:checked + .slider:before {
   width: 350px;
 }
 
-#dialog-settings > .uk-width-medium {
+#dialogSettings > .uk-width-medium {
   width: 420px;
 }
 
@@ -1094,7 +1094,7 @@ input:checked + .slider:before {
   font-size: 1rem !important;
 }
 
-#dialog-udfu .CodeMirror {
+#dialogUdfu .CodeMirror {
   padding: 5px;
   height: calc(100vh - 220px);
   max-height: 800px;

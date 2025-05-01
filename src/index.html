@@ -26,8 +26,8 @@
 
   <body>
     <div id="wrapper" class="wrapper">
-      <div id="header-win" class="header-win">
-        <div id="header-win-title" class="header-win-title"></div>
+      <div id="winHeader" class="winHeader">
+        <div id="winHeaderTitle" class="winHeaderTitle"></div>
         <div id="winButtons" class="winButtons">
           <span id="close" class="close-btn-win" title="Exit"></span>
           <span id="max" class="max-btn-win" title="Maximize"></span>
@@ -36,8 +36,8 @@
         </div>
       </div>
 
-      <div id="header-mac" class="header-mac">
-        <div id="header-mac-title" class="header-mac-title"></div>
+      <div id="macHeader" class="macHeader">
+        <div id="macHeaderTitle" class="macHeaderTitle"></div>
       </div>
 
       <div id="panel" class="panel">
@@ -121,7 +121,7 @@
       </div>
     </div>
 
-    <div id="dialog-newPage" class="modal" uk-modal>
+    <div id="dialogNewPage" class="modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
         <h2 class="uk-modal-title">New page title</h2>
         <div>
@@ -129,14 +129,14 @@
         </div>
         <div uk-flex>
           <div class="dialog-buttons uk-flex-right">
-            <button id="dialog-newPage-save" class="uk-button uk-button-primary uk-button-small">Save</button>
+            <button id="dialogNewPageSave" class="uk-button uk-button-primary uk-button-small">Save</button>
             <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
           </div>
         </div>
       </div>
     </div>
 
-    <div id="dialog-renamePage" class="modal" uk-modal>
+    <div id="dialogRenamePage" class="modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
         <h2 class="uk-modal-title">Rename page</h2>
         <div>
@@ -144,14 +144,14 @@
         </div>
         <div uk-flex>
           <div class="dialog-buttons uk-flex-right">
-            <button id="dialog-renamePage-save" class="uk-button uk-button-primary uk-button-small">Save</button>
+            <button id="dialogRenamePageSave" class="uk-button uk-button-primary uk-button-small">Save</button>
             <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
           </div>
         </div>
       </div>
     </div>
 
-    <div id="dialog-udfu" class="modal" uk-modal>
+    <div id="dialogUdfu" class="modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-2xlarge">
         <h2 class="uk-modal-title uk-text-center">User Defined Functions & Units</h2>
         <ul id="udfuTabs" uk-tab>
@@ -166,7 +166,7 @@
             <div uk-grid>
               <div class="dialog-buttons uk-width-1-2 uk-flex-left"></div>
               <div class="dialog-buttons uk-width-1-2 uk-flex-right">
-                <button id="dialog-udfu-save-f" class="uk-button uk-button-primary uk-button-small">Save</button>
+                <button id="dialogUdfuSaveF" class="uk-button uk-button-primary uk-button-small">Save</button>
                 <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
               </div>
             </div>
@@ -178,7 +178,7 @@
             <div uk-grid>
               <div class="dialog-buttons uk-width-1-2 uk-flex-left"></div>
               <div class="dialog-buttons uk-width-1-2 uk-flex-right">
-                <button id="dialog-udfu-save-u" class="uk-button uk-button-primary uk-button-small">Save</button>
+                <button id="dialogUdfuSaveU" class="uk-button uk-button-primary uk-button-small">Save</button>
                 <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
               </div>
             </div>
@@ -187,7 +187,7 @@
       </div>
     </div>
 
-    <div id="dialog-settings" class="modal" uk-modal>
+    <div id="dialogSettings" class="modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
         <h2 class="uk-modal-title uk-text-center">Settings</h2>
         <div class="dialog-settings-body">
@@ -316,7 +316,7 @@
             <div class="uk-text-right uk-width-1-2">
               <div class="uk-child-width-expand" uk-grid>
                 <div class="uk-text-right uk-width-1-6">
-                  <span id="precision-label" class="uk-label precision"></span>
+                  <span id="precisionLabel" class="uk-label precision"></span>
                 </div>
                 <div class="uk-text-right range uk-position-relative">
                   <input id="precision" class="uk-range settingItem" type="range" min="0" max="16" step="1" />
@@ -329,7 +329,7 @@
             <div class="uk-text-right uk-width-1-2">
               <div class="uk-child-width-expand" uk-grid>
                 <div class="uk-text-right uk-width-1-6">
-                  <span id="expUpper-label" class="uk-label expUpper"></span>
+                  <span id="expUpperLabel" class="uk-label expUpper"></span>
                 </div>
                 <div class="uk-text-right range uk-position-relative">
                   <input id="expUpper" class="uk-range settingItem" type="range" min="0" max="32" step="1" />
@@ -342,7 +342,7 @@
             <div class="uk-text-right uk-width-1-2">
               <div class="uk-child-width-expand" uk-grid>
                 <div class="uk-text-right uk-width-1-6">
-                  <span id="expLower-label" class="uk-label expLower"></span>
+                  <span id="expLowerLabel" class="uk-label expLower"></span>
                 </div>
                 <div class="uk-text-right range uk-position-relative">
                   <input id="expLower" class="uk-range settingItem" type="range" min="-32" max="0" step="1" />
@@ -574,7 +574,7 @@
         <div uk-grid>
           <div class="dialog-buttons resetButtons uk-width-2-3 uk-flex-left">
             <a
-              id="dialog-settings-reset"
+              id="dialogSettingsReset"
               class="resetButton uk-text-danger"
               title="Reset all app settings and data"
               uk-tooltip
@@ -595,7 +595,7 @@
       </div>
     </div>
 
-    <div id="dialog-theme" class="dialog-theme modal" uk-modal>
+    <div id="dialogTheme" class="dialogTheme modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
         <h2 class="uk-modal-title uk-text-center">Customize Theme</h2>
         <div class="uk-child-width-expand uk-margin-small-bottom" uk-grid>
@@ -683,21 +683,21 @@
       </div>
     </div>
 
-    <div id="dialog-about" class="dialog-about modal" uk-modal>
+    <div id="dialogAbout" class="dialogAbout modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
         <button class="uk-modal-close-default" type="button" uk-close></button>
         <div class="dialog-about-header">
           <img id="numaraLogo" />
         </div>
         <div>
-          <span id="dialog-about-appVersion" class="dialog-about-appVersion"></span>
-          <span id="dialog-about-updateStatus" class="dialog-about-updateStatus"></span>
+          <span id="dialogAboutAppVersion" class="dialogAboutAppVersion"></span>
+          <span id="dialogAboutUpdateStatus" class="dialogAboutUpdateStatus"></span>
           <span>
             <button id="updateButton" class="uk-button uk-button-primary uk-button-small updateButton">
               Install Now
             </button>
           </span>
-          <span id="dialog-about-copyright" class="dialog-about-copyright"></span>
+          <span id="dialogAboutCopyright" class="dialogAboutCopyright"></span>
         </div>
 
         <div class="dialog-about-links">
@@ -710,7 +710,7 @@
       </div>
     </div>
 
-    <div id="dialog-plot" class="modal" uk-modal>
+    <div id="dialogPlot" class="modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-2xlarge">
         <h2 id="plotTitle" class="uk-modal-title uk-text-center plotTitle"></h2>
         <div id="plot"></div>
@@ -745,7 +745,7 @@
       </div>
     </div>
 
-    <div id="dialog-error" class="modal" uk-modal>
+    <div id="dialogError" class="modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
         <button class="uk-modal-close-default" type="button" uk-close></button>
         <h2 id="errTitle" class="errTitle"></h2>
@@ -753,12 +753,12 @@
       </div>
     </div>
 
-    <div id="dialog-confirm" class="dialog-confirm" uk-modal>
+    <div id="dialogConfirm" class="dialogConfirm" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
         <h2 class="uk-modal-title">Are you sure?</h2>
         <span id="confirmMsg"></span>
         <div class="dialog-buttons uk-flex-right">
-          <button id="confirm-yes" class="uk-button uk-button-danger uk-button-small">Yes</button>
+          <button id="confirmYes" class="uk-button uk-button-danger uk-button-small">Yes</button>
           <button class="uk-button uk-button-default uk-modal-close uk-button-small">No</button>
         </div>
       </div>

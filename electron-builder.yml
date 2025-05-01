@@ -4,6 +4,8 @@ appId: com.numara.app
 # Artifact name pattern
 artifactName: '${productName}-${version}-${arch}.${ext}'
 
+asar: false
+
 # Publish configuration
 publish:
   - provider: github

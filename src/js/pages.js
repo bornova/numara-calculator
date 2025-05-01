@@ -1,4 +1,5 @@
-import { $, $all, app, store } from './common'
+import { app, store } from './common'
+import { dom } from './dom'
 import { cm } from './editor'
 import { generateIcons } from './icons'
 import { confirm, modal, notify } from './modal'
@@ -71,7 +72,7 @@ export function populatePages() {
     defaultPage()
   }
 
-  $('#pageList').innerHTML = ''
+  dom.pageList.innerHTML = ''
 
   pages.forEach((page) => {
     const pageListItem = document.createElement('div')
@@ -118,7 +119,7 @@ export function populatePages() {
       }
     })
 
-    $('#pageList').appendChild(pageListItem)
+    dom.pageList.appendChild(pageListItem)
   })
 
   generateIcons()
@@ -126,7 +127,6 @@ export function populatePages() {
 
 /**
  * Load page.
- *
  * @param {string} pageId Id of the page to load.
  */
 export function loadPage(pageId) {
@@ -136,8 +136,8 @@ export function loadPage(pageId) {
   app.activePage = pageId
   store.set('lastPage', pageId)
 
-  $('#pageName').innerHTML = page.name
-  $('#pageName').title = page.name
+  dom.pageName.innerHTML = page.name
+  dom.pageName.title = page.name
 
   cm.setValue(page.data)
 
@@ -177,14 +177,13 @@ export function defaultPage() {
 
 /**
  * Create new page.
- *
  * @param {boolean} isImport Is the new page imported? true | false
  */
 export function newPage(isImport) {
   const pageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
   const pages = store.get('pages')
   const pageName =
-    $('#newPageTitleInput').value.replace(/<|>/g, '').trim() || (isImport ? 'Imported page' : getPageName())
+    dom.newPageTitleInput.value.replace(/<|>/g, '').trim() || (isImport ? 'Imported page' : getPageName())
 
   const pageNames = pages.map((p) => p.name)
 
@@ -204,14 +203,13 @@ export function newPage(isImport) {
 
   populatePages()
 
-  $('#pageName').innerHTML = pageName
+  dom.pageName.innerHTML = pageName
 
-  modal.hide('#dialog-newPage')
+  modal.hide('#dialogNewPage')
 }
 
 /**
  * Delete page.
- *
  * @param {string} pageId Id of the page to delete.
  */
 export function deletePage(pageId) {
@@ -234,50 +232,65 @@ export function deletePage(pageId) {
 
 /**
  * Rename page.
- *
  * @param {string} pageId Id of the page to rename.
  */
 export function renamePage(pageId) {
   const pages = store.get('pages')
   const page = pages.find((page) => page.id === pageId)
 
-  $('#renamePageTitleInput').value = page.name
+  dom.renamePageTitleInput.value = page.name
 
-  modal.show('#dialog-renamePage')
+  modal.show('#dialogRenamePage')
 
-  function rename() {
-    page.name = $('#renamePageTitleInput').value.replace(/<|>/g, '').trim() || getPageName()
+  // Remove previous event listener to avoid stacking
+  const newListener = function rename() {
+    const newName = dom.renamePageTitleInput.value.replace(/<|>/g, '').trim() || getPageName()
+    // Prevent duplicate page names
+    if (pages.some((p) => p.name === newName && p.id !== pageId)) {
+      notify(`"${newName}" already exists. Please choose a different page name.`, 'danger')
+      return
+    }
 
+    page.name = newName
     store.set('pages', pages)
 
     populatePages()
 
-    $('#pageName').innerHTML = page.name
+    dom.pageName.innerHTML = page.name
+    dom.dialogRenamePageSave.removeEventListener('click', newListener)
 
-    modal.hide('#dialog-renamePage')
-
-    $('#dialog-renamePage-save').removeEventListener('click', rename)
+    modal.hide('#dialogRenamePage')
   }
 
-  $('#dialog-renamePage-save').addEventListener('click', rename)
+  dom.dialogRenamePageSave.addEventListener('click', newListener)
 }
 
 /**
  * Duplicate page.
- *
  * @param {string} pageId Id of the page to duplicate.
  */
 export function duplicatePage(pageId) {
   const dupPageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
   const pages = store.get('pages')
   const dupPage = pages.find((page) => page.id === pageId)
+
+  if (!dupPage) {
+    notify('Page not found.', 'danger')
+    return
+  }
+
   const dupPageData = dupPage.data
-  const dupPageName = dupPage.name + ' (copy)'
+  let dupPageName = dupPage.name + ' (copy)'
+  // Ensure unique name for duplicate
+  const baseName = dupPage.name + ' (copy)'
+  let count = 1
+
+  while (pages.some((p) => p.name === dupPageName)) {
+    dupPageName = `${baseName} ${count++}`
+  }
 
   app.activePage = dupPageId
-
   pages.push({ id: dupPageId, name: dupPageName, data: dupPageData })
-
   store.set('pages', pages)
 
   loadPage(dupPageId)
@@ -285,33 +298,31 @@ export function duplicatePage(pageId) {
 
 /**
  * Sort page list.
- *
  * @param {string} by Sort by argument - oldnew | newold | az | za
  */
 export function sortPages(by) {
   const pages = store.get('pages')
-
   let sortedPages
 
   switch (by) {
     case 'oldnew':
-      sortedPages = pages.sort((a, b) => a.id - b.id)
+      sortedPages = [...pages].sort((a, b) => a.id.localeCompare(b.id))
       break
     case 'newold':
-      sortedPages = pages.sort((a, b) => b.id - a.id)
+      sortedPages = [...pages].sort((a, b) => b.id.localeCompare(a.id))
       break
     case 'az':
-      sortedPages = pages.sort((a, b) => a.name.localeCompare(b.name))
+      sortedPages = [...pages].sort((a, b) => a.name.localeCompare(b.name))
       break
     case 'za':
-      sortedPages = pages.sort((a, b) => b.name.localeCompare(a.name))
+      sortedPages = [...pages].sort((a, b) => b.name.localeCompare(a.name))
       break
+    default:
+      sortedPages = pages
   }
 
   store.set('pages', sortedPages)
-
   populatePages()
-
   UIkit.dropdown('#sortDropdown').hide(0)
 }
 
@@ -320,7 +331,7 @@ export function sortPages(by) {
  */
 export function pageOrder() {
   const pages = store.get('pages')
-  const pageList = $all('#pageList > div')
+  const pageList = dom.els('#pageList > div')
   const orderedPages = [...pageList].map((el) => pages.find((page) => page.id === el.getAttribute('id')))
 
   store.set('pages', orderedPages)
@@ -334,7 +345,6 @@ export function deleteAllPages() {
     store.set('pages', [])
 
     defaultPage()
-
     populatePages()
   })
 }
@@ -343,51 +353,51 @@ export function deleteAllPages() {
  * Show new page dialog.
  */
 function newPageDialog() {
-  $('#newPageTitleInput').value = ''
-  $('#newPageTitleInput').focus()
+  dom.newPageTitleInput.value = ''
+  dom.newPageTitleInput.focus()
 
-  modal.show('#dialog-newPage')
+  modal.show('#dialogNewPage')
 }
 
 // Event listeners
-$('#newPageButton').addEventListener('click', newPageDialog)
-$('#newPageButtonSP').addEventListener('click', newPageDialog)
-$('#dialog-newPage-save').addEventListener('click', () => {
+dom.newPageButton.addEventListener('click', newPageDialog)
+dom.newPageButtonSP.addEventListener('click', newPageDialog)
+dom.dialogNewPageSave.addEventListener('click', () => {
   newPage(false)
 })
-$('#newPageTitleInput').addEventListener('keyup', (event) => {
+dom.newPageTitleInput.addEventListener('keyup', (event) => {
   if (event.key === 'Enter' || event.keyCode === 13) {
-    $('#dialog-newPage-save').click()
+    dom.dialogNewPageSave.click()
   }
 })
-$('#deleteAllPagesButton').addEventListener('click', deleteAllPages)
-$('#renamePageTitleInput').addEventListener('keyup', (event) => {
+dom.deleteAllPagesButton.addEventListener('click', deleteAllPages)
+dom.renamePageTitleInput.addEventListener('keyup', (event) => {
   if (event.key === 'Enter' || event.keyCode === 13) {
-    $('#dialog-renamePage-save').click()
+    dom.dialogRenamePageSave.click()
   }
 })
-$('#sortOldNew').addEventListener('click', () => {
+dom.sortOldNew.addEventListener('click', () => {
   sortPages('oldnew')
 })
-$('#sortNewOld').addEventListener('click', () => {
+dom.sortNewOld.addEventListener('click', () => {
   sortPages('newold')
 })
-$('#sortAZ').addEventListener('click', () => {
+dom.sortAZ.addEventListener('click', () => {
   sortPages('az')
 })
-$('#sortZA').addEventListener('click', () => {
+dom.sortZA.addEventListener('click', () => {
   sortPages('za')
 })
-$('#closeSidePanelButton').addEventListener('click', () => {
+dom.closeSidePanelButton.addEventListener('click', () => {
   UIkit.offcanvas('#sidePanel').hide()
 })
-$('#printButton').addEventListener('click', () => {
+dom.printButton.addEventListener('click', () => {
   window.print()
 })
 
 if (isElectron) {
   // Import calculations from file
-  $('#importButton').addEventListener('click', numara.import)
+  dom.importButton.addEventListener('click', numara.import)
 
   numara.importData((event, data, msg) => {
     newPage(true)
@@ -402,9 +412,10 @@ if (isElectron) {
   numara.main.import(numara.import)
 
   // Export calculations to file
-  $('#exportButton').addEventListener('click', () => {
+  dom.exportButton.addEventListener('click', () => {
     const pages = store.get('pages')
     const page = pages.find((page) => page.id === app.activePage).name
+
     numara.export(page, cm.getValue())
   })
 
@@ -417,7 +428,7 @@ if (isElectron) {
   })
 
   numara.main.export(() => {
-    numara.export($('#newPageTitleInput').value, cm.getValue())
+    numara.export(dom.newPageTitleInput.value, cm.getValue())
   })
 
   // Print window from main
@@ -426,5 +437,5 @@ if (isElectron) {
     window.print()
   })
 } else {
-  $all('#exportButton, #importButton, #spDivider').forEach((el) => el.remove())
+  dom.els('#exportButton, #importButton, #spDivider').forEach((el) => el.remove())
 }

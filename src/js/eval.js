@@ -1,4 +1,5 @@
-import { $, app, store } from './common'
+import { app, store } from './common'
+import { dom } from './dom'
 import { cm, numaraHints, keywords } from './editor'
 import { checkLocale } from './utils'
 
@@ -17,9 +18,96 @@ window.math = math
 
 const nowFormat = 'D t'
 const nowDayFormat = 'ccc, D t'
-
 const todayFormat = 'D'
 const todayDayFormat = 'ccc, D'
+
+const REGEX_CONTINUATION = /[+\-*/]/
+const REGEX_DATE_TIME =
+  /[+-] * .* *(millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia)s?/g
+const REGEX_PCNT_OF = /%[ ]*of[ ]*/g
+const REGEX_PCNT_OF_VAL = /[\w.]*%[ ]*of[ ]*/g
+
+const CLASS_RULER = 'ruler'
+const CLASS_NO_RULER = 'noRuler'
+const CLASS_LINE_ERROR = 'lineNoError'
+const CLASS_ANSWER = 'answer'
+const CLASS_PLOT_BUTTON = 'plotButton'
+const CLASS_LINE_ERROR_LINK = 'lineError'
+
+/**
+ * Evaluate a single line and return the answer and answerCopy.
+ * @param {string} line - The line to evaluate.
+ * @param {number} lineNo - The line number (1-based).
+ * @param {object} cmLine - The CodeMirror line object.
+ * @param {Array} avgs - Array of averages.
+ * @param {Array} totals - Array of totals.
+ * @param {Array} subtotals - Array of subtotals.
+ * @returns {{answer: string, answerCopy: string}}
+ */
+function evaluateLine(line, lineNo, cmLine, avgs, totals, subtotals) {
+  let answer = ''
+  let answerCopy = ''
+
+  try {
+    line =
+      lineNo > 1 &&
+      REGEX_CONTINUATION.test(line.charAt(0)) &&
+      cm.getLine(lineNo - 2)?.length > 0 &&
+      app.settings.contPrevLine
+        ? app.mathScope.ans + line
+        : line
+
+    if (checkLocale()) {
+      line = line.replace(/[,;]/g, (match) => (match === ',' ? '.' : ','))
+    }
+
+    app.mathScope.avg = math.evaluate(avgs.length > 0 ? '(' + math.mean(avgs) + ')' : '0')
+    app.mathScope.total = math.evaluate(totals.length > 0 ? '(' + totals.join('+') + ')' : '0')
+    app.mathScope.subtotal = math.evaluate(subtotals.length > 0 ? '(' + subtotals.join('+') + ')' : '0')
+
+    try {
+      answer = math.evaluate(line, app.mathScope)
+    } catch {
+      answer = evaluate(line)
+    }
+
+    if (!(answer || answer === 0)) {
+      subtotals.length = 0
+
+      return { answer: '', answerCopy: '' }
+    }
+
+    app.mathScope._ = answer
+    app.mathScope.ans = answer
+    app.mathScope['line' + lineNo] = answer
+
+    if (typeof answer === 'number') {
+      avgs.push(answer)
+      totals.push(answer)
+      subtotals.push(answer)
+    }
+
+    answerCopy = formatAnswer(answer, app.settings.thouSep && app.settings.copyThouSep)
+    answer = formatAnswer(answer, app.settings.thouSep)
+
+    if (answer.match(/\w\(x\)/)) {
+      const plotAns = (/\w\(x\)$/.test(answer) && line !== 'ans' ? line : answer).replace(/\s+/g, '')
+
+      app.mathScope.ans = plotAns
+      app.mathScope['line' + lineNo] = plotAns
+
+      answer = `<a class="${CLASS_PLOT_BUTTON}" data-func="${plotAns}">Plot</a>`
+    }
+  } catch (error) {
+    if (app.settings.lineErrors) {
+      cm.addLineClass(cm.getLineNumber(cmLine), 'gutter', CLASS_LINE_ERROR)
+
+      answer = `<a class="${CLASS_LINE_ERROR_LINK}" data-line="${lineNo}" data-error="${String(error).replace(/'|"/g, '`')}">Error</a>`
+    }
+  }
+
+  return { answer, answerCopy }
+}
 
 /**
  * Calculate answers.
@@ -42,105 +130,63 @@ export function calculate() {
   app.mathScope.now = dateTime.toFormat(app.settings.dateDay ? nowDayFormat : nowFormat)
   app.mathScope.today = dateTime.toFormat(app.settings.dateDay ? todayDayFormat : todayFormat)
 
-  $('#clearButton').setAttribute('disabled', cm.getValue() === '')
-  $('#copyButton').setAttribute('disabled', cm.getValue() === '')
+  dom.clearButton.setAttribute('disabled', cm.getValue() === '')
+  dom.copyButton.setAttribute('disabled', cm.getValue() === '')
+
+  // Cache line heights to avoid repeated DOM access
+  const lineHeights = Array.from(cm.display.lineDiv.children).map((child) => child?.clientHeight ?? 0)
 
   cm.eachLine((cmLine) => {
     const cmLineNo = cm.getLineNumber(cmLine)
     const lineNo = cmLineNo + 1
-
-    let answer = ''
     let line = cmLine.text.trim().split('//')[0].split('#')[0]
 
-    cm.removeLineClass(cmLine, 'gutter', 'lineNoError')
+    cm.removeLineClass(cmLine, 'gutter', CLASS_LINE_ERROR)
 
     if (app.settings.rulers) {
-      cm.removeLineClass(cmLine, 'wrap', 'noRuler')
-      cm.addLineClass(cmLine, 'wrap', 'ruler')
+      cm.removeLineClass(cmLine, 'wrap', CLASS_NO_RULER)
+      cm.addLineClass(cmLine, 'wrap', CLASS_RULER)
     } else {
-      cm.removeLineClass(cmLine, 'wrap', 'ruler')
-      cm.addLineClass(cmLine, 'wrap', 'noRuler')
+      cm.removeLineClass(cmLine, 'wrap', CLASS_RULER)
+      cm.addLineClass(cmLine, 'wrap', CLASS_NO_RULER)
     }
 
+    let answer = ''
+    answerCopy = ''
+
     if (line) {
-      try {
-        line =
-          lineNo > 1 &&
-          line.charAt(0).match(/[+\-*/]/) &&
-          cm.getLine(lineNo - 2).length > 0 &&
-          app.settings.contPrevLine
-            ? app.mathScope.ans + line
-            : line
+      const result = evaluateLine(line, lineNo, cmLine, avgs, totals, subtotals)
 
-        if (checkLocale()) {
-          line = line.replace(/[,;]/g, (match) => (match === ',' ? '.' : ','))
-        }
-
-        app.mathScope.avg = math.evaluate(avgs.length > 0 ? '(' + math.mean(avgs) + ')' : '0')
-        app.mathScope.total = math.evaluate(totals.length > 0 ? '(' + totals.join('+') + ')' : '0')
-        app.mathScope.subtotal = math.evaluate(subtotals.length > 0 ? '(' + subtotals.join('+') + ')' : '0')
-
-        try {
-          answer = math.evaluate(line, app.mathScope)
-        } catch {
-          answer = evaluate(line)
-        }
-
-        if (answer || answer === 0) {
-          app.mathScope._ = answer
-          app.mathScope.ans = answer
-          app.mathScope['line' + lineNo] = answer
-
-          if (typeof answer === 'number') {
-            avgs.push(answer)
-            totals.push(answer)
-            subtotals.push(answer)
-          }
-
-          answerCopy = formatAnswer(answer, app.settings.thouSep && app.settings.copyThouSep)
-          answer = formatAnswer(answer, app.settings.thouSep)
-
-          if (answer.match(/\w\(x\)/)) {
-            const plotAns = (/\w\(x\)$/.test(answer) && line !== 'ans' ? line : answer).replace(/\s+/g, '')
-
-            app.mathScope.ans = plotAns
-            app.mathScope['line' + lineNo] = plotAns
-
-            answer = `<a class="plotButton" data-func="${plotAns}">Plot</a>`
-          }
-        } else {
-          subtotals.length = 0
-
-          answer = ''
-        }
-      } catch (error) {
-        if (app.settings.lineErrors) {
-          cm.addLineClass(cmLineNo, 'gutter', 'lineNoError')
-
-          answer = `<a class="lineError" data-line="${lineNo}" data-error="${String(error).replace(/'|"/g, '`')}">Error</a>`
-        }
-      }
+      answer = result.answer
+      answerCopy = result.answerCopy
     } else {
       subtotals.length = 0
     }
 
-    const lineHeight = cm.display.lineDiv.children[cmLineNo].clientHeight
+    const lineHeight = lineHeights[cmLineNo]
 
     answers += `<div
-        class="${app.settings.rulers ? 'ruler' : 'noRuler'} uk-display-block"
+        class="${app.settings.rulers ? CLASS_RULER : CLASS_NO_RULER} uk-display-block"
         data-line="${cmLineNo}"
         style="height:${lineHeight}px"
       >
-        <span class="${answer && !answer.startsWith('<a') ? 'answer' : ''}" data-copy="${answerCopy}">${answer}</span>
+        <span class="${answer && !answer.startsWith('<a') ? CLASS_ANSWER : ''}" data-copy="${answerCopy}">${answer}</span>
       </div>`
   })
 
-  $('#output').innerHTML = answers
+  dom.output.innerHTML = answers
 
   addScopeHints()
 
   if (app.activePage) {
-    savePageData()
+    const pages = store.get('pages')
+    const page = pages.find((page) => page.id === app.activePage)
+
+    if (!page) return
+
+    page.data = cm.getValue()
+    page.history = cm.getHistory()
+    store.set('pages', pages)
   }
 }
 
@@ -158,13 +204,10 @@ function evaluate(line) {
     }
   }
 
-  const dateTimeReg =
-    /[+-] * .* *(millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia)s?/g
-
-  if (line.match(dateTimeReg)) {
+  if (line.match(REGEX_DATE_TIME)) {
     line = line.replace('now', app.mathScope.now).replace('today', app.mathScope.today)
 
-    const lineDate = line.replace(dateTimeReg, '').trim()
+    const lineDate = line.replace(REGEX_DATE_TIME, '').trim()
     const lineDateRight = line.replace(lineDate, '').trim()
     const locale = { locale: app.settings.locale }
     const lineDateNow = DateTime.fromFormat(lineDate, app.settings.dateDay ? nowDayFormat : nowFormat, locale)
@@ -192,11 +235,8 @@ function evaluate(line) {
     }
   }
 
-  const pcntOfReg = /%[ ]*of[ ]*/g
-  const pcntOfValReg = /[\w.]*%[ ]*of[ ]*/g
-
-  if (line.match(pcntOfValReg)) {
-    line = line.replaceAll(pcntOfReg, '/100*')
+  if (line.match(REGEX_PCNT_OF_VAL)) {
+    line = line.replaceAll(REGEX_PCNT_OF, '/100*')
   }
 
   return math.evaluate(line, app.mathScope)
@@ -208,22 +248,11 @@ function evaluate(line) {
  * @returns {string} - The stripped answer.
  */
 function stripAnswer(answer) {
-  let t = answer.length
-
-  if (answer.charAt(0) === '"') {
-    answer = answer.substring(1, t--)
-  }
-
-  if (answer.charAt(--t) === '"') {
-    answer = answer.substring(0, t)
-  }
-
-  return answer
+  return typeof answer === 'string' ? answer.replace(/^"|"$/g, '') : answer
 }
 
 /**
  * Format answer.
- *
  * @param {*} answer Value to format.
  * @param {boolean} useGrouping Include thousands separator - True|False
  * @returns {string} - The formatted answer.
@@ -271,17 +300,4 @@ function addScopeHints() {
       numaraHints.push({ text: v, desc: 'Variable', className: 'cm-variable' })
     }
   })
-}
-
-/**
- * Save page data to store.
- */
-function savePageData() {
-  const pages = store.get('pages')
-  const page = pages.find((page) => page.id === app.activePage)
-
-  page.data = cm.getValue()
-  page.history = cm.getHistory()
-
-  store.set('pages', pages)
 }

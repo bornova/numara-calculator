@@ -1,4 +1,5 @@
-import { $, app, store } from './common'
+import { app, store } from './common'
+import { dom } from './dom'
 import { calculate, formatAnswer, math } from './eval'
 
 import * as formulajs from '@formulajs/formulajs'
@@ -18,7 +19,7 @@ import 'codemirror/addon/search/search'
 import 'codemirror/addon/search/searchcursor'
 
 /** CodeMirror input panel. */
-export const cm = CodeMirror.fromTextArea($('#inputArea'), {
+export const cm = CodeMirror.fromTextArea(dom.inputArea, {
   autofocus: true,
   coverGutterNextToScrollbar: true,
   extraKeys: { 'Ctrl-Space': 'autocomplete' },
@@ -40,11 +41,11 @@ const udOptions = {
 const udfPlaceholder = 'xyz: (x, y, z) => {\n\treturn x+y+z\n},\n\nmyConstant: 123'
 const uduPlaceholder = 'foo: "18 foot",\nbar: "40 foo"'
 
-$('#udfInput').setAttribute('placeholder', udfPlaceholder)
-$('#uduInput').setAttribute('placeholder', uduPlaceholder)
+dom.udfInput.setAttribute('placeholder', udfPlaceholder)
+dom.uduInput.setAttribute('placeholder', uduPlaceholder)
 
-export const udfInput = CodeMirror.fromTextArea($('#udfInput'), udOptions)
-export const uduInput = CodeMirror.fromTextArea($('#uduInput'), udOptions)
+export const udfInput = CodeMirror.fromTextArea(dom.udfInput, udOptions)
+export const uduInput = CodeMirror.fromTextArea(dom.uduInput, udOptions)
 
 /**
  * Refresh editor and focus.
@@ -62,21 +63,10 @@ export function refreshEditor(editor) {
 // Codemirror syntax templates
 CodeMirror.defineMode('numara', () => ({
   token: (stream) => {
-    if (stream.match(/\/\/.*/) || stream.match(/#.*/)) {
-      return 'comment'
-    }
-
-    if (stream.match(/\d/)) {
-      return 'number'
-    }
-
-    if (stream.match(/(?:\+|-|\*|\/|,|;|\.|:|@|~|=|>|<|&|\||`|'|\^|\?|!|%)/)) {
-      return 'operator'
-    }
-
-    if (stream.match(/\b(?:xls.)\b/)) {
-      return 'formulajs'
-    }
+    if (stream.match(/\/\/.*/) || stream.match(/#.*/)) return 'comment'
+    if (stream.match(/\d/)) return 'number'
+    if (stream.match(/(?:\+|-|\*|\/|,|;|\.|:|@|~|=|>|<|&|\||`|'|\^|\?|!|%)/)) return 'operator'
+    if (stream.match(/\b(?:xls.)\b/)) return 'formulajs'
 
     stream.eatWhile(/\w/)
 
@@ -89,41 +79,21 @@ CodeMirror.defineMode('numara', () => ({
       return 'currency'
     }
 
-    if (typeof math[cmStream] === 'function' && Object.getOwnPropertyNames(math[cmStream]).includes('signatures')) {
+    if (typeof math[cmStream] === 'function' && Object.getOwnPropertyNames(math[cmStream]).includes('signatures'))
       return 'function'
-    }
 
-    if (app.udfList.includes(cmStream)) {
-      return 'udf'
-    }
-
-    if (app.uduList.includes(cmStream)) {
-      return 'udu'
-    }
-
-    if (cmStream.match(/\b(?:_|ans|total|subtotal|avg|today|now)\b/)) {
-      return 'keyword'
-    }
-
-    if (cmStream.match(/\b(?:line\d+)\b/)) {
-      return 'lineNo'
-    }
-
-    if (typeof formulajs[cmStream] === 'function' && stream.string.startsWith('xls.')) {
-      return 'excel'
-    }
+    if (app.udfList.includes(cmStream)) return 'udf'
+    if (app.uduList.includes(cmStream)) return 'udu'
+    if (cmStream.match(/\b(?:_|ans|total|subtotal|avg|today|now)\b/)) return 'keyword'
+    if (cmStream.match(/\b(?:line\d+)\b/)) return 'lineNo'
+    if (typeof formulajs[cmStream] === 'function' && stream.string.startsWith('xls.')) return 'excel'
 
     try {
       const val = math.evaluate(cmStream)
       const par = math.parse(cmStream)
 
-      if (val.units && !val.value) {
-        return 'unit'
-      }
-
-      if (par.isSymbolNode && val) {
-        return 'constant'
-      }
+      if (val.units && !val.value) return 'unit'
+      if (par.isSymbolNode && val) return 'constant'
     } catch {
       /** Ignore catch */
     }
@@ -149,8 +119,6 @@ CodeMirror.defineMode('plain', () => ({
 }))
 
 // Codemirror autocomplete hints
-export const numaraHints = []
-
 export const keywords = [
   { text: '_', desc: 'Answer from last calculated line' },
   { text: 'ans', desc: 'Answer from last calculated line' },
@@ -161,39 +129,30 @@ export const keywords = [
   { text: 'total', desc: 'Total of previous line values. Numbers only.' }
 ]
 
-keywords.forEach((key) => {
-  key.className = 'cm-keyword'
-  numaraHints.push(key)
-})
-
-for (const f in math) {
-  if (typeof math[f] === 'function' && Object.getOwnPropertyNames(math[f]).includes('signatures')) {
-    numaraHints.push({ text: f, className: 'cm-function' })
-  }
-}
-
-for (const expr in math.expression.mathWithTransform) {
-  if (
-    typeof math[expr] !== 'function' &&
-    typeof math[expr] !== 'boolean' &&
-    (math[expr]?.value || !isNaN(math[expr]))
-  ) {
-    numaraHints.push({ text: expr, desc: math.help(expr).doc.description, className: 'cm-constant' })
-  }
-}
-
-Object.keys(formulajs).forEach((f) => {
-  numaraHints.push({ text: 'xls.' + f, className: 'cm-excel' })
-})
-
-Object.values(math.Unit.UNITS).flatMap((unit) => {
-  Object.values(unit.prefixes).forEach((prefix) => {
-    const unitBase = unit.base.key.replaceAll('_', ' ').toLowerCase()
-    const unitCat = unitBase.charAt(0).toUpperCase() + unitBase.slice(1)
-
-    numaraHints.push({ text: prefix.name + unit.name, desc: unitCat + ' unit', className: 'cm-unit' })
-  })
-})
+export const numaraHints = [
+  ...keywords.map((key) => ({ ...key, className: 'cm-keyword' })),
+  ...Object.keys(math)
+    .filter((f) => typeof math[f] === 'function' && Object.getOwnPropertyNames(math[f]).includes('signatures'))
+    .map((f) => ({ text: f, className: 'cm-function' })),
+  ...Object.keys(math.expression.mathWithTransform)
+    .filter(
+      (expr) =>
+        typeof math[expr] !== 'function' && typeof math[expr] !== 'boolean' && (math[expr]?.value || !isNaN(math[expr]))
+    )
+    .map((expr) => ({
+      text: expr,
+      desc: math.help(expr).doc.description,
+      className: 'cm-constant'
+    })),
+  ...Object.keys(formulajs).map((f) => ({ text: 'xls.' + f, className: 'cm-excel' })),
+  ...Object.values(math.Unit.UNITS).flatMap((unit) =>
+    Object.values(unit.prefixes).map((prefix) => {
+      const unitBase = unit.base.key.replaceAll('_', ' ').toLowerCase()
+      const unitCat = unitBase.charAt(0).toUpperCase() + unitBase.slice(1)
+      return { text: prefix.name + unit.name, desc: unitCat + ' unit', className: 'cm-unit' }
+    })
+  )
+]
 
 CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
   const cmCursor = editor.getCursor()
@@ -213,14 +172,17 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
   let curStr = cmCursorLine.slice(start, end)
   let curWord = start !== end && curStr
 
-  const curWordRegex = new RegExp('^' + curWord, 'i')
+  // Use a more robust regex for word matching
+  const curWordRegex = curWord ? new RegExp('^' + curWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null
 
-  curWord = !curStr.endsWith('.') || curStr === 'xls.'
+  // Only show hints if not ending with '.' or is 'xls.'
+  const shouldShowHints = curStr && (!curStr.endsWith('.') || curStr === 'xls.')
 
   return {
-    list: !curWord
-      ? []
-      : numaraHints.filter(({ text }) => text.match(curWordRegex)).sort((a, b) => a.text.localeCompare(b.text)),
+    list:
+      shouldShowHints && curWordRegex
+        ? numaraHints.filter(({ text }) => curWordRegex.test(text)).sort((a, b) => a.text.localeCompare(b.text))
+        : [],
     from: CodeMirror.Pos(cmCursor.line, start),
     to: CodeMirror.Pos(cmCursor.line, end)
   }
@@ -236,11 +198,11 @@ CodeMirror.commands.autocomplete = (cm) => {
 // Force editor line bottom alignment
 function cmForceBottom() {
   const lineTop = cm.display.lineDiv.children[cm.getCursor().line].getBoundingClientRect().top
-  const barTop = $('.CodeMirror-hscrollbar').getBoundingClientRect().top
+  const barTop = dom.el('.CodeMirror-hscrollbar').getBoundingClientRect().top
   const lineHeight = +app.settings.lineHeight.replace('px', '') + 1
 
   if (barTop - lineTop < lineHeight) {
-    $('#output').scrollTop = $('#output').scrollTop + (lineHeight - (barTop - lineTop))
+    dom.output.scrollTop = dom.output.scrollTop + (lineHeight - (barTop - lineTop))
   }
 }
 
@@ -258,12 +220,7 @@ cm.on('cursorActivity', (cm) => {
 
   cm.eachLine((line) => {
     const cmLineNo = cm.getLineNumber(line)
-
-    if (cmLineNo === activeLine) {
-      cm.addLineClass(cmLineNo, 'gutter', 'activeLine')
-    } else {
-      cm.removeLineClass(cmLineNo, 'gutter', 'activeLine')
-    }
+    cm[cmLineNo === activeLine ? 'addLineClass' : 'removeLineClass'](cmLineNo, 'gutter', 'activeLine')
   })
 
   setTimeout(cmForceBottom, 20)
@@ -320,9 +277,7 @@ function handleFunctionTooltip(target) {
     showTooltip(
       target,
       `<div>${tip.description}</div>
-      <div class="tooltipCode">
-        ${tip.syntax.map((s) => '<code>' + s + '</code>').join(' ')}
-      </div>`
+      <div class="tooltipCode">${tip.syntax.map((s) => '<code>' + s + '</code>').join(' ')}</div>`
     )
   } catch {
     showTooltip(target, 'Description not available')

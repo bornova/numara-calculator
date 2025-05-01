@@ -1,5 +1,6 @@
 import { colors } from './colors'
-import { $, $all, app, store } from './common'
+import { app, store } from './common'
+import { dom } from './dom'
 import { cm, udfInput, uduInput } from './editor'
 import { calculate, math } from './eval'
 import { getRates } from './forex'
@@ -11,22 +12,22 @@ import DeepDiff from 'deep-diff'
 
 /** Show/hide Defaults link. */
 function checkDefaults() {
-  $('#defaultSettingsButton').style.display = DeepDiff.diff(app.settings, settings.defaults) ? 'inline' : 'none'
+  dom.defaultSettingsButton.style.display = DeepDiff.diff(app.settings, settings.defaults) ? 'inline' : 'none'
 }
 
 /** Show warning if big number option is selected. */
 function bigNumberWarning() {
-  $('#bigNumWarn').style.display = app.settings.numericOutput === 'BigNumber' ? 'inline-block' : 'none'
+  dom.bigNumWarn.style.display = app.settings.numericOutput === 'BigNumber' ? 'inline-block' : 'none'
 }
 
 /** Show warning if locale uses comma as decimal point separator. */
 function localeWarning() {
-  $('#localeWarn').style.display = checkLocale() ? 'inline-block' : 'none'
+  dom.localeWarn.style.display = checkLocale() ? 'inline-block' : 'none'
 }
 
 /** Check for app settings modifications. */
 function checkMods(key) {
-  $('#' + key + 'Mod').style.display = app.settings[key] !== settings.defaults[key] ? 'inline-block' : 'none'
+  dom.el('#' + key + 'Mod').style.display = app.settings[key] !== settings.defaults[key] ? 'inline-block' : 'none'
 }
 
 /** Check for app settings schema changes. */
@@ -86,11 +87,7 @@ export const settings = {
 
   /** Initialize settings. */
   initialize: () => {
-    if (store.get('settings')) {
-      checkSchema()
-    } else {
-      store.set('settings', settings.defaults)
-    }
+    store.get('settings') ? checkSchema() : store.set('settings', settings.defaults)
 
     app.settings = store.get('settings')
 
@@ -123,7 +120,7 @@ export const settings = {
     }
     // End fix
 
-    $all('.settingItem').forEach((item) => {
+    dom.els('.settingItem').forEach((item) => {
       const span = document.createElement('span')
       const icon = document.createElement('span')
 
@@ -131,9 +128,7 @@ export const settings = {
 
       span.setAttribute('id', item.getAttribute('id') + 'Mod')
       span.setAttribute('class', item.getAttribute('type') === 'checkbox' ? 'settingModToggle' : 'settingMod')
-
       span.appendChild(icon)
-
       span.addEventListener('click', () => {
         const key = item.getAttribute('id')
 
@@ -144,11 +139,7 @@ export const settings = {
         settings.apply()
       })
 
-      if (item.getAttribute('type') === 'checkbox') {
-        item.parentElement.before(span)
-      } else {
-        item.before(span)
-      }
+      item.getAttribute('type') === 'checkbox' ? item.parentElement.before(span) : item.before(span)
 
       generateIcons()
     })
@@ -177,49 +168,45 @@ export const settings = {
     const numericOutputs = ['number', 'BigNumber', 'Fraction']
     const notations = ['auto', 'engineering', 'exponential', 'fixed', '-', 'bin', 'hex', 'oct']
 
-    $('#locale').innerHTML = ''
+    dom.locale.innerHTML = ''
 
     for (const l of locales) {
-      $('#locale').innerHTML += `<option value="${l[1]}">${l[0]}</option>`
+      dom.locale.innerHTML += `<option value="${l[1]}">${l[0]}</option>`
     }
 
-    $('#precision-label').innerHTML = app.settings.precision
-    $('#expLower-label').innerHTML = app.settings.expLower
-    $('#expUpper-label').innerHTML = app.settings.expUpper
+    dom.precisionLabel.innerHTML = app.settings.precision
+    dom.expLowerLabel.innerHTML = app.settings.expLower
+    dom.expUpperLabel.innerHTML = app.settings.expUpper
 
-    $('#numericOutput').innerHTML = ''
+    dom.numericOutput.innerHTML = ''
 
     for (const n of numericOutputs) {
-      $('#numericOutput').innerHTML += `<option value="${n}">${n.charAt(0).toUpperCase() + n.slice(1)}</option>`
+      dom.numericOutput.innerHTML += `<option value="${n}">${n.charAt(0).toUpperCase() + n.slice(1)}</option>`
     }
 
-    $('#notation').innerHTML = ''
+    dom.notation.innerHTML = ''
 
     for (const n of notations) {
-      $('#notation').innerHTML +=
+      dom.notation.innerHTML +=
         n === '-'
           ? '<option disabled>-</option>'
           : `<option value="${n}">${n.charAt(0).toUpperCase() + n.slice(1)}</option>`
     }
 
-    $('#matrixType').innerHTML = ''
+    dom.matrixType.innerHTML = ''
 
     for (const m of matrixTypes) {
-      $('#matrixType').innerHTML += `<option value="${m}">${m}</option>`
+      dom.matrixType.innerHTML += `<option value="${m}">${m}</option>`
     }
 
-    $('#lastUpdated').innerHTML = app.settings.currency ? store.get('rateDate') : ''
-    $('#currencyUpdate').style.visibility = app.settings.currency ? 'visible' : 'hidden'
+    dom.lastUpdated.innerHTML = app.settings.currency ? store.get('rateDate') : ''
+    dom.currencyUpdate.style.visibility = app.settings.currency ? 'visible' : 'hidden'
 
     Object.keys(app.settings).forEach((key) => {
-      const el = $('#' + key)
+      const el = dom.el('#' + key)
 
       if (el) {
-        if (el.getAttribute('type') === 'checkbox') {
-          el.checked = app.settings[key]
-        } else {
-          el.value = app.settings[key]
-        }
+        el[el.getAttribute('type') === 'checkbox' ? 'checked' : 'value'] = app.settings[key]
 
         checkMods(key)
       }
@@ -237,8 +224,8 @@ export const settings = {
   apply: () => {
     const appTheme = getTheme()
 
-    $('#style').setAttribute('href', 'css/' + appTheme + '.css')
-    $('#numaraLogo').setAttribute('src', 'assets/logo-' + appTheme + '.png')
+    dom.inlineStyle.setAttribute('href', 'css/' + appTheme + '.css')
+    dom.numaraLogo.setAttribute('src', 'assets/logo-' + appTheme + '.png')
 
     setTimeout(() => {
       colors.apply()
@@ -263,7 +250,7 @@ export const settings = {
       numara.setOnTop(app.settings.alwaysOnTop)
     }
 
-    const elements = $all('.panelFont, .input .CodeMirror')
+    const elements = dom.els('.panelFont, .input .CodeMirror')
 
     for (const el of elements) {
       el.style.fontSize = app.settings.fontSize
@@ -271,9 +258,9 @@ export const settings = {
       el.style.setProperty('line-height', app.settings.lineHeight, 'important')
     }
 
-    $('#input').style.width = (app.settings.divider ? app.settings.inputWidth : settings.defaults.inputWidth) + '%'
-    $('#panelDivider').style.display = app.settings.divider ? 'block' : 'none'
-    $('#output').style.textAlign = app.settings.divider ? 'left' : 'right'
+    dom.input.style.width = (app.settings.divider ? app.settings.inputWidth : settings.defaults.inputWidth) + '%'
+    dom.panelDivider.style.display = app.settings.divider ? 'block' : 'none'
+    dom.output.style.textAlign = app.settings.divider ? 'left' : 'right'
 
     cm.setOption('mode', app.settings.syntax ? 'numara' : 'plain')
     cm.setOption('lineNumbers', app.settings.lineNumbers)
@@ -311,23 +298,22 @@ export const settings = {
   /** Save settings to local storage. */
   save: () => {
     Object.keys(app.settings).forEach((key) => {
-      const el = $('#' + key)
+      const el = dom.el('#' + key)
 
       if (el) {
         app.settings[key] = el.getAttribute('type') === 'checkbox' ? el.checked : el.value
-
         checkMods(key)
       }
     })
 
-    if (!$('#currency').checked) {
+    if (!dom.currency.checked) {
       localStorage.removeItem('rateDate')
 
       app.currencyRates = {}
     }
 
-    $('#currencyUpdate').style.visibility = $('#currency').checked ? 'visible' : 'hidden'
-    $('#currencyWarn').style.display = app.settings.currency ? 'none' : 'inline-block'
+    dom.currencyUpdate.style.visibility = dom.currency.checked ? 'visible' : 'hidden'
+    dom.currencyWarn.style.display = app.settings.currency ? 'none' : 'inline-block'
 
     if (!store.get('rateDate') && app.settings.currency) {
       getRates()
@@ -344,35 +330,35 @@ export const settings = {
 
   /** Toggle settings sliders to enabled/disabled based on parent setting. */
   toggleSubs: () => {
-    $('#expUpper').disabled = app.settings.notation !== 'auto'
-    $('#expLower').disabled = app.settings.notation !== 'auto'
-    $('#keywordTips').disabled = !app.settings.syntax
-    $('#matchBrackets').disabled = !app.settings.syntax
-    $('#copyThouSep').disabled = !app.settings.thouSep
-    $('#currencyInterval').disabled = !app.settings.currency
-    $('#updateRatesLink').dataset.enabled = app.settings.currency
+    dom.expUpper.disabled = app.settings.notation !== 'auto'
+    dom.expLower.disabled = app.settings.notation !== 'auto'
+    dom.keywordTips.disabled = !app.settings.syntax
+    dom.matchBrackets.disabled = !app.settings.syntax
+    dom.copyThouSep.disabled = !app.settings.thouSep
+    dom.currencyInterval.disabled = !app.settings.currency
+    dom.updateRatesLink.dataset.enabled = app.settings.currency
 
-    $('#expUpper').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
-    $('#expLower').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
-    $('#keywordTips').parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
-    $('#matchBrackets').parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
-    $('#copyThouSep').parentNode.style.opacity = app.settings.thouSep ? '1' : '0.5'
+    dom.expUpper.parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
+    dom.expLower.parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
+    dom.keywordTips.parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
+    dom.matchBrackets.parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
+    dom.copyThouSep.parentNode.style.opacity = app.settings.thouSep ? '1' : '0.5'
 
-    $('#expUpperMod').style.pointerEvents = app.settings.notation === 'auto' ? 'auto' : 'none'
-    $('#expLowerMod').style.pointerEvents = app.settings.notation === 'auto' ? 'auto' : 'none'
-    $('#keywordTipsMod').style.pointerEvents = app.settings.syntax ? 'auto' : 'none'
-    $('#matchBracketsMod').style.pointerEvents = app.settings.syntax ? 'auto' : 'none'
-    $('#copyThouSepMod').style.pointerEvents = app.settings.thouSep ? 'auto' : 'none'
+    dom.el('#expUpperMod').style.pointerEvents = app.settings.notation === 'auto' ? 'auto' : 'none'
+    dom.el('#expLowerMod').style.pointerEvents = app.settings.notation === 'auto' ? 'auto' : 'none'
+    dom.el('#keywordTipsMod').style.pointerEvents = app.settings.syntax ? 'auto' : 'none'
+    dom.el('#matchBracketsMod').style.pointerEvents = app.settings.syntax ? 'auto' : 'none'
+    dom.el('#copyThouSepMod').style.pointerEvents = app.settings.thouSep ? 'auto' : 'none'
 
-    $('#expUpperMod').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
-    $('#expLowerMod').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
-    $('#keywordTipsMod').parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
-    $('#matchBracketsMod').parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
-    $('#copyThouSepMod').parentNode.style.opacity = app.settings.thouSep ? '1' : '0.5'
+    dom.el('#expUpperMod').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
+    dom.el('#expLowerMod').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
+    dom.el('#keywordTipsMod').parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
+    dom.el('#matchBracketsMod').parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
+    dom.el('#copyThouSepMod').parentNode.style.opacity = app.settings.thouSep ? '1' : '0.5'
   }
 }
 
-$('#defaultSettingsButton').addEventListener('click', () => {
+dom.defaultSettingsButton.addEventListener('click', () => {
   confirm('All settings will revert back to defaults.', () => {
     app.settings = JSON.parse(JSON.stringify(settings.defaults))
     app.colors = JSON.parse(JSON.stringify(colors.defaults))
@@ -386,7 +372,7 @@ $('#defaultSettingsButton').addEventListener('click', () => {
   })
 })
 
-$('#dialog-settings-reset').addEventListener('click', () => {
+dom.dialogSettingsReset.addEventListener('click', () => {
   confirm('All user settings and data will be lost.', () => {
     if (isElectron) {
       numara.resetApp()
@@ -398,17 +384,17 @@ $('#dialog-settings-reset').addEventListener('click', () => {
 })
 
 if (isElectron) {
-  $('#resetSizeButton').addEventListener('click', numara.resetSize)
+  dom.resetSizeButton.addEventListener('click', numara.resetSize)
 }
 
-$('#localeWarn').addEventListener('click', () => {
+dom.localeWarn.addEventListener('click', () => {
   showError(
     'Caution: Locale',
     `Your locale (${app.settings.locale}) uses comma (,) as decimal separator.  Therefore, you must use semicolon (;) as argument separator when using functions.<br><br>Ex. sum(1;3) // 4`
   )
 })
 
-$('#bigNumWarn').addEventListener('click', () => {
+dom.bigNumWarn.addEventListener('click', () => {
   showError(
     'Caution: BigNumber Limitations',
     `Using the BigNumber may break function plotting and is not compatible with some math functions. 
@@ -417,25 +403,25 @@ $('#bigNumWarn').addEventListener('click', () => {
   )
 })
 
-$('#currencyWarn').addEventListener('click', () => {
+dom.currencyWarn.addEventListener('click', () => {
   showError('App restart needed', `Currencies used in existing calculations will be removed after app restart.`)
 })
 
-$('#precision').addEventListener('input', () => {
-  $('#precision-label').innerHTML = $('#precision').value
+dom.precision.addEventListener('input', () => {
+  dom.precisionLabel.innerHTML = dom.precision.value
 })
 
-$('#expLower').addEventListener('input', () => {
-  $('#expLower-label').innerHTML = $('#expLower').value
+dom.expLower.addEventListener('input', () => {
+  dom.expLowerLabel.innerHTML = dom.expLower.value
 })
 
-$('#expUpper').addEventListener('input', () => {
-  $('#expUpper-label').innerHTML = $('#expUpper').value
+dom.expUpper.addEventListener('input', () => {
+  dom.expUpperLabel.innerHTML = dom.expUpper.value
 })
 
-$('#updateRatesLink').addEventListener('click', getRates)
+dom.updateRatesLink.addEventListener('click', getRates)
 
-$all('.settingItem').forEach((el) => {
+dom.els('.settingItem').forEach((el) => {
   el.addEventListener('change', () => {
     settings.save()
     settings.apply()

@@ -19,8 +19,8 @@ body {
   background-color: #dadada;
 }
 
-.header-win-title,
-.header-mac-title {
+.winHeaderTitle,
+.macHeaderTitle {
   color: #384859;
 }
 
@@ -159,17 +159,17 @@ body {
   border-top: 1px solid #eaeaea;
 }
 
-.dialog-about-updateStatus {
+.dialogAboutUpdateStatus {
   color: #666666;
 }
 
 /* Settings menu items */
-#dialog-settings h3 {
+#dialogSettings h3 {
   color: #1d3f5c;
 }
 
-#dialog-settings .settingMod,
-#dialog-settings .settingModToggle {
+#dialogSettings .settingMod,
+#dialogSettings .settingModToggle {
   color: #dd9359;
 }
 
@@ -330,7 +330,7 @@ li.CodeMirror-hint-active {
   color: #eaeaea !important;
 }
 
-.dialog-udfu .CodeMirror {
+.dialogUdfu .CodeMirror {
   border: 1px solid #eaeaea !important;
 }
 
