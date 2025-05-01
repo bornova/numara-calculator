@@ -75,6 +75,7 @@ export function confirm(msg, action) {
     action()
     event.stopPropagation()
     UIkit.modal('#dialogConfirm').hide()
+
     dom.confirmYes.removeEventListener('click', yesAction)
     dom.confirmYes._yesAction = null
   }
