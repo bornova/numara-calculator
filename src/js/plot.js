@@ -11,7 +11,6 @@ export function plot() {
   dom.plotTitle.innerHTML = app.plotFunction
 
   const f = math.simplify(app.plotFunction.split('=')[1], app.mathScope).toString()
-
   let domain = math.abs(math.evaluate(f, { x: 0 })) * 2
 
   if (domain === Infinity || domain === 0) {
