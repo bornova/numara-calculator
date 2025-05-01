@@ -87,11 +87,7 @@ export const settings = {
 
   /** Initialize settings. */
   initialize: () => {
-    if (store.get('settings')) {
-      checkSchema()
-    } else {
-      store.set('settings', settings.defaults)
-    }
+    store.get('settings') ? checkSchema() : store.set('settings', settings.defaults)
 
     app.settings = store.get('settings')
 
@@ -143,11 +139,7 @@ export const settings = {
         settings.apply()
       })
 
-      if (item.getAttribute('type') === 'checkbox') {
-        item.parentElement.before(span)
-      } else {
-        item.before(span)
-      }
+      item.getAttribute('type') === 'checkbox' ? item.parentElement.before(span) : item.before(span)
 
       generateIcons()
     })
@@ -214,11 +206,7 @@ export const settings = {
       const el = dom.el('#' + key)
 
       if (el) {
-        if (el.getAttribute('type') === 'checkbox') {
-          el.checked = app.settings[key]
-        } else {
-          el.value = app.settings[key]
-        }
+        el[el.getAttribute('type') === 'checkbox' ? 'checked' : 'value'] = app.settings[key]
 
         checkMods(key)
       }
