@@ -43,11 +43,7 @@ export function checkSize() {
 
 /** Minimize/maximize window. */
 export function toggleMinMax() {
-  if (numara.isMaximized()) {
-    numara.unmaximize()
-  } else {
-    numara.maximize()
-  }
+  numara.isMaximized() ? numara.minimize() : numara.maximize()
 }
 
 /** Check for app update */
