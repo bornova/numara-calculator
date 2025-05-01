@@ -21,12 +21,12 @@ const nowDayFormat = 'ccc, D t'
 const todayFormat = 'D'
 const todayDayFormat = 'ccc, D'
 
-// Constants for regex and magic strings
 const REGEX_CONTINUATION = /[+\-*/]/
 const REGEX_DATE_TIME =
   /[+-] * .* *(millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia)s?/g
 const REGEX_PCNT_OF = /%[ ]*of[ ]*/g
 const REGEX_PCNT_OF_VAL = /[\w.]*%[ ]*of[ ]*/g
+
 const CLASS_RULER = 'ruler'
 const CLASS_NO_RULER = 'noRuler'
 const CLASS_LINE_ERROR = 'lineNoError'
