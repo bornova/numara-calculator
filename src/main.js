@@ -78,19 +78,19 @@ function createAppWindow() {
     return { action: 'deny' }
   })
 
-  win.on('close', () => {
+  win.on('maximize', () => win.webContents.send('isMax', true))
+  win.on('unmaximize', () => win.webContents.send('isMax', false))
+  win.on('restore', () => win.webContents.send('restored', true))
+  win.on('moved', () => {
     config.set('fullSize', win.isMaximized())
     config.set('position', win.getPosition())
-
+  })
+  win.on('resized', () => {
     if (!win.isMaximized()) {
       config.set('appWidth', win.getSize()[0])
       config.set('appHeight', win.getSize()[1])
     }
   })
-
-  win.on('maximize', () => win.webContents.send('isMax', true))
-  win.on('unmaximize', () => win.webContents.send('isMax', false))
-  win.on('restore', () => win.webContents.send('restored', true))
 
   if (app.isPackaged) {
     win.on('focus', () => globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {}))
