@@ -46,6 +46,20 @@ export function checkColorChange() {
 
 let activePicker = null
 
+function setPickerValue(picker, colorsObj) {
+  const def = colorsObj?.[picker.dataset.class]?.[picker.dataset.theme]
+  if (def) {
+    picker.value = def
+  }
+}
+
+function addPickerListeners(picker) {
+  picker.addEventListener('click', (event) => {
+    activePicker = event.target
+    checkColorChange()
+  })
+}
+
 export const colors = {
   defaults: {
     answer: { title: 'Answers', class: '.output', dark: '#1eb5f0', light: '#17586b' },
@@ -79,17 +93,8 @@ export const colors = {
     app.colors = store.get('colors')
 
     colorInputs.forEach((picker) => {
-      const def = app.colors?.[picker.dataset.class]?.[picker.dataset.theme]
-
-      if (def) {
-        picker.value = def
-      }
-
-      picker.addEventListener('click', (event) => {
-        activePicker = event.target
-
-        checkColorChange()
-      })
+      setPickerValue(picker, app.colors)
+      addPickerListeners(picker)
     })
 
     Coloris.init()
@@ -106,7 +111,6 @@ export const colors = {
 
     Coloris.ready(() => {
       const picker = dom.el('#clr-color-value')
-
       if (!picker) return
 
       const button = document.createElement('a')
