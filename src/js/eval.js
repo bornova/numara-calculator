@@ -196,7 +196,7 @@ export function calculate() {
  * @returns {*} - The evaluated result.
  */
 function evaluate(line) {
-  if (line.match(/:/)) {
+  if (line.includes(':')) {
     try {
       math.evaluate(line.split(':')[0])
     } catch {
