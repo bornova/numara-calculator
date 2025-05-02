@@ -88,41 +88,38 @@ function copyAnswer(event, index, withLines) {
   )
 }
 
+const nothingToCopy = () => notify('Nothing to copy.')
+const safeCopy = (text, message) => (text ? copyToClipboard(text, message) : nothingToCopy())
+
 /**
  * Copy all inputs.
  */
 function copyAllLines() {
-  const value = cm.getValue()
-
-  copyToClipboard(value, 'Copied all lines to clipboard.')
+  safeCopy(cm.getValue(), 'Copied all lines to clipboard.')
 }
 
 /**
  * Copy all answers.
  */
 function copyAllAnswers() {
-  if (cm.getValue() === '') {
-    notify('Nothing to copy.')
-    return
-  }
+  if (cm.getValue() === '') return nothingToCopy()
 
   let copiedOutputs = ''
+
   cm.eachLine((line) => {
     const index = cm.getLineNumber(line)
 
     copiedOutputs += `${dom.output.children[index]?.innerText ?? ''}\n`
   })
-  copyToClipboard(copiedOutputs, 'Copied all answers to clipboard.')
+
+  safeCopy(copiedOutputs, 'Copied all answers to clipboard.')
 }
 
 /**
  * Copy page.
  */
 export function copyAll() {
-  if (cm.getValue() === '') {
-    notify('Nothing to copy.')
-    return
-  }
+  if (cm.getValue() === '') return nothingToCopy()
 
   let copiedCalc = ''
 
@@ -137,7 +134,7 @@ export function copyAll() {
       : '\n'
   })
 
-  copyToClipboard(copiedCalc, 'Copied page to clipboard.')
+  safeCopy(copiedCalc, 'Copied page to clipboard.')
 }
 
 // Context menus
