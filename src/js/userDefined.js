@@ -1,6 +1,7 @@
 import { app, store } from './common'
 import { dom } from './dom'
 import { udfInput, uduInput } from './editor'
+import { math } from './eval'
 import { showError } from './modal'
 
 /**
@@ -13,20 +14,12 @@ export function applyUdfu(input, type) {
   return new Promise((resolve, reject) => {
     try {
       const isFunc = type === 'func'
-      const loadUD = new Function(
-        `'use strict'; 
-        let window; 
-        let numara; 
-        math.${isFunc ? 'import' : 'createUnit'}({${input}}, {override: true})`
-      )
-
-      loadUD()
-
       const UDFunc = new Function(`'use strict'; return {${input}}`)
-      const list = isFunc ? 'udfList' : 'uduList'
+
+      isFunc ? math.import(UDFunc(), { override: true }) : math.createUnit(UDFunc(), { override: true })
 
       for (const f in UDFunc()) {
-        app[list].push(f)
+        app[isFunc ? 'udfList' : 'uduList'].push(f)
       }
 
       store.set(isFunc ? 'udf' : 'udu', input)
