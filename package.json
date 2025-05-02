@@ -25,7 +25,7 @@
     "wiki": "node src/misc/wiki.js"
   },
   "devDependencies": {
-    "@eslint/js": "^9.25.1",
+    "@eslint/js": "^9.26.0",
     "@formulajs/formulajs": "^4.4.11",
     "@melloware/coloris": "^0.24.0",
     "codemirror": "^5.65.19",
@@ -33,7 +33,7 @@
     "electron": "^36.1.0",
     "electron-builder": "^26.0.12",
     "esbuild": "^0.25.3",
-    "eslint": "^9.25.1",
+    "eslint": "^9.26.0",
     "fs-extra": "^11.3.0",
     "function-plot": "^1.25.1",
     "lucide": "^0.506.0",
