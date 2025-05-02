@@ -274,13 +274,22 @@ export const settings = {
       predictable: app.settings.predictable
     })
 
-    if (app.settings.currency && app.settings.currencyInterval !== '0') {
+    if (app.settings.currency) {
+      if (app.settings.currencyInterval === '0') {
+        clearInterval(updateInterval)
+        store.set('rateInterval', false)
+      } else {
+        clearInterval(updateInterval)
+        updateInterval = setInterval(getRates, +app.settings.currencyInterval)
+        store.set('rateInterval', true)
+      }
+    }
+
+    if (app.settings.currencyInterval === '0') {
       clearInterval(updateInterval)
-      updateInterval = setInterval(getRates, +app.settings.currencyInterval)
-      store.set('rateInterval', true)
     } else {
       clearInterval(updateInterval)
-      store.set('rateInterval', false)
+      updateInterval = setInterval(getRates, +app.settings.currencyInterval)
     }
 
     setTimeout(calculate, 10)
