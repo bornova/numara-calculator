@@ -16,9 +16,7 @@ contextBridge.exposeInMainWorld('numara', {
   // Window controls
   fullscreen: () =>
     ipcRenderer.on('fullscreen', (event, isFullscreen) => {
-      if (isFullscreen) {
-        ipcRenderer.send('maximize')
-      }
+      if (isFullscreen) ipcRenderer.send('maximize')
     }),
   close: () => ipcRenderer.send('close'),
   minimize: () => ipcRenderer.send('minimize'),
