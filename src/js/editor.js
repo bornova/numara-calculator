@@ -35,6 +35,7 @@ const udOptions = {
   autoCloseBrackets: true,
   autofocus: true,
   mode: 'javascript',
+  smartIndent: false,
   tabSize: 2
 }
 
@@ -344,42 +345,26 @@ function handleKeywordTooltip(target) {
   showTooltip(target, keyword.desc)
 }
 
+const TOOLTIP_HANDLERS = {
+  [CLASS_NAMES.FUNCTION]: handleFunctionTooltip,
+  [CLASS_NAMES.UDF]: (target) => showTooltip(target, 'User defined function'),
+  [CLASS_NAMES.UDU]: (target) => showTooltip(target, 'User defined unit'),
+  [CLASS_NAMES.CURRENCY]: handleCurrencyTooltip,
+  [CLASS_NAMES.UNIT]: handleUnitTooltip,
+  [CLASS_NAMES.CONSTANT]: handleConstantTooltip,
+  [CLASS_NAMES.VARIABLE]: handleVariableTooltip,
+  [CLASS_NAMES.LINE_NO]: handleLineNoTooltip,
+  [CLASS_NAMES.KEYWORD]: handleKeywordTooltip,
+  [CLASS_NAMES.FORMULAJS]: (target) => showTooltip(target, 'Formulajs'),
+  [CLASS_NAMES.EXCEL]: (target) => showTooltip(target, 'Excel function')
+}
+
 document.addEventListener('mouseover', (event) => {
   if (app.settings.keywordTips && event.target.classList[0]?.startsWith('cm-')) {
-    switch (event.target.classList[0]) {
-      case CLASS_NAMES.FUNCTION:
-        handleFunctionTooltip(event.target)
-        break
-      case CLASS_NAMES.UDF:
-        showTooltip(event.target, 'User defined function')
-        break
-      case CLASS_NAMES.UDU:
-        showTooltip(event.target, 'User defined unit')
-        break
-      case CLASS_NAMES.CURRENCY:
-        handleCurrencyTooltip(event.target)
-        break
-      case CLASS_NAMES.UNIT:
-        handleUnitTooltip(event.target)
-        break
-      case CLASS_NAMES.CONSTANT:
-        handleConstantTooltip(event.target)
-        break
-      case CLASS_NAMES.VARIABLE:
-        handleVariableTooltip(event.target)
-        break
-      case CLASS_NAMES.LINE_NO:
-        handleLineNoTooltip(event.target)
-        break
-      case CLASS_NAMES.KEYWORD:
-        handleKeywordTooltip(event.target)
-        break
-      case CLASS_NAMES.FORMULAJS:
-        showTooltip(event.target, 'Formulajs')
-        break
-      case CLASS_NAMES.EXCEL:
-        showTooltip(event.target, 'Excel function')
-        break
+    const handler = TOOLTIP_HANDLERS[event.target.classList[0]]
+
+    if (handler) {
+      handler(event.target)
     }
   }
 
