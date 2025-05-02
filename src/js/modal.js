@@ -66,28 +66,11 @@ export function confirm(msg, action) {
 
   modal.show('#dialogConfirm')
 
-  // Remove any previous handler before adding a new one
-  if (dom.confirmYes._yesAction) {
-    dom.confirmYes.removeEventListener('click', dom.confirmYes._yesAction)
-  }
-
   const yesAction = (event) => {
     action()
     event.stopPropagation()
     UIkit.modal('#dialogConfirm').hide()
-
-    dom.confirmYes.removeEventListener('click', yesAction)
-    dom.confirmYes._yesAction = null
   }
 
-  dom.confirmYes._yesAction = yesAction
-  dom.confirmYes.addEventListener('click', yesAction)
-
-  // Clean up handler on modal close
-  UIkit.util.on('#dialogConfirm', 'hidden', () => {
-    if (dom.confirmYes._yesAction) {
-      dom.confirmYes.removeEventListener('click', dom.confirmYes._yesAction)
-      dom.confirmYes._yesAction = null
-    }
-  })
+  dom.confirmYes.onclick = yesAction
 }
