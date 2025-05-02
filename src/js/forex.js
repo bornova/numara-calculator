@@ -14,23 +14,27 @@ numaraHints.push({ text: USD_UNIT, desc: 'U.S. Dollar', className: 'cm-currency'
  * Get exchange rates and update the application.
  */
 export function getRates() {
-  if (navigator.onLine) {
-    dom.lastUpdated.innerHTML = '<div uk-spinner="ratio: 0.3"></div>'
+  if (!navigator.onLine) {
+    dom.lastUpdated.innerHTML = 'No internet connection.'
+    notify('No internet connection. Could not update exchange rates.', 'warning')
 
-    fetch(EXCHANGE_RATE_URL)
-      .then((response) => response.json())
-      .then((rates) => {
-        updateCurrencyRates(rates)
-        dom.lastUpdated.innerHTML = store.get('rateDate')
-        cm.setOption('mode', app.settings.syntax ? 'numara' : 'plain')
-        calculate()
-      })
-      .catch((error) => {
-        handleFetchError(error)
-      })
-  } else {
-    handleNoInternetConnection()
+    return
   }
+
+  dom.lastUpdated.innerHTML = '<div uk-spinner="ratio: 0.3"></div>'
+
+  fetch(EXCHANGE_RATE_URL)
+    .then((response) => response.json())
+    .then((rates) => {
+      updateCurrencyRates(rates)
+      dom.lastUpdated.innerHTML = store.get('rateDate')
+      cm.setOption('mode', app.settings.syntax ? 'numara' : 'plain')
+      calculate()
+    })
+    .catch((error) => {
+      dom.lastUpdated.innerHTML = 'n/a'
+      notify('Failed to get exchange rates (' + error + ')', 'warning')
+    })
 }
 
 /**
@@ -59,21 +63,4 @@ function updateCurrencyRates(rates) {
   if (lastDate) {
     store.set('rateDate', lastDate)
   }
-}
-
-/**
- * Handle fetch error for exchange rates.
- * @param {Error} error - The error object.
- */
-function handleFetchError(error) {
-  dom.lastUpdated.innerHTML = 'n/a'
-  notify('Failed to get exchange rates (' + error + ')', 'warning')
-}
-
-/**
- * Handle no internet connection.
- */
-function handleNoInternetConnection() {
-  dom.lastUpdated.innerHTML = 'No internet connection.'
-  notify('No internet connection. Could not update exchange rates.', 'warning')
 }

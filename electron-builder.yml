@@ -4,6 +4,7 @@ appId: com.numara.app
 # Artifact name pattern
 artifactName: '${productName}-${version}-${arch}.${ext}'
 
+# Disable asar
 asar: false
 
 # Publish configuration

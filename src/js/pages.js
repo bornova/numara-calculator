@@ -243,8 +243,9 @@ export function renamePage(pageId) {
   modal.show('#dialogRenamePage')
 
   // Remove previous event listener to avoid stacking
-  const newListener = function rename() {
+  function newListener() {
     const newName = dom.renamePageTitleInput.value.replace(/<|>/g, '').trim() || getPageName()
+
     // Prevent duplicate page names
     if (pages.some((p) => p.name === newName && p.id !== pageId)) {
       notify(`"${newName}" already exists. Please choose a different page name.`, 'danger')
@@ -257,12 +258,11 @@ export function renamePage(pageId) {
     populatePages()
 
     dom.pageName.innerHTML = page.name
-    dom.dialogRenamePageSave.removeEventListener('click', newListener)
 
     modal.hide('#dialogRenamePage')
   }
 
-  dom.dialogRenamePageSave.addEventListener('click', newListener)
+  dom.dialogRenamePageSave.onclick = newListener
 }
 
 /**

@@ -20,37 +20,40 @@ import UIkit from 'uikit'
 
 document.title = description
 
+/**
+ * Sets up the application headers based on platform and environment.
+ */
 const setupHeaders = () => {
+  const toggleMaxButtons = (isMax) => {
+    dom.unmaxBtn.style.display = isMax ? 'block' : 'none'
+    dom.maxBtn.style.display = isMax ? 'none' : 'block'
+  }
+
   if (isElectron && !isMac) {
     dom.headerMac.remove()
     dom.headerWin.style.display = 'block'
     dom.headerWinTitle.innerHTML = name
 
-    dom.maxBtn.style.display = numara.isMaximized() ? 'none' : 'block'
-    dom.unmaxBtn.style.display = numara.isMaximized() ? 'block' : 'none'
+    toggleMaxButtons(numara.isMaximized())
 
     dom.minBtn.addEventListener('click', numara.minimize)
     dom.maxBtn.addEventListener('click', numara.maximize)
     dom.unmaxBtn.addEventListener('click', numara.unmaximize)
     dom.closeBtn.addEventListener('click', numara.close)
 
-    numara.isMax((event, isMax) => {
-      dom.unmaxBtn.style.display = isMax ? 'block' : 'none'
-      dom.maxBtn.style.display = isMax ? 'none' : 'block'
-    })
-
+    numara.isMax((event, isMax) => toggleMaxButtons(isMax))
     dom.headerWin.addEventListener('dblclick', toggleMinMax)
   } else {
     dom.headerWin.remove()
     dom.headerMac.style.display = 'block'
     dom.headerMacTitle.innerHTML = name
-
-    if (isElectron) {
-      dom.headerMac.addEventListener('dblclick', toggleMinMax)
-    }
+    if (isElectron) dom.headerMac.addEventListener('dblclick', toggleMinMax)
   }
 }
 
+/**
+ * Populates the About dialog with app info and sets up related links.
+ */
 const setupAppInfo = () => {
   dom.dialogAboutCopyright.innerHTML = `Copyright &copy; ${new Date().getFullYear()} ${author.name}`
   dom.dialogAboutAppVersion.innerHTML = isElectron
@@ -72,31 +75,33 @@ const setupAppInfo = () => {
   }
 }
 
+/**
+ * Attaches click handlers to main action buttons in the UI.
+ */
 const setupActionButtons = () => {
-  dom.clearButton.addEventListener('click', () => {
-    if (cm.getValue() !== '') {
-      cm.setValue('')
-      cm.focus()
+  const buttonActions = [
+    {
+      btn: dom.clearButton,
+      handler: () => {
+        if (cm.getValue() !== '') {
+          cm.setValue('')
+          cm.focus()
+          calculate()
+        }
+      }
+    },
+    { btn: dom.copyButton, handler: copyAll },
+    { btn: dom.udfuButton, handler: () => modal.show('#dialogUdfu') },
+    { btn: dom.settingsButton, handler: () => modal.show('#dialogSettings') },
+    { btn: dom.aboutButton, handler: () => modal.show('#dialogAbout') }
+  ]
 
-      calculate()
-    }
-  })
-
-  dom.copyButton.addEventListener('click', copyAll)
-
-  dom.udfuButton.addEventListener('click', () => {
-    modal.show('#dialogUdfu')
-  })
-
-  dom.settingsButton.addEventListener('click', () => {
-    modal.show('#dialogSettings')
-  })
-
-  dom.aboutButton.addEventListener('click', () => {
-    modal.show('#dialogAbout')
-  })
+  buttonActions.forEach(({ btn, handler }) => btn.addEventListener('click', handler))
 }
 
+/**
+ * Sets up click and mouse events for the output panel.
+ */
 const setupOutputPanelActions = () => {
   dom.output.addEventListener('click', (event) => {
     switch (event.target.className) {
@@ -138,6 +143,10 @@ const setupOutputPanelActions = () => {
   })
 }
 
+/**
+ * Enables resizing of the input/output panel via a draggable divider.
+ * Handles double-click to reset and mouse events for resizing.
+ */
 const setupPanelResizer = () => {
   let resizeDelay
   let isResizing = false
@@ -182,6 +191,10 @@ const setupPanelResizer = () => {
   })
 }
 
+/**
+ * Registers keyboard shortcuts for common actions using tinykeys.
+ * Handles modal state and side panel toggling.
+ */
 const setupKeyboardShortcuts = () => {
   const keys = {
     clearButton: ['$mod+D'],
@@ -208,6 +221,10 @@ const setupKeyboardShortcuts = () => {
 
 let windowResizeDelay
 
+/**
+ * Sets up global event listeners for keyboard and window resize events.
+ * Handles CodeMirror refresh and triggers recalculation on resize.
+ */
 const setupEventListeners = () => {
   document.addEventListener('keydown', (event) => {
     app.refreshCM = !event.repeat
@@ -228,6 +245,10 @@ const setupEventListeners = () => {
   })
 }
 
+/**
+ * Synchronizes scrolling between the input and output panels.
+ * Adds scroll-to-top button functionality.
+ */
 const setupSyncScroll = () => {
   const inputPanel = document.querySelector('.CodeMirror-scroll')
   const outputPanel = dom.output
@@ -259,6 +280,10 @@ const setupSyncScroll = () => {
   })
 }
 
+/**
+ * Initializes UIkit utilities, dialog events, and user-defined input editors.
+ * Handles focus management and page sorting.
+ */
 const setupUIkitUtils = () => {
   // Tooltip defaults
   UIkit.mixin({ data: { offset: 5 } }, 'tooltip')
@@ -332,6 +357,9 @@ const setupUIkitUtils = () => {
   })
 }
 
+/**
+ * Loads and applies user-defined functions and units from storage.
+ */
 const setupUserDefined = () => {
   // Set user defined values
   if (!store.get('udf')) {
@@ -346,6 +374,10 @@ const setupUserDefined = () => {
   applyUdfu(store.get('udu'), 'unit')
 }
 
+/**
+ * Prepares the print layout and cleans up after printing.
+ * Dynamically generates a print-friendly version of the current page.
+ */
 const setupPrint = () => {
   window.addEventListener('beforeprint', () => {
     const printArea = document.createElement('div')
@@ -390,6 +422,9 @@ const setupPrint = () => {
   })
 }
 
+/**
+ * Main application initializer. Calls all setup functions and loads initial state.
+ */
 const initializeApp = () => {
   setupHeaders()
   setupAppInfo()
