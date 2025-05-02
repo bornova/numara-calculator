@@ -13,25 +13,14 @@ export const isElectron = userAgent.includes('electron')
 export function getTheme() {
   app.settings = store.get('settings')
 
-  return app.settings?.theme === 'system'
-    ? isElectron
-      ? numara.isDark()
-        ? 'dark'
-        : 'light'
-      : 'light'
-    : app.settings?.theme === 'dark'
-      ? 'dark'
-      : 'light'
+  if (app.settings?.theme === 'dark') return 'dark'
+  if (app.settings?.theme === 'system' && isElectron) return numara.isDark() ? 'dark' : 'light'
+  return 'light'
 }
 
 /** Check user locale for thousands separator. */
 export function checkLocale() {
-  const locale =
-    app.settings.locale === 'system'
-      ? navigator.languages && navigator.languages.length
-        ? navigator.languages[0]
-        : navigator.language
-      : app.settings.locale
+  const locale = app.settings.locale === 'system' ? navigator.language : app.settings.locale
 
   return (1.11).toLocaleString(locale).match(/[,]/)
 }
