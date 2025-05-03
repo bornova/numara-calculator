@@ -27,9 +27,23 @@ const schema = {
   theme: { type: 'string', default: 'system' }
 }
 const config = new Store({ schema, clearInvalidConfig: true, fileExtension: '' })
-const theme = config.get('theme')
-const dark = '#1f1f1f'
-const light = '#ffffff'
+
+const DARK_COLOR = '#1f1f1f'
+const LIGHT_COLOR = '#ffffff'
+
+const getTheme = () => config.get('theme')
+
+const getThemeColor = () =>
+  config.get('theme') === 'dark' || (config.get('theme') === 'system' && nativeTheme.shouldUseDarkColors)
+    ? DARK_COLOR
+    : LIGHT_COLOR
+
+const titleBarConfig = () =>
+  process.platform !== 'darwin'
+    ? getTheme() === 'dark'
+      ? { color: DARK_COLOR, symbolColor: LIGHT_COLOR }
+      : { color: LIGHT_COLOR, symbolColor: DARK_COLOR }
+    : false
 
 let win
 
@@ -38,15 +52,15 @@ let win
  */
 function createAppWindow() {
   win = new BrowserWindow({
-    backgroundColor:
-      theme === 'system' ? (nativeTheme.shouldUseDarkColors ? dark : light) : theme === 'dark' ? dark : light,
+    backgroundColor: getThemeColor(),
     frame: false,
     height: parseInt(config.get('appHeight')),
     width: parseInt(config.get('appWidth')),
     minHeight: 360,
     minWidth: 420,
     show: false,
-    titleBarStyle: 'hiddenInset',
+    titleBarStyle: process.platform == 'darwin' ? 'hiddenInset' : 'hidden',
+    titleBarOverlay: true,
     webPreferences: {
       preload: path.join(import.meta.dirname, 'preload.cjs'),
       spellcheck: false
@@ -61,16 +75,17 @@ function createAppWindow() {
     }
 
     win.setHasShadow(true)
+    win.setTitleBarOverlay(titleBarConfig())
 
     if (config.get('position')) {
       win.setPosition(config.get('position')[0], config.get('position')[1])
     }
 
-    win.show()
-
     if (process.platform === 'darwin' && !app.isPackaged) {
       win.webContents.openDevTools()
     }
+
+    win.show()
   })
 
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -81,11 +96,10 @@ function createAppWindow() {
   win.on('maximize', () => win.webContents.send('isMax', true))
   win.on('unmaximize', () => win.webContents.send('isMax', false))
   win.on('restore', () => win.webContents.send('restored', true))
-  win.on('moved', () => {
+  win.on('close', () => {
     config.set('fullSize', win.isMaximized())
     config.set('position', win.getPosition())
-  })
-  win.on('resized', () => {
+
     if (!win.isMaximized()) {
       config.set('appWidth', win.getSize()[0])
       config.set('appHeight', win.getSize()[1])
@@ -102,15 +116,17 @@ app.setAppUserModelId(app.name)
 app.whenReady().then(createAppWindow)
 app.requestSingleInstanceLock() ? app.on('second-instance', () => win.focus()) : app.quit()
 
-nativeTheme.on('updated', () => win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors))
+nativeTheme.on('updated', () => {
+  win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors)
+  win.setTitleBarOverlay(titleBarConfig())
+})
 
 ipcMain.on('isDark', (event) => (event.returnValue = nativeTheme.shouldUseDarkColors))
-ipcMain.on('setTheme', (event, mode) => config.set('theme', mode))
+ipcMain.on('setTheme', (event, mode) => {
+  config.set('theme', mode)
+  win.setTitleBarOverlay(titleBarConfig())
+})
 ipcMain.on('setOnTop', (event, bool) => win.setAlwaysOnTop(bool))
-ipcMain.on('close', () => app.quit())
-ipcMain.on('minimize', () => win.minimize())
-ipcMain.on('maximize', () => win.maximize())
-ipcMain.on('unmaximize', () => win.unmaximize())
 ipcMain.on('isMaximized', (event) => (event.returnValue = win.isMaximized()))
 ipcMain.on('isResized', (event) => {
   event.returnValue = win.getSize()[0] !== schema.appWidth.default || win.getSize()[1] !== schema.appHeight.default
