@@ -24,25 +24,10 @@ document.title = description
  * Sets up the application headers based on platform and environment.
  */
 const setupHeaders = () => {
-  const toggleMaxButtons = (isMax) => {
-    dom.unmaxBtn.style.display = isMax ? 'block' : 'none'
-    dom.maxBtn.style.display = isMax ? 'none' : 'block'
-  }
-
   if (isElectron && !isMac) {
     dom.headerMac.remove()
     dom.headerWin.style.display = 'block'
     dom.headerWinTitle.innerHTML = name
-
-    toggleMaxButtons(numara.isMaximized())
-
-    dom.minBtn.addEventListener('click', numara.minimize)
-    dom.maxBtn.addEventListener('click', numara.maximize)
-    dom.unmaxBtn.addEventListener('click', numara.unmaximize)
-    dom.closeBtn.addEventListener('click', numara.close)
-
-    numara.isMax((event, isMax) => toggleMaxButtons(isMax))
-    dom.headerWin.addEventListener('dblclick', toggleMinMax)
   } else {
     dom.headerWin.remove()
     dom.headerMac.style.display = 'block'
