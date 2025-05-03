@@ -45,6 +45,9 @@ const titleBarConfig = () =>
       : { color: LIGHT_COLOR, symbolColor: DARK_COLOR }
     : false
 
+const isMac = process.platform === 'darwin'
+const isWin = process.platform === 'win32'
+
 let win
 
 /**
@@ -59,7 +62,7 @@ function createAppWindow() {
     minHeight: 360,
     minWidth: 420,
     show: false,
-    titleBarStyle: process.platform == 'darwin' ? 'hiddenInset' : 'hidden',
+    titleBarStyle: isMac ? 'hiddenInset' : 'hidden',
     titleBarOverlay: true,
     webPreferences: {
       preload: path.join(import.meta.dirname, 'preload.cjs'),
@@ -70,18 +73,18 @@ function createAppWindow() {
   win.loadFile('build/index.html')
 
   win.webContents.on('did-finish-load', () => {
-    if (config.get('fullSize') && process.platform === 'win32') {
+    if (config.get('fullSize') && isWin) {
       win.webContents.send('fullscreen', true)
     }
 
     win.setHasShadow(true)
-    win.setTitleBarOverlay(titleBarConfig())
+    if (isWin) win.setTitleBarOverlay(titleBarConfig())
 
     if (config.get('position')) {
       win.setPosition(config.get('position')[0], config.get('position')[1])
     }
 
-    if (process.platform === 'darwin' && !app.isPackaged) {
+    if (isMac && !app.isPackaged) {
       win.webContents.openDevTools()
     }
 
@@ -118,13 +121,13 @@ app.requestSingleInstanceLock() ? app.on('second-instance', () => win.focus()) :
 
 nativeTheme.on('updated', () => {
   win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors)
-  win.setTitleBarOverlay(titleBarConfig())
+  if (isWin) win.setTitleBarOverlay(titleBarConfig())
 })
 
 ipcMain.on('isDark', (event) => (event.returnValue = nativeTheme.shouldUseDarkColors))
 ipcMain.on('setTheme', (event, mode) => {
   config.set('theme', mode)
-  win.setTitleBarOverlay(titleBarConfig())
+  if (isWin) win.setTitleBarOverlay(titleBarConfig())
 })
 ipcMain.on('setOnTop', (event, bool) => win.setAlwaysOnTop(bool))
 ipcMain.on('isMaximized', (event) => (event.returnValue = win.isMaximized()))
@@ -409,6 +412,4 @@ const menuTemplate = [
   }
 ]
 
-Menu.setApplicationMenu(
-  process.platform === 'darwin' || process.platform === 'linux' ? Menu.buildFromTemplate(menuTemplate) : null
-)
+Menu.setApplicationMenu(isMac || process.platform === 'linux' ? Menu.buildFromTemplate(menuTemplate) : null)
