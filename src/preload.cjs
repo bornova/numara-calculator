@@ -18,10 +18,8 @@ contextBridge.exposeInMainWorld('numara', {
     ipcRenderer.on('fullscreen', (event, isFullscreen) => {
       if (isFullscreen) ipcRenderer.send('maximize')
     }),
-  close: () => ipcRenderer.send('close'),
   minimize: () => ipcRenderer.send('minimize'),
   maximize: () => ipcRenderer.send('maximize'),
-  unmaximize: () => ipcRenderer.send('unmaximize'),
   isMax: (callback) => ipcRenderer.on('isMax', callback),
   isMaximized: () => ipcRenderer.sendSync('isMaximized'),
   isResized: () => ipcRenderer.sendSync('isResized'),
