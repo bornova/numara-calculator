@@ -28,25 +28,27 @@ const schema = {
 }
 const config = new Store({ schema, clearInvalidConfig: true, fileExtension: '' })
 
+const isMac = process.platform === 'darwin'
+const isWin = process.platform === 'win32'
+
 const DARK_COLOR = '#1f1f1f'
 const LIGHT_COLOR = '#ffffff'
-
-const getTheme = () => config.get('theme')
 
 const getThemeColor = () =>
   config.get('theme') === 'dark' || (config.get('theme') === 'system' && nativeTheme.shouldUseDarkColors)
     ? DARK_COLOR
     : LIGHT_COLOR
 
-const titleBarConfig = () =>
-  process.platform !== 'darwin'
-    ? getTheme() === 'dark'
-      ? { color: DARK_COLOR, symbolColor: LIGHT_COLOR }
-      : { color: LIGHT_COLOR, symbolColor: DARK_COLOR }
-    : false
+const titleBarConfig = () => ({
+  color: getThemeColor(),
+  symbolColor: getThemeColor() === DARK_COLOR ? LIGHT_COLOR : DARK_COLOR
+})
 
-const isMac = process.platform === 'darwin'
-const isWin = process.platform === 'win32'
+const setTitleBarOverlay = () => {
+  if (!isWin) return
+
+  win.setTitleBarOverlay(titleBarConfig())
+}
 
 let win
 
@@ -77,8 +79,7 @@ function createAppWindow() {
       win.webContents.send('fullscreen', true)
     }
 
-    win.setHasShadow(true)
-    if (isWin) win.setTitleBarOverlay(titleBarConfig())
+    setTitleBarOverlay()
 
     if (config.get('position')) {
       win.setPosition(config.get('position')[0], config.get('position')[1])
@@ -121,13 +122,13 @@ app.requestSingleInstanceLock() ? app.on('second-instance', () => win.focus()) :
 
 nativeTheme.on('updated', () => {
   win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors)
-  if (isWin) win.setTitleBarOverlay(titleBarConfig())
+  setTitleBarOverlay()
 })
 
 ipcMain.on('isDark', (event) => (event.returnValue = nativeTheme.shouldUseDarkColors))
 ipcMain.on('setTheme', (event, mode) => {
   config.set('theme', mode)
-  if (isWin) win.setTitleBarOverlay(titleBarConfig())
+  setTitleBarOverlay()
 })
 ipcMain.on('setOnTop', (event, bool) => win.setAlwaysOnTop(bool))
 ipcMain.on('isMaximized', (event) => (event.returnValue = win.isMaximized()))
