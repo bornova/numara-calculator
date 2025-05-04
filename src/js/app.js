@@ -442,7 +442,6 @@ const initializeApp = () => {
 
   if (isElectron) {
     numara.themeUpdate(settings.apply)
-    numara.fullscreen()
     numara.restored(() => {
       cm.focus()
     })
@@ -452,6 +451,12 @@ const initializeApp = () => {
     dom.dialogAboutAppVersion.addEventListener('click', (event) => {
       if (event.detail === 9) {
         numara.openDevTools()
+      }
+    })
+
+    numara.resized(() => {
+      if (app.activePlot && dom.dialogPlot.classList.contains('uk-open')) {
+        plot()
       }
     })
   }

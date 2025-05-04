@@ -76,7 +76,7 @@ function createAppWindow() {
 
   win.webContents.on('did-finish-load', () => {
     if (config.get('fullSize') && isWin) {
-      win.webContents.send('fullscreen', true)
+      win.maximize()
     }
 
     setTitleBarOverlay()
@@ -97,17 +97,23 @@ function createAppWindow() {
     return { action: 'deny' }
   })
 
-  win.on('maximize', () => win.webContents.send('isMax', true))
-  win.on('unmaximize', () => win.webContents.send('isMax', false))
-  win.on('restore', () => win.webContents.send('restored', true))
   win.on('close', () => {
     config.set('fullSize', win.isMaximized())
     config.set('position', win.getPosition())
 
     if (!win.isMaximized()) {
-      config.set('appWidth', win.getSize()[0])
-      config.set('appHeight', win.getSize()[1])
+      const [width, height] = win.getSize()
+
+      config.set('appWidth', width)
+      config.set('appHeight', height)
     }
+  })
+
+  win.on('resized', () => {
+    const [width, height] = win.getSize()
+    const isResized = width !== schema.appWidth.default || height !== schema.appHeight.default
+
+    if (isResized) win.webContents.send('resized')
   })
 
   if (app.isPackaged) {
@@ -133,7 +139,9 @@ ipcMain.on('setTheme', (event, mode) => {
 ipcMain.on('setOnTop', (event, bool) => win.setAlwaysOnTop(bool))
 ipcMain.on('isMaximized', (event) => (event.returnValue = win.isMaximized()))
 ipcMain.on('isResized', (event) => {
-  event.returnValue = win.getSize()[0] !== schema.appWidth.default || win.getSize()[1] !== schema.appHeight.default
+  const [width, height] = win.getSize()
+
+  event.returnValue = width !== schema.appWidth.default || height !== schema.appHeight.default
 })
 
 ipcMain.on('import', (event) => {
@@ -178,9 +186,7 @@ ipcMain.on('export', (event, fileName, content) => {
  * Reset window size to default.
  */
 function resetSize() {
-  if (win) {
-    win.setSize(schema.appWidth.default, schema.appHeight.default)
-  }
+  win.setSize(schema.appWidth.default, schema.appHeight.default)
 }
 
 ipcMain.on('resetSize', resetSize)
