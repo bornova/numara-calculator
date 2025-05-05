@@ -192,7 +192,7 @@ const setupKeyboardShortcuts = () => {
     tinykeys(window, {
       [command]: (event) => {
         event.preventDefault()
-        const modalOpen = document.querySelectorAll('.uk-open').length > 0
+        const modalOpen = dom.els('.uk-open').length > 0
 
         if (!modalOpen) {
           document.getElementById(button).click()
@@ -235,7 +235,7 @@ const setupEventListeners = () => {
  * Adds scroll-to-top button functionality.
  */
 const setupSyncScroll = () => {
-  const inputPanel = document.querySelector('.CodeMirror-scroll')
+  const inputPanel = dom.el('.CodeMirror-scroll')
   const outputPanel = dom.output
 
   let inputScroll = false
@@ -272,13 +272,29 @@ const setupSyncScroll = () => {
 const setupUIkitUtils = () => {
   // Tooltip defaults
   UIkit.mixin({ data: { offset: 5 } }, 'tooltip')
+
+  // Windows controls transparency when modal is shown/hidden
+  UIkit.util.on('.modal, #sidePanel', 'beforeshow', () => {
+    if (isElectron) numara.transControls(true)
+  })
+
+  UIkit.util.on('.modal, #sidePanel', 'hidden', () => {
+    const modalOpen = dom.els('.uk-open').length > 0
+
+    if (isElectron) numara.transControls(modalOpen)
+    // Focus on input when dialog is closed
+    setTimeout(() => {
+      cm.focus()
+    }, 100)
+  })
+
   // Initiate theme dialog
   UIkit.util.on('#dialogTheme', 'shown', checkColorChange)
+
   // Initiate settings dialog
   UIkit.util.on('#dialogSettings', 'beforeshow', settings.prep)
 
   let udTab = 1
-
   // Prepare user defined dialog inputs
   UIkit.util.on('#dialogUdfu', 'shown', (event) => {
     if (event.target.id === 'dialogUdfu') {
@@ -300,13 +316,6 @@ const setupUIkitUtils = () => {
   UIkit.util.on('#uduTab', 'shown', () => {
     udTab = 2
     refreshEditor(uduInput)
-  })
-
-  // Focus on input when dialog is closed
-  UIkit.util.on('.modal', 'hidden', () => {
-    setTimeout(() => {
-      cm.focus()
-    }, 100)
   })
 
   // Plot dialog
@@ -332,12 +341,6 @@ const setupUIkitUtils = () => {
     setTimeout(() => {
       dom.renamePageTitleInput.focus()
       dom.renamePageTitleInput.select()
-    }, 20)
-  })
-
-  UIkit.util.on('#sidePanel', 'hidden', () => {
-    setTimeout(() => {
-      cm.focus()
     }, 20)
   })
 }
@@ -451,12 +454,6 @@ const initializeApp = () => {
     dom.dialogAboutAppVersion.addEventListener('click', (event) => {
       if (event.detail === 9) {
         numara.openDevTools()
-      }
-    })
-
-    numara.resized(() => {
-      if (app.activePlot && dom.dialogPlot.classList.contains('uk-open')) {
-        plot()
       }
     })
   }
