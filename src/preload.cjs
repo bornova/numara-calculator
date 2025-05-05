@@ -22,6 +22,7 @@ contextBridge.exposeInMainWorld('numara', {
   resetSize: () => ipcRenderer.send('resetSize'),
   restored: (callback) => ipcRenderer.on('restored', callback),
   setOnTop: (callback) => ipcRenderer.send('setOnTop', callback),
+  transControls: (isTrans) => ipcRenderer.send('transControls', isTrans),
 
   // Import
   import: () => ipcRenderer.send('import'),
