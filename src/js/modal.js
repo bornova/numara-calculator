@@ -1,5 +1,6 @@
 import { app } from './common'
 import { dom } from './dom'
+
 import UIkit from 'uikit'
 
 export const modal = {

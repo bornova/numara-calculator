@@ -33,14 +33,15 @@ const isWin = process.platform === 'win32'
 
 const DARK_COLOR = '#1f1f1f'
 const LIGHT_COLOR = '#ffffff'
+const TRANS_COLOR = '#00000000'
 
 const getThemeColor = () =>
   config.get('theme') === 'dark' || (config.get('theme') === 'system' && nativeTheme.shouldUseDarkColors)
     ? DARK_COLOR
     : LIGHT_COLOR
 
-const titleBarConfig = () => ({
-  color: getThemeColor(),
+const titleBarConfig = (isTrans) => ({
+  color: isTrans ? TRANS_COLOR : getThemeColor(),
   symbolColor: getThemeColor() === DARK_COLOR ? LIGHT_COLOR : DARK_COLOR
 })
 
@@ -136,6 +137,8 @@ ipcMain.on('setTheme', (event, mode) => {
   config.set('theme', mode)
   setTitleBarOverlay()
 })
+ipcMain.on('transControls', (event, isTrans) => win.setTitleBarOverlay(titleBarConfig(isTrans)))
+
 ipcMain.on('setOnTop', (event, bool) => win.setAlwaysOnTop(bool))
 ipcMain.on('isMaximized', (event) => (event.returnValue = win.isMaximized()))
 ipcMain.on('isResized', (event) => {
