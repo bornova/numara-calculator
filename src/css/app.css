@@ -269,7 +269,7 @@ text {
 .actions {
   position: fixed;
   right: 10px;
-  bottom: 10px;
+  bottom: 8px;
   left: 10px;
   height: 25px;
 }
@@ -786,7 +786,7 @@ input:checked + .slider:before {
   display: none;
   position: fixed;
   right: 2px;
-  bottom: 35px;
+  bottom: 32px;
   cursor: pointer;
   width: 10px;
 }
