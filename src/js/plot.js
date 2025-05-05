@@ -1,7 +1,10 @@
 import { app, store } from './common'
 import { dom } from './dom'
 import { math } from './eval'
+import { isElectron } from './utils'
+
 import { productName } from './../../package.json'
+
 import functionPlot from 'function-plot'
 
 /**
@@ -94,3 +97,9 @@ dom.resetPlot.addEventListener('click', () => {
   app.activePlot = null
   plot()
 })
+
+if (isElectron) {
+  numara.resized(() => {
+    if (app.activePlot && dom.dialogPlot.classList.contains('uk-open')) plot()
+  })
+}
