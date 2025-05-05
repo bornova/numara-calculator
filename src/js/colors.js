@@ -74,12 +74,13 @@ export const colors = {
     },
     excel: { title: 'Excel', class: '.cm-excel', dark: '#3cc383', light: '#197b43' },
     function: { title: 'Functions', class: '.cm-formulajs, .cm-function, .cm-udf', dark: '#cb82f5', light: '#6f42c1' },
-    keyword: { title: 'Keywords', class: '.cm-keyword, .cm-lineNo', dark: '#be6317', light: '#be6317' },
+    keyword: { title: 'Keywords', class: '.cm-keyword, .cm-lineNo', dark: '#e78c3f', light: '#be6317' },
     number: { title: 'Numbers', class: '.cm-number', dark: '#e6e6e6', light: '#333333' },
     operator: { title: 'Operators', class: '.cm-operator', dark: '#bbbbbb', light: '#888888' },
     text: { title: 'Text', class: '.cm-text', dark: '#e6e6e6', light: '#333333' },
-    unit: { title: 'Units', class: '.cm-unit, .cm-udu', dark: '#4d87c9', light: '#005cc5' },
-    variable: { title: 'Variables', class: '.cm-variable', dark: '#96b4c4', light: '#57707c' }
+    unit: { title: 'Units', class: '.cm-unit, .cm-udu', dark: '#6b9cd3', light: '#005cc5' },
+    variable: { title: 'Variables', class: '.cm-variable', dark: '#96b4c4', light: '#57707c' },
+    noSyntax: { dark: '#e6e6e6', light: '#333333' }
   },
 
   /**
@@ -138,7 +139,9 @@ export const colors = {
     app.colors = store.get('colors')
 
     Object.values(app.colors).forEach((color) => {
-      colorSheet += `${color.class} { color: ${color[appTheme]}; }\n`
+      let colorValue = app.settings.syntax ? color[appTheme] : colors.defaults.noSyntax[appTheme]
+
+      colorSheet += `${color.class} { color: ${colorValue};}\n`
     })
 
     dom.colorSheet.innerHTML = colorSheet

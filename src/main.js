@@ -27,9 +27,28 @@ const schema = {
   theme: { type: 'string', default: 'system' }
 }
 const config = new Store({ schema, clearInvalidConfig: true, fileExtension: '' })
-const theme = config.get('theme')
-const dark = '#1f1f1f'
-const light = '#ffffff'
+
+const isMac = process.platform === 'darwin'
+const isWin = process.platform === 'win32'
+
+const DARK_COLOR = '#1f1f1f'
+const LIGHT_COLOR = '#ffffff'
+
+const getThemeColor = () =>
+  config.get('theme') === 'dark' || (config.get('theme') === 'system' && nativeTheme.shouldUseDarkColors)
+    ? DARK_COLOR
+    : LIGHT_COLOR
+
+const titleBarConfig = () => ({
+  color: getThemeColor(),
+  symbolColor: getThemeColor() === DARK_COLOR ? LIGHT_COLOR : DARK_COLOR
+})
+
+const setTitleBarOverlay = () => {
+  if (!isWin) return
+
+  win.setTitleBarOverlay(titleBarConfig())
+}
 
 let win
 
@@ -38,15 +57,15 @@ let win
  */
 function createAppWindow() {
   win = new BrowserWindow({
-    backgroundColor:
-      theme === 'system' ? (nativeTheme.shouldUseDarkColors ? dark : light) : theme === 'dark' ? dark : light,
+    backgroundColor: getThemeColor(),
     frame: false,
     height: parseInt(config.get('appHeight')),
     width: parseInt(config.get('appWidth')),
     minHeight: 360,
     minWidth: 420,
     show: false,
-    titleBarStyle: 'hiddenInset',
+    titleBarStyle: isMac ? 'hiddenInset' : 'hidden',
+    titleBarOverlay: true,
     webPreferences: {
       preload: path.join(import.meta.dirname, 'preload.cjs'),
       spellcheck: false
@@ -56,21 +75,21 @@ function createAppWindow() {
   win.loadFile('build/index.html')
 
   win.webContents.on('did-finish-load', () => {
-    if (config.get('fullSize') && process.platform === 'win32') {
-      win.webContents.send('fullscreen', true)
+    if (config.get('fullSize') && isWin) {
+      win.maximize()
     }
 
-    win.setHasShadow(true)
+    setTitleBarOverlay()
 
     if (config.get('position')) {
       win.setPosition(config.get('position')[0], config.get('position')[1])
     }
 
-    win.show()
-
-    if (process.platform === 'darwin' && !app.isPackaged) {
+    if (isMac && !app.isPackaged) {
       win.webContents.openDevTools()
     }
+
+    win.show()
   })
 
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -83,14 +102,19 @@ function createAppWindow() {
     config.set('position', win.getPosition())
 
     if (!win.isMaximized()) {
-      config.set('appWidth', win.getSize()[0])
-      config.set('appHeight', win.getSize()[1])
+      const [width, height] = win.getSize()
+
+      config.set('appWidth', width)
+      config.set('appHeight', height)
     }
   })
 
-  win.on('maximize', () => win.webContents.send('isMax', true))
-  win.on('unmaximize', () => win.webContents.send('isMax', false))
-  win.on('restore', () => win.webContents.send('restored', true))
+  win.on('resized', () => {
+    const [width, height] = win.getSize()
+    const isResized = width !== schema.appWidth.default || height !== schema.appHeight.default
+
+    if (isResized) win.webContents.send('resized')
+  })
 
   if (app.isPackaged) {
     win.on('focus', () => globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {}))
@@ -102,18 +126,22 @@ app.setAppUserModelId(app.name)
 app.whenReady().then(createAppWindow)
 app.requestSingleInstanceLock() ? app.on('second-instance', () => win.focus()) : app.quit()
 
-nativeTheme.on('updated', () => win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors))
+nativeTheme.on('updated', () => {
+  win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors)
+  setTitleBarOverlay()
+})
 
 ipcMain.on('isDark', (event) => (event.returnValue = nativeTheme.shouldUseDarkColors))
-ipcMain.on('setTheme', (event, mode) => config.set('theme', mode))
+ipcMain.on('setTheme', (event, mode) => {
+  config.set('theme', mode)
+  setTitleBarOverlay()
+})
 ipcMain.on('setOnTop', (event, bool) => win.setAlwaysOnTop(bool))
-ipcMain.on('close', () => app.quit())
-ipcMain.on('minimize', () => win.minimize())
-ipcMain.on('maximize', () => win.maximize())
-ipcMain.on('unmaximize', () => win.unmaximize())
 ipcMain.on('isMaximized', (event) => (event.returnValue = win.isMaximized()))
 ipcMain.on('isResized', (event) => {
-  event.returnValue = win.getSize()[0] !== schema.appWidth.default || win.getSize()[1] !== schema.appHeight.default
+  const [width, height] = win.getSize()
+
+  event.returnValue = width !== schema.appWidth.default || height !== schema.appHeight.default
 })
 
 ipcMain.on('import', (event) => {
@@ -158,9 +186,7 @@ ipcMain.on('export', (event, fileName, content) => {
  * Reset window size to default.
  */
 function resetSize() {
-  if (win) {
-    win.setSize(schema.appWidth.default, schema.appHeight.default)
-  }
+  win.setSize(schema.appWidth.default, schema.appHeight.default)
 }
 
 ipcMain.on('resetSize', resetSize)
@@ -393,6 +419,4 @@ const menuTemplate = [
   }
 ]
 
-Menu.setApplicationMenu(
-  process.platform === 'darwin' || process.platform === 'linux' ? Menu.buildFromTemplate(menuTemplate) : null
-)
+Menu.setApplicationMenu(isMac || process.platform === 'linux' ? Menu.buildFromTemplate(menuTemplate) : null)

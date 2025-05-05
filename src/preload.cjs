@@ -14,17 +14,11 @@ contextBridge.exposeInMainWorld('numara', {
   themeUpdate: (callback) => ipcRenderer.on('themeUpdate', callback),
 
   // Window controls
-  fullscreen: () =>
-    ipcRenderer.on('fullscreen', (event, isFullscreen) => {
-      if (isFullscreen) ipcRenderer.send('maximize')
-    }),
-  close: () => ipcRenderer.send('close'),
   minimize: () => ipcRenderer.send('minimize'),
   maximize: () => ipcRenderer.send('maximize'),
-  unmaximize: () => ipcRenderer.send('unmaximize'),
-  isMax: (callback) => ipcRenderer.on('isMax', callback),
   isMaximized: () => ipcRenderer.sendSync('isMaximized'),
   isResized: () => ipcRenderer.sendSync('isResized'),
+  resized: (callback) => ipcRenderer.on('resized', callback),
   resetSize: () => ipcRenderer.send('resetSize'),
   restored: (callback) => ipcRenderer.on('restored', callback),
   setOnTop: (callback) => ipcRenderer.send('setOnTop', callback),

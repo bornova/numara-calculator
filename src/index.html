@@ -28,12 +28,6 @@
     <div id="wrapper" class="wrapper">
       <div id="winHeader" class="winHeader">
         <div id="winHeaderTitle" class="winHeaderTitle"></div>
-        <div id="winButtons" class="winButtons">
-          <span id="close" class="close-btn-win" title="Exit"></span>
-          <span id="max" class="max-btn-win" title="Maximize"></span>
-          <span id="unmax" class="unmax-btn-win" title="Unmaximize"></span>
-          <span id="min" class="min-btn-win" title="Minimize"></span>
-        </div>
       </div>
 
       <div id="macHeader" class="macHeader">
@@ -213,16 +207,6 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div>Always on top</div>
-            <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="alwaysOnTop" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-
-          <div class="uk-child-width-expand" uk-grid>
             <div class="padTop1">Font size</div>
             <div class="uk-text-right uk-position-relative">
               <select id="fontSize" class="uk-select settingItem">
@@ -258,39 +242,38 @@
               </select>
             </div>
           </div>
-
-          <h3>Locale</h3>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">
-              User locale<a id="localeWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
-            </div>
-            <div class="uk-text-right uk-position-relative">
-              <select id="locale" class="uk-select settingItem"></select>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div>Show day with date</div>
+            <div>Syntax highligting</div>
             <div class="uk-text-right uk-position-relative">
               <label class="switch">
-                <input id="dateDay" type="checkbox" class="settingItem" />
+                <input id="syntax" type="checkbox" class="settingItem" />
                 <span class="slider round"></span>
               </label>
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div>Thousand separator</div>
-            <div class="uk-text-right uk-position-relative">
+            <div>Keyword tooltips</div>
+            <div class="uk-text-right uk-width-2-5 uk-position-relative">
               <label class="switch">
-                <input id="thouSep" type="checkbox" class="settingItem" />
+                <input id="keywordTips" type="checkbox" class="settingItem" />
                 <span class="slider round"></span>
               </label>
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div><i class="subSwitchIcon" data-lucide="corner-down-right"></i>Copy with answer</div>
+            <div>Highlight matching brackets</div>
+            <div class="uk-text-right uk-width-2-5 uk-position-relative">
+              <label class="switch">
+                <input id="matchBrackets" type="checkbox" class="settingItem" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div>Always on top</div>
             <div class="uk-text-right uk-position-relative">
               <label class="switch">
-                <input id="copyThouSep" type="checkbox" class="settingItem" />
+                <input id="alwaysOnTop" type="checkbox" class="settingItem" />
                 <span class="slider round"></span>
               </label>
             </div>
@@ -376,33 +359,7 @@
           </div>
 
           <h3>Editor</h3>
-          <div class="uk-child-width-expand" uk-grid>
-            <div>Syntax highligting</div>
-            <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="syntax" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div>Keyword tooltips</div>
-            <div class="uk-text-right uk-width-2-5 uk-position-relative">
-              <label class="switch">
-                <input id="keywordTips" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div>Highlight matching brackets</div>
-            <div class="uk-text-right uk-width-2-5 uk-position-relative">
-              <label class="switch">
-                <input id="matchBrackets" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
+
           <div class="uk-child-width-expand" uk-grid>
             <div>Autocomplete hints</div>
             <div class="uk-text-right uk-position-relative">
@@ -462,6 +419,43 @@
             <div class="uk-text-right uk-width-2-5 uk-position-relative">
               <label class="switch">
                 <input id="lineWrap" type="checkbox" class="settingItem" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+
+          <h3>Locale</h3>
+          <div class="uk-child-width-expand" uk-grid>
+            <div class="padTop1">
+              User locale<a id="localeWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
+            </div>
+            <div class="uk-text-right uk-position-relative">
+              <select id="locale" class="uk-select settingItem"></select>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div>Show day with date</div>
+            <div class="uk-text-right uk-position-relative">
+              <label class="switch">
+                <input id="dateDay" type="checkbox" class="settingItem" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div>Thousand separator</div>
+            <div class="uk-text-right uk-position-relative">
+              <label class="switch">
+                <input id="thouSep" type="checkbox" class="settingItem" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div><i class="subSwitchIcon" data-lucide="corner-down-right"></i>Copy with answer</div>
+            <div class="uk-text-right uk-position-relative">
+              <label class="switch">
+                <input id="copyThouSep" type="checkbox" class="settingItem" />
                 <span class="slider round"></span>
               </label>
             </div>
@@ -572,22 +566,22 @@
         </div>
 
         <div uk-grid>
-          <div class="dialog-buttons resetButtons uk-width-2-3 uk-flex-left">
+          <div class="dialog-buttons resetButtons uk-width-1-2 uk-flex-left">
             <a
               id="dialogSettingsReset"
               class="resetButton uk-text-danger"
               title="Reset all app settings and data"
               uk-tooltip
             >
-              <i data-lucide="list-restart"></i>
+              Reset App
             </a>
             <a id="resetSizeButton" class="resetSizeButton" title="Reset window size" uk-tooltip>
               <i data-lucide="scaling"></i>
             </a>
           </div>
-          <div class="dialog-buttons resetButtons uk-width-1-3 uk-flex-right">
+          <div class="dialog-buttons resetButtons uk-width-1-2 uk-flex-right">
             <a id="defaultSettingsButton" class="defSettingsButton" title="Restore default settings" uk-tooltip>
-              Defaults
+              Restore default
             </a>
             <button class="uk-button uk-button-default uk-modal-close uk-button-small">Close</button>
           </div>

@@ -29,12 +29,6 @@ export const dom = {
   headerMac: document.getElementById('macHeader'),
   headerMacTitle: document.getElementById('macHeaderTitle'),
 
-  // Window buttons
-  closeBtn: document.getElementById('close'),
-  maxBtn: document.getElementById('max'),
-  unmaxBtn: document.getElementById('unmax'),
-  minBtn: document.getElementById('min'),
-
   // Actions
   newPageButton: document.getElementById('newPageButton'),
   clearButton: document.getElementById('clearButton'),
