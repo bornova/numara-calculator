@@ -1,9 +1,8 @@
-import { app, store } from './common'
 import { dom } from './dom'
 import { cm } from './editor'
 import { generateIcons } from './icons'
 import { confirm, modal, notify } from './modal'
-import { isElectron } from './utils'
+import { app, isElectron, store } from './utils'
 
 import { DateTime } from 'luxon'
 
@@ -14,29 +13,22 @@ import UIkit from 'uikit'
  * @returns {string} The page name.
  */
 export function getPageName() {
-  const pages = store.get('pages')
+  const pages = store.get('pages') || []
+  const usedNumbers = new Set(
+    pages
+      .map((page) => {
+        const match = page.name.trim().match(/^Page (\d+)$/)
+        return match ? Number(match[1]) : null
+      })
+      .filter((n) => n !== null)
+  )
+
   let pageNo = 1
-
-  if (pages) {
-    const regex = new RegExp(/\b(Page \d+)$\b/)
-    const pageNos = pages
-      .filter((page) => regex.test(page.name.trim()))
-      .map((page) => +page.name.split(' ')[1])
-      .sort((a, b) => a - b)
-
-    const max = Math.max(...pageNos)
-
-    if (pageNos[0] === 1) {
-      for (let i = 0; i < max; i++) {
-        if (pageNos[i + 1] !== pageNos[i] + 1) {
-          pageNo = pageNos[i] + 1
-          break
-        }
-      }
-    }
+  while (usedNumbers.has(pageNo)) {
+    pageNo++
   }
 
-  return 'Page ' + pageNo
+  return `Page ${pageNo}`
 }
 
 /**
@@ -127,19 +119,19 @@ export function populatePages() {
  * @param {string} pageId Id of the page to load.
  */
 export function loadPage(pageId) {
-  const page = store.get('pages').find((page) => page.id === pageId)
-  const cursor = page.cursor
+  const page = store.get('pages').find((p) => p.id === pageId)
+  const { name, data, history, cursor } = page
 
   app.activePage = pageId
   store.set('lastPage', pageId)
 
-  dom.pageName.innerHTML = page.name
-  dom.pageName.title = page.name
+  dom.pageName.innerHTML = name
+  dom.pageName.title = name
 
-  cm.setValue(page.data)
+  cm.setValue(data)
 
-  if (page.history) {
-    cm.setHistory(page.history)
+  if (history) {
+    cm.setHistory(history)
   }
 
   cm.execCommand('goLineEnd')
@@ -182,7 +174,7 @@ export function newPage(isImport) {
   const pageName =
     dom.newPageTitleInput.value.replace(/<|>/g, '').trim() || (isImport ? 'Imported page' : getPageName())
 
-  const pageNames = pages.map((p) => p.name)
+  const pageNames = pages.map(({ name }) => name)
 
   if (pageNames.includes(pageName)) {
     notify(`"${pageName}" already exists. Please choose a different page name.`, 'danger')
@@ -211,8 +203,9 @@ export function newPage(isImport) {
  */
 export function deletePage(pageId) {
   let pages = store.get('pages')
+  const pageName = pages.find((page) => page.id === pageId).name
 
-  confirm('"' + pages.find((page) => page.id === pageId).name + '" will be deleted.', () => {
+  confirm(`"${pageName}" will be deleted.`, () => {
     pages = pages.filter((page) => page.id !== pageId)
 
     store.set('pages', pages)
@@ -220,7 +213,7 @@ export function deletePage(pageId) {
     if (pages.length === 0) {
       defaultPage()
     } else if (pageId === app.activePage) {
-      loadPage(pages.pop().id)
+      loadPage(pages[pages.length - 1].id)
     }
 
     populatePages()
@@ -299,24 +292,15 @@ export function duplicatePage(pageId) {
  */
 export function sortPages(by) {
   const pages = store.get('pages')
-  let sortedPages
-
-  switch (by) {
-    case 'oldnew':
-      sortedPages = [...pages].sort((a, b) => a.id.localeCompare(b.id))
-      break
-    case 'newold':
-      sortedPages = [...pages].sort((a, b) => b.id.localeCompare(a.id))
-      break
-    case 'az':
-      sortedPages = [...pages].sort((a, b) => a.name.localeCompare(b.name))
-      break
-    case 'za':
-      sortedPages = [...pages].sort((a, b) => b.name.localeCompare(a.name))
-      break
-    default:
-      sortedPages = pages
+  const sorters = {
+    oldnew: (a, b) => a.id.localeCompare(b.id),
+    newold: (a, b) => b.id.localeCompare(a.id),
+    az: (a, b) => a.name.localeCompare(b.name),
+    za: (a, b) => b.name.localeCompare(a.name)
   }
+
+  const sorter = sorters[by]
+  const sortedPages = sorter ? [...pages].sort(sorter) : pages
 
   store.set('pages', sortedPages)
   populatePages()

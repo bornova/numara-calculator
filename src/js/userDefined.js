@@ -1,8 +1,8 @@
-import { app, store } from './common'
 import { dom } from './dom'
 import { udfInput, uduInput } from './editor'
 import { math } from './eval'
 import { showError } from './modal'
+import { app, store } from './utils'
 
 /**
  * Apply user defined functions or units.
@@ -15,10 +15,15 @@ export function applyUdfu(input, type) {
     try {
       const isFunc = type === 'func'
       const UDFunc = new Function(`'use strict'; return {${input}}`)
+      const udfObj = UDFunc()
 
-      isFunc ? math.import(UDFunc(), { override: true }) : math.createUnit(UDFunc(), { override: true })
+      if (isFunc) {
+        math.import(udfObj, { override: true })
+      } else {
+        math.createUnit(udfObj, { override: true })
+      }
 
-      for (const f in UDFunc()) {
+      for (const f in udfObj) {
         app[isFunc ? 'udfList' : 'uduList'].push(f)
       }
 

@@ -1,8 +1,7 @@
-import { app, store } from './common'
 import { dom } from './dom'
 import { generateIcons } from './icons'
 import { confirm, modal } from './modal'
-import { getTheme } from './utils'
+import { app, getTheme, store } from './utils'
 
 import Coloris from '@melloware/coloris'
 import DeepDiff from 'deep-diff'

@@ -1,6 +1,6 @@
-import { app, store } from './common'
 import { dom } from './dom'
 import { math } from './eval'
+import { app, store } from './utils'
 
 import { productName } from './../../package.json'
 

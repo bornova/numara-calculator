@@ -997,6 +997,10 @@ input:checked + .slider:before {
   height: 10px;
 }
 
+.uk-offcanvas-overlay:before {
+  background: rgba(0, 0, 0, 0.5);
+}
+
 @media (max-width: 639px) {
   .uk-notification {
     right: 25px;

@@ -1,8 +1,8 @@
-import { app, store } from './common'
 import { dom } from './dom'
 import { cm, numaraHints } from './editor'
 import { calculate, math } from './eval'
 import { notify } from './modal'
+import { app, store } from './utils'
 
 const USD_UNIT = 'USD'
 const EXCHANGE_RATE_URL = 'https://www.floatrates.com/widget/1030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json'

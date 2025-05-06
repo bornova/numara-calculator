@@ -1,12 +1,11 @@
 import { colors } from './colors'
-import { app, store } from './common'
 import { dom } from './dom'
 import { cm, udfInput, uduInput } from './editor'
 import { calculate, math } from './eval'
 import { getRates } from './forex'
 import { generateIcons } from './icons'
 import { confirm, showError } from './modal'
-import { checkSize, getTheme, isElectron } from './utils'
+import { app, checkSize, getTheme, isElectron, store } from './utils'
 
 import DeepDiff from 'deep-diff'
 
@@ -36,6 +35,26 @@ function checkSchema() {
       store.set('settings', app.settings)
     }
   })
+}
+
+/**
+ * Populates a select HTML element with given options.
+ *
+ * @param {HTMLSelectElement} selectEl - The select element to populate.
+ * @param {Array<string|Array>} options - The options to add. Each option can be a string or an array [label, value].
+ * @param {string|null} [disabledValue=null] - An optional value to disable in the select options.
+ */
+function populateSelect(selectEl, options, disabledValue = null) {
+  selectEl.innerHTML = ''
+  for (const opt of options) {
+    if (opt === disabledValue) {
+      selectEl.innerHTML += `<option disabled>${opt}</option>`
+    } else if (Array.isArray(opt)) {
+      selectEl.innerHTML += `<option value="${opt[1]}">${opt[0]}</option>`
+    } else {
+      selectEl.innerHTML += `<option value="${opt}">${opt.charAt(0).toUpperCase() + opt.slice(1)}</option>`
+    }
+  }
 }
 
 let updateInterval
@@ -140,35 +159,14 @@ export const settings = {
     const numericOutputs = ['number', 'BigNumber', 'Fraction']
     const notations = ['auto', 'engineering', 'exponential', 'fixed', '-', 'bin', 'hex', 'oct']
 
-    dom.locale.innerHTML = ''
-
-    for (const l of locales) {
-      dom.locale.innerHTML += `<option value="${l[1]}">${l[0]}</option>`
-    }
+    populateSelect(dom.locale, locales)
+    populateSelect(dom.numericOutput, numericOutputs)
+    populateSelect(dom.notation, notations, '-')
+    populateSelect(dom.matrixType, matrixTypes)
 
     dom.precisionLabel.innerHTML = app.settings.precision
     dom.expLowerLabel.innerHTML = app.settings.expLower
     dom.expUpperLabel.innerHTML = app.settings.expUpper
-    dom.numericOutput.innerHTML = ''
-
-    for (const n of numericOutputs) {
-      dom.numericOutput.innerHTML += `<option value="${n}">${n.charAt(0).toUpperCase() + n.slice(1)}</option>`
-    }
-
-    dom.notation.innerHTML = ''
-
-    for (const n of notations) {
-      dom.notation.innerHTML +=
-        n === '-'
-          ? '<option disabled>-</option>'
-          : `<option value="${n}">${n.charAt(0).toUpperCase() + n.slice(1)}</option>`
-    }
-
-    dom.matrixType.innerHTML = ''
-
-    for (const m of matrixTypes) {
-      dom.matrixType.innerHTML += `<option value="${m}">${m}</option>`
-    }
 
     dom.lastUpdated.innerHTML = app.settings.currency ? store.get('rateDate') : ''
     dom.currencyUpdate.style.visibility = app.settings.currency ? 'visible' : 'hidden'
@@ -244,22 +242,12 @@ export const settings = {
       predictable: app.settings.predictable
     })
 
-    if (app.settings.currency) {
-      if (app.settings.currencyInterval === '0') {
-        clearInterval(updateInterval)
-        store.set('rateInterval', false)
-      } else {
-        clearInterval(updateInterval)
-        updateInterval = setInterval(getRates, +app.settings.currencyInterval)
-        store.set('rateInterval', true)
-      }
-    }
-
-    if (app.settings.currencyInterval === '0') {
-      clearInterval(updateInterval)
-    } else {
-      clearInterval(updateInterval)
+    clearInterval(updateInterval)
+    if (app.settings.currency && app.settings.currencyInterval !== '0') {
       updateInterval = setInterval(getRates, +app.settings.currencyInterval)
+      store.set('rateInterval', true)
+    } else {
+      store.set('rateInterval', false)
     }
 
     setTimeout(calculate, 10)
