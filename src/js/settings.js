@@ -6,7 +6,7 @@ import { calculate, math } from './eval'
 import { getRates } from './forex'
 import { generateIcons } from './icons'
 import { confirm, showError } from './modal'
-import { checkLocale, checkSize, getTheme, isElectron } from './utils'
+import { checkSize, getTheme, isElectron } from './utils'
 
 import DeepDiff from 'deep-diff'
 
@@ -18,11 +18,6 @@ function checkDefaults() {
 /** Show warning if big number option is selected. */
 function bigNumberWarning() {
   dom.bigNumWarn.style.display = app.settings.numericOutput === 'BigNumber' ? 'inline-block' : 'none'
-}
-
-/** Show warning if locale uses comma as decimal point separator. */
-function localeWarning() {
-  dom.localeWarn.style.display = checkLocale() ? 'inline-block' : 'none'
 }
 
 /** Check for app settings modifications. */
@@ -74,6 +69,7 @@ export const settings = {
     notifyDuration: '5000',
     notifyLocation: 'bottom-center',
     numericOutput: 'number',
+    pasteThouSep: false,
     plotCross: false,
     plotDerivative: false,
     plotGrid: false,
@@ -95,30 +91,6 @@ export const settings = {
     if (app.settings.currency) {
       getRates()
     }
-
-    // Start required line height fix
-    if (app.settings.lineHeight.endsWith('em')) {
-      switch (app.settings.lineHeight) {
-        case '1.5em':
-          app.settings.lineHeight = '16px'
-          break
-        case '1.75em':
-          app.settings.lineHeight = '20px'
-          break
-        case '2em':
-          app.settings.lineHeight = '24px'
-          break
-        case '2.5em':
-          app.settings.lineHeight = '28px'
-          break
-        case '3em':
-          app.settings.lineHeight = '32px'
-          break
-      }
-
-      store.set('settings', app.settings)
-    }
-    // End fix
 
     dom.els('.settingItem').forEach((item) => {
       const span = document.createElement('span')
@@ -177,7 +149,6 @@ export const settings = {
     dom.precisionLabel.innerHTML = app.settings.precision
     dom.expLowerLabel.innerHTML = app.settings.expLower
     dom.expUpperLabel.innerHTML = app.settings.expUpper
-
     dom.numericOutput.innerHTML = ''
 
     for (const n of numericOutputs) {
@@ -214,7 +185,6 @@ export const settings = {
 
     checkSize()
     checkDefaults()
-    localeWarning()
     bigNumberWarning()
 
     settings.toggleSubs()
@@ -320,7 +290,6 @@ export const settings = {
     }
 
     checkDefaults()
-    localeWarning()
     bigNumberWarning()
 
     settings.toggleSubs()
@@ -330,31 +299,28 @@ export const settings = {
 
   /** Toggle settings sliders to enabled/disabled based on parent setting. */
   toggleSubs: () => {
-    dom.expUpper.disabled = app.settings.notation !== 'auto'
-    dom.expLower.disabled = app.settings.notation !== 'auto'
-    dom.keywordTips.disabled = !app.settings.syntax
-    dom.matchBrackets.disabled = !app.settings.syntax
-    dom.copyThouSep.disabled = !app.settings.thouSep
+    // Helper to enable/disable and set opacity for related controls
+    const toggle = (el, enabled) => {
+      el.disabled = !enabled
+      el.parentNode.style.opacity = enabled ? '1' : '0.5'
+
+      const mod = dom.el('#' + el.id + 'Mod')
+
+      if (mod) {
+        mod.style.pointerEvents = enabled ? 'auto' : 'none'
+        mod.parentNode.style.opacity = enabled ? '1' : '0.5'
+      }
+    }
+
+    toggle(dom.expUpper, app.settings.notation === 'auto')
+    toggle(dom.expLower, app.settings.notation === 'auto')
+    toggle(dom.keywordTips, app.settings.syntax)
+    toggle(dom.matchBrackets, app.settings.syntax)
+    toggle(dom.copyThouSep, app.settings.thouSep)
+    toggle(dom.pasteThouSep, app.settings.thouSep)
+
     dom.currencyInterval.disabled = !app.settings.currency
     dom.updateRatesLink.dataset.enabled = app.settings.currency
-
-    dom.expUpper.parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
-    dom.expLower.parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
-    dom.keywordTips.parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
-    dom.matchBrackets.parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
-    dom.copyThouSep.parentNode.style.opacity = app.settings.thouSep ? '1' : '0.5'
-
-    dom.el('#expUpperMod').style.pointerEvents = app.settings.notation === 'auto' ? 'auto' : 'none'
-    dom.el('#expLowerMod').style.pointerEvents = app.settings.notation === 'auto' ? 'auto' : 'none'
-    dom.el('#keywordTipsMod').style.pointerEvents = app.settings.syntax ? 'auto' : 'none'
-    dom.el('#matchBracketsMod').style.pointerEvents = app.settings.syntax ? 'auto' : 'none'
-    dom.el('#copyThouSepMod').style.pointerEvents = app.settings.thouSep ? 'auto' : 'none'
-
-    dom.el('#expUpperMod').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
-    dom.el('#expLowerMod').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
-    dom.el('#keywordTipsMod').parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
-    dom.el('#matchBracketsMod').parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
-    dom.el('#copyThouSepMod').parentNode.style.opacity = app.settings.thouSep ? '1' : '0.5'
   }
 }
 
@@ -386,13 +352,6 @@ dom.dialogSettingsReset.addEventListener('click', () => {
 if (isElectron) {
   dom.resetSizeButton.addEventListener('click', numara.resetSize)
 }
-
-dom.localeWarn.addEventListener('click', () => {
-  showError(
-    'Caution: Locale',
-    `Your locale (${app.settings.locale}) uses comma (,) as decimal separator.  Therefore, you must use semicolon (;) as argument separator when using functions.<br><br>Ex. sum(1;3) // 4`
-  )
-})
 
 dom.bigNumWarn.addEventListener('click', () => {
   showError(

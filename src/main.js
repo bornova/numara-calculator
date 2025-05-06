@@ -40,18 +40,18 @@ const getThemeColor = () =>
     ? DARK_COLOR
     : LIGHT_COLOR
 
-const titleBarConfig = (isTrans) => ({
-  color: isTrans ? TRANS_COLOR : getThemeColor(),
-  symbolColor: getThemeColor() === DARK_COLOR ? LIGHT_COLOR : DARK_COLOR
-})
+let win
 
-const setTitleBarOverlay = () => {
+const setTitleBarOverlay = (isTrans) => {
   if (!isWin) return
 
-  win.setTitleBarOverlay(titleBarConfig())
-}
+  const titleBarConfig = {
+    color: isTrans ? TRANS_COLOR : getThemeColor(),
+    symbolColor: getThemeColor() === DARK_COLOR ? LIGHT_COLOR : DARK_COLOR
+  }
 
-let win
+  win.setTitleBarOverlay(titleBarConfig)
+}
 
 /**
  * Create the main application window.
@@ -110,13 +110,6 @@ function createAppWindow() {
     }
   })
 
-  win.on('resized', () => {
-    const [width, height] = win.getSize()
-    const isResized = width !== schema.appWidth.default || height !== schema.appHeight.default
-
-    if (isResized) win.webContents.send('resized')
-  })
-
   if (app.isPackaged) {
     win.on('focus', () => globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {}))
     win.on('blur', () => globalShortcut.unregisterAll())
@@ -137,13 +130,12 @@ ipcMain.on('setTheme', (event, mode) => {
   config.set('theme', mode)
   setTitleBarOverlay()
 })
-ipcMain.on('transControls', (event, isTrans) => win.setTitleBarOverlay(titleBarConfig(isTrans)))
+ipcMain.on('transControls', (event, isTrans) => setTitleBarOverlay(isTrans))
 
 ipcMain.on('setOnTop', (event, bool) => win.setAlwaysOnTop(bool))
 ipcMain.on('isMaximized', (event) => (event.returnValue = win.isMaximized()))
 ipcMain.on('isResized', (event) => {
   const [width, height] = win.getSize()
-
   event.returnValue = width !== schema.appWidth.default || height !== schema.appHeight.default
 })
 
@@ -193,7 +185,6 @@ function resetSize() {
 }
 
 ipcMain.on('resetSize', resetSize)
-
 ipcMain.on('resetApp', () => {
   session.defaultSession.clearStorageData().then(() => {
     config.clear()
@@ -201,7 +192,6 @@ ipcMain.on('resetApp', () => {
     app.exit()
   })
 })
-
 ipcMain.on('openDevTools', () => win.webContents.openDevTools())
 ipcMain.on('openLogs', () => {
   shell.openPath(path.join(app.getPath('logs'), 'main.log'))

@@ -424,11 +424,9 @@
             </div>
           </div>
 
-          <h3>Locale</h3>
+          <h3>Answer Locale</h3>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">
-              User locale<a id="localeWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
-            </div>
+            <div class="padTop1">Default locale</div>
             <div class="uk-text-right uk-position-relative">
               <select id="locale" class="uk-select settingItem"></select>
             </div>
@@ -456,6 +454,15 @@
             <div class="uk-text-right uk-position-relative">
               <label class="switch">
                 <input id="copyThouSep" type="checkbox" class="settingItem" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div><i class="subSwitchIcon" data-lucide="corner-down-right"></i>Paste without separator</div>
+            <div class="uk-text-right uk-position-relative">
+              <label class="switch">
+                <input id="pasteThouSep" type="checkbox" class="settingItem" />
                 <span class="slider round"></span>
               </label>
             </div>
@@ -650,11 +657,6 @@
             <div><input type="text" data-class="operator" data-theme="dark" class="colorInput" readonly /></div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="uk-text-right">Text</div>
-            <div><input type="text" data-class="text" data-theme="light" class="colorInput" readonly /></div>
-            <div><input type="text" data-class="text" data-theme="dark" class="colorInput" readonly /></div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
             <div class="uk-text-right">Units</div>
             <div><input type="text" data-class="unit" data-theme="light" class="colorInput" readonly /></div>
             <div><input type="text" data-class="unit" data-theme="dark" class="colorInput" readonly /></div>
@@ -663,6 +665,12 @@
             <div class="uk-text-right">Variables</div>
             <div><input type="text" data-class="variable" data-theme="light" class="colorInput" readonly /></div>
             <div><input type="text" data-class="variable" data-theme="dark" class="colorInput" readonly /></div>
+          </div>
+          <div class="colorHR uk-text-secondary uk-margin-small">No syntax</div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div class="uk-text-right">Plain</div>
+            <div><input type="text" data-class="plain" data-theme="light" class="colorInput" readonly /></div>
+            <div><input type="text" data-class="plain" data-theme="dark" class="colorInput" readonly /></div>
           </div>
         </div>
 

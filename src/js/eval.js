@@ -1,7 +1,6 @@
 import { app, store } from './common'
 import { dom } from './dom'
 import { cm, numaraHints, keywords } from './editor'
-import { checkLocale } from './utils'
 
 import { DateTime } from 'luxon'
 import { all, create, factory } from 'mathjs'
@@ -56,10 +55,6 @@ function evaluateLine(line, lineNo, cmLine, avgs, totals, subtotals) {
       app.settings.contPrevLine
         ? app.mathScope.ans + line
         : line
-
-    if (checkLocale()) {
-      line = line.replace(/[,;]/g, (match) => (match === ',' ? '.' : ','))
-    }
 
     app.mathScope.avg = math.evaluate(avgs.length > 0 ? '(' + math.mean(avgs) + ')' : '0')
     app.mathScope.total = math.evaluate(totals.length > 0 ? '(' + totals.join('+') + ')' : '0')

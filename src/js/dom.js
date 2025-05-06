@@ -1,5 +1,5 @@
 /**
- * DOM elements cache
+ * DOM elements cache and utility functions.
  */
 export const dom = {
   /**
@@ -16,7 +16,7 @@ export const dom = {
    */
   els: (selector) => document.querySelectorAll(selector),
 
-  // Main elements
+  // Cached elements
   panel: document.getElementById('panel'),
   input: document.getElementById('input'),
   inputArea: document.getElementById('inputArea'),
@@ -71,8 +71,8 @@ export const dom = {
   dialogSettings: document.getElementById('dialogSettings'),
   customizeThemeButton: document.getElementById('customizeThemeButton'),
   locale: document.getElementById('locale'),
-  localeWarn: document.getElementById('localeWarn'),
   copyThouSep: document.getElementById('copyThouSep'),
+  pasteThouSep: document.getElementById('pasteThouSep'),
   numericOutput: document.getElementById('numericOutput'),
   bigNumWarn: document.getElementById('bigNumWarn'),
   notation: document.getElementById('notation'),

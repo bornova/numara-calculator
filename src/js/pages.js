@@ -10,23 +10,6 @@ import { DateTime } from 'luxon'
 import UIkit from 'uikit'
 
 /**
- * Migrate old saved calculations to pages.
- */
-export function migrateSaved() {
-  const saved = store.get('saved')
-  const pages = store.get('pages')
-
-  if (saved) {
-    Object.entries(saved).forEach(([id, val]) => {
-      pages.push({ id, name: val[0], data: val[1] })
-    })
-
-    store.set('pages', pages)
-    localStorage.removeItem('saved')
-  }
-}
-
-/**
  * Get page name/number to use.
  * @returns {string} The page name.
  */
@@ -61,6 +44,20 @@ export function getPageName() {
  * @returns {string} The last page ID.
  */
 export const lastPage = () => store.get('lastPage')
+
+/**
+ * Initialize pages.
+ */
+export function initializePages() {
+  if (!store.get('pages')) {
+    defaultPage()
+  } else {
+    app.activePage = lastPage()
+    loadPage(lastPage())
+  }
+
+  populatePages()
+}
 
 /**
  * Populate the page list in side bar.

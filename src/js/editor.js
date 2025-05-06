@@ -115,7 +115,7 @@ CodeMirror.defineMode('plain', () => ({
   token: (stream) => {
     stream.next()
 
-    return 'text'
+    return 'plain'
   }
 }))
 
@@ -213,6 +213,24 @@ cm.on('changes', calculate)
 cm.on('inputRead', (cm) => {
   if (app.settings.autocomplete) {
     CodeMirror.commands.autocomplete(cm)
+  }
+})
+
+cm.on('paste', (cm, event) => {
+  event.preventDefault()
+
+  let pastedText = event.clipboardData.getData('text/plain')
+
+  if (app.settings.thouSep && app.settings.pasteThouSep) {
+    cm.replaceSelection(pastedText)
+  } else {
+    try {
+      math.evaluate(pastedText, app.mathScope)
+      cm.replaceSelection(pastedText)
+    } catch {
+      let modifiedText = pastedText.replaceAll(',', '')
+      cm.replaceSelection(modifiedText)
+    }
   }
 })
 

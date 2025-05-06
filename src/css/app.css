@@ -269,7 +269,7 @@ text {
 .actions {
   position: fixed;
   right: 10px;
-  bottom: 8px;
+  bottom: 10px;
   left: 10px;
   height: 25px;
 }
@@ -350,7 +350,7 @@ text {
 }
 
 .sidePanelActions {
-  margin: 15px 10px 11px 10px;
+  margin: 14px 10px auto 10px;
 }
 
 .closeSidePanelButton {
@@ -517,6 +517,10 @@ text {
 #dialogSettings .settingMod > svg,
 #dialogSettings .settingModToggle > svg {
   width: 24px;
+}
+
+#dialogSettings input:disabled + span.slider.round {
+  cursor: default;
 }
 
 #dialogSettings .range .settingMod {
@@ -1115,8 +1119,8 @@ input:checked + .slider:before {
 .colorPickerContainer {
   margin-right: -8px;
   padding-right: 10px;
-  height: calc(100vh - 225px);
-  max-height: 390px;
+  height: calc(100vh - 200px);
+  max-height: 420px;
   overflow: scroll;
 }
 
