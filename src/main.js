@@ -40,6 +40,8 @@ const getThemeColor = () =>
     ? DARK_COLOR
     : LIGHT_COLOR
 
+let win
+
 const setTitleBarOverlay = (isTrans) => {
   if (!isWin) return
 
@@ -48,10 +50,8 @@ const setTitleBarOverlay = (isTrans) => {
     symbolColor: getThemeColor() === DARK_COLOR ? LIGHT_COLOR : DARK_COLOR
   }
 
-  win.setTitleBarOverlay(titleBarConfig())
+  win.setTitleBarOverlay(titleBarConfig)
 }
-
-let win
 
 /**
  * Create the main application window.
