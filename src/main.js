@@ -130,15 +130,13 @@ ipcMain.on('setTheme', (event, mode) => {
   config.set('theme', mode)
   setTitleBarOverlay()
 })
-ipcMain.on('transControls', (event, isTrans) => win.setTitleBarOverlay(titleBarConfig(isTrans)))
-
+ipcMain.on('transControls', (event, isTrans) => setTitleBarOverlay(titleBarConfig(isTrans)))
 ipcMain.on('setOnTop', (event, bool) => win.setAlwaysOnTop(bool))
 ipcMain.on('isMaximized', (event) => (event.returnValue = win.isMaximized()))
 ipcMain.on('isResized', (event) => {
   const [width, height] = win.getSize()
   event.returnValue = width !== schema.appWidth.default || height !== schema.appHeight.default
 })
-
 ipcMain.on('import', (event) => {
   const file = dialog.showOpenDialogSync(win, {
     filters: [{ name: 'Numara', extensions: ['numara'] }],
@@ -157,7 +155,6 @@ ipcMain.on('import', (event) => {
     })
   }
 })
-
 ipcMain.on('export', (event, fileName, content) => {
   const file = dialog.showSaveDialogSync(win, {
     defaultPath: fileName,
