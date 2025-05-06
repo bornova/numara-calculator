@@ -221,9 +221,9 @@ function cmForceBottom() {
 cm.on('changes', calculate)
 
 cm.on('inputRead', (cm) => {
-  if (app.settings.autocomplete) {
-    CodeMirror.commands.autocomplete(cm)
-  }
+  if (!app.settings.autocomplete) return
+
+  CodeMirror.commands.autocomplete(cm)
 })
 
 cm.on('paste', (cm, event) => {
@@ -339,17 +339,17 @@ function handleConstantTooltip(target) {
 }
 
 function handleVariableTooltip(target) {
-  if (app.mathScope[target.innerText] && typeof app.mathScope[target.innerText] !== 'function') {
-    let varTooltip
+  if (!app.mathScope[target.innerText] || typeof app.mathScope[target.innerText] === 'function') return
 
-    try {
-      varTooltip = formatAnswer(math.evaluate(target.innerText, app.mathScope))
-    } catch {
-      varTooltip = 'Undefined'
-    }
+  let varTooltip
 
-    showTooltip(target, varTooltip)
+  try {
+    varTooltip = formatAnswer(math.evaluate(target.innerText, app.mathScope))
+  } catch {
+    varTooltip = 'Undefined'
   }
+
+  showTooltip(target, varTooltip)
 }
 
 function handleLineNoTooltip(target) {
@@ -398,14 +398,14 @@ document.addEventListener('mouseover', (event) => {
     }
   }
 
-  if (className === 'CodeMirror-linenumber') {
-    const activeLine = cm.getCursor().line + 1
-    const isValid = activeLine > +event.target.innerText
+  if (className !== 'CodeMirror-linenumber') return
 
-    event.target.style.cursor = isValid ? 'pointer' : 'default'
-    event.target.setAttribute(
-      'title',
-      isValid && app.settings.keywordTips ? `Insert 'line${event.target.innerText}' to Line ${activeLine}` : ''
-    )
-  }
+  const activeLine = cm.getCursor().line + 1
+  const isValid = activeLine > +event.target.innerText
+
+  event.target.style.cursor = isValid ? 'pointer' : 'default'
+  event.target.setAttribute(
+    'title',
+    isValid && app.settings.keywordTips ? `Insert 'line${event.target.innerText}' to Line ${activeLine}` : ''
+  )
 })
