@@ -1,5 +1,5 @@
-import { app } from './common'
 import { dom } from './dom'
+import { app } from './utils'
 
 import UIkit from 'uikit'
 
