@@ -1,6 +1,6 @@
-import { app, store } from './common'
 import { dom } from './dom'
 import { cm, numaraHints, keywords } from './editor'
+import { app, store } from './utils'
 
 import { DateTime } from 'luxon'
 import { all, create, factory } from 'mathjs'
@@ -121,12 +121,15 @@ export function calculate() {
 
   const dateTime = DateTime.now().setLocale(app.settings.locale)
 
+  const cmValue = cm.getValue()
+  const cmHistory = cm.getHistory()
+
   app.mathScope = {}
   app.mathScope.now = dateTime.toFormat(app.settings.dateDay ? nowDayFormat : nowFormat)
   app.mathScope.today = dateTime.toFormat(app.settings.dateDay ? todayDayFormat : todayFormat)
 
-  dom.clearButton.setAttribute('disabled', cm.getValue() === '')
-  dom.copyButton.setAttribute('disabled', cm.getValue() === '')
+  dom.clearButton.setAttribute('disabled', cmValue === '')
+  dom.copyButton.setAttribute('disabled', cmValue === '')
 
   // Cache line heights to avoid repeated DOM access
   const lineHeights = Array.from(cm.display.lineDiv.children).map((child) => child?.clientHeight ?? 0)
@@ -179,9 +182,12 @@ export function calculate() {
 
     if (!page) return
 
-    page.data = cm.getValue()
-    page.history = cm.getHistory()
-    store.set('pages', pages)
+    // Only update if changed
+    if (page.data !== cmValue || JSON.stringify(page.history) !== JSON.stringify(cmHistory)) {
+      page.data = cmValue
+      page.history = cmHistory
+      store.set('pages', pages)
+    }
   }
 }
 
