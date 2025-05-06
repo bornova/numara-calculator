@@ -1,5 +1,4 @@
 import { checkColorChange, colors } from './colors'
-import { app, store } from './common'
 import { copyAll } from './context'
 import { dom } from './dom'
 import { cm, refreshEditor, udfInput, uduInput } from './editor'
@@ -10,7 +9,7 @@ import { plot } from './plot'
 import { settings } from './settings'
 import { getPageName, initializePages, pageOrder, populatePages } from './pages'
 import { applyUdfu } from './userDefined'
-import { checkSize, checkAppUpdate, isMac, isElectron, toggleMinMax } from './utils'
+import { app, checkSize, checkAppUpdate, isMac, isElectron, store, toggleMinMax } from './utils'
 
 import { author, description, homepage, name, version } from './../../package.json'
 
