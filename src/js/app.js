@@ -8,7 +8,7 @@ import { generateIcons } from './icons'
 import { modal, notify, showError } from './modal'
 import { plot } from './plot'
 import { settings } from './settings'
-import { defaultPage, lastPage, loadPage, migrateSaved, getPageName, pageOrder, populatePages } from './pages'
+import { getPageName, initializePages, pageOrder, populatePages } from './pages'
 import { applyUdfu } from './userDefined'
 import { checkSize, checkAppUpdate, isMac, isElectron, toggleMinMax } from './utils'
 
@@ -32,7 +32,10 @@ const setupHeaders = () => {
     dom.headerWin.remove()
     dom.headerMac.style.display = 'block'
     dom.headerMacTitle.innerHTML = name
-    if (isElectron) dom.headerMac.addEventListener('dblclick', toggleMinMax)
+
+    if (isElectron) {
+      dom.headerMac.addEventListener('dblclick', toggleMinMax)
+    }
   }
 }
 
@@ -172,6 +175,7 @@ const setupPanelResizer = () => {
       clearTimeout(resizeDelay)
       resizeDelay = setTimeout(calculate, 10)
     }
+
     dividerTooltip()
   })
 }
@@ -410,6 +414,23 @@ const setupPrint = () => {
   })
 }
 
+const electronActions = () => {
+  if (isElectron) {
+    numara.themeUpdate(settings.apply)
+    numara.restored(() => {
+      cm.focus()
+    })
+    // Check for updates
+    checkAppUpdate()
+    // Open developer Tools
+    dom.dialogAboutAppVersion.addEventListener('click', (event) => {
+      if (event.detail === 9) {
+        numara.openDevTools()
+      }
+    })
+  }
+}
+
 /**
  * Main application initializer. Calls all setup functions and loads initial state.
  */
@@ -433,30 +454,9 @@ const initializeApp = () => {
   settings.initialize()
   settings.apply()
 
-  if (!store.get('pages')) {
-    defaultPage()
-  } else {
-    app.activePage = lastPage()
-    loadPage(lastPage())
-  }
+  initializePages()
 
-  migrateSaved()
-  populatePages()
-
-  if (isElectron) {
-    numara.themeUpdate(settings.apply)
-    numara.restored(() => {
-      cm.focus()
-    })
-    // Check for updates
-    checkAppUpdate()
-    // Open developer Tools
-    dom.dialogAboutAppVersion.addEventListener('click', (event) => {
-      if (event.detail === 9) {
-        numara.openDevTools()
-      }
-    })
-  }
+  electronActions()
 
   setTimeout(() => {
     cm.focus()
