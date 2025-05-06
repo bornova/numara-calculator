@@ -29,11 +29,10 @@ function checkSchema() {
   app.settings = store.get('settings')
 
   DeepDiff.observableDiff(app.settings, settings.defaults, (d) => {
-    if (d.kind !== 'E') {
-      DeepDiff.applyChange(app.settings, settings.defaults, d)
+    if (d.kind === 'E') return
 
-      store.set('settings', app.settings)
-    }
+    DeepDiff.applyChange(app.settings, settings.defaults, d)
+    store.set('settings', app.settings)
   })
 }
 
@@ -174,11 +173,10 @@ export const settings = {
     Object.keys(app.settings).forEach((key) => {
       const el = dom.el('#' + key)
 
-      if (el) {
-        el[el.getAttribute('type') === 'checkbox' ? 'checked' : 'value'] = app.settings[key]
+      if (!el) return
 
-        checkMods(key)
-      }
+      el[el.getAttribute('type') === 'checkbox' ? 'checked' : 'value'] = app.settings[key]
+      checkMods(key)
     })
 
     checkSize()
