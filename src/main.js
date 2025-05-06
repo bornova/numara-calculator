@@ -42,6 +42,10 @@ const getThemeColor = () =>
 
 let win
 
+/**
+ * Sets the title bar overlay configuration based on the transparency state.
+ * @param {boolean} isTrans - Determines if the title bar should be transparent.
+ */
 const setTitleBarOverlay = (isTrans) => {
   if (!isWin) return
 
@@ -128,7 +132,7 @@ nativeTheme.on('updated', () => {
 ipcMain.on('isDark', (event) => (event.returnValue = nativeTheme.shouldUseDarkColors))
 ipcMain.on('setTheme', (event, mode) => {
   config.set('theme', mode)
-  setTitleBarOverlay()
+  setTitleBarOverlay(true)
 })
 ipcMain.on('transControls', (event, isTrans) => setTitleBarOverlay(isTrans))
 
