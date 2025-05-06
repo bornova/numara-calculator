@@ -20,11 +20,11 @@ function checkDefaultColors() {
   app.colors = storedColors
 
   DeepDiff.observableDiff(app.colors, colors.defaults, (d) => {
-    if (d.kind !== 'E') {
-      DeepDiff.applyChange(app.colors, colors.defaults, d)
+    if (d.kind === 'E') return
 
-      store.set('colors', app.colors)
-    }
+    DeepDiff.applyChange(app.colors, colors.defaults, d)
+
+    store.set('colors', app.colors)
   })
 }
 
@@ -47,9 +47,9 @@ let activePicker = null
 
 function setPickerValue(picker, colorsObj) {
   const def = colorsObj?.[picker.dataset.class]?.[picker.dataset.theme]
-  if (def) {
-    picker.value = def
-  }
+  if (!def) return
+
+  picker.value = def
 }
 
 function addPickerListeners(picker) {
@@ -191,7 +191,6 @@ function resetActivePickerColor() {
   if (!activePicker) return
 
   const def = colors.defaults?.[activePicker.dataset.class]?.[activePicker.dataset.theme]
-
   if (!def) return
 
   activePicker.dispatchEvent(new Event('input', { bubbles: true }))
