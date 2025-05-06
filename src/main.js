@@ -106,12 +106,12 @@ function createAppWindow() {
     config.set('fullSize', win.isMaximized())
     config.set('position', win.getPosition())
 
-    if (!win.isMaximized()) {
-      const [width, height] = win.getSize()
+    if (win.isMaximized()) return
 
-      config.set('appWidth', width)
-      config.set('appHeight', height)
-    }
+    const [width, height] = win.getSize()
+
+    config.set('appWidth', width)
+    config.set('appHeight', height)
   })
 
   if (app.isPackaged) {
@@ -150,16 +150,16 @@ ipcMain.on('import', (event) => {
     title: 'Open Calculations'
   })
 
-  if (file) {
-    fs.readFile(file[0], 'utf8', (error, data) => {
-      if (error) {
-        event.sender.send('importDataError', error)
-        return
-      }
+  if (!file) return
 
-      event.sender.send('importData', data, 'Imported from: ' + file[0])
-    })
-  }
+  fs.readFile(file[0], 'utf8', (error, data) => {
+    if (error) {
+      event.sender.send('importDataError', error)
+      return
+    }
+
+    event.sender.send('importData', data, 'Imported from: ' + file[0])
+  })
 })
 
 ipcMain.on('export', (event, fileName, content) => {
@@ -169,16 +169,16 @@ ipcMain.on('export', (event, fileName, content) => {
     title: 'Export Calculations'
   })
 
-  if (file) {
-    fs.writeFile(file, content, (error) => {
-      if (error) {
-        event.sender.send('exportDataError', error)
-        return
-      }
+  if (!file) return
 
-      event.sender.send('exportData', 'Exported to: ' + file)
-    })
-  }
+  fs.writeFile(file, content, (error) => {
+    if (error) {
+      event.sender.send('exportDataError', error)
+      return
+    }
+
+    event.sender.send('exportData', 'Exported to: ' + file)
+  })
 })
 
 /**
