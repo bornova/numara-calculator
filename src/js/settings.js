@@ -69,6 +69,7 @@ export const settings = {
     notifyDuration: '5000',
     notifyLocation: 'bottom-center',
     numericOutput: 'number',
+    pasteThouSep: false,
     plotCross: false,
     plotDerivative: false,
     plotGrid: false,
@@ -298,31 +299,28 @@ export const settings = {
 
   /** Toggle settings sliders to enabled/disabled based on parent setting. */
   toggleSubs: () => {
-    dom.expUpper.disabled = app.settings.notation !== 'auto'
-    dom.expLower.disabled = app.settings.notation !== 'auto'
-    dom.keywordTips.disabled = !app.settings.syntax
-    dom.matchBrackets.disabled = !app.settings.syntax
-    dom.copyThouSep.disabled = !app.settings.thouSep
+    // Helper to enable/disable and set opacity for related controls
+    const toggle = (el, enabled) => {
+      el.disabled = !enabled
+      el.parentNode.style.opacity = enabled ? '1' : '0.5'
+
+      const mod = dom.el('#' + el.id + 'Mod')
+
+      if (mod) {
+        mod.style.pointerEvents = enabled ? 'auto' : 'none'
+        mod.parentNode.style.opacity = enabled ? '1' : '0.5'
+      }
+    }
+
+    toggle(dom.expUpper, app.settings.notation === 'auto')
+    toggle(dom.expLower, app.settings.notation === 'auto')
+    toggle(dom.keywordTips, app.settings.syntax)
+    toggle(dom.matchBrackets, app.settings.syntax)
+    toggle(dom.copyThouSep, app.settings.thouSep)
+    toggle(dom.pasteThouSep, app.settings.thouSep)
+
     dom.currencyInterval.disabled = !app.settings.currency
     dom.updateRatesLink.dataset.enabled = app.settings.currency
-
-    dom.expUpper.parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
-    dom.expLower.parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
-    dom.keywordTips.parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
-    dom.matchBrackets.parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
-    dom.copyThouSep.parentNode.style.opacity = app.settings.thouSep ? '1' : '0.5'
-
-    dom.el('#expUpperMod').style.pointerEvents = app.settings.notation === 'auto' ? 'auto' : 'none'
-    dom.el('#expLowerMod').style.pointerEvents = app.settings.notation === 'auto' ? 'auto' : 'none'
-    dom.el('#keywordTipsMod').style.pointerEvents = app.settings.syntax ? 'auto' : 'none'
-    dom.el('#matchBracketsMod').style.pointerEvents = app.settings.syntax ? 'auto' : 'none'
-    dom.el('#copyThouSepMod').style.pointerEvents = app.settings.thouSep ? 'auto' : 'none'
-
-    dom.el('#expUpperMod').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
-    dom.el('#expLowerMod').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
-    dom.el('#keywordTipsMod').parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
-    dom.el('#matchBracketsMod').parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
-    dom.el('#copyThouSepMod').parentNode.style.opacity = app.settings.thouSep ? '1' : '0.5'
   }
 }
 
