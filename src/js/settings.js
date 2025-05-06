@@ -6,7 +6,7 @@ import { calculate, math } from './eval'
 import { getRates } from './forex'
 import { generateIcons } from './icons'
 import { confirm, showError } from './modal'
-import { checkLocale, checkSize, getTheme, isElectron } from './utils'
+import { checkSize, getTheme, isElectron } from './utils'
 
 import DeepDiff from 'deep-diff'
 
@@ -18,11 +18,6 @@ function checkDefaults() {
 /** Show warning if big number option is selected. */
 function bigNumberWarning() {
   dom.bigNumWarn.style.display = app.settings.numericOutput === 'BigNumber' ? 'inline-block' : 'none'
-}
-
-/** Show warning if locale uses comma as decimal point separator. */
-function localeWarning() {
-  dom.localeWarn.style.display = checkLocale() ? 'inline-block' : 'none'
 }
 
 /** Check for app settings modifications. */
@@ -96,30 +91,6 @@ export const settings = {
       getRates()
     }
 
-    // Start required line height fix
-    if (app.settings.lineHeight.endsWith('em')) {
-      switch (app.settings.lineHeight) {
-        case '1.5em':
-          app.settings.lineHeight = '16px'
-          break
-        case '1.75em':
-          app.settings.lineHeight = '20px'
-          break
-        case '2em':
-          app.settings.lineHeight = '24px'
-          break
-        case '2.5em':
-          app.settings.lineHeight = '28px'
-          break
-        case '3em':
-          app.settings.lineHeight = '32px'
-          break
-      }
-
-      store.set('settings', app.settings)
-    }
-    // End fix
-
     dom.els('.settingItem').forEach((item) => {
       const span = document.createElement('span')
       const icon = document.createElement('span')
@@ -177,7 +148,6 @@ export const settings = {
     dom.precisionLabel.innerHTML = app.settings.precision
     dom.expLowerLabel.innerHTML = app.settings.expLower
     dom.expUpperLabel.innerHTML = app.settings.expUpper
-
     dom.numericOutput.innerHTML = ''
 
     for (const n of numericOutputs) {
@@ -214,7 +184,6 @@ export const settings = {
 
     checkSize()
     checkDefaults()
-    localeWarning()
     bigNumberWarning()
 
     settings.toggleSubs()
@@ -320,7 +289,6 @@ export const settings = {
     }
 
     checkDefaults()
-    localeWarning()
     bigNumberWarning()
 
     settings.toggleSubs()
@@ -386,13 +354,6 @@ dom.dialogSettingsReset.addEventListener('click', () => {
 if (isElectron) {
   dom.resetSizeButton.addEventListener('click', numara.resetSize)
 }
-
-dom.localeWarn.addEventListener('click', () => {
-  showError(
-    'Caution: Locale',
-    `Your locale (${app.settings.locale}) uses comma (,) as decimal separator.  Therefore, you must use semicolon (;) as argument separator when using functions.<br><br>Ex. sum(1;3) // 4`
-  )
-})
 
 dom.bigNumWarn.addEventListener('click', () => {
   showError(
