@@ -110,13 +110,6 @@ function createAppWindow() {
     }
   })
 
-  win.on('resized', () => {
-    const [width, height] = win.getSize()
-    const isResized = width !== schema.appWidth.default || height !== schema.appHeight.default
-
-    if (isResized) win.webContents.send('resized')
-  })
-
   if (app.isPackaged) {
     win.on('focus', () => globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {}))
     win.on('blur', () => globalShortcut.unregisterAll())
@@ -143,7 +136,6 @@ ipcMain.on('setOnTop', (event, bool) => win.setAlwaysOnTop(bool))
 ipcMain.on('isMaximized', (event) => (event.returnValue = win.isMaximized()))
 ipcMain.on('isResized', (event) => {
   const [width, height] = win.getSize()
-
   event.returnValue = width !== schema.appWidth.default || height !== schema.appHeight.default
 })
 
@@ -193,7 +185,6 @@ function resetSize() {
 }
 
 ipcMain.on('resetSize', resetSize)
-
 ipcMain.on('resetApp', () => {
   session.defaultSession.clearStorageData().then(() => {
     config.clear()
@@ -201,7 +192,6 @@ ipcMain.on('resetApp', () => {
     app.exit()
   })
 })
-
 ipcMain.on('openDevTools', () => win.webContents.openDevTools())
 ipcMain.on('openLogs', () => {
   shell.openPath(path.join(app.getPath('logs'), 'main.log'))
