@@ -221,12 +221,16 @@ cm.on('paste', (cm, event) => {
 
   let pastedText = event.clipboardData.getData('text/plain')
 
-  try {
-    math.evaluate(pastedText, app.mathScope)
+  if (app.settings.thouSep && app.settings.pasteThouSep) {
     cm.replaceSelection(pastedText)
-  } catch {
-    let modifiedText = pastedText.replaceAll(',', '')
-    cm.replaceSelection(modifiedText)
+  } else {
+    try {
+      math.evaluate(pastedText, app.mathScope)
+      cm.replaceSelection(pastedText)
+    } catch {
+      let modifiedText = pastedText.replaceAll(',', '')
+      cm.replaceSelection(modifiedText)
+    }
   }
 })
 
