@@ -43,6 +43,10 @@ body {
   color: #d41111;
 }
 
+.plotButton {
+  color: inherit;
+}
+
 .msgBox {
   color: #58a1c5;
 }
@@ -388,4 +392,8 @@ input.clr-color {
 
 .clr-preview button {
   border: 1px solid #ffffff;
+}
+
+.colorHR {
+  border-bottom: 1px solid #666666;
 }

@@ -1115,8 +1115,8 @@ input:checked + .slider:before {
 .colorPickerContainer {
   margin-right: -8px;
   padding-right: 10px;
-  height: calc(100vh - 225px);
-  max-height: 390px;
+  height: calc(100vh - 200px);
+  max-height: 420px;
   overflow: scroll;
 }
 

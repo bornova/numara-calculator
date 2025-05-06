@@ -45,6 +45,10 @@ body {
   color: #b10e0e;
 }
 
+.plotButton {
+  color: inherit;
+}
+
 .msgBox {
   color: #006699;
 }
@@ -324,4 +328,8 @@ li.CodeMirror-hint-active {
 
 .colorInput {
   color: #333333;
+}
+
+.colorHR {
+  border-bottom: 1px solid #eaeaea;
 }
