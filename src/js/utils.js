@@ -18,13 +18,6 @@ export function getTheme() {
   return 'light'
 }
 
-/** Check user locale for thousands separator. */
-export function checkLocale() {
-  const locale = app.settings.locale === 'system' ? navigator.language : app.settings.locale
-
-  return (1.11).toLocaleString(locale).match(/[,]/)
-}
-
 /** Check window size. */
 export function checkSize() {
   dom.resetSizeButton.style.display = isElectron && numara.isResized() && !numara.isMaximized() ? 'block' : 'none'
