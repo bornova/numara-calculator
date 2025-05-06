@@ -646,24 +646,26 @@ div:has(> #logsLink) {
   margin: 15px 0;
 }
 
-.resetButtons svg {
-  width: 14px;
-  pointer-events: none;
-}
-
 .defSettingsButton {
   margin-right: 10px;
 }
 
-#resetSize > svg {
-  margin: 10px 10px 0 0;
-  width: 14px;
-  height: 14px;
+.resetSizeButton {
+  position: absolute;
+  top: 10px;
+  right: 15px;
 }
 
 .resetSizeButton {
-  float: left;
-  margin-left: 10px;
+  position: absolute;
+  top: 10px;
+  right: 15px;
+}
+
+.resetSizeButton > svg {
+  height: 14px;
+  width: 14px;
+  pointer-events: none;
 }
 
 /* Messages */

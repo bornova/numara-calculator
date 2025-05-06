@@ -182,6 +182,10 @@ body {
   color: #999999;
 }
 
+.resetSizeButton {
+  color: #666666;
+}
+
 /* Plot */
 text {
   fill: #444444;
