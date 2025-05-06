@@ -72,6 +72,7 @@ export const dom = {
   customizeThemeButton: document.getElementById('customizeThemeButton'),
   locale: document.getElementById('locale'),
   copyThouSep: document.getElementById('copyThouSep'),
+  pasteThouSep: document.getElementById('pasteThouSep'),
   numericOutput: document.getElementById('numericOutput'),
   bigNumWarn: document.getElementById('bigNumWarn'),
   notation: document.getElementById('notation'),
