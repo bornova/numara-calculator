@@ -414,20 +414,20 @@ const setupPrint = () => {
 }
 
 const electronActions = () => {
-  if (isElectron) {
-    numara.themeUpdate(settings.apply)
-    numara.restored(() => {
-      cm.focus()
-    })
-    // Check for updates
-    checkAppUpdate()
-    // Open developer Tools
-    dom.dialogAboutAppVersion.addEventListener('click', (event) => {
-      if (event.detail === 9) {
-        numara.openDevTools()
-      }
-    })
-  }
+  if (!isElectron) return
+
+  numara.themeUpdate(settings.apply)
+  numara.restored(() => {
+    cm.focus()
+  })
+  // Check for updates
+  checkAppUpdate()
+  // Open developer Tools
+  dom.dialogAboutAppVersion.addEventListener('click', (event) => {
+    if (event.detail === 9) {
+      numara.openDevTools()
+    }
+  })
 }
 
 /**
