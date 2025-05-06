@@ -1,6 +1,6 @@
-import { app, store } from './common'
 import { dom } from './dom'
 import { calculate, formatAnswer, math } from './eval'
+import { app, store } from './utils'
 
 import * as formulajs from '@formulajs/formulajs'
 
@@ -73,6 +73,7 @@ CodeMirror.defineMode('numara', () => ({
 
     const cmStream = stream.current()
 
+    // Currency
     if (
       app.settings.currency &&
       (Object.keys(app.currencyRates).some((curr) => app.currencyRates[curr].code === cmStream) || cmStream === 'USD')
@@ -80,15 +81,23 @@ CodeMirror.defineMode('numara', () => ({
       return 'currency'
     }
 
-    if (typeof math[cmStream] === 'function' && Object.getOwnPropertyNames(math[cmStream]).includes('signatures'))
+    // Math function
+    if (typeof math[cmStream] === 'function' && Object.getOwnPropertyNames(math[cmStream]).includes('signatures')) {
       return 'function'
+    }
 
+    // User defined
     if (app.udfList.includes(cmStream)) return 'udf'
     if (app.uduList.includes(cmStream)) return 'udu'
-    if (cmStream.match(/\b(?:_|ans|total|subtotal|avg|today|now)\b/)) return 'keyword'
-    if (cmStream.match(/\b(?:line\d+)\b/)) return 'lineNo'
+
+    // Keywords and line numbers
+    if (/\b(_|ans|total|subtotal|avg|today|now)\b/.test(cmStream)) return 'keyword'
+    if (/\bline\d+\b/.test(cmStream)) return 'lineNo'
+
+    // Excel
     if (typeof formulajs[cmStream] === 'function' && stream.string.startsWith('xls.')) return 'excel'
 
+    // Try to detect unit or constant
     try {
       const val = math.evaluate(cmStream)
       const par = math.parse(cmStream)
@@ -96,9 +105,10 @@ CodeMirror.defineMode('numara', () => ({
       if (val.units && !val.value) return 'unit'
       if (par.isSymbolNode && val) return 'constant'
     } catch {
-      /** Ignore catch */
+      // Ignore
     }
 
+    // Variable fallback
     try {
       math.evaluate(cmStream)
     } catch {
@@ -291,7 +301,7 @@ function showTooltip(target, title) {
 
 function handleFunctionTooltip(target) {
   try {
-    const tip = JSON.parse(JSON.stringify(math.help(target.innerText).toJSON()))
+    const tip = math.help(target.innerText).toJSON()
 
     showTooltip(
       target,
@@ -360,7 +370,7 @@ function handleLineNoTooltip(target) {
 function handleKeywordTooltip(target) {
   const keyword = keywords.find((key) => target.innerText === key.text)
 
-  showTooltip(target, keyword.desc)
+  showTooltip(target, keyword?.desc)
 }
 
 const TOOLTIP_HANDLERS = {
@@ -378,15 +388,17 @@ const TOOLTIP_HANDLERS = {
 }
 
 document.addEventListener('mouseover', (event) => {
-  if (app.settings.keywordTips && event.target.classList[0]?.startsWith('cm-')) {
-    const handler = TOOLTIP_HANDLERS[event.target.classList[0]]
+  const className = event.target.classList[0]
+
+  if (app.settings.keywordTips && className?.startsWith('cm-')) {
+    const handler = TOOLTIP_HANDLERS[className]
 
     if (handler) {
       handler(event.target)
     }
   }
 
-  if (event.target.classList[0] === 'CodeMirror-linenumber') {
+  if (className === 'CodeMirror-linenumber') {
     const activeLine = cm.getCursor().line + 1
     const isValid = activeLine > +event.target.innerText
 
