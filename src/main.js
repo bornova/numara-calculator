@@ -130,7 +130,7 @@ ipcMain.on('setTheme', (event, mode) => {
   config.set('theme', mode)
   setTitleBarOverlay()
 })
-ipcMain.on('transControls', (event, isTrans) => win.setTitleBarOverlay(isTrans))
+ipcMain.on('transControls', (event, isTrans) => setTitleBarOverlay(isTrans))
 
 ipcMain.on('setOnTop', (event, bool) => win.setAlwaysOnTop(bool))
 ipcMain.on('isMaximized', (event) => (event.returnValue = win.isMaximized()))
