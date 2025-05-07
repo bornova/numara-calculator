@@ -343,9 +343,7 @@ function newPageDialog() {
 // Event listeners
 dom.newPageButton.addEventListener('click', newPageDialog)
 dom.newPageButtonSP.addEventListener('click', newPageDialog)
-dom.dialogNewPageSave.addEventListener('click', () => {
-  newPage(false)
-})
+dom.dialogNewPageSave.addEventListener('click', () => newPage(false))
 dom.newPageTitleInput.addEventListener('keyup', (event) => {
   if (event.key === 'Enter' || event.keyCode === 13) {
     dom.dialogNewPageSave.click()
@@ -357,24 +355,12 @@ dom.renamePageTitleInput.addEventListener('keyup', (event) => {
     dom.dialogRenamePageSave.click()
   }
 })
-dom.sortOldNew.addEventListener('click', () => {
-  sortPages('oldnew')
-})
-dom.sortNewOld.addEventListener('click', () => {
-  sortPages('newold')
-})
-dom.sortAZ.addEventListener('click', () => {
-  sortPages('az')
-})
-dom.sortZA.addEventListener('click', () => {
-  sortPages('za')
-})
-dom.closeSidePanelButton.addEventListener('click', () => {
-  UIkit.offcanvas('#sidePanel').hide()
-})
-dom.printButton.addEventListener('click', () => {
-  window.print()
-})
+dom.sortOldNew.addEventListener('click', () => sortPages('oldnew'))
+dom.sortNewOld.addEventListener('click', () => sortPages('newold'))
+dom.sortAZ.addEventListener('click', () => sortPages('az'))
+dom.sortZA.addEventListener('click', () => sortPages('za'))
+dom.closeSidePanelButton.addEventListener('click', () => UIkit.offcanvas('#sidePanel').hide())
+dom.printButton.addEventListener('click', () => window.print())
 
 if (isElectron) {
   // Import calculations from file
@@ -386,10 +372,7 @@ if (isElectron) {
     notify(msg, 'success')
   })
 
-  numara.importDataError((event, error) => {
-    notify(error, 'danger')
-  })
-
+  numara.importDataError((event, error) => notify(error, 'danger'))
   numara.main.import(numara.import)
 
   // Export calculations to file
@@ -400,17 +383,9 @@ if (isElectron) {
     numara.export(page, cm.getValue())
   })
 
-  numara.exportData((event, msg) => {
-    notify(msg, 'success')
-  })
-
-  numara.exportDataError((event, error) => {
-    notify(error, 'danger')
-  })
-
-  numara.main.export(() => {
-    numara.export(dom.newPageTitleInput.value, cm.getValue())
-  })
+  numara.exportData((event, msg) => notify(msg, 'success'))
+  numara.exportDataError((event, error) => notify(error, 'danger'))
+  numara.main.export(() => numara.export(dom.newPageTitleInput.value, cm.getValue()))
 
   // Print window from main
   numara.main.print(() => {
