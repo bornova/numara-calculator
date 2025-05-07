@@ -47,6 +47,7 @@ export function getTheme() {
 
   if (app.settings?.theme === 'dark') return 'dark'
   if (app.settings?.theme === 'system' && isElectron) return numara.isDark() ? 'dark' : 'light'
+
   return 'light'
 }
 
@@ -103,9 +104,7 @@ export function checkAppUpdate() {
 
         dom.notificationDot.style.display = 'block'
         dom.updateButton.style.display = 'inline-block'
-        dom.updateButton.addEventListener('click', () => {
-          numara.updateApp()
-        })
+        dom.updateButton.addEventListener('click', () => numara.updateApp())
         break
       }
 
