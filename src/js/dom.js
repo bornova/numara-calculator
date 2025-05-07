@@ -50,7 +50,6 @@ export const dom = {
   newPageButtonSP: document.getElementById('newPageButtonSP'),
   importButton: document.getElementById('importButton'),
   exportButton: document.getElementById('exportButton'),
-  spDivider: document.getElementById('spDivider'), //
   printButton: document.getElementById('printButton'),
   deleteAllPagesButton: document.getElementById('deleteAllPagesButton'),
 
@@ -70,9 +69,6 @@ export const dom = {
   // Settings dialog
   dialogSettings: document.getElementById('dialogSettings'),
   customizeThemeButton: document.getElementById('customizeThemeButton'),
-  locale: document.getElementById('locale'),
-  copyThouSep: document.getElementById('copyThouSep'),
-  pasteThouSep: document.getElementById('pasteThouSep'),
   numericOutput: document.getElementById('numericOutput'),
   bigNumWarn: document.getElementById('bigNumWarn'),
   notation: document.getElementById('notation'),
@@ -85,6 +81,9 @@ export const dom = {
   matrixType: document.getElementById('matrixType'),
   keywordTips: document.getElementById('keywordTips'),
   matchBrackets: document.getElementById('matchBrackets'),
+  locale: document.getElementById('locale'),
+  copyThouSep: document.getElementById('copyThouSep'),
+  pasteThouSep: document.getElementById('pasteThouSep'),
   currency: document.getElementById('currency'),
   currencyWarn: document.getElementById('currencyWarn'),
   currencyInterval: document.getElementById('currencyInterval'),
