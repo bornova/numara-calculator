@@ -57,6 +57,14 @@ const setupAppInfo = () => {
   dom.helpLink.setAttribute('href', `${homepage}/wiki`)
 
   if (isElectron) {
+    dom.dialogAboutAppVersion.title = `
+    <div class="uk-text-small">
+      <div><b>Chrome</b>: ${numara.versions.chrome()}</div>
+      <div><b>Electron</b>: ${numara.versions.electron()}</div>
+      <div><b>Node</b>: ${numara.versions.node()}</div>
+      <div><b>V8</b>: ${numara.versions.v8()}</div>
+    </div>`
+
     dom.logsLink.parentElement.style.display = 'block'
     dom.logsLink.addEventListener('click', numara.openLogs)
   }
