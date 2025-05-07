@@ -58,16 +58,10 @@ function updatePlotSetting(setting, value) {
 }
 
 // Event listeners for plot settings
-dom.plotCrossModal.addEventListener('click', () => {
-  updatePlotSetting('plotCross', dom.plotCrossModal.checked)
-})
-
+dom.plotCrossModal.addEventListener('click', () => updatePlotSetting('plotCross', dom.plotCrossModal.checked))
+dom.plotGridModal.addEventListener('click', () => updatePlotSetting('plotGrid', dom.plotGridModal.checked))
 dom.plotDerivativeModal.addEventListener('click', () => {
   updatePlotSetting('plotDerivative', dom.plotDerivativeModal.checked)
-})
-
-dom.plotGridModal.addEventListener('click', () => {
-  updatePlotSetting('plotGrid', dom.plotGridModal.checked)
 })
 
 /**
