@@ -298,10 +298,10 @@ export const settings = {
       }
     }
 
-    toggle(dom.expUpper, app.settings.notation === 'auto')
-    toggle(dom.expLower, app.settings.notation === 'auto')
     toggle(dom.keywordTips, app.settings.syntax)
     toggle(dom.matchBrackets, app.settings.syntax)
+    toggle(dom.expUpper, app.settings.notation === 'auto')
+    toggle(dom.expLower, app.settings.notation === 'auto')
     toggle(dom.copyThouSep, app.settings.thouSep)
     toggle(dom.pasteThouSep, app.settings.thouSep)
 
