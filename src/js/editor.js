@@ -49,9 +49,8 @@ export const udfInput = CodeMirror.fromTextArea(dom.udfInput, udOptions)
 export const uduInput = CodeMirror.fromTextArea(dom.uduInput, udOptions)
 
 /**
- * Refresh editor and focus.
- *
- * @param {CodeMirror} editor CodeMirror instance to refresh
+ * Refreshes the given CodeMirror editor and focuses it after a short delay.
+ * @param {CodeMirror} editor - CodeMirror instance to refresh and focus.
  */
 export function refreshEditor(editor) {
   editor.refresh()
@@ -288,10 +287,20 @@ const CLASS_NAMES = {
   EXCEL: 'cm-excel'
 }
 
+/**
+ * Determines the tooltip position based on the given element.
+ * @param {Element} el - The DOM element to check.
+ * @returns {string} Returns 'right' if the element is an <li>, otherwise 'top-left'.
+ */
 function getTooltipPosition(el) {
   return el.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left'
 }
 
+/**
+ * Displays a tooltip on the specified target element with the given title.
+ * @param {HTMLElement|string} target - The target element or selector to attach the tooltip to.
+ * @param {string} title - The text to display inside the tooltip.
+ */
 function showTooltip(target, title) {
   UIkit.tooltip(target, {
     pos: getTooltipPosition(target),
@@ -299,6 +308,10 @@ function showTooltip(target, title) {
   }).show()
 }
 
+/**
+ * Displays a tooltip with the description and syntax of a mathematical function.
+ * @param {HTMLElement} target - The DOM element representing the function for which to show the tooltip.
+ */
 function handleFunctionTooltip(target) {
   try {
     const tip = math.help(target.innerText).toJSON()
@@ -313,6 +326,10 @@ function handleFunctionTooltip(target) {
   }
 }
 
+/**
+ * Displays a tooltip with the currency name for the given currency code.
+ * @param {HTMLElement} target - The DOM element representing the currency.
+ */
 function handleCurrencyTooltip(target) {
   try {
     const currency = target.innerText
@@ -324,12 +341,20 @@ function handleCurrencyTooltip(target) {
   }
 }
 
+/**
+ * Displays a tooltip with the description of a unit.
+ * @param {HTMLElement} target - The DOM element representing the unit.
+ */
 function handleUnitTooltip(target) {
   const hint = numaraHints.find((hint) => hint.text === target.innerText)
 
   showTooltip(target, hint.desc)
 }
 
+/**
+ * Displays a tooltip with the description of a constant.
+ * @param {HTMLElement} target - The DOM element representing the constant.
+ */
 function handleConstantTooltip(target) {
   try {
     showTooltip(target, math.help(target.innerText).doc.description)
@@ -338,6 +363,10 @@ function handleConstantTooltip(target) {
   }
 }
 
+/**
+ * Displays a tooltip with the value of a variable.
+ * @param {HTMLElement} target - The DOM element representing the variable.
+ */
 function handleVariableTooltip(target) {
   if (!app.mathScope[target.innerText] || typeof app.mathScope[target.innerText] === 'function') return
 
@@ -352,6 +381,10 @@ function handleVariableTooltip(target) {
   showTooltip(target, varTooltip)
 }
 
+/**
+ * Displays a tooltip with the value or type of a line number reference.
+ * @param {HTMLElement} target - The DOM element representing the line number.
+ */
 function handleLineNoTooltip(target) {
   let tooltip
 
@@ -367,6 +400,10 @@ function handleLineNoTooltip(target) {
   showTooltip(target, tooltip)
 }
 
+/**
+ * Displays a tooltip with the description of a keyword.
+ * @param {HTMLElement} target - The DOM element representing the keyword.
+ */
 function handleKeywordTooltip(target) {
   const keyword = keywords.find((key) => target.innerText === key.text)
 
