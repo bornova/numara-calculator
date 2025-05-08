@@ -184,6 +184,9 @@
     <div id="dialogSettings" class="modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
         <h2 class="uk-modal-title uk-text-center">Settings</h2>
+        <a id="resetSizeButton" class="resetSizeButton" title="Reset window size" uk-tooltip>
+          <i data-lucide="scaling"></i>
+        </a>
         <div class="dialog-settings-body">
           <h3>Appearance</h3>
           <div class="uk-child-width-expand" uk-grid>
@@ -424,7 +427,7 @@
             </div>
           </div>
 
-          <h3>Answer Locale</h3>
+          <h3>Locale</h3>
           <div class="uk-child-width-expand" uk-grid>
             <div class="padTop1">Default locale</div>
             <div class="uk-text-right uk-position-relative">
@@ -582,9 +585,6 @@
             >
               Reset App
             </a>
-            <a id="resetSizeButton" class="resetSizeButton" title="Reset window size" uk-tooltip>
-              <i data-lucide="scaling"></i>
-            </a>
           </div>
           <div class="dialog-buttons resetButtons uk-width-1-2 uk-flex-right">
             <a id="defaultSettingsButton" class="defSettingsButton" title="Restore default settings" uk-tooltip>
@@ -692,7 +692,7 @@
           <img id="numaraLogo" />
         </div>
         <div>
-          <span id="dialogAboutAppVersion" class="dialogAboutAppVersion"></span>
+          <span id="dialogAboutAppVersion" class="dialogAboutAppVersion" uk-tooltip></span>
           <span id="dialogAboutUpdateStatus" class="dialogAboutUpdateStatus"></span>
           <span>
             <button id="updateButton" class="uk-button uk-button-primary uk-button-small updateButton">

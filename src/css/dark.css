@@ -184,6 +184,10 @@ body {
   color: #999999;
 }
 
+.resetSizeButton {
+  color: #999999;
+}
+
 /* Plot */
 .origin {
   stroke: #f9f9f9;

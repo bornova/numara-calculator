@@ -180,14 +180,11 @@ export function calculate() {
     const pages = store.get('pages')
     const page = pages.find((page) => page.id === app.activePage)
 
-    if (!page) return
+    if (!page || (page.data === cmValue && JSON.stringify(page.history) === JSON.stringify(cmHistory))) return
 
-    // Only update if changed
-    if (page.data !== cmValue || JSON.stringify(page.history) !== JSON.stringify(cmHistory)) {
-      page.data = cmValue
-      page.history = cmHistory
-      store.set('pages', pages)
-    }
+    page.data = cmValue
+    page.history = cmHistory
+    store.set('pages', pages)
   }
 }
 
@@ -217,28 +214,24 @@ function evaluate(line) {
     const rightOfDate = String(math.evaluate(lineDateRight + ' to hours', app.mathScope))
     const durHrs = Number(rightOfDate.split(' ')[0])
 
-    if (lineDateTime) {
-      const dtLine = lineDateTime
-        .plus({ hours: durHrs })
-        .toFormat(
-          lineDateNow.isValid
-            ? app.settings.dateDay
-              ? nowDayFormat
-              : nowFormat
-            : app.settings.dateDay
-              ? todayDayFormat
-              : todayFormat
-        )
+    if (!lineDateTime) return 'Invalid Date'
 
-      line = `"${dtLine}"`
-    } else {
-      return 'Invalid Date'
-    }
+    const dtLine = lineDateTime
+      .plus({ hours: durHrs })
+      .toFormat(
+        lineDateNow.isValid
+          ? app.settings.dateDay
+            ? nowDayFormat
+            : nowFormat
+          : app.settings.dateDay
+            ? todayDayFormat
+            : todayFormat
+      )
+
+    line = `"${dtLine}"`
   }
 
-  if (line.match(REGEX_PCNT_OF_VAL)) {
-    line = line.replaceAll(REGEX_PCNT_OF, '/100*')
-  }
+  line = line.match(REGEX_PCNT_OF_VAL) ? line.replaceAll(REGEX_PCNT_OF, '/100*') : line
 
   return math.evaluate(line, app.mathScope)
 }
@@ -297,8 +290,8 @@ function addScopeHints() {
   const vars = Object.keys(app.mathScope).filter((scope) => !scopeKeywords.includes(scope))
 
   vars.forEach((v) => {
-    if (!numaraHints.some((hint) => hint.text === v) && v !== 'line' + cm.lineCount()) {
-      numaraHints.push({ text: v, desc: 'Variable', className: 'cm-variable' })
-    }
+    if (numaraHints.some((hint) => hint.text === v) || v === 'line' + cm.lineCount()) return
+
+    numaraHints.push({ text: v, desc: 'Variable', className: 'cm-variable' })
   })
 }

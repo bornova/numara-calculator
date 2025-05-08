@@ -65,6 +65,7 @@ function copyToClipboard(text, message) {
  */
 function copyLine(event, index) {
   index = +index
+
   const line = cm.getLine(index)?.trim()
 
   copyToClipboard(line, `Copied Line ${index + 1} to clipboard.`)
@@ -78,6 +79,7 @@ function copyLine(event, index) {
  */
 function copyAnswer(event, index, withLines) {
   index = +index
+
   const line = cm.getLine(index)?.trim()
   const answer = dom.output.children[index]?.children?.[0]?.dataset?.copy
   const copiedText = withLines ? `${line} = ${answer}` : `${answer}`
@@ -147,9 +149,7 @@ function initializeContextMenus() {
 
   dom.output.addEventListener('contextmenu', outputContext)
 
-  dom.els('.textBox').forEach((el) => {
-    el.addEventListener('contextmenu', textboxContext)
-  })
+  dom.els('.textBox').forEach((el) => el.addEventListener('contextmenu', textboxContext))
 
   numara.copyLine(copyLine)
   numara.copyAnswer(copyAnswer)

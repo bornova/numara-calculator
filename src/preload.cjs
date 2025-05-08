@@ -8,6 +8,13 @@ contextBridge.exposeInMainWorld('numara', {
     print: (callback) => ipcRenderer.on('print', callback)
   },
 
+  versions: {
+    chrome: () => process.versions.chrome,
+    electron: () => process.versions.electron,
+    node: () => process.versions.node,
+    v8: () => process.versions.v8
+  },
+
   // App theme
   isDark: () => ipcRenderer.sendSync('isDark'),
   setTheme: (theme) => ipcRenderer.send('setTheme', theme),

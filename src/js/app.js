@@ -5,9 +5,9 @@ import { cm, refreshEditor, udfInput, uduInput } from './editor'
 import { calculate } from './eval'
 import { generateIcons } from './icons'
 import { modal, notify, showError } from './modal'
+import { getPageName, initializePages, pageOrder, populatePages } from './pages'
 import { plot } from './plot'
 import { settings } from './settings'
-import { getPageName, initializePages, pageOrder, populatePages } from './pages'
 import { applyUdfu } from './userDefined'
 import { app, checkSize, checkAppUpdate, isMac, isElectron, store, toggleMinMax } from './utils'
 
@@ -57,6 +57,14 @@ const setupAppInfo = () => {
   dom.helpLink.setAttribute('href', `${homepage}/wiki`)
 
   if (isElectron) {
+    dom.dialogAboutAppVersion.title = `
+    <div class="uk-text-small">
+      <div><b>Chrome</b>: ${numara.versions.chrome()}</div>
+      <div><b>Electron</b>: ${numara.versions.electron()}</div>
+      <div><b>Node</b>: ${numara.versions.node()}</div>
+      <div><b>V8</b>: ${numara.versions.v8()}</div>
+    </div>`
+
     dom.logsLink.parentElement.style.display = 'block'
     dom.logsLink.addEventListener('click', numara.openLogs)
   }
@@ -195,6 +203,7 @@ const setupKeyboardShortcuts = () => {
     tinykeys(window, {
       [command]: (event) => {
         event.preventDefault()
+
         const modalOpen = dom.els('.uk-open').length > 0
 
         if (!modalOpen) {
@@ -414,26 +423,32 @@ const setupPrint = () => {
 }
 
 const electronActions = () => {
-  if (isElectron) {
-    numara.themeUpdate(settings.apply)
-    numara.restored(() => {
-      cm.focus()
-    })
-    // Check for updates
-    checkAppUpdate()
-    // Open developer Tools
-    dom.dialogAboutAppVersion.addEventListener('click', (event) => {
-      if (event.detail === 9) {
-        numara.openDevTools()
-      }
-    })
-  }
+  if (!isElectron) return
+
+  numara.themeUpdate(settings.apply)
+  numara.restored(() => {
+    cm.focus()
+  })
+  // Check for updates
+  checkAppUpdate()
+  // Open developer Tools
+  dom.dialogAboutAppVersion.addEventListener('click', (event) => {
+    if (event.detail === 9) {
+      numara.openDevTools()
+    }
+  })
 }
 
 /**
  * Main application initializer. Calls all setup functions and loads initial state.
  */
 const initializeApp = () => {
+  settings.initialize()
+  settings.apply()
+
+  colors.initialize()
+  colors.apply()
+
   setupHeaders()
   setupAppInfo()
   setupActionButtons()
@@ -446,15 +461,7 @@ const initializeApp = () => {
   setupUserDefined()
   setupPrint()
   generateIcons()
-
-  colors.initialize()
-  colors.apply()
-
-  settings.initialize()
-  settings.apply()
-
   initializePages()
-
   electronActions()
 
   setTimeout(() => {
