@@ -85,9 +85,7 @@ export const colors = {
    * Initialize color pickers and listeners.
    */
   initialize: () => {
-    const storedColors = store.get('colors')
-
-    storedColors ? checkDefaultColors() : store.set('colors', colors.defaults)
+    store.get('colors') ? checkDefaultColors() : store.set('colors', colors.defaults)
 
     app.colors = store.get('colors')
 
