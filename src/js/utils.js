@@ -81,6 +81,8 @@ export function checkAppUpdate() {
         notify(
           `A new updated version ${version} is available. <a class="notificationLink" onclick="document.querySelector('#aboutButton').click()">Update status</a>`
         )
+
+        dom.notificationDot.style.display = 'block'
         break
 
       case 'notAvailable':
@@ -102,7 +104,6 @@ export function checkAppUpdate() {
           )
         }
 
-        dom.notificationDot.style.display = 'block'
         dom.updateButton.style.display = 'inline-block'
         dom.updateButton.addEventListener('click', () => numara.updateApp())
         break
