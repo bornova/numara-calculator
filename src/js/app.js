@@ -301,7 +301,9 @@ const setupUIkitUtils = () => {
   })
 
   // Initiate theme dialog
-  UIkit.util.on('#dialogTheme', 'shown', checkColorChange)
+  UIkit.util.on('#dialogTheme', 'shown', () => {
+    checkColorChange()
+  })
 
   // Initiate settings dialog
   UIkit.util.on('#dialogSettings', 'beforeshow', settings.prep)
