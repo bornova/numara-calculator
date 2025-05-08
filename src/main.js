@@ -14,7 +14,6 @@ log.errorHandler.startCatching()
 log.eventLogger.startLogging()
 
 const { autoUpdater } = updater
-
 autoUpdater.autoInstallOnAppQuit = false
 autoUpdater.logger = log
 autoUpdater.logger.transports.file.level = 'info'
@@ -26,6 +25,7 @@ const schema = {
   position: { type: 'array', items: { type: 'integer' } },
   theme: { type: 'string', default: 'system' }
 }
+
 const config = new Store({ schema, clearInvalidConfig: true, fileExtension: '' })
 
 const isMac = process.platform === 'darwin'
@@ -80,19 +80,11 @@ function createAppWindow() {
   win.loadFile('build/index.html')
 
   win.webContents.on('did-finish-load', () => {
-    if (config.get('fullSize') && isWin) {
-      win.maximize()
-    }
+    if (config.get('fullSize') && isWin) win.maximize()
+    if (config.get('position')) win.setPosition(config.get('position')[0], config.get('position')[1])
+    if (isMac && !app.isPackaged) win.webContents.openDevTools()
 
     setTitleBarOverlay()
-
-    if (config.get('position')) {
-      win.setPosition(config.get('position')[0], config.get('position')[1])
-    }
-
-    if (isMac && !app.isPackaged) {
-      win.webContents.openDevTools()
-    }
 
     win.show()
   })
@@ -285,7 +277,6 @@ ipcMain.on('inputContextMenu', (event, index, isEmpty, isLine, isSelection, isMu
     ...contextHeader(index, isMultiLine, hasAnswer),
     ...commonContext(event, index, isEmpty, isSelection, isMultiLine, hasAnswer)
   ]
-
   const contextMenu = Menu.buildFromTemplate(contextMenuTemplate)
 
   contextMenu.popup()
@@ -304,7 +295,6 @@ ipcMain.on('outputContextMenu', (event, index, isEmpty, hasAnswer) => {
     ...contextHeader(index, false, hasAnswer),
     ...commonContext(event, index, isEmpty, false, false, hasAnswer)
   ]
-
   const contextMenu = Menu.buildFromTemplate(contextMenuTemplate)
 
   contextMenu.popup()
