@@ -313,10 +313,8 @@ export const settings = {
 dom.defaultSettingsButton.addEventListener('click', () => {
   confirm('All settings will revert back to defaults.', () => {
     app.settings = JSON.parse(JSON.stringify(settings.defaults))
-    app.colors = JSON.parse(JSON.stringify(colors.defaults))
 
     store.set('settings', app.settings)
-    store.set('colors', app.colors)
 
     settings.prep()
     settings.save()
