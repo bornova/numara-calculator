@@ -663,8 +663,8 @@ div:has(> #logsLink) {
 }
 
 .resetSizeButton > svg {
-  height: 14px;
   width: 14px;
+  height: 14px;
   pointer-events: none;
 }
 
