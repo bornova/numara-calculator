@@ -73,10 +73,7 @@ CodeMirror.defineMode('numara', () => ({
     const cmStream = stream.current()
 
     // Currency
-    if (
-      app.settings.currency &&
-      (Object.keys(app.currencyRates).some((curr) => app.currencyRates[curr].code === cmStream) || cmStream === 'USD')
-    ) {
+    if (math.Unit.UNITS[cmStream]?.base.key === 'USD_STUFF') {
       return 'currency'
     }
 
@@ -333,7 +330,8 @@ function handleFunctionTooltip(target) {
 function handleCurrencyTooltip(target) {
   try {
     const currency = target.innerText
-    const currencyName = currency === 'USD' ? 'U.S. Dollar' : app.currencyRates[currency.toLowerCase()].name
+    const currencyName =
+      currency.toUpperCase() === 'USD' ? 'U.S. Dollar' : app.currencyRates[currency.toLowerCase()].name
 
     showTooltip(target, currencyName)
   } catch {
