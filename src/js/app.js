@@ -231,7 +231,7 @@ const setupEventListeners = () => {
     app.refreshCM = true
   })
 
-  window.addEventListener('resize', () => {
+  const resizeObserver = new ResizeObserver(() => {
     if (app.activePlot && dom.dialogPlot.classList.contains('uk-open')) {
       plot()
     }
@@ -240,6 +240,8 @@ const setupEventListeners = () => {
     windowResizeDelay = setTimeout(calculate, 10)
     checkSize()
   })
+
+  resizeObserver.observe(document.body)
 }
 
 /**
