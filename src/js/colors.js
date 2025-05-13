@@ -13,6 +13,8 @@ const BORDER_CHANGED = '2px solid #dd9359'
 const COLOR_INPUT_SELECTOR = '.colorInput'
 const colorInputs = dom.els(COLOR_INPUT_SELECTOR)
 
+let activePicker = null
+
 /** Check for color schema changes. */
 function checkDefaultColors() {
   const storedColors = store.get('colors')
@@ -28,26 +30,8 @@ function checkDefaultColors() {
   })
 }
 
-/**
- * Check if color has changed.
- * Highlights changed color pickers.
- */
-export function checkColorChange() {
-  const theme = getTheme()
-
-  colorInputs.forEach((picker) => {
-    const def = colors.defaults?.[picker.dataset.class]?.[picker.dataset.theme]
-    const isSame = picker.value === def
-
-    picker.style.borderLeft = isSame ? (theme === 'light' ? BORDER_LIGHT : BORDER_DARK) : BORDER_CHANGED
-  })
-}
-
-let activePicker = null
-
 function setPickerValue(picker, colorsObj) {
-  const def = colorsObj?.[picker.dataset.class]?.[picker.dataset.theme]
-  if (!def) return
+  const def = colorsObj[picker.dataset.class][picker.dataset.theme]
 
   picker.value = def
 }
@@ -56,6 +40,35 @@ function addPickerListeners(picker) {
   picker.addEventListener('click', (event) => {
     activePicker = event.target
     checkColorChange()
+  })
+}
+
+/**
+ * Reset the active color picker to its default value.
+ */
+function resetActivePickerColor() {
+  if (!activePicker) return
+
+  const def = colors.defaults[activePicker.dataset.class][activePicker.dataset.theme]
+
+  activePicker.dispatchEvent(new Event('input', { bubbles: true }))
+
+  dom.el('#clr-color-value').value = def
+  dom.el('#clr-color-value').dispatchEvent(new Event('change'))
+}
+
+/**
+ * Check if color has changed.
+ * Highlights changed color pickers.
+ */
+export function checkColorChange() {
+  const theme = getTheme()
+
+  colorInputs.forEach((picker) => {
+    const def = colors.defaults[picker.dataset.class][picker.dataset.theme]
+    const isSame = picker.value === def
+
+    picker.style.borderLeft = isSame ? (theme === 'light' ? BORDER_LIGHT : BORDER_DARK) : BORDER_CHANGED
   })
 }
 
@@ -108,8 +121,6 @@ export const colors = {
 
     Coloris.ready(() => {
       const picker = dom.el('#clr-color-value')
-      if (!picker) return
-
       const button = document.createElement('a')
 
       picker.after(button)
@@ -151,9 +162,7 @@ export const colors = {
    */
   save: () => {
     colorInputs.forEach((picker) => {
-      if (app.colors?.[picker.dataset.class]) {
-        app.colors[picker.dataset.class][picker.dataset.theme] = picker.value
-      }
+      app.colors[picker.dataset.class][picker.dataset.theme] = picker.value
     })
 
     store.set('colors', app.colors)
@@ -168,12 +177,9 @@ export const colors = {
     app.colors = store.get('colors')
 
     colorInputs.forEach((picker) => {
-      const def = colors.defaults?.[picker.dataset.class]?.[picker.dataset.theme]
+      const def = colors.defaults[picker.dataset.class][picker.dataset.theme]
 
-      if (def) {
-        picker.value = def
-      }
-
+      picker.value = def
       picker.dispatchEvent(new Event('input', { bubbles: true }))
     })
 
@@ -182,26 +188,11 @@ export const colors = {
   }
 }
 
-/**
- * Reset the active color picker to its default value.
- */
-function resetActivePickerColor() {
-  if (!activePicker) return
-
-  const def = colors.defaults?.[activePicker.dataset.class]?.[activePicker.dataset.theme]
-  if (!def) return
-
-  activePicker.dispatchEvent(new Event('input', { bubbles: true }))
-
-  dom.el('#clr-color-value').value = def
-  dom.el('#clr-color-value').dispatchEvent(new Event('change'))
-}
-
-dom.customizeThemeButton?.addEventListener('click', () => {
+dom.customizeThemeButton.addEventListener('click', () => {
   modal.show('#dialogTheme')
 })
 
-dom.resetColorsButton?.addEventListener('click', () => {
+dom.resetColorsButton.addEventListener('click', () => {
   confirm('This will reset all colors to their default values', () => {
     colors.reset()
   })
