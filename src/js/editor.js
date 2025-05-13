@@ -2,10 +2,7 @@ import { dom } from './dom'
 import { calculate, formatAnswer, math } from './eval'
 import { app, store } from './utils'
 
-import * as formulajs from '@formulajs/formulajs'
-
 import UIkit from 'uikit'
-
 import CodeMirror from 'codemirror'
 
 import 'codemirror/mode/javascript/javascript'
@@ -18,47 +15,55 @@ import 'codemirror/addon/search/jump-to-line'
 import 'codemirror/addon/search/search'
 import 'codemirror/addon/search/searchcursor'
 
-/** CodeMirror input panel. */
-export const cm = CodeMirror.fromTextArea(dom.inputArea, {
-  autofocus: true,
-  coverGutterNextToScrollbar: true,
-  extraKeys: { 'Ctrl-Space': 'autocomplete' },
-  flattenSpans: true,
-  mode: 'numara',
-  smartIndent: false,
-  theme: 'numara',
-  viewportMargin: Infinity
-})
+import * as formulajs from '@formulajs/formulajs'
 
-// User defined functions and units editors
-const udOptions = {
-  autoCloseBrackets: true,
-  autofocus: true,
-  mode: 'javascript',
-  smartIndent: false,
-  tabSize: 2
+const CLASS_NAMES = {
+  FUNCTION: 'cm-function',
+  UDF: 'cm-udf',
+  UDU: 'cm-udu',
+  CURRENCY: 'cm-currency',
+  UNIT: 'cm-unit',
+  CONSTANT: 'cm-constant',
+  VARIABLE: 'cm-variable',
+  LINE_NO: 'cm-lineNo',
+  KEYWORD: 'cm-keyword',
+  FORMULAJS: 'cm-formulajs',
+  EXCEL: 'cm-excel'
 }
 
-const udfPlaceholder = 'xyz: (x, y, z) => {\n\treturn x+y+z\n},\n\nmyConstant: 123'
-const uduPlaceholder = 'foo: "18 foot",\nbar: "40 foo"'
+const mathEntries = Object.entries(math.expression.mathWithTransform)
+const mathFunctions = mathEntries.filter(([k]) => typeof math[k] === 'function')
+const mathConstants = mathEntries.filter(
+  ([k]) => typeof math[k] !== 'function' && typeof math[k] !== 'boolean' && (math[k]?.value || !isNaN(math[k]))
+)
+const units = () =>
+  Object.values(math.Unit.UNITS).flatMap((unit) =>
+    Object.values(unit.prefixes).map((prefix) => {
+      const token = prefix.name + unit.name
+      const unitBase = unit.base.key.replaceAll('_', ' ').toLowerCase()
+      const unitCat = unitBase.charAt(0).toUpperCase() + unitBase.slice(1)
+      return {
+        token,
+        hint: { text: token, desc: unitCat + ' unit', className: CLASS_NAMES.UNIT }
+      }
+    })
+  )
+export const keywords = [
+  { text: '_', desc: 'Answer from last calculated line' },
+  { text: 'ans', desc: 'Answer from last calculated line' },
+  { text: 'avg', desc: 'Average of previous line values. Numbers only.' },
+  { text: 'now', desc: 'Current date and time' },
+  { text: 'subtotal', desc: 'Total of all lines in previous block. Numbers only.' },
+  { text: 'today', desc: 'Current date' },
+  { text: 'total', desc: 'Total of previous line values. Numbers only.' }
+]
 
-dom.udfInput.setAttribute('placeholder', udfPlaceholder)
-dom.uduInput.setAttribute('placeholder', uduPlaceholder)
-
-export const udfInput = CodeMirror.fromTextArea(dom.udfInput, udOptions)
-export const uduInput = CodeMirror.fromTextArea(dom.uduInput, udOptions)
-
-/**
- * Refreshes the given CodeMirror editor and focuses it after a short delay.
- * @param {CodeMirror} editor - CodeMirror instance to refresh and focus.
- */
-export function refreshEditor(editor) {
-  editor.refresh()
-
-  setTimeout(() => {
-    editor.focus()
-  }, 100)
-}
+// Mode tokens
+const functionTokens = mathFunctions.map(([f]) => f)
+const constantTokens = mathConstants.map(([c]) => c)
+const unitTokens = units().map((u) => u.token)
+const keywordTokens = keywords.map((key) => key.text)
+const excelTokens = Object.keys(formulajs).map((f) => 'xls.' + f)
 
 // Codemirror syntax templates
 CodeMirror.defineMode('numara', () => ({
@@ -72,37 +77,15 @@ CodeMirror.defineMode('numara', () => ({
 
     const cmStream = stream.current()
 
-    // Currency
-    if (math.Unit.UNITS[cmStream]?.base.key === 'USD_STUFF') {
-      return 'currency'
-    }
-
-    // Math function
-    if (typeof math[cmStream] === 'function' && Object.getOwnPropertyNames(math[cmStream]).includes('signatures')) {
-      return 'function'
-    }
-
-    // User defined
+    if (math.Unit.UNITS[cmStream]?.base.key === 'USD_STUFF') return 'currency'
+    if (functionTokens.includes(cmStream)) return 'function'
+    if (constantTokens.includes(cmStream)) return 'constant'
+    if (unitTokens.includes(cmStream)) return 'unit'
+    if (keywordTokens.includes(cmStream)) return 'keyword'
+    if (/\bline\d+\b/.test(cmStream)) return 'lineNo'
     if (app.udfList.includes(cmStream)) return 'udf'
     if (app.uduList.includes(cmStream)) return 'udu'
-
-    // Keywords and line numbers
-    if (/\b(_|ans|total|subtotal|avg|today|now)\b/.test(cmStream)) return 'keyword'
-    if (/\bline\d+\b/.test(cmStream)) return 'lineNo'
-
-    // Excel
-    if (typeof formulajs[cmStream] === 'function' && stream.string.startsWith('xls.')) return 'excel'
-
-    // Try to detect unit or constant
-    try {
-      const val = math.evaluate(cmStream)
-      const par = math.parse(cmStream)
-
-      if (val.units && !val.value) return 'unit'
-      if (par.isSymbolNode && val) return 'constant'
-    } catch {
-      // Ignore
-    }
+    if (excelTokens.includes(cmStream)) return 'excel'
 
     // Variable fallback
     try {
@@ -125,41 +108,18 @@ CodeMirror.defineMode('plain', () => ({
   }
 }))
 
-// Codemirror autocomplete hints
-export const keywords = [
-  { text: '_', desc: 'Answer from last calculated line' },
-  { text: 'ans', desc: 'Answer from last calculated line' },
-  { text: 'avg', desc: 'Average of previous line values. Numbers only.' },
-  { text: 'now', desc: 'Current date and time' },
-  { text: 'subtotal', desc: 'Total of all lines in previous block. Numbers only.' },
-  { text: 'today', desc: 'Current date' },
-  { text: 'total', desc: 'Total of previous line values. Numbers only.' }
-]
+// Editor hints
+const functionHints = mathFunctions.map(([f]) => ({ text: f, className: CLASS_NAMES.FUNCTION }))
+const constantHints = mathConstants.map(([c]) => ({
+  text: c,
+  desc: math.help(c).doc.description,
+  className: CLASS_NAMES.CONSTANT
+}))
+const unitHints = units().map((u) => u.hint)
+const keywordHints = keywords.map((key) => ({ ...key, className: CLASS_NAMES.KEYWORD }))
+const excelHints = excelTokens.map((f) => ({ text: f, className: CLASS_NAMES.EXCEL }))
 
-export const numaraHints = [
-  ...keywords.map((key) => ({ ...key, className: 'cm-keyword' })),
-  ...Object.keys(math)
-    .filter((f) => typeof math[f] === 'function' && Object.getOwnPropertyNames(math[f]).includes('signatures'))
-    .map((f) => ({ text: f, className: 'cm-function' })),
-  ...Object.keys(math.expression.mathWithTransform)
-    .filter(
-      (expr) =>
-        typeof math[expr] !== 'function' && typeof math[expr] !== 'boolean' && (math[expr]?.value || !isNaN(math[expr]))
-    )
-    .map((expr) => ({
-      text: expr,
-      desc: math.help(expr).doc.description,
-      className: 'cm-constant'
-    })),
-  ...Object.keys(formulajs).map((f) => ({ text: 'xls.' + f, className: 'cm-excel' })),
-  ...Object.values(math.Unit.UNITS).flatMap((unit) =>
-    Object.values(unit.prefixes).map((prefix) => {
-      const unitBase = unit.base.key.replaceAll('_', ' ').toLowerCase()
-      const unitCat = unitBase.charAt(0).toUpperCase() + unitBase.slice(1)
-      return { text: prefix.name + unit.name, desc: unitCat + ' unit', className: 'cm-unit' }
-    })
-  )
-]
+export const numaraHints = [...functionHints, ...constantHints, ...unitHints, ...keywordHints, ...excelHints]
 
 CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
   const cmCursor = editor.getCursor()
@@ -168,26 +128,17 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
   let start = cmCursor.ch
   let end = start
 
-  while (end < cmCursorLine.length && /[\w.$]/.test(cmCursorLine.charAt(end))) {
-    ++end
-  }
-
-  while (start && /[\w.$]/.test(cmCursorLine.charAt(start - 1))) {
-    --start
-  }
+  while (end < cmCursorLine.length && /[\w.$]/.test(cmCursorLine.charAt(end))) ++end
+  while (start && /[\w.$]/.test(cmCursorLine.charAt(start - 1))) --start
 
   let curStr = cmCursorLine.slice(start, end)
   let curWord = start !== end && curStr
 
-  // Use a more robust regex for word matching
   const curWordRegex = curWord ? new RegExp('^' + curWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null
-
-  // Only show hints if not ending with '.' or is 'xls.'
-  const shouldShowHints = curStr && (!curStr.endsWith('.') || curStr === 'xls.')
 
   return {
     list:
-      shouldShowHints && curWordRegex
+      curStr && (!curStr.endsWith('.') || curStr === 'xls.') && curWordRegex
         ? numaraHints.filter(({ text }) => curWordRegex.test(text)).sort((a, b) => a.text.localeCompare(b.text))
         : [],
     from: CodeMirror.Pos(cmCursor.line, start),
@@ -212,6 +163,30 @@ function cmForceBottom() {
     dom.output.scrollTop = dom.output.scrollTop + (lineHeight - (barTop - lineTop))
   }
 }
+
+/** CodeMirror instances. */
+export const cm = CodeMirror.fromTextArea(dom.inputArea, {
+  autofocus: true,
+  coverGutterNextToScrollbar: true,
+  extraKeys: { 'Ctrl-Space': 'autocomplete' },
+  flattenSpans: true,
+  mode: 'numara',
+  smartIndent: false,
+  theme: 'numara',
+  viewportMargin: Infinity
+})
+
+const udOptions = { autoCloseBrackets: true, autofocus: true, mode: 'javascript', smartIndent: false, tabSize: 2 }
+
+export const udfInput = CodeMirror.fromTextArea(dom.udfInput, udOptions)
+export const uduInput = CodeMirror.fromTextArea(dom.uduInput, udOptions)
+
+// Set the placeholder values of the user defined dialog CodeMirror instances
+const udfPlaceholder = 'xyz: (x, y, z) => {\n\treturn x+y+z\n},\n\nmyConstant: 123'
+const uduPlaceholder = 'foo: "18 foot",\nbar: "40 foo"'
+
+dom.udfInput.setAttribute('placeholder', udfPlaceholder)
+dom.uduInput.setAttribute('placeholder', uduPlaceholder)
 
 // Codemirror handlers
 cm.on('changes', calculate)
@@ -270,19 +245,6 @@ cm.on('gutterClick', (cm, line) => {
 cm.on('scrollCursorIntoView', cmForceBottom)
 
 // Tooltips
-const CLASS_NAMES = {
-  FUNCTION: 'cm-function',
-  UDF: 'cm-udf',
-  UDU: 'cm-udu',
-  CURRENCY: 'cm-currency',
-  UNIT: 'cm-unit',
-  CONSTANT: 'cm-constant',
-  VARIABLE: 'cm-variable',
-  LINE_NO: 'cm-lineNo',
-  KEYWORD: 'cm-keyword',
-  FORMULAJS: 'cm-formulajs',
-  EXCEL: 'cm-excel'
-}
 
 /**
  * Determines the tooltip position based on the given element.
@@ -444,3 +406,15 @@ document.addEventListener('mouseover', (event) => {
     isValid && app.settings.keywordTips ? `Insert 'line${event.target.innerText}' to Line ${activeLine}` : ''
   )
 })
+
+/**
+ * Refreshes the given CodeMirror editor and focuses it after a short delay.
+ * @param {CodeMirror} editor - CodeMirror instance to refresh and focus.
+ */
+export function refreshEditor(editor) {
+  editor.refresh()
+
+  setTimeout(() => {
+    editor.focus()
+  }, 100)
+}
