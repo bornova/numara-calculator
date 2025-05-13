@@ -45,8 +45,8 @@ export const isElectron = userAgent.includes('electron')
 export function getTheme() {
   app.settings = store.get('settings')
 
-  if (app.settings?.theme === 'dark') return 'dark'
-  if (app.settings?.theme === 'system' && isElectron) return numara.isDark() ? 'dark' : 'light'
+  if (app.settings.theme === 'dark') return 'dark'
+  if (app.settings.theme === 'system' && isElectron) return numara.isDark() ? 'dark' : 'light'
 
   return 'light'
 }
