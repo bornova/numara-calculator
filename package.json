@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.26.0",
-    "@formulajs/formulajs": "^4.4.11",
+    "@formulajs/formulajs": "^4.5.1",
     "@melloware/coloris": "^0.24.0",
     "codemirror": "^5.65.19",
     "deep-diff": "^1.0.2",
