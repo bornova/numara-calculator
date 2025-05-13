@@ -839,6 +839,10 @@ input:checked + .slider:before {
   font-size: 1rem;
 }
 
+.modal .uk-modal-dialog .uk-modal-title {
+  cursor: move;
+}
+
 .uk-modal-footer {
   padding: 15px;
 }
@@ -1106,7 +1110,7 @@ input:checked + .slider:before {
 
 #dialogUdfu .CodeMirror {
   padding: 5px;
-  height: calc(100vh - 220px);
+
   max-height: 800px;
   font-size: 1.1em;
 }
