@@ -39,38 +39,6 @@ const setupHeaders = () => {
 }
 
 /**
- * Populates the About dialog with app info and sets up related links.
- */
-const setupAppInfo = () => {
-  dom.dialogAboutCopyright.innerHTML = `Copyright &copy; ${new Date().getFullYear()} ${author.name}`
-  dom.dialogAboutAppVersion.innerHTML = isElectron
-    ? `Version ${version}`
-    : `Version ${version}
-      <div class="versionCtnr">
-        <div>
-          <a href="https://github.com/bornova/numara-calculator/releases" target="_blank">Download desktop version</a>
-        </div>
-      </div>`
-  dom.gitLink.setAttribute('href', homepage)
-  dom.webLink.setAttribute('href', author.url)
-  dom.licenseLink.setAttribute('href', `${homepage}/blob/master/LICENSE`)
-  dom.helpLink.setAttribute('href', `${homepage}/wiki`)
-
-  if (isElectron) {
-    dom.dialogAboutAppVersion.title = `
-    <div class="uk-text-small">
-      <div><b>Chrome</b>: ${numara.versions.chrome()}</div>
-      <div><b>Electron</b>: ${numara.versions.electron()}</div>
-      <div><b>Node</b>: ${numara.versions.node()}</div>
-      <div><b>V8</b>: ${numara.versions.v8()}</div>
-    </div>`
-
-    dom.logsLink.parentElement.style.display = 'block'
-    dom.logsLink.addEventListener('click', numara.openLogs)
-  }
-}
-
-/**
  * Attaches click handlers to main action buttons in the UI.
  */
 const setupActionButtons = () => {
@@ -135,147 +103,6 @@ const setupOutputPanelActions = () => {
     while (sels[0]) {
       sels[0].classList.remove('CodeMirror-selected')
     }
-  })
-}
-
-/**
- * Enables resizing of the input/output panel via a draggable divider.
- * Handles double-click to reset and mouse events for resizing.
- */
-const setupPanelResizer = () => {
-  let resizeDelay
-  let isResizing = false
-
-  const panel = dom.panel
-  const divider = dom.panelDivider
-  const dividerTooltip = () => {
-    divider.title =
-      dom.input.style.width === settings.defaults.inputWidth + '%' ? 'Drag to resize' : 'Double click to reset position'
-  }
-
-  divider.addEventListener('dblclick', () => {
-    app.settings.inputWidth = settings.defaults.inputWidth
-    store.set('settings', app.settings)
-    settings.apply()
-    dividerTooltip()
-  })
-
-  divider.addEventListener('mousedown', (event) => {
-    isResizing = event.target === divider
-  })
-
-  dom.panel.addEventListener('mouseup', () => {
-    isResizing = false
-  })
-
-  dom.panel.addEventListener('mousemove', (event) => {
-    if (isResizing) {
-      const offset = app.settings.lineNumbers ? 12 : 27
-      const pointerRelativeXpos = event.clientX - panel.offsetLeft - offset
-      let inputWidth = (pointerRelativeXpos / panel.clientWidth) * 100
-      inputWidth = Math.max(0, Math.min(100, inputWidth))
-
-      dom.input.style.width = inputWidth + '%'
-      app.settings.inputWidth = inputWidth
-      store.set('settings', app.settings)
-
-      clearTimeout(resizeDelay)
-      resizeDelay = setTimeout(calculate, 10)
-    }
-
-    dividerTooltip()
-  })
-}
-
-/**
- * Registers keyboard shortcuts for common actions using tinykeys.
- * Handles modal state and side panel toggling.
- */
-const setupKeyboardShortcuts = () => {
-  const keys = {
-    clearButton: ['$mod+D'],
-    newPageButton: ['$mod+N'],
-    printButton: ['$mod+P'],
-    sidePanelButton: ['Shift+TAB']
-  }
-
-  for (const [button, command] of Object.entries(keys)) {
-    tinykeys(window, {
-      [command]: (event) => {
-        event.preventDefault()
-
-        const modalOpen = dom.els('.uk-open').length > 0
-
-        if (!modalOpen) {
-          document.getElementById(button).click()
-        } else if (dom.sidePanel.classList.contains('uk-open') && !dom.dialogNewPage.classList.contains('uk-open')) {
-          dom.closeSidePanelButton.click()
-        }
-      }
-    })
-  }
-}
-
-let windowResizeDelay
-
-/**
- * Sets up global event listeners for keyboard and window resize events.
- * Handles CodeMirror refresh and triggers recalculation on resize.
- */
-const setupEventListeners = () => {
-  document.addEventListener('keydown', (event) => {
-    app.refreshCM = !event.repeat
-  })
-
-  document.addEventListener('keyup', () => {
-    app.refreshCM = true
-  })
-
-  const resizeObserver = new ResizeObserver(() => {
-    if (app.activePlot && dom.dialogPlot.classList.contains('uk-open')) {
-      plot()
-    }
-
-    clearTimeout(windowResizeDelay)
-    windowResizeDelay = setTimeout(calculate, 10)
-    checkSize()
-  })
-
-  resizeObserver.observe(document.body)
-}
-
-/**
- * Synchronizes scrolling between the input and output panels.
- * Adds scroll-to-top button functionality.
- */
-const setupSyncScroll = () => {
-  const inputPanel = dom.el('.CodeMirror-scroll')
-  const outputPanel = dom.output
-
-  let inputScroll = false
-  let outputScroll = false
-
-  inputPanel.addEventListener('scroll', () => {
-    if (!inputScroll) {
-      outputScroll = true
-      outputPanel.scrollTop = inputPanel.scrollTop
-    }
-    inputScroll = false
-  })
-
-  outputPanel.addEventListener('scroll', () => {
-    if (!outputScroll) {
-      inputScroll = true
-      inputPanel.scrollTop = outputPanel.scrollTop
-    }
-
-    outputScroll = false
-    dom.scrollTop.style.display = outputPanel.scrollTop > 50 ? 'block' : 'none'
-  })
-
-  dom.scrollTop.addEventListener('click', () => {
-    inputPanel.scroll({ top: 0, behavior: 'smooth' })
-    outputPanel.scroll({ top: 0, behavior: 'smooth' })
   })
 }
 
@@ -359,6 +186,11 @@ const setupUIkitUtils = () => {
       dom.renamePageTitleInput.select()
     }, 20)
   })
+
+  UIkit.util.on('#dialogError', 'hidden', () => {
+    dom.errTitle.innerHTML = ''
+    dom.errMsg.innerHTML = ''
+  })
 }
 
 /**
@@ -376,6 +208,179 @@ const setupUserDefined = () => {
 
   applyUdfu(store.get('udf'), 'func')
   applyUdfu(store.get('udu'), 'unit')
+}
+
+/**
+ * Enables resizing of the input/output panel via a draggable divider.
+ * Handles double-click to reset and mouse events for resizing.
+ */
+const setupPanelResizer = () => {
+  let resizeDelay
+  let isResizing = false
+
+  const panel = dom.panel
+  const divider = dom.panelDivider
+  const dividerTooltip = () => {
+    divider.title =
+      dom.input.style.width === settings.defaults.inputWidth + '%' ? 'Drag to resize' : 'Double click to reset position'
+  }
+
+  divider.addEventListener('dblclick', () => {
+    app.settings.inputWidth = settings.defaults.inputWidth
+    store.set('settings', app.settings)
+    settings.apply()
+    dividerTooltip()
+  })
+
+  divider.addEventListener('mousedown', (event) => {
+    isResizing = event.target === divider
+  })
+
+  dom.panel.addEventListener('mouseup', () => {
+    isResizing = false
+  })
+
+  dom.panel.addEventListener('mousemove', (event) => {
+    if (isResizing) {
+      const offset = app.settings.lineNumbers ? 12 : 27
+      const pointerRelativeXpos = event.clientX - panel.offsetLeft - offset
+      let inputWidth = (pointerRelativeXpos / panel.clientWidth) * 100
+      inputWidth = Math.max(0, Math.min(100, inputWidth))
+
+      dom.input.style.width = inputWidth + '%'
+      app.settings.inputWidth = inputWidth
+      store.set('settings', app.settings)
+
+      clearTimeout(resizeDelay)
+      resizeDelay = setTimeout(calculate, 10)
+    }
+
+    dividerTooltip()
+  })
+}
+
+/**
+ * Synchronizes scrolling between the input and output panels.
+ * Adds scroll-to-top button functionality.
+ */
+const setupSyncScroll = () => {
+  const inputPanel = dom.el('.CodeMirror-scroll')
+  const outputPanel = dom.output
+
+  let inputScroll = false
+  let outputScroll = false
+
+  inputPanel.addEventListener('scroll', () => {
+    if (!inputScroll) {
+      outputScroll = true
+      outputPanel.scrollTop = inputPanel.scrollTop
+    }
+    inputScroll = false
+  })
+
+  outputPanel.addEventListener('scroll', () => {
+    if (!outputScroll) {
+      inputScroll = true
+      inputPanel.scrollTop = outputPanel.scrollTop
+    }
+
+    outputScroll = false
+    dom.scrollTop.style.display = outputPanel.scrollTop > 50 ? 'block' : 'none'
+  })
+
+  dom.scrollTop.addEventListener('click', () => {
+    inputPanel.scroll({ top: 0, behavior: 'smooth' })
+    outputPanel.scroll({ top: 0, behavior: 'smooth' })
+  })
+}
+
+let windowResizeDelay
+
+/**
+ * Sets up global event listeners for keyboard and window resize events.
+ * Handles CodeMirror refresh and triggers recalculation on resize.
+ */
+const setupEventListeners = () => {
+  document.addEventListener('keydown', (event) => {
+    app.refreshCM = !event.repeat
+  })
+
+  document.addEventListener('keyup', () => {
+    app.refreshCM = true
+  })
+
+  const resizeObserver = new ResizeObserver(() => {
+    if (app.activePlot && dom.dialogPlot.classList.contains('uk-open')) {
+      plot()
+    }
+
+    clearTimeout(windowResizeDelay)
+    windowResizeDelay = setTimeout(calculate, 10)
+    checkSize()
+  })
+
+  resizeObserver.observe(document.body)
+}
+
+/**
+ * Populates the About dialog with app info and sets up related links.
+ */
+const setupAppInfo = () => {
+  dom.dialogAboutCopyright.innerHTML = `Copyright &copy; ${new Date().getFullYear()} ${author.name}`
+  dom.dialogAboutAppVersion.innerHTML = isElectron
+    ? `Version ${version}`
+    : `Version ${version}
+      <div class="versionCtnr">
+        <div>
+          <a href="https://github.com/bornova/numara-calculator/releases" target="_blank">Download desktop version</a>
+        </div>
+      </div>`
+  dom.gitLink.setAttribute('href', homepage)
+  dom.webLink.setAttribute('href', author.url)
+  dom.licenseLink.setAttribute('href', `${homepage}/blob/master/LICENSE`)
+  dom.helpLink.setAttribute('href', `${homepage}/wiki`)
+
+  if (isElectron) {
+    dom.dialogAboutAppVersion.title = `
+    <div class="uk-text-small">
+      <div><b>Chrome</b>: ${numara.versions.chrome()}</div>
+      <div><b>Electron</b>: ${numara.versions.electron()}</div>
+      <div><b>Node</b>: ${numara.versions.node()}</div>
+      <div><b>V8</b>: ${numara.versions.v8()}</div>
+    </div>`
+
+    dom.logsLink.parentElement.style.display = 'block'
+    dom.logsLink.addEventListener('click', numara.openLogs)
+  }
+}
+
+/**
+ * Registers keyboard shortcuts for common actions using tinykeys.
+ * Handles modal state and side panel toggling.
+ */
+const setupKeyboardShortcuts = () => {
+  const keys = {
+    clearButton: ['$mod+D'],
+    newPageButton: ['$mod+N'],
+    printButton: ['$mod+P'],
+    sidePanelButton: ['Shift+TAB']
+  }
+
+  for (const [button, command] of Object.entries(keys)) {
+    tinykeys(window, {
+      [command]: (event) => {
+        event.preventDefault()
+
+        const modalOpen = dom.els('.uk-open').length > 0
+
+        if (!modalOpen) {
+          document.getElementById(button).click()
+        } else if (dom.sidePanel.classList.contains('uk-open') && !dom.dialogNewPage.classList.contains('uk-open')) {
+          dom.closeSidePanelButton.click()
+        }
+      }
+    })
+  }
 }
 
 /**
@@ -453,20 +458,22 @@ const initializeApp = () => {
   colors.initialize()
   colors.apply()
 
+  generateIcons()
+
   setupHeaders()
-  setupAppInfo()
   setupActionButtons()
   setupOutputPanelActions()
-  setupPanelResizer()
-  setupKeyboardShortcuts()
-  setupEventListeners()
-  setupSyncScroll()
   setupUIkitUtils()
   setupUserDefined()
+  setupPanelResizer()
+  setupSyncScroll()
+  setupEventListeners()
+  setupAppInfo()
+  setupKeyboardShortcuts()
   setupPrint()
-  generateIcons()
-  initializePages()
+
   electronActions()
+  initializePages()
 
   setTimeout(() => {
     cm.focus()
