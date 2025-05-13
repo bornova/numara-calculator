@@ -38,6 +38,190 @@ export function getPageName() {
 export const lastPage = () => store.get('lastPage')
 
 /**
+ * Generate default page.
+ */
+export function defaultPage() {
+  const pageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
+  const pageName = getPageName()
+
+  store.set('pages', [{ id: pageId, name: pageName, data: store.get('input') || '' }])
+  localStorage.removeItem('input')
+
+  loadPage(pageId)
+}
+
+/**
+ * Create new page.
+ * @param {boolean} isImport Is the new page imported? true | false
+ */
+export function newPage(isImport) {
+  const pageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
+  const pages = store.get('pages')
+  const pageName =
+    dom.newPageTitleInput.value.replace(/<|>/g, '').trim() || (isImport ? 'Imported page' : getPageName())
+
+  const pageNames = pages.map(({ name }) => name)
+
+  if (pageNames.includes(pageName)) {
+    notify(`"${pageName}" already exists. Please choose a different page name.`, 'danger')
+    return
+  }
+
+  app.activePage = pageId
+
+  pages.push({ id: pageId, name: pageName, data: '' })
+
+  store.set('pages', pages)
+  store.set('lastPage', pageId)
+
+  cm.setValue('')
+
+  populatePages()
+
+  dom.pageName.innerHTML = pageName
+
+  modal.hide('#dialogNewPage')
+}
+
+/**
+ * Duplicate page.
+ * @param {string} pageId Id of the page to duplicate.
+ */
+export function duplicatePage(pageId) {
+  const dupPageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
+  const pages = store.get('pages')
+  const dupPage = pages.find((page) => page.id === pageId)
+
+  if (!dupPage) {
+    notify('Page not found.', 'danger')
+    return
+  }
+
+  const dupPageData = dupPage.data
+  let dupPageName = dupPage.name + ' (copy)'
+  // Ensure unique name for duplicate
+  const baseName = dupPage.name + ' (copy)'
+  let count = 1
+
+  while (pages.some((p) => p.name === dupPageName)) {
+    dupPageName = `${baseName} ${count++}`
+  }
+
+  app.activePage = dupPageId
+  pages.push({ id: dupPageId, name: dupPageName, data: dupPageData })
+  store.set('pages', pages)
+
+  loadPage(dupPageId)
+}
+
+/**
+ * Delete page.
+ * @param {string} pageId Id of the page to delete.
+ */
+export function deletePage(pageId) {
+  let pages = store.get('pages')
+  const pageName = pages.find((page) => page.id === pageId).name
+
+  confirm(`"${pageName}" will be deleted.`, () => {
+    pages = pages.filter((page) => page.id !== pageId)
+
+    store.set('pages', pages)
+
+    if (pages.length === 0) {
+      defaultPage()
+    } else if (pageId === app.activePage) {
+      loadPage(pages[pages.length - 1].id)
+    }
+
+    populatePages()
+  })
+}
+
+/**
+ * Delete all pages.
+ */
+export function deleteAllPages() {
+  confirm('All pages will be deleted permanently.', () => {
+    store.set('pages', [])
+
+    defaultPage()
+    populatePages()
+  })
+}
+
+/**
+ * Rename page.
+ * @param {string} pageId Id of the page to rename.
+ */
+export function renamePage(pageId) {
+  const pages = store.get('pages')
+  const page = pages.find((page) => page.id === pageId)
+
+  dom.renamePageTitleInput.value = page.name
+
+  modal.show('#dialogRenamePage')
+
+  // Remove previous event listener to avoid stacking
+  function newListener() {
+    const newName = dom.renamePageTitleInput.value.replace(/<|>/g, '').trim() || getPageName()
+
+    // Prevent duplicate page names
+    if (pages.some((p) => p.name === newName && p.id !== pageId)) {
+      notify(`"${newName}" already exists. Please choose a different page name.`, 'danger')
+      return
+    }
+
+    page.name = newName
+    store.set('pages', pages)
+
+    populatePages()
+
+    dom.pageName.innerHTML = page.name
+
+    modal.hide('#dialogRenamePage')
+  }
+
+  dom.dialogRenamePageSave.onclick = newListener
+}
+
+/**
+ * Load page.
+ * @param {string} pageId Id of the page to load.
+ */
+export function loadPage(pageId) {
+  const page = store.get('pages').find((p) => p.id === pageId)
+  const { name, data, history, cursor } = page
+
+  app.activePage = pageId
+  store.set('lastPage', pageId)
+
+  dom.pageName.innerHTML = name
+  dom.pageName.title = name
+
+  cm.setValue(data)
+
+  if (history) {
+    cm.setHistory(history)
+  }
+
+  cm.execCommand('goLineEnd')
+
+  if (cursor) {
+    cm.setCursor(cursor)
+
+    setTimeout(() => {
+      try {
+        cm.scrollIntoView({ ch: cursor.ch, line: cursor.line + 1 })
+      } catch {
+        cm.scrollIntoView(cursor)
+      }
+    }, 100)
+  }
+
+  populatePages()
+}
+
+/**
  * Initialize pages.
  */
 export function initializePages() {
@@ -115,178 +299,6 @@ export function populatePages() {
 }
 
 /**
- * Load page.
- * @param {string} pageId Id of the page to load.
- */
-export function loadPage(pageId) {
-  const page = store.get('pages').find((p) => p.id === pageId)
-  const { name, data, history, cursor } = page
-
-  app.activePage = pageId
-  store.set('lastPage', pageId)
-
-  dom.pageName.innerHTML = name
-  dom.pageName.title = name
-
-  cm.setValue(data)
-
-  if (history) {
-    cm.setHistory(history)
-  }
-
-  cm.execCommand('goLineEnd')
-
-  if (cursor) {
-    cm.setCursor(cursor)
-
-    setTimeout(() => {
-      try {
-        cm.scrollIntoView({ ch: cursor.ch, line: cursor.line + 1 })
-      } catch {
-        cm.scrollIntoView(cursor)
-      }
-    }, 100)
-  }
-
-  populatePages()
-}
-
-/**
- * Generate default page.
- */
-export function defaultPage() {
-  const pageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
-  const pageName = getPageName()
-
-  store.set('pages', [{ id: pageId, name: pageName, data: store.get('input') || '' }])
-  localStorage.removeItem('input')
-
-  loadPage(pageId)
-}
-
-/**
- * Create new page.
- * @param {boolean} isImport Is the new page imported? true | false
- */
-export function newPage(isImport) {
-  const pageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
-  const pages = store.get('pages')
-  const pageName =
-    dom.newPageTitleInput.value.replace(/<|>/g, '').trim() || (isImport ? 'Imported page' : getPageName())
-
-  const pageNames = pages.map(({ name }) => name)
-
-  if (pageNames.includes(pageName)) {
-    notify(`"${pageName}" already exists. Please choose a different page name.`, 'danger')
-    return
-  }
-
-  app.activePage = pageId
-
-  pages.push({ id: pageId, name: pageName, data: '' })
-
-  store.set('pages', pages)
-  store.set('lastPage', pageId)
-
-  cm.setValue('')
-
-  populatePages()
-
-  dom.pageName.innerHTML = pageName
-
-  modal.hide('#dialogNewPage')
-}
-
-/**
- * Delete page.
- * @param {string} pageId Id of the page to delete.
- */
-export function deletePage(pageId) {
-  let pages = store.get('pages')
-  const pageName = pages.find((page) => page.id === pageId).name
-
-  confirm(`"${pageName}" will be deleted.`, () => {
-    pages = pages.filter((page) => page.id !== pageId)
-
-    store.set('pages', pages)
-
-    if (pages.length === 0) {
-      defaultPage()
-    } else if (pageId === app.activePage) {
-      loadPage(pages[pages.length - 1].id)
-    }
-
-    populatePages()
-  })
-}
-
-/**
- * Rename page.
- * @param {string} pageId Id of the page to rename.
- */
-export function renamePage(pageId) {
-  const pages = store.get('pages')
-  const page = pages.find((page) => page.id === pageId)
-
-  dom.renamePageTitleInput.value = page.name
-
-  modal.show('#dialogRenamePage')
-
-  // Remove previous event listener to avoid stacking
-  function newListener() {
-    const newName = dom.renamePageTitleInput.value.replace(/<|>/g, '').trim() || getPageName()
-
-    // Prevent duplicate page names
-    if (pages.some((p) => p.name === newName && p.id !== pageId)) {
-      notify(`"${newName}" already exists. Please choose a different page name.`, 'danger')
-      return
-    }
-
-    page.name = newName
-    store.set('pages', pages)
-
-    populatePages()
-
-    dom.pageName.innerHTML = page.name
-
-    modal.hide('#dialogRenamePage')
-  }
-
-  dom.dialogRenamePageSave.onclick = newListener
-}
-
-/**
- * Duplicate page.
- * @param {string} pageId Id of the page to duplicate.
- */
-export function duplicatePage(pageId) {
-  const dupPageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
-  const pages = store.get('pages')
-  const dupPage = pages.find((page) => page.id === pageId)
-
-  if (!dupPage) {
-    notify('Page not found.', 'danger')
-    return
-  }
-
-  const dupPageData = dupPage.data
-  let dupPageName = dupPage.name + ' (copy)'
-  // Ensure unique name for duplicate
-  const baseName = dupPage.name + ' (copy)'
-  let count = 1
-
-  while (pages.some((p) => p.name === dupPageName)) {
-    dupPageName = `${baseName} ${count++}`
-  }
-
-  app.activePage = dupPageId
-  pages.push({ id: dupPageId, name: dupPageName, data: dupPageData })
-  store.set('pages', pages)
-
-  loadPage(dupPageId)
-}
-
-/**
  * Sort page list.
  * @param {string} by Sort by argument - oldnew | newold | az | za
  */
@@ -319,18 +331,6 @@ export function pageOrder() {
 }
 
 /**
- * Delete all pages.
- */
-export function deleteAllPages() {
-  confirm('All pages will be deleted permanently.', () => {
-    store.set('pages', [])
-
-    defaultPage()
-    populatePages()
-  })
-}
-
-/**
  * Show new page dialog.
  */
 function newPageDialog() {
@@ -340,7 +340,6 @@ function newPageDialog() {
   modal.show('#dialogNewPage')
 }
 
-// Event listeners
 dom.newPageButton.addEventListener('click', newPageDialog)
 dom.newPageButtonSP.addEventListener('click', newPageDialog)
 dom.dialogNewPageSave.addEventListener('click', () => newPage(false))
