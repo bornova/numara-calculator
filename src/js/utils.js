@@ -7,6 +7,7 @@ export const app = {
   activePage: null,
   colors: null,
   currencyRates: {},
+  iconCache: {},
   mathScope: {},
   plotFunction: null,
   refreshCM: true,
