@@ -240,6 +240,16 @@ text {
   user-select: text;
 }
 
+.plotButton {
+  display: block;
+  cursor: pointer;
+}
+
+.plotButton > svg {
+  width: 1em;
+  pointer-events: none;
+}
+
 .lineError,
 .plotButton {
   margin: 0 12px 0 5px;
@@ -478,14 +488,10 @@ text {
 }
 
 /* Settings */
-#dialogSettings .uk-width-medium {
-  width: 385px;
-}
-
 .dialog-settings-body {
   margin-right: -8px;
   padding-right: 10px;
-  height: calc(100vh - 185px);
+  height: calc(100vh - 200px);
   max-height: 600px;
   overflow: scroll;
 }
@@ -663,8 +669,8 @@ div:has(> #logsLink) {
 }
 
 .resetSizeButton > svg {
-  height: 14px;
   width: 14px;
+  height: 14px;
   pointer-events: none;
 }
 
@@ -827,6 +833,7 @@ input:checked + .slider:before {
 .uk-modal-dialog {
   transition: 0s linear;
   border-radius: 3px;
+  max-width: calc(100vw - 60px) !important;
 }
 
 .uk-modal-body {
@@ -837,6 +844,10 @@ input:checked + .slider:before {
 .errTitle {
   font-weight: 600;
   font-size: 1rem;
+}
+
+.modal .uk-modal-dialog .uk-modal-title {
+  cursor: move;
 }
 
 .uk-modal-footer {
@@ -934,6 +945,7 @@ input:checked + .slider:before {
 
 #dialogSettings > .uk-width-medium {
   width: 420px;
+  min-width: 400px;
 }
 
 .uk-width-large {
@@ -1106,8 +1118,8 @@ input:checked + .slider:before {
 
 #dialogUdfu .CodeMirror {
   padding: 5px;
-  height: calc(100vh - 220px);
-  max-height: 800px;
+  height: calc(100vh - 200px);
+  max-height: 600px;
   font-size: 1.1em;
 }
 

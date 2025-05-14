@@ -245,7 +245,7 @@ text {
 }
 
 .uk-tooltip {
-  background-color: #eaeaea;
+  background-color: #eeeeee;
   color: #000;
 }
 
@@ -303,12 +303,12 @@ text {
 }
 
 .CodeMirror-hint:hover {
-  background-color: #eaeaea !important;
-  color: #162e44 !important;
+  background-color: #f1f1f1 !important;
+  color: initial !important;
 }
 
 li.CodeMirror-hint-active {
-  background-color: #eaeaea;
+  background-color: #f1f1f1;
   color: initial !important;
 }
 

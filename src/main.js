@@ -46,7 +46,7 @@ let win
  * Sets the title bar overlay configuration based on the transparency state.
  * @param {boolean} isTrans - Determines if the title bar should be transparent.
  */
-const setTitleBarOverlay = (isTrans) => {
+function setTitleBarOverlay(isTrans) {
   if (!isWin) return
 
   const titleBarConfig = {

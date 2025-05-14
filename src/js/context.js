@@ -4,6 +4,23 @@ import { notify } from './modal'
 import { isElectron } from './utils'
 
 /**
+ * Helper to safely copy text to clipboard and show notification.
+ * @param {string} text - The text to copy.
+ * @param {string} message - The notification message.
+ */
+function copyToClipboard(text, message) {
+  if (!text) {
+    notify('Nothing to copy.')
+    return
+  }
+
+  navigator.clipboard.writeText(text).then(() => notify(message))
+}
+
+const nothingToCopy = () => notify('Nothing to copy.')
+const safeCopy = (text, message) => (text ? copyToClipboard(text, message) : nothingToCopy())
+
+/**
  * Main context menus for input.
  */
 function inputContext() {
@@ -13,7 +30,7 @@ function inputContext() {
     const isLine = line.length > 0
     const isEmpty = cm.getValue() === ''
     const isSelection = cm.somethingSelected()
-    const answer = dom.output.children[index]?.innerText
+    const answer = dom.output.children[index].innerText
     const hasAnswer = answer !== '' && answer !== 'Error' && answer !== 'Plot'
     const selections = cm.listSelections()
     const isMultiLine = selections.length > 1 || selections[0].anchor.line !== selections[0].head.line
@@ -27,8 +44,8 @@ function inputContext() {
  * @param {Event} event - The event object.
  */
 function outputContext(event) {
-  const answer = event.target?.innerText
-  const index = event.target?.dataset?.line || event.target?.parentElement?.dataset?.line || cm.lastLine()
+  const answer = event.target.innerText
+  const index = event.target.dataset.line || event.target.parentElement.dataset.line || cm.lastLine()
   const hasAnswer = index !== null && answer !== '' && answer !== 'Error' && answer !== 'Plot'
   const isEmpty = cm.getValue() === ''
 
@@ -45,20 +62,6 @@ function textboxContext() {
 }
 
 /**
- * Helper to safely copy text to clipboard and show notification.
- * @param {string} text - The text to copy.
- * @param {string} message - The notification message.
- */
-function copyToClipboard(text, message) {
-  if (!text) {
-    notify('Nothing to copy.')
-    return
-  }
-
-  navigator.clipboard.writeText(text).then(() => notify(message))
-}
-
-/**
  * Copy line answer.
  * @param {Event} event - The event object.
  * @param {number} index - The index of the line.
@@ -66,7 +69,7 @@ function copyToClipboard(text, message) {
 function copyLine(event, index) {
   index = +index
 
-  const line = cm.getLine(index)?.trim()
+  const line = cm.getLine(index).trim()
 
   copyToClipboard(line, `Copied Line ${index + 1} to clipboard.`)
 }
@@ -80,8 +83,8 @@ function copyLine(event, index) {
 function copyAnswer(event, index, withLines) {
   index = +index
 
-  const line = cm.getLine(index)?.trim()
-  const answer = dom.output.children[index]?.children?.[0]?.dataset?.copy
+  const line = cm.getLine(index).trim()
+  const answer = dom.output.children[index].children[0].dataset.copy
   const copiedText = withLines ? `${line} = ${answer}` : `${answer}`
 
   copyToClipboard(
@@ -89,9 +92,6 @@ function copyAnswer(event, index, withLines) {
     withLines ? `Copied Line ${index + 1} with answer to clipboard.` : `Copied '${answer}' to clipboard.`
   )
 }
-
-const nothingToCopy = () => notify('Nothing to copy.')
-const safeCopy = (text, message) => (text ? copyToClipboard(text, message) : nothingToCopy())
 
 /**
  * Copy all inputs.
@@ -111,7 +111,7 @@ function copyAllAnswers() {
   cm.eachLine((line) => {
     const index = cm.getLineNumber(line)
 
-    copiedOutputs += `${dom.output.children[index]?.innerText ?? ''}\n`
+    copiedOutputs += `${dom.output.children[index].innerText ?? ''}\n`
   })
 
   safeCopy(copiedOutputs, 'Copied all answers to clipboard.')
@@ -132,7 +132,7 @@ export function copyAll() {
     copiedCalc += text
       ? text.match(/^(#|\/\/)/)
         ? `${text}\n`
-        : `${text} = ${dom.output.children[index]?.innerText ?? ''}\n`
+        : `${text} = ${dom.output.children[index].innerText ?? ''}\n`
       : '\n'
   })
 

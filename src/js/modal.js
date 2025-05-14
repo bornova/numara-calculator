@@ -20,41 +20,16 @@ export const modal = {
   }
 }
 
-// Track if error handler is already attached
-let errorHandlerAttached = false
-
 /**
  * Show error dialog.
  * @param {string} title Title of dialog box.
  * @param {string} error Error message to show.
  */
 export function showError(title, error) {
-  if (!errorHandlerAttached) {
-    UIkit.util.on('#dialogError', 'beforeshow', () => {
-      dom.errTitle.innerHTML = title
-      dom.errMsg.innerHTML = error
-    })
-    errorHandlerAttached = true
-  } else {
-    dom.errTitle.innerHTML = title
-    dom.errMsg.innerHTML = error
-  }
+  dom.errTitle.innerHTML = title
+  dom.errMsg.innerHTML = error
 
   modal.show('#dialogError')
-}
-
-/**
- * Show app notifications.
- * @param {string} msg Notification to show.
- * @param {string} [stat='primary'] Notification status: primary | success | warning | danger
- */
-export function notify(msg, stat = 'primary') {
-  UIkit.notification({
-    message: msg,
-    pos: app.settings.notifyLocation,
-    status: stat,
-    timeout: +app.settings.notifyDuration
-  })
 }
 
 /**
@@ -75,3 +50,67 @@ export function confirm(msg, action) {
 
   dom.confirmYes.onclick = yesAction
 }
+
+/**
+ * Show app notifications.
+ * @param {string} msg Notification to show.
+ * @param {string} [stat='primary'] Notification status: primary | success | warning | danger
+ */
+export function notify(msg, stat = 'primary') {
+  UIkit.notification({
+    message: msg,
+    pos: app.settings.notifyLocation,
+    status: stat,
+    timeout: +app.settings.notifyDuration
+  })
+}
+
+// Make dialogs draggable
+dom.els('.modal').forEach((modal) => {
+  const dialog = modal.querySelector('.uk-modal-dialog')
+  const header = dialog.querySelector('.uk-modal-title')
+
+  if (!dialog || !header) return
+
+  // Center dialog on show
+  UIkit.util.on(modal, 'beforeshow', () => {
+    const udOpen = dom.els('#dialogUdfu.uk-open').length > 0
+
+    if (udOpen) return
+
+    Object.assign(dialog.style, { visibility: 'hidden', display: 'block', position: 'absolute' })
+
+    requestAnimationFrame(() => {
+      dialog.style.left = `${(window.innerWidth - dialog.offsetWidth) / 2}px`
+      dialog.style.top = `${(window.innerHeight - dialog.offsetHeight) / 2}px`
+      dialog.style.visibility = ''
+    })
+  })
+
+  let dragging = false
+
+  header.addEventListener('mousedown', (e) => {
+    const offsetX = e.clientX - dialog.offsetLeft
+    const offsetY = e.clientY - dialog.offsetTop
+    dragging = true
+
+    const move = (e) => {
+      if (!dragging) return
+
+      const left = Math.max(10, Math.min(e.clientX - offsetX, window.innerWidth - dialog.offsetWidth - 10))
+      const top = Math.max(40, Math.min(e.clientY - offsetY, window.innerHeight - dialog.offsetHeight - 10))
+
+      dialog.style.left = `${left}px`
+      dialog.style.top = `${top}px`
+    }
+
+    const up = () => {
+      dragging = false
+      document.removeEventListener('mousemove', move)
+      document.removeEventListener('mouseup', up)
+    }
+
+    document.addEventListener('mousemove', move)
+    document.addEventListener('mouseup', up)
+  })
+})

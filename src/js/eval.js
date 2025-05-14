@@ -51,7 +51,7 @@ function evaluateLine(line, lineNo, cmLine, avgs, totals, subtotals) {
     line =
       lineNo > 1 &&
       REGEX_CONTINUATION.test(line.charAt(0)) &&
-      cm.getLine(lineNo - 2)?.length > 0 &&
+      cm.getLine(lineNo - 2).length > 0 &&
       app.settings.contPrevLine
         ? app.mathScope.ans + line
         : line
@@ -91,7 +91,7 @@ function evaluateLine(line, lineNo, cmLine, avgs, totals, subtotals) {
       app.mathScope.ans = plotAns
       app.mathScope['line' + lineNo] = plotAns
 
-      answer = `<a class="${CLASS_PLOT_BUTTON}" data-func="${plotAns}">Plot</a>`
+      answer = `<a class="${CLASS_PLOT_BUTTON}" data-func="${plotAns}">${dom.icons.ChartSpline}</a>`
     }
   } catch (error) {
     if (app.settings.lineErrors) {
@@ -132,7 +132,7 @@ export function calculate() {
   dom.copyButton.setAttribute('disabled', cmValue === '')
 
   // Cache line heights to avoid repeated DOM access
-  const lineHeights = Array.from(cm.display.lineDiv.children).map((child) => child?.clientHeight ?? 0)
+  const lineHeights = Array.from(cm.display.lineDiv.children).map((child) => child.clientHeight ?? 0)
 
   cm.eachLine((cmLine) => {
     const cmLineNo = cm.getLineNumber(cmLine)

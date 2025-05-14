@@ -3,7 +3,6 @@ import { dom } from './dom'
 import { cm, udfInput, uduInput } from './editor'
 import { calculate, math } from './eval'
 import { getRates } from './forex'
-import { generateIcons } from './icons'
 import { confirm, showError } from './modal'
 import { app, checkSize, getTheme, isElectron, store } from './utils'
 
@@ -112,13 +111,11 @@ export const settings = {
 
     dom.els('.settingItem').forEach((item) => {
       const span = document.createElement('span')
-      const icon = document.createElement('span')
-
-      icon.setAttribute('data-lucide', 'dot')
+      const icon = dom.icons.Dot
 
       span.setAttribute('id', item.getAttribute('id') + 'Mod')
       span.setAttribute('class', item.getAttribute('type') === 'checkbox' ? 'settingModToggle' : 'settingMod')
-      span.appendChild(icon)
+      span.innerHTML = icon
       span.addEventListener('click', () => {
         const key = item.getAttribute('id')
 
@@ -130,8 +127,6 @@ export const settings = {
       })
 
       item.getAttribute('type') === 'checkbox' ? item.parentElement.before(span) : item.before(span)
-
-      generateIcons()
     })
   },
 

@@ -16,6 +16,9 @@ export const dom = {
    */
   els: (selector) => document.querySelectorAll(selector),
 
+  // Cached icons
+  icons: {},
+
   // Cached elements
   panel: document.getElementById('panel'),
   input: document.getElementById('input'),

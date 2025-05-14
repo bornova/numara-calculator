@@ -1,6 +1,5 @@
 import { dom } from './dom'
 import { cm } from './editor'
-import { generateIcons } from './icons'
 import { confirm, modal, notify } from './modal'
 import { app, isElectron, store } from './utils'
 
@@ -36,120 +35,6 @@ export function getPageName() {
  * @returns {string} The last page ID.
  */
 export const lastPage = () => store.get('lastPage')
-
-/**
- * Initialize pages.
- */
-export function initializePages() {
-  if (!store.get('pages')) {
-    defaultPage()
-  } else {
-    app.activePage = lastPage()
-    loadPage(lastPage())
-  }
-
-  populatePages()
-}
-
-/**
- * Populate the page list in side bar.
- */
-export function populatePages() {
-  const pages = store.get('pages')
-
-  if (!pages || pages.length === 0) {
-    defaultPage()
-  }
-
-  dom.pageList.innerHTML = ''
-
-  pages.forEach((page) => {
-    const pageListItem = document.createElement('div')
-
-    pageListItem.id = page.id
-    pageListItem.classList.add(
-      'pageListItem',
-      'uk-flex',
-      'uk-flex-middle',
-      app.activePage === page.id ? 'activePage' : 'inactivePage'
-    )
-    pageListItem.innerHTML = `
-      <div class="uk-flex-1" data-action="load">
-        <div id="page-${page.id}" class="pageListItemTitle" title="${page.name}">${page.name}</div>
-        <div class="dialog-open-date">${DateTime.fromFormat(page.id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
-      </div>
-      <div class="uk-flex-right uk-margin-small-right">
-        <span class="drop-parent-icon"><i data-lucide="ellipsis-vertical"></i></span>
-        <div uk-dropdown="mode: click; pos: right-top; bg-scroll: false; close-on-scroll: true">
-          <div class="renamePageButton uk-flex uk-flex-column" data-action="rename" title="Rename">Rename</div>
-          <div class="dupPageButton uk-flex uk-flex-column" data-action="duplicate" title="Duplicate">Duplicate</div>
-          <div class="deletePageButton uk-flex uk-flex-column" data-action="delete" title="Delete">Delete</div>
-        </div>
-      </div>
-    `
-
-    pageListItem.addEventListener('click', (event) => {
-      if (event.target.parentNode.dataset.action === 'load') {
-        loadPage(page.id)
-        UIkit.offcanvas('#sidePanel').hide()
-      }
-
-      switch (event.target.dataset.action) {
-        case 'rename':
-          UIkit.dropdown(event.target.parentNode).hide(0)
-          renamePage(page.id)
-          break
-        case 'delete':
-          deletePage(page.id)
-          break
-        case 'duplicate':
-          duplicatePage(page.id)
-          break
-      }
-    })
-
-    dom.pageList.appendChild(pageListItem)
-  })
-
-  generateIcons()
-}
-
-/**
- * Load page.
- * @param {string} pageId Id of the page to load.
- */
-export function loadPage(pageId) {
-  const page = store.get('pages').find((p) => p.id === pageId)
-  const { name, data, history, cursor } = page
-
-  app.activePage = pageId
-  store.set('lastPage', pageId)
-
-  dom.pageName.innerHTML = name
-  dom.pageName.title = name
-
-  cm.setValue(data)
-
-  if (history) {
-    cm.setHistory(history)
-  }
-
-  cm.execCommand('goLineEnd')
-
-  if (cursor) {
-    cm.setCursor(cursor)
-
-    setTimeout(() => {
-      try {
-        cm.scrollIntoView({ ch: cursor.ch, line: cursor.line + 1 })
-      } catch {
-        cm.scrollIntoView(cursor)
-      }
-    }, 100)
-  }
-
-  populatePages()
-}
 
 /**
  * Generate default page.
@@ -198,6 +83,37 @@ export function newPage(isImport) {
 }
 
 /**
+ * Duplicate page.
+ * @param {string} pageId Id of the page to duplicate.
+ */
+export function duplicatePage(pageId) {
+  const dupPageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
+  const pages = store.get('pages')
+  const dupPage = pages.find((page) => page.id === pageId)
+
+  if (!dupPage) {
+    notify('Page not found.', 'danger')
+    return
+  }
+
+  const dupPageData = dupPage.data
+  let dupPageName = dupPage.name + ' (copy)'
+  // Ensure unique name for duplicate
+  const baseName = dupPage.name + ' (copy)'
+  let count = 1
+
+  while (pages.some((p) => p.name === dupPageName)) {
+    dupPageName = `${baseName} ${count++}`
+  }
+
+  app.activePage = dupPageId
+  pages.push({ id: dupPageId, name: dupPageName, data: dupPageData })
+  store.set('pages', pages)
+
+  loadPage(dupPageId)
+}
+
+/**
  * Delete page.
  * @param {string} pageId Id of the page to delete.
  */
@@ -216,6 +132,18 @@ export function deletePage(pageId) {
       loadPage(pages[pages.length - 1].id)
     }
 
+    populatePages()
+  })
+}
+
+/**
+ * Delete all pages.
+ */
+export function deleteAllPages() {
+  confirm('All pages will be deleted permanently.', () => {
+    store.set('pages', [])
+
+    defaultPage()
     populatePages()
   })
 }
@@ -256,34 +184,129 @@ export function renamePage(pageId) {
 }
 
 /**
- * Duplicate page.
- * @param {string} pageId Id of the page to duplicate.
+ * Load page.
+ * @param {string} pageId Id of the page to load.
  */
-export function duplicatePage(pageId) {
-  const dupPageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
+export function loadPage(pageId) {
+  const page = store.get('pages').find((p) => p.id === pageId)
+  const { name, data, history, cursor } = page
+
+  app.activePage = pageId
+  store.set('lastPage', pageId)
+
+  dom.pageName.innerHTML = name
+  dom.pageName.title = name
+
+  cm.setValue(data)
+
+  if (history) {
+    cm.setHistory(history)
+  }
+
+  cm.execCommand('goLineEnd')
+
+  if (cursor) {
+    cm.setCursor(cursor)
+
+    setTimeout(() => {
+      try {
+        cm.scrollIntoView({ ch: cursor.ch, line: cursor.line + 1 })
+      } catch {
+        cm.scrollIntoView(cursor)
+      }
+    }, 100)
+  }
+
+  populatePages()
+}
+
+/**
+ * Initialize pages.
+ */
+export function initializePages() {
+  if (!store.get('pages')) {
+    defaultPage()
+  } else {
+    app.activePage = lastPage()
+    loadPage(lastPage())
+  }
+
+  populatePages()
+}
+
+/**
+ * Populate the page list in side bar.
+ */
+export function populatePages() {
   const pages = store.get('pages')
-  const dupPage = pages.find((page) => page.id === pageId)
 
-  if (!dupPage) {
-    notify('Page not found.', 'danger')
-    return
+  if (!pages || pages.length === 0) {
+    defaultPage()
   }
 
-  const dupPageData = dupPage.data
-  let dupPageName = dupPage.name + ' (copy)'
-  // Ensure unique name for duplicate
-  const baseName = dupPage.name + ' (copy)'
-  let count = 1
+  dom.pageList.innerHTML = ''
 
-  while (pages.some((p) => p.name === dupPageName)) {
-    dupPageName = `${baseName} ${count++}`
-  }
+  pages.forEach((page) => {
+    const pageListItem = document.createElement('div')
 
-  app.activePage = dupPageId
-  pages.push({ id: dupPageId, name: dupPageName, data: dupPageData })
-  store.set('pages', pages)
+    pageListItem.id = page.id
+    pageListItem.classList.add(
+      'pageListItem',
+      'uk-flex',
+      'uk-flex-middle',
+      app.activePage === page.id ? 'activePage' : 'inactivePage'
+    )
+    pageListItem.innerHTML = `
+      <div class="uk-flex-1" data-action="load">
+        <div id="page-${page.id}" class="pageListItemTitle" title="${page.name}">${page.name}</div>
+        <div class="dialog-open-date">${DateTime.fromFormat(page.id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
+      </div>
+      <div class="uk-flex-right uk-margin-small-right">
+        <span class="drop-parent-icon">${dom.icons.EllipsisVertical}</span>
+        <div uk-dropdown="mode: click; pos: right-top; bg-scroll: false; container: body">
+          <div 
+            class="renamePageButton uk-flex uk-flex-column"
+            data-page="${page.id}"
+            data-action="rename"
+            title="Rename">Rename
+          </div>
+          <div 
+            class="dupPageButton uk-flex uk-flex-column"
+            data-page="${page.id}"
+            data-action="duplicate"
+            title="Duplicate">Duplicate
+          </div>
+          <div class="deletePageButton uk-flex uk-flex-column"
+            data-page="${page.id}"
+            data-action="delete"
+            title="Delete">Delete
+          </div>
+        </div>
+      </div>
+    `
 
-  loadPage(dupPageId)
+    pageListItem.addEventListener('click', (event) => {
+      if (event.target.parentNode.dataset.action === 'load') {
+        loadPage(page.id)
+        UIkit.offcanvas('#sidePanel').hide()
+      }
+
+      switch (event.target.dataset.action) {
+        case 'rename':
+          UIkit.dropdown(event.target.parentNode).hide(0)
+          renamePage(page.id)
+          break
+        case 'delete':
+          deletePage(page.id)
+          break
+        case 'duplicate':
+          duplicatePage(page.id)
+          break
+      }
+    })
+
+    dom.pageList.appendChild(pageListItem)
+  })
 }
 
 /**
@@ -319,18 +342,6 @@ export function pageOrder() {
 }
 
 /**
- * Delete all pages.
- */
-export function deleteAllPages() {
-  confirm('All pages will be deleted permanently.', () => {
-    store.set('pages', [])
-
-    defaultPage()
-    populatePages()
-  })
-}
-
-/**
  * Show new page dialog.
  */
 function newPageDialog() {
@@ -340,7 +351,6 @@ function newPageDialog() {
   modal.show('#dialogNewPage')
 }
 
-// Event listeners
 dom.newPageButton.addEventListener('click', newPageDialog)
 dom.newPageButtonSP.addEventListener('click', newPageDialog)
 dom.dialogNewPageSave.addEventListener('click', () => newPage(false))
@@ -361,6 +371,33 @@ dom.sortAZ.addEventListener('click', () => sortPages('az'))
 dom.sortZA.addEventListener('click', () => sortPages('za'))
 dom.closeSidePanelButton.addEventListener('click', () => UIkit.offcanvas('#sidePanel').hide())
 dom.printButton.addEventListener('click', () => window.print())
+
+document.addEventListener('click', (event) => {
+  const pageId = event.target?.dataset?.page
+
+  switch (event.target.dataset.action) {
+    case 'rename':
+      UIkit.dropdown(event.target.parentNode).hide(0)
+      renamePage(pageId)
+      break
+    case 'delete':
+      deletePage(pageId)
+      break
+    case 'duplicate':
+      duplicatePage(pageId)
+      UIkit.dropdown(event.target.parentNode).hide(0)
+      break
+  }
+})
+
+dom.pageList.addEventListener('scroll', () => {
+  dom.els('.uk-dropdown').forEach((el) => {
+    const dropdown = UIkit.dropdown(el)
+    if (dropdown) {
+      dropdown.hide(0)
+    }
+  })
+})
 
 if (isElectron) {
   // Import calculations from file

@@ -7,7 +7,7 @@ import { app, store } from './utils'
 const USD_UNIT = 'USD'
 const EXCHANGE_RATE_URL = 'https://www.floatrates.com/widget/1030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json'
 
-math.createUnit(USD_UNIT)
+math.createUnit(USD_UNIT, { aliases: [USD_UNIT.toLowerCase()] })
 numaraHints.push({ text: USD_UNIT, desc: 'U.S. Dollar', className: 'cm-currency' })
 
 /**
@@ -17,7 +17,6 @@ export function getRates() {
   if (!navigator.onLine) {
     dom.lastUpdated.innerHTML = 'No internet connection.'
     notify('No internet connection. Could not update exchange rates.', 'warning')
-
     return
   }
 
@@ -44,17 +43,24 @@ export function getRates() {
 function updateCurrencyRates(rates) {
   if (!rates || typeof rates !== 'object') return
 
-  app.currencyRates = rates
-
   let lastDate = null
 
-  for (const code in rates) {
-    const { code: rateCode, inverseRate, name, date } = rates[code]
+  app.currencyRates = rates
 
-    math.createUnit(rateCode, { definition: math.unit(inverseRate + USD_UNIT) }, { override: true })
+  for (const rateCode in rates) {
+    const { code, inverseRate, name, date } = rates[rateCode]
 
-    if (!numaraHints.some((hint) => hint.text === rateCode)) {
-      numaraHints.push({ text: rateCode, desc: name, className: 'cm-currency' })
+    math.createUnit(
+      code,
+      {
+        aliases: Object.keys(math.Unit.UNITS).includes(code.toLowerCase()) ? [] : [code.toLowerCase()],
+        definition: math.unit(inverseRate + USD_UNIT)
+      },
+      { override: true }
+    )
+
+    if (!numaraHints.some((hint) => hint.text === code)) {
+      numaraHints.push({ text: code, desc: name, className: 'cm-currency' })
     }
 
     lastDate = date
