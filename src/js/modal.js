@@ -78,11 +78,7 @@ dom.els('.modal').forEach((modal) => {
 
     if (udOpen) return
 
-    Object.assign(dialog.style, {
-      visibility: 'hidden',
-      display: 'block',
-      position: 'absolute'
-    })
+    Object.assign(dialog.style, { visibility: 'hidden', display: 'block', position: 'absolute' })
 
     requestAnimationFrame(() => {
       dialog.style.left = `${(window.innerWidth - dialog.offsetWidth) / 2}px`
@@ -102,7 +98,7 @@ dom.els('.modal').forEach((modal) => {
       if (!dragging) return
 
       const left = Math.max(10, Math.min(e.clientX - offsetX, window.innerWidth - dialog.offsetWidth - 10))
-      const top = Math.max(10, Math.min(e.clientY - offsetY, window.innerHeight - dialog.offsetHeight - 10))
+      const top = Math.max(40, Math.min(e.clientY - offsetY, window.innerHeight - dialog.offsetHeight - 10))
 
       dialog.style.left = `${left}px`
       dialog.style.top = `${top}px`
