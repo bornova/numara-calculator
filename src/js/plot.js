@@ -1,6 +1,6 @@
 import { dom } from './dom'
-import { math } from './eval'
-import { app, store } from './utils'
+import { calculate, math } from './eval'
+import { app, checkSize, store } from './utils'
 
 import { productName } from './../../package.json'
 
@@ -90,3 +90,17 @@ dom.resetPlot.addEventListener('click', () => {
   app.activePlot = null
   plot()
 })
+
+let windowResizeDelay
+
+const resizeObserver = new ResizeObserver(() => {
+  if (app.activePlot && dom.dialogPlot.classList.contains('uk-open')) {
+    plot()
+  }
+
+  clearTimeout(windowResizeDelay)
+  windowResizeDelay = setTimeout(calculate, 10)
+  checkSize()
+})
+
+resizeObserver.observe(document.body)
