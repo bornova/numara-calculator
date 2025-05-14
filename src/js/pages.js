@@ -1,6 +1,5 @@
 import { dom } from './dom'
 import { cm } from './editor'
-import { generateIcons } from './icons'
 import { confirm, modal, notify } from './modal'
 import { app, isElectron, store } from './utils'
 
@@ -263,11 +262,25 @@ export function populatePages() {
         <div class="dialog-open-date">${DateTime.fromFormat(page.id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
       </div>
       <div class="uk-flex-right uk-margin-small-right">
-        <span class="drop-parent-icon"><i data-lucide="ellipsis-vertical"></i></span>
-        <div uk-dropdown="mode: click; pos: right-top; bg-scroll: false; close-on-scroll: true">
-          <div class="renamePageButton uk-flex uk-flex-column" data-action="rename" title="Rename">Rename</div>
-          <div class="dupPageButton uk-flex uk-flex-column" data-action="duplicate" title="Duplicate">Duplicate</div>
-          <div class="deletePageButton uk-flex uk-flex-column" data-action="delete" title="Delete">Delete</div>
+        <span class="drop-parent-icon">${dom.icons.EllipsisVertical}</span>
+        <div uk-dropdown="mode: click; pos: right-top; bg-scroll: false; container: body">
+          <div 
+            class="renamePageButton uk-flex uk-flex-column"
+            data-page="${page.id}"
+            data-action="rename"
+            title="Rename">Rename
+          </div>
+          <div 
+            class="dupPageButton uk-flex uk-flex-column"
+            data-page="${page.id}"
+            data-action="duplicate"
+            title="Duplicate">Duplicate
+          </div>
+          <div class="deletePageButton uk-flex uk-flex-column"
+            data-page="${page.id}"
+            data-action="delete"
+            title="Delete">Delete
+          </div>
         </div>
       </div>
     `
@@ -294,8 +307,6 @@ export function populatePages() {
 
     dom.pageList.appendChild(pageListItem)
   })
-
-  generateIcons()
 }
 
 /**
@@ -360,6 +371,33 @@ dom.sortAZ.addEventListener('click', () => sortPages('az'))
 dom.sortZA.addEventListener('click', () => sortPages('za'))
 dom.closeSidePanelButton.addEventListener('click', () => UIkit.offcanvas('#sidePanel').hide())
 dom.printButton.addEventListener('click', () => window.print())
+
+document.addEventListener('click', (event) => {
+  const pageId = event.target?.dataset?.page
+
+  switch (event.target.dataset.action) {
+    case 'rename':
+      UIkit.dropdown(event.target.parentNode).hide(0)
+      renamePage(pageId)
+      break
+    case 'delete':
+      deletePage(pageId)
+      break
+    case 'duplicate':
+      duplicatePage(pageId)
+      UIkit.dropdown(event.target.parentNode).hide(0)
+      break
+  }
+})
+
+dom.pageList.addEventListener('scroll', () => {
+  dom.els('.uk-dropdown').forEach((el) => {
+    const dropdown = UIkit.dropdown(el)
+    if (dropdown) {
+      dropdown.hide(0)
+    }
+  })
+})
 
 if (isElectron) {
   // Import calculations from file
