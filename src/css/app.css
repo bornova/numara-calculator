@@ -241,7 +241,6 @@ text {
 }
 
 .plotButton {
-  display: block;
   cursor: pointer;
 }
 
@@ -1118,7 +1117,7 @@ input:checked + .slider:before {
 
 #dialogUdfu .CodeMirror {
   padding: 5px;
-  height: calc(100vh - 200px);
+  height: calc(100vh - 235px);
   max-height: 600px;
   font-size: 1.1em;
 }
