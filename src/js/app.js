@@ -9,7 +9,7 @@ import { getPageName, initializePages, pageOrder, populatePages } from './pages'
 import { plot } from './plot'
 import { settings } from './settings'
 import { applyUdfu } from './userDefined'
-import { app, checkSize, checkAppUpdate, isMac, isElectron, store, toggleMinMax } from './utils'
+import { app, checkAppUpdate, isMac, isElectron, store, toggleMinMax } from './utils'
 
 import { author, description, homepage, name, version } from './../../package.json'
 
@@ -294,34 +294,6 @@ const setupSyncScroll = () => {
   })
 }
 
-let windowResizeDelay
-
-/**
- * Sets up global event listeners for keyboard and window resize events.
- * Handles CodeMirror refresh and triggers recalculation on resize.
- */
-const setupEventListeners = () => {
-  document.addEventListener('keydown', (event) => {
-    app.refreshCM = !event.repeat
-  })
-
-  document.addEventListener('keyup', () => {
-    app.refreshCM = true
-  })
-
-  const resizeObserver = new ResizeObserver(() => {
-    if (app.activePlot && dom.dialogPlot.classList.contains('uk-open')) {
-      plot()
-    }
-
-    clearTimeout(windowResizeDelay)
-    windowResizeDelay = setTimeout(calculate, 10)
-    checkSize()
-  })
-
-  resizeObserver.observe(document.body)
-}
-
 /**
  * Populates the About dialog with app info and sets up related links.
  */
@@ -452,13 +424,13 @@ const electronActions = () => {
  * Main application initializer. Calls all setup functions and loads initial state.
  */
 const initializeApp = () => {
-  settings.initialize()
-  settings.apply()
+  generateIcons()
 
   colors.initialize()
   colors.apply()
 
-  generateIcons()
+  settings.initialize()
+  settings.apply()
 
   setupHeaders()
   setupActionButtons()
@@ -467,7 +439,6 @@ const initializeApp = () => {
   setupUserDefined()
   setupPanelResizer()
   setupSyncScroll()
-  setupEventListeners()
   setupAppInfo()
   setupKeyboardShortcuts()
   setupPrint()
