@@ -91,7 +91,7 @@ function evaluateLine(line, lineNo, cmLine, avgs, totals, subtotals) {
       app.mathScope.ans = plotAns
       app.mathScope['line' + lineNo] = plotAns
 
-      answer = `<a class="${CLASS_PLOT_BUTTON}" data-func="${plotAns}">Plot</a>`
+      answer = `<a class="${CLASS_PLOT_BUTTON}" data-func="${plotAns}">${dom.icons.ChartSpline}</a>`
     }
   } catch (error) {
     if (app.settings.lineErrors) {
