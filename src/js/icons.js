@@ -1,9 +1,13 @@
+import { dom } from './dom'
+
 import {
+  createElement,
   createIcons,
   AlertCircle,
   ArrowUpDown,
   Braces,
   BrushCleaning,
+  ChartSpline,
   Circle,
   Copy,
   CornerDownRight,
@@ -29,6 +33,7 @@ const icons = {
   ArrowUpDown,
   Braces,
   BrushCleaning,
+  ChartSpline,
   Circle,
   Copy,
   CornerDownRight,
@@ -50,8 +55,18 @@ const icons = {
 }
 
 /**
+ * Cache app icons in dom object.
+ */
+function cacheIcons() {
+  Object.entries(icons).forEach(([name, icon]) => {
+    dom.icons[name] = createElement(icon).outerHTML
+  })
+}
+
+/**
  * Generate app icons.
  */
 export const generateIcons = () => {
   createIcons({ icons })
+  cacheIcons()
 }
