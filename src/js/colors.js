@@ -1,5 +1,4 @@
 import { dom } from './dom'
-import { generateIcons } from './icons'
 import { confirm, modal } from './modal'
 import { app, getTheme, store } from './utils'
 
@@ -126,13 +125,12 @@ export const colors = {
       picker.after(button)
       button.setAttribute('title', 'Reset color')
       button.classList.add('clr-custom-reset')
-      button.innerHTML = '<i data-lucide="rotate-ccw"></i>'
+      button.innerHTML = dom.icons.RotateCcw
       button.addEventListener('click', () => {
         resetActivePickerColor()
         checkColorChange()
         colors.save()
       })
-      generateIcons()
     })
   },
 
