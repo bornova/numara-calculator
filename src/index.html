@@ -51,6 +51,7 @@
             <i data-lucide="plus"></i>
           </a>
           <span class="actionDivider"></span>
+          <a id="printButton" class="action" title="Print page" uk-tooltip><i data-lucide="printer"></i></a>
           <a id="clearButton" class="action" title="Clear page" uk-tooltip><i data-lucide="brush-cleaning"></i></a>
           <a id="copyButton" class="action" title="Copy page" uk-tooltip><i data-lucide="copy"></i></a>
         </div>
@@ -72,7 +73,10 @@
           <span id="pageListSort" class="pageListSort uk-float-right" title="Sort">
             <i data-lucide="arrow-up-down"></i>
           </span>
-          <div id="sortDropdown" uk-dropdown="mode: click; pos: right-top; bg-scroll: false; close-on-scroll: true">
+          <div
+            id="sortDropdown"
+            uk-dropdown="mode: click; pos: right-top; bg-scroll: false; close-on-scroll: true; container: body"
+          >
             <div id="sortOldNew" class="sortListItem uk-flex uk-flex-column" title="Sort older to newer">
               Older to newer
             </div>
@@ -102,8 +106,6 @@
               <a id="exportButton" class="action exportButton" title="Export" uk-tooltip>
                 <i data-lucide="upload"></i>
               </a>
-              <span id="spDivider" class="actionDivider"></span>
-              <a id="printButton" class="action" title="Print page" uk-tooltip><i data-lucide="printer"></i></a>
             </div>
             <div class="rightActions uk-flex uk-flex-middle uk-flex-right uk-flex-1 uk-text-right">
               <a id="deleteAllPagesButton" class="action deleteAllPagesButton" title="Delete all pages" uk-tooltip>
