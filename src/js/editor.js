@@ -418,3 +418,11 @@ export function refreshEditor(editor) {
     editor.focus()
   }, 100)
 }
+
+document.addEventListener('keydown', (event) => {
+  app.refreshCM = !event.repeat
+})
+
+document.addEventListener('keyup', () => {
+  app.refreshCM = true
+})
