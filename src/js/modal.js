@@ -66,6 +66,14 @@ export function notify(msg, stat = 'primary') {
 }
 
 // Make dialogs draggable
+const centerModal = (modal) => {
+  requestAnimationFrame(() => {
+    modal.style.left = `${(window.innerWidth - modal.offsetWidth) / 2}px`
+    modal.style.top = `${(window.innerHeight - modal.offsetHeight) / 2}px`
+    modal.style.visibility = ''
+  })
+}
+
 dom.els('.modal').forEach((modal) => {
   const dialog = modal.querySelector('.uk-modal-dialog')
   const header = dialog.querySelector('.uk-modal-title')
@@ -80,11 +88,7 @@ dom.els('.modal').forEach((modal) => {
 
     Object.assign(dialog.style, { visibility: 'hidden', display: 'block', position: 'absolute' })
 
-    requestAnimationFrame(() => {
-      dialog.style.left = `${(window.innerWidth - dialog.offsetWidth) / 2}px`
-      dialog.style.top = `${(window.innerHeight - dialog.offsetHeight) / 2}px`
-      dialog.style.visibility = ''
-    })
+    centerModal(dialog)
   })
 
   let dragging = false
@@ -113,4 +117,6 @@ dom.els('.modal').forEach((modal) => {
     document.addEventListener('mousemove', move)
     document.addEventListener('mouseup', up)
   })
+
+  header.addEventListener('dblclick', () => centerModal(dialog))
 })
