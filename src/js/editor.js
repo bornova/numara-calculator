@@ -178,15 +178,15 @@ export const cm = CodeMirror.fromTextArea(dom.inputArea, {
 
 const udOptions = { autoCloseBrackets: true, autofocus: true, mode: 'javascript', smartIndent: false, tabSize: 2 }
 
-export const udfInput = CodeMirror.fromTextArea(dom.udfInput, udOptions)
-export const uduInput = CodeMirror.fromTextArea(dom.uduInput, udOptions)
-
 // Set the placeholder values of the user defined dialog CodeMirror instances
 const udfPlaceholder = 'xyz: (x, y, z) => {\n\treturn x+y+z\n},\n\nmyConstant: 123'
 const uduPlaceholder = 'foo: "18 foot",\nbar: "40 foo"'
 
 dom.udfInput.setAttribute('placeholder', udfPlaceholder)
 dom.uduInput.setAttribute('placeholder', uduPlaceholder)
+
+export const udfInput = CodeMirror.fromTextArea(dom.udfInput, udOptions)
+export const uduInput = CodeMirror.fromTextArea(dom.uduInput, udOptions)
 
 // Codemirror handlers
 cm.on('changes', calculate)
