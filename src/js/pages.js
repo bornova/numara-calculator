@@ -257,8 +257,8 @@ export function populatePages() {
       app.activePage === page.id ? 'activePage' : 'inactivePage'
     )
     pageListItem.innerHTML = `
-      <div class="uk-flex-1" data-action="load">
-        <div id="page-${page.id}" class="pageListItemTitle" title="${page.name}">${page.name}</div>
+      <div class="uk-flex-1" data-action="load" data-page="${page.id}">
+        <div class="pageListItemTitle" title="${page.name}">${page.name}</div>
         <div class="dialog-open-date">${DateTime.fromFormat(page.id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
       </div>
       <div class="uk-flex-right uk-margin-small-right">
@@ -284,26 +284,6 @@ export function populatePages() {
         </div>
       </div>
     `
-
-    pageListItem.addEventListener('click', (event) => {
-      if (event.target.parentNode.dataset.action === 'load') {
-        loadPage(page.id)
-        UIkit.offcanvas('#sidePanel').hide()
-      }
-
-      switch (event.target.dataset.action) {
-        case 'rename':
-          UIkit.dropdown(event.target.parentNode).hide(0)
-          renamePage(page.id)
-          break
-        case 'delete':
-          deletePage(page.id)
-          break
-        case 'duplicate':
-          duplicatePage(page.id)
-          break
-      }
-    })
 
     dom.pageList.appendChild(pageListItem)
   })
@@ -373,7 +353,13 @@ dom.closeSidePanelButton.addEventListener('click', () => UIkit.offcanvas('#sideP
 dom.printButton.addEventListener('click', () => window.print())
 
 document.addEventListener('click', (event) => {
-  const pageId = event.target?.dataset?.page
+  let pageId = event.target?.dataset?.page
+
+  if (event.target.parentNode.dataset.action === 'load') {
+    pageId = event.target.parentNode.parentNode.id
+    loadPage(pageId)
+    UIkit.offcanvas('#sidePanel').hide()
+  }
 
   switch (event.target.dataset.action) {
     case 'rename':
