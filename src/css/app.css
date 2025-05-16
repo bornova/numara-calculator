@@ -88,7 +88,7 @@ text {
   font-size: 0.9rem;
 }
 
-.wrapper {
+.appWrapper {
   position: fixed;
   top: 0;
   right: 0;
@@ -162,7 +162,7 @@ text {
 }
 
 /* Content */
-.panel {
+.mainPanel {
   display: flex;
   position: fixed;
   top: 50px;
@@ -359,7 +359,11 @@ text {
 }
 
 .sidePanelActions {
-  margin: 14px 10px auto 10px;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: 10px 10px 14px 10px;
 }
 
 .closeSidePanelButton {
@@ -1207,7 +1211,7 @@ input.clr-color {
 }
 
 @media print {
-  .wrapper,
+  .appWrapper,
   .uk-open,
   .uk-tooltip {
     display: none !important;
