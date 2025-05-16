@@ -97,9 +97,9 @@ export function duplicatePage(pageId) {
   }
 
   const dupPageData = dupPage.data
-  let dupPageName = dupPage.name + ' (copy)'
-  // Ensure unique name for duplicate
   const baseName = dupPage.name + ' (copy)'
+  let dupPageName = baseName
+
   let count = 1
 
   while (pages.some((p) => p.name === dupPageName)) {
@@ -351,34 +351,10 @@ dom.sortAZ.addEventListener('click', () => sortPages('az'))
 dom.sortZA.addEventListener('click', () => sortPages('za'))
 dom.closeSidePanelButton.addEventListener('click', () => UIkit.offcanvas('#sidePanel').hide())
 dom.printButton.addEventListener('click', () => window.print())
-
-document.addEventListener('click', (event) => {
-  let pageId = event.target?.dataset?.page
-
-  if (event.target.parentNode.dataset.action === 'load') {
-    pageId = event.target.parentNode.parentNode.id
-    loadPage(pageId)
-    UIkit.offcanvas('#sidePanel').hide()
-  }
-
-  switch (event.target.dataset.action) {
-    case 'rename':
-      UIkit.dropdown(event.target.parentNode).hide(0)
-      renamePage(pageId)
-      break
-    case 'delete':
-      deletePage(pageId)
-      break
-    case 'duplicate':
-      duplicatePage(pageId)
-      UIkit.dropdown(event.target.parentNode).hide(0)
-      break
-  }
-})
-
 dom.pageList.addEventListener('scroll', () => {
   dom.els('.uk-dropdown').forEach((el) => {
     const dropdown = UIkit.dropdown(el)
+
     if (dropdown) {
       dropdown.hide(0)
     }
@@ -418,3 +394,27 @@ if (isElectron) {
 } else {
   dom.els('#exportButton, #importButton, #spDivider').forEach((el) => el.remove())
 }
+
+document.addEventListener('click', (event) => {
+  let pageId = event.target?.dataset?.page
+
+  if (event.target.parentNode.dataset.action === 'load') {
+    pageId = event.target.parentNode.parentNode.id
+    loadPage(pageId)
+    UIkit.offcanvas('#sidePanel').hide()
+  }
+
+  switch (event.target.dataset.action) {
+    case 'rename':
+      UIkit.dropdown(event.target.parentNode).hide(0)
+      renamePage(pageId)
+      break
+    case 'delete':
+      deletePage(pageId)
+      break
+    case 'duplicate':
+      duplicatePage(pageId)
+      UIkit.dropdown(event.target.parentNode).hide(0)
+      break
+  }
+})
