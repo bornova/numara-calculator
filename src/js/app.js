@@ -369,11 +369,11 @@ const setupUIkitUtils = () => {
 const initializeApp = () => {
   generateIcons()
 
-  colors.initialize()
-  colors.apply()
-
   settings.initialize()
   settings.apply()
+
+  colors.initialize()
+  colors.apply()
 
   setupHeaders()
   setupActionButtons()
