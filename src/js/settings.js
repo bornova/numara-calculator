@@ -44,6 +44,7 @@ function checkSchema() {
  */
 function populateSelect(selectEl, options, disabledValue = null) {
   selectEl.innerHTML = ''
+
   for (const opt of options) {
     if (opt === disabledValue) {
       selectEl.innerHTML += `<option disabled>${opt}</option>`
@@ -79,7 +80,7 @@ export const settings = {
     lineHeight: '24px',
     lineNumbers: true,
     lineWrap: true,
-    locale: 'en-US',
+    locale: 'system',
     matchBrackets: true,
     matrixType: 'Matrix',
     notation: 'auto',
@@ -104,11 +105,6 @@ export const settings = {
 
     app.settings = store.get('settings')
 
-    // Get exchange rates
-    if (app.settings.currency) {
-      getRates()
-    }
-
     dom.els('.settingItem').forEach((item) => {
       const span = document.createElement('span')
       const icon = dom.icons.Dot
@@ -128,6 +124,10 @@ export const settings = {
 
       item.getAttribute('type') === 'checkbox' ? item.parentElement.before(span) : item.before(span)
     })
+
+    if (app.settings.currency) {
+      getRates()
+    }
   },
 
   /** Prepare settings dialog items. */
@@ -161,7 +161,6 @@ export const settings = {
     dom.precisionLabel.innerHTML = app.settings.precision
     dom.expLowerLabel.innerHTML = app.settings.expLower
     dom.expUpperLabel.innerHTML = app.settings.expUpper
-
     dom.lastUpdated.innerHTML = app.settings.currency ? store.get('rateDate') : ''
     dom.currencyUpdate.style.visibility = app.settings.currency ? 'visible' : 'hidden'
 
@@ -188,9 +187,7 @@ export const settings = {
     dom.inlineStyle.setAttribute('href', 'css/' + appTheme + '.css')
     dom.numaraLogo.setAttribute('src', 'assets/logo-' + appTheme + '.png')
 
-    setTimeout(() => {
-      colors.apply()
-    }, 50)
+    setTimeout(colors.apply, 50)
 
     const udfuTheme =
       app.settings.theme === 'system'
@@ -328,10 +325,6 @@ dom.dialogSettingsReset.addEventListener('click', () => {
   })
 })
 
-if (isElectron) {
-  dom.resetSizeButton.addEventListener('click', numara.resetSize)
-}
-
 dom.bigNumWarn.addEventListener('click', () => {
   showError(
     'Caution: BigNumber Limitations',
@@ -365,3 +358,9 @@ dom.els('.settingItem').forEach((el) => {
     settings.apply()
   })
 })
+
+if (isElectron) {
+  dom.resetSizeButton.addEventListener('click', numara.resetSize)
+
+  numara.themeUpdate(settings.apply)
+}

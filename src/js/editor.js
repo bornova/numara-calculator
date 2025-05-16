@@ -178,15 +178,15 @@ export const cm = CodeMirror.fromTextArea(dom.inputArea, {
 
 const udOptions = { autoCloseBrackets: true, autofocus: true, mode: 'javascript', smartIndent: false, tabSize: 2 }
 
-export const udfInput = CodeMirror.fromTextArea(dom.udfInput, udOptions)
-export const uduInput = CodeMirror.fromTextArea(dom.uduInput, udOptions)
-
 // Set the placeholder values of the user defined dialog CodeMirror instances
 const udfPlaceholder = 'xyz: (x, y, z) => {\n\treturn x+y+z\n},\n\nmyConstant: 123'
 const uduPlaceholder = 'foo: "18 foot",\nbar: "40 foo"'
 
 dom.udfInput.setAttribute('placeholder', udfPlaceholder)
 dom.uduInput.setAttribute('placeholder', uduPlaceholder)
+
+export const udfInput = CodeMirror.fromTextArea(dom.udfInput, udOptions)
+export const uduInput = CodeMirror.fromTextArea(dom.uduInput, udOptions)
 
 // Codemirror handlers
 cm.on('changes', calculate)
@@ -384,6 +384,18 @@ const TOOLTIP_HANDLERS = {
   [CLASS_NAMES.EXCEL]: (target) => showTooltip(target, 'Excel function')
 }
 
+/**
+ * Refreshes the given CodeMirror editor and focuses it after a short delay.
+ * @param {CodeMirror} editor - CodeMirror instance to refresh and focus.
+ */
+export function refreshEditor(editor) {
+  editor.refresh()
+
+  setTimeout(() => {
+    editor.focus()
+  }, 100)
+}
+
 document.addEventListener('mouseover', (event) => {
   const className = event.target.classList[0]
 
@@ -406,18 +418,6 @@ document.addEventListener('mouseover', (event) => {
     isValid && app.settings.keywordTips ? `Insert 'line${event.target.innerText}' to Line ${activeLine}` : ''
   )
 })
-
-/**
- * Refreshes the given CodeMirror editor and focuses it after a short delay.
- * @param {CodeMirror} editor - CodeMirror instance to refresh and focus.
- */
-export function refreshEditor(editor) {
-  editor.refresh()
-
-  setTimeout(() => {
-    editor.focus()
-  }, 100)
-}
 
 document.addEventListener('keydown', (event) => {
   app.refreshCM = !event.repeat
