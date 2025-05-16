@@ -112,10 +112,12 @@ body {
 }
 
 .uk-dropdown {
-  background: #000000;
+  background: #333333;
   color: inherit;
 }
 
+.renamePageButton,
+.dupPageButton,
 .deletePageButton {
   color: #e6e6e6;
 }
