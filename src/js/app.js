@@ -19,9 +19,6 @@ import UIkit from 'uikit'
 
 document.title = description
 
-/**
- * Sets up the application headers based on platform and environment.
- */
 const setupHeaders = () => {
   if (isElectron && !isMac) {
     dom.headerMac.remove()
@@ -38,9 +35,6 @@ const setupHeaders = () => {
   }
 }
 
-/**
- * Attaches click handlers to main action buttons in the UI.
- */
 const setupActionButtons = () => {
   const buttonActions = [
     {
@@ -62,9 +56,6 @@ const setupActionButtons = () => {
   buttonActions.forEach(({ btn, handler }) => btn.addEventListener('click', handler))
 }
 
-/**
- * Sets up click and mouse events for the output panel.
- */
 const setupOutputPanelActions = () => {
   dom.output.addEventListener('click', (event) => {
     switch (event.target.className) {
@@ -106,96 +97,6 @@ const setupOutputPanelActions = () => {
   })
 }
 
-/**
- * Initializes UIkit utilities, dialog events, and user-defined input editors.
- * Handles focus management and page sorting.
- */
-const setupUIkitUtils = () => {
-  // Tooltip defaults
-  UIkit.mixin({ data: { offset: 5 } }, 'tooltip')
-
-  // Windows controls transparency when modal is shown/hidden
-  UIkit.util.on('.modal, #sidePanel', 'beforeshow', () => {
-    if (isElectron) numara.transControls(true)
-  })
-
-  UIkit.util.on('.modal, #sidePanel', 'hidden', () => {
-    const modalOpen = dom.els('.uk-open').length > 0
-
-    if (isElectron) numara.transControls(modalOpen)
-    // Focus on input when dialog is closed
-    setTimeout(() => {
-      cm.focus()
-    }, 100)
-  })
-
-  // Initiate theme dialog
-  UIkit.util.on('#dialogTheme', 'shown', () => {
-    checkColorChange()
-  })
-
-  // Initiate settings dialog
-  UIkit.util.on('#dialogSettings', 'beforeshow', settings.prep)
-
-  let udTab = 1
-  // Prepare user defined dialog inputs
-  UIkit.util.on('#dialogUdfu', 'shown', (event) => {
-    if (event.target.id === 'dialogUdfu') {
-      const udf = store.get('udf').trim()
-      const udu = store.get('udu').trim()
-
-      refreshEditor(udTab === 1 ? udfInput : uduInput)
-
-      udfInput.setValue(udf)
-      uduInput.setValue(udu)
-    }
-  })
-
-  UIkit.util.on('#udfTab', 'shown', () => {
-    udTab = 1
-    refreshEditor(udfInput)
-  })
-
-  UIkit.util.on('#uduTab', 'shown', () => {
-    udTab = 2
-    refreshEditor(uduInput)
-  })
-
-  // Plot dialog
-  UIkit.util.on('#dialogPlot', 'shown', plot)
-  UIkit.util.on('#dialogPlot', 'hide', () => {
-    app.activePlot = false
-  })
-
-  // Save page sort order after move
-  UIkit.util.on('#pageList', 'moved', () => {
-    pageOrder()
-    populatePages()
-  })
-
-  // Save dialog title focus on shown
-  UIkit.util.on('#dialogNewPage', 'shown', () => {
-    dom.newPageTitleInput.setAttribute('placeholder', getPageName())
-    dom.newPageTitleInput.focus()
-  })
-
-  // Focus rename input on show
-  UIkit.util.on('#dialogRenamePage', 'shown', () => {
-    setTimeout(() => {
-      dom.renamePageTitleInput.focus()
-      dom.renamePageTitleInput.select()
-    }, 20)
-  })
-
-  UIkit.util.on('#dialogError', 'hidden', () => {
-    dom.errTitle.innerHTML = ''
-    dom.errMsg.innerHTML = ''
-  })
-}
-
-/**
- * Loads and applies user-defined functions and units from storage.
- */
 const setupUserDefined = () => {
   // Set user defined values
   if (!store.get('udf')) {
@@ -210,10 +111,6 @@ const setupUserDefined = () => {
   applyUdfu(store.get('udu'), 'unit')
 }
 
-/**
- * Enables resizing of the input/output panel via a draggable divider.
- * Handles double-click to reset and mouse events for resizing.
- */
 const setupPanelResizer = () => {
   let resizeDelay
   let isResizing = false
@@ -234,15 +131,15 @@ const setupPanelResizer = () => {
     isResizing = event.target === dom.panelDivider
   })
 
-  dom.panel.addEventListener('mouseup', () => {
+  dom.mainPanel.addEventListener('mouseup', () => {
     isResizing = false
   })
 
-  dom.panel.addEventListener('mousemove', (event) => {
+  dom.mainPanel.addEventListener('mousemove', (event) => {
     if (isResizing) {
       const offset = app.settings.lineNumbers ? 12 : 27
-      const pointerRelativeXpos = event.clientX - dom.panel.offsetLeft - offset
-      let inputWidth = (pointerRelativeXpos / dom.panel.clientWidth) * 100
+      const pointerRelativeXpos = event.clientX - dom.mainPanel.offsetLeft - offset
+      let inputWidth = (pointerRelativeXpos / dom.mainPanel.clientWidth) * 100
       inputWidth = Math.max(0, Math.min(100, inputWidth))
 
       dom.input.style.width = inputWidth + '%'
@@ -257,10 +154,6 @@ const setupPanelResizer = () => {
   })
 }
 
-/**
- * Synchronizes scrolling between the input and output panels.
- * Adds scroll-to-top button functionality.
- */
 const setupSyncScroll = () => {
   const inputPanel = dom.el('.CodeMirror-scroll')
   const outputPanel = dom.output
@@ -273,6 +166,7 @@ const setupSyncScroll = () => {
       outputScroll = true
       outputPanel.scrollTop = inputPanel.scrollTop
     }
+
     inputScroll = false
   })
 
@@ -292,9 +186,6 @@ const setupSyncScroll = () => {
   })
 }
 
-/**
- * Populates the About dialog with app info and sets up related links.
- */
 const setupAppInfo = () => {
   dom.dialogAboutCopyright.innerHTML = `Copyright &copy; ${new Date().getFullYear()} ${author.name}`
   dom.dialogAboutAppVersion.innerHTML = isElectron
@@ -321,13 +212,16 @@ const setupAppInfo = () => {
 
     dom.logsLink.parentElement.style.display = 'block'
     dom.logsLink.addEventListener('click', numara.openLogs)
+
+    // Open developer Tools
+    dom.dialogAboutAppVersion.addEventListener('click', (event) => {
+      if (event.detail === 9) {
+        numara.openDevTools()
+      }
+    })
   }
 }
 
-/**
- * Registers keyboard shortcuts for common actions using tinykeys.
- * Handles modal state and side panel toggling.
- */
 const setupKeyboardShortcuts = () => {
   const keys = {
     clearButton: ['$mod+D'],
@@ -353,11 +247,7 @@ const setupKeyboardShortcuts = () => {
   }
 }
 
-/**
- * Prepares the print layout and cleans up after printing.
- * Dynamically generates a print-friendly version of the current page.
- */
-const setupPrint = () => {
+const setupPrintArea = () => {
   window.addEventListener('beforeprint', () => {
     const printArea = document.createElement('div')
 
@@ -401,26 +291,81 @@ const setupPrint = () => {
   })
 }
 
-const electronActions = () => {
-  if (!isElectron) return
+const setupUIkitUtils = () => {
+  UIkit.mixin({ data: { offset: 5 } }, 'tooltip')
 
-  numara.themeUpdate(settings.apply)
-  numara.restored(() => {
-    cm.focus()
+  UIkit.util.on('.modal, #sidePanel', 'beforeshow', () => {
+    if (isElectron) numara.transControls(true)
   })
-  // Check for updates
-  checkAppUpdate()
-  // Open developer Tools
-  dom.dialogAboutAppVersion.addEventListener('click', (event) => {
-    if (event.detail === 9) {
-      numara.openDevTools()
+
+  UIkit.util.on('.modal, #sidePanel', 'hidden', () => {
+    const modalOpen = dom.els('.uk-open').length > 0
+
+    if (isElectron) numara.transControls(modalOpen)
+
+    setTimeout(() => {
+      cm.focus()
+    }, 100)
+  })
+
+  UIkit.util.on('#dialogTheme', 'shown', () => {
+    checkColorChange()
+  })
+
+  UIkit.util.on('#dialogSettings', 'beforeshow', settings.prep)
+
+  let udTab = 1
+
+  UIkit.util.on('#dialogUdfu', 'shown', (event) => {
+    if (event.target.id === 'dialogUdfu') {
+      const udf = store.get('udf').trim()
+      const udu = store.get('udu').trim()
+
+      refreshEditor(udTab === 1 ? udfInput : uduInput)
+
+      udfInput.setValue(udf)
+      uduInput.setValue(udu)
     }
+  })
+
+  UIkit.util.on('#udfTab', 'shown', () => {
+    udTab = 1
+    refreshEditor(udfInput)
+  })
+
+  UIkit.util.on('#uduTab', 'shown', () => {
+    udTab = 2
+    refreshEditor(uduInput)
+  })
+
+  UIkit.util.on('#dialogPlot', 'shown', plot)
+  UIkit.util.on('#dialogPlot', 'hide', () => {
+    app.activePlot = false
+  })
+
+  UIkit.util.on('#pageList', 'moved', () => {
+    pageOrder()
+    populatePages()
+  })
+
+  UIkit.util.on('#dialogNewPage', 'shown', () => {
+    dom.newPageTitleInput.setAttribute('placeholder', getPageName())
+    dom.newPageTitleInput.focus()
+  })
+
+  UIkit.util.on('#dialogRenamePage', 'shown', () => {
+    setTimeout(() => {
+      dom.renamePageTitleInput.focus()
+      dom.renamePageTitleInput.select()
+    }, 20)
+  })
+
+  UIkit.util.on('#dialogError', 'hidden', () => {
+    dom.errTitle.innerHTML = ''
+    dom.errMsg.innerHTML = ''
   })
 }
 
-/**
- * Main application initializer. Calls all setup functions and loads initial state.
- */
 const initializeApp = () => {
   generateIcons()
 
@@ -433,20 +378,17 @@ const initializeApp = () => {
   setupHeaders()
   setupActionButtons()
   setupOutputPanelActions()
-  setupUIkitUtils()
   setupUserDefined()
   setupPanelResizer()
   setupSyncScroll()
   setupAppInfo()
   setupKeyboardShortcuts()
-  setupPrint()
-
-  electronActions()
+  setupPrintArea()
+  setupUIkitUtils()
   initializePages()
+  checkAppUpdate()
 
-  setTimeout(() => {
-    cm.focus()
-  }, 500)
+  setTimeout(() => cm.focus(), 500)
 }
 
 initializeApp()
