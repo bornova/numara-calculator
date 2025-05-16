@@ -108,21 +108,17 @@ function evaluateLine(line, lineNo, cmLine, avgs, totals, subtotals) {
  * Calculate answers.
  */
 export function calculate() {
-  if (app.refreshCM) {
-    cm.refresh()
-  }
-
-  let answers = ''
-  let answerCopy = ''
+  if (app.refreshCM) cm.refresh()
 
   const avgs = []
   const totals = []
   const subtotals = []
-
   const dateTime = DateTime.now().setLocale(app.settings.locale)
-
   const cmValue = cm.getValue()
   const cmHistory = cm.getHistory()
+
+  let answers = ''
+  let answerCopy = ''
 
   app.mathScope = {}
   app.mathScope.now = dateTime.toFormat(app.settings.dateDay ? nowDayFormat : nowFormat)
