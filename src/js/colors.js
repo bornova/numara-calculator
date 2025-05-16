@@ -14,7 +14,6 @@ const colorInputs = dom.els(COLOR_INPUT_SELECTOR)
 
 let activePicker = null
 
-/** Check for color schema changes. */
 function checkDefaultColors() {
   const storedColors = store.get('colors')
 
@@ -42,24 +41,17 @@ function addPickerListeners(picker) {
   })
 }
 
-/**
- * Reset the active color picker to its default value.
- */
 function resetActivePickerColor() {
   if (!activePicker) return
 
   const def = colors.defaults[activePicker.dataset.class][activePicker.dataset.theme]
+  const colorInput = dom.el('#clr-color-value')
 
+  colorInput.value = def
+  colorInput.dispatchEvent(new Event('change'))
   activePicker.dispatchEvent(new Event('input', { bubbles: true }))
-
-  dom.el('#clr-color-value').value = def
-  dom.el('#clr-color-value').dispatchEvent(new Event('change'))
 }
 
-/**
- * Check if color has changed.
- * Highlights changed color pickers.
- */
 export function checkColorChange() {
   const theme = getTheme()
 
@@ -93,9 +85,6 @@ export const colors = {
     variable: { title: 'Variables', class: '.cm-variable', dark: '#96b4c4', light: '#57707c' }
   },
 
-  /**
-   * Initialize color pickers and listeners.
-   */
   initialize: () => {
     store.get('colors') ? checkDefaultColors() : store.set('colors', colors.defaults)
 
@@ -134,9 +123,6 @@ export const colors = {
     })
   },
 
-  /**
-   * Apply current colors to the DOM.
-   */
   apply: () => {
     const appTheme = getTheme()
     let colorSheet = ''
@@ -155,9 +141,6 @@ export const colors = {
     dom.colorSheet.innerHTML = colorSheet
   },
 
-  /**
-   * Save current color values from pickers to store.
-   */
   save: () => {
     colorInputs.forEach((picker) => {
       app.colors[picker.dataset.class][picker.dataset.theme] = picker.value
@@ -167,9 +150,6 @@ export const colors = {
     colors.apply()
   },
 
-  /**
-   * Reset all colors to defaults.
-   */
   reset: () => {
     store.set('colors', colors.defaults)
     app.colors = store.get('colors')
@@ -186,12 +166,8 @@ export const colors = {
   }
 }
 
-dom.customizeThemeButton.addEventListener('click', () => {
-  modal.show('#dialogTheme')
-})
+dom.customizeThemeButton.addEventListener('click', () => modal.show('#dialogTheme'))
 
 dom.resetColorsButton.addEventListener('click', () => {
-  confirm('This will reset all colors to their default values', () => {
-    colors.reset()
-  })
+  confirm('This will reset all colors to their default values', colors.reset)
 })
