@@ -20,7 +20,7 @@ export const dom = {
   icons: {},
 
   // Cached elements
-  panel: document.getElementById('panel'),
+  mainPanel: document.getElementById('mainPanel'),
   input: document.getElementById('input'),
   inputArea: document.getElementById('inputArea'),
   output: document.getElementById('output'),
