@@ -384,6 +384,18 @@ const TOOLTIP_HANDLERS = {
   [CLASS_NAMES.EXCEL]: (target) => showTooltip(target, 'Excel function')
 }
 
+/**
+ * Refreshes the given CodeMirror editor and focuses it after a short delay.
+ * @param {CodeMirror} editor - CodeMirror instance to refresh and focus.
+ */
+export function refreshEditor(editor) {
+  editor.refresh()
+
+  setTimeout(() => {
+    editor.focus()
+  }, 100)
+}
+
 document.addEventListener('mouseover', (event) => {
   const className = event.target.classList[0]
 
@@ -406,18 +418,6 @@ document.addEventListener('mouseover', (event) => {
     isValid && app.settings.keywordTips ? `Insert 'line${event.target.innerText}' to Line ${activeLine}` : ''
   )
 })
-
-/**
- * Refreshes the given CodeMirror editor and focuses it after a short delay.
- * @param {CodeMirror} editor - CodeMirror instance to refresh and focus.
- */
-export function refreshEditor(editor) {
-  editor.refresh()
-
-  setTimeout(() => {
-    editor.focus()
-  }, 100)
-}
 
 document.addEventListener('keydown', (event) => {
   app.refreshCM = !event.repeat
