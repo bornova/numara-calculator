@@ -65,7 +65,10 @@ export function notify(msg, stat = 'primary') {
   })
 }
 
-// Make dialogs draggable
+/**
+ * Centers the modal dialog on the screen.
+ * @param {HTMLElement} modal - The modal element to center.
+ */
 const centerModal = (modal) => {
   requestAnimationFrame(() => {
     modal.style.left = `${(window.innerWidth - modal.offsetWidth) / 2}px`
@@ -74,17 +77,18 @@ const centerModal = (modal) => {
   })
 }
 
-dom.els('.modal').forEach((modal) => {
+/**
+ * Makes a UIkit modal dialog draggable by its title/header.
+ * @param {HTMLElement} modal - The root modal element containing the dialog and title.
+ */
+function makeModalDraggable(modal) {
   const dialog = modal.querySelector('.uk-modal-dialog')
-  const header = dialog.querySelector('.uk-modal-title')
+  const header = dialog?.querySelector('.uk-modal-title')
 
   if (!dialog || !header) return
 
-  // Center dialog on show
   UIkit.util.on(modal, 'beforeshow', () => {
-    const udOpen = dom.els('#dialogUdfu.uk-open').length > 0
-
-    if (udOpen) return
+    if (dom.els('#dialogUdfu.uk-open').length > 0) return
 
     Object.assign(dialog.style, { visibility: 'hidden', display: 'block', position: 'absolute' })
 
@@ -92,31 +96,33 @@ dom.els('.modal').forEach((modal) => {
   })
 
   let dragging = false
+  let offsetX = 0
+  let offsetY = 0
+
+  const move = (e) => {
+    if (!dragging) return
+
+    dialog.style.left = `${Math.max(10, Math.min(e.clientX - offsetX, window.innerWidth - dialog.offsetWidth - 10))}px`
+    dialog.style.top = `${Math.max(40, Math.min(e.clientY - offsetY, window.innerHeight - dialog.offsetHeight - 10))}px`
+  }
+
+  const up = () => {
+    dragging = false
+    document.removeEventListener('mousemove', move)
+    document.removeEventListener('mouseup', up)
+  }
 
   header.addEventListener('mousedown', (e) => {
-    const offsetX = e.clientX - dialog.offsetLeft
-    const offsetY = e.clientY - dialog.offsetTop
+    offsetX = e.clientX - dialog.offsetLeft
+    offsetY = e.clientY - dialog.offsetTop
     dragging = true
-
-    const move = (e) => {
-      if (!dragging) return
-
-      const left = Math.max(10, Math.min(e.clientX - offsetX, window.innerWidth - dialog.offsetWidth - 10))
-      const top = Math.max(40, Math.min(e.clientY - offsetY, window.innerHeight - dialog.offsetHeight - 10))
-
-      dialog.style.left = `${left}px`
-      dialog.style.top = `${top}px`
-    }
-
-    const up = () => {
-      dragging = false
-      document.removeEventListener('mousemove', move)
-      document.removeEventListener('mouseup', up)
-    }
 
     document.addEventListener('mousemove', move)
     document.addEventListener('mouseup', up)
   })
 
   header.addEventListener('dblclick', () => centerModal(dialog))
-})
+}
+
+// Make all modals draggable
+dom.els('.modal').forEach(makeModalDraggable)
