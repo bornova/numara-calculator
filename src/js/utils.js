@@ -35,7 +35,6 @@ export const store = {
   }
 }
 
-// Cache user agent checks
 const userAgent = navigator.userAgent.toLowerCase()
 /** Check if app is running on MacOS. */
 export const isMac = userAgent.includes('mac')
@@ -77,7 +76,6 @@ export function checkAppUpdate() {
       case 'checking':
         updateStatusMessage('Checking for updates...')
         break
-
       case 'available':
         notify(
           `A new updated version ${version} is available. <a class="notificationLink" onclick="document.querySelector('#aboutButton').click()">Update status</a>`
@@ -89,11 +87,9 @@ export function checkAppUpdate() {
       case 'notAvailable':
         updateStatusMessage('Numara is up to date.')
         break
-
       case 'downloading':
         updateStatusMessage(`Downloading update... (${Math.round(progress.percent)}%)`)
         break
-
       case 'downloaded': {
         const notice = `New version ${version} is ready to install.`
 
@@ -113,7 +109,6 @@ export function checkAppUpdate() {
       case 'error':
         updateStatusMessage('Error while checking for updates.')
         break
-
       default:
         updateStatusMessage('Unable to check for update.')
     }
