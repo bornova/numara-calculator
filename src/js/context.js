@@ -56,9 +56,7 @@ function outputContext(event) {
  * Textbox context menu.
  */
 function textboxContext() {
-  setTimeout(() => {
-    numara.textboxContextMenu()
-  }, 20)
+  setTimeout(numara.textboxContextMenu, 20)
 }
 
 /**
