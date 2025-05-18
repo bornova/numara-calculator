@@ -14,33 +14,6 @@ const colorInputs = dom.els(COLOR_INPUT_SELECTOR)
 
 let activePicker = null
 
-function checkDefaultColors() {
-  const storedColors = store.get('colors')
-
-  app.colors = storedColors
-
-  DeepDiff.observableDiff(app.colors, colors.defaults, (d) => {
-    if (d.kind === 'E') return
-
-    DeepDiff.applyChange(app.colors, colors.defaults, d)
-
-    store.set('colors', app.colors)
-  })
-}
-
-function setPickerValue(picker, colorsObj) {
-  const def = colorsObj[picker.dataset.class][picker.dataset.theme]
-
-  picker.value = def
-}
-
-function addPickerListeners(picker) {
-  picker.addEventListener('click', (event) => {
-    activePicker = event.target
-    checkColorChange()
-  })
-}
-
 function resetActivePickerColor() {
   if (!activePicker) return
 
@@ -86,13 +59,27 @@ export const colors = {
   },
 
   initialize: () => {
-    store.get('colors') ? checkDefaultColors() : store.set('colors', colors.defaults)
-
     app.colors = store.get('colors')
 
+    if (app.colors) {
+      DeepDiff.observableDiff(app.colors, colors.defaults, (diff) => {
+        if (diff.kind === 'E') return
+
+        DeepDiff.applyChange(app.colors, colors.defaults, diff)
+        store.set('colors', app.colors)
+      })
+    } else {
+      app.colors = { ...colors.defaults }
+      store.set('colors', app.colors)
+    }
+
     colorInputs.forEach((picker) => {
-      setPickerValue(picker, app.colors)
-      addPickerListeners(picker)
+      picker.value = app.colors[picker.dataset.class][picker.dataset.theme]
+
+      picker.addEventListener('click', (event) => {
+        activePicker = event.target
+        checkColorChange()
+      })
     })
 
     Coloris.init()
@@ -123,6 +110,10 @@ export const colors = {
     })
   },
 
+  checkDefaults: () => {
+    dom.defaultColorsButton.style.display = DeepDiff.diff(app.colors, colors.defaults) ? 'inline' : 'none'
+  },
+
   apply: () => {
     const appTheme = getTheme()
     let colorSheet = ''
@@ -148,6 +139,7 @@ export const colors = {
 
     store.set('colors', app.colors)
     colors.apply()
+    colors.checkDefaults()
   },
 
   reset: () => {
@@ -162,12 +154,13 @@ export const colors = {
     })
 
     checkColorChange()
+    colors.checkDefaults()
     colors.apply()
   }
 }
 
 dom.customizeThemeButton.addEventListener('click', () => modal.show('#dialogTheme'))
 
-dom.resetColorsButton.addEventListener('click', () => {
+dom.defaultColorsButton.addEventListener('click', () => {
   confirm('This will reset all colors to their default values', colors.reset)
 })
