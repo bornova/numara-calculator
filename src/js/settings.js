@@ -13,26 +13,14 @@ function checkDefaults() {
   dom.defaultSettingsButton.style.display = DeepDiff.diff(app.settings, settings.defaults) ? 'inline' : 'none'
 }
 
-/** Show warning if big number option is selected. */
-function bigNumberWarning() {
-  dom.bigNumWarn.style.display = app.settings.numericOutput === 'BigNumber' ? 'inline-block' : 'none'
-}
-
 /** Check for app settings modifications. */
 function checkMods(key) {
   dom.el('#' + key + 'Mod').style.display = app.settings[key] !== settings.defaults[key] ? 'inline-block' : 'none'
 }
 
-/** Check for app settings schema changes. */
-function checkSchema() {
-  app.settings = store.get('settings')
-
-  DeepDiff.observableDiff(app.settings, settings.defaults, (d) => {
-    if (d.kind === 'E') return
-
-    DeepDiff.applyChange(app.settings, settings.defaults, d)
-    store.set('settings', app.settings)
-  })
+/** Show warning if big number option is selected. */
+function bigNumberWarning() {
+  dom.bigNumWarn.style.display = app.settings.numericOutput === 'BigNumber' ? 'inline-block' : 'none'
 }
 
 /**
@@ -101,9 +89,19 @@ export const settings = {
 
   /** Initialize settings. */
   initialize: () => {
-    store.get('settings') ? checkSchema() : store.set('settings', settings.defaults)
-
     app.settings = store.get('settings')
+
+    if (app.settings) {
+      DeepDiff.observableDiff(app.settings, settings.defaults, (diff) => {
+        if (diff.kind === 'E') return
+
+        DeepDiff.applyChange(app.settings, settings.defaults, diff)
+        store.set('settings', app.settings)
+      })
+    } else {
+      app.settings = { ...settings.defaults }
+      store.set('settings', app.settings)
+    }
 
     dom.els('.settingItem').forEach((item) => {
       const span = document.createElement('span')
@@ -125,9 +123,7 @@ export const settings = {
       item.getAttribute('type') === 'checkbox' ? item.parentElement.before(span) : item.before(span)
     })
 
-    if (app.settings.currency) {
-      getRates()
-    }
+    if (app.settings.currency) getRates()
   },
 
   /** Prepare settings dialog items. */
@@ -263,9 +259,7 @@ export const settings = {
     dom.currencyUpdate.style.visibility = dom.currency.checked ? 'visible' : 'hidden'
     dom.currencyWarn.style.display = app.settings.currency ? 'none' : 'inline-block'
 
-    if (!store.get('rateDate') && app.settings.currency) {
-      getRates()
-    }
+    if (!store.get('rateDate') && app.settings.currency) getRates()
 
     checkDefaults()
     bigNumberWarning()
@@ -283,11 +277,10 @@ export const settings = {
       el.parentNode.style.opacity = enabled ? '1' : '0.5'
 
       const mod = dom.el('#' + el.id + 'Mod')
+      if (!mod) return
 
-      if (mod) {
-        mod.style.pointerEvents = enabled ? 'auto' : 'none'
-        mod.parentNode.style.opacity = enabled ? '1' : '0.5'
-      }
+      mod.style.pointerEvents = enabled ? 'auto' : 'none'
+      mod.parentNode.style.opacity = enabled ? '1' : '0.5'
     }
 
     toggle(dom.keywordTips, app.settings.syntax)
@@ -304,13 +297,11 @@ export const settings = {
 
 dom.defaultSettingsButton.addEventListener('click', () => {
   confirm('All settings will revert back to defaults.', () => {
-    app.settings = JSON.parse(JSON.stringify(settings.defaults))
-
-    store.set('settings', app.settings)
+    app.settings = { ...settings.defaults }
 
     settings.prep()
-    settings.save()
     settings.apply()
+    settings.save()
   })
 })
 
