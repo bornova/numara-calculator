@@ -42,12 +42,14 @@ const units = () =>
       const token = prefix.name + unit.name
       const unitBase = unit.base.key.replaceAll('_', ' ').toLowerCase()
       const unitCat = unitBase.charAt(0).toUpperCase() + unitBase.slice(1)
+
       return {
         token,
         hint: { text: token, desc: unitCat + ' unit', className: CLASS_NAMES.UNIT }
       }
     })
   )
+
 export const keywords = [
   { text: '_', desc: 'Answer from last calculated line' },
   { text: 'ans', desc: 'Answer from last calculated line' },
@@ -103,7 +105,6 @@ CodeMirror.defineMode('numara', () => ({
 CodeMirror.defineMode('plain', () => ({
   token: (stream) => {
     stream.next()
-
     return 'plain'
   }
 }))
@@ -159,9 +160,7 @@ function cmForceBottom() {
   const barTop = dom.el('.CodeMirror-hscrollbar').getBoundingClientRect().top
   const lineHeight = +app.settings.lineHeight.replace('px', '') + 1
 
-  if (barTop - lineTop < lineHeight) {
-    dom.output.scrollTop = dom.output.scrollTop + (lineHeight - (barTop - lineTop))
-  }
+  if (barTop - lineTop < lineHeight) dom.output.scrollTop = dom.output.scrollTop + (lineHeight - (barTop - lineTop))
 }
 
 /** CodeMirror instances. */
@@ -237,9 +236,9 @@ cm.on('gutterClick', (cm, line) => {
   const lineNo = line + 1
   const activeLine = cm.getCursor().line + 1
 
-  if (activeLine > lineNo) {
-    cm.replaceSelection('line' + lineNo)
-  }
+  if (activeLine <= lineNo) return
+
+  cm.replaceSelection('line' + lineNo)
 })
 
 cm.on('scrollCursorIntoView', cmForceBottom)
@@ -391,9 +390,7 @@ const TOOLTIP_HANDLERS = {
 export function refreshEditor(editor) {
   editor.refresh()
 
-  setTimeout(() => {
-    editor.focus()
-  }, 100)
+  setTimeout(() => editor.focus(), 100)
 }
 
 document.addEventListener('mouseover', (event) => {
@@ -402,9 +399,7 @@ document.addEventListener('mouseover', (event) => {
   if (app.settings.keywordTips && className?.startsWith('cm-')) {
     const handler = TOOLTIP_HANDLERS[className]
 
-    if (handler) {
-      handler(event.target)
-    }
+    if (handler) handler(event.target)
   }
 
   if (className !== 'CodeMirror-linenumber') return
