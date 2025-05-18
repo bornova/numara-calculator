@@ -123,6 +123,7 @@ export const colors = {
     if (app.settings.syntax) {
       Object.values(app.colors).forEach((color) => {
         if (color.title === 'Plain') return
+
         colorSheet += `${color.class} { color: ${color[appTheme]};}\n`
       })
     } else {

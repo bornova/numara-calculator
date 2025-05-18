@@ -83,20 +83,13 @@ const setupOutputPanelActions = () => {
   })
 
   dom.output.addEventListener('mousedown', () => {
-    const sels = document.getElementsByClassName('CodeMirror-selected')
-
-    while (sels[0]) {
-      sels[0].classList.remove('CodeMirror-selected')
-    }
+    dom.els('.CodeMirror-selected').forEach((el) => el.classList.remove('CodeMirror-selected'))
   })
 }
 
 const setupUserDefined = () => {
-  let udf = store.get('udf') || ''
-  let udu = store.get('udu') || ''
-
-  applyUdfu(udf, 'func')
-  applyUdfu(udu, 'unit')
+  applyUdfu(store.get('udf') || '', 'func')
+  applyUdfu(store.get('udu') || '', 'unit')
 }
 
 const setupPanelResizer = () => {
@@ -251,6 +244,7 @@ const setupPrintArea = () => {
 
     document.body.appendChild(printArea)
 
+    const rows = []
     cm.eachLine((line) => {
       const lineNo = cm.getLineNumber(line)
       const input = cm.getLine(lineNo)
@@ -266,9 +260,9 @@ const setupPrintArea = () => {
           <td class="printAnswer${app.settings.divider ? 'Left' : 'Right'}">${answer}</td>
         </tr>`
 
-      document.getElementById('printPage').innerHTML += row
+      rows.push(row)
     })
-
+    document.getElementById('printPage').innerHTML = rows.join('')
     printArea.innerHTML += `</table>`
   })
 
