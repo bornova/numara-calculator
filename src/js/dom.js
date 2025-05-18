@@ -98,7 +98,7 @@ export const dom = {
   defaultSettingsButton: document.getElementById('defaultSettingsButton'),
 
   // Theme dialog
-  resetColorsButton: document.getElementById('resetColorsButton'),
+  defaultColorsButton: document.getElementById('defaultColorsButton'),
 
   // About dialog
   dialogAbout: document.getElementById('dialogAbout'),
