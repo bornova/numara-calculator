@@ -836,7 +836,7 @@ input:checked + .slider:before {
 .uk-modal-dialog {
   transition: 0s linear;
   border-radius: 3px;
-  max-width: calc(100vw - 60px) !important;
+  max-width: calc(100vw - 40px) !important;
 }
 
 .uk-modal-body {
