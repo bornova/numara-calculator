@@ -15,9 +15,7 @@ export function plot() {
   const f = math.simplify(app.plotFunction.split('=')[1], app.mathScope).toString()
   let domain = math.abs(math.evaluate(f, { x: 0 })) * 2
 
-  if (domain === Infinity || domain === 0) {
-    domain = 10
-  }
+  if (domain === Infinity || domain === 0) domain = 10
 
   const xDomain = app.activePlot ? app.activePlot.meta.xScale.domain() : [-domain, domain]
   const yDomain = app.activePlot ? app.activePlot.meta.yScale.domain() : [-domain, domain]
@@ -94,9 +92,7 @@ dom.resetPlot.addEventListener('click', () => {
 let windowResizeDelay
 
 const resizeObserver = new ResizeObserver(() => {
-  if (app.activePlot && dom.dialogPlot.classList.contains('uk-open')) {
-    plot()
-  }
+  if (app.activePlot && dom.dialogPlot.classList.contains('uk-open')) plot()
 
   clearTimeout(windowResizeDelay)
   windowResizeDelay = setTimeout(calculate, 10)
