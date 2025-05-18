@@ -21,12 +21,9 @@ contextBridge.exposeInMainWorld('numara', {
   themeUpdate: (callback) => ipcRenderer.on('themeUpdate', callback),
 
   // Window controls
-  minimize: () => ipcRenderer.send('minimize'),
-  maximize: () => ipcRenderer.send('maximize'),
   isMaximized: () => ipcRenderer.sendSync('isMaximized'),
   isResized: () => ipcRenderer.sendSync('isResized'),
   resetSize: () => ipcRenderer.send('resetSize'),
-  restored: (callback) => ipcRenderer.on('restored', callback),
   setOnTop: (callback) => ipcRenderer.send('setOnTop', callback),
   transControls: (isTrans) => ipcRenderer.send('transControls', isTrans),
 
