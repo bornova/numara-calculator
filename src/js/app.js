@@ -229,12 +229,14 @@ const setupKeyboardShortcuts = () => {
 const setupPrintArea = () => {
   window.addEventListener('beforeprint', () => {
     const printArea = document.createElement('div')
+    const rows = []
 
     printArea.setAttribute('id', 'printArea')
     printArea.className = 'printArea'
     printArea.innerHTML = `
       <div id="printTitle" class="printTitle">${name}</div>
-      <table id="printPage"
+      <table
+        id="printPage"
         class="printPage ${app.settings.rulers ? 'printRulers' : ''}"
         style="
           font-size: ${app.settings.fontSize};
@@ -244,7 +246,6 @@ const setupPrintArea = () => {
 
     document.body.appendChild(printArea)
 
-    const rows = []
     cm.eachLine((line) => {
       const lineNo = cm.getLineNumber(line)
       const input = cm.getLine(lineNo)
@@ -262,6 +263,7 @@ const setupPrintArea = () => {
 
       rows.push(row)
     })
+
     document.getElementById('printPage').innerHTML = rows.join('')
     printArea.innerHTML += `</table>`
   })
