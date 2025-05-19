@@ -132,9 +132,9 @@ const setupPanelResizer = () => {
       clearTimeout(resizeDelay)
       resizeDelay = setTimeout(calculate, 10)
     }
-
-    dividerTooltip()
   })
+
+  dom.panelDivider.addEventListener('mousemove', dividerTooltip)
 }
 
 const setupSyncScroll = () => {
