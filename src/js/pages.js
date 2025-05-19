@@ -24,12 +24,6 @@ export function getPageName() {
 }
 
 /**
- * Get last page from store.
- * @returns {string} The last page ID.
- */
-export const lastPage = () => store.get('lastPage')
-
-/**
  * Generate default page.
  */
 export function defaultPage() {
@@ -215,8 +209,8 @@ export function loadPage(pageId) {
  */
 export function initializePages() {
   if (store.get('pages')) {
-    app.activePage = lastPage()
-    loadPage(lastPage())
+    app.activePage = store.get('lastPage')
+    loadPage(app.activePage)
   } else {
     defaultPage()
   }
@@ -378,13 +372,14 @@ if (isElectron) {
 }
 
 document.addEventListener('click', (event) => {
-  let pageId = event.target?.dataset?.page
-
-  if (event.target.parentNode.dataset.action === 'load') {
-    pageId = event.target.parentNode.parentNode.id
+  if (event.target.parentNode?.dataset?.action === 'load') {
+    let pageId = event.target.parentNode.parentNode.id
     loadPage(pageId)
     UIkit.offcanvas('#sidePanel').hide()
+    return
   }
+
+  let pageId = event.target?.dataset?.page
 
   switch (event.target.dataset.action) {
     case 'rename':
