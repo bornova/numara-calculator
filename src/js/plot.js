@@ -91,12 +91,10 @@ dom.resetPlot.addEventListener('click', () => {
 
 let windowResizeDelay
 
-const resizeObserver = new ResizeObserver(() => {
+window.addEventListener('resize', () => {
   if (app.activePlot && dom.dialogPlot.classList.contains('uk-open')) plot()
 
   clearTimeout(windowResizeDelay)
   windowResizeDelay = setTimeout(calculate, 10)
   checkSize()
 })
-
-resizeObserver.observe(document.body)
