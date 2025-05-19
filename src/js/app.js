@@ -93,18 +93,21 @@ const setupUserDefined = () => {
 }
 
 const setupPanelResizer = () => {
+  const defaultWidth = 60
   let resizeDelay
   let isResizing = false
 
+  let inputWidth = store.get('inputWidth') || defaultWidth
+  dom.input.style.width = (app.settings.divider ? inputWidth : defaultWidth) + '%'
+
   const dividerTooltip = () => {
     dom.panelDivider.title =
-      dom.input.style.width === settings.defaults.inputWidth + '%' ? 'Drag to resize' : 'Double click to reset position'
+      dom.input.style.width === `${defaultWidth}%` ? 'Drag to resize' : 'Double click to reset position'
   }
 
   dom.panelDivider.addEventListener('dblclick', () => {
-    app.settings.inputWidth = settings.defaults.inputWidth
-    dom.input.style.width = `${settings.defaults.inputWidth}%`
-    store.set('settings', app.settings)
+    dom.input.style.width = `${defaultWidth}%`
+    store.set('inputWidth', defaultWidth)
     dividerTooltip()
   })
 
@@ -118,14 +121,13 @@ const setupPanelResizer = () => {
 
   dom.mainPanel.addEventListener('mousemove', (event) => {
     if (isResizing) {
-      const offset = app.settings.lineNumbers ? 12 : 27
+      const offset = 10
       const pointerRelativeXpos = event.clientX - dom.mainPanel.offsetLeft - offset
       let inputWidth = (pointerRelativeXpos / dom.mainPanel.clientWidth) * 100
       inputWidth = Math.max(0, Math.min(100, inputWidth))
 
       dom.input.style.width = inputWidth + '%'
-      app.settings.inputWidth = inputWidth
-      store.set('settings', app.settings)
+      store.set('inputWidth', inputWidth)
 
       clearTimeout(resizeDelay)
       resizeDelay = setTimeout(calculate, 10)
