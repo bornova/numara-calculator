@@ -188,7 +188,7 @@ export const udfInput = CodeMirror.fromTextArea(dom.udfInput, udOptions)
 export const uduInput = CodeMirror.fromTextArea(dom.uduInput, udOptions)
 
 // Codemirror handlers
-cm.on('change', calculate)
+cm.on('changes', calculate)
 
 cm.on('inputRead', (cm) => {
   if (!app.settings.autocomplete) return
