@@ -136,14 +136,9 @@ export function calculate() {
     let line = cmLine.text.trim().split('//')[0].split('#')[0]
 
     cm.removeLineClass(cmLine, 'gutter', CLASS_LINE_ERROR)
-
-    if (app.settings.rulers) {
-      cm.removeLineClass(cmLine, 'wrap', CLASS_NO_RULER)
-      cm.addLineClass(cmLine, 'wrap', CLASS_RULER)
-    } else {
-      cm.removeLineClass(cmLine, 'wrap', CLASS_RULER)
-      cm.addLineClass(cmLine, 'wrap', CLASS_NO_RULER)
-    }
+    cm.removeLineClass(cmLine, 'wrap', CLASS_RULER)
+    cm.removeLineClass(cmLine, 'wrap', CLASS_NO_RULER)
+    cm.addLineClass(cmLine, 'wrap', app.settings.rulers ? CLASS_RULER : CLASS_NO_RULER)
 
     let answer = ''
     answerCopy = ''
@@ -164,7 +159,9 @@ export function calculate() {
         data-line="${cmLineNo}"
         style="height:${lineHeight}px"
       >
-        <span class="${answer && !answer.startsWith('<a') ? CLASS_ANSWER : ''}" data-copy="${answerCopy}">${answer}</span>
+        <span class="${answer && !answer.startsWith('<a') ? CLASS_ANSWER : ''}" data-copy="${answerCopy}">
+          ${answer}
+        </span>
       </div>`
   })
 
