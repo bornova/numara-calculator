@@ -98,7 +98,6 @@ export function checkAppUpdate() {
         dom.updateButton.addEventListener('click', () => numara.updateApp())
         break
       }
-
       case 'error':
         updateStatusMessage('Error while checking for updates.')
         break
