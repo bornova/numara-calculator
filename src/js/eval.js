@@ -213,6 +213,8 @@ function addScopeHints() {
  * Calculate answers.
  */
 export function calculate() {
+  if (app.refreshCM) cm.refresh()
+
   const avgs = []
   const totals = []
   const subtotals = []

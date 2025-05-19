@@ -413,3 +413,11 @@ document.addEventListener('mouseover', (event) => {
     isValid && app.settings.keywordTips ? `Insert 'line${event.target.innerText}' to Line ${activeLine}` : ''
   )
 })
+
+document.addEventListener('keydown', (event) => {
+  app.refreshCM = !event.repeat
+})
+
+document.addEventListener('keyup', () => {
+  app.refreshCM = true
+})
