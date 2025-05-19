@@ -188,7 +188,7 @@ export const udfInput = CodeMirror.fromTextArea(dom.udfInput, udOptions)
 export const uduInput = CodeMirror.fromTextArea(dom.uduInput, udOptions)
 
 // Codemirror handlers
-cm.on('changes', calculate)
+cm.on('change', calculate)
 
 cm.on('inputRead', (cm) => {
   if (!app.settings.autocomplete) return
@@ -412,12 +412,4 @@ document.addEventListener('mouseover', (event) => {
     'title',
     isValid && app.settings.keywordTips ? `Insert 'line${event.target.innerText}' to Line ${activeLine}` : ''
   )
-})
-
-document.addEventListener('keydown', (event) => {
-  app.refreshCM = !event.repeat
-})
-
-document.addEventListener('keyup', () => {
-  app.refreshCM = true
 })
