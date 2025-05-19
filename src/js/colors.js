@@ -17,10 +17,9 @@ let activePicker = null
 function resetActivePickerColor() {
   if (!activePicker) return
 
-  const def = colors.defaults[activePicker.dataset.class][activePicker.dataset.theme]
   const colorInput = dom.el('#clr-color-value')
 
-  colorInput.value = def
+  colorInput.value = colors.defaults[activePicker.dataset.class][activePicker.dataset.theme]
   colorInput.dispatchEvent(new Event('change'))
   activePicker.dispatchEvent(new Event('input', { bubbles: true }))
 }
@@ -29,8 +28,7 @@ export function checkColorChange() {
   const theme = getTheme()
 
   colorInputs.forEach((picker) => {
-    const def = colors.defaults[picker.dataset.class][picker.dataset.theme]
-    const isSame = picker.value === def
+    const isSame = picker.value === colors.defaults[picker.dataset.class][picker.dataset.theme]
 
     picker.style.borderLeft = isSame ? (theme === 'light' ? BORDER_LIGHT : BORDER_DARK) : BORDER_CHANGED
   })
@@ -148,9 +146,7 @@ export const colors = {
     app.colors = store.get('colors')
 
     colorInputs.forEach((picker) => {
-      const def = colors.defaults[picker.dataset.class][picker.dataset.theme]
-
-      picker.value = def
+      picker.value = colors.defaults[picker.dataset.class][picker.dataset.theme]
       picker.dispatchEvent(new Event('input', { bubbles: true }))
     })
 
