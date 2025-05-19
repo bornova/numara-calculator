@@ -62,7 +62,6 @@ export const settings = {
     expUpper: '12',
     fontSize: '1.1rem',
     fontWeight: '400',
-    inputWidth: 60,
     keywordTips: true,
     lineErrors: true,
     lineHeight: '24px',
@@ -212,7 +211,6 @@ export const settings = {
       el.style.setProperty('line-height', app.settings.lineHeight, 'important')
     }
 
-    dom.input.style.width = (app.settings.divider ? app.settings.inputWidth : settings.defaults.inputWidth) + '%'
     dom.panelDivider.style.display = app.settings.divider ? 'block' : 'none'
     dom.output.style.textAlign = app.settings.divider ? 'left' : 'right'
 
