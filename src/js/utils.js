@@ -43,8 +43,6 @@ export const isElectron = userAgent.includes('electron')
 
 /** Get app theme */
 export function getTheme() {
-  app.settings = store.get('settings')
-
   if (app.settings.theme === 'dark') return 'dark'
   if (app.settings.theme === 'system' && isElectron) return numara.isDark() ? 'dark' : 'light'
 
@@ -54,11 +52,6 @@ export function getTheme() {
 /** Check window size. */
 export function checkSize() {
   dom.resetSizeButton.style.display = isElectron && numara.isResized() && !numara.isMaximized() ? 'block' : 'none'
-}
-
-/** Minimize/maximize window. */
-export function toggleMinMax() {
-  numara.isMaximized() ? numara.minimize() : numara.maximize()
 }
 
 /** Check for app update */
@@ -105,7 +98,6 @@ export function checkAppUpdate() {
         dom.updateButton.addEventListener('click', () => numara.updateApp())
         break
       }
-
       case 'error':
         updateStatusMessage('Error while checking for updates.')
         break

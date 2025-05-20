@@ -14,27 +14,14 @@ import UIkit from 'uikit'
 export function getPageName() {
   const pages = store.get('pages') || []
   const usedNumbers = new Set(
-    pages
-      .map((page) => {
-        const match = page.name.trim().match(/^Page (\d+)$/)
-        return match ? Number(match[1]) : null
-      })
-      .filter((n) => n !== null)
+    pages.map((page) => Number(page.name.trim().replace(/^Page (\d+)$/, '$1')) || null).filter((n) => n !== null)
   )
 
   let pageNo = 1
-  while (usedNumbers.has(pageNo)) {
-    pageNo++
-  }
+  while (usedNumbers.has(pageNo)) pageNo++
 
   return `Page ${pageNo}`
 }
-
-/**
- * Get last page from store.
- * @returns {string} The last page ID.
- */
-export const lastPage = () => store.get('lastPage')
 
 /**
  * Generate default page.
@@ -99,7 +86,6 @@ export function duplicatePage(pageId) {
   const dupPageData = dupPage.data
   const baseName = dupPage.name + ' (copy)'
   let dupPageName = baseName
-
   let count = 1
 
   while (pages.some((p) => p.name === dupPageName)) {
@@ -199,9 +185,7 @@ export function loadPage(pageId) {
 
   cm.setValue(data)
 
-  if (history) {
-    cm.setHistory(history)
-  }
+  if (history) cm.setHistory(history)
 
   cm.execCommand('goLineEnd')
 
@@ -224,11 +208,11 @@ export function loadPage(pageId) {
  * Initialize pages.
  */
 export function initializePages() {
-  if (!store.get('pages')) {
-    defaultPage()
+  if (store.get('pages')) {
+    app.activePage = store.get('lastPage')
+    loadPage(app.activePage)
   } else {
-    app.activePage = lastPage()
-    loadPage(lastPage())
+    defaultPage()
   }
 
   populatePages()
@@ -240,9 +224,7 @@ export function initializePages() {
 export function populatePages() {
   const pages = store.get('pages')
 
-  if (!pages || pages.length === 0) {
-    defaultPage()
-  }
+  if (!pages || pages.length === 0) defaultPage()
 
   dom.pageList.innerHTML = ''
 
@@ -331,33 +313,27 @@ function newPageDialog() {
   modal.show('#dialogNewPage')
 }
 
+dom.closeSidePanelButton.addEventListener('click', () => UIkit.offcanvas('#sidePanel').hide())
 dom.newPageButton.addEventListener('click', newPageDialog)
 dom.newPageButtonSP.addEventListener('click', newPageDialog)
 dom.dialogNewPageSave.addEventListener('click', () => newPage(false))
 dom.newPageTitleInput.addEventListener('keyup', (event) => {
-  if (event.key === 'Enter' || event.keyCode === 13) {
-    dom.dialogNewPageSave.click()
-  }
+  if (event.key === 'Enter') dom.dialogNewPageSave.click()
 })
 dom.deleteAllPagesButton.addEventListener('click', deleteAllPages)
-dom.renamePageTitleInput.addEventListener('keyup', (event) => {
-  if (event.key === 'Enter' || event.keyCode === 13) {
-    dom.dialogRenamePageSave.click()
-  }
-})
 dom.sortOldNew.addEventListener('click', () => sortPages('oldnew'))
 dom.sortNewOld.addEventListener('click', () => sortPages('newold'))
 dom.sortAZ.addEventListener('click', () => sortPages('az'))
 dom.sortZA.addEventListener('click', () => sortPages('za'))
-dom.closeSidePanelButton.addEventListener('click', () => UIkit.offcanvas('#sidePanel').hide())
-dom.printButton.addEventListener('click', () => window.print())
+dom.renamePageTitleInput.addEventListener('keyup', (event) => {
+  if (event.key === 'Enter') dom.dialogRenamePageSave.click()
+})
+
 dom.pageList.addEventListener('scroll', () => {
   dom.els('.uk-dropdown').forEach((el) => {
     const dropdown = UIkit.dropdown(el)
 
-    if (dropdown) {
-      dropdown.hide(0)
-    }
+    if (dropdown) dropdown.hide(0)
   })
 })
 
@@ -396,13 +372,14 @@ if (isElectron) {
 }
 
 document.addEventListener('click', (event) => {
-  let pageId = event.target?.dataset?.page
-
-  if (event.target.parentNode.dataset.action === 'load') {
-    pageId = event.target.parentNode.parentNode.id
+  if (event.target.parentNode?.dataset?.action === 'load') {
+    let pageId = event.target.parentNode.parentNode.id
     loadPage(pageId)
     UIkit.offcanvas('#sidePanel').hide()
+    return
   }
+
+  let pageId = event.target?.dataset?.page
 
   switch (event.target.dataset.action) {
     case 'rename':

@@ -48,27 +48,24 @@ function evaluateLine(line, lineNo, cmLine, avgs, totals, subtotals) {
   let answerCopy = ''
 
   try {
-    line =
-      lineNo > 1 &&
-      REGEX_CONTINUATION.test(line.charAt(0)) &&
-      cm.getLine(lineNo - 2).length > 0 &&
-      app.settings.contPrevLine
-        ? app.mathScope.ans + line
-        : line
+    if (lineNo > 1 && REGEX_CONTINUATION.test(line.charAt(0)) && app.settings.contPrevLine) {
+      const prevLine = cm.getLine(lineNo - 2)
 
-    app.mathScope.avg = math.evaluate(avgs.length > 0 ? '(' + math.mean(avgs) + ')' : '0')
-    app.mathScope.total = math.evaluate(totals.length > 0 ? '(' + totals.join('+') + ')' : '0')
-    app.mathScope.subtotal = math.evaluate(subtotals.length > 0 ? '(' + subtotals.join('+') + ')' : '0')
+      if (prevLine && prevLine.length > 0) line = app.mathScope.ans + line
+    }
+
+    app.mathScope.avg = avgs.length > 0 ? math.mean(avgs) : 0
+    app.mathScope.total = totals.length > 0 ? totals.reduce((a, b) => a + b, 0) : 0
+    app.mathScope.subtotal = subtotals.length > 0 ? subtotals.reduce((a, b) => a + b, 0) : 0
 
     try {
       answer = math.evaluate(line, app.mathScope)
     } catch {
-      answer = evaluate(line)
+      answer = altEvaluate(line)
     }
 
     if (!(answer || answer === 0)) {
       subtotals.length = 0
-
       return { answer: '', answerCopy: '' }
     }
 
@@ -105,91 +102,11 @@ function evaluateLine(line, lineNo, cmLine, avgs, totals, subtotals) {
 }
 
 /**
- * Calculate answers.
- */
-export function calculate() {
-  if (app.refreshCM) cm.refresh()
-
-  const avgs = []
-  const totals = []
-  const subtotals = []
-  const dateTime = DateTime.now().setLocale(app.settings.locale)
-  const cmValue = cm.getValue()
-  const cmHistory = cm.getHistory()
-
-  let answers = ''
-  let answerCopy = ''
-
-  app.mathScope = {}
-  app.mathScope.now = dateTime.toFormat(app.settings.dateDay ? nowDayFormat : nowFormat)
-  app.mathScope.today = dateTime.toFormat(app.settings.dateDay ? todayDayFormat : todayFormat)
-
-  dom.clearButton.setAttribute('disabled', cmValue === '')
-  dom.copyButton.setAttribute('disabled', cmValue === '')
-
-  // Cache line heights to avoid repeated DOM access
-  const lineHeights = Array.from(cm.display.lineDiv.children).map((child) => child.clientHeight ?? 0)
-
-  cm.eachLine((cmLine) => {
-    const cmLineNo = cm.getLineNumber(cmLine)
-    const lineNo = cmLineNo + 1
-    let line = cmLine.text.trim().split('//')[0].split('#')[0]
-
-    cm.removeLineClass(cmLine, 'gutter', CLASS_LINE_ERROR)
-
-    if (app.settings.rulers) {
-      cm.removeLineClass(cmLine, 'wrap', CLASS_NO_RULER)
-      cm.addLineClass(cmLine, 'wrap', CLASS_RULER)
-    } else {
-      cm.removeLineClass(cmLine, 'wrap', CLASS_RULER)
-      cm.addLineClass(cmLine, 'wrap', CLASS_NO_RULER)
-    }
-
-    let answer = ''
-    answerCopy = ''
-
-    if (line) {
-      const result = evaluateLine(line, lineNo, cmLine, avgs, totals, subtotals)
-
-      answer = result.answer
-      answerCopy = result.answerCopy
-    } else {
-      subtotals.length = 0
-    }
-
-    const lineHeight = lineHeights[cmLineNo]
-
-    answers += `<div
-        class="${app.settings.rulers ? CLASS_RULER : CLASS_NO_RULER} uk-display-block"
-        data-line="${cmLineNo}"
-        style="height:${lineHeight}px"
-      >
-        <span class="${answer && !answer.startsWith('<a') ? CLASS_ANSWER : ''}" data-copy="${answerCopy}">${answer}</span>
-      </div>`
-  })
-
-  dom.output.innerHTML = answers
-
-  addScopeHints()
-
-  if (app.activePage) {
-    const pages = store.get('pages')
-    const page = pages.find((page) => page.id === app.activePage)
-
-    if (!page || (page.data === cmValue && JSON.stringify(page.history) === JSON.stringify(cmHistory))) return
-
-    page.data = cmValue
-    page.history = cmHistory
-    store.set('pages', pages)
-  }
-}
-
-/**
  * Secondary evaluate method to try if math.evaluate fails.
  * @param {string} line - The line to evaluate.
  * @returns {*} - The evaluated result.
  */
-function evaluate(line) {
+function altEvaluate(line) {
   if (line.includes(':')) {
     try {
       math.evaluate(line.split(':')[0])
@@ -290,4 +207,97 @@ function addScopeHints() {
 
     numaraHints.push({ text: v, desc: 'Variable', className: 'cm-variable' })
   })
+}
+
+/**
+ * Calculate answers.
+ */
+export function calculate() {
+  if (app.refreshCM) cm.refresh()
+
+  const avgs = []
+  const totals = []
+  const subtotals = []
+  const dateTime = DateTime.now().setLocale(app.settings.locale)
+  const cmValue = cm.getValue()
+  const cmHistory = cm.getHistory()
+
+  let answers = ''
+  let answerCopy = ''
+
+  app.mathScope = {}
+  app.mathScope.now = dateTime.toFormat(app.settings.dateDay ? nowDayFormat : nowFormat)
+  app.mathScope.today = dateTime.toFormat(app.settings.dateDay ? todayDayFormat : todayFormat)
+
+  dom.clearButton.setAttribute('disabled', cmValue === '')
+  dom.copyButton.setAttribute('disabled', cmValue === '')
+
+  const lineHeights = Array.from(cm.display.lineDiv.children).map((child) => child.clientHeight ?? 0)
+  const useRulers = app.settings.rulers
+  const classRuler = useRulers ? CLASS_RULER : CLASS_NO_RULER
+  const totalLines = cm.lineCount()
+
+  for (let cmLineNo = 0; cmLineNo < totalLines; cmLineNo++) {
+    const cmLine = cm.getLineHandle(cmLineNo)
+    const lineNo = cmLineNo + 1
+
+    let line = cmLine.text.trim()
+    const commentIdx = line.indexOf('//')
+    const hashIdx = line.indexOf('#')
+    if (commentIdx !== -1 || hashIdx !== -1) {
+      const idx =
+        commentIdx !== -1 && hashIdx !== -1 ? Math.min(commentIdx, hashIdx) : commentIdx !== -1 ? commentIdx : hashIdx
+
+      line = line.substring(0, idx)
+    }
+
+    cm.removeLineClass(cmLine, 'gutter', 'lineNoError')
+
+    if (useRulers) {
+      cm.removeLineClass(cmLine, 'wrap', 'noRuler')
+      cm.addLineClass(cmLine, 'wrap', 'ruler')
+    } else {
+      cm.removeLineClass(cmLine, 'wrap', 'ruler')
+      cm.addLineClass(cmLine, 'wrap', 'noRuler')
+    }
+
+    let answer = ''
+    answerCopy = ''
+
+    if (line) {
+      const result = evaluateLine(line, lineNo, cmLine, avgs, totals, subtotals)
+
+      answer = result.answer
+      answerCopy = result.answerCopy
+    } else {
+      subtotals.length = 0
+    }
+
+    const lineHeight = lineHeights[cmLineNo]
+
+    answers += `<div
+        class="${classRuler} uk-display-block"
+        data-line="${cmLineNo}"
+        style="height:${lineHeight}px"
+      >
+        <span class="${answer && !answer.startsWith('<a') ? CLASS_ANSWER : ''}" data-copy="${answerCopy}">
+          ${answer}
+        </span>
+      </div>`
+  }
+
+  if (dom.output.innerHTML !== answers) dom.output.innerHTML = answers
+
+  addScopeHints()
+
+  if (app.activePage) {
+    const pages = store.get('pages')
+    const page = pages.find((page) => page.id === app.activePage)
+
+    if (!page || (page.data === cmValue && JSON.stringify(page.history) === JSON.stringify(cmHistory))) return
+
+    page.data = cmValue
+    page.history = cmHistory
+    store.set('pages', pages)
+  }
 }

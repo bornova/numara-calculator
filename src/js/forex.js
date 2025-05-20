@@ -59,14 +59,12 @@ function updateCurrencyRates(rates) {
       { override: true }
     )
 
-    if (!numaraHints.some((hint) => hint.text === code)) {
+    if (numaraHints.every((hint) => hint.text !== code)) {
       numaraHints.push({ text: code, desc: name, className: 'cm-currency' })
     }
 
     lastDate = date
   }
 
-  if (lastDate) {
-    store.set('rateDate', lastDate)
-  }
+  if (lastDate) store.set('rateDate', lastDate)
 }

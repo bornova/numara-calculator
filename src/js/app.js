@@ -9,10 +9,9 @@ import { getPageName, initializePages, pageOrder, populatePages } from './pages'
 import { plot } from './plot'
 import { settings } from './settings'
 import { applyUdfu } from './userDefined'
-import { app, checkAppUpdate, isMac, isElectron, store, toggleMinMax } from './utils'
+import { app, checkAppUpdate, isMac, isElectron, store } from './utils'
 
 import { author, description, homepage, name, version } from './../../package.json'
-
 import { tinykeys } from 'tinykeys'
 
 import UIkit from 'uikit'
@@ -28,32 +27,27 @@ const setupHeaders = () => {
     dom.headerWin.remove()
     dom.headerMac.style.display = 'block'
     dom.headerMacTitle.innerHTML = name
-
-    if (isElectron) {
-      dom.headerMac.addEventListener('dblclick', toggleMinMax)
-    }
   }
 }
 
 const setupActionButtons = () => {
-  const buttonActions = [
+  const actionButtons = [
+    { btn: 'printButton', action: () => window.print() },
     {
-      btn: dom.clearButton,
-      handler: () => {
-        if (cm.getValue() !== '') {
-          cm.setValue('')
-          cm.focus()
-          calculate()
-        }
+      btn: 'clearButton',
+      action: () => {
+        cm.setValue('')
+        cm.focus()
+        calculate()
       }
     },
-    { btn: dom.copyButton, handler: copyAll },
-    { btn: dom.udfuButton, handler: () => modal.show('#dialogUdfu') },
-    { btn: dom.settingsButton, handler: () => modal.show('#dialogSettings') },
-    { btn: dom.aboutButton, handler: () => modal.show('#dialogAbout') }
+    { btn: 'copyButton', action: () => copyAll() },
+    { btn: 'udfuButton', action: () => modal.show('#dialogUdfu') },
+    { btn: 'settingsButton', action: () => modal.show('#dialogSettings') },
+    { btn: 'aboutButton', action: () => modal.show('#dialogAbout') }
   ]
 
-  buttonActions.forEach(({ btn, handler }) => btn.addEventListener('click', handler))
+  actionButtons.forEach(({ btn, action }) => dom[btn].addEventListener('click', action))
 }
 
 const setupOutputPanelActions = () => {
@@ -89,41 +83,31 @@ const setupOutputPanelActions = () => {
   })
 
   dom.output.addEventListener('mousedown', () => {
-    const sels = document.getElementsByClassName('CodeMirror-selected')
-
-    while (sels[0]) {
-      sels[0].classList.remove('CodeMirror-selected')
-    }
+    dom.els('.CodeMirror-selected').forEach((el) => el.classList.remove('CodeMirror-selected'))
   })
 }
 
 const setupUserDefined = () => {
-  // Set user defined values
-  if (!store.get('udf')) {
-    store.set('udf', '')
-  }
-
-  if (!store.get('udu')) {
-    store.set('udu', '')
-  }
-
-  applyUdfu(store.get('udf'), 'func')
-  applyUdfu(store.get('udu'), 'unit')
+  applyUdfu(store.get('udf') || '', 'func')
+  applyUdfu(store.get('udu') || '', 'unit')
 }
 
 const setupPanelResizer = () => {
+  const defaultWidth = 60
   let resizeDelay
   let isResizing = false
 
+  let inputWidth = store.get('inputWidth') || defaultWidth
+  dom.input.style.width = (app.settings.divider ? inputWidth : defaultWidth) + '%'
+
   const dividerTooltip = () => {
     dom.panelDivider.title =
-      dom.input.style.width === settings.defaults.inputWidth + '%' ? 'Drag to resize' : 'Double click to reset position'
+      dom.input.style.width === `${defaultWidth}%` ? 'Drag to resize' : 'Double click to reset position'
   }
 
   dom.panelDivider.addEventListener('dblclick', () => {
-    app.settings.inputWidth = settings.defaults.inputWidth
-    store.set('settings', app.settings)
-    settings.apply()
+    dom.input.style.width = `${defaultWidth}%`
+    store.set('inputWidth', defaultWidth)
     dividerTooltip()
   })
 
@@ -137,21 +121,20 @@ const setupPanelResizer = () => {
 
   dom.mainPanel.addEventListener('mousemove', (event) => {
     if (isResizing) {
-      const offset = app.settings.lineNumbers ? 12 : 27
+      const offset = 10
       const pointerRelativeXpos = event.clientX - dom.mainPanel.offsetLeft - offset
       let inputWidth = (pointerRelativeXpos / dom.mainPanel.clientWidth) * 100
       inputWidth = Math.max(0, Math.min(100, inputWidth))
 
       dom.input.style.width = inputWidth + '%'
-      app.settings.inputWidth = inputWidth
-      store.set('settings', app.settings)
+      store.set('inputWidth', inputWidth)
 
       clearTimeout(resizeDelay)
       resizeDelay = setTimeout(calculate, 10)
     }
-
-    dividerTooltip()
   })
+
+  dom.panelDivider.addEventListener('mousemove', dividerTooltip)
 }
 
 const setupSyncScroll = () => {
@@ -215,9 +198,7 @@ const setupAppInfo = () => {
 
     // Open developer Tools
     dom.dialogAboutAppVersion.addEventListener('click', (event) => {
-      if (event.detail === 9) {
-        numara.openDevTools()
-      }
+      if (event.detail === 9) numara.openDevTools()
     })
   }
 }
@@ -250,12 +231,14 @@ const setupKeyboardShortcuts = () => {
 const setupPrintArea = () => {
   window.addEventListener('beforeprint', () => {
     const printArea = document.createElement('div')
+    const rows = []
 
     printArea.setAttribute('id', 'printArea')
     printArea.className = 'printArea'
     printArea.innerHTML = `
       <div id="printTitle" class="printTitle">${name}</div>
-      <table id="printPage"
+      <table
+        id="printPage"
         class="printPage ${app.settings.rulers ? 'printRulers' : ''}"
         style="
           font-size: ${app.settings.fontSize};
@@ -280,19 +263,18 @@ const setupPrintArea = () => {
           <td class="printAnswer${app.settings.divider ? 'Left' : 'Right'}">${answer}</td>
         </tr>`
 
-      document.getElementById('printPage').innerHTML += row
+      rows.push(row)
     })
 
+    document.getElementById('printPage').innerHTML = rows.join('')
     printArea.innerHTML += `</table>`
   })
 
-  window.addEventListener('afterprint', () => {
-    document.getElementById('printArea').remove()
-  })
+  window.addEventListener('afterprint', () => document.getElementById('printArea').remove())
 }
 
 const setupUIkitUtils = () => {
-  UIkit.mixin({ data: { offset: 5 } }, 'tooltip')
+  UIkit.mixin({ data: { offset: 5, delay: 300 } }, 'tooltip')
 
   UIkit.util.on('.modal, #sidePanel', 'beforeshow', () => {
     if (isElectron) numara.transControls(true)
@@ -303,13 +285,12 @@ const setupUIkitUtils = () => {
 
     if (isElectron) numara.transControls(modalOpen)
 
-    setTimeout(() => {
-      cm.focus()
-    }, 100)
+    setTimeout(() => cm.focus(), 100)
   })
 
   UIkit.util.on('#dialogTheme', 'shown', () => {
     checkColorChange()
+    colors.checkDefaults()
   })
 
   UIkit.util.on('#dialogSettings', 'beforeshow', settings.prep)

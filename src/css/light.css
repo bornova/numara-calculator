@@ -111,10 +111,6 @@ body {
   color: #4682b4;
 }
 
-.deletePageButton {
-  color: #666666;
-}
-
 .deletePageButton:hover {
   color: #b10e0e;
 }
