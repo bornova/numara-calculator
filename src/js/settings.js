@@ -62,6 +62,7 @@ export const settings = {
     expUpper: '12',
     fontSize: '1.1rem',
     fontWeight: '400',
+    inputWidth: 60,
     keywordTips: true,
     lineErrors: true,
     lineHeight: '24px',
@@ -70,6 +71,7 @@ export const settings = {
     locale: 'system',
     matchBrackets: true,
     matrixType: 'Matrix',
+    newPageOnStart: false,
     notation: 'auto',
     notifyDuration: '5000',
     notifyLocation: 'bottom-center',
@@ -144,7 +146,11 @@ export const settings = {
       { 'tr-TR': 'Turkish (Turkey)' }
     ]
 
-    const answerPositions = [{ left: 'Left' }, { right: 'Right' }, { bottom: 'Bottom' }]
+    const answerPositions = [
+      { left: 'Left (with divider)' },
+      { right: 'Right (no divider)' },
+      { bottom: 'Below Expression' }
+    ]
     const matrixTypes = [{ Matrix: 'Matrix' }, { Array: 'Array' }]
     const numericOutputs = [{ number: 'Number' }, { BigNumber: 'BigNumber' }, { Fraction: 'Fraction' }]
     const notations = [
@@ -231,21 +237,27 @@ export const settings = {
       })
     }
 
-    dom.panelDivider.style.removeProperty('--divider', 'transparent')
-
-    if (app.settings.answerPosition === 'bottom') {
-      dom.input.style.width = '100%'
-      dom.output.style.width = '20px'
-    } else if (app.settings.answerPosition === 'left') {
-      dom.input.style.width = store.get('inputWidth') + '%'
-    } else {
-      dom.panelDivider.style.setProperty('--divider', 'transparent')
-      dom.input.style.width = '60%'
+    // Set input/output widths and styles based on answer position
+    switch (app.settings.answerPosition) {
+      case 'bottom':
+        dom.input.style.width = '100%'
+        dom.output.style.width = '20px'
+        dom.output.style.minWidth = '20px'
+        dom.output.style.textAlign = 'right'
+        break
+      case 'left':
+        dom.input.style.width = (store.get('inputWidth') || 60) + '%'
+        dom.output.style.minWidth = '120px'
+        dom.output.style.textAlign = 'left'
+        break
+      case 'right':
+      default:
+        dom.input.style.width = '60%'
+        dom.output.style.textAlign = 'right'
+        break
     }
 
-    dom.panelDivider.style.display = app.settings.answerPosition === 'bottom' ? 'none' : 'block'
-    dom.output.style.minWidth = app.settings.answerPosition === 'bottom' ? '20px' : '120px'
-    dom.output.style.textAlign = app.settings.answerPosition === 'left' ? 'left' : 'right'
+    dom.panelDivider.style.display = app.settings.answerPosition === 'left' ? 'block' : 'none'
 
     cm.setOption('mode', app.settings.syntax ? 'numara' : 'plain')
     cm.setOption('lineNumbers', app.settings.lineNumbers)
