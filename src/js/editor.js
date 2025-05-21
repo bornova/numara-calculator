@@ -157,8 +157,9 @@ CodeMirror.commands.autocomplete = (cm) => {
 // Force editor line bottom alignment
 function cmForceBottom() {
   const lineTop = cm.display.lineDiv.children[cm.getCursor().line].getBoundingClientRect().top
+  const lineBottom = cm.display.lineDiv.children[cm.getCursor().line].getBoundingClientRect().bottom
   const barTop = dom.el('.CodeMirror-hscrollbar').getBoundingClientRect().top
-  const lineHeight = +app.settings.lineHeight.replace('px', '') + 1
+  const lineHeight = lineBottom - lineTop
 
   if (barTop - lineTop < lineHeight) dom.output.scrollTop = dom.output.scrollTop + (lineHeight - (barTop - lineTop))
 }
@@ -188,7 +189,13 @@ export const udfInput = CodeMirror.fromTextArea(dom.udfInput, udOptions)
 export const uduInput = CodeMirror.fromTextArea(dom.uduInput, udOptions)
 
 // Codemirror handlers
-cm.on('changes', calculate)
+let calculateTimeout
+cm.on('changes', () => {
+  clearTimeout(calculateTimeout)
+  calculateTimeout = setTimeout(() => {
+    calculate()
+  }, cm.lineCount())
+})
 
 cm.on('inputRead', (cm) => {
   if (!app.settings.autocomplete) return
