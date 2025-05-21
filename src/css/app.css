@@ -249,8 +249,7 @@ text {
   pointer-events: none;
 }
 
-.lineError,
-.plotButton {
+.lineError {
   margin: 0 12px 0 5px;
 }
 

@@ -1,4 +1,8 @@
 /* Light theme CSS */
+:root {
+  --divider: #eaeaea;
+}
+
 html,
 body {
   background-color: #ffffff;
@@ -54,7 +58,7 @@ body {
 }
 
 .divider::before {
-  background-color: #eaeaea !important;
+  background-color: var(--divider) !important;
 }
 .divider:hover::before {
   background-color: #b7d5e6 !important;

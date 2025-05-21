@@ -1,4 +1,8 @@
 /* Dark theme CSS */
+:root {
+  --divider: #3b3b3b;
+}
+
 html,
 body {
   background-color: #1f1f1f;
@@ -52,7 +56,7 @@ body {
 }
 
 .divider::before {
-  background-color: #3b3b3b !important;
+  background-color: var(--divider) !important;
 }
 
 .divider:hover::before {
