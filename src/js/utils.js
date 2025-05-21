@@ -13,7 +13,8 @@ export const app = {
   refreshCM: true,
   settings: null,
   udfList: [],
-  uduList: []
+  uduList: [],
+  widgetMap: new WeakMap()
 }
 
 /** Local storage utility. */
