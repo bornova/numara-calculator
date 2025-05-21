@@ -33,15 +33,15 @@ function bigNumberWarning() {
 function populateSelect(selectEl, options, disabledValue = null) {
   selectEl.innerHTML = ''
 
-  for (const opt of options) {
-    if (opt === disabledValue) {
+  options.forEach((option) => {
+    const [value, opt] = Object.entries(option)[0]
+
+    if (value === disabledValue) {
       selectEl.innerHTML += `<option disabled>${opt}</option>`
-    } else if (Array.isArray(opt)) {
-      selectEl.innerHTML += `<option value="${opt[1]}">${opt[0]}</option>`
     } else {
-      selectEl.innerHTML += `<option value="${opt}">${opt.charAt(0).toUpperCase() + opt.slice(1)}</option>`
+      selectEl.innerHTML += `<option value="${value}">${opt}</option>`
     }
-  }
+  })
 }
 
 let updateInterval
@@ -50,6 +50,7 @@ export const settings = {
   /** Default settings. */
   defaults: {
     alwaysOnTop: false,
+    answerPosition: 'left',
     autocomplete: true,
     closeBrackets: true,
     contPrevLine: true,
@@ -57,7 +58,6 @@ export const settings = {
     currency: true,
     currencyInterval: '0',
     dateDay: false,
-    divider: true,
     expLower: '-12',
     expUpper: '12',
     fontSize: '1.1rem',
@@ -128,29 +128,40 @@ export const settings = {
   /** Prepare settings dialog items. */
   prep: () => {
     const locales = [
-      ['System', 'system'],
-      ['Chinese (PRC)', 'zh-CN'],
-      ['English (Canada)', 'en-CA'],
-      ['English (UK)', 'en-GB'],
-      ['English (US)', 'en-US'],
-      ['French (France)', 'fr-FR'],
-      ['German (Germany)', 'de-DE'],
-      ['Italian (Italy)', 'it-IT'],
-      ['Japanese (Japan)', 'ja-JP'],
-      ['Portuguese (Brazil)', 'pt-BR'],
-      ['Russian (Russia)', 'ru-RU'],
-      ['Spanish (Mexico)', 'es-MX'],
-      ['Spanish (Spain)', 'es-ES'],
-      ['Turkish (Turkey)', 'tr-TR']
+      { system: 'System' },
+      { 'zh-CN': 'Chinese (PRC)' },
+      { 'en-CA': 'English (Canada)' },
+      { 'en-GB': 'English (UK)' },
+      { 'en-US': 'English (US)' },
+      { 'fr-FR': 'French (France)' },
+      { 'de-DE': 'German (Germany)' },
+      { 'it-IT': 'Italian (Italy)' },
+      { 'ja-JP': 'Japanese (Japan)' },
+      { 'pt-BR': 'Portuguese (Brazil)' },
+      { 'ru-RU': 'Russian (Russia)' },
+      { 'es-MX': 'Spanish (Mexico)' },
+      { 'es-ES': 'Spanish (Spain)' },
+      { 'tr-TR': 'Turkish (Turkey)' }
     ]
 
-    const matrixTypes = ['Matrix', 'Array']
-    const numericOutputs = ['number', 'BigNumber', 'Fraction']
-    const notations = ['auto', 'engineering', 'exponential', 'fixed', '-', 'bin', 'hex', 'oct']
+    const answerPositions = [{ left: 'Left' }, { right: 'Right' }, { bottom: 'Bottom' }]
+    const matrixTypes = [{ Matrix: 'Matrix' }, { Array: 'Array' }]
+    const numericOutputs = [{ number: 'Number' }, { BigNumber: 'BigNumber' }, { Fraction: 'Fraction' }]
+    const notations = [
+      { auto: 'Auto' },
+      { engineering: 'Engineering' },
+      { exponential: 'Exponential' },
+      { fixed: 'Fixed' },
+      { spacer: '-' },
+      { bin: 'Binary' },
+      { hex: 'Hexadecimal' },
+      { oct: 'Octal' }
+    ]
 
+    populateSelect(dom.answerPosition, answerPositions)
     populateSelect(dom.locale, locales)
     populateSelect(dom.numericOutput, numericOutputs)
-    populateSelect(dom.notation, notations, '-')
+    populateSelect(dom.notation, notations, 'spacer')
     populateSelect(dom.matrixType, matrixTypes)
 
     dom.precisionLabel.innerHTML = app.settings.precision
@@ -203,16 +214,38 @@ export const settings = {
       numara.setOnTop(app.settings.alwaysOnTop)
     }
 
-    const elements = dom.els('.panelFont, .input .CodeMirror')
-
-    for (const el of elements) {
+    dom.els('.panelFont, .input .CodeMirror').forEach((el) => {
       el.style.fontSize = app.settings.fontSize
       el.style.fontWeight = app.settings.fontWeight
       el.style.setProperty('line-height', app.settings.lineHeight, 'important')
+    })
+
+    if (app.settings.answerPosition !== 'bottom') {
+      cm.eachLine((cmLine) => {
+        const existingWidget = app.widgetMap.get(cmLine)
+
+        if (existingWidget) {
+          existingWidget.clear()
+          app.widgetMap.delete(cmLine)
+        }
+      })
     }
 
-    dom.panelDivider.style.display = app.settings.divider ? 'block' : 'none'
-    dom.output.style.textAlign = app.settings.divider ? 'left' : 'right'
+    dom.panelDivider.style.removeProperty('--divider', 'transparent')
+
+    if (app.settings.answerPosition === 'bottom') {
+      dom.input.style.width = '100%'
+      dom.output.style.width = '20px'
+    } else if (app.settings.answerPosition === 'left') {
+      dom.input.style.width = store.get('inputWidth') + '%'
+    } else {
+      dom.panelDivider.style.setProperty('--divider', 'transparent')
+      dom.input.style.width = '60%'
+    }
+
+    dom.panelDivider.style.display = app.settings.answerPosition === 'bottom' ? 'none' : 'block'
+    dom.output.style.minWidth = app.settings.answerPosition === 'bottom' ? '20px' : '120px'
+    dom.output.style.textAlign = app.settings.answerPosition === 'left' ? 'left' : 'right'
 
     cm.setOption('mode', app.settings.syntax ? 'numara' : 'plain')
     cm.setOption('lineNumbers', app.settings.lineNumbers)
