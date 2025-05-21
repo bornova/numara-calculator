@@ -82,6 +82,7 @@ export const dom = {
   expLower: document.getElementById('expLower'),
   expLowerLabel: document.getElementById('expLowerLabel'),
   matrixType: document.getElementById('matrixType'),
+  answerPosition: document.getElementById('answerPosition'),
   keywordTips: document.getElementById('keywordTips'),
   matchBrackets: document.getElementById('matchBrackets'),
   locale: document.getElementById('locale'),
