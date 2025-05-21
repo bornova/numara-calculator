@@ -93,7 +93,7 @@ const setupUserDefined = () => {
 }
 
 const setupPanelResizer = () => {
-  const defaultWidth = 60
+  const defaultWidth = settings.defaults.inputWidth
   let resizeDelay
   let isResizing = false
 
