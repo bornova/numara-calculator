@@ -51,13 +51,13 @@ const setupActionButtons = () => {
 }
 
 const setupOutputPanelActions = () => {
-  dom.output.addEventListener('click', (event) => {
+  document.addEventListener('click', (event) => {
     switch (event.target.className) {
       case 'answer':
         navigator.clipboard.writeText(event.target.dataset.copy)
         notify(`Copied '${event.target.dataset.copy}' to clipboard.`)
         break
-      case 'plotButton': {
+      case 'plotButton answer': {
         const func = event.target.getAttribute('data-func')
 
         app.plotFunction = func.startsWith('line') ? app.mathScope[func] : func
@@ -98,7 +98,13 @@ const setupPanelResizer = () => {
   let isResizing = false
 
   let inputWidth = store.get('inputWidth') || defaultWidth
-  dom.input.style.width = (app.settings.divider ? inputWidth : defaultWidth) + '%'
+  if (app.settings.answerPosition === 'left') {
+    dom.input.style.width = inputWidth + '%'
+  } else if (app.settings.answerPosition === 'bottom') {
+    dom.input.style.width = '100%'
+  } else {
+    dom.input.style.width = defaultWidth + '%'
+  }
 
   const dividerTooltip = () => {
     dom.panelDivider.title =
@@ -260,7 +266,7 @@ const setupPrintArea = () => {
         >
           ${app.settings.lineNumbers ? '<td class="printLineNumCol">' + (lineNo + 1) + '</td>' : ''}
           <td style="width:${app.settings.inputWidth}%;">${input}</td>
-          <td class="printAnswer${app.settings.divider ? 'Left' : 'Right'}">${answer}</td>
+          <td class="printAnswer${app.settings.answerPosition === 'left' ? 'Left' : 'Right'}">${answer}</td>
         </tr>`
 
       rows.push(row)
