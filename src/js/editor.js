@@ -157,8 +157,9 @@ CodeMirror.commands.autocomplete = (cm) => {
 // Force editor line bottom alignment
 function cmForceBottom() {
   const lineTop = cm.display.lineDiv.children[cm.getCursor().line].getBoundingClientRect().top
+  const lineBottom = cm.display.lineDiv.children[cm.getCursor().line].getBoundingClientRect().bottom
   const barTop = dom.el('.CodeMirror-hscrollbar').getBoundingClientRect().top
-  const lineHeight = +app.settings.lineHeight.replace('px', '') + 1
+  const lineHeight = lineBottom - lineTop
 
   if (barTop - lineTop < lineHeight) dom.output.scrollTop = dom.output.scrollTop + (lineHeight - (barTop - lineTop))
 }

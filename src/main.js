@@ -139,7 +139,7 @@ ipcMain.on('import', (event) => {
   const file = dialog.showOpenDialogSync(win, {
     filters: [{ name: 'Numara', extensions: ['numara'] }],
     properties: ['openFile'],
-    title: 'Open Calculations'
+    title: 'Import Calculations'
   })
 
   if (!file) return

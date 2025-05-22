@@ -1,5 +1,5 @@
 import { dom } from './dom'
-import { cm, numaraHints, keywords } from './editor'
+import { cm } from './editor'
 import { app, store } from './utils'
 
 import { DateTime } from 'luxon'
@@ -30,7 +30,7 @@ const CLASS_RULER = 'ruler'
 const CLASS_NO_RULER = 'noRuler'
 const CLASS_LINE_ERROR = 'lineNoError'
 const CLASS_ANSWER = 'answer'
-const CLASS_PLOT_BUTTON = 'plotButton'
+const CLASS_PLOT_BUTTON = 'plotButton answer'
 const CLASS_LINE_ERROR_LINK = 'lineError'
 
 /**
@@ -195,18 +195,26 @@ export function formatAnswer(answer, useGrouping) {
   return stripAnswer(formattedAnswer)
 }
 
-/**
- * Add scoped items to hints.
- */
-function addScopeHints() {
-  const scopeKeywords = keywords.map((key) => key.text)
-  const vars = Object.keys(app.mathScope).filter((scope) => !scopeKeywords.includes(scope))
+function updateLineWidget(line, answer) {
+  const handle = line
 
-  vars.forEach((v) => {
-    if (numaraHints.some((hint) => hint.text === v) || v === 'line' + cm.lineCount()) return
+  let widget = app.widgetMap.get(handle)
 
-    numaraHints.push({ text: v, desc: 'Variable', className: 'cm-variable' })
-  })
+  if (widget) {
+    widget.node.innerHTML = answer
+  } else {
+    const node = document.createElement('div')
+    node.innerHTML = answer
+
+    widget = cm.addLineWidget(handle, node, {
+      above: false,
+      coverGutter: false,
+      noHScroll: true
+    })
+
+    widget.node = node
+    app.widgetMap.set(handle, widget)
+  }
 }
 
 /**
@@ -274,21 +282,24 @@ export function calculate() {
     }
 
     const lineHeight = lineHeights[cmLineNo]
+    const answerClass = answer && !answer.startsWith('<a') ? CLASS_ANSWER : ''
+    const answerSpan = `<span class="${answerClass}" data-line="${cmLineNo}" data-copy="${answerCopy}">${answer}</span>`
 
-    answers += `<div
-        class="${classRuler} uk-display-block"
-        data-line="${cmLineNo}"
-        style="height:${lineHeight}px"
-      >
-        <span class="${answer && !answer.startsWith('<a') ? CLASS_ANSWER : ''}" data-copy="${answerCopy}">
-          ${answer}
-        </span>
-      </div>`
+    if (app.settings.answerPosition === 'bottom') {
+      const answerDiv = `<div>${answerSpan}</div>`
+      updateLineWidget(cmLine, answerDiv)
+    } else {
+      answers += `<div class="${classRuler}" style="height:${lineHeight}px">${answerSpan}</div>`
+    }
   }
 
-  if (dom.output.innerHTML !== answers) dom.output.innerHTML = answers
-
-  addScopeHints()
+  if (app.settings.answerPosition === 'bottom') {
+    dom.output.innerHTML = `
+      <div style="height: ${dom.el('.CodeMirror-scroll').scrollHeight - 50}px;"></div>
+    `
+  } else if (dom.output.innerHTML !== answers) {
+    dom.output.innerHTML = answers
+  }
 
   if (app.activePage) {
     const pages = store.get('pages')

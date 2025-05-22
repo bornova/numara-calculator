@@ -36,7 +36,7 @@ export function checkColorChange() {
 
 export const colors = {
   defaults: {
-    answer: { title: 'Answers', class: '.output', dark: '#1eb5f0', light: '#17586b' },
+    answer: { title: 'Answers', class: '.answer', dark: '#1eb5f0', light: '#17586b' },
     comment: { title: 'Comments', class: '.cm-comment', dark: '#5a5a5a', light: '#bebebe' },
     constant: { title: 'Constants', class: '.cm-constant', dark: '#39baa0', light: '#2c917d' },
     currency: { title: 'Currencies', class: '.cm-currency', dark: '#009688', light: '#009688' },
@@ -51,7 +51,7 @@ export const colors = {
     keyword: { title: 'Keywords', class: '.cm-keyword, .cm-lineNo', dark: '#e78c3f', light: '#be6317' },
     number: { title: 'Numbers', class: '.cm-number', dark: '#e6e6e6', light: '#333333' },
     operator: { title: 'Operators', class: '.cm-operator', dark: '#bbbbbb', light: '#888888' },
-    plain: { title: 'Plain', class: '.cm-plain, .output', dark: '#e6e6e6', light: '#333333' },
+    plain: { title: 'Plain', class: '.cm-plain, .answer', dark: '#e6e6e6', light: '#333333' },
     unit: { title: 'Units', class: '.cm-unit, .cm-udu', dark: '#6b9cd3', light: '#005cc5' },
     variable: { title: 'Variables', class: '.cm-variable', dark: '#96b4c4', light: '#57707c' }
   },
@@ -125,7 +125,7 @@ export const colors = {
         colorSheet += `${color.class} { color: ${color[appTheme]};}\n`
       })
     } else {
-      colorSheet += `.cm-plain, .output { color: ${app.colors.plain[appTheme]};}\n`
+      colorSheet += `${app.colors.plain.class} { color: ${app.colors.plain[appTheme]};}\n`
     }
 
     dom.colorSheet.innerHTML = colorSheet

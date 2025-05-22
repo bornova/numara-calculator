@@ -249,8 +249,7 @@ text {
   pointer-events: none;
 }
 
-.lineError,
-.plotButton {
+.lineError {
   margin: 0 12px 0 5px;
 }
 
@@ -567,8 +566,7 @@ text {
 }
 
 .lastUpdated {
-  display: inline-block;
-  vertical-align: middle;
+  display: block;
   margin-right: 3px;
   font-size: 0.9rem;
 }

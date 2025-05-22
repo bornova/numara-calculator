@@ -33,15 +33,15 @@ function bigNumberWarning() {
 function populateSelect(selectEl, options, disabledValue = null) {
   selectEl.innerHTML = ''
 
-  for (const opt of options) {
-    if (opt === disabledValue) {
+  options.forEach((option) => {
+    const [value, opt] = Object.entries(option)[0]
+
+    if (value === disabledValue) {
       selectEl.innerHTML += `<option disabled>${opt}</option>`
-    } else if (Array.isArray(opt)) {
-      selectEl.innerHTML += `<option value="${opt[1]}">${opt[0]}</option>`
     } else {
-      selectEl.innerHTML += `<option value="${opt}">${opt.charAt(0).toUpperCase() + opt.slice(1)}</option>`
+      selectEl.innerHTML += `<option value="${value}">${opt}</option>`
     }
-  }
+  })
 }
 
 let updateInterval
@@ -50,6 +50,7 @@ export const settings = {
   /** Default settings. */
   defaults: {
     alwaysOnTop: false,
+    answerPosition: 'left',
     autocomplete: true,
     closeBrackets: true,
     contPrevLine: true,
@@ -57,11 +58,11 @@ export const settings = {
     currency: true,
     currencyInterval: '0',
     dateDay: false,
-    divider: true,
     expLower: '-12',
     expUpper: '12',
     fontSize: '1.1rem',
     fontWeight: '400',
+    inputWidth: 60,
     keywordTips: true,
     lineErrors: true,
     lineHeight: '24px',
@@ -70,6 +71,7 @@ export const settings = {
     locale: 'system',
     matchBrackets: true,
     matrixType: 'Matrix',
+    newPageOnStart: false,
     notation: 'auto',
     notifyDuration: '5000',
     notifyLocation: 'bottom-center',
@@ -128,29 +130,44 @@ export const settings = {
   /** Prepare settings dialog items. */
   prep: () => {
     const locales = [
-      ['System', 'system'],
-      ['Chinese (PRC)', 'zh-CN'],
-      ['English (Canada)', 'en-CA'],
-      ['English (UK)', 'en-GB'],
-      ['English (US)', 'en-US'],
-      ['French (France)', 'fr-FR'],
-      ['German (Germany)', 'de-DE'],
-      ['Italian (Italy)', 'it-IT'],
-      ['Japanese (Japan)', 'ja-JP'],
-      ['Portuguese (Brazil)', 'pt-BR'],
-      ['Russian (Russia)', 'ru-RU'],
-      ['Spanish (Mexico)', 'es-MX'],
-      ['Spanish (Spain)', 'es-ES'],
-      ['Turkish (Turkey)', 'tr-TR']
+      { system: 'System' },
+      { 'zh-CN': 'Chinese (PRC)' },
+      { 'en-CA': 'English (Canada)' },
+      { 'en-GB': 'English (UK)' },
+      { 'en-US': 'English (US)' },
+      { 'fr-FR': 'French (France)' },
+      { 'de-DE': 'German (Germany)' },
+      { 'it-IT': 'Italian (Italy)' },
+      { 'ja-JP': 'Japanese (Japan)' },
+      { 'pt-BR': 'Portuguese (Brazil)' },
+      { 'ru-RU': 'Russian (Russia)' },
+      { 'es-MX': 'Spanish (Mexico)' },
+      { 'es-ES': 'Spanish (Spain)' },
+      { 'tr-TR': 'Turkish (Turkey)' }
     ]
 
-    const matrixTypes = ['Matrix', 'Array']
-    const numericOutputs = ['number', 'BigNumber', 'Fraction']
-    const notations = ['auto', 'engineering', 'exponential', 'fixed', '-', 'bin', 'hex', 'oct']
+    const answerPositions = [
+      { left: 'Left (with divider)' },
+      { right: 'Right (no divider)' },
+      { bottom: 'Below Expression' }
+    ]
+    const matrixTypes = [{ Matrix: 'Matrix' }, { Array: 'Array' }]
+    const numericOutputs = [{ number: 'Number' }, { BigNumber: 'BigNumber' }, { Fraction: 'Fraction' }]
+    const notations = [
+      { auto: 'Auto' },
+      { engineering: 'Engineering' },
+      { exponential: 'Exponential' },
+      { fixed: 'Fixed' },
+      { spacer: '-' },
+      { bin: 'Binary' },
+      { hex: 'Hexadecimal' },
+      { oct: 'Octal' }
+    ]
 
+    populateSelect(dom.answerPosition, answerPositions)
     populateSelect(dom.locale, locales)
     populateSelect(dom.numericOutput, numericOutputs)
-    populateSelect(dom.notation, notations, '-')
+    populateSelect(dom.notation, notations, 'spacer')
     populateSelect(dom.matrixType, matrixTypes)
 
     dom.precisionLabel.innerHTML = app.settings.precision
@@ -203,16 +220,44 @@ export const settings = {
       numara.setOnTop(app.settings.alwaysOnTop)
     }
 
-    const elements = dom.els('.panelFont, .input .CodeMirror')
-
-    for (const el of elements) {
+    dom.els('.panelFont, .input .CodeMirror').forEach((el) => {
       el.style.fontSize = app.settings.fontSize
       el.style.fontWeight = app.settings.fontWeight
       el.style.setProperty('line-height', app.settings.lineHeight, 'important')
+    })
+
+    if (app.settings.answerPosition !== 'bottom') {
+      cm.eachLine((cmLine) => {
+        const existingWidget = app.widgetMap.get(cmLine)
+
+        if (existingWidget) {
+          existingWidget.clear()
+          app.widgetMap.delete(cmLine)
+        }
+      })
     }
 
-    dom.panelDivider.style.display = app.settings.divider ? 'block' : 'none'
-    dom.output.style.textAlign = app.settings.divider ? 'left' : 'right'
+    // Set input/output widths and styles based on answer position
+    switch (app.settings.answerPosition) {
+      case 'bottom':
+        dom.input.style.width = '100%'
+        dom.output.style.width = '20px'
+        dom.output.style.minWidth = '20px'
+        dom.output.style.textAlign = 'right'
+        break
+      case 'left':
+        dom.input.style.width = (store.get('inputWidth') || 60) + '%'
+        dom.output.style.minWidth = '120px'
+        dom.output.style.textAlign = 'left'
+        break
+      case 'right':
+      default:
+        dom.input.style.width = '60%'
+        dom.output.style.textAlign = 'right'
+        break
+    }
+
+    dom.panelDivider.style.display = app.settings.answerPosition === 'left' ? 'block' : 'none'
 
     cm.setOption('mode', app.settings.syntax ? 'numara' : 'plain')
     cm.setOption('lineNumbers', app.settings.lineNumbers)

@@ -209,8 +209,22 @@ export function loadPage(pageId) {
  */
 export function initializePages() {
   if (store.get('pages')) {
-    app.activePage = store.get('lastPage')
-    loadPage(app.activePage)
+    if (app.settings.newPageOnStart) {
+      const pages = store.get('pages')
+      const blankExists = pages.some((page) => page.data === '')
+
+      if (blankExists) {
+        const blankPage = pages.find((page) => page.data === '')
+
+        app.activePage = blankPage.id
+        loadPage(blankPage.id)
+      } else {
+        newPage()
+      }
+    } else {
+      app.activePage = store.get('lastPage')
+      loadPage(app.activePage)
+    }
   } else {
     defaultPage()
   }

@@ -50,14 +50,14 @@ const setupActionButtons = () => {
   actionButtons.forEach(({ btn, action }) => dom[btn].addEventListener('click', action))
 }
 
-const setupOutputPanelActions = () => {
-  dom.output.addEventListener('click', (event) => {
+const setupOutputActions = () => {
+  document.addEventListener('click', (event) => {
     switch (event.target.className) {
       case 'answer':
         navigator.clipboard.writeText(event.target.dataset.copy)
         notify(`Copied '${event.target.dataset.copy}' to clipboard.`)
         break
-      case 'plotButton': {
+      case 'plotButton answer': {
         const func = event.target.getAttribute('data-func')
 
         app.plotFunction = func.startsWith('line') ? app.mathScope[func] : func
@@ -93,12 +93,18 @@ const setupUserDefined = () => {
 }
 
 const setupPanelResizer = () => {
-  const defaultWidth = 60
+  const defaultWidth = settings.defaults.inputWidth
   let resizeDelay
   let isResizing = false
 
   let inputWidth = store.get('inputWidth') || defaultWidth
-  dom.input.style.width = (app.settings.divider ? inputWidth : defaultWidth) + '%'
+  if (app.settings.answerPosition === 'left') {
+    dom.input.style.width = inputWidth + '%'
+  } else if (app.settings.answerPosition === 'bottom') {
+    dom.input.style.width = '100%'
+  } else {
+    dom.input.style.width = defaultWidth + '%'
+  }
 
   const dividerTooltip = () => {
     dom.panelDivider.title =
@@ -251,17 +257,30 @@ const setupPrintArea = () => {
     cm.eachLine((line) => {
       const lineNo = cm.getLineNumber(line)
       const input = cm.getLine(lineNo)
-      const answer = dom.output.children[lineNo].innerText
-      const row = `
-        <tr style="
-          height: ${app.settings.lineHeight};
-          font-size: ${app.settings.fontSize};
-          font-weight: ${app.settings.fontWeight};"
-        >
-          ${app.settings.lineNumbers ? '<td class="printLineNumCol">' + (lineNo + 1) + '</td>' : ''}
-          <td style="width:${app.settings.inputWidth}%;">${input}</td>
-          <td class="printAnswer${app.settings.divider ? 'Left' : 'Right'}">${answer}</td>
-        </tr>`
+      const answer = dom.el(`[data-line="${lineNo}"]`).innerText
+      const trHeader = `<tr style="
+        height: ${app.settings.lineHeight};
+        font-size: ${app.settings.fontSize};
+        font-weight: ${app.settings.fontWeight};"
+      >`
+      const noBB = app.settings.answerPosition ? 'border-bottom: none !important;' : ''
+      const row =
+        app.settings.answerPosition === 'bottom'
+          ? `
+          ${trHeader}
+            ${app.settings.lineNumbers ? `<td class="printLineNumCol" style="${noBB}">${lineNo + 1}</td>` : ''}
+            <td style="width:100%; ${noBB};">${input}</td>
+          </tr>
+          ${trHeader}
+            ${app.settings.lineNumbers ? '<td class="printLineNumCol"></td>' : ''}
+            <td>${answer}</td>
+          </tr>`
+          : `
+          ${trHeader}
+            ${app.settings.lineNumbers ? '<td class="printLineNumCol">' + (lineNo + 1) + '</td>' : ''}
+            <td style="width:${app.settings.inputWidth}%;">${input}</td>
+            <td class="printAnswer${app.settings.answerPosition === 'left' ? 'Left' : 'Right'}">${answer}</td>
+          </tr>`
 
       rows.push(row)
     })
@@ -358,7 +377,7 @@ const initializeApp = () => {
 
   setupHeaders()
   setupActionButtons()
-  setupOutputPanelActions()
+  setupOutputActions()
   setupUserDefined()
   setupPanelResizer()
   setupSyncScroll()
