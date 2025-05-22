@@ -34,7 +34,7 @@ linux:
 # RPM specific configuration
 rpm:
   depends:
-    - '/usr/lib64/libuuid.so.1'
+    - /usr/lib64/libuuid.so.1
 
 # macOS configuration
 mac:
@@ -45,9 +45,13 @@ mac:
 
 # Windows configuration
 win:
+  icon: 'build/assets/icon.ico'
   verifyUpdateCodeSignature: false
 
 # NSIS installer configuration
 nsis:
   deleteAppDataOnUninstall: true
+  installerIcon: build/assets/icon.ico
+  uninstallerIcon: build/assets/icon.ico
+  installerHeaderIcon: build/assets/icon.ico
   oneClick: false
