@@ -257,17 +257,30 @@ const setupPrintArea = () => {
     cm.eachLine((line) => {
       const lineNo = cm.getLineNumber(line)
       const input = cm.getLine(lineNo)
-      const answer = dom.output.children[lineNo].innerText
-      const row = `
-        <tr style="
-          height: ${app.settings.lineHeight};
-          font-size: ${app.settings.fontSize};
-          font-weight: ${app.settings.fontWeight};"
-        >
-          ${app.settings.lineNumbers ? '<td class="printLineNumCol">' + (lineNo + 1) + '</td>' : ''}
-          <td style="width:${app.settings.inputWidth}%;">${input}</td>
-          <td class="printAnswer${app.settings.answerPosition === 'left' ? 'Left' : 'Right'}">${answer}</td>
-        </tr>`
+      const answer = dom.el(`[data-line="${lineNo}"]`).innerText
+      const trHeader = `<tr style="
+        height: ${app.settings.lineHeight};
+        font-size: ${app.settings.fontSize};
+        font-weight: ${app.settings.fontWeight};"
+      >`
+      const noBB = app.settings.answerPosition ? 'border-bottom: none !important;' : ''
+      const row =
+        app.settings.answerPosition === 'bottom'
+          ? `
+          ${trHeader}
+            ${app.settings.lineNumbers ? `<td class="printLineNumCol" style="${noBB}">${lineNo + 1}</td>` : ''}
+            <td style="width:100%; ${noBB};">${input}</td>
+          </tr>
+          ${trHeader}
+            ${app.settings.lineNumbers ? '<td class="printLineNumCol"></td>' : ''}
+            <td>${answer}</td>
+          </tr>`
+          : `
+          ${trHeader}
+            ${app.settings.lineNumbers ? '<td class="printLineNumCol">' + (lineNo + 1) + '</td>' : ''}
+            <td style="width:${app.settings.inputWidth}%;">${input}</td>
+            <td class="printAnswer${app.settings.answerPosition === 'left' ? 'Left' : 'Right'}">${answer}</td>
+          </tr>`
 
       rows.push(row)
     })
