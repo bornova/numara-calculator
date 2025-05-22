@@ -50,7 +50,7 @@ const setupActionButtons = () => {
   actionButtons.forEach(({ btn, action }) => dom[btn].addEventListener('click', action))
 }
 
-const setupOutputPanelActions = () => {
+const setupOutputActions = () => {
   document.addEventListener('click', (event) => {
     switch (event.target.className) {
       case 'answer':
@@ -364,7 +364,7 @@ const initializeApp = () => {
 
   setupHeaders()
   setupActionButtons()
-  setupOutputPanelActions()
+  setupOutputActions()
   setupUserDefined()
   setupPanelResizer()
   setupSyncScroll()
