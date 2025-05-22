@@ -283,13 +283,13 @@ export function calculate() {
 
     const lineHeight = lineHeights[cmLineNo]
     const answerClass = answer && !answer.startsWith('<a') ? CLASS_ANSWER : ''
-    const answerSpan = `<span class="${answerClass}" data-copy="${answerCopy}">${answer}</span>`
+    const answerSpan = `<span class="${answerClass}" data-line="${cmLineNo}" data-copy="${answerCopy}">${answer}</span>`
 
     if (app.settings.answerPosition === 'bottom') {
-      const answerDiv = `<div data-line="${cmLineNo}">${answerSpan}</div>`
+      const answerDiv = `<div>${answerSpan}</div>`
       updateLineWidget(cmLine, answerDiv)
     } else {
-      answers += `<div class="${classRuler}" data-line="${cmLineNo}" style="height:${lineHeight}px">${answerSpan}</div>`
+      answers += `<div class="${classRuler}" style="height:${lineHeight}px">${answerSpan}</div>`
     }
   }
 
