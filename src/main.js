@@ -112,7 +112,7 @@ function createAppWindow() {
   }
 }
 
-app.setAppUserModelId(app.name)
+app.setAppUserModelId('com.numara.app')
 app.whenReady().then(createAppWindow)
 app.requestSingleInstanceLock() ? app.on('second-instance', () => win.focus()) : app.quit()
 
