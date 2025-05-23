@@ -237,34 +237,23 @@ const setupKeyboardShortcuts = () => {
 const setupPrintArea = () => {
   window.addEventListener('beforeprint', () => {
     const printArea = document.createElement('div')
-    const rows = []
+    let tableRows = ''
 
     printArea.setAttribute('id', 'printArea')
     printArea.className = 'printArea'
-    printArea.innerHTML = `
-      <div id="printTitle" class="printTitle">${name}</div>
-      <table
-        id="printPage"
-        class="printPage ${app.settings.rulers ? 'printRulers' : ''}"
-        style="
-          font-size: ${app.settings.fontSize};
-          font-weight: ${app.settings.fontWeight};
-          line-height: ${app.settings.lineHeight};"
-      >`
-
-    document.body.appendChild(printArea)
 
     cm.eachLine((line) => {
       const lineNo = cm.getLineNumber(line)
       const input = cm.getLine(lineNo)
-      const answer = dom.el(`[data-line="${lineNo}"]`).innerText
+      const answerEl = dom.el(`[data-line="${lineNo}"]`)
+      const answer = answerEl ? answerEl.innerText : ''
       const trHeader = `<tr style="
         height: ${app.settings.lineHeight};
         font-size: ${app.settings.fontSize};
         font-weight: ${app.settings.fontWeight};"
       >`
       const noBB = app.settings.answerPosition ? 'border-bottom: none !important;' : ''
-      const row =
+      tableRows +=
         app.settings.answerPosition === 'bottom'
           ? `
           ${trHeader}
@@ -277,19 +266,30 @@ const setupPrintArea = () => {
           </tr>`
           : `
           ${trHeader}
-            ${app.settings.lineNumbers ? '<td class="printLineNumCol">' + (lineNo + 1) + '</td>' : ''}
+            ${app.settings.lineNumbers ? `<td class="printLineNumCol">${lineNo + 1}</td>` : ''}
             <td style="width:${app.settings.inputWidth}%;">${input}</td>
             <td class="printAnswer${app.settings.answerPosition === 'left' ? 'Left' : 'Right'}">${answer}</td>
           </tr>`
-
-      rows.push(row)
     })
 
-    document.getElementById('printPage').innerHTML = rows.join('')
-    printArea.innerHTML += `</table>`
+    printArea.innerHTML = `
+      <div id="printTitle" class="printTitle">${name}</div>
+      <table
+        id="printPage"
+        class="printPage ${app.settings.rulers ? 'printRulers' : ''}"
+        style="
+          font-size: ${app.settings.fontSize};
+          font-weight: ${app.settings.fontWeight};
+          line-height: ${app.settings.lineHeight};"
+      >${tableRows}</table>`
+
+    document.body.appendChild(printArea)
   })
 
-  window.addEventListener('afterprint', () => document.getElementById('printArea').remove())
+  window.addEventListener('afterprint', () => {
+    const printArea = document.getElementById('printArea')
+    if (printArea) printArea.remove()
+  })
 }
 
 const setupUIkitUtils = () => {
