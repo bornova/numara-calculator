@@ -158,6 +158,6 @@ export const colors = {
 
 dom.customizeThemeButton.addEventListener('click', () => modal.show('#dialogTheme'))
 
-dom.defaultColorsButton.addEventListener('click', () => {
+dom.el('#defaultColorsButton').addEventListener('click', () => {
   confirm('This will reset all colors to their default values', colors.reset)
 })
