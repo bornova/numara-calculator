@@ -138,7 +138,7 @@ export function copyAll() {
 }
 
 // Context menus
-function initializeContextMenus() {
+export function initializeContextMenus() {
   if (!isElectron) return
 
   cm.on('contextmenu', inputContext)
@@ -156,5 +156,3 @@ function initializeContextMenus() {
   numara.copyAllAnswers(copyAllAnswers)
   numara.copyAll(copyAll)
 }
-
-initializeContextMenus()
