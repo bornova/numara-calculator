@@ -1,8 +1,4 @@
 /* Light theme CSS */
-:root {
-  --divider: #eaeaea;
-}
-
 html,
 body {
   background-color: #ffffff;
@@ -23,9 +19,31 @@ body {
   background-color: #dadada;
 }
 
-.winHeaderTitle,
-.macHeaderTitle {
+.header-win-title,
+.header-mac-title {
   color: #384859;
+}
+
+.min-btn-win:hover,
+.max-btn-win:hover,
+.unmax-btn-win:hover {
+  background-color: #eeeeee;
+}
+
+.min-btn-win {
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTIgMTAiIGZpbGw9InJnYig2OCwgNjgsIDY4KSIgc2hhcGUtcmVuZGVyaW5nPSJjcmlzcEVkZ2VzIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0xMSA0LjM5OVY1LjVIMFY0LjM5OWgxMXoiIC8+PC9zdmc+');
+}
+
+.max-btn-win {
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTIgMTIiIGZpbGw9InJnYig2OCwgNjgsIDY4KSIgc2hhcGUtcmVuZGVyaW5nPSJjcmlzcEVkZ2VzIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0xMSAwdjExSDBWMGgxMXpNOS44OTkgMS4xMDFIMS4xVjkuOWg4LjhWMS4xeiIgLz48L3N2Zz4=');
+}
+
+.unmax-btn-win {
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTIgMTIiIGZpbGw9InJnYig2OCwgNjgsIDY4KSIgc2hhcGUtcmVuZGVyaW5nPSJjcmlzcEVkZ2VzIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0xMSA4Ljc5OEg4Ljc5OFYxMUgwVjIuMjAyaDIuMjAyVjBIMTF2OC43OTh6bS0zLjI5OC01LjVoLTYuNnY2LjZoNi42di02LjZ6TTkuOSAxLjFIMy4yOTh2MS4xMDFoNS41djUuNWgxLjF2LTYuNnoiIC8+PC9zdmc+');
+}
+
+.close-btn-win {
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTIgMTIiIGZpbGw9InJnYig2OCwgNjgsIDY4KSIgc2hhcGUtcmVuZGVyaW5nPSJjcmlzcEVkZ2VzIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik02LjI3OSA1LjVMMTEgMTAuMjIxbC0uNzc5Ljc3OUw1LjUgNi4yNzkuNzc5IDExIDAgMTAuMjIxIDQuNzIxIDUuNSAwIC43NzkuNzc5IDAgNS41IDQuNzIxIDEwLjIyMSAwIDExIC43NzkgNi4yNzkgNS41eiIgLz48L3N2Zz4=');
 }
 
 .lineNo {
@@ -49,16 +67,12 @@ body {
   color: #b10e0e;
 }
 
-.plotButton {
-  color: inherit;
-}
-
 .msgBox {
   color: #006699;
 }
 
 .divider::before {
-  background-color: var(--divider) !important;
+  background-color: #eaeaea !important;
 }
 .divider:hover::before {
   background-color: #b7d5e6 !important;
@@ -115,6 +129,10 @@ body {
   color: #4682b4;
 }
 
+.deletePageButton {
+  color: #666666;
+}
+
 .deletePageButton:hover {
   color: #b10e0e;
 }
@@ -141,17 +159,17 @@ body {
   border-top: 1px solid #eaeaea;
 }
 
-.dialogAboutUpdateStatus {
+.dialog-about-updateStatus {
   color: #666666;
 }
 
 /* Settings menu items */
-#dialogSettings h3 {
+#dialog-settings h3 {
   color: #1d3f5c;
 }
 
-#dialogSettings .settingMod,
-#dialogSettings .settingModToggle {
+#dialog-settings .settingMod,
+#dialog-settings .settingModToggle {
   color: #dd9359;
 }
 
@@ -180,10 +198,6 @@ body {
 
 .lastUpdated {
   color: #999999;
-}
-
-.resetSizeButton {
-  color: #666666;
 }
 
 /* Plot */
@@ -245,7 +259,7 @@ text {
 }
 
 .uk-tooltip {
-  background-color: #eeeeee;
+  background-color: #eaeaea;
   color: #000;
 }
 
@@ -303,12 +317,12 @@ text {
 }
 
 .CodeMirror-hint:hover {
-  background-color: #f1f1f1 !important;
-  color: initial !important;
+  background-color: #eaeaea !important;
+  color: #162e44 !important;
 }
 
 li.CodeMirror-hint-active {
-  background-color: #f1f1f1;
+  background-color: #eaeaea;
   color: initial !important;
 }
 
@@ -316,7 +330,7 @@ li.CodeMirror-hint-active {
   color: #eaeaea !important;
 }
 
-.dialogUdfu .CodeMirror {
+.dialog-udfu .CodeMirror {
   border: 1px solid #eaeaea !important;
 }
 
@@ -332,8 +346,4 @@ li.CodeMirror-hint-active {
 
 .colorInput {
   color: #333333;
-}
-
-.colorHR {
-  border-bottom: 1px solid #eaeaea;
 }

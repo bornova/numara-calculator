@@ -1,45 +1,43 @@
 import { colors } from './colors'
-import { dom } from './dom'
+import { $, $all, app, store } from './common'
 import { cm, udfInput, uduInput } from './editor'
 import { calculate, math } from './eval'
 import { getRates } from './forex'
+import { generateIcons } from './icons'
 import { confirm, showError } from './modal'
-import { app, checkSize, getTheme, isElectron, store } from './utils'
+import { checkLocale, checkSize, getTheme, isElectron } from './utils'
 
 import DeepDiff from 'deep-diff'
 
 /** Show/hide Defaults link. */
 function checkDefaults() {
-  dom.defaultSettingsButton.style.display = DeepDiff.diff(app.settings, settings.defaults) ? 'inline' : 'none'
-}
-
-/** Check for app settings modifications. */
-function checkMods(key) {
-  dom.el('#' + key + 'Mod').style.display = app.settings[key] !== settings.defaults[key] ? 'inline-block' : 'none'
+  $('#defaultSettingsButton').style.display = DeepDiff.diff(app.settings, settings.defaults) ? 'inline' : 'none'
 }
 
 /** Show warning if big number option is selected. */
 function bigNumberWarning() {
-  dom.bigNumWarn.style.display = app.settings.numericOutput === 'BigNumber' ? 'inline-block' : 'none'
+  $('#bigNumWarn').style.display = app.settings.numericOutput === 'BigNumber' ? 'inline-block' : 'none'
 }
 
-/**
- * Populates a select HTML element with given options.
- *
- * @param {HTMLSelectElement} selectEl - The select element to populate.
- * @param {Array<string|Array>} options - The options to add. Each option can be a string or an array [label, value].
- * @param {string|null} [disabledValue=null] - An optional value to disable in the select options.
- */
-function populateSelect(selectEl, options, disabledValue = null) {
-  selectEl.innerHTML = ''
+/** Show warning if locale uses comma as decimal point separator. */
+function localeWarning() {
+  $('#localeWarn').style.display = checkLocale() ? 'inline-block' : 'none'
+}
 
-  options.forEach((option) => {
-    const [value, opt] = Object.entries(option)[0]
+/** Check for app settings modifications. */
+function checkMods(key) {
+  $('#' + key + 'Mod').style.display = app.settings[key] !== settings.defaults[key] ? 'inline-block' : 'none'
+}
 
-    if (value === disabledValue) {
-      selectEl.innerHTML += `<option disabled>${opt}</option>`
-    } else {
-      selectEl.innerHTML += `<option value="${value}">${opt}</option>`
+/** Check for app settings schema changes. */
+function checkSchema() {
+  app.settings = store.get('settings')
+
+  DeepDiff.observableDiff(app.settings, settings.defaults, (d) => {
+    if (d.kind !== 'E') {
+      DeepDiff.applyChange(app.settings, settings.defaults, d)
+
+      store.set('settings', app.settings)
     }
   })
 }
@@ -50,7 +48,6 @@ export const settings = {
   /** Default settings. */
   defaults: {
     alwaysOnTop: false,
-    answerPosition: 'left',
     autocomplete: true,
     closeBrackets: true,
     contPrevLine: true,
@@ -58,6 +55,7 @@ export const settings = {
     currency: true,
     currencyInterval: '0',
     dateDay: false,
+    divider: true,
     expLower: '-12',
     expUpper: '12',
     fontSize: '1.1rem',
@@ -68,15 +66,13 @@ export const settings = {
     lineHeight: '24px',
     lineNumbers: true,
     lineWrap: true,
-    locale: 'system',
+    locale: 'en-US',
     matchBrackets: true,
     matrixType: 'Matrix',
-    newPageOnStart: false,
     notation: 'auto',
     notifyDuration: '5000',
     notifyLocation: 'bottom-center',
     numericOutput: 'number',
-    pasteThouSep: false,
     plotCross: false,
     plotDerivative: false,
     plotGrid: false,
@@ -90,27 +86,54 @@ export const settings = {
 
   /** Initialize settings. */
   initialize: () => {
-    app.settings = store.get('settings')
-
-    if (app.settings) {
-      DeepDiff.observableDiff(app.settings, settings.defaults, (diff) => {
-        if (diff.kind === 'E') return
-
-        DeepDiff.applyChange(app.settings, settings.defaults, diff)
-        store.set('settings', app.settings)
-      })
+    if (store.get('settings')) {
+      checkSchema()
     } else {
-      app.settings = { ...settings.defaults }
-      store.set('settings', app.settings)
+      store.set('settings', settings.defaults)
     }
 
-    dom.els('.settingItem').forEach((item) => {
+    app.settings = store.get('settings')
+
+    // Get exchange rates
+    if (app.settings.currency) {
+      getRates()
+    }
+
+    // Start required line height fix
+    if (app.settings.lineHeight.endsWith('em')) {
+      switch (app.settings.lineHeight) {
+        case '1.5em':
+          app.settings.lineHeight = '16px'
+          break
+        case '1.75em':
+          app.settings.lineHeight = '20px'
+          break
+        case '2em':
+          app.settings.lineHeight = '24px'
+          break
+        case '2.5em':
+          app.settings.lineHeight = '28px'
+          break
+        case '3em':
+          app.settings.lineHeight = '32px'
+          break
+      }
+
+      store.set('settings', app.settings)
+    }
+    // End fix
+
+    $all('.settingItem').forEach((item) => {
       const span = document.createElement('span')
-      const icon = dom.icons.Dot
+      const icon = document.createElement('span')
+
+      icon.setAttribute('data-lucide', 'dot')
 
       span.setAttribute('id', item.getAttribute('id') + 'Mod')
       span.setAttribute('class', item.getAttribute('type') === 'checkbox' ? 'settingModToggle' : 'settingMod')
-      span.innerHTML = icon
+
+      span.appendChild(icon)
+
       span.addEventListener('click', () => {
         const key = item.getAttribute('id')
 
@@ -121,72 +144,90 @@ export const settings = {
         settings.apply()
       })
 
-      item.getAttribute('type') === 'checkbox' ? item.parentElement.before(span) : item.before(span)
-    })
+      if (item.getAttribute('type') === 'checkbox') {
+        item.parentElement.before(span)
+      } else {
+        item.before(span)
+      }
 
-    if (app.settings.currency) getRates()
+      generateIcons()
+    })
   },
 
   /** Prepare settings dialog items. */
   prep: () => {
     const locales = [
-      { system: 'System' },
-      { 'zh-CN': 'Chinese (PRC)' },
-      { 'en-CA': 'English (Canada)' },
-      { 'en-GB': 'English (UK)' },
-      { 'en-US': 'English (US)' },
-      { 'fr-FR': 'French (France)' },
-      { 'de-DE': 'German (Germany)' },
-      { 'it-IT': 'Italian (Italy)' },
-      { 'ja-JP': 'Japanese (Japan)' },
-      { 'pt-BR': 'Portuguese (Brazil)' },
-      { 'ru-RU': 'Russian (Russia)' },
-      { 'es-MX': 'Spanish (Mexico)' },
-      { 'es-ES': 'Spanish (Spain)' },
-      { 'tr-TR': 'Turkish (Turkey)' }
+      ['System', 'system'],
+      ['Chinese (PRC)', 'zh-CN'],
+      ['English (Canada)', 'en-CA'],
+      ['English (UK)', 'en-GB'],
+      ['English (US)', 'en-US'],
+      ['French (France)', 'fr-FR'],
+      ['German (Germany)', 'de-DE'],
+      ['Italian (Italy)', 'it-IT'],
+      ['Japanese (Japan)', 'ja-JP'],
+      ['Portuguese (Brazil)', 'pt-BR'],
+      ['Russian (Russia)', 'ru-RU'],
+      ['Spanish (Mexico)', 'es-MX'],
+      ['Spanish (Spain)', 'es-ES'],
+      ['Turkish (Turkey)', 'tr-TR']
     ]
 
-    const answerPositions = [
-      { left: 'Left (with divider)' },
-      { right: 'Right (no divider)' },
-      { bottom: 'Below Expression' }
-    ]
-    const matrixTypes = [{ Matrix: 'Matrix' }, { Array: 'Array' }]
-    const numericOutputs = [{ number: 'Number' }, { BigNumber: 'BigNumber' }, { Fraction: 'Fraction' }]
-    const notations = [
-      { auto: 'Auto' },
-      { engineering: 'Engineering' },
-      { exponential: 'Exponential' },
-      { fixed: 'Fixed' },
-      { spacer: '-' },
-      { bin: 'Binary' },
-      { hex: 'Hexadecimal' },
-      { oct: 'Octal' }
-    ]
+    const matrixTypes = ['Matrix', 'Array']
+    const numericOutputs = ['number', 'BigNumber', 'Fraction']
+    const notations = ['auto', 'engineering', 'exponential', 'fixed', '-', 'bin', 'hex', 'oct']
 
-    populateSelect(dom.answerPosition, answerPositions)
-    populateSelect(dom.locale, locales)
-    populateSelect(dom.numericOutput, numericOutputs)
-    populateSelect(dom.notation, notations, 'spacer')
-    populateSelect(dom.matrixType, matrixTypes)
+    $('#locale').innerHTML = ''
 
-    dom.precisionLabel.innerHTML = app.settings.precision
-    dom.expLowerLabel.innerHTML = app.settings.expLower
-    dom.expUpperLabel.innerHTML = app.settings.expUpper
-    dom.lastUpdated.innerHTML = app.settings.currency ? store.get('rateDate') : ''
-    dom.currencyUpdate.style.visibility = app.settings.currency ? 'visible' : 'hidden'
+    for (const l of locales) {
+      $('#locale').innerHTML += `<option value="${l[1]}">${l[0]}</option>`
+    }
+
+    $('#precision-label').innerHTML = app.settings.precision
+    $('#expLower-label').innerHTML = app.settings.expLower
+    $('#expUpper-label').innerHTML = app.settings.expUpper
+
+    $('#numericOutput').innerHTML = ''
+
+    for (const n of numericOutputs) {
+      $('#numericOutput').innerHTML += `<option value="${n}">${n.charAt(0).toUpperCase() + n.slice(1)}</option>`
+    }
+
+    $('#notation').innerHTML = ''
+
+    for (const n of notations) {
+      $('#notation').innerHTML +=
+        n === '-'
+          ? '<option disabled>-</option>'
+          : `<option value="${n}">${n.charAt(0).toUpperCase() + n.slice(1)}</option>`
+    }
+
+    $('#matrixType').innerHTML = ''
+
+    for (const m of matrixTypes) {
+      $('#matrixType').innerHTML += `<option value="${m}">${m}</option>`
+    }
+
+    $('#lastUpdated').innerHTML = app.settings.currency ? store.get('rateDate') : ''
+    $('#currencyUpdate').style.visibility = app.settings.currency ? 'visible' : 'hidden'
 
     Object.keys(app.settings).forEach((key) => {
-      const el = dom.el('#' + key)
+      const el = $('#' + key)
 
-      if (!el) return
+      if (el) {
+        if (el.getAttribute('type') === 'checkbox') {
+          el.checked = app.settings[key]
+        } else {
+          el.value = app.settings[key]
+        }
 
-      el[el.getAttribute('type') === 'checkbox' ? 'checked' : 'value'] = app.settings[key]
-      checkMods(key)
+        checkMods(key)
+      }
     })
 
     checkSize()
     checkDefaults()
+    localeWarning()
     bigNumberWarning()
 
     settings.toggleSubs()
@@ -196,10 +237,12 @@ export const settings = {
   apply: () => {
     const appTheme = getTheme()
 
-    dom.inlineStyle.setAttribute('href', 'css/' + appTheme + '.css')
-    dom.numaraLogo.setAttribute('src', 'assets/logo-' + appTheme + '.png')
+    $('#style').setAttribute('href', 'css/' + appTheme + '.css')
+    $('#numaraLogo').setAttribute('src', 'assets/logo-' + appTheme + '.png')
 
-    setTimeout(colors.apply, 50)
+    setTimeout(() => {
+      colors.apply()
+    }, 50)
 
     const udfuTheme =
       app.settings.theme === 'system'
@@ -220,44 +263,17 @@ export const settings = {
       numara.setOnTop(app.settings.alwaysOnTop)
     }
 
-    dom.els('.panelFont, .input .CodeMirror').forEach((el) => {
+    const elements = $all('.panelFont, .input .CodeMirror')
+
+    for (const el of elements) {
       el.style.fontSize = app.settings.fontSize
       el.style.fontWeight = app.settings.fontWeight
       el.style.setProperty('line-height', app.settings.lineHeight, 'important')
-    })
-
-    if (app.settings.answerPosition !== 'bottom') {
-      cm.eachLine((cmLine) => {
-        const existingWidget = app.widgetMap.get(cmLine)
-
-        if (existingWidget) {
-          existingWidget.clear()
-          app.widgetMap.delete(cmLine)
-        }
-      })
     }
 
-    // Set input/output widths and styles based on answer position
-    switch (app.settings.answerPosition) {
-      case 'bottom':
-        dom.input.style.width = '100%'
-        dom.output.style.width = '20px'
-        dom.output.style.minWidth = '20px'
-        dom.output.style.textAlign = 'right'
-        break
-      case 'left':
-        dom.input.style.width = (store.get('inputWidth') || 60) + '%'
-        dom.output.style.minWidth = '120px'
-        dom.output.style.textAlign = 'left'
-        break
-      case 'right':
-      default:
-        dom.input.style.width = '60%'
-        dom.output.style.textAlign = 'right'
-        break
-    }
-
-    dom.panelDivider.style.display = app.settings.answerPosition === 'left' ? 'block' : 'none'
+    $('#input').style.width = (app.settings.divider ? app.settings.inputWidth : settings.defaults.inputWidth) + '%'
+    $('#panelDivider').style.display = app.settings.divider ? 'block' : 'none'
+    $('#output').style.textAlign = app.settings.divider ? 'left' : 'right'
 
     cm.setOption('mode', app.settings.syntax ? 'numara' : 'plain')
     cm.setOption('lineNumbers', app.settings.lineNumbers)
@@ -271,12 +287,22 @@ export const settings = {
       predictable: app.settings.predictable
     })
 
-    clearInterval(updateInterval)
-    if (app.settings.currency && app.settings.currencyInterval !== '0') {
-      updateInterval = setInterval(getRates, +app.settings.currencyInterval)
-      store.set('rateInterval', true)
+    if (app.settings.currency) {
+      if (app.settings.currencyInterval === '0') {
+        clearInterval(updateInterval)
+        store.set('rateInterval', false)
+      } else {
+        clearInterval(updateInterval)
+        updateInterval = setInterval(getRates, +app.settings.currencyInterval)
+        store.set('rateInterval', true)
+      }
+    }
+
+    if (app.settings.currencyInterval === '0') {
+      clearInterval(updateInterval)
     } else {
-      store.set('rateInterval', false)
+      clearInterval(updateInterval)
+      updateInterval = setInterval(getRates, +app.settings.currencyInterval)
     }
 
     setTimeout(calculate, 10)
@@ -285,26 +311,30 @@ export const settings = {
   /** Save settings to local storage. */
   save: () => {
     Object.keys(app.settings).forEach((key) => {
-      const el = dom.el('#' + key)
+      const el = $('#' + key)
 
       if (el) {
         app.settings[key] = el.getAttribute('type') === 'checkbox' ? el.checked : el.value
+
         checkMods(key)
       }
     })
 
-    if (!dom.currency.checked) {
+    if (!$('#currency').checked) {
       localStorage.removeItem('rateDate')
 
       app.currencyRates = {}
     }
 
-    dom.currencyUpdate.style.visibility = dom.currency.checked ? 'visible' : 'hidden'
-    dom.currencyWarn.style.display = app.settings.currency ? 'none' : 'inline-block'
+    $('#currencyUpdate').style.visibility = $('#currency').checked ? 'visible' : 'hidden'
+    $('#currencyWarn').style.display = app.settings.currency ? 'none' : 'inline-block'
 
-    if (!store.get('rateDate') && app.settings.currency) getRates()
+    if (!store.get('rateDate') && app.settings.currency) {
+      getRates()
+    }
 
     checkDefaults()
+    localeWarning()
     bigNumberWarning()
 
     settings.toggleSubs()
@@ -314,41 +344,49 @@ export const settings = {
 
   /** Toggle settings sliders to enabled/disabled based on parent setting. */
   toggleSubs: () => {
-    // Helper to enable/disable and set opacity for related controls
-    const toggle = (el, enabled) => {
-      el.disabled = !enabled
-      el.parentNode.style.opacity = enabled ? '1' : '0.5'
+    $('#expUpper').disabled = app.settings.notation !== 'auto'
+    $('#expLower').disabled = app.settings.notation !== 'auto'
+    $('#keywordTips').disabled = !app.settings.syntax
+    $('#matchBrackets').disabled = !app.settings.syntax
+    $('#copyThouSep').disabled = !app.settings.thouSep
+    $('#currencyInterval').disabled = !app.settings.currency
+    $('#updateRatesLink').dataset.enabled = app.settings.currency
 
-      const mod = dom.el('#' + el.id + 'Mod')
-      if (!mod) return
+    $('#expUpper').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
+    $('#expLower').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
+    $('#keywordTips').parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
+    $('#matchBrackets').parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
+    $('#copyThouSep').parentNode.style.opacity = app.settings.thouSep ? '1' : '0.5'
 
-      mod.style.pointerEvents = enabled ? 'auto' : 'none'
-      mod.parentNode.style.opacity = enabled ? '1' : '0.5'
-    }
+    $('#expUpperMod').style.pointerEvents = app.settings.notation === 'auto' ? 'auto' : 'none'
+    $('#expLowerMod').style.pointerEvents = app.settings.notation === 'auto' ? 'auto' : 'none'
+    $('#keywordTipsMod').style.pointerEvents = app.settings.syntax ? 'auto' : 'none'
+    $('#matchBracketsMod').style.pointerEvents = app.settings.syntax ? 'auto' : 'none'
+    $('#copyThouSepMod').style.pointerEvents = app.settings.thouSep ? 'auto' : 'none'
 
-    toggle(dom.keywordTips, app.settings.syntax)
-    toggle(dom.matchBrackets, app.settings.syntax)
-    toggle(dom.expUpper, app.settings.notation === 'auto')
-    toggle(dom.expLower, app.settings.notation === 'auto')
-    toggle(dom.copyThouSep, app.settings.thouSep)
-    toggle(dom.pasteThouSep, app.settings.thouSep)
-
-    dom.currencyInterval.disabled = !app.settings.currency
-    dom.updateRatesLink.dataset.enabled = app.settings.currency
+    $('#expUpperMod').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
+    $('#expLowerMod').parentNode.style.opacity = app.settings.notation === 'auto' ? '1' : '0.5'
+    $('#keywordTipsMod').parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
+    $('#matchBracketsMod').parentNode.style.opacity = app.settings.syntax ? '1' : '0.5'
+    $('#copyThouSepMod').parentNode.style.opacity = app.settings.thouSep ? '1' : '0.5'
   }
 }
 
-dom.defaultSettingsButton.addEventListener('click', () => {
+$('#defaultSettingsButton').addEventListener('click', () => {
   confirm('All settings will revert back to defaults.', () => {
-    app.settings = { ...settings.defaults }
+    app.settings = JSON.parse(JSON.stringify(settings.defaults))
+    app.colors = JSON.parse(JSON.stringify(colors.defaults))
+
+    store.set('settings', app.settings)
+    store.set('colors', app.colors)
 
     settings.prep()
-    settings.apply()
     settings.save()
+    settings.apply()
   })
 })
 
-dom.dialogSettingsReset.addEventListener('click', () => {
+$('#dialog-settings-reset').addEventListener('click', () => {
   confirm('All user settings and data will be lost.', () => {
     if (isElectron) {
       numara.resetApp()
@@ -359,7 +397,18 @@ dom.dialogSettingsReset.addEventListener('click', () => {
   })
 })
 
-dom.bigNumWarn.addEventListener('click', () => {
+if (isElectron) {
+  $('#resetSizeButton').addEventListener('click', numara.resetSize)
+}
+
+$('#localeWarn').addEventListener('click', () => {
+  showError(
+    'Caution: Locale',
+    `Your locale (${app.settings.locale}) uses comma (,) as decimal separator.  Therefore, you must use semicolon (;) as argument separator when using functions.<br><br>Ex. sum(1;3) // 4`
+  )
+})
+
+$('#bigNumWarn').addEventListener('click', () => {
   showError(
     'Caution: BigNumber Limitations',
     `Using the BigNumber may break function plotting and is not compatible with some math functions. 
@@ -368,33 +417,27 @@ dom.bigNumWarn.addEventListener('click', () => {
   )
 })
 
-dom.currencyWarn.addEventListener('click', () => {
+$('#currencyWarn').addEventListener('click', () => {
   showError('App restart needed', `Currencies used in existing calculations will be removed after app restart.`)
 })
 
-dom.precision.addEventListener('input', () => {
-  dom.precisionLabel.innerHTML = dom.precision.value
+$('#precision').addEventListener('input', () => {
+  $('#precision-label').innerHTML = $('#precision').value
 })
 
-dom.expLower.addEventListener('input', () => {
-  dom.expLowerLabel.innerHTML = dom.expLower.value
+$('#expLower').addEventListener('input', () => {
+  $('#expLower-label').innerHTML = $('#expLower').value
 })
 
-dom.expUpper.addEventListener('input', () => {
-  dom.expUpperLabel.innerHTML = dom.expUpper.value
+$('#expUpper').addEventListener('input', () => {
+  $('#expUpper-label').innerHTML = $('#expUpper').value
 })
 
-dom.updateRatesLink.addEventListener('click', getRates)
+$('#updateRatesLink').addEventListener('click', getRates)
 
-dom.els('.settingItem').forEach((el) => {
+$all('.settingItem').forEach((el) => {
   el.addEventListener('change', () => {
     settings.save()
     settings.apply()
   })
 })
-
-if (isElectron) {
-  dom.resetSizeButton.addEventListener('click', numara.resetSize)
-
-  numara.themeUpdate(settings.apply)
-}

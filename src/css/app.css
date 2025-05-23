@@ -88,7 +88,7 @@ text {
   font-size: 0.9rem;
 }
 
-.appWrapper {
+.wrapper {
   position: fixed;
   top: 0;
   right: 0;
@@ -97,7 +97,7 @@ text {
 }
 
 /* Windows Header */
-.winHeader {
+.header-win {
   -webkit-app-region: drag !important;
   display: none;
   position: fixed;
@@ -107,7 +107,7 @@ text {
   height: 30px;
 }
 
-.winHeaderTitle {
+.header-win-title {
   float: left;
   margin: 5px 0 0 15px;
   font-weight: 700;
@@ -144,7 +144,7 @@ text {
 }
 
 /* Mac Header */
-.macHeader {
+.header-mac {
   -webkit-app-region: drag !important;
   display: none;
   position: fixed;
@@ -154,7 +154,7 @@ text {
   height: 40px;
 }
 
-.macHeaderTitle {
+.header-mac-title {
   padding-top: 10px;
   font-size: 1.1em;
   font-family: 'Numara';
@@ -162,7 +162,7 @@ text {
 }
 
 /* Content */
-.mainPanel {
+.panel {
   display: flex;
   position: fixed;
   top: 50px;
@@ -240,16 +240,8 @@ text {
   user-select: text;
 }
 
+.lineError,
 .plotButton {
-  cursor: pointer;
-}
-
-.plotButton > svg {
-  width: 1em;
-  pointer-events: none;
-}
-
-.lineError {
   margin: 0 12px 0 5px;
 }
 
@@ -358,11 +350,7 @@ text {
 }
 
 .sidePanelActions {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  margin: 10px 10px 14px 10px;
+  margin: 15px 10px 11px 10px;
 }
 
 .closeSidePanelButton {
@@ -481,7 +469,7 @@ text {
   font-size: 0.9rem;
 }
 
-.dialogConfirm {
+.dialog-confirm {
   z-index: 10010;
 }
 
@@ -490,30 +478,34 @@ text {
 }
 
 /* Settings */
+#dialog-settings .uk-width-medium {
+  width: 385px;
+}
+
 .dialog-settings-body {
   margin-right: -8px;
   padding-right: 10px;
-  height: calc(100vh - 200px);
+  height: calc(100vh - 185px);
   max-height: 600px;
   overflow: scroll;
 }
 
-#dialogSettings .uk-overflow-auto {
+#dialog-settings .uk-overflow-auto {
   padding-right: 10px;
 }
 
-#dialogSettings h3 {
+#dialog-settings h3 {
   margin: 25px 0 12px 0;
   font-weight: 500;
   font-size: 1rem;
 }
 
-#dialogSettings h3:first-of-type {
+#dialog-settings h3:first-of-type {
   margin: 0px 0 12px 0;
 }
 
-#dialogSettings .settingMod,
-#dialogSettings .settingModToggle {
+#dialog-settings .settingMod,
+#dialog-settings .settingModToggle {
   display: none;
   position: absolute;
   cursor: pointer;
@@ -522,16 +514,12 @@ text {
   color: #dd9359;
 }
 
-#dialogSettings .settingMod > svg,
-#dialogSettings .settingModToggle > svg {
+#dialog-settings .settingMod > svg,
+#dialog-settings .settingModToggle > svg {
   width: 24px;
 }
 
-#dialogSettings input:disabled + span.slider.round {
-  cursor: default;
-}
-
-#dialogSettings .range .settingMod {
+#dialog-settings .range .settingMod {
   margin-left: -54px;
 }
 
@@ -566,7 +554,8 @@ text {
 }
 
 .lastUpdated {
-  display: block;
+  display: inline-block;
+  vertical-align: middle;
   margin-right: 3px;
   font-size: 0.9rem;
 }
@@ -583,7 +572,7 @@ text {
 }
 
 /* About dialog items */
-.dialogAbout {
+.dialog-about {
   text-align: center;
 }
 
@@ -602,7 +591,7 @@ text {
   margin-left: 5px;
 }
 
-.dialogAbout p {
+.dialog-about p {
   clear: both;
   margin-top: 5px;
 }
@@ -621,7 +610,7 @@ div:has(> #logsLink) {
   display: none;
 }
 
-.dialogAboutAppVersion {
+.dialog-about-appVersion {
   display: block;
   margin-bottom: 8px;
   text-align: center;
@@ -632,7 +621,7 @@ div:has(> #logsLink) {
   text-align: center;
 }
 
-.dialogAboutUpdateStatus {
+.dialog-about-updateStatus {
   display: block;
   text-align: center;
 }
@@ -648,31 +637,29 @@ div:has(> #logsLink) {
   text-transform: capitalize;
 }
 
-.dialogAboutCopyright {
+.dialog-about-copyright {
   display: block;
   margin: 15px 0;
+}
+
+.resetButtons svg {
+  width: 14px;
+  pointer-events: none;
 }
 
 .defSettingsButton {
   margin-right: 10px;
 }
 
-.resetSizeButton {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-}
-
-.resetSizeButton {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-}
-
-.resetSizeButton > svg {
+#resetSize > svg {
+  margin: 10px 10px 0 0;
   width: 14px;
   height: 14px;
-  pointer-events: none;
+}
+
+.resetSizeButton {
+  float: left;
+  margin-left: 10px;
 }
 
 /* Messages */
@@ -799,7 +786,7 @@ input:checked + .slider:before {
   display: none;
   position: fixed;
   right: 2px;
-  bottom: 32px;
+  bottom: 35px;
   cursor: pointer;
   width: 10px;
 }
@@ -834,7 +821,6 @@ input:checked + .slider:before {
 .uk-modal-dialog {
   transition: 0s linear;
   border-radius: 3px;
-  max-width: calc(100vw - 40px) !important;
 }
 
 .uk-modal-body {
@@ -940,9 +926,8 @@ input:checked + .slider:before {
   width: 350px;
 }
 
-#dialogSettings > .uk-width-medium {
+#dialog-settings > .uk-width-medium {
   width: 420px;
-  min-width: 400px;
 }
 
 .uk-width-large {
@@ -1006,10 +991,6 @@ input:checked + .slider:before {
 .uk-notification-close svg {
   width: 10px;
   height: 10px;
-}
-
-.uk-offcanvas-overlay:before {
-  background: rgba(0, 0, 0, 0.5);
 }
 
 @media (max-width: 639px) {
@@ -1113,10 +1094,10 @@ input:checked + .slider:before {
   font-size: 1rem !important;
 }
 
-#dialogUdfu .CodeMirror {
+#dialog-udfu .CodeMirror {
   padding: 5px;
-  height: calc(100vh - 235px);
-  max-height: 600px;
+  height: calc(100vh - 220px);
+  max-height: 800px;
   font-size: 1.1em;
 }
 
@@ -1134,8 +1115,8 @@ input:checked + .slider:before {
 .colorPickerContainer {
   margin-right: -8px;
   padding-right: 10px;
-  height: calc(100vh - 200px);
-  max-height: 420px;
+  height: calc(100vh - 225px);
+  max-height: 390px;
   overflow: scroll;
 }
 
@@ -1205,7 +1186,7 @@ input.clr-color {
 }
 
 @media print {
-  .appWrapper,
+  .wrapper,
   .uk-open,
   .uk-tooltip {
     display: none !important;

@@ -1,8 +1,10 @@
-import { dom } from './dom'
+import { $, app, store } from './common'
 import { calculate, formatAnswer, math } from './eval'
-import { app, store } from './utils'
+
+import * as formulajs from '@formulajs/formulajs'
 
 import UIkit from 'uikit'
+
 import CodeMirror from 'codemirror'
 
 import 'codemirror/mode/javascript/javascript'
@@ -15,81 +17,117 @@ import 'codemirror/addon/search/jump-to-line'
 import 'codemirror/addon/search/search'
 import 'codemirror/addon/search/searchcursor'
 
-import * as formulajs from '@formulajs/formulajs'
+/** CodeMirror input panel. */
+export const cm = CodeMirror.fromTextArea($('#inputArea'), {
+  autofocus: true,
+  coverGutterNextToScrollbar: true,
+  extraKeys: { 'Ctrl-Space': 'autocomplete' },
+  flattenSpans: true,
+  mode: 'numara',
+  smartIndent: false,
+  theme: 'numara',
+  viewportMargin: Infinity
+})
 
-const CLASS_NAMES = {
-  FUNCTION: 'cm-function',
-  UDF: 'cm-udf',
-  UDU: 'cm-udu',
-  CURRENCY: 'cm-currency',
-  UNIT: 'cm-unit',
-  CONSTANT: 'cm-constant',
-  VARIABLE: 'cm-variable',
-  LINE_NO: 'cm-lineNo',
-  KEYWORD: 'cm-keyword',
-  FORMULAJS: 'cm-formulajs',
-  EXCEL: 'cm-excel'
+// User defined functions and units editors
+const udOptions = {
+  autoCloseBrackets: true,
+  autofocus: true,
+  mode: 'javascript',
+  tabSize: 2
 }
 
-const mathEntries = Object.entries(math.expression.mathWithTransform)
-const mathFunctions = mathEntries.filter(([k]) => typeof math[k] === 'function')
-const mathConstants = mathEntries.filter(
-  ([k]) => typeof math[k] !== 'function' && typeof math[k] !== 'boolean' && (math[k]?.value || !isNaN(math[k]))
-)
-const units = () =>
-  Object.values(math.Unit.UNITS).flatMap((unit) =>
-    Object.values(unit.prefixes).map((prefix) => {
-      const token = prefix.name + unit.name
-      const unitBase = unit.base.key.replaceAll('_', ' ').toLowerCase()
-      const unitCat = unitBase.charAt(0).toUpperCase() + unitBase.slice(1)
+const udfPlaceholder = 'xyz: (x, y, z) => {\n\treturn x+y+z\n},\n\nmyConstant: 123'
+const uduPlaceholder = 'foo: "18 foot",\nbar: "40 foo"'
 
-      return {
-        token,
-        hint: { text: token, desc: unitCat + ' unit', className: CLASS_NAMES.UNIT }
-      }
-    })
-  )
+$('#udfInput').setAttribute('placeholder', udfPlaceholder)
+$('#uduInput').setAttribute('placeholder', uduPlaceholder)
 
-export const keywords = [
-  { text: '_', desc: 'Answer from last calculated line' },
-  { text: 'ans', desc: 'Answer from last calculated line' },
-  { text: 'avg', desc: 'Average of previous line values. Numbers only.' },
-  { text: 'now', desc: 'Current date and time' },
-  { text: 'subtotal', desc: 'Total of all lines in previous block. Numbers only.' },
-  { text: 'today', desc: 'Current date' },
-  { text: 'total', desc: 'Total of previous line values. Numbers only.' }
-]
+export const udfInput = CodeMirror.fromTextArea($('#udfInput'), udOptions)
+export const uduInput = CodeMirror.fromTextArea($('#uduInput'), udOptions)
 
-// Mode tokens
-const functionTokens = mathFunctions.map(([f]) => f)
-const constantTokens = mathConstants.map(([c]) => c)
-const unitTokens = units().map((u) => u.token)
-const keywordTokens = keywords.map((key) => key.text)
-const excelTokens = Object.keys(formulajs).map((f) => 'xls.' + f)
+/**
+ * Refresh editor and focus.
+ *
+ * @param {CodeMirror} editor CodeMirror instance to refresh
+ */
+export function refreshEditor(editor) {
+  editor.refresh()
+
+  setTimeout(() => {
+    editor.focus()
+  }, 100)
+}
 
 // Codemirror syntax templates
 CodeMirror.defineMode('numara', () => ({
   token: (stream) => {
-    if (stream.match(/\/\/.*/) || stream.match(/#.*/)) return 'comment'
-    if (stream.match(/\d/)) return 'number'
-    if (stream.match(/(?:\+|-|\*|\/|,|;|\.|:|@|~|=|>|<|&|\||`|'|\^|\?|!|%)/)) return 'operator'
-    if (stream.match(/\b(?:xls.)\b/)) return 'formulajs'
+    if (stream.match(/\/\/.*/) || stream.match(/#.*/)) {
+      return 'comment'
+    }
+
+    if (stream.match(/\d/)) {
+      return 'number'
+    }
+
+    if (stream.match(/(?:\+|-|\*|\/|,|;|\.|:|@|~|=|>|<|&|\||`|'|\^|\?|!|%)/)) {
+      return 'operator'
+    }
+
+    if (stream.match(/\b(?:xls.)\b/)) {
+      return 'formulajs'
+    }
 
     stream.eatWhile(/\w/)
 
     const cmStream = stream.current()
 
-    if (math.Unit.UNITS[cmStream]?.base.key === 'USD_STUFF') return 'currency'
-    if (functionTokens.includes(cmStream)) return 'function'
-    if (constantTokens.includes(cmStream)) return 'constant'
-    if (unitTokens.includes(cmStream)) return 'unit'
-    if (keywordTokens.includes(cmStream)) return 'keyword'
-    if (/\bline\d+\b/.test(cmStream)) return 'lineNo'
-    if (app.udfList.includes(cmStream)) return 'udf'
-    if (app.uduList.includes(cmStream)) return 'udu'
-    if (excelTokens.includes(cmStream)) return 'excel'
+    if (
+      app.settings.currency &&
+      (Object.keys(app.currencyRates).some((curr) => app.currencyRates[curr].code === cmStream) || cmStream === 'USD')
+    ) {
+      return 'currency'
+    }
 
-    // Variable fallback
+    if (typeof math[cmStream] === 'function' && Object.getOwnPropertyNames(math[cmStream]).includes('signatures')) {
+      return 'function'
+    }
+
+    if (app.udfList.includes(cmStream)) {
+      return 'udf'
+    }
+
+    if (app.uduList.includes(cmStream)) {
+      return 'udu'
+    }
+
+    if (cmStream.match(/\b(?:_|ans|total|subtotal|avg|today|now)\b/)) {
+      return 'keyword'
+    }
+
+    if (cmStream.match(/\b(?:line\d+)\b/)) {
+      return 'lineNo'
+    }
+
+    if (typeof formulajs[cmStream] === 'function' && stream.string.startsWith('xls.')) {
+      return 'excel'
+    }
+
+    try {
+      const val = math.evaluate(cmStream)
+      const par = math.parse(cmStream)
+
+      if (val.units && !val.value) {
+        return 'unit'
+      }
+
+      if (par.isSymbolNode && val) {
+        return 'constant'
+      }
+    } catch {
+      /** Ignore catch */
+    }
+
     try {
       math.evaluate(cmStream)
     } catch {
@@ -105,22 +143,57 @@ CodeMirror.defineMode('numara', () => ({
 CodeMirror.defineMode('plain', () => ({
   token: (stream) => {
     stream.next()
-    return 'plain'
+
+    return 'text'
   }
 }))
 
-// Editor hints
-const functionHints = mathFunctions.map(([f]) => ({ text: f, className: CLASS_NAMES.FUNCTION }))
-const constantHints = mathConstants.map(([c]) => ({
-  text: c,
-  desc: math.help(c).doc.description,
-  className: CLASS_NAMES.CONSTANT
-}))
-const unitHints = units().map((u) => u.hint)
-const keywordHints = keywords.map((key) => ({ ...key, className: CLASS_NAMES.KEYWORD }))
-const excelHints = excelTokens.map((f) => ({ text: f, className: CLASS_NAMES.EXCEL }))
+// Codemirror autocomplete hints
+export const numaraHints = []
 
-export const numaraHints = [...functionHints, ...constantHints, ...unitHints, ...keywordHints, ...excelHints]
+export const keywords = [
+  { text: '_', desc: 'Answer from last calculated line' },
+  { text: 'ans', desc: 'Answer from last calculated line' },
+  { text: 'avg', desc: 'Average of previous line values. Numbers only.' },
+  { text: 'now', desc: 'Current date and time' },
+  { text: 'subtotal', desc: 'Total of all lines in previous block. Numbers only.' },
+  { text: 'today', desc: 'Current date' },
+  { text: 'total', desc: 'Total of previous line values. Numbers only.' }
+]
+
+keywords.forEach((key) => {
+  key.className = 'cm-keyword'
+  numaraHints.push(key)
+})
+
+for (const f in math) {
+  if (typeof math[f] === 'function' && Object.getOwnPropertyNames(math[f]).includes('signatures')) {
+    numaraHints.push({ text: f, className: 'cm-function' })
+  }
+}
+
+for (const expr in math.expression.mathWithTransform) {
+  if (
+    typeof math[expr] !== 'function' &&
+    typeof math[expr] !== 'boolean' &&
+    (math[expr]?.value || !isNaN(math[expr]))
+  ) {
+    numaraHints.push({ text: expr, desc: math.help(expr).doc.description, className: 'cm-constant' })
+  }
+}
+
+Object.keys(formulajs).forEach((f) => {
+  numaraHints.push({ text: 'xls.' + f, className: 'cm-excel' })
+})
+
+Object.values(math.Unit.UNITS).flatMap((unit) => {
+  Object.values(unit.prefixes).forEach((prefix) => {
+    const unitBase = unit.base.key.replaceAll('_', ' ').toLowerCase()
+    const unitCat = unitBase.charAt(0).toUpperCase() + unitBase.slice(1)
+
+    numaraHints.push({ text: prefix.name + unit.name, desc: unitCat + ' unit', className: 'cm-unit' })
+  })
+})
 
 CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
   const cmCursor = editor.getCursor()
@@ -129,19 +202,25 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
   let start = cmCursor.ch
   let end = start
 
-  while (end < cmCursorLine.length && /[\w.$]/.test(cmCursorLine.charAt(end))) ++end
-  while (start && /[\w.$]/.test(cmCursorLine.charAt(start - 1))) --start
+  while (end < cmCursorLine.length && /[\w.$]/.test(cmCursorLine.charAt(end))) {
+    ++end
+  }
+
+  while (start && /[\w.$]/.test(cmCursorLine.charAt(start - 1))) {
+    --start
+  }
 
   let curStr = cmCursorLine.slice(start, end)
   let curWord = start !== end && curStr
 
-  const curWordRegex = curWord ? new RegExp('^' + curWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null
+  const curWordRegex = new RegExp('^' + curWord, 'i')
+
+  curWord = !curStr.endsWith('.') || curStr === 'xls.'
 
   return {
-    list:
-      curStr && (!curStr.endsWith('.') || curStr === 'xls.') && curWordRegex
-        ? numaraHints.filter(({ text }) => curWordRegex.test(text)).sort((a, b) => a.text.localeCompare(b.text))
-        : [],
+    list: !curWord
+      ? []
+      : numaraHints.filter(({ text }) => text.match(curWordRegex)).sort((a, b) => a.text.localeCompare(b.text)),
     from: CodeMirror.Pos(cmCursor.line, start),
     to: CodeMirror.Pos(cmCursor.line, end)
   }
@@ -157,61 +236,20 @@ CodeMirror.commands.autocomplete = (cm) => {
 // Force editor line bottom alignment
 function cmForceBottom() {
   const lineTop = cm.display.lineDiv.children[cm.getCursor().line].getBoundingClientRect().top
-  const lineBottom = cm.display.lineDiv.children[cm.getCursor().line].getBoundingClientRect().bottom
-  const barTop = dom.el('.CodeMirror-hscrollbar').getBoundingClientRect().top
-  const lineHeight = lineBottom - lineTop
+  const barTop = $('.CodeMirror-hscrollbar').getBoundingClientRect().top
+  const lineHeight = +app.settings.lineHeight.replace('px', '') + 1
 
-  if (barTop - lineTop < lineHeight) dom.output.scrollTop = dom.output.scrollTop + (lineHeight - (barTop - lineTop))
+  if (barTop - lineTop < lineHeight) {
+    $('#output').scrollTop = $('#output').scrollTop + (lineHeight - (barTop - lineTop))
+  }
 }
-
-/** CodeMirror instances. */
-export const cm = CodeMirror.fromTextArea(dom.inputArea, {
-  autofocus: true,
-  coverGutterNextToScrollbar: true,
-  extraKeys: { 'Ctrl-Space': 'autocomplete' },
-  flattenSpans: true,
-  mode: 'numara',
-  smartIndent: false,
-  theme: 'numara',
-  viewportMargin: Infinity
-})
-
-const udOptions = { autoCloseBrackets: true, autofocus: true, mode: 'javascript', smartIndent: false, tabSize: 2 }
-
-// Set the placeholder values of the user defined dialog CodeMirror instances
-const udfPlaceholder = 'xyz: (x, y, z) => {\n\treturn x+y+z\n},\n\nmyConstant: 123'
-const uduPlaceholder = 'foo: "18 foot",\nbar: "40 foo"'
-
-dom.udfInput.setAttribute('placeholder', udfPlaceholder)
-dom.uduInput.setAttribute('placeholder', uduPlaceholder)
-
-export const udfInput = CodeMirror.fromTextArea(dom.udfInput, udOptions)
-export const uduInput = CodeMirror.fromTextArea(dom.uduInput, udOptions)
 
 // Codemirror handlers
 cm.on('changes', calculate)
 
 cm.on('inputRead', (cm) => {
-  if (!app.settings.autocomplete) return
-
-  CodeMirror.commands.autocomplete(cm)
-})
-
-cm.on('paste', (cm, event) => {
-  event.preventDefault()
-
-  let pastedText = event.clipboardData.getData('text/plain')
-
-  if (app.settings.thouSep && app.settings.pasteThouSep) {
-    cm.replaceSelection(pastedText)
-  } else {
-    try {
-      math.evaluate(pastedText, app.mathScope)
-      cm.replaceSelection(pastedText)
-    } catch {
-      let modifiedText = pastedText.replaceAll(',', '')
-      cm.replaceSelection(modifiedText)
-    }
+  if (app.settings.autocomplete) {
+    CodeMirror.commands.autocomplete(cm)
   }
 })
 
@@ -220,7 +258,12 @@ cm.on('cursorActivity', (cm) => {
 
   cm.eachLine((line) => {
     const cmLineNo = cm.getLineNumber(line)
-    cm[cmLineNo === activeLine ? 'addLineClass' : 'removeLineClass'](cmLineNo, 'gutter', 'activeLine')
+
+    if (cmLineNo === activeLine) {
+      cm.addLineClass(cmLineNo, 'gutter', 'activeLine')
+    } else {
+      cm.removeLineClass(cmLineNo, 'gutter', 'activeLine')
+    }
   })
 
   setTimeout(cmForceBottom, 20)
@@ -237,29 +280,32 @@ cm.on('gutterClick', (cm, line) => {
   const lineNo = line + 1
   const activeLine = cm.getCursor().line + 1
 
-  if (activeLine <= lineNo) return
-
-  cm.replaceSelection('line' + lineNo)
+  if (activeLine > lineNo) {
+    cm.replaceSelection('line' + lineNo)
+  }
 })
 
 cm.on('scrollCursorIntoView', cmForceBottom)
 
 // Tooltips
+const CLASS_NAMES = {
+  FUNCTION: 'cm-function',
+  UDF: 'cm-udf',
+  UDU: 'cm-udu',
+  CURRENCY: 'cm-currency',
+  UNIT: 'cm-unit',
+  CONSTANT: 'cm-constant',
+  VARIABLE: 'cm-variable',
+  LINE_NO: 'cm-lineNo',
+  KEYWORD: 'cm-keyword',
+  FORMULAJS: 'cm-formulajs',
+  EXCEL: 'cm-excel'
+}
 
-/**
- * Determines the tooltip position based on the given element.
- * @param {Element} el - The DOM element to check.
- * @returns {string} Returns 'right' if the element is an <li>, otherwise 'top-left'.
- */
 function getTooltipPosition(el) {
   return el.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left'
 }
 
-/**
- * Displays a tooltip on the specified target element with the given title.
- * @param {HTMLElement|string} target - The target element or selector to attach the tooltip to.
- * @param {string} title - The text to display inside the tooltip.
- */
 function showTooltip(target, title) {
   UIkit.tooltip(target, {
     pos: getTooltipPosition(target),
@@ -267,33 +313,26 @@ function showTooltip(target, title) {
   }).show()
 }
 
-/**
- * Displays a tooltip with the description and syntax of a mathematical function.
- * @param {HTMLElement} target - The DOM element representing the function for which to show the tooltip.
- */
 function handleFunctionTooltip(target) {
   try {
-    const tip = math.help(target.innerText).toJSON()
+    const tip = JSON.parse(JSON.stringify(math.help(target.innerText).toJSON()))
 
     showTooltip(
       target,
       `<div>${tip.description}</div>
-      <div class="tooltipCode">${tip.syntax.map((s) => '<code>' + s + '</code>').join(' ')}</div>`
+      <div class="tooltipCode">
+        ${tip.syntax.map((s) => '<code>' + s + '</code>').join(' ')}
+      </div>`
     )
   } catch {
     showTooltip(target, 'Description not available')
   }
 }
 
-/**
- * Displays a tooltip with the currency name for the given currency code.
- * @param {HTMLElement} target - The DOM element representing the currency.
- */
 function handleCurrencyTooltip(target) {
   try {
     const currency = target.innerText
-    const currencyName =
-      currency.toUpperCase() === 'USD' ? 'U.S. Dollar' : app.currencyRates[currency.toLowerCase()].name
+    const currencyName = currency === 'USD' ? 'U.S. Dollar' : app.currencyRates[currency.toLowerCase()].name
 
     showTooltip(target, currencyName)
   } catch {
@@ -301,20 +340,12 @@ function handleCurrencyTooltip(target) {
   }
 }
 
-/**
- * Displays a tooltip with the description of a unit.
- * @param {HTMLElement} target - The DOM element representing the unit.
- */
 function handleUnitTooltip(target) {
   const hint = numaraHints.find((hint) => hint.text === target.innerText)
 
   showTooltip(target, hint.desc)
 }
 
-/**
- * Displays a tooltip with the description of a constant.
- * @param {HTMLElement} target - The DOM element representing the constant.
- */
 function handleConstantTooltip(target) {
   try {
     showTooltip(target, math.help(target.innerText).doc.description)
@@ -323,28 +354,20 @@ function handleConstantTooltip(target) {
   }
 }
 
-/**
- * Displays a tooltip with the value of a variable.
- * @param {HTMLElement} target - The DOM element representing the variable.
- */
 function handleVariableTooltip(target) {
-  if (!app.mathScope[target.innerText] || typeof app.mathScope[target.innerText] === 'function') return
+  if (app.mathScope[target.innerText] && typeof app.mathScope[target.innerText] !== 'function') {
+    let varTooltip
 
-  let varTooltip
+    try {
+      varTooltip = formatAnswer(math.evaluate(target.innerText, app.mathScope))
+    } catch {
+      varTooltip = 'Undefined'
+    }
 
-  try {
-    varTooltip = formatAnswer(math.evaluate(target.innerText, app.mathScope))
-  } catch {
-    varTooltip = 'Undefined'
+    showTooltip(target, varTooltip)
   }
-
-  showTooltip(target, varTooltip)
 }
 
-/**
- * Displays a tooltip with the value or type of a line number reference.
- * @param {HTMLElement} target - The DOM element representing the line number.
- */
 function handleLineNoTooltip(target) {
   let tooltip
 
@@ -360,65 +383,59 @@ function handleLineNoTooltip(target) {
   showTooltip(target, tooltip)
 }
 
-/**
- * Displays a tooltip with the description of a keyword.
- * @param {HTMLElement} target - The DOM element representing the keyword.
- */
 function handleKeywordTooltip(target) {
   const keyword = keywords.find((key) => target.innerText === key.text)
 
-  showTooltip(target, keyword?.desc)
-}
-
-const TOOLTIP_HANDLERS = {
-  [CLASS_NAMES.FUNCTION]: handleFunctionTooltip,
-  [CLASS_NAMES.UDF]: (target) => showTooltip(target, 'User defined function'),
-  [CLASS_NAMES.UDU]: (target) => showTooltip(target, 'User defined unit'),
-  [CLASS_NAMES.CURRENCY]: handleCurrencyTooltip,
-  [CLASS_NAMES.UNIT]: handleUnitTooltip,
-  [CLASS_NAMES.CONSTANT]: handleConstantTooltip,
-  [CLASS_NAMES.VARIABLE]: handleVariableTooltip,
-  [CLASS_NAMES.LINE_NO]: handleLineNoTooltip,
-  [CLASS_NAMES.KEYWORD]: handleKeywordTooltip,
-  [CLASS_NAMES.FORMULAJS]: (target) => showTooltip(target, 'Formulajs'),
-  [CLASS_NAMES.EXCEL]: (target) => showTooltip(target, 'Excel function')
-}
-
-/**
- * Refreshes the given CodeMirror editor and focuses it after a short delay.
- * @param {CodeMirror} editor - CodeMirror instance to refresh and focus.
- */
-export function refreshEditor(editor) {
-  editor.refresh()
-
-  setTimeout(() => editor.focus(), 100)
+  showTooltip(target, keyword.desc)
 }
 
 document.addEventListener('mouseover', (event) => {
-  const className = event.target.classList[0]
-
-  if (app.settings.keywordTips && className?.startsWith('cm-')) {
-    const handler = TOOLTIP_HANDLERS[className]
-
-    if (handler) handler(event.target)
+  if (app.settings.keywordTips && event.target.classList[0]?.startsWith('cm-')) {
+    switch (event.target.classList[0]) {
+      case CLASS_NAMES.FUNCTION:
+        handleFunctionTooltip(event.target)
+        break
+      case CLASS_NAMES.UDF:
+        showTooltip(event.target, 'User defined function')
+        break
+      case CLASS_NAMES.UDU:
+        showTooltip(event.target, 'User defined unit')
+        break
+      case CLASS_NAMES.CURRENCY:
+        handleCurrencyTooltip(event.target)
+        break
+      case CLASS_NAMES.UNIT:
+        handleUnitTooltip(event.target)
+        break
+      case CLASS_NAMES.CONSTANT:
+        handleConstantTooltip(event.target)
+        break
+      case CLASS_NAMES.VARIABLE:
+        handleVariableTooltip(event.target)
+        break
+      case CLASS_NAMES.LINE_NO:
+        handleLineNoTooltip(event.target)
+        break
+      case CLASS_NAMES.KEYWORD:
+        handleKeywordTooltip(event.target)
+        break
+      case CLASS_NAMES.FORMULAJS:
+        showTooltip(event.target, 'Formulajs')
+        break
+      case CLASS_NAMES.EXCEL:
+        showTooltip(event.target, 'Excel function')
+        break
+    }
   }
 
-  if (className !== 'CodeMirror-linenumber') return
+  if (event.target.classList[0] === 'CodeMirror-linenumber') {
+    const activeLine = cm.getCursor().line + 1
+    const isValid = activeLine > +event.target.innerText
 
-  const activeLine = cm.getCursor().line + 1
-  const isValid = activeLine > +event.target.innerText
-
-  event.target.style.cursor = isValid ? 'pointer' : 'default'
-  event.target.setAttribute(
-    'title',
-    isValid && app.settings.keywordTips ? `Insert 'line${event.target.innerText}' to Line ${activeLine}` : ''
-  )
-})
-
-document.addEventListener('keydown', (event) => {
-  app.refreshCM = !event.repeat
-})
-
-document.addEventListener('keyup', () => {
-  app.refreshCM = true
+    event.target.style.cursor = isValid ? 'pointer' : 'default'
+    event.target.setAttribute(
+      'title',
+      isValid && app.settings.keywordTips ? `Insert 'line${event.target.innerText}' to Line ${activeLine}` : ''
+    )
+  }
 })

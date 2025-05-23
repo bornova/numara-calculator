@@ -31,7 +31,7 @@ linux:
 # RPM specific configuration
 rpm:
   depends:
-    - /usr/lib64/libuuid.so.1
+    - '/usr/lib64/libuuid.so.1'
 
 # macOS configuration
 mac:

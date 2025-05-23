@@ -1,39 +1,35 @@
-import { dom } from './dom'
+import { $, app, store } from './common'
 import { cm, numaraHints } from './editor'
 import { calculate, math } from './eval'
 import { notify } from './modal'
-import { app, store } from './utils'
 
 const USD_UNIT = 'USD'
 const EXCHANGE_RATE_URL = 'https://www.floatrates.com/widget/1030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json'
 
-math.createUnit(USD_UNIT, { aliases: [USD_UNIT.toLowerCase()] })
+math.createUnit(USD_UNIT)
 numaraHints.push({ text: USD_UNIT, desc: 'U.S. Dollar', className: 'cm-currency' })
 
 /**
  * Get exchange rates and update the application.
  */
 export function getRates() {
-  if (!navigator.onLine) {
-    dom.lastUpdated.innerHTML = 'No internet connection.'
-    notify('No internet connection. Could not update exchange rates.', 'warning')
-    return
+  if (navigator.onLine) {
+    $('#lastUpdated').innerHTML = '<div uk-spinner="ratio: 0.3"></div>'
+
+    fetch(EXCHANGE_RATE_URL)
+      .then((response) => response.json())
+      .then((rates) => {
+        updateCurrencyRates(rates)
+        $('#lastUpdated').innerHTML = store.get('rateDate')
+        cm.setOption('mode', app.settings.syntax ? 'numara' : 'plain')
+        calculate()
+      })
+      .catch((error) => {
+        handleFetchError(error)
+      })
+  } else {
+    handleNoInternetConnection()
   }
-
-  dom.lastUpdated.innerHTML = '<div uk-spinner="ratio: 0.3"></div>'
-
-  fetch(EXCHANGE_RATE_URL)
-    .then((response) => response.json())
-    .then((rates) => {
-      updateCurrencyRates(rates)
-      dom.lastUpdated.innerHTML = store.get('rateDate')
-      cm.setOption('mode', app.settings.syntax ? 'numara' : 'plain')
-      calculate()
-    })
-    .catch((error) => {
-      dom.lastUpdated.innerHTML = 'n/a'
-      notify('Failed to get exchange rates (' + error + ')', 'warning')
-    })
 }
 
 /**
@@ -41,30 +37,34 @@ export function getRates() {
  * @param {Object} rates - The exchange rates data.
  */
 function updateCurrencyRates(rates) {
-  if (!rates || typeof rates !== 'object') return
-
-  let lastDate = null
-
   app.currencyRates = rates
 
-  for (const rateCode in rates) {
-    const { code, inverseRate, name, date } = rates[rateCode]
+  Object.keys(rates).forEach((currency) => {
+    const rate = rates[currency]
 
-    math.createUnit(
-      code,
-      {
-        aliases: Object.keys(math.Unit.UNITS).includes(code.toLowerCase()) ? [] : [code.toLowerCase()],
-        definition: math.unit(inverseRate + USD_UNIT)
-      },
-      { override: true }
-    )
+    math.createUnit(rate.code, { definition: math.unit(rate.inverseRate + USD_UNIT) }, { override: true })
 
-    if (numaraHints.every((hint) => hint.text !== code)) {
-      numaraHints.push({ text: code, desc: name, className: 'cm-currency' })
+    if (!numaraHints.some((hint) => hint.text === rate.code)) {
+      numaraHints.push({ text: rate.code, desc: rate.name, className: 'cm-currency' })
     }
 
-    lastDate = date
-  }
+    store.set('rateDate', rate.date)
+  })
+}
 
-  if (lastDate) store.set('rateDate', lastDate)
+/**
+ * Handle fetch error for exchange rates.
+ * @param {Error} error - The error object.
+ */
+function handleFetchError(error) {
+  $('#lastUpdated').innerHTML = 'n/a'
+  notify('Failed to get exchange rates (' + error + ')', 'warning')
+}
+
+/**
+ * Handle no internet connection scenario.
+ */
+function handleNoInternetConnection() {
+  $('#lastUpdated').innerHTML = 'No internet connection.'
+  notify('No internet connection. Could not update exchange rates.', 'warning')
 }

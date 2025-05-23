@@ -14,6 +14,7 @@ log.errorHandler.startCatching()
 log.eventLogger.startLogging()
 
 const { autoUpdater } = updater
+
 autoUpdater.autoInstallOnAppQuit = false
 autoUpdater.logger = log
 autoUpdater.logger.transports.file.level = 'info'
@@ -28,49 +29,27 @@ const schema = {
 
 const config = new Store({ schema, clearInvalidConfig: true, fileExtension: '' })
 
-const isMac = process.platform === 'darwin'
-const isWin = process.platform === 'win32'
+const theme = config.get('theme')
 
-const DARK_COLOR = '#1f1f1f'
-const LIGHT_COLOR = '#ffffff'
-const TRANS_COLOR = '#00000000'
-
-const getThemeColor = () =>
-  config.get('theme') === 'dark' || (config.get('theme') === 'system' && nativeTheme.shouldUseDarkColors)
-    ? DARK_COLOR
-    : LIGHT_COLOR
+const dark = '#1f1f1f'
+const light = '#ffffff'
 
 let win
-
-/**
- * Sets the title bar overlay configuration based on the transparency state.
- * @param {boolean} isTrans - Determines if the title bar should be transparent.
- */
-function setTitleBarOverlay(isTrans) {
-  if (!isWin) return
-
-  const titleBarConfig = {
-    color: isTrans ? TRANS_COLOR : getThemeColor(),
-    symbolColor: getThemeColor() === DARK_COLOR ? LIGHT_COLOR : DARK_COLOR
-  }
-
-  win.setTitleBarOverlay(titleBarConfig)
-}
 
 /**
  * Create the main application window.
  */
 function createAppWindow() {
   win = new BrowserWindow({
-    backgroundColor: getThemeColor(),
+    backgroundColor:
+      theme === 'system' ? (nativeTheme.shouldUseDarkColors ? dark : light) : theme === 'dark' ? dark : light,
     frame: false,
     height: parseInt(config.get('appHeight')),
     width: parseInt(config.get('appWidth')),
     minHeight: 360,
     minWidth: 420,
     show: false,
-    titleBarStyle: isMac ? 'hiddenInset' : 'hidden',
-    titleBarOverlay: true,
+    titleBarStyle: 'hiddenInset',
     webPreferences: {
       preload: path.join(import.meta.dirname, 'preload.cjs'),
       spellcheck: false
@@ -80,13 +59,21 @@ function createAppWindow() {
   win.loadFile('build/index.html')
 
   win.webContents.on('did-finish-load', () => {
-    if (config.get('fullSize') && isWin) win.maximize()
-    if (config.get('position')) win.setPosition(config.get('position')[0], config.get('position')[1])
-    if (isMac && !app.isPackaged) win.webContents.openDevTools()
+    if (config.get('fullSize') && process.platform === 'win32') {
+      win.webContents.send('fullscreen', true)
+    }
 
-    setTitleBarOverlay()
+    win.setHasShadow(true)
+
+    if (config.get('position')) {
+      win.setPosition(config.get('position')[0], config.get('position')[1])
+    }
 
     win.show()
+
+    if (process.platform === 'darwin' && !app.isPackaged) {
+      win.webContents.openDevTools()
+    }
   })
 
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -98,13 +85,15 @@ function createAppWindow() {
     config.set('fullSize', win.isMaximized())
     config.set('position', win.getPosition())
 
-    if (win.isMaximized()) return
-
-    const [width, height] = win.getSize()
-
-    config.set('appWidth', width)
-    config.set('appHeight', height)
+    if (!win.isMaximized()) {
+      config.set('appWidth', win.getSize()[0])
+      config.set('appHeight', win.getSize()[1])
+    }
   })
+
+  win.on('maximize', () => win.webContents.send('isMax', true))
+  win.on('unmaximize', () => win.webContents.send('isMax', false))
+  win.on('restore', () => win.webContents.send('restored', true))
 
   if (app.isPackaged) {
     win.on('focus', () => globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {}))
@@ -112,46 +101,47 @@ function createAppWindow() {
   }
 }
 
-app.setAppUserModelId('com.numara.app')
-app.whenReady().then(createAppWindow)
-app.requestSingleInstanceLock() ? app.on('second-instance', () => win.focus()) : app.quit()
+app.setAppUserModelId(app.name)
 
-nativeTheme.on('updated', () => {
-  win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors)
-  setTitleBarOverlay()
-})
+app.whenReady().then(createAppWindow)
+
+if (!app.requestSingleInstanceLock()) {
+  app.quit()
+} else {
+  app.on('second-instance', () => win.focus())
+}
+
+nativeTheme.on('updated', () => win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors))
 
 ipcMain.on('isDark', (event) => (event.returnValue = nativeTheme.shouldUseDarkColors))
-ipcMain.on('setTheme', (event, mode) => {
-  config.set('theme', mode)
-  setTitleBarOverlay(true)
-})
-ipcMain.on('transControls', (event, isTrans) => setTitleBarOverlay(isTrans))
-
+ipcMain.on('setTheme', (event, mode) => config.set('theme', mode))
 ipcMain.on('setOnTop', (event, bool) => win.setAlwaysOnTop(bool))
+ipcMain.on('close', () => app.quit())
+ipcMain.on('minimize', () => win.minimize())
+ipcMain.on('maximize', () => win.maximize())
+ipcMain.on('unmaximize', () => win.unmaximize())
 ipcMain.on('isMaximized', (event) => (event.returnValue = win.isMaximized()))
 ipcMain.on('isResized', (event) => {
-  const [width, height] = win.getSize()
-  event.returnValue = width !== schema.appWidth.default || height !== schema.appHeight.default
+  event.returnValue = win.getSize()[0] !== schema.appWidth.default || win.getSize()[1] !== schema.appHeight.default
 })
 
 ipcMain.on('import', (event) => {
   const file = dialog.showOpenDialogSync(win, {
     filters: [{ name: 'Numara', extensions: ['numara'] }],
     properties: ['openFile'],
-    title: 'Import Calculations'
+    title: 'Open Calculations'
   })
 
-  if (!file) return
+  if (file) {
+    fs.readFile(file[0], 'utf8', (error, data) => {
+      if (error) {
+        event.sender.send('importDataError', error)
+        return
+      }
 
-  fs.readFile(file[0], 'utf8', (error, data) => {
-    if (error) {
-      event.sender.send('importDataError', error)
-      return
-    }
-
-    event.sender.send('importData', data, 'Imported from: ' + file[0])
-  })
+      event.sender.send('importData', data, 'Imported from: ' + file[0])
+    })
+  }
 })
 
 ipcMain.on('export', (event, fileName, content) => {
@@ -161,26 +151,29 @@ ipcMain.on('export', (event, fileName, content) => {
     title: 'Export Calculations'
   })
 
-  if (!file) return
+  if (file) {
+    fs.writeFile(file, content, (error) => {
+      if (error) {
+        event.sender.send('exportDataError', error)
+        return
+      }
 
-  fs.writeFile(file, content, (error) => {
-    if (error) {
-      event.sender.send('exportDataError', error)
-      return
-    }
-
-    event.sender.send('exportData', 'Exported to: ' + file)
-  })
+      event.sender.send('exportData', 'Exported to: ' + file)
+    })
+  }
 })
 
 /**
  * Reset window size to default.
  */
 function resetSize() {
-  win.setSize(schema.appWidth.default, schema.appHeight.default)
+  if (win) {
+    win.setSize(schema.appWidth.default, schema.appHeight.default)
+  }
 }
 
 ipcMain.on('resetSize', resetSize)
+
 ipcMain.on('resetApp', () => {
   session.defaultSession.clearStorageData().then(() => {
     config.clear()
@@ -188,6 +181,7 @@ ipcMain.on('resetApp', () => {
     app.exit()
   })
 })
+
 ipcMain.on('openDevTools', () => win.webContents.openDevTools())
 ipcMain.on('openLogs', () => {
   shell.openPath(path.join(app.getPath('logs'), 'main.log'))
@@ -277,6 +271,7 @@ ipcMain.on('inputContextMenu', (event, index, isEmpty, isLine, isSelection, isMu
     ...contextHeader(index, isMultiLine, hasAnswer),
     ...commonContext(event, index, isEmpty, isSelection, isMultiLine, hasAnswer)
   ]
+
   const contextMenu = Menu.buildFromTemplate(contextMenuTemplate)
 
   contextMenu.popup()
@@ -295,6 +290,7 @@ ipcMain.on('outputContextMenu', (event, index, isEmpty, hasAnswer) => {
     ...contextHeader(index, false, hasAnswer),
     ...commonContext(event, index, isEmpty, false, false, hasAnswer)
   ]
+
   const contextMenu = Menu.buildFromTemplate(contextMenuTemplate)
 
   contextMenu.popup()
@@ -406,4 +402,6 @@ const menuTemplate = [
   }
 ]
 
-Menu.setApplicationMenu(isMac || process.platform === 'linux' ? Menu.buildFromTemplate(menuTemplate) : null)
+Menu.setApplicationMenu(
+  process.platform === 'darwin' || process.platform === 'linux' ? Menu.buildFromTemplate(menuTemplate) : null
+)

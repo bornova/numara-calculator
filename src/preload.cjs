@@ -8,24 +8,28 @@ contextBridge.exposeInMainWorld('numara', {
     print: (callback) => ipcRenderer.on('print', callback)
   },
 
-  versions: {
-    chrome: () => process.versions.chrome,
-    electron: () => process.versions.electron,
-    node: () => process.versions.node,
-    v8: () => process.versions.v8
-  },
-
   // App theme
   isDark: () => ipcRenderer.sendSync('isDark'),
   setTheme: (theme) => ipcRenderer.send('setTheme', theme),
   themeUpdate: (callback) => ipcRenderer.on('themeUpdate', callback),
 
   // Window controls
+  fullscreen: () =>
+    ipcRenderer.on('fullscreen', (event, isFullscreen) => {
+      if (isFullscreen) {
+        ipcRenderer.send('maximize')
+      }
+    }),
+  close: () => ipcRenderer.send('close'),
+  minimize: () => ipcRenderer.send('minimize'),
+  maximize: () => ipcRenderer.send('maximize'),
+  unmaximize: () => ipcRenderer.send('unmaximize'),
+  isMax: (callback) => ipcRenderer.on('isMax', callback),
   isMaximized: () => ipcRenderer.sendSync('isMaximized'),
   isResized: () => ipcRenderer.sendSync('isResized'),
   resetSize: () => ipcRenderer.send('resetSize'),
+  restored: (callback) => ipcRenderer.on('restored', callback),
   setOnTop: (callback) => ipcRenderer.send('setOnTop', callback),
-  transControls: (isTrans) => ipcRenderer.send('transControls', isTrans),
 
   // Import
   import: () => ipcRenderer.send('import'),
