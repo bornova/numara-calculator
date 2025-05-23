@@ -4,9 +4,6 @@ appId: com.numara.app
 # Artifact name pattern
 artifactName: '${productName}-${version}-${arch}.${ext}'
 
-# Disable asar
-asar: false
-
 # Publish configuration
 publish:
   - provider: github
@@ -45,13 +42,9 @@ mac:
 
 # Windows configuration
 win:
-  icon: 'build/assets/icon.ico'
   verifyUpdateCodeSignature: false
 
 # NSIS installer configuration
 nsis:
   deleteAppDataOnUninstall: true
-  installerIcon: build/assets/icon.ico
-  uninstallerIcon: build/assets/icon.ico
-  installerHeaderIcon: build/assets/icon.ico
   oneClick: false
