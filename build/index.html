@@ -25,22 +25,16 @@
   </head>
 
   <body>
-    <div id="wrapper" class="wrapper">
-      <div id="header-win" class="header-win">
-        <div id="header-win-title" class="header-win-title"></div>
-        <div id="winButtons" class="winButtons">
-          <span id="close" class="close-btn-win" title="Exit"></span>
-          <span id="max" class="max-btn-win" title="Maximize"></span>
-          <span id="unmax" class="unmax-btn-win" title="Unmaximize"></span>
-          <span id="min" class="min-btn-win" title="Minimize"></span>
-        </div>
+    <div id="appWrapper" class="appWrapper">
+      <div id="winHeader" class="winHeader">
+        <div id="winHeaderTitle" class="winHeaderTitle"></div>
       </div>
 
-      <div id="header-mac" class="header-mac">
-        <div id="header-mac-title" class="header-mac-title"></div>
+      <div id="macHeader" class="macHeader">
+        <div id="macHeaderTitle" class="macHeaderTitle"></div>
       </div>
 
-      <div id="panel" class="panel">
+      <div id="mainPanel" class="mainPanel">
         <div id="input" class="input">
           <textarea id="inputArea" class="inputArea panelFont" name="sync" spellcheck="false" tabindex="-1"></textarea>
         </div>
@@ -57,7 +51,8 @@
             <i data-lucide="plus"></i>
           </a>
           <span class="actionDivider"></span>
-          <a id="clearButton" class="action" title="Clear page" uk-tooltip><i data-lucide="eraser"></i></a>
+          <a id="printButton" class="action" title="Print page" uk-tooltip><i data-lucide="printer"></i></a>
+          <a id="clearButton" class="action" title="Clear page" uk-tooltip><i data-lucide="brush-cleaning"></i></a>
           <a id="copyButton" class="action" title="Copy page" uk-tooltip><i data-lucide="copy"></i></a>
         </div>
         <div id="centerActions" class="centerActions uk-flex uk-flex-middle">
@@ -78,7 +73,10 @@
           <span id="pageListSort" class="pageListSort uk-float-right" title="Sort">
             <i data-lucide="arrow-up-down"></i>
           </span>
-          <div id="sortDropdown" uk-dropdown="mode: click; pos: right-top; bg-scroll: false; close-on-scroll: true">
+          <div
+            id="sortDropdown"
+            uk-dropdown="mode: click; pos: right-top; bg-scroll: false; close-on-scroll: true; container: body"
+          >
             <div id="sortOldNew" class="sortListItem uk-flex uk-flex-column" title="Sort older to newer">
               Older to newer
             </div>
@@ -108,8 +106,6 @@
               <a id="exportButton" class="action exportButton" title="Export" uk-tooltip>
                 <i data-lucide="upload"></i>
               </a>
-              <span id="spDivider" class="actionDivider"></span>
-              <a id="printButton" class="action" title="Print page" uk-tooltip><i data-lucide="printer"></i></a>
             </div>
             <div class="rightActions uk-flex uk-flex-middle uk-flex-right uk-flex-1 uk-text-right">
               <a id="deleteAllPagesButton" class="action deleteAllPagesButton" title="Delete all pages" uk-tooltip>
@@ -121,7 +117,7 @@
       </div>
     </div>
 
-    <div id="dialog-newPage" class="modal" uk-modal>
+    <div id="dialogNewPage" class="modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
         <h2 class="uk-modal-title">New page title</h2>
         <div>
@@ -129,14 +125,14 @@
         </div>
         <div uk-flex>
           <div class="dialog-buttons uk-flex-right">
-            <button id="dialog-newPage-save" class="uk-button uk-button-primary uk-button-small">Save</button>
+            <button id="dialogNewPageSave" class="uk-button uk-button-primary uk-button-small">Save</button>
             <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
           </div>
         </div>
       </div>
     </div>
 
-    <div id="dialog-renamePage" class="modal" uk-modal>
+    <div id="dialogRenamePage" class="modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
         <h2 class="uk-modal-title">Rename page</h2>
         <div>
@@ -144,15 +140,15 @@
         </div>
         <div uk-flex>
           <div class="dialog-buttons uk-flex-right">
-            <button id="dialog-renamePage-save" class="uk-button uk-button-primary uk-button-small">Save</button>
+            <button id="dialogRenamePageSave" class="uk-button uk-button-primary uk-button-small">Save</button>
             <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
           </div>
         </div>
       </div>
     </div>
 
-    <div id="dialog-udfu" class="modal" uk-modal>
-      <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-2xlarge">
+    <div id="dialogUdfu" class="modal" uk-modal>
+      <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-xlarge">
         <h2 class="uk-modal-title uk-text-center">User Defined Functions & Units</h2>
         <ul id="udfuTabs" uk-tab>
           <li><a>Functions</a></li>
@@ -166,7 +162,7 @@
             <div uk-grid>
               <div class="dialog-buttons uk-width-1-2 uk-flex-left"></div>
               <div class="dialog-buttons uk-width-1-2 uk-flex-right">
-                <button id="dialog-udfu-save-f" class="uk-button uk-button-primary uk-button-small">Save</button>
+                <button id="dialogUdfuSaveF" class="uk-button uk-button-primary uk-button-small">Save</button>
                 <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
               </div>
             </div>
@@ -178,7 +174,7 @@
             <div uk-grid>
               <div class="dialog-buttons uk-width-1-2 uk-flex-left"></div>
               <div class="dialog-buttons uk-width-1-2 uk-flex-right">
-                <button id="dialog-udfu-save-u" class="uk-button uk-button-primary uk-button-small">Save</button>
+                <button id="dialogUdfuSaveU" class="uk-button uk-button-primary uk-button-small">Save</button>
                 <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
               </div>
             </div>
@@ -187,9 +183,12 @@
       </div>
     </div>
 
-    <div id="dialog-settings" class="modal" uk-modal>
+    <div id="dialogSettings" class="modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
         <h2 class="uk-modal-title uk-text-center">Settings</h2>
+        <a id="resetSizeButton" class="resetSizeButton" title="Reset window size" uk-tooltip>
+          <i data-lucide="scaling"></i>
+        </a>
         <div class="dialog-settings-body">
           <h3>Appearance</h3>
           <div class="uk-child-width-expand" uk-grid>
@@ -212,16 +211,6 @@
               </div>
             </div>
           </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div>Always on top</div>
-            <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="alwaysOnTop" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-
           <div class="uk-child-width-expand" uk-grid>
             <div class="padTop1">Font size</div>
             <div class="uk-text-right uk-position-relative">
@@ -258,118 +247,11 @@
               </select>
             </div>
           </div>
-
-          <h3>Locale</h3>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">
-              User locale<a id="localeWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
-            </div>
-            <div class="uk-text-right uk-position-relative">
-              <select id="locale" class="uk-select settingItem"></select>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div>Show day with date</div>
+            <div>Always on top</div>
             <div class="uk-text-right uk-position-relative">
               <label class="switch">
-                <input id="dateDay" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div>Thousand separator</div>
-            <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="thouSep" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div><i class="subSwitchIcon" data-lucide="corner-down-right"></i>Copy with answer</div>
-            <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="copyThouSep" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-
-          <h3>Calculator</h3>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">
-              Numeric output<a id="bigNumWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
-            </div>
-            <div class="uk-text-right uk-position-relative">
-              <select id="numericOutput" class="uk-select settingItem"></select>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">Notation</div>
-            <div class="uk-text-right uk-position-relative">
-              <select id="notation" class="uk-select settingItem"></select>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="uk-width-1-2 pr-lh">Precision</div>
-            <div class="uk-text-right uk-width-1-2">
-              <div class="uk-child-width-expand" uk-grid>
-                <div class="uk-text-right uk-width-1-6">
-                  <span id="precision-label" class="uk-label precision"></span>
-                </div>
-                <div class="uk-text-right range uk-position-relative">
-                  <input id="precision" class="uk-range settingItem" type="range" min="0" max="16" step="1" />
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="uk-width-1-2 pr-lh">Upper exponent limit</div>
-            <div class="uk-text-right uk-width-1-2">
-              <div class="uk-child-width-expand" uk-grid>
-                <div class="uk-text-right uk-width-1-6">
-                  <span id="expUpper-label" class="uk-label expUpper"></span>
-                </div>
-                <div class="uk-text-right range uk-position-relative">
-                  <input id="expUpper" class="uk-range settingItem" type="range" min="0" max="32" step="1" />
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="uk-width-1-2 pr-lh">Lower exponent limit</div>
-            <div class="uk-text-right uk-width-1-2">
-              <div class="uk-child-width-expand" uk-grid>
-                <div class="uk-text-right uk-width-1-6">
-                  <span id="expLower-label" class="uk-label expLower"></span>
-                </div>
-                <div class="uk-text-right range uk-position-relative">
-                  <input id="expLower" class="uk-range settingItem" type="range" min="-32" max="0" step="1" />
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">Matrix type</div>
-            <div class="uk-text-right uk-position-relative">
-              <select id="matrixType" class="uk-select settingItem"></select>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div>Predictable output</div>
-            <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="predictable" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div>Continue previous line</div>
-            <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="contPrevLine" type="checkbox" class="settingItem" />
+                <input id="alwaysOnTop" type="checkbox" class="settingItem" />
                 <span class="slider round"></span>
               </label>
             </div>
@@ -422,19 +304,19 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div>Panel divider</div>
+            <div>Line numbers</div>
             <div class="uk-text-right uk-width-2-5 uk-position-relative">
               <label class="switch">
-                <input id="divider" type="checkbox" class="settingItem" />
+                <input id="lineNumbers" type="checkbox" class="settingItem" />
                 <span class="slider round"></span>
               </label>
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div>Line numbers</div>
+            <div>Wrap lines (input only)</div>
             <div class="uk-text-right uk-width-2-5 uk-position-relative">
               <label class="switch">
-                <input id="lineNumbers" type="checkbox" class="settingItem" />
+                <input id="lineWrap" type="checkbox" class="settingItem" />
                 <span class="slider round"></span>
               </label>
             </div>
@@ -449,6 +331,100 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
+            <div>Start with blank page</div>
+            <div class="uk-text-right uk-width-2-5 uk-position-relative">
+              <label class="switch">
+                <input id="newPageOnStart" type="checkbox" class="settingItem" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+
+          <h3>Calculator</h3>
+          <div class="uk-child-width-expand" uk-grid>
+            <div class="padTop1">Answer position</div>
+            <div class="uk-text-right uk-position-relative">
+              <select id="answerPosition" class="uk-select settingItem"></select>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div class="padTop1">
+              Numeric output<a id="bigNumWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
+            </div>
+            <div class="uk-text-right uk-position-relative">
+              <select id="numericOutput" class="uk-select settingItem"></select>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div class="padTop1">Notation</div>
+            <div class="uk-text-right uk-position-relative">
+              <select id="notation" class="uk-select settingItem"></select>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div class="uk-width-1-2 pr-lh">Precision</div>
+            <div class="uk-text-right uk-width-1-2">
+              <div class="uk-child-width-expand" uk-grid>
+                <div class="uk-text-right uk-width-1-6">
+                  <span id="precisionLabel" class="uk-label precision"></span>
+                </div>
+                <div class="uk-text-right range uk-position-relative">
+                  <input id="precision" class="uk-range settingItem" type="range" min="0" max="16" step="1" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div class="uk-width-1-2 pr-lh">Upper exponent limit</div>
+            <div class="uk-text-right uk-width-1-2">
+              <div class="uk-child-width-expand" uk-grid>
+                <div class="uk-text-right uk-width-1-6">
+                  <span id="expUpperLabel" class="uk-label expUpper"></span>
+                </div>
+                <div class="uk-text-right range uk-position-relative">
+                  <input id="expUpper" class="uk-range settingItem" type="range" min="0" max="32" step="1" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div class="uk-width-1-2 pr-lh">Lower exponent limit</div>
+            <div class="uk-text-right uk-width-1-2">
+              <div class="uk-child-width-expand" uk-grid>
+                <div class="uk-text-right uk-width-1-6">
+                  <span id="expLowerLabel" class="uk-label expLower"></span>
+                </div>
+                <div class="uk-text-right range uk-position-relative">
+                  <input id="expLower" class="uk-range settingItem" type="range" min="-32" max="0" step="1" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div class="padTop1">Matrix type</div>
+            <div class="uk-text-right uk-position-relative">
+              <select id="matrixType" class="uk-select settingItem"></select>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div>Predictable output</div>
+            <div class="uk-text-right uk-position-relative">
+              <label class="switch">
+                <input id="predictable" type="checkbox" class="settingItem" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div>Continue previous line</div>
+            <div class="uk-text-right uk-position-relative">
+              <label class="switch">
+                <input id="contPrevLine" type="checkbox" class="settingItem" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
             <div>Line errors</div>
             <div class="uk-text-right uk-width-2-5 uk-position-relative">
               <label class="switch">
@@ -457,11 +433,46 @@
               </label>
             </div>
           </div>
+
+          <h3>Locale</h3>
           <div class="uk-child-width-expand" uk-grid>
-            <div>Wrap lines (input only)</div>
-            <div class="uk-text-right uk-width-2-5 uk-position-relative">
+            <div class="padTop1">Answer locale</div>
+            <div class="uk-text-right uk-position-relative">
+              <select id="locale" class="uk-select settingItem"></select>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div>Show day with date</div>
+            <div class="uk-text-right uk-position-relative">
               <label class="switch">
-                <input id="lineWrap" type="checkbox" class="settingItem" />
+                <input id="dateDay" type="checkbox" class="settingItem" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div>Thousand separator</div>
+            <div class="uk-text-right uk-position-relative">
+              <label class="switch">
+                <input id="thouSep" type="checkbox" class="settingItem" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div><i class="subSwitchIcon" data-lucide="corner-down-right"></i>Copy with answer</div>
+            <div class="uk-text-right uk-position-relative">
+              <label class="switch">
+                <input id="copyThouSep" type="checkbox" class="settingItem" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div><i class="subSwitchIcon" data-lucide="corner-down-right"></i>Paste with separator</div>
+            <div class="uk-text-right uk-position-relative">
+              <label class="switch">
+                <input id="pasteThouSep" type="checkbox" class="settingItem" />
                 <span class="slider round"></span>
               </label>
             </div>
@@ -527,28 +538,20 @@
 
           <h3>Currency Conversion</h3>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="uk-width-4-5">
-              <div>
-                Enabled<a id="currencyWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
-              </div>
+            <div>
+              Enabled<a id="currencyWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
             </div>
-            <div class="uk-text-right uk-width-1-5 uk-position-relative">
+            <div class="uk-text-right uk-width-2-5 uk-position-relative">
               <label class="switch">
                 <input id="currency" type="checkbox" class="settingItem" />
                 <span class="slider round"></span>
               </label>
             </div>
           </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="uk-width-2-3">
-              <div class="padTop1">Rate update interval</div>
-              <div id="currencyUpdate">
-                <span class="lastUpdated">Last update:</span>
-                <span id="lastUpdated" class="lastUpdated"></span>
-              </div>
-            </div>
 
-            <div class="uk-width-1-3 uk-position-relative uk-text-right">
+          <div class="uk-child-width-expand" uk-grid>
+            <div class="padTop1">Rate update interval</div>
+            <div class="uk-position-relative uk-text-right">
               <div class="uk-flex">
                 <select id="currencyInterval" class="uk-select settingItem uk-flex-left">
                   <option value="0">On start</option>
@@ -569,25 +572,29 @@
               </div>
             </div>
           </div>
+
+          <div class="uk-child-width-expand uk-margin-xsmall-top">
+            <div id="currencyUpdate">
+              <span class="lastUpdated">Last updated on:</span>
+              <span id="lastUpdated" class="lastUpdated"></span>
+            </div>
+          </div>
         </div>
 
         <div uk-grid>
-          <div class="dialog-buttons resetButtons uk-width-2-3 uk-flex-left">
+          <div class="dialog-buttons resetButtons uk-width-1-2 uk-flex-left">
             <a
-              id="dialog-settings-reset"
+              id="dialogSettingsReset"
               class="resetButton uk-text-danger"
               title="Reset all app settings and data"
               uk-tooltip
             >
-              <i data-lucide="list-restart"></i>
-            </a>
-            <a id="resetSizeButton" class="resetSizeButton" title="Reset window size" uk-tooltip>
-              <i data-lucide="scaling"></i>
+              Reset App
             </a>
           </div>
-          <div class="dialog-buttons resetButtons uk-width-1-3 uk-flex-right">
+          <div class="dialog-buttons resetButtons uk-width-1-2 uk-flex-right">
             <a id="defaultSettingsButton" class="defSettingsButton" title="Restore default settings" uk-tooltip>
-              Defaults
+              Restore default
             </a>
             <button class="uk-button uk-button-default uk-modal-close uk-button-small">Close</button>
           </div>
@@ -595,7 +602,7 @@
       </div>
     </div>
 
-    <div id="dialog-theme" class="dialog-theme modal" uk-modal>
+    <div id="dialogTheme" class="dialogTheme modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
         <h2 class="uk-modal-title uk-text-center">Customize Theme</h2>
         <div class="uk-child-width-expand uk-margin-small-bottom" uk-grid>
@@ -656,11 +663,6 @@
             <div><input type="text" data-class="operator" data-theme="dark" class="colorInput" readonly /></div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="uk-text-right">Text</div>
-            <div><input type="text" data-class="text" data-theme="light" class="colorInput" readonly /></div>
-            <div><input type="text" data-class="text" data-theme="dark" class="colorInput" readonly /></div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
             <div class="uk-text-right">Units</div>
             <div><input type="text" data-class="unit" data-theme="light" class="colorInput" readonly /></div>
             <div><input type="text" data-class="unit" data-theme="dark" class="colorInput" readonly /></div>
@@ -670,34 +672,39 @@
             <div><input type="text" data-class="variable" data-theme="light" class="colorInput" readonly /></div>
             <div><input type="text" data-class="variable" data-theme="dark" class="colorInput" readonly /></div>
           </div>
+          <div class="colorHR uk-text-secondary uk-margin-small">No syntax</div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div class="uk-text-right">Plain</div>
+            <div><input type="text" data-class="plain" data-theme="light" class="colorInput" readonly /></div>
+            <div><input type="text" data-class="plain" data-theme="dark" class="colorInput" readonly /></div>
+          </div>
         </div>
 
         <div uk-grid>
-          <div class="dialog-buttons uk-width-1-2 uk-flex-left">
-            <a id="resetColorsButton" class="uk-text-danger uk-margin-small-right">Reset colors</a>
-          </div>
-          <div class="dialog-buttons uk-width-1-2 uk-flex-right">
+          <div class="dialog-buttons uk-width-1-5 uk-flex-left"></div>
+          <div class="dialog-buttons uk-width-4-5 uk-flex-right">
+            <a id="defaultColorsButton" class="defSettingsButton uk-margin-small-right">Restore default</a>
             <button class="uk-button uk-button-default uk-modal-close uk-button-small">Close</button>
           </div>
         </div>
       </div>
     </div>
 
-    <div id="dialog-about" class="dialog-about modal" uk-modal>
+    <div id="dialogAbout" class="dialogAbout modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
         <button class="uk-modal-close-default" type="button" uk-close></button>
         <div class="dialog-about-header">
           <img id="numaraLogo" />
         </div>
         <div>
-          <span id="dialog-about-appVersion" class="dialog-about-appVersion"></span>
-          <span id="dialog-about-updateStatus" class="dialog-about-updateStatus"></span>
+          <span id="dialogAboutAppVersion" class="dialogAboutAppVersion" uk-tooltip></span>
+          <span id="dialogAboutUpdateStatus" class="dialogAboutUpdateStatus"></span>
           <span>
             <button id="updateButton" class="uk-button uk-button-primary uk-button-small updateButton">
               Install Now
             </button>
           </span>
-          <span id="dialog-about-copyright" class="dialog-about-copyright"></span>
+          <span id="dialogAboutCopyright" class="dialogAboutCopyright"></span>
         </div>
 
         <div class="dialog-about-links">
@@ -710,7 +717,7 @@
       </div>
     </div>
 
-    <div id="dialog-plot" class="modal" uk-modal>
+    <div id="dialogPlot" class="modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-2xlarge">
         <h2 id="plotTitle" class="uk-modal-title uk-text-center plotTitle"></h2>
         <div id="plot"></div>
@@ -745,7 +752,7 @@
       </div>
     </div>
 
-    <div id="dialog-error" class="modal" uk-modal>
+    <div id="dialogError" class="modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
         <button class="uk-modal-close-default" type="button" uk-close></button>
         <h2 id="errTitle" class="errTitle"></h2>
@@ -753,12 +760,12 @@
       </div>
     </div>
 
-    <div id="dialog-confirm" class="dialog-confirm" uk-modal>
+    <div id="dialogConfirm" class="dialogConfirm" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
         <h2 class="uk-modal-title">Are you sure?</h2>
         <span id="confirmMsg"></span>
         <div class="dialog-buttons uk-flex-right">
-          <button id="confirm-yes" class="uk-button uk-button-danger uk-button-small">Yes</button>
+          <button id="confirmYes" class="uk-button uk-button-danger uk-button-small">Yes</button>
           <button class="uk-button uk-button-default uk-modal-close uk-button-small">No</button>
         </div>
       </div>
