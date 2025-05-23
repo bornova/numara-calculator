@@ -1,8 +1,4 @@
 /* Dark theme CSS */
-:root {
-  --divider: #3b3b3b;
-}
-
 html,
 body {
   background-color: #1f1f1f;
@@ -56,7 +52,7 @@ body {
 }
 
 .divider::before {
-  background-color: var(--divider) !important;
+  background-color: #3b3b3b !important;
 }
 
 .divider:hover::before {
@@ -116,12 +112,10 @@ body {
 }
 
 .uk-dropdown {
-  background: #333333;
-  color: #e6e6e6;
+  background: #000000;
+  color: inherit;
 }
 
-.renamePageButton,
-.dupPageButton,
 .deletePageButton {
   color: #e6e6e6;
 }
