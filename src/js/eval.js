@@ -200,10 +200,29 @@ export function formatAnswer(answer, useGrouping) {
   return stripAnswer(formattedAnswer)
 }
 
-function updateLineWidget(line, answer) {
-  const handle = line
+/**
+ * Strip comments from a line.
+ * @param {string} line - The line to strip comments from.
+ * @returns {string} - The line without comments.
+ */
+function stripComments(line) {
+  const commentIdx = line.indexOf('//')
+  const hashIdx = line.indexOf('#')
+  if (commentIdx !== -1 || hashIdx !== -1) {
+    const idx =
+      commentIdx !== -1 && hashIdx !== -1 ? Math.min(commentIdx, hashIdx) : commentIdx !== -1 ? commentIdx : hashIdx
+    return line.substring(0, idx)
+  }
+  return line
+}
 
-  let widget = app.widgetMap.get(handle)
+/**
+ * Update the line widget with the answer.
+ * @param {number} lineHandle - The line handle.
+ * @param {string} answer - The answer to display.
+ */
+function updateLineWidget(lineHandle, answer) {
+  let widget = app.widgetMap.get(lineHandle)
 
   if (widget) {
     widget.node.innerHTML = answer
@@ -211,14 +230,14 @@ function updateLineWidget(line, answer) {
     const node = document.createElement('div')
     node.innerHTML = answer
 
-    widget = cm.addLineWidget(handle, node, {
+    widget = cm.addLineWidget(lineHandle, node, {
       above: false,
       coverGutter: false,
       noHScroll: true
     })
 
     widget.node = node
-    app.widgetMap.set(handle, widget)
+    app.widgetMap.set(lineHandle, widget)
   }
 }
 
@@ -254,15 +273,7 @@ export function calculate() {
     const cmLine = cm.getLineHandle(cmLineNo)
     const lineNo = cmLineNo + 1
 
-    let line = cmLine.text.trim()
-    const commentIdx = line.indexOf('//')
-    const hashIdx = line.indexOf('#')
-    if (commentIdx !== -1 || hashIdx !== -1) {
-      const idx =
-        commentIdx !== -1 && hashIdx !== -1 ? Math.min(commentIdx, hashIdx) : commentIdx !== -1 ? commentIdx : hashIdx
-
-      line = line.substring(0, idx)
-    }
+    let line = stripComments(cmLine.text.trim())
 
     cm.removeLineClass(cmLine, 'gutter', 'lineNoError')
 
