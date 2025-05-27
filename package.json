@@ -32,7 +32,7 @@
     "deep-diff": "^1.0.2",
     "electron": "^36.3.1",
     "electron-builder": "^26.0.12",
-    "esbuild": "^0.25.4",
+    "esbuild": "^0.25.5",
     "eslint": "^9.27.0",
     "fs-extra": "^11.3.0",
     "function-plot": "^1.25.1",
