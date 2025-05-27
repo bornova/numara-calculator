@@ -1,5 +1,5 @@
 import { checkColorChange, colors } from './colors'
-import { copyAll } from './context'
+import { copyAll, initializeContextMenus } from './context'
 import { dom } from './dom'
 import { cm, refreshEditor, udfInput, uduInput } from './editor'
 import { calculate } from './eval'
@@ -386,6 +386,7 @@ const initializeApp = () => {
   setupPrintArea()
   setupUIkitUtils()
   initializePages()
+  initializeContextMenus()
   checkAppUpdate()
 
   setTimeout(() => cm.focus(), 500)
