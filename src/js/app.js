@@ -31,55 +31,58 @@ const setupHeaders = () => {
 }
 
 const setupActionButtons = () => {
-  const actionButtons = [
-    { btn: 'printButton', action: () => window.print() },
-    {
-      btn: 'clearButton',
-      action: () => {
-        cm.setValue('')
-        cm.focus()
-        calculate()
-      }
+  const actions = {
+    printButton: () => window.print(),
+    clearButton: () => {
+      cm.setValue('')
+      cm.focus()
+      calculate()
     },
-    { btn: 'copyButton', action: () => copyAll() },
-    { btn: 'udfuButton', action: () => modal.show('#dialogUdfu') },
-    { btn: 'settingsButton', action: () => modal.show('#dialogSettings') },
-    { btn: 'aboutButton', action: () => modal.show('#dialogAbout') }
-  ]
+    copyButton: copyAll,
+    udfuButton: () => modal.show('#dialogUdfu'),
+    settingsButton: () => modal.show('#dialogSettings'),
+    aboutButton: () => modal.show('#dialogAbout')
+  }
 
-  actionButtons.forEach(({ btn, action }) => dom[btn].addEventListener('click', action))
+  Object.entries(actions).forEach(([btn, action]) => dom[btn].addEventListener('click', action))
 }
 
 const setupOutputActions = () => {
   document.addEventListener('click', (event) => {
-    switch (event.target.className) {
-      case 'answer':
-        navigator.clipboard.writeText(event.target.dataset.copy)
-        notify(`Copied '${event.target.dataset.copy}' to clipboard.`)
-        break
-      case 'plotButton answer': {
-        const func = event.target.getAttribute('data-func')
+    const answerEl = event.target.closest('.answer')
+    const plotEl = event.target.closest('.plotButton.answer')
+    const errorEl = event.target.closest('.lineError')
 
-        app.plotFunction = func.startsWith('line') ? app.mathScope[func] : func
-
-        try {
-          dom.plotCrossModal.checked = app.settings.plotCross
-          dom.plotDerivativeModal.checked = app.settings.plotDerivative
-          dom.plotGridModal.checked = app.settings.plotGrid
-
-          plot()
-
-          modal.show('#dialogPlot')
-        } catch (error) {
-          showError('Error', error)
-        }
-        break
-      }
-      case 'lineError':
-        showError('Error on Line ' + event.target.getAttribute('data-line'), event.target.getAttribute('data-error'))
-        break
+    if (answerEl) {
+      navigator.clipboard.writeText(answerEl.dataset.copy)
+      notify(`Copied '${answerEl.dataset.copy}' to clipboard.`)
+      event.stopPropagation()
+      return
     }
-    event.stopPropagation()
+
+    if (plotEl) {
+      const func = plotEl.getAttribute('data-func')
+      app.plotFunction = func.startsWith('line') ? app.mathScope[func] : func
+
+      try {
+        dom.plotCrossModal.checked = app.settings.plotCross
+        dom.plotDerivativeModal.checked = app.settings.plotDerivative
+        dom.plotGridModal.checked = app.settings.plotGrid
+
+        plot()
+        modal.show('#dialogPlot')
+      } catch (error) {
+        showError('Error', error)
+      }
+      event.stopPropagation()
+      return
+    }
+
+    if (errorEl) {
+      showError('Error on Line ' + errorEl.getAttribute('data-line'), errorEl.getAttribute('data-error'))
+      event.stopPropagation()
+      return
+    }
   })
 
   dom.output.addEventListener('mousedown', () => {
