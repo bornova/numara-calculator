@@ -18,17 +18,17 @@ import 'codemirror/addon/search/searchcursor'
 import * as formulajs from '@formulajs/formulajs'
 
 const CLASS_NAMES = {
+  CONSTANT: 'cm-constant',
+  CURRENCY: 'cm-currency',
+  EXCEL: 'cm-excel',
+  FORMULAJS: 'cm-formulajs',
   FUNCTION: 'cm-function',
+  KEYWORD: 'cm-keyword',
+  LINE_NO: 'cm-lineNo',
   UDF: 'cm-udf',
   UDU: 'cm-udu',
-  CURRENCY: 'cm-currency',
   UNIT: 'cm-unit',
-  CONSTANT: 'cm-constant',
-  VARIABLE: 'cm-variable',
-  LINE_NO: 'cm-lineNo',
-  KEYWORD: 'cm-keyword',
-  FORMULAJS: 'cm-formulajs',
-  EXCEL: 'cm-excel'
+  VARIABLE: 'cm-variable'
 }
 
 const mathEntries = Object.entries(math.expression.mathWithTransform)
