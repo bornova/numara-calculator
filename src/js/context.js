@@ -82,7 +82,7 @@ function copyAnswer(event, index, withLines) {
   index = +index
 
   const line = cm.getLine(index).trim()
-  const answer = dom.el(`[data-line="${index}"]`).dataset.copy
+  const answer = dom.el(`[data-line="${index}"]`).dataset.answer
   const copiedText = withLines ? `${line} = ${answer}` : `${answer}`
 
   copyToClipboard(
