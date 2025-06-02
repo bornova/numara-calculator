@@ -299,7 +299,7 @@ export function calculate() {
 
     const lineHeight = lineHeights[cmLineNo]
     const answerClass = answer && !answer.startsWith('<a') ? CLASS_ANSWER : ''
-    const answerSpan = `<span class="${answerClass}" data-line="${cmLineNo}" data-copy="${answerCopy}">${answer}</span>`
+    const answerSpan = `<span class="${answerClass}" data-line="${cmLineNo}" data-answer="${answerCopy}">${answer}</span>`
 
     if (app.settings.answerPosition === 'bottom') {
       const answerDiv = `<div>${answerSpan}</div>`
