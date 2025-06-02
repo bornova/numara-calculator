@@ -134,7 +134,7 @@ export const colors = {
       colorSheet += `${app.colors.plain.class} { color: ${app.colors.plain[appTheme]};}\n`
     }
 
-    dom.colorSheet.innerHTML = colorSheet
+    dom.colorSheet.textContent = colorSheet
   },
 
   save: () => {
