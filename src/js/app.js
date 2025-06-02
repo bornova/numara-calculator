@@ -49,16 +49,9 @@ const setupActionButtons = () => {
 
 const setupOutputActions = () => {
   document.addEventListener('click', (event) => {
-    const answerEl = event.target.closest('.answer')
-    const plotEl = event.target.closest('.plotButton.answer')
-    const errorEl = event.target.closest('.lineError')
-
-    if (answerEl) {
-      navigator.clipboard.writeText(answerEl.dataset.copy)
-      notify(`Copied '${answerEl.dataset.copy}' to clipboard.`)
-      event.stopPropagation()
-      return
-    }
+    const answerEl = event.target.closest('[data-answer]')
+    const errorEl = event.target.closest('[data-error]')
+    const plotEl = event.target.closest('[data-func]')
 
     if (plotEl) {
       const func = plotEl.getAttribute('data-func')
@@ -74,13 +67,17 @@ const setupOutputActions = () => {
       } catch (error) {
         showError('Error', error)
       }
-      event.stopPropagation()
       return
     }
 
     if (errorEl) {
       showError('Error on Line ' + errorEl.getAttribute('data-line'), errorEl.getAttribute('data-error'))
-      event.stopPropagation()
+      return
+    }
+
+    if (answerEl) {
+      navigator.clipboard.writeText(answerEl.dataset.answer)
+      notify(`Copied '${answerEl.dataset.answer}' to clipboard.`)
       return
     }
   })
