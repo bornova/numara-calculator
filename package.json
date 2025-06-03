@@ -41,7 +41,7 @@
     "mathjs": "^14.5.2",
     "prettier": "^3.5.3",
     "tinykeys": "^3.0.0",
-    "uikit": "^3.23.8"
+    "uikit": "^3.23.9"
   },
   "dependencies": {
     "electron-log": "^5.4.0",
