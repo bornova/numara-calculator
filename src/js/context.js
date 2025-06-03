@@ -30,7 +30,7 @@ function inputContext() {
     const isLine = line.length > 0
     const isEmpty = cm.getValue() === ''
     const isSelection = cm.somethingSelected()
-    const answer = dom.el(`[data-line="${index}"]`).innerText
+    const answer = dom.el(`[data-line="${index + 1}"]`).innerText
     const hasAnswer = answer !== '' && answer !== 'Error' && answer !== 'Plot'
     const selections = cm.listSelections()
     const isMultiLine = selections.length > 1 || selections[0].anchor.line !== selections[0].head.line
@@ -82,7 +82,7 @@ function copyAnswer(event, index, withLines) {
   index = +index
 
   const line = cm.getLine(index).trim()
-  const answer = dom.el(`[data-line="${index}"]`).dataset.answer
+  const answer = dom.el(`[data-line="${index + 1}"]`).dataset.answer
   const copiedText = withLines ? `${line} = ${answer}` : `${answer}`
 
   copyToClipboard(
@@ -109,7 +109,7 @@ function copyAllAnswers() {
   cm.eachLine((line) => {
     const index = cm.getLineNumber(line)
 
-    copiedOutputs += `${dom.el(`[data-line="${index}"]`).innerText ?? ''}\n`
+    copiedOutputs += `${dom.el(`[data-line="${index + 1}"]`).innerText ?? ''}\n`
   })
 
   safeCopy(copiedOutputs, 'Copied all answers to clipboard.')
@@ -124,7 +124,7 @@ export function copyAll() {
   let copiedCalc = ''
 
   cm.eachLine((line) => {
-    const index = cm.getLineNumber(line)
+    const index = cm.getLineNumber(line) + 1
     const text = line.text.trim()
 
     copiedCalc += text
