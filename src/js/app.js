@@ -30,8 +30,8 @@ const setupHeaders = () => {
   }
 }
 
-const setupActionButtons = () => {
-  const actions = {
+const setupAppButtons = () => {
+  const buttons = {
     printButton: () => window.print(),
     clearButton: () => {
       cm.setValue('')
@@ -44,17 +44,17 @@ const setupActionButtons = () => {
     aboutButton: () => modal.show('#dialogAbout')
   }
 
-  Object.entries(actions).forEach(([btn, action]) => dom[btn].addEventListener('click', action))
+  Object.entries(buttons).forEach(([btn, action]) => dom[btn].addEventListener('click', action))
 }
 
-const setupOutputActions = () => {
+const setupResultActions = () => {
   document.addEventListener('click', (event) => {
     const answerEl = event.target.closest('[data-answer]')
     const errorEl = event.target.closest('[data-error]')
-    const plotEl = event.target.closest('[data-func]')
+    const plotEl = event.target.closest('[data-plot]')
 
     if (plotEl) {
-      const func = plotEl.getAttribute('data-func')
+      const func = plotEl.getAttribute('data-plot')
       app.plotFunction = func.startsWith('line') ? app.mathScope[func] : func
 
       try {
@@ -245,7 +245,7 @@ const setupPrintArea = () => {
     cm.eachLine((line) => {
       const lineNo = cm.getLineNumber(line)
       const input = cm.getLine(lineNo)
-      const answerEl = dom.el(`[data-line="${lineNo}"]`)
+      const answerEl = dom.el(`[data-line="${lineNo + 1}"]`)
       const answer = answerEl ? answerEl.innerText : ''
       const trHeader = `<tr style="
         height: ${app.settings.lineHeight};
@@ -376,8 +376,8 @@ const initializeApp = () => {
   colors.apply()
 
   setupHeaders()
-  setupActionButtons()
-  setupOutputActions()
+  setupAppButtons()
+  setupResultActions()
   setupUserDefined()
   setupPanelResizer()
   setupSyncScroll()
