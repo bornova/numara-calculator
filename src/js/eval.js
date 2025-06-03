@@ -25,6 +25,7 @@ const REGEX_DATE_TIME =
   /[+-] * .* *(millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia)s?/g
 const REGEX_PCNT_OF = /%[ ]*of[ ]*/g
 const REGEX_PCNT_OF_VAL = /[\w.]*%[ ]*of[ ]*/g
+const REGEX_PLOT = /\w\(x\)\s*=/
 
 const CLASS_RULER = 'ruler'
 const CLASS_NO_RULER = 'noRuler'
@@ -41,11 +42,10 @@ const CLASS_LINE_ERROR_LINK = 'lineError'
  * @param {Array} avgs - Array of averages.
  * @param {Array} totals - Array of totals.
  * @param {Array} subtotals - Array of subtotals.
- * @returns {{answer: string, answerCopy: string}}
+ * @returns {string} - The evaluated answer or an error link.
  */
 function evaluateLine(line, lineNo, cmLine, avgs, totals, subtotals) {
-  let answer = ''
-  let answerCopy = ''
+  let answer, answerCopy
 
   try {
     if (lineNo > 1 && REGEX_CONTINUATION.test(line.charAt(0)) && app.settings.contPrevLine) {
@@ -55,8 +55,8 @@ function evaluateLine(line, lineNo, cmLine, avgs, totals, subtotals) {
     }
 
     app.mathScope.avg = avgs.length > 0 ? math.mean(avgs) : 0
-    app.mathScope.total = totals.length > 0 ? totals.reduce((a, b) => a + b, 0) : 0
-    app.mathScope.subtotal = subtotals.length > 0 ? subtotals.reduce((a, b) => a + b, 0) : 0
+    app.mathScope.total = totals.length > 0 ? math.sum(totals) : 0
+    app.mathScope.subtotal = subtotals.length > 0 ? math.sum(subtotals) : 0
 
     try {
       answer = math.evaluate(line, app.mathScope)
@@ -66,7 +66,7 @@ function evaluateLine(line, lineNo, cmLine, avgs, totals, subtotals) {
 
     if (!(answer || answer === 0)) {
       subtotals.length = 0
-      return { answer: '', answerCopy: '' }
+      return ``
     }
 
     app.mathScope._ = answer
@@ -82,28 +82,29 @@ function evaluateLine(line, lineNo, cmLine, avgs, totals, subtotals) {
     answerCopy = formatAnswer(answer, app.settings.thouSep && app.settings.copyThouSep)
     answer = formatAnswer(answer, app.settings.thouSep)
 
-    if (answer.match(/\w\(x\)/)) {
-      const plotAns = (/\w\(x\)$/.test(answer) && line !== 'ans' ? line : answer).replace(/\s+/g, '')
+    if (REGEX_PLOT.test(line) || REGEX_PLOT.test(answer)) {
+      const plotAns = REGEX_PLOT.test(line) ? line : answer
 
       app.mathScope.ans = plotAns
       app.mathScope['line' + lineNo] = plotAns
 
-      answer = `<a 
+      return `<a
         class="${CLASS_PLOT_BUTTON}"
-        data-func="${plotAns}"
+        data-line="${lineNo}"
+        data-plot="${plotAns}"
         uk-tooltip="title: Plot; pos: right">
           ${dom.icons.ChartSpline}
-      </a>`
+        </a>`
     }
+
+    return `<span class="${CLASS_ANSWER}" data-line="${lineNo}" data-answer="${answerCopy}">${answer}</span>`
   } catch (error) {
     if (app.settings.lineErrors) {
       cm.addLineClass(cm.getLineNumber(cmLine), 'gutter', CLASS_LINE_ERROR)
 
-      answer = `<a class="${CLASS_LINE_ERROR_LINK}" data-line="${lineNo}" data-error="${String(error).replace(/'|"/g, '`')}">Error</a>`
+      return `<a class="${CLASS_LINE_ERROR_LINK}" data-line="${lineNo}" data-error="${String(error).replace(/'|"/g, '`')}">Error</a>`
     }
   }
-
-  return { answer, answerCopy }
 }
 
 /**
@@ -208,11 +209,14 @@ export function formatAnswer(answer, useGrouping) {
 function stripComments(line) {
   const commentIdx = line.indexOf('//')
   const hashIdx = line.indexOf('#')
+
   if (commentIdx !== -1 || hashIdx !== -1) {
     const idx =
       commentIdx !== -1 && hashIdx !== -1 ? Math.min(commentIdx, hashIdx) : commentIdx !== -1 ? commentIdx : hashIdx
+
     return line.substring(0, idx)
   }
+
   return line
 }
 
@@ -230,13 +234,9 @@ function updateLineWidget(lineHandle, answer) {
     const node = document.createElement('div')
     node.innerHTML = answer
 
-    widget = cm.addLineWidget(lineHandle, node, {
-      above: false,
-      coverGutter: false,
-      noHScroll: true
-    })
-
+    widget = cm.addLineWidget(lineHandle, node, { above: false, coverGutter: false, noHScroll: true })
     widget.node = node
+
     app.widgetMap.set(lineHandle, widget)
   }
 }
@@ -253,9 +253,7 @@ export function calculate() {
   const dateTime = DateTime.now().setLocale(app.settings.locale)
   const cmValue = cm.getValue()
   const cmHistory = cm.getHistory()
-
   let answers = ''
-  let answerCopy = ''
 
   app.mathScope = {}
   app.mathScope.now = dateTime.toFormat(app.settings.dateDay ? nowDayFormat : nowFormat)
@@ -272,7 +270,6 @@ export function calculate() {
   for (let cmLineNo = 0; cmLineNo < totalLines; cmLineNo++) {
     const cmLine = cm.getLineHandle(cmLineNo)
     const lineNo = cmLineNo + 1
-
     let line = stripComments(cmLine.text.trim())
 
     cm.removeLineClass(cmLine, 'gutter', 'lineNoError')
@@ -285,34 +282,25 @@ export function calculate() {
       cm.addLineClass(cmLine, 'wrap', 'noRuler')
     }
 
-    let answer = ''
-    answerCopy = ''
+    let result = ''
 
     if (line) {
-      const result = evaluateLine(line, lineNo, cmLine, avgs, totals, subtotals)
-
-      answer = result.answer
-      answerCopy = result.answerCopy
+      result = evaluateLine(line, lineNo, cmLine, avgs, totals, subtotals)
     } else {
       subtotals.length = 0
     }
 
     const lineHeight = lineHeights[cmLineNo]
-    const answerClass = answer && !answer.startsWith('<a') ? CLASS_ANSWER : ''
-    const answerSpan = `<span class="${answerClass}" data-line="${cmLineNo}" data-answer="${answerCopy}">${answer}</span>`
 
     if (app.settings.answerPosition === 'bottom') {
-      const answerDiv = `<div>${answerSpan}</div>`
-      updateLineWidget(cmLine, answerDiv)
+      updateLineWidget(cmLine, result)
     } else {
-      answers += `<div class="${classRuler}" style="height:${lineHeight}px">${answerSpan}</div>`
+      answers += `<div class="${classRuler}" style="height:${lineHeight}px">${result}</div>`
     }
   }
 
   if (app.settings.answerPosition === 'bottom') {
-    dom.output.innerHTML = `
-      <div style="height: ${dom.el('.CodeMirror-scroll').scrollHeight - 50}px;"></div>
-    `
+    dom.output.innerHTML = `<div style="height: ${dom.el('.CodeMirror-scroll').scrollHeight - 50}px;"></div>`
   } else if (dom.output.innerHTML !== answers) {
     dom.output.innerHTML = answers
   }
