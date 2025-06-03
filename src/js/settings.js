@@ -36,11 +36,8 @@ function populateSelect(selectEl, options, disabledValue = null) {
   options.forEach((option) => {
     const [value, opt] = Object.entries(option)[0]
 
-    if (value === disabledValue) {
-      selectEl.innerHTML += `<option disabled>${opt}</option>`
-    } else {
-      selectEl.innerHTML += `<option value="${value}">${opt}</option>`
-    }
+    selectEl.innerHTML +=
+      value === disabledValue ? `<option disabled>${opt}</option>` : `<option value="${value}">${opt}</option>`
   })
 }
 
