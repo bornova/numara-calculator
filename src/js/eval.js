@@ -37,19 +37,19 @@ const CLASS_LINE_ERROR_LINK = 'lineError'
 /**
  * Evaluate a single line and return the answer and answerCopy.
  * @param {string} line - The line to evaluate.
- * @param {number} lineNo - The line number (1-based).
- * @param {object} cmLine - The CodeMirror line object.
+ * @param {number} lineIndex - The line index (0-based).
+ * @param {object} lineHandle - The CodeMirror line handle.
  * @param {Array} avgs - Array of averages.
  * @param {Array} totals - Array of totals.
  * @param {Array} subtotals - Array of subtotals.
  * @returns {string} - The evaluated answer or an error link.
  */
-function evaluateLine(line, lineNo, cmLine, avgs, totals, subtotals) {
+function evaluateLine(line, lineIndex, lineHandle, avgs, totals, subtotals) {
   let answer, answerCopy
 
   try {
-    if (lineNo > 1 && REGEX_CONTINUATION.test(line.charAt(0)) && app.settings.contPrevLine) {
-      const prevLine = cm.getLine(lineNo - 2)
+    if (lineIndex > 0 && REGEX_CONTINUATION.test(line.charAt(0)) && app.settings.contPrevLine) {
+      const prevLine = cm.getLine(lineIndex - 1)
 
       if (prevLine && prevLine.length > 0) line = app.mathScope.ans + line
     }
@@ -71,7 +71,7 @@ function evaluateLine(line, lineNo, cmLine, avgs, totals, subtotals) {
 
     app.mathScope._ = answer
     app.mathScope.ans = answer
-    app.mathScope['line' + lineNo] = answer
+    app.mathScope[`line${lineIndex + 1}`] = answer
 
     if (typeof answer === 'number') {
       avgs.push(answer)
@@ -86,23 +86,22 @@ function evaluateLine(line, lineNo, cmLine, avgs, totals, subtotals) {
       const plotAns = REGEX_PLOT.test(line) ? line : answer
 
       app.mathScope.ans = plotAns
-      app.mathScope['line' + lineNo] = plotAns
+      app.mathScope[`line${lineIndex + 1}`] = plotAns
 
       return `<a
         class="${CLASS_PLOT_BUTTON}"
-        data-line="${lineNo}"
         data-plot="${plotAns}"
         uk-tooltip="title: Plot; pos: right">
           ${dom.icons.ChartSpline}
         </a>`
     }
 
-    return `<span class="${CLASS_ANSWER}" data-line="${lineNo}" data-answer="${answerCopy}">${answer}</span>`
+    return `<span class="${CLASS_ANSWER}" data-answer="${answerCopy}">${answer}</span>`
   } catch (error) {
     if (app.settings.lineErrors) {
-      cm.addLineClass(cm.getLineNumber(cmLine), 'gutter', CLASS_LINE_ERROR)
+      cm.addLineClass(cm.getLineNumber(lineHandle), 'gutter', CLASS_LINE_ERROR)
 
-      return `<a class="${CLASS_LINE_ERROR_LINK}" data-line="${lineNo}" data-error="${String(error).replace(/'|"/g, '`')}">Error</a>`
+      return `<a class="${CLASS_LINE_ERROR_LINK}" data-error="${String(error).replace(/'|"/g, '`')}">Error</a>`
     }
   }
 }
@@ -267,35 +266,34 @@ export function calculate() {
   const classRuler = useRulers ? CLASS_RULER : CLASS_NO_RULER
   const totalLines = cm.lineCount()
 
-  for (let cmLineNo = 0; cmLineNo < totalLines; cmLineNo++) {
-    const cmLine = cm.getLineHandle(cmLineNo)
-    const lineNo = cmLineNo + 1
-    let line = stripComments(cmLine.text.trim())
+  for (let lineIndex = 0; lineIndex < totalLines; lineIndex++) {
+    const lineHandle = cm.getLineHandle(lineIndex)
+    let line = stripComments(lineHandle.text.trim())
 
-    cm.removeLineClass(cmLine, 'gutter', 'lineNoError')
+    cm.removeLineClass(lineHandle, 'gutter', 'lineNoError')
 
     if (useRulers) {
-      cm.removeLineClass(cmLine, 'wrap', 'noRuler')
-      cm.addLineClass(cmLine, 'wrap', 'ruler')
+      cm.removeLineClass(lineHandle, 'wrap', 'noRuler')
+      cm.addLineClass(lineHandle, 'wrap', 'ruler')
     } else {
-      cm.removeLineClass(cmLine, 'wrap', 'ruler')
-      cm.addLineClass(cmLine, 'wrap', 'noRuler')
+      cm.removeLineClass(lineHandle, 'wrap', 'ruler')
+      cm.addLineClass(lineHandle, 'wrap', 'noRuler')
     }
 
-    let result = ''
+    let result = ``
 
     if (line) {
-      result = evaluateLine(line, lineNo, cmLine, avgs, totals, subtotals)
+      result = evaluateLine(line, lineIndex, lineHandle, avgs, totals, subtotals)
     } else {
       subtotals.length = 0
     }
 
-    const lineHeight = lineHeights[cmLineNo]
+    const lineHeight = lineHeights[lineIndex]
 
     if (app.settings.answerPosition === 'bottom') {
-      updateLineWidget(cmLine, result)
+      updateLineWidget(lineHandle, result)
     } else {
-      answers += `<div class="${classRuler}" style="height:${lineHeight}px">${result}</div>`
+      answers += `<div class="${classRuler}" data-index="${lineIndex}" style="height:${lineHeight}px">${result}</div>`
     }
   }
 
