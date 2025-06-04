@@ -1,3 +1,4 @@
+import { outputContext } from './context'
 import { dom } from './dom'
 import { cm } from './editor'
 import { app, store } from './utils'
@@ -231,7 +232,9 @@ function updateLineWidget(lineHandle, answer) {
     widget.node.innerHTML = answer
   } else {
     const node = document.createElement('div')
+    node.dataset.index = cm.getLineNumber(lineHandle)
     node.innerHTML = answer
+    node.addEventListener('contextmenu', outputContext)
 
     widget = cm.addLineWidget(lineHandle, node, { above: false, coverGutter: false, noHScroll: true })
     widget.node = node

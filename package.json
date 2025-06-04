@@ -2,7 +2,7 @@
   "name": "numara",
   "productName": "Numara",
   "description": "Numara Calculator",
-  "version": "6.0.2",
+  "version": "6.0.3",
   "author": {
     "name": "Timur Atalay",
     "email": "mail@numara.io",
@@ -30,7 +30,7 @@
     "@melloware/coloris": "^0.25.0",
     "codemirror": "^5.65.19",
     "deep-diff": "^1.0.2",
-    "electron": "^36.3.2",
+    "electron": "^36.4.0",
     "electron-builder": "^26.0.12",
     "esbuild": "^0.25.5",
     "eslint": "^9.28.0",
