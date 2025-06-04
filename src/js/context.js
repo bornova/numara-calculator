@@ -43,7 +43,7 @@ function inputContext() {
  * Output panel context menu.
  * @param {Event} event - The event object.
  */
-function outputContext(event) {
+export function outputContext(event) {
   const answer = event.target.innerText
   const lineIndex = event.target.dataset.index || cm.lastLine()
   const hasAnswer = lineIndex !== null && answer !== '' && answer !== 'Error' && answer !== 'Plot'
