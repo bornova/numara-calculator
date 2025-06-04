@@ -45,7 +45,11 @@ const units = () =>
 
       return {
         token,
-        hint: { text: token, desc: unitCat + ' unit', className: CLASS_NAMES.UNIT }
+        hint: {
+          text: token,
+          desc: unitCat + ' unit',
+          className: CLASS_NAMES.UNIT
+        }
       }
     })
   )

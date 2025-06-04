@@ -51,7 +51,7 @@ export const colors = {
     keyword: { title: 'Keywords', class: '.cm-keyword, .cm-lineNo', dark: '#e78c3f', light: '#be6317' },
     number: { title: 'Numbers', class: '.cm-number', dark: '#e6e6e6', light: '#333333' },
     operator: { title: 'Operators', class: '.cm-operator', dark: '#bbbbbb', light: '#888888' },
-    plain: { title: 'Plain', class: '.cm-plain, .answer', dark: '#e6e6e6', light: '#333333' },
+    plain: { title: 'Plain', class: '.cm-plain, .answer, .lineError', dark: '#e6e6e6', light: '#333333' },
     unit: { title: 'Units', class: '.cm-unit, .cm-udu', dark: '#6b9cd3', light: '#005cc5' },
     variable: { title: 'Variables', class: '.cm-variable', dark: '#96b4c4', light: '#57707c' }
   },

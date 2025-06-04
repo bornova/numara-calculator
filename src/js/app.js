@@ -30,8 +30,8 @@ const setupHeaders = () => {
   }
 }
 
-const setupActionButtons = () => {
-  const actions = {
+const setupAppButtons = () => {
+  const buttons = {
     printButton: () => window.print(),
     clearButton: () => {
       cm.setValue('')
@@ -44,17 +44,17 @@ const setupActionButtons = () => {
     aboutButton: () => modal.show('#dialogAbout')
   }
 
-  Object.entries(actions).forEach(([btn, action]) => dom[btn].addEventListener('click', action))
+  Object.entries(buttons).forEach(([btn, action]) => dom[btn].addEventListener('click', action))
 }
 
-const setupOutputActions = () => {
+const setupResultActions = () => {
   document.addEventListener('click', (event) => {
     const answerEl = event.target.closest('[data-answer]')
     const errorEl = event.target.closest('[data-error]')
-    const plotEl = event.target.closest('[data-func]')
+    const plotEl = event.target.closest('[data-plot]')
 
     if (plotEl) {
-      const func = plotEl.getAttribute('data-func')
+      const func = plotEl.getAttribute('data-plot')
       app.plotFunction = func.startsWith('line') ? app.mathScope[func] : func
 
       try {
@@ -71,7 +71,7 @@ const setupOutputActions = () => {
     }
 
     if (errorEl) {
-      showError('Error on Line ' + errorEl.getAttribute('data-line'), errorEl.getAttribute('data-error'))
+      showError('Error on Line ' + errorEl.getAttribute('data-index'), errorEl.getAttribute('data-error'))
       return
     }
 
@@ -243,9 +243,9 @@ const setupPrintArea = () => {
     printArea.className = 'printArea'
 
     cm.eachLine((line) => {
-      const lineNo = cm.getLineNumber(line)
-      const input = cm.getLine(lineNo)
-      const answerEl = dom.el(`[data-line="${lineNo}"]`)
+      const lineIndex = cm.getLineNumber(line)
+      const input = cm.getLine(lineIndex)
+      const answerEl = dom.el(`[data-index="${lineIndex}"]`)
       const answer = answerEl ? answerEl.innerText : ''
       const trHeader = `<tr style="
         height: ${app.settings.lineHeight};
@@ -257,7 +257,7 @@ const setupPrintArea = () => {
         app.settings.answerPosition === 'bottom'
           ? `
           ${trHeader}
-            ${app.settings.lineNumbers ? `<td class="printLineNumCol" style="${noBB}">${lineNo + 1}</td>` : ''}
+            ${app.settings.lineNumbers ? `<td class="printLineNumCol" style="${noBB}">${lineIndex + 1}</td>` : ''}
             <td style="width:100%; ${noBB};">${input}</td>
           </tr>
           ${trHeader}
@@ -266,7 +266,7 @@ const setupPrintArea = () => {
           </tr>`
           : `
           ${trHeader}
-            ${app.settings.lineNumbers ? `<td class="printLineNumCol">${lineNo + 1}</td>` : ''}
+            ${app.settings.lineNumbers ? `<td class="printLineNumCol">${lineIndex + 1}</td>` : ''}
             <td style="width:${app.settings.inputWidth}%;">${input}</td>
             <td class="printAnswer${app.settings.answerPosition === 'left' ? 'Left' : 'Right'}">${answer}</td>
           </tr>`
@@ -376,8 +376,8 @@ const initializeApp = () => {
   colors.apply()
 
   setupHeaders()
-  setupActionButtons()
-  setupOutputActions()
+  setupAppButtons()
+  setupResultActions()
   setupUserDefined()
   setupPanelResizer()
   setupSyncScroll()
