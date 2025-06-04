@@ -71,7 +71,7 @@ const setupResultActions = () => {
     }
 
     if (errorEl) {
-      showError('Error on Line ' + errorEl.getAttribute('data-line'), errorEl.getAttribute('data-error'))
+      showError('Error on Line ' + errorEl.getAttribute('data-index'), errorEl.getAttribute('data-error'))
       return
     }
 
@@ -243,9 +243,9 @@ const setupPrintArea = () => {
     printArea.className = 'printArea'
 
     cm.eachLine((line) => {
-      const lineNo = cm.getLineNumber(line)
-      const input = cm.getLine(lineNo)
-      const answerEl = dom.el(`[data-line="${lineNo + 1}"]`)
+      const lineIndex = cm.getLineNumber(line)
+      const input = cm.getLine(lineIndex)
+      const answerEl = dom.el(`[data-index="${lineIndex}"]`)
       const answer = answerEl ? answerEl.innerText : ''
       const trHeader = `<tr style="
         height: ${app.settings.lineHeight};
@@ -257,7 +257,7 @@ const setupPrintArea = () => {
         app.settings.answerPosition === 'bottom'
           ? `
           ${trHeader}
-            ${app.settings.lineNumbers ? `<td class="printLineNumCol" style="${noBB}">${lineNo + 1}</td>` : ''}
+            ${app.settings.lineNumbers ? `<td class="printLineNumCol" style="${noBB}">${lineIndex + 1}</td>` : ''}
             <td style="width:100%; ${noBB};">${input}</td>
           </tr>
           ${trHeader}
@@ -266,7 +266,7 @@ const setupPrintArea = () => {
           </tr>`
           : `
           ${trHeader}
-            ${app.settings.lineNumbers ? `<td class="printLineNumCol">${lineNo + 1}</td>` : ''}
+            ${app.settings.lineNumbers ? `<td class="printLineNumCol">${lineIndex + 1}</td>` : ''}
             <td style="width:${app.settings.inputWidth}%;">${input}</td>
             <td class="printAnswer${app.settings.answerPosition === 'left' ? 'Left' : 'Right'}">${answer}</td>
           </tr>`
