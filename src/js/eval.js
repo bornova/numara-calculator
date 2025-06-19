@@ -57,7 +57,48 @@ function evaluateLine(line, lineIndex, lineHandle, avgs, totals, subtotals) {
 
     app.mathScope.avg = avgs.length > 0 ? math.mean(avgs) : 0
     app.mathScope.total = totals.length > 0 ? math.sum(totals) : 0
-    app.mathScope.subtotal = subtotals.length > 0 ? math.sum(subtotals) : 0
+
+    // Calculate subtotal
+    if (subtotals.length > 0) {
+      try {
+        const subtotalSum = math.sum(subtotals)
+        // We want the subtotal to be in the most recent unit
+        const lastValue = subtotals[subtotals.length - 1]
+
+        // Try to convert to the unit of the last value if both have units
+        try {
+          if (
+            subtotalSum &&
+            lastValue &&
+            subtotalSum.units &&
+            lastValue.units &&
+            subtotalSum.toString &&
+            lastValue.toString
+          ) {
+            // Extract unit from the string representation
+            const lastStr = lastValue.toString()
+            const lastParts = lastStr.split(' ')
+            if (lastParts.length > 1) {
+              const targetUnit = lastParts.slice(1).join(' ')
+              app.mathScope.subtotal = subtotalSum.to(targetUnit)
+            } else {
+              app.mathScope.subtotal = subtotalSum
+            }
+          } else {
+            app.mathScope.subtotal = subtotalSum
+          }
+        } catch {
+          // If conversion fails, use the original sum
+          app.mathScope.subtotal = subtotalSum
+        }
+      } catch {
+        // If sum fails (incompatible units), set subtotal to undefined
+        // This allows evaluation to continue but subtotal won't be available
+        app.mathScope.subtotal = undefined
+      }
+    } else {
+      app.mathScope.subtotal = 0
+    }
 
     try {
       answer = math.evaluate(line, app.mathScope)
@@ -66,7 +107,6 @@ function evaluateLine(line, lineIndex, lineHandle, avgs, totals, subtotals) {
     }
 
     if (!(answer || answer === 0)) {
-      subtotals.length = 0
       return ``
     }
 
@@ -77,6 +117,9 @@ function evaluateLine(line, lineIndex, lineHandle, avgs, totals, subtotals) {
     if (typeof answer === 'number') {
       avgs.push(answer)
       totals.push(answer)
+      subtotals.push(answer)
+    } else if (answer && answer.type === 'Unit') {
+      // Handle units - extract the numeric value and unit
       subtotals.push(answer)
     }
 
