@@ -55,9 +55,23 @@ function evaluateLine(line, lineIndex, lineHandle, avgs, totals, subtotals) {
       if (prevLine && prevLine.length > 0) line = app.mathScope.ans + line
     }
 
-    app.mathScope.avg = avgs.length > 0 ? math.mean(avgs) : 0
-    app.mathScope.total = totals.length > 0 ? math.sum(totals) : 0
-    app.mathScope.subtotal = subtotals.length > 0 ? math.sum(subtotals) : 0
+    try {
+      app.mathScope.avg = avgs.length ? math.mean(avgs) : 0
+    } catch {
+      app.mathScope.avg = 'n/a'
+    }
+
+    try {
+      app.mathScope.total = totals.length ? math.sum(totals) : 0
+    } catch {
+      app.mathScope.total = 'n/a'
+    }
+
+    try {
+      app.mathScope.subtotal = subtotals.length ? math.sum(subtotals) : 0
+    } catch {
+      app.mathScope.subtotal = 'n/a'
+    }
 
     try {
       answer = math.evaluate(line, app.mathScope)
@@ -74,11 +88,9 @@ function evaluateLine(line, lineIndex, lineHandle, avgs, totals, subtotals) {
     app.mathScope.ans = answer
     app.mathScope[`line${lineIndex + 1}`] = answer
 
-    if (typeof answer === 'number') {
-      avgs.push(answer)
-      totals.push(answer)
-      subtotals.push(answer)
-    }
+    avgs.push(answer)
+    totals.push(answer)
+    subtotals.push(answer)
 
     answerCopy = formatAnswer(answer, app.settings.thouSep && app.settings.copyThouSep)
     answer = formatAnswer(answer, app.settings.thouSep)
