@@ -71,7 +71,10 @@ const setupResultActions = () => {
     }
 
     if (errorEl) {
-      showError('Error on Line ' + errorEl.getAttribute('data-index'), errorEl.getAttribute('data-error'))
+      showError(
+        `Error on Line ${+errorEl.parentElement.getAttribute('data-index') + 1}`,
+        errorEl.getAttribute('data-error')
+      )
       return
     }
 
@@ -88,8 +91,8 @@ const setupResultActions = () => {
 }
 
 const setupUserDefined = () => {
-  applyUdfu(store.get('udf') || '', 'func')
-  applyUdfu(store.get('udu') || '', 'unit')
+  applyUdfu(store.get('udf') ?? '', 'func')
+  applyUdfu(store.get('udu') ?? '', 'unit')
 }
 
 const setupPanelResizer = () => {
@@ -97,13 +100,13 @@ const setupPanelResizer = () => {
   let resizeDelay
   let isResizing = false
 
-  let inputWidth = store.get('inputWidth') || defaultWidth
+  let inputWidth = store.get('inputWidth') ?? defaultWidth
   if (app.settings.answerPosition === 'left') {
-    dom.input.style.width = inputWidth + '%'
+    dom.input.style.width = `${inputWidth}%`
   } else if (app.settings.answerPosition === 'bottom') {
     dom.input.style.width = '100%'
   } else {
-    dom.input.style.width = defaultWidth + '%'
+    dom.input.style.width = `${defaultWidth}%`
   }
 
   const dividerTooltip = () => {
