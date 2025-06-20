@@ -79,7 +79,7 @@ function evaluateLine(line, lineIndex, lineHandle, avgs, totals, subtotals) {
       answer = altEvaluate(line)
     }
 
-    if (!(answer || answer === 0)) {
+    if (!answer || answer === 0) {
       subtotals.length = 0
       return ``
     }
