@@ -168,11 +168,53 @@ function cmForceBottom() {
   if (barTop - lineTop < lineHeight) dom.output.scrollTop = dom.output.scrollTop + (lineHeight - (barTop - lineTop))
 }
 
+function toggleComment(cm) {
+  const selections = cm.listSelections()
+
+  cm.operation(() => {
+    for (const selection of selections) {
+      const startLine = Math.min(selection.anchor.line, selection.head.line)
+      const endLine = Math.max(selection.anchor.line, selection.head.line)
+
+      // Check if all selected lines are already commented
+      let allCommented = true
+      for (let i = startLine; i <= endLine; i++) {
+        const line = cm.getLine(i)
+        if (line !== null && line !== undefined && !line.trim().startsWith('//')) {
+          allCommented = false
+          break
+        }
+      }
+
+      // Toggle comments
+      for (let i = startLine; i <= endLine; i++) {
+        const line = cm.getLine(i)
+        if (line === null || line === undefined) continue
+
+        if (allCommented) {
+          // Remove comment
+          const uncommented = line.replace(/^(\s*)\/\/\s?/, '$1')
+          cm.replaceRange(uncommented, { line: i, ch: 0 }, { line: i, ch: line.length })
+        } else {
+          // Add comment
+          const leadingWhitespace = line.match(/^\s*/)[0]
+          const commented = leadingWhitespace + '// ' + line.slice(leadingWhitespace.length)
+          cm.replaceRange(commented, { line: i, ch: 0 }, { line: i, ch: line.length })
+        }
+      }
+    }
+  })
+}
+
 /** CodeMirror instances. */
 export const cm = CodeMirror.fromTextArea(dom.inputArea, {
   autofocus: true,
   coverGutterNextToScrollbar: true,
-  extraKeys: { 'Ctrl-Space': 'autocomplete' },
+  extraKeys: {
+    'Ctrl-Space': 'autocomplete',
+    'Cmd-/': toggleComment,
+    'Ctrl-/': toggleComment
+  },
   flattenSpans: true,
   mode: 'numara',
   smartIndent: false,
