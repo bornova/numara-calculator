@@ -1,11 +1,10 @@
 import { dom } from './dom'
-import { calculate, formatAnswer, math } from './eval'
+import { calculate, formatAnswer, math, updateErrorClasses } from './eval'
 import { app, store } from './utils'
 
-import UIkit from 'uikit'
 import CodeMirror from 'codemirror'
+import UIkit from 'uikit'
 
-import 'codemirror/mode/javascript/javascript'
 import 'codemirror/addon/dialog/dialog'
 import 'codemirror/addon/display/placeholder'
 import 'codemirror/addon/edit/closebrackets'
@@ -14,6 +13,7 @@ import 'codemirror/addon/hint/show-hint'
 import 'codemirror/addon/search/jump-to-line'
 import 'codemirror/addon/search/search'
 import 'codemirror/addon/search/searchcursor'
+import 'codemirror/mode/javascript/javascript'
 
 import * as formulajs from '@formulajs/formulajs'
 
@@ -226,6 +226,9 @@ cm.on('cursorActivity', (cm) => {
     const cmLineNo = cm.getLineNumber(line)
     cm[cmLineNo === activeLine ? 'addLineClass' : 'removeLineClass'](cmLineNo, 'gutter', 'activeLine')
   })
+
+  // Update error classes based on new cursor position
+  updateErrorClasses()
 
   setTimeout(cmForceBottom, 20)
 

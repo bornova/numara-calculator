@@ -33,7 +33,9 @@ const CLASS_NO_RULER = 'noRuler'
 const CLASS_LINE_ERROR = 'lineNoError'
 const CLASS_ANSWER = 'answer'
 const CLASS_PLOT_BUTTON = 'plotButton answer'
-const CLASS_LINE_ERROR_LINK = 'lineError'
+
+// Store line errors for re-evaluation when cursor moves
+const lineErrors = new Map()
 
 /**
  * Evaluate a single line and return the answer and answerCopy.
@@ -110,11 +112,20 @@ function evaluateLine(line, lineIndex, lineHandle, avgs, totals, subtotals) {
     }
 
     return `<span class="${CLASS_ANSWER}" data-answer="${answerCopy}">${answer}</span>`
-  } catch (error) {
+  } catch {
     if (app.settings.lineErrors) {
-      cm.addLineClass(cm.getLineNumber(lineHandle), 'gutter', CLASS_LINE_ERROR)
+      const currentLineNumber = cm.getLineNumber(lineHandle)
+      const activeLine = cm.getCursor().line
 
-      return `<a class="${CLASS_LINE_ERROR_LINK}" data-error="${String(error).replace(/'|"/g, '`')}">Error</a>`
+      // Store that this line has an error
+      lineErrors.set(currentLineNumber, true)
+
+      // Only add error class if not the active line
+      if (currentLineNumber !== activeLine) {
+        cm.addLineClass(currentLineNumber, 'gutter', CLASS_LINE_ERROR)
+      }
+
+      return ``
     }
   }
 }
@@ -256,10 +267,28 @@ function updateLineWidget(lineHandle, answer) {
 }
 
 /**
+ * Update error classes based on cursor position
+ */
+export function updateErrorClasses() {
+  const activeLine = cm.getCursor().line
+
+  lineErrors.forEach((hasError, lineNumber) => {
+    if (lineNumber === activeLine) {
+      cm.removeLineClass(lineNumber, 'gutter', CLASS_LINE_ERROR)
+    } else if (hasError) {
+      cm.addLineClass(lineNumber, 'gutter', CLASS_LINE_ERROR)
+    }
+  })
+}
+
+/**
  * Calculate answers.
  */
 export function calculate() {
   if (app.refreshCM) cm.refresh()
+
+  // Clear previous line errors
+  lineErrors.clear()
 
   const avgs = []
   const totals = []
@@ -285,7 +314,7 @@ export function calculate() {
     const lineHandle = cm.getLineHandle(lineIndex)
     let line = stripComments(lineHandle.text.trim())
 
-    cm.removeLineClass(lineHandle, 'gutter', 'lineNoError')
+    cm.removeLineClass(lineHandle, 'gutter', CLASS_LINE_ERROR)
 
     if (useRulers) {
       cm.removeLineClass(lineHandle, 'wrap', 'noRuler')
