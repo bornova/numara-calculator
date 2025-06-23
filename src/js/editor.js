@@ -141,10 +141,44 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
 
   const curWordRegex = curWord ? new RegExp('^' + curWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null
 
+  // Build hints for all variables from the current math scope
+  // This shows users all available variables with their current values
+  const variableHints = []
+
+  // Keywords that are already included in the keyword hints
+  const keywordNames = keywords.map((k) => k.text)
+
+  for (const key of Object.keys(app.mathScope)) {
+    // Skip variables that are already in keyword hints to avoid duplicates
+    if (keywordNames.includes(key)) continue
+
+    variableHints.push({
+      text: key,
+      className: CLASS_NAMES.VARIABLE
+    })
+  }
+
+  // Add user-defined functions from udfList
+  // These are custom functions created by the user
+  const userFunctionHints = app.udfList.map((funcName) => ({
+    text: funcName,
+    className: CLASS_NAMES.FUNCTION
+  }))
+
+  // Add user-defined units from uduList
+  // These are custom units created by the user
+  const userUnitHints = app.uduList.map((unitName) => ({
+    text: unitName,
+    className: CLASS_NAMES.UNIT
+  }))
+
+  // Combine all hint sources: built-in hints, user variables, user functions, and user units
+  const allHints = [...numaraHints, ...variableHints, ...userFunctionHints, ...userUnitHints]
+
   return {
     list:
       curStr && (!curStr.endsWith('.') || curStr === 'xls.') && curWordRegex
-        ? numaraHints.filter(({ text }) => curWordRegex.test(text)).sort((a, b) => a.text.localeCompare(b.text))
+        ? allHints.filter(({ text }) => curWordRegex.test(text)).sort((a, b) => a.text.localeCompare(b.text))
         : [],
     from: CodeMirror.Pos(cmCursor.line, start),
     to: CodeMirror.Pos(cmCursor.line, end)
