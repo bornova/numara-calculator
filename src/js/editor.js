@@ -141,10 +141,44 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
 
   const curWordRegex = curWord ? new RegExp('^' + curWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null
 
+  // Build hints for all variables from the current math scope
+  // This shows users all available variables with their current values
+  const variableHints = []
+
+  // Keywords that are already included in the keyword hints
+  const keywordNames = keywords.map((k) => k.text)
+
+  for (const key of Object.keys(app.mathScope)) {
+    // Skip variables that are already in keyword hints to avoid duplicates
+    if (keywordNames.includes(key)) continue
+
+    variableHints.push({
+      text: key,
+      className: CLASS_NAMES.VARIABLE
+    })
+  }
+
+  // Add user-defined functions from udfList
+  // These are custom functions created by the user
+  const userFunctionHints = app.udfList.map((funcName) => ({
+    text: funcName,
+    className: CLASS_NAMES.FUNCTION
+  }))
+
+  // Add user-defined units from uduList
+  // These are custom units created by the user
+  const userUnitHints = app.uduList.map((unitName) => ({
+    text: unitName,
+    className: CLASS_NAMES.UNIT
+  }))
+
+  // Combine all hint sources: built-in hints, user variables, user functions, and user units
+  const allHints = [...numaraHints, ...variableHints, ...userFunctionHints, ...userUnitHints]
+
   return {
     list:
       curStr && (!curStr.endsWith('.') || curStr === 'xls.') && curWordRegex
-        ? numaraHints.filter(({ text }) => curWordRegex.test(text)).sort((a, b) => a.text.localeCompare(b.text))
+        ? allHints.filter(({ text }) => curWordRegex.test(text)).sort((a, b) => a.text.localeCompare(b.text))
         : [],
     from: CodeMirror.Pos(cmCursor.line, start),
     to: CodeMirror.Pos(cmCursor.line, end)
@@ -168,11 +202,53 @@ function cmForceBottom() {
   if (barTop - lineTop < lineHeight) dom.output.scrollTop = dom.output.scrollTop + (lineHeight - (barTop - lineTop))
 }
 
+function toggleComment(cm) {
+  const selections = cm.listSelections()
+
+  cm.operation(() => {
+    for (const selection of selections) {
+      const startLine = Math.min(selection.anchor.line, selection.head.line)
+      const endLine = Math.max(selection.anchor.line, selection.head.line)
+
+      // Check if all selected lines are already commented
+      let allCommented = true
+      for (let i = startLine; i <= endLine; i++) {
+        const line = cm.getLine(i)
+        if (line !== null && line !== undefined && !line.trim().startsWith('//')) {
+          allCommented = false
+          break
+        }
+      }
+
+      // Toggle comments
+      for (let i = startLine; i <= endLine; i++) {
+        const line = cm.getLine(i)
+        if (line === null || line === undefined) continue
+
+        if (allCommented) {
+          // Remove comment
+          const uncommented = line.replace(/^(\s*)\/\/\s?/, '$1')
+          cm.replaceRange(uncommented, { line: i, ch: 0 }, { line: i, ch: line.length })
+        } else {
+          // Add comment
+          const leadingWhitespace = line.match(/^\s*/)[0]
+          const commented = leadingWhitespace + '// ' + line.slice(leadingWhitespace.length)
+          cm.replaceRange(commented, { line: i, ch: 0 }, { line: i, ch: line.length })
+        }
+      }
+    }
+  })
+}
+
 /** CodeMirror instances. */
 export const cm = CodeMirror.fromTextArea(dom.inputArea, {
   autofocus: true,
   coverGutterNextToScrollbar: true,
-  extraKeys: { 'Ctrl-Space': 'autocomplete' },
+  extraKeys: {
+    'Ctrl-Space': 'autocomplete',
+    'Cmd-/': toggleComment,
+    'Ctrl-/': toggleComment
+  },
   flattenSpans: true,
   mode: 'numara',
   smartIndent: false,
