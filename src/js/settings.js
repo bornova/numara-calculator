@@ -61,7 +61,7 @@ export const settings = {
     fontWeight: '400',
     inputWidth: 60,
     keywordTips: true,
-    lineErrors: true,
+    lineErrors: false,
     lineHeight: '24px',
     lineNumbers: true,
     lineWrap: true,
