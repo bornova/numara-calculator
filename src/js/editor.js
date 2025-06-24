@@ -1,5 +1,6 @@
 import { dom } from './dom'
 import { calculate, formatAnswer, math } from './eval'
+import { showError } from './modal'
 import { app, store } from './utils'
 
 import UIkit from 'uikit'
@@ -202,6 +203,9 @@ function cmForceBottom() {
   if (barTop - lineTop < lineHeight) dom.output.scrollTop = dom.output.scrollTop + (lineHeight - (barTop - lineTop))
 }
 
+/** Toggles comments on the selected lines.
+ * @param {CodeMirror} cm - The CodeMirror instance to toggle comments on.
+ */
 function toggleComment(cm) {
   const selections = cm.listSelections()
 
@@ -316,6 +320,12 @@ cm.on('cursorActivity', (cm) => {
 cm.on('gutterClick', (cm, line) => {
   const lineNo = line + 1
   const activeLine = cm.getCursor().line + 1
+  const error = dom.el('[data-index="' + line + '"]').firstChild?.dataset.error
+
+  if (error) {
+    showError(`Error on Line ${lineNo}`, error)
+    return
+  }
 
   if (activeLine <= lineNo) return
 
@@ -475,7 +485,7 @@ export function refreshEditor(editor) {
 }
 
 document.addEventListener('mouseover', (event) => {
-  const className = event.target.classList[0]
+  const className = event.target?.classList[0]
 
   if (app.settings.keywordTips && className?.startsWith('cm-')) {
     const handler = TOOLTIP_HANDLERS[className]
@@ -485,13 +495,19 @@ document.addEventListener('mouseover', (event) => {
 
   if (className !== 'CodeMirror-linenumber') return
 
-  const activeLine = cm.getCursor().line + 1
+  const line = cm.getCursor().line
+  const activeLine = line + 1
   const isValid = activeLine > +event.target.innerText
+  const hasError = event.target.parentElement.classList.contains('lineNoError')
 
-  event.target.style.cursor = isValid ? 'pointer' : 'default'
+  event.target.style.cursor = isValid || hasError ? 'pointer' : 'default'
   event.target.setAttribute(
     'title',
-    isValid && app.settings.keywordTips ? `Insert 'line${event.target.innerText}' to Line ${activeLine}` : ''
+    hasError
+      ? `Line ${event.target.innerText} has an error`
+      : isValid && app.settings.keywordTips
+        ? `Insert 'line${event.target.innerText}' to Line ${activeLine}`
+        : ''
   )
 })
 
