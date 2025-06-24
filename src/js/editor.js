@@ -2,6 +2,7 @@ import { dom } from './dom'
 import { calculate, formatAnswer, math } from './eval'
 import { showError } from './modal'
 import { app, store } from './utils'
+import { CURRENCY_SYMBOLS } from './forex'
 
 import UIkit from 'uikit'
 import CodeMirror from 'codemirror'
@@ -72,11 +73,32 @@ const unitTokens = units().map((u) => u.token)
 const keywordTokens = keywords.map((key) => key.text)
 const excelTokens = Object.keys(formulajs).map((f) => 'xls.' + f)
 
+// Create regex pattern for currency symbols
+// Initialize with empty pattern if CURRENCY_SYMBOLS is not yet loaded
+let currencySymbolPattern = /(?:)/
+try {
+  if (CURRENCY_SYMBOLS && Object.keys(CURRENCY_SYMBOLS).length > 0) {
+    currencySymbolPattern = new RegExp(
+      '(' +
+        Object.keys(CURRENCY_SYMBOLS)
+          .map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+          .join('|') +
+        ')'
+    )
+  }
+} catch {
+  // Currency symbols may not be initialized yet during initial load
+}
+
 // Codemirror syntax templates
 CodeMirror.defineMode('numara', () => ({
   token: (stream) => {
     if (stream.match(/\/\/.*/) || stream.match(/#.*/)) return 'comment'
     if (stream.match(/\d/)) return 'number'
+
+    // Check for currency symbols
+    if (stream.match(currencySymbolPattern)) return 'currency'
+
     if (stream.match(/(?:\+|-|\*|\/|,|;|\.|:|@|~|=|>|<|&|\||`|'|\^|\?|!|%)/)) return 'operator'
     if (stream.match(/\b(?:xls.)\b/)) return 'formulajs'
 

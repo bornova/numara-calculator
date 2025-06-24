@@ -2,6 +2,7 @@ import { outputContext } from './context'
 import { dom } from './dom'
 import { cm } from './editor'
 import { app, store } from './utils'
+import { CURRENCY_SYMBOLS } from './forex'
 
 import { DateTime } from 'luxon'
 import { all, create, factory } from 'mathjs'
@@ -34,6 +35,45 @@ const CLASS_LINE_ERROR = 'lineNoError'
 const CLASS_ANSWER = 'answer'
 const CLASS_PLOT_BUTTON = 'plotButton answer'
 const CLASS_LINE_ERROR_LINK = 'lineError'
+
+/**
+ * Preprocess currency symbols in expressions to convert them to currency codes.
+ * This allows users to type currency symbols (like $, £, €) instead of currency codes.
+ *
+ * Examples:
+ *   $100 → 100 usd
+ *   £50 → 50 gbp
+ *   €75.50 → 75.50 eur
+ *
+ * @param {string} expression - The expression to preprocess
+ * @returns {string} - The preprocessed expression with currency symbols replaced
+ */
+function preprocessCurrencySymbols(expression) {
+  // Return unchanged if CURRENCY_SYMBOLS is not available
+  if (!CURRENCY_SYMBOLS || typeof CURRENCY_SYMBOLS !== 'object') {
+    return expression
+  }
+
+  let processed = expression
+
+  // Create a regex pattern that matches currency symbols followed by numbers
+  // Sort symbols by length (longest first) to avoid partial matches (e.g., A$ before $)
+  const sortedSymbols = Object.keys(CURRENCY_SYMBOLS).sort((a, b) => b.length - a.length)
+
+  const currencyPattern = new RegExp(
+    '(' + sortedSymbols.map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')' + '\\s*([0-9]+\\.?[0-9]*)',
+    'g'
+  )
+
+  // Replace currency symbol + number with number + currency code
+  processed = processed.replace(currencyPattern, (match, symbol, number) => {
+    const currencyCode = CURRENCY_SYMBOLS[symbol]
+    // Use lowercase to match the behavior when typing currency codes directly
+    return `${number} ${currencyCode.toLowerCase()}`
+  })
+
+  return processed
+}
 
 /**
  * Evaluate a single line and return the answer and answerCopy.
@@ -73,10 +113,13 @@ function evaluateLine(line, lineIndex, lineHandle, avgs, totals, subtotals) {
       app.mathScope.subtotal = 'n/a'
     }
 
+    // Preprocess currency symbols
+    const processedLine = preprocessCurrencySymbols(line)
+
     try {
-      answer = math.evaluate(line, app.mathScope)
+      answer = math.evaluate(processedLine, app.mathScope)
     } catch {
-      answer = altEvaluate(line)
+      answer = altEvaluate(processedLine)
     }
 
     if (!answer || answer === 0) {
