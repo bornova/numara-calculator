@@ -111,11 +111,12 @@ function evaluateLine(line, lineIndex, lineHandle, avgs, totals, subtotals) {
 
     return `<span class="${CLASS_ANSWER}" data-answer="${answerCopy}">${answer}</span>`
   } catch (error) {
-    if (app.settings.lineErrors) {
-      cm.addLineClass(cm.getLineNumber(lineHandle), 'gutter', CLASS_LINE_ERROR)
+    cm.addLineClass(cm.getLineNumber(lineHandle), 'gutter', CLASS_LINE_ERROR)
 
-      return `<a class="${CLASS_LINE_ERROR_LINK}" data-error="${String(error).replace(/'|"/g, '`')}">Error</a>`
-    }
+    const errorMessage = String(error).replace(/'|"/g, '`')
+    const errorLink = app.settings.lineErrors ? 'Error' : ''
+
+    return `<a class="${CLASS_LINE_ERROR_LINK}" data-error="${errorMessage}">${errorLink}</a>`
   }
 }
 
@@ -285,14 +286,14 @@ export function calculate() {
     const lineHandle = cm.getLineHandle(lineIndex)
     let line = stripComments(lineHandle.text.trim())
 
-    cm.removeLineClass(lineHandle, 'gutter', 'lineNoError')
+    cm.removeLineClass(lineHandle, 'gutter', CLASS_LINE_ERROR)
 
     if (useRulers) {
-      cm.removeLineClass(lineHandle, 'wrap', 'noRuler')
-      cm.addLineClass(lineHandle, 'wrap', 'ruler')
+      cm.removeLineClass(lineHandle, 'wrap', CLASS_NO_RULER)
+      cm.addLineClass(lineHandle, 'wrap', CLASS_RULER)
     } else {
-      cm.removeLineClass(lineHandle, 'wrap', 'ruler')
-      cm.addLineClass(lineHandle, 'wrap', 'noRuler')
+      cm.removeLineClass(lineHandle, 'wrap', CLASS_RULER)
+      cm.addLineClass(lineHandle, 'wrap', CLASS_NO_RULER)
     }
 
     let result = ``
