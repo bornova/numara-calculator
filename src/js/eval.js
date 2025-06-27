@@ -44,6 +44,9 @@ const CLASS_LINE_ERROR_LINK = 'lineError'
  *   $100 → 100 usd
  *   £50 → 50 gbp
  *   €75.50 → 75.50 eur
+ *   $x → x usd (where x is a variable)
+ *   $x + $y → x usd + y usd
+ *   $100 to € → 100 usd to eur
  *
  * @param {string} expression - The expression to preprocess
  * @returns {string} - The preprocessed expression with currency symbols replaced
@@ -56,20 +59,53 @@ function preprocessCurrencySymbols(expression) {
 
   let processed = expression
 
-  // Create a regex pattern that matches currency symbols followed by numbers
   // Sort symbols by length (longest first) to avoid partial matches (e.g., A$ before $)
   const sortedSymbols = Object.keys(CURRENCY_SYMBOLS).sort((a, b) => b.length - a.length)
 
-  const currencyPattern = new RegExp(
-    '(' + sortedSymbols.map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')' + '\\s*([0-9]+\\.?[0-9]*)',
+  // Create escaped versions of symbols for regex
+  const escapedSymbols = sortedSymbols.map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+
+  // Pattern 1: Currency symbol followed by number (e.g., $100, €50.25)
+  // This handles direct numeric values with currency symbols
+  const numberPattern = new RegExp('(' + escapedSymbols.join('|') + ')' + '\\s*([0-9]+\\.?[0-9]*)', 'g')
+
+  // Pattern 2: Currency symbol followed by variable or expression (e.g., $x, $(x+y))
+  // Matches: symbol + variable name OR symbol + parenthesized expression
+  // This enables using currency symbols with variables and complex expressions
+  const variablePattern = new RegExp(
+    '(' + escapedSymbols.join('|') + ')' + '\\s*([a-zA-Z_][a-zA-Z0-9_]*|\\([^)]+\\))',
     'g'
   )
 
-  // Replace currency symbol + number with number + currency code
-  processed = processed.replace(currencyPattern, (match, symbol, number) => {
+  // Pattern 3: Standalone currency symbol (e.g., "to €", "in $")
+  // Must be preceded by whitespace or start of string, and followed by whitespace, operator, or end of string
+  // This supports currency conversion syntax like "$100 to €"
+  const standalonePattern = new RegExp('(?:^|\\s)(' + escapedSymbols.join('|') + ')(?=\\s|[+\\-*/,)]|$)', 'g')
+
+  // Apply replacements in order of specificity to avoid conflicts
+
+  // First, replace currency symbol + number (e.g., $100 → 100 usd)
+  processed = processed.replace(numberPattern, (match, symbol, number) => {
     const currencyCode = CURRENCY_SYMBOLS[symbol]
-    // Use lowercase to match the behavior when typing currency codes directly
     return `${number} ${currencyCode.toLowerCase()}`
+  })
+
+  // Then, replace currency symbol + variable/expression (e.g., $x → x usd, $(x+y) → (x+y) usd)
+  processed = processed.replace(variablePattern, (match, symbol, variableOrExpr) => {
+    const currencyCode = CURRENCY_SYMBOLS[symbol]
+    // Handle parenthesized expressions by removing outer parentheses from the match
+    if (variableOrExpr.startsWith('(')) {
+      return `(${variableOrExpr.slice(1, -1)}) ${currencyCode.toLowerCase()}`
+    }
+    return `${variableOrExpr} ${currencyCode.toLowerCase()}`
+  })
+
+  // Finally, replace standalone currency symbols (e.g., "to €" → "to eur")
+  processed = processed.replace(standalonePattern, (match, symbol) => {
+    const currencyCode = CURRENCY_SYMBOLS[symbol]
+    // Preserve leading whitespace from the match
+    const leadingSpace = match.startsWith(' ') ? ' ' : ''
+    return `${leadingSpace}${currencyCode.toLowerCase()}`
   })
 
   return processed

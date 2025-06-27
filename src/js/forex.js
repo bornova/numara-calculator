@@ -2,6 +2,7 @@ import { dom } from './dom'
 import { cm, numaraHints } from './editor'
 import { notify } from './modal'
 import { app, store } from './utils'
+// Import calculate and math directly to avoid passing them as parameters
 import { calculate, math } from './eval'
 
 const USD_UNIT = 'USD'
@@ -48,6 +49,8 @@ export const CURRENCY_SYMBOLS = {
  * 1. It's the base currency - all other currencies are defined relative to USD
  * 2. It needs to exist before other currencies can be created (they're defined as multiples of USD)
  * 3. It should be available even when offline or if the exchange rate API fails
+ *
+ * Note: This function now uses the imported math instance directly
  */
 export function initializeUSDHints() {
   // Create USD unit with symbol alias
@@ -59,6 +62,9 @@ export function initializeUSDHints() {
 
 /**
  * Get exchange rates and update the application.
+ *
+ * Fetches current exchange rates from the API and updates currency units in Math.js.
+ * Uses the imported calculate and math instances directly.
  */
 export function getRates() {
   if (!navigator.onLine) {
@@ -85,7 +91,10 @@ export function getRates() {
 
 /**
  * Update currency rates in the application.
- * @param {Object} rates - The exchange rates data.
+ * @param {Object} rates - The exchange rates data from the API.
+ *
+ * Creates Math.js units for each currency with both code and symbol aliases.
+ * All currencies are defined relative to USD.
  */
 function updateCurrencyRates(rates) {
   if (!rates || typeof rates !== 'object') return
