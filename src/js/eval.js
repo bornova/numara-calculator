@@ -2,6 +2,7 @@ import { outputContext } from './context'
 import { dom } from './dom'
 import { cm } from './editor'
 import { app, store } from './utils'
+import { CURRENCY_SYMBOLS } from './forex'
 
 import { DateTime } from 'luxon'
 import { all, create, factory } from 'mathjs'
@@ -34,6 +35,81 @@ const CLASS_LINE_ERROR = 'lineNoError'
 const CLASS_ANSWER = 'answer'
 const CLASS_PLOT_BUTTON = 'plotButton answer'
 const CLASS_LINE_ERROR_LINK = 'lineError'
+
+/**
+ * Preprocess currency symbols in expressions to convert them to currency codes.
+ * This allows users to type currency symbols (like $, £, €) instead of currency codes.
+ *
+ * Examples:
+ *   $100 → 100 usd
+ *   £50 → 50 gbp
+ *   €75.50 → 75.50 eur
+ *   $x → x usd (where x is a variable)
+ *   $x + $y → x usd + y usd
+ *   $100 to € → 100 usd to eur
+ *
+ * @param {string} expression - The expression to preprocess
+ * @returns {string} - The preprocessed expression with currency symbols replaced
+ */
+function preprocessCurrencySymbols(expression) {
+  // Return unchanged if CURRENCY_SYMBOLS is not available
+  if (!CURRENCY_SYMBOLS || typeof CURRENCY_SYMBOLS !== 'object') {
+    return expression
+  }
+
+  let processed = expression
+
+  // Sort symbols by length (longest first) to avoid partial matches (e.g., A$ before $)
+  const sortedSymbols = Object.keys(CURRENCY_SYMBOLS).sort((a, b) => b.length - a.length)
+
+  // Create escaped versions of symbols for regex
+  const escapedSymbols = sortedSymbols.map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+
+  // Pattern 1: Currency symbol followed by number (e.g., $100, €50.25)
+  // This handles direct numeric values with currency symbols
+  const numberPattern = new RegExp('(' + escapedSymbols.join('|') + ')' + '\\s*([0-9]+\\.?[0-9]*)', 'g')
+
+  // Pattern 2: Currency symbol followed by variable or expression (e.g., $x, $(x+y))
+  // Matches: symbol + variable name OR symbol + parenthesized expression
+  // This enables using currency symbols with variables and complex expressions
+  const variablePattern = new RegExp(
+    '(' + escapedSymbols.join('|') + ')' + '\\s*([a-zA-Z_][a-zA-Z0-9_]*|\\([^)]+\\))',
+    'g'
+  )
+
+  // Pattern 3: Standalone currency symbol (e.g., "to €", "in $")
+  // Must be preceded by whitespace or start of string, and followed by whitespace, operator, or end of string
+  // This supports currency conversion syntax like "$100 to €"
+  const standalonePattern = new RegExp('(?:^|\\s)(' + escapedSymbols.join('|') + ')(?=\\s|[+\\-*/,)]|$)', 'g')
+
+  // Apply replacements in order of specificity to avoid conflicts
+
+  // First, replace currency symbol + number (e.g., $100 → 100 usd)
+  processed = processed.replace(numberPattern, (match, symbol, number) => {
+    const currencyCode = CURRENCY_SYMBOLS[symbol]
+    return `${number} ${currencyCode.toLowerCase()}`
+  })
+
+  // Then, replace currency symbol + variable/expression (e.g., $x → x usd, $(x+y) → (x+y) usd)
+  processed = processed.replace(variablePattern, (match, symbol, variableOrExpr) => {
+    const currencyCode = CURRENCY_SYMBOLS[symbol]
+    // Handle parenthesized expressions by removing outer parentheses from the match
+    if (variableOrExpr.startsWith('(')) {
+      return `(${variableOrExpr.slice(1, -1)}) ${currencyCode.toLowerCase()}`
+    }
+    return `${variableOrExpr} ${currencyCode.toLowerCase()}`
+  })
+
+  // Finally, replace standalone currency symbols (e.g., "to €" → "to eur")
+  processed = processed.replace(standalonePattern, (match, symbol) => {
+    const currencyCode = CURRENCY_SYMBOLS[symbol]
+    // Preserve leading whitespace from the match
+    const leadingSpace = match.startsWith(' ') ? ' ' : ''
+    return `${leadingSpace}${currencyCode.toLowerCase()}`
+  })
+
+  return processed
+}
 
 /**
  * Evaluate a single line and return the answer and answerCopy.
@@ -73,10 +149,13 @@ function evaluateLine(line, lineIndex, lineHandle, avgs, totals, subtotals) {
       app.mathScope.subtotal = 'n/a'
     }
 
+    // Preprocess currency symbols
+    const processedLine = preprocessCurrencySymbols(line)
+
     try {
-      answer = math.evaluate(line, app.mathScope)
+      answer = math.evaluate(processedLine, app.mathScope)
     } catch {
-      answer = altEvaluate(line)
+      answer = altEvaluate(processedLine)
     }
 
     if (!answer || answer === 0) {
