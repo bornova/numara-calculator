@@ -122,8 +122,8 @@ export const settings = {
     })
 
     if (app.settings.currency) {
-      initializeUSDHints(math)
-      getRates(math, calculate)
+      initializeUSDHints()
+      getRates()
     }
   },
 
@@ -273,7 +273,7 @@ export const settings = {
 
     clearInterval(updateInterval)
     if (app.settings.currency && app.settings.currencyInterval !== '0') {
-      updateInterval = setInterval(() => getRates(math, calculate), +app.settings.currencyInterval)
+      updateInterval = setInterval(() => getRates(), +app.settings.currencyInterval)
       store.set('rateInterval', true)
     } else {
       store.set('rateInterval', false)
@@ -302,7 +302,7 @@ export const settings = {
     dom.currencyUpdate.style.visibility = dom.currency.checked ? 'visible' : 'hidden'
     dom.currencyWarn.style.display = app.settings.currency ? 'none' : 'inline-block'
 
-    if (!store.get('rateDate') && app.settings.currency) getRates(math, calculate)
+    if (!store.get('rateDate') && app.settings.currency) getRates()
 
     checkDefaults()
     bigNumberWarning()
@@ -384,7 +384,7 @@ dom.expUpper.addEventListener('input', () => {
   dom.expUpperLabel.innerHTML = dom.expUpper.value
 })
 
-dom.updateRatesLink.addEventListener('click', () => getRates(math, calculate))
+dom.updateRatesLink.addEventListener('click', () => getRates())
 
 dom.els('.settingItem').forEach((el) => {
   el.addEventListener('change', () => {
