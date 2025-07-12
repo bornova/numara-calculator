@@ -2,7 +2,7 @@ import { colors } from './colors'
 import { dom } from './dom'
 import { cm, udfInput, uduInput } from './editor'
 import { calculate, math } from './eval'
-import { getRates } from './forex'
+import { getRates, initializeUSDHints } from './forex'
 import { confirm, showError } from './modal'
 import { app, checkSize, getTheme, isElectron, store } from './utils'
 
@@ -121,7 +121,10 @@ export const settings = {
       item.getAttribute('type') === 'checkbox' ? item.parentElement.before(span) : item.before(span)
     })
 
-    if (app.settings.currency) getRates()
+    if (app.settings.currency) {
+      initializeUSDHints()
+      getRates()
+    }
   },
 
   /** Prepare settings dialog items. */
@@ -270,7 +273,7 @@ export const settings = {
 
     clearInterval(updateInterval)
     if (app.settings.currency && app.settings.currencyInterval !== '0') {
-      updateInterval = setInterval(getRates, +app.settings.currencyInterval)
+      updateInterval = setInterval(() => getRates(), +app.settings.currencyInterval)
       store.set('rateInterval', true)
     } else {
       store.set('rateInterval', false)
@@ -381,7 +384,7 @@ dom.expUpper.addEventListener('input', () => {
   dom.expUpperLabel.innerHTML = dom.expUpper.value
 })
 
-dom.updateRatesLink.addEventListener('click', getRates)
+dom.updateRatesLink.addEventListener('click', () => getRates())
 
 dom.els('.settingItem').forEach((el) => {
   el.addEventListener('change', () => {
