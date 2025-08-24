@@ -134,15 +134,26 @@ function altEvaluate(line) {
     }
   }
 
+  for (const [key, value] of Object.entries(app.mathScope)) {
+    line = line.replaceAll(key, value)
+  }
+
   if (line.match(REGEX_DATE_TIME)) {
-    line = line.replace('now', app.mathScope.now).replace('today', app.mathScope.today)
+    const locale = { locale: app.settings.locale }
 
     const lineDate = line.replace(REGEX_DATE_TIME, '').trim()
     const lineDateRight = line.replace(lineDate, '').trim()
-    const locale = { locale: app.settings.locale }
-    const lineDateNow = DateTime.fromFormat(lineDate, app.settings.dateDay ? nowDayFormat : nowFormat, locale)
-    const lineDateToday = DateTime.fromFormat(lineDate, app.settings.dateDay ? todayDayFormat : todayFormat, locale)
-    const lineDateTime = lineDateNow.isValid ? lineDateNow : lineDateToday.isValid ? lineDateToday : false
+    const lineDateNow = DateTime.fromFormat(lineDate, nowFormat, locale)
+    const lineDateToday = DateTime.fromFormat(lineDate, todayFormat, locale)
+    const lineDateTodayDay = DateTime.fromFormat(lineDate, todayDayFormat, locale)
+
+    const lineDateTime = lineDateNow.isValid
+      ? lineDateNow
+      : lineDateToday.isValid
+        ? lineDateToday
+        : lineDateTodayDay.isValid
+          ? lineDateTodayDay
+          : false
     const rightOfDate = String(math.evaluate(lineDateRight + ' to hours', app.mathScope))
     const durHrs = Number(rightOfDate.split(' ')[0])
 
