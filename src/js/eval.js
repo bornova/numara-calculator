@@ -135,18 +135,18 @@ function altEvaluate(line) {
   }
 
   for (const [key, value] of Object.entries(app.mathScope)) {
-    line = line.replaceAll(key, value)
+    const regex = new RegExp(`\\b${key}\\b`, 'g')
+
+    line = line.replace(regex, value)
   }
 
   if (line.match(REGEX_DATE_TIME)) {
     const locale = { locale: app.settings.locale }
-
     const lineDate = line.replace(REGEX_DATE_TIME, '').trim()
     const lineDateRight = line.replace(lineDate, '').trim()
     const lineDateNow = DateTime.fromFormat(lineDate, nowFormat, locale)
     const lineDateToday = DateTime.fromFormat(lineDate, todayFormat, locale)
     const lineDateTodayDay = DateTime.fromFormat(lineDate, todayDayFormat, locale)
-
     const lineDateTime = lineDateNow.isValid
       ? lineDateNow
       : lineDateToday.isValid
@@ -154,11 +154,11 @@ function altEvaluate(line) {
         : lineDateTodayDay.isValid
           ? lineDateTodayDay
           : false
-    const rightOfDate = String(math.evaluate(lineDateRight + ' to hours', app.mathScope))
-    const durHrs = Number(rightOfDate.split(' ')[0])
 
     if (!lineDateTime) return 'Invalid Date'
 
+    const rightOfDate = String(math.evaluate(lineDateRight + ' to hours', app.mathScope))
+    const durHrs = Number(rightOfDate.split(' ')[0])
     const dtLine = lineDateTime
       .plus({ hours: durHrs })
       .toFormat(
