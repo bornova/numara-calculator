@@ -44,7 +44,7 @@ export function newPage(isImport) {
   const pageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
   const pages = store.get('pages')
   const pageName =
-    dom.newPageTitleInput.value.replace(/<|>/g, '').trim() || (isImport ? 'Imported page' : getPageName())
+    dom.newPageTitleInput.value.replace(/<|>/g, '').trim() || (isImport ? `Import #${pageId}` : getPageName())
 
   const pageNames = pages.map(({ name }) => name)
 
@@ -277,6 +277,16 @@ export function populatePages() {
             data-action="delete"
             title="Delete">Delete
           </div>
+          ${
+            isElectron
+              ? `<hr class="sortListDivider" />
+                <div class="exportPageButton uk-flex uk-flex-column"
+                  data-page="${page.id}"
+                  data-action="export"
+                  title="Export">Export
+                </div>`
+              : ''
+          }
         </div>
       </div>
     `
@@ -353,7 +363,7 @@ dom.pageList.addEventListener('scroll', () => {
 
 if (isElectron) {
   // Import calculations from file
-  dom.importButton.addEventListener('click', numara.import)
+  dom.importPageButton.addEventListener('click', numara.importPage)
 
   numara.importData((event, data, msg) => {
     newPage(true)
@@ -362,19 +372,11 @@ if (isElectron) {
   })
 
   numara.importDataError((event, error) => notify(error, 'danger'))
-  numara.main.import(numara.import)
-
-  // Export calculations to file
-  dom.exportButton.addEventListener('click', () => {
-    const pages = store.get('pages')
-    const page = pages.find((page) => page.id === app.activePage).name
-
-    numara.export(page, cm.getValue())
-  })
+  numara.main.importPage(numara.importPage)
 
   numara.exportData((event, msg) => notify(msg, 'success'))
   numara.exportDataError((event, error) => notify(error, 'danger'))
-  numara.main.export(() => numara.export(dom.newPageTitleInput.value, cm.getValue()))
+  numara.main.exportPage(() => numara.exportPage(dom.newPageTitleInput.value, cm.getValue()))
 
   // Print window from main
   numara.main.print(() => {
@@ -382,7 +384,7 @@ if (isElectron) {
     window.print()
   })
 } else {
-  dom.els('#exportButton, #importButton, #spDivider').forEach((el) => el.remove())
+  dom.els('#importPageButton, #spDivider').forEach((el) => el.remove())
 }
 
 document.addEventListener('click', (event) => {
@@ -407,5 +409,13 @@ document.addEventListener('click', (event) => {
       duplicatePage(pageId)
       UIkit.dropdown(event.target.parentNode).hide(0)
       break
+    case 'export':
+      if (isElectron) {
+        const pages = store.get('pages')
+        const page = pages.find((page) => page.id === pageId)
+
+        numara.exportPage(page.name, page.data)
+        UIkit.dropdown(event.target.parentNode).hide(0)
+      }
   }
 })
