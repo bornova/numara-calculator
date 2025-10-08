@@ -99,15 +99,10 @@
                 <i data-lucide="plus"></i>
               </a>
             </div>
-            <div class="centerActions uk-flex uk-flex-middle uk-text-center">
-              <a id="importButton" class="action importButton" title="Import" uk-tooltip>
+            <div class="rightActions uk-flex uk-flex-middle uk-flex-right uk-flex-1 uk-text-right">
+              <a id="importPageButton" class="action importPageButton" title="Import Page" uk-tooltip>
                 <i data-lucide="download"></i>
               </a>
-              <a id="exportButton" class="action exportButton" title="Export" uk-tooltip>
-                <i data-lucide="upload"></i>
-              </a>
-            </div>
-            <div class="rightActions uk-flex uk-flex-middle uk-flex-right uk-flex-1 uk-text-right">
               <a id="deleteAllPagesButton" class="action deleteAllPagesButton" title="Delete all pages" uk-tooltip>
                 <i data-lucide="trash"></i>
               </a>
@@ -478,35 +473,6 @@
             </div>
           </div>
 
-          <h3>Function Plots</h3>
-          <div class="uk-child-width-expand" uk-grid>
-            <div>Show cross</div>
-            <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="plotCross" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div>Show derivative</div>
-            <div class="uk-text-right uk-width-2-5 uk-position-relative">
-              <label class="switch">
-                <input id="plotDerivative" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div>Show grid</div>
-            <div class="uk-text-right uk-width-2-5 uk-position-relative">
-              <label class="switch">
-                <input id="plotGrid" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-
           <h3>Notifications</h3>
           <div class="uk-child-width-expand" uk-grid>
             <div class="padTop1">Location</div>
@@ -722,7 +688,8 @@
         <h2 id="plotTitle" class="uk-modal-title uk-text-center plotTitle"></h2>
         <div id="plot"></div>
         <div class="uk-margin-small-top">
-          <a id="resetPlot" title="Reset plot viewport">Reset Scale</a>
+          <a id="axisSettingsButton" title="Change XY axis domain values">Axis Settings</a>
+          <a id="resetPlot" class="uk-margin-small-left" title="Reset plot viewport">Reset View</a>
         </div>
         <div uk-grid>
           <div class="dialog-buttons uk-width-3-5 uk-flex-left uk-flex-middle">
@@ -747,6 +714,63 @@
           <div class="dialog-buttons uk-width-2-5 uk-flex-right">
             <button id="exportPlot" class="uk-button uk-button-default uk-button-small">Export SVG</button>
             <button class="uk-button uk-button-default uk-modal-close uk-button-small">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="dialogPlotAxisSettings" class="modal" uk-modal>
+      <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
+        <h2 class="uk-modal-title">Plot Axis Settings</h2>
+        <div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div class="uk-width-1-2 pr-lh">X-Axis Precision</div>
+            <div class="uk-text-right uk-width-1-2">
+              <div class="uk-child-width-expand" uk-grid>
+                <div class="uk-text-right uk-width-1-6">
+                  <span id="plotXPrecisionLabel" class="uk-label precision"></span>
+                </div>
+                <div class="uk-text-right range uk-position-relative">
+                  <input id="plotXPrecision" class="uk-range" type="range" min="0" max="16" step="1" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="uk-child-width-expand" uk-grid>
+            <div>Auto Range</div>
+            <div class="uk-text-right uk-width-2-5 uk-position-relative">
+              <label class="switch">
+                <input id="plotAutoDomain" type="checkbox" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="domainParent">
+            <div class="div1">
+              <input id="yMax" class="domainTextBox textBox" type="text" />
+            </div>
+            <div class="div2"><input id="yMin" class="domainTextBox textBox" type="text" /></div>
+            <div class="div3"></div>
+            <div class="div4">y</div>
+            <div class="div5">x</div>
+            <div class="div6"></div>
+            <div class="div7">
+              <input id="xMin" class="domainTextBox textBox" type="text" />
+            </div>
+            <div class="div8">
+              <input id="xMax" class="domainTextBox textBox" type="text" />
+            </div>
+          </div>
+        </div>
+        <div uk-flex>
+          <div class="dialog-buttons uk-flex-right">
+            <a id="defaultDomainsButton" class="defSettingsButton" title="Restore default domains" uk-tooltip>
+              Defaults
+            </a>
+            <button id="dialogPlotAxisSettingsSave" class="uk-button uk-button-primary uk-button-small">Save</button>
+            <button class="uk-button uk-button-default uk-modal-close uk-button-small">Cancel</button>
           </div>
         </div>
       </div>
