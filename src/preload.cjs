@@ -3,8 +3,8 @@ const { contextBridge, ipcRenderer } = require('electron')
 contextBridge.exposeInMainWorld('numara', {
   // Calls from main.js
   main: {
-    import: (callback) => ipcRenderer.on('import', callback),
-    export: (callback) => ipcRenderer.on('export', callback),
+    importPage: (callback) => ipcRenderer.on('importPage', callback),
+    exportPage: (callback) => ipcRenderer.on('exportPage', callback),
     print: (callback) => ipcRenderer.on('print', callback)
   },
 
@@ -28,12 +28,12 @@ contextBridge.exposeInMainWorld('numara', {
   transControls: (isTrans) => ipcRenderer.send('transControls', isTrans),
 
   // Import
-  import: () => ipcRenderer.send('import'),
+  importPage: () => ipcRenderer.send('importPage'),
   importData: (callback) => ipcRenderer.on('importData', callback),
   importDataError: (callback) => ipcRenderer.on('importDataError', callback),
 
   //Export
-  export: (arg1, arg2) => ipcRenderer.send('export', arg1, arg2),
+  exportPage: (arg1, arg2) => ipcRenderer.send('exportPage', arg1, arg2),
   exportData: (callback) => ipcRenderer.on('exportData', callback),
   exportDataError: (callback) => ipcRenderer.on('exportDataError', callback),
 

@@ -82,7 +82,7 @@ function createAppWindow() {
   win.webContents.on('did-finish-load', () => {
     if (config.get('fullSize') && isWin) win.maximize()
     if (config.get('position')) win.setPosition(config.get('position')[0], config.get('position')[1])
-    if (isMac && !app.isPackaged) win.webContents.openDevTools()
+    if ((isMac || isWin) && !app.isPackaged) win.webContents.openDevTools()
 
     setTitleBarOverlay()
 
@@ -135,11 +135,11 @@ ipcMain.on('isResized', (event) => {
   event.returnValue = width !== schema.appWidth.default || height !== schema.appHeight.default
 })
 
-ipcMain.on('import', (event) => {
+ipcMain.on('importPage', (event) => {
   const file = dialog.showOpenDialogSync(win, {
     filters: [{ name: 'Numara', extensions: ['numara'] }],
     properties: ['openFile'],
-    title: 'Import Calculations'
+    title: 'Import Page'
   })
 
   if (!file) return
@@ -154,11 +154,11 @@ ipcMain.on('import', (event) => {
   })
 })
 
-ipcMain.on('export', (event, fileName, content) => {
+ipcMain.on('exportPage', (event, fileName, content) => {
   const file = dialog.showSaveDialogSync(win, {
     defaultPath: fileName,
     filters: [{ name: 'Numara', extensions: ['numara'] }],
-    title: 'Export Calculations'
+    title: 'Export Page'
   })
 
   if (!file) return
@@ -340,15 +340,15 @@ const menuTemplate = [
     label: 'File',
     submenu: [
       {
-        label: 'Import',
+        label: 'Import Page',
         click: () => {
-          win.webContents.send('import')
+          win.webContents.send('importPage')
         }
       },
       {
-        label: 'Export',
+        label: 'Export Page',
         click: () => {
-          win.webContents.send('export')
+          win.webContents.send('exportPage')
         }
       },
       { type: 'separator' },
