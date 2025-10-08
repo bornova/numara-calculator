@@ -58,9 +58,9 @@ const setupResultActions = () => {
       app.plotFunction = func.startsWith('line') ? app.mathScope[func] : func
 
       try {
-        dom.plotCrossModal.checked = app.settings.plotCross
-        dom.plotDerivativeModal.checked = app.settings.plotDerivative
-        dom.plotGridModal.checked = app.settings.plotGrid
+        dom.plotCrossModal.checked = app.plotSettings.showCross
+        dom.plotDerivativeModal.checked = app.plotSettings.showDerivative
+        dom.plotGridModal.checked = app.plotSettings.showGrid
 
         plot()
         modal.show('#dialogPlot')
@@ -344,6 +344,25 @@ const setupUIkitUtils = () => {
   UIkit.util.on('#dialogPlot', 'shown', plot)
   UIkit.util.on('#dialogPlot', 'hide', () => {
     app.activePlot = false
+  })
+
+  UIkit.util.on('#dialogPlotAxisSettings', 'shown', () => {
+    const { auto, x, y } = app.plotSettings.domain
+    const domainSettings = [
+      [dom.plotXMin, x[0]],
+      [dom.plotXMax, x[1]],
+      [dom.plotYMin, y[0]],
+      [dom.plotYMax, y[1]]
+    ]
+
+    dom.plotAutoDomain.checked = auto
+    dom.plotXPrecision.value = app.plotSettings.domain.xPrecision
+    dom.plotXPrecisionLabel.innerHTML = app.plotSettings.domain.xPrecision
+
+    domainSettings.forEach(([el, val]) => {
+      el.value = val
+      el.disabled = auto
+    })
   })
 
   UIkit.util.on('#pageList', 'moved', () => {
