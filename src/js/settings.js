@@ -6,16 +6,19 @@ import { getRates } from './forex'
 import { confirm, showError } from './modal'
 import { app, checkSize, getTheme, isElectron, store } from './utils'
 
-import DeepDiff from 'deep-diff'
+import { applyChange, observableDiff } from 'deep-diff-esm'
 
 /** Show/hide Defaults link. */
 function checkDefaults() {
-  dom.defaultSettingsButton.style.display = DeepDiff.diff(app.settings, settings.defaults) ? 'inline' : 'none'
+  dom.defaultSettingsButton.style.display = observableDiff(app.settings, settings.defaults).length ? 'inline' : 'none'
 }
 
 /** Check for app settings modifications. */
 function checkMods(key) {
-  dom.el('#' + key + 'Mod').style.display = app.settings[key] !== settings.defaults[key] ? 'inline-block' : 'none'
+  const el = dom.el('#' + key + 'Mod')
+  if (el) {
+    el.style.display = app.settings[key] !== settings.defaults[key] ? 'inline-block' : 'none'
+  }
 }
 
 /** Show warning if big number option is selected. */
@@ -74,9 +77,6 @@ export const settings = {
     notifyLocation: 'bottom-center',
     numericOutput: 'number',
     pasteThouSep: false,
-    plotCross: false,
-    plotDerivative: false,
-    plotGrid: false,
     precision: '4',
     predictable: false,
     rulers: false,
@@ -90,10 +90,10 @@ export const settings = {
     app.settings = store.get('settings')
 
     if (app.settings) {
-      DeepDiff.observableDiff(app.settings, settings.defaults, (diff) => {
+      observableDiff(app.settings, settings.defaults, (diff) => {
         if (diff.kind === 'E') return
 
-        DeepDiff.applyChange(app.settings, settings.defaults, diff)
+        applyChange(app.settings, settings.defaults, diff)
         store.set('settings', app.settings)
       })
     } else {
