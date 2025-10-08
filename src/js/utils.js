@@ -10,6 +10,7 @@ export const app = {
   iconCache: {},
   mathScope: {},
   plotFunction: null,
+  plotSettings: null,
   refreshCM: true,
   settings: null,
   udfList: [],
