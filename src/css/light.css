@@ -121,6 +121,7 @@ body {
 
 .renamePageButton:hover,
 .dupPageButton:hover,
+.exportPageButton:hover,
 .sortListItem:hover {
   color: #005cc5;
 }

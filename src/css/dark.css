@@ -130,6 +130,7 @@ body {
 
 .renamePageButton:hover,
 .dupPageButton:hover,
+.exportPageButton:hover,
 .sortListItem:hover {
   color: #2196f3;
 }
@@ -202,8 +203,8 @@ line {
 }
 
 .domain {
-  stroke: #333333;
   opacity: 1;
+  stroke: #333333;
 }
 
 .syntaxError {

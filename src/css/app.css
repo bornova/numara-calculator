@@ -22,6 +22,7 @@
   background: none;
   padding: 0;
   resize: none;
+  scrollbar-gutter: auto !important;
   user-select: none;
 }
 
@@ -455,8 +456,13 @@ text {
 .renamePageButton,
 .dupPageButton,
 .deletePageButton,
+.exportPageButton,
 .sortListItem {
   cursor: pointer;
+  padding: 5px 10px;
+}
+
+.exportPageButton {
   padding: 5px 10px;
 }
 
@@ -714,6 +720,76 @@ div:has(> #logsLink) {
 
 .top-right-legend {
   fill: #4682b4;
+}
+
+.domainParent {
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
+  grid-template-columns: repeat(4, 1fr);
+  margin: auto;
+  width: 250px;
+}
+
+.domainParent > .div1 {
+  grid-column: span 4 / span 4;
+  text-align: center;
+}
+
+.domainParent > .div2 {
+  grid-row-start: 4;
+  grid-column: span 4 / span 4;
+  grid-column-start: 1;
+  text-align: center;
+}
+
+.domainParent > .div3 {
+  grid-row-start: 2;
+  grid-column-start: 2;
+  border-right: 1px solid #cccccc;
+  border-bottom: 1px solid #cccccc;
+}
+
+.domainParent > .div4 {
+  grid-row-start: 2;
+  grid-column-start: 3;
+  border-bottom: 1px solid #cccccc;
+  padding-left: 5px;
+}
+
+.domainParent > .div5 {
+  grid-row-start: 3;
+  grid-column-start: 2;
+  border-right: 1px solid #cccccc;
+}
+
+.domainParent > .div6 {
+  grid-row-start: 3;
+  grid-column-start: 3;
+}
+
+.domainParent > .div7 {
+  grid-row: span 2 / span 2;
+  grid-row-start: 2;
+  grid-column-start: 1;
+  margin: auto 0;
+  text-align: right;
+}
+
+.domainParent > .div8 {
+  grid-row: span 2 / span 2;
+  grid-row-start: 2;
+  grid-column-start: 4;
+  margin: auto 0;
+}
+
+.domainTextBox {
+  margin: 10px;
+  width: 50px;
+}
+
+.domainTextBox:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 /* Toggle buttons */
