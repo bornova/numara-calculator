@@ -3,7 +3,7 @@ import { confirm, modal } from './modal'
 import { app, getTheme, store } from './utils'
 
 import Coloris from '@melloware/coloris'
-import DeepDiff from 'deep-diff'
+import { applyChange, diff, observableDiff } from 'deep-diff-esm'
 
 const BORDER_LIGHT = '1px solid #eaeaea'
 const BORDER_DARK = '1px solid #666666'
@@ -60,10 +60,10 @@ export const colors = {
     app.colors = store.get('colors')
 
     if (app.colors) {
-      DeepDiff.observableDiff(app.colors, colors.defaults, (diff) => {
+      observableDiff(app.colors, colors.defaults, (diff) => {
         if (diff.kind === 'E') return
 
-        DeepDiff.applyChange(app.colors, colors.defaults, diff)
+        applyChange(app.colors, colors.defaults, diff)
         store.set('colors', app.colors)
       })
     } else {
@@ -115,7 +115,7 @@ export const colors = {
   },
 
   checkDefaults: () => {
-    dom.defaultColorsButton.style.display = DeepDiff.diff(app.colors, colors.defaults) ? 'inline' : 'none'
+    dom.defaultColorsButton.style.display = diff(app.colors, colors.defaults) ? 'inline' : 'none'
   },
 
   apply: () => {
