@@ -118,10 +118,6 @@ function setupEventListeners() {
     updatePlotSetting('showDerivative', dom.plotDerivativeModal.checked)
   )
 
-  dom.plotXPrecision.addEventListener('input', () => {
-    dom.plotXPrecisionLabel.innerHTML = dom.plotXPrecision.value
-  })
-
   dom.exportPlot.addEventListener('click', () => {
     const svg = dom.el('.function-plot')
     svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
@@ -164,6 +160,10 @@ function setupEventListeners() {
     resetPlot()
   })
 
+  dom.plotXPrecision.addEventListener('input', () => {
+    dom.plotXPrecisionLabel.innerHTML = dom.plotXPrecision.value
+  })
+
   dom.plotAutoDomain.addEventListener('change', () => {
     const isAutoDomain = dom.plotAutoDomain.checked
 
@@ -175,9 +175,9 @@ function setupEventListeners() {
 
   dom.defaultDomainsButton.addEventListener('click', () => {
     dom.plotXPrecision.value = plotSettings.defaults.domain.xPrecision
+    dom.plotXPrecisionLabel.innerHTML = plotSettings.defaults.domain.xPrecision
     dom.plotAutoDomain.checked = true
     dom.plotAutoDomain.dispatchEvent(new Event('change'))
-    dom.plotXPrecision.dispatchEvent(new Event('input'))
     dom.plotXMin.value = plotSettings.defaults.domain.x[0]
     dom.plotXMax.value = plotSettings.defaults.domain.x[1]
     dom.plotYMin.value = plotSettings.defaults.domain.y[0]
