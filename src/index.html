@@ -431,16 +431,18 @@
 
           <h3>Locale</h3>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">Answer locale</div>
+            <div class="padTop1">User locale</div>
             <div class="uk-text-right uk-position-relative">
               <select id="locale" class="uk-select settingItem"></select>
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div>Show day with date</div>
+            <div>
+              Enable for inputs<a id="localeWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
+            </div>
             <div class="uk-text-right uk-position-relative">
               <label class="switch">
-                <input id="dateDay" type="checkbox" class="settingItem" />
+                <input id="inputLocale" type="checkbox" class="settingItem" />
                 <span class="slider round"></span>
               </label>
             </div>
@@ -468,6 +470,15 @@
             <div class="uk-text-right uk-position-relative">
               <label class="switch">
                 <input id="pasteThouSep" type="checkbox" class="settingItem" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div>Show day with date</div>
+            <div class="uk-text-right uk-position-relative">
+              <label class="switch">
+                <input id="dateDay" type="checkbox" class="settingItem" />
                 <span class="slider round"></span>
               </label>
             </div>

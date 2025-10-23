@@ -364,11 +364,12 @@ function showTooltip(target, title) {
 function handleFunctionTooltip(target) {
   try {
     const tip = math.help(target.innerText).toJSON()
+    const syntax = tip.syntax.map((s) => s.replaceAll(/,/g, app.settings.inputLocale ? ';' : ','))
 
     showTooltip(
       target,
       `<div>${tip.description}</div>
-      <div class="tooltipCode">${tip.syntax.map((s) => '<code>' + s + '</code>').join(' ')}</div>`
+      <div class="tooltipCode">${syntax.map((s) => `<code>${s}</code>`).join(' ')}</div>`
     )
   } catch {
     showTooltip(target, 'Description not available')
