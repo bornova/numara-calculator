@@ -3,6 +3,7 @@ import { copyAll, initializeContextMenus } from './context'
 import { dom } from './dom'
 import { cm, refreshEditor, udfInput, uduInput } from './editor'
 import { calculate } from './eval'
+import { initializeHelpTooltips } from './help'
 import { generateIcons } from './icons'
 import { modal, notify, showError } from './modal'
 import { getPageName, initializePages, pageOrder, populatePages } from './pages'
@@ -409,6 +410,7 @@ const initializeApp = () => {
   setupUIkitUtils()
   initializePages()
   initializeContextMenus()
+  initializeHelpTooltips()
   checkAppUpdate()
 
   setTimeout(() => cm.focus(), 500)
