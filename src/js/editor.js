@@ -1,7 +1,7 @@
 import { dom } from './dom'
 import { calculate, formatAnswer, math } from './eval'
 import { showError } from './modal'
-import { app, store } from './utils'
+import { app, localeUsesComma, store } from './utils'
 
 import UIkit from 'uikit'
 import CodeMirror from 'codemirror'
@@ -293,7 +293,7 @@ cm.on('paste', (cm, event) => {
       math.evaluate(pastedText, app.mathScope)
       cm.replaceSelection(pastedText)
     } catch {
-      let modifiedText = pastedText.replaceAll(',', '')
+      const modifiedText = pastedText.replaceAll(localeUsesComma() ? ',' : '.', '')
       cm.replaceSelection(modifiedText)
     }
   }
