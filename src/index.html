@@ -187,7 +187,7 @@
         <div class="dialog-settings-body">
           <h3>Appearance</h3>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">Theme</div>
+            <div class="padTop1" data-help="theme">Theme</div>
             <div class="uk-text-right uk-position-relative">
               <div class="uk-flex">
                 <select id="theme" class="uk-select settingItem uk-flex-left">
@@ -207,7 +207,7 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">Font size</div>
+            <div class="padTop1" data-help="fontSize">Font size</div>
             <div class="uk-text-right uk-position-relative">
               <select id="fontSize" class="uk-select settingItem">
                 <option value="0.9rem">Tiny</option>
@@ -219,7 +219,7 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">Font weight</div>
+            <div class="padTop1" data-help="fontWeight">Font weight</div>
             <div class="uk-text-right uk-position-relative">
               <select id="fontWeight" class="uk-select settingItem">
                 <option value="200">Light</option>
@@ -231,7 +231,7 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">Line height</div>
+            <div class="padTop1" data-help="lineHeight">Line height</div>
             <div class="uk-text-right uk-position-relative">
               <select id="lineHeight" class="uk-select settingItem">
                 <option value="16px">Tiny</option>
@@ -243,7 +243,7 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div>Always on top</div>
+            <div data-help="alwaysOnTop">Always on top</div>
             <div class="uk-text-right uk-position-relative">
               <label class="switch">
                 <input id="alwaysOnTop" type="checkbox" class="settingItem" />
@@ -254,7 +254,7 @@
 
           <h3>Editor</h3>
           <div class="uk-child-width-expand" uk-grid>
-            <div>Syntax highligting</div>
+            <div data-help="syntax">Syntax highligting</div>
             <div class="uk-text-right uk-position-relative">
               <label class="switch">
                 <input id="syntax" type="checkbox" class="settingItem" />
@@ -263,7 +263,7 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div>Keyword tooltips</div>
+            <div data-help="keywordTips">Keyword tooltips</div>
             <div class="uk-text-right uk-width-2-5 uk-position-relative">
               <label class="switch">
                 <input id="keywordTips" type="checkbox" class="settingItem" />
@@ -272,7 +272,7 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div>Highlight matching brackets</div>
+            <div data-help="matchBrackets">Highlight matching brackets</div>
             <div class="uk-text-right uk-width-2-5 uk-position-relative">
               <label class="switch">
                 <input id="matchBrackets" type="checkbox" class="settingItem" />
@@ -281,7 +281,7 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div>Autocomplete hints</div>
+            <div data-help="autocomplete">Autocomplete hints</div>
             <div class="uk-text-right uk-position-relative">
               <label class="switch">
                 <input id="autocomplete" type="checkbox" class="settingItem" />
@@ -290,7 +290,7 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div>Close matching brackets</div>
+            <div data-help="closeBrackets">Close matching brackets</div>
             <div class="uk-text-right uk-width-2-5 uk-position-relative">
               <label class="switch">
                 <input id="closeBrackets" type="checkbox" class="settingItem" />
@@ -299,7 +299,7 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div>Line numbers</div>
+            <div data-help="lineNumbers">Line numbers</div>
             <div class="uk-text-right uk-width-2-5 uk-position-relative">
               <label class="switch">
                 <input id="lineNumbers" type="checkbox" class="settingItem" />
@@ -308,7 +308,7 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div>Wrap lines (input only)</div>
+            <div data-help="lineWrap">Wrap lines (input only)</div>
             <div class="uk-text-right uk-width-2-5 uk-position-relative">
               <label class="switch">
                 <input id="lineWrap" type="checkbox" class="settingItem" />
@@ -317,7 +317,7 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div>Rulers</div>
+            <div data-help="rulers">Rulers</div>
             <div class="uk-text-right uk-width-2-5 uk-position-relative">
               <label class="switch">
                 <input id="rulers" type="checkbox" class="settingItem" />
@@ -326,7 +326,7 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div>Start with blank page</div>
+            <div data-help="newPageOnStart">Start with blank page</div>
             <div class="uk-text-right uk-width-2-5 uk-position-relative">
               <label class="switch">
                 <input id="newPageOnStart" type="checkbox" class="settingItem" />
@@ -337,13 +337,13 @@
 
           <h3>Calculator</h3>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">Answer position</div>
+            <div class="padTop1" data-help="answerPosition">Answer position</div>
             <div class="uk-text-right uk-position-relative">
               <select id="answerPosition" class="uk-select settingItem"></select>
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">
+            <div class="padTop1" data-help="numericOutput">
               Numeric output<a id="bigNumWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
             </div>
             <div class="uk-text-right uk-position-relative">
@@ -351,13 +351,13 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">Notation</div>
+            <div class="padTop1" data-help="notation">Notation</div>
             <div class="uk-text-right uk-position-relative">
               <select id="notation" class="uk-select settingItem"></select>
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="uk-width-1-2 pr-lh">Precision</div>
+            <div class="uk-width-1-2 pr-lh" data-help="precision">Precision</div>
             <div class="uk-text-right uk-width-1-2">
               <div class="uk-child-width-expand" uk-grid>
                 <div class="uk-text-right uk-width-1-6">
@@ -370,7 +370,7 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="uk-width-1-2 pr-lh">Upper exponent limit</div>
+            <div class="uk-width-1-2 pr-lh" data-help="expUpper">Upper exponent limit</div>
             <div class="uk-text-right uk-width-1-2">
               <div class="uk-child-width-expand" uk-grid>
                 <div class="uk-text-right uk-width-1-6">
@@ -383,7 +383,7 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="uk-width-1-2 pr-lh">Lower exponent limit</div>
+            <div class="uk-width-1-2 pr-lh" data-help="expLower">Lower exponent limit</div>
             <div class="uk-text-right uk-width-1-2">
               <div class="uk-child-width-expand" uk-grid>
                 <div class="uk-text-right uk-width-1-6">
@@ -396,13 +396,13 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">Matrix type</div>
+            <div class="padTop1" data-help="matrixType">Matrix type</div>
             <div class="uk-text-right uk-position-relative">
               <select id="matrixType" class="uk-select settingItem"></select>
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div>Predictable output</div>
+            <div data-help="predictable">Predictable output</div>
             <div class="uk-text-right uk-position-relative">
               <label class="switch">
                 <input id="predictable" type="checkbox" class="settingItem" />
@@ -411,7 +411,7 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div>Continue previous line</div>
+            <div data-help="contPrevLine">Continue previous line</div>
             <div class="uk-text-right uk-position-relative">
               <label class="switch">
                 <input id="contPrevLine" type="checkbox" class="settingItem" />
@@ -420,7 +420,7 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div>Line errors</div>
+            <div data-help="lineErrors">Line errors</div>
             <div class="uk-text-right uk-width-2-5 uk-position-relative">
               <label class="switch">
                 <input id="lineErrors" type="checkbox" class="settingItem" />
@@ -431,14 +431,45 @@
 
           <h3>Locale</h3>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">User locale</div>
+            <div class="padTop1" data-help="locale">User locale</div>
             <div class="uk-text-right uk-position-relative">
               <select id="locale" class="uk-select settingItem"></select>
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div>
-              Enable for inputs<a id="localeWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
+            <div data-help="thouSep">Thousands separator</div>
+            <div class="uk-text-right uk-position-relative">
+              <label class="switch">
+                <input id="thouSep" type="checkbox" class="settingItem" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div data-help="copyThouSep">
+              <i class="subSwitchIcon" data-lucide="corner-down-right"></i>Copy with answer
+            </div>
+            <div class="uk-text-right uk-position-relative">
+              <label class="switch">
+                <input id="copyThouSep" type="checkbox" class="settingItem" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div data-help="pasteThouSep">
+              <i class="subSwitchIcon" data-lucide="corner-down-right"></i>Paste with separator
+            </div>
+            <div class="uk-text-right uk-position-relative">
+              <label class="switch">
+                <input id="pasteThouSep" type="checkbox" class="settingItem" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div data-help="inputLocale">
+              Enable for input<a id="localeWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
             </div>
             <div class="uk-text-right uk-position-relative">
               <label class="switch">
@@ -448,34 +479,7 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div>Thousand separator</div>
-            <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="thouSep" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div><i class="subSwitchIcon" data-lucide="corner-down-right"></i>Copy with answer</div>
-            <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="copyThouSep" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div><i class="subSwitchIcon" data-lucide="corner-down-right"></i>Paste with separator</div>
-            <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="pasteThouSep" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div>Show day with date</div>
+            <div data-help="dateDay">Show day with date</div>
             <div class="uk-text-right uk-position-relative">
               <label class="switch">
                 <input id="dateDay" type="checkbox" class="settingItem" />
@@ -486,7 +490,7 @@
 
           <h3>Notifications</h3>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">Location</div>
+            <div class="padTop1" data-help="notifyLocation">Position</div>
             <div class="uk-text-right uk-position-relative">
               <select id="notifyLocation" class="uk-select settingItem">
                 <option value="top-left">Top Left</option>
@@ -500,7 +504,7 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">Duration</div>
+            <div class="padTop1" data-help="notifyDuration">Duration</div>
             <div class="uk-text-right uk-position-relative">
               <select id="notifyDuration" class="uk-select settingItem">
                 <option value="1000">1 second</option>
@@ -515,7 +519,7 @@
 
           <h3>Currency Conversion</h3>
           <div class="uk-child-width-expand" uk-grid>
-            <div>
+            <div data-help="currency">
               Enabled<a id="currencyWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
             </div>
             <div class="uk-text-right uk-width-2-5 uk-position-relative">
@@ -527,7 +531,7 @@
           </div>
 
           <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1">Rate update interval</div>
+            <div class="padTop1" data-help="currencyInterval">Rate update interval</div>
             <div class="uk-position-relative uk-text-right">
               <div class="uk-flex">
                 <select id="currencyInterval" class="uk-select settingItem uk-flex-left">
