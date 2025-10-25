@@ -1,7 +1,7 @@
 import { dom } from './dom'
 import { calculate, formatAnswer, math } from './eval'
 import { showError } from './modal'
-import { app, store } from './utils'
+import { app, localeUsesComma, store } from './utils'
 
 import UIkit from 'uikit'
 import CodeMirror from 'codemirror'
@@ -293,7 +293,7 @@ cm.on('paste', (cm, event) => {
       math.evaluate(pastedText, app.mathScope)
       cm.replaceSelection(pastedText)
     } catch {
-      let modifiedText = pastedText.replaceAll(',', '')
+      const modifiedText = pastedText.replaceAll(localeUsesComma() ? '.' : ',', '')
       cm.replaceSelection(modifiedText)
     }
   }
@@ -364,11 +364,12 @@ function showTooltip(target, title) {
 function handleFunctionTooltip(target) {
   try {
     const tip = math.help(target.innerText).toJSON()
+    const syntax = tip.syntax.map((s) => s.replaceAll(/,/g, app.settings.inputLocale ? ';' : ','))
 
     showTooltip(
       target,
       `<div>${tip.description}</div>
-      <div class="tooltipCode">${tip.syntax.map((s) => '<code>' + s + '</code>').join(' ')}</div>`
+      <div class="tooltipCode">${syntax.map((s) => `<code>${s}</code>`).join(' ')}</div>`
     )
   } catch {
     showTooltip(target, 'Description not available')

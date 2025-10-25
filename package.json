@@ -2,7 +2,7 @@
   "name": "numara",
   "productName": "Numara",
   "description": "Numara Calculator",
-  "version": "6.3.0",
+  "version": "6.4.0",
   "author": {
     "name": "Timur Atalay",
     "email": "mail@numara.io",
@@ -25,23 +25,23 @@
     "wiki": "node src/misc/wiki.js"
   },
   "devDependencies": {
-    "@eslint/js": "^9.37.0",
+    "@eslint/js": "^9.38.0",
     "@formulajs/formulajs": "^4.5.4",
     "@melloware/coloris": "^0.25.0",
     "codemirror": "^5.65.20",
     "deep-diff-esm": "^1.0.0",
-    "electron": "^38.2.2",
+    "electron": "^38.4.0",
     "electron-builder": "^26.0.12",
-    "esbuild": "^0.25.10",
-    "eslint": "^9.37.0",
+    "esbuild": "^0.25.11",
+    "eslint": "^9.38.0",
     "fs-extra": "^11.3.2",
     "function-plot": "^1.25.1",
-    "lucide": "^0.544.0",
+    "lucide": "^0.548.0",
     "luxon": "^3.7.2",
-    "mathjs": "^14.8.2",
+    "mathjs": "^15.0.0",
     "prettier": "^3.6.2",
     "tinykeys": "^3.0.0",
-    "uikit": "^3.24.1"
+    "uikit": "^3.24.2"
   },
   "dependencies": {
     "electron-log": "^5.4.3",

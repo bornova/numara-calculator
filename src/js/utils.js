@@ -56,6 +56,20 @@ export function checkSize() {
   dom.resetSizeButton.style.display = isElectron && numara.isResized() && !numara.isMaximized() ? 'block' : 'none'
 }
 
+/** Check user locale for thousands separator. */
+export function localeUsesComma() {
+  const locale =
+    app.settings.locale === 'system'
+      ? navigator.languages && navigator.languages.length
+        ? navigator.languages[0]
+        : navigator.language
+      : app.settings.locale
+
+  const test = (1.11).toLocaleString(locale)
+
+  return test.match(/[,]/)
+}
+
 /** Check for app update */
 export function checkAppUpdate() {
   if (!isElectron) return

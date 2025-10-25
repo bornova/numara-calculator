@@ -1,7 +1,7 @@
 import { outputContext } from './context'
 import { dom } from './dom'
 import { cm } from './editor'
-import { app, store } from './utils'
+import { app, localeUsesComma, store } from './utils'
 
 import { DateTime } from 'luxon'
 import { all, create, factory } from 'mathjs'
@@ -49,6 +49,11 @@ function evaluateLine(line, lineIndex, lineHandle, avgs, totals, subtotals) {
   let answer, answerCopy
 
   try {
+    if (app.settings.inputLocale) {
+      line = localeUsesComma() ? line.replace(/\./g, '').replace(/,/g, '.') : line.replace(/,/g, '')
+      line = line.replace(/;/g, ',')
+    }
+
     if (lineIndex > 0 && REGEX_CONTINUATION.test(line.charAt(0)) && app.settings.contPrevLine) {
       const prevLine = cm.getLine(lineIndex - 1)
 

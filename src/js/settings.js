@@ -26,6 +26,11 @@ function bigNumberWarning() {
   dom.bigNumWarn.style.display = app.settings.numericOutput === 'BigNumber' ? 'inline-block' : 'none'
 }
 
+/** Show warning if locale uses comma as decimal point separator. */
+function localeWarning() {
+  dom.localeWarn.style.display = app.settings.inputLocale ? 'inline-block' : 'none'
+}
+
 /**
  * Populates a select HTML element with given options.
  *
@@ -62,6 +67,7 @@ export const settings = {
     expUpper: '12',
     fontSize: '1.1rem',
     fontWeight: '400',
+    inputLocale: false,
     inputWidth: 60,
     keywordTips: true,
     lineErrors: false,
@@ -140,7 +146,7 @@ export const settings = {
       { 'ru-RU': 'Russian (Russia)' },
       { 'es-MX': 'Spanish (Mexico)' },
       { 'es-ES': 'Spanish (Spain)' },
-      { 'tr-TR': 'Turkish (Turkey)' }
+      { 'tr-TR': 'Turkish (Turkiye)' }
     ]
 
     const answerPositions = [
@@ -184,6 +190,7 @@ export const settings = {
 
     checkSize()
     checkDefaults()
+    localeWarning()
     bigNumberWarning()
 
     settings.toggleSubs()
@@ -303,6 +310,7 @@ export const settings = {
 
     checkDefaults()
     bigNumberWarning()
+    localeWarning()
 
     settings.toggleSubs()
 
@@ -362,6 +370,13 @@ dom.bigNumWarn.addEventListener('click', () => {
     `Using the BigNumber may break function plotting and is not compatible with some math functions. 
       It may also cause unexpected behavior and affect overall performance.<br><br>
       <a target="_blank" href="https://mathjs.org/docs/datatypes/bignumbers.html">Read more on BigNumbers</a>`
+  )
+})
+
+dom.localeWarn.addEventListener('click', () => {
+  showError(
+    'Caution: Enable locale on user input',
+    `This will allow inputs to contain thousands and decimal separators, per user's selected locale, which will be sanitized for the calculations. Since comma (,) is the default argument seperator, with this setting enabled, you must use semicolon (;) as argument separator in all applicable functions. Ex. sum(1;3) // 4 <br><br>Unexpected results may occur so use with caution.`
   )
 })
 

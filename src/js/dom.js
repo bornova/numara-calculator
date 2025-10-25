@@ -85,6 +85,8 @@ export const dom = {
   keywordTips: document.getElementById('keywordTips'),
   matchBrackets: document.getElementById('matchBrackets'),
   locale: document.getElementById('locale'),
+  localeWarn: document.getElementById('localeWarn'),
+  inputLocale: document.getElementById('inputLocale'),
   copyThouSep: document.getElementById('copyThouSep'),
   pasteThouSep: document.getElementById('pasteThouSep'),
   currency: document.getElementById('currency'),

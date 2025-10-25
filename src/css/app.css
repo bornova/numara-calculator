@@ -10,6 +10,8 @@
 /* Color picker */
 @import url('./../../node_modules/@melloware/coloris/dist/coloris.css');
 
+@import url('./colors.css');
+
 /* Numara CSS */
 * {
   -webkit-backface-visibility: hidden;
@@ -22,7 +24,6 @@
   background: none;
   padding: 0;
   resize: none;
-  scrollbar-gutter: auto !important;
   user-select: none;
 }
 
@@ -56,7 +57,7 @@ input[type='range']::-webkit-slider-runnable-track {
   margin-top: 2px;
   border: none;
   border-radius: 3px;
-  background-color: #999999;
+  background-color: var(--color-gray-140);
   width: 300px;
   height: 1px;
 }
@@ -66,13 +67,13 @@ input[type='range']::-webkit-slider-thumb {
   margin-top: -7px;
   border: none;
   border-radius: 50%;
-  background-color: #1e87f0;
+  background-color: var(--color-blue-70);
   width: 14px;
   height: 14px;
 }
 
 input[type='range']:focus::-webkit-slider-runnable-track {
-  background-color: #999999;
+  background-color: var(--color-gray-140);
 }
 
 pre {
@@ -114,34 +115,6 @@ text {
   font-weight: 700;
   font-size: 1.1em;
   font-family: 'Numara';
-}
-
-.winButtons {
-  position: fixed;
-  top: 0;
-  right: 0;
-}
-
-.unmax {
-  display: none;
-}
-
-.min-btn-win,
-.max-btn-win,
-.unmax-btn-win,
-.close-btn-win {
-  -webkit-app-region: no-drag;
-  float: right;
-  background-position: center;
-  background-size: 11px 11px;
-  background-repeat: no-repeat;
-  width: 46px;
-  height: 30px;
-}
-
-.close-btn-win:hover {
-  background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTIgMTIiIGZpbGw9InJnYigyNTUsIDI1NSwgMjU1KSIgc2hhcGUtcmVuZGVyaW5nPSJjcmlzcEVkZ2VzIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik02LjI3OSA1LjVMMTEgMTAuMjIxbC0uNzc5Ljc3OUw1LjUgNi4yNzkuNzc5IDExIDAgMTAuMjIxIDQuNzIxIDUuNSAwIC43NzkuNzc5IDAgNS41IDQuNzIxIDEwLjIyMSAwIDExIC43NzkgNi4yNzkgNS41eiIgLz48L3N2Zz4=');
-  background-color: #ee1111;
 }
 
 /* Mac Header */
@@ -346,8 +319,8 @@ text {
 }
 
 .notificationDot > svg {
-  fill: #1e87f0;
-  stroke: #1e87f0;
+  fill: var(--color-blue-70);
+  stroke: var(--color-blue-70);
   width: 5px;
   height: 5px;
 }
@@ -483,7 +456,7 @@ text {
 
 .dialog-open-date {
   padding: 0 5px 5px 5px;
-  color: #999999;
+  color: var(--color-gray-140);
   font-size: 0.9rem;
 }
 
@@ -525,7 +498,7 @@ text {
   cursor: pointer;
   margin-top: -3px;
   margin-left: -20px;
-  color: #dd9359;
+  color: var(--color-orange-10);
 }
 
 #dialogSettings .settingMod > svg,
@@ -564,7 +537,7 @@ text {
 }
 
 .warn-icon svg {
-  stroke: #faa05a;
+  stroke: var(--color-orange-20);
   margin-top: -3px;
   width: 14px;
   height: 14px;
@@ -645,7 +618,7 @@ div:has(> #logsLink) {
 
 .notificationLink {
   margin-left: 8px;
-  color: #56b6c2;
+  color: var(--color-blue-140);
 }
 
 .updateButton {
@@ -703,7 +676,7 @@ div:has(> #logsLink) {
 
 .textBox {
   box-sizing: border-box;
-  border: 1px solid #cccccc;
+  border: 1px solid var(--color-gray-180);
   padding: 5px;
   width: 100%;
 }
@@ -719,7 +692,7 @@ div:has(> #logsLink) {
 }
 
 .top-right-legend {
-  fill: #4682b4;
+  fill: var(--color-blue-120);
 }
 
 .domainParent {
@@ -745,21 +718,21 @@ div:has(> #logsLink) {
 .domainParent > .div3 {
   grid-row-start: 2;
   grid-column-start: 2;
-  border-right: 1px solid #cccccc;
-  border-bottom: 1px solid #cccccc;
+  border-right: 1px solid var(--color-gray-180);
+  border-bottom: 1px solid var(--color-gray-180);
 }
 
 .domainParent > .div4 {
   grid-row-start: 2;
   grid-column-start: 3;
-  border-bottom: 1px solid #cccccc;
+  border-bottom: 1px solid var(--color-gray-180);
   padding-left: 5px;
 }
 
 .domainParent > .div5 {
   grid-row-start: 3;
   grid-column-start: 2;
-  border-right: 1px solid #cccccc;
+  border-right: 1px solid var(--color-gray-180);
 }
 
 .domainParent > .div6 {
@@ -840,7 +813,7 @@ div:has(> #logsLink) {
   left: 0;
   transition: 0.2s;
   cursor: pointer;
-  background-color: #cccccc;
+  background-color: var(--color-gray-180);
 }
 
 .slider:before {
@@ -863,7 +836,7 @@ div:has(> #logsLink) {
 }
 
 input:checked + .slider {
-  background-color: #1e87f0;
+  background-color: var(--color-blue-70);
 }
 
 input:checked + .slider:before {
@@ -1166,13 +1139,13 @@ input:checked + .slider:before {
 }
 
 .cm-s-numara button {
-  color: #1e87f0 !important;
+  color: var(--color-blue-70) !important;
   font-size: inherit !important;
 }
 
 .cm-s-numara button:hover {
   cursor: pointer !important;
-  color: #5286b9 !important;
+  color: var(--color-blue-130) !important;
   font-size: inherit !important;
 }
 
@@ -1312,11 +1285,11 @@ input.clr-color {
 
   .printLineNumCol {
     width: 1px;
-    color: #ccc !important;
+    color: var(--color-gray-180) !important;
   }
 
   .printAnswerLeft {
-    border-left: 1px solid #eaeaea;
+    border-left: 1px solid var(--color-gray-220);
   }
 
   .printAnswerRight {
@@ -1332,7 +1305,7 @@ input.clr-color {
   }
 
   .printRulers tr td {
-    border-bottom: 1px solid #eaeaea;
+    border-bottom: 1px solid var(--color-gray-220);
   }
 
   .scrollTop {
