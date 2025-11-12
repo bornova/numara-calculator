@@ -30,7 +30,7 @@
     "@melloware/coloris": "^0.25.0",
     "codemirror": "^5.65.20",
     "deep-diff-esm": "^1.0.1",
-    "electron": "^39.1.1",
+    "electron": "^39.1.2",
     "electron-builder": "^26.0.12",
     "esbuild": "^0.27.0",
     "eslint": "^9.39.1",
