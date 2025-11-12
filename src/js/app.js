@@ -3,6 +3,7 @@ import { copyAll, initializeContextMenus } from './context'
 import { dom } from './dom'
 import { cm, refreshEditor, udfInput, uduInput } from './editor'
 import { calculate } from './eval'
+import { initializeUSD } from './forex'
 import { initializeHelpTooltips } from './help'
 import { generateIcons } from './icons'
 import { modal, notify, showError } from './modal'
@@ -411,6 +412,7 @@ const initializeApp = () => {
   initializePages()
   initializeContextMenus()
   initializeHelpTooltips()
+  initializeUSD()
   checkAppUpdate()
 
   setTimeout(() => cm.focus(), 500)
