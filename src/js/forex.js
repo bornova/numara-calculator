@@ -7,8 +7,19 @@ import { app, store } from './utils'
 const USD_UNIT = 'USD'
 const EXCHANGE_RATE_URL = 'https://www.floatrates.com/widget/1030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json'
 
-math.createUnit(USD_UNIT, { aliases: [USD_UNIT.toLowerCase()] })
-numaraHints.push({ text: USD_UNIT, desc: 'U.S. Dollar', className: 'cm-currency' })
+export const currencySymbols = {
+  CNY: '¥',
+  GBP: '£',
+  EUR: '€',
+  RUB: '₽',
+  TRY: '₺',
+  USD: '$'
+}
+
+export function initializeUSD() {
+  math.createUnit(USD_UNIT, { aliases: [USD_UNIT.toLowerCase()] })
+  numaraHints.push({ text: USD_UNIT, desc: 'U.S. Dollar', className: 'cm-currency' })
+}
 
 /**
  * Get exchange rates and update the application.

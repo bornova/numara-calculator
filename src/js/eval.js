@@ -1,6 +1,7 @@
 import { outputContext } from './context'
 import { dom } from './dom'
 import { cm } from './editor'
+import { currencySymbols } from './forex'
 import { app, localeUsesComma, store } from './utils'
 
 import { DateTime } from 'luxon'
@@ -52,6 +53,12 @@ function evaluateLine(line, lineIndex, lineHandle, avgs, totals, subtotals) {
     if (app.settings.inputLocale) {
       line = localeUsesComma() ? line.replace(/\./g, '').replace(/,/g, '.') : line.replace(/,/g, '')
       line = line.replace(/;/g, ',')
+    }
+
+    if (app.settings.currency) {
+      Object.entries(currencySymbols).forEach(([code, symbol]) => {
+        line = line.replaceAll(symbol, code + ' ')
+      })
     }
 
     if (lineIndex > 0 && REGEX_CONTINUATION.test(line.charAt(0)) && app.settings.contPrevLine) {

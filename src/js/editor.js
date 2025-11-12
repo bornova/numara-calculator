@@ -1,5 +1,6 @@
 import { dom } from './dom'
 import { calculate, formatAnswer, math } from './eval'
+import { currencySymbols } from './forex'
 import { showError } from './modal'
 import { app, localeUsesComma, store } from './utils'
 
@@ -71,6 +72,7 @@ const constantTokens = mathConstants.map(([c]) => c)
 const unitTokens = units().map((u) => u.token)
 const keywordTokens = keywords.map((key) => key.text)
 const excelTokens = Object.keys(formulajs).map((f) => 'xls.' + f)
+const currencyTokens = Object.entries(currencySymbols).map((c) => c[1])
 
 // Codemirror syntax templates
 CodeMirror.defineMode('numara', () => ({
@@ -79,6 +81,7 @@ CodeMirror.defineMode('numara', () => ({
     if (stream.match(/\d/)) return 'number'
     if (stream.match(/(?:\+|-|\*|\/|,|;|\.|:|@|~|=|>|<|&|\||`|'|\^|\?|!|%)/)) return 'operator'
     if (stream.match(/\b(?:xls.)\b/)) return 'formulajs'
+    if (currencyTokens.some((token) => stream.match(token))) return 'currency'
 
     stream.eatWhile(/\w/)
 
@@ -382,12 +385,18 @@ function handleFunctionTooltip(target) {
  */
 function handleCurrencyTooltip(target) {
   try {
-    const currency = target.innerText
+    let currency = target.innerText
+
+    if (currencyTokens.includes(currency)) {
+      currency = Object.keys(currencySymbols).find((key) => currencySymbols[key] === currency)
+    }
+
     const currencyName =
       currency.toUpperCase() === 'USD' ? 'U.S. Dollar' : app.currencyRates[currency.toLowerCase()].name
 
     showTooltip(target, currencyName)
-  } catch {
+  } catch (e) {
+    console.log(e)
     showTooltip(target, 'Description not available')
   }
 }
