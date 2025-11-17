@@ -91,7 +91,7 @@ function evaluateLine(line, lineIndex, lineHandle, avgs, totals, subtotals) {
       answer = altEvaluate(line)
     }
 
-    if (!answer || answer === 0) {
+    if (answer === undefined || answer === null || answer === '') {
       subtotals.length = 0
       return ``
     }
