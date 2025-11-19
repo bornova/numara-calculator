@@ -132,6 +132,7 @@ ipcMain.on('setOnTop', (event, bool) => win.setAlwaysOnTop(bool))
 ipcMain.on('isMaximized', (event) => (event.returnValue = win.isMaximized()))
 ipcMain.on('isResized', (event) => {
   const [width, height] = win.getSize()
+
   event.returnValue = width !== schema.appWidth.default || height !== schema.appHeight.default
 })
 
@@ -150,7 +151,7 @@ ipcMain.on('importPage', (event) => {
       return
     }
 
-    event.sender.send('importData', data, 'Imported from: ' + file[0])
+    event.sender.send('pageImported', data, 'Imported from: ' + file[0])
   })
 })
 
@@ -169,7 +170,7 @@ ipcMain.on('exportPage', (event, fileName, content) => {
       return
     }
 
-    event.sender.send('exportData', 'Exported to: ' + file)
+    event.sender.send('pageExported', 'Exported to: ' + file)
   })
 })
 
