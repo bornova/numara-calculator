@@ -1,13 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('numara', {
-  // Calls from main.js
-  main: {
-    importPage: (callback) => ipcRenderer.on('importPage', callback),
-    exportPage: (callback) => ipcRenderer.on('exportPage', callback),
-    print: (callback) => ipcRenderer.on('print', callback)
-  },
-
   versions: {
     chrome: () => process.versions.chrome,
     electron: () => process.versions.electron,
@@ -29,13 +22,16 @@ contextBridge.exposeInMainWorld('numara', {
 
   // Import
   importPage: () => ipcRenderer.send('importPage'),
-  importData: (callback) => ipcRenderer.on('importData', callback),
+  pageImported: (callback) => ipcRenderer.on('pageImported', (event, data, msg) => callback(data, msg)),
   importDataError: (callback) => ipcRenderer.on('importDataError', callback),
 
   //Export
-  exportPage: (arg1, arg2) => ipcRenderer.send('exportPage', arg1, arg2),
-  exportData: (callback) => ipcRenderer.on('exportData', callback),
+  exportPage: (pageName, pageData) => ipcRenderer.send('exportPage', pageName, pageData),
+  pageExported: (callback) => ipcRenderer.on('pageExported', (event, data) => callback(data)),
   exportDataError: (callback) => ipcRenderer.on('exportDataError', callback),
+
+  // Print
+  print: (callback) => ipcRenderer.on('print', callback),
 
   // Context menus
   inputContextMenu: (index, isEmpty, isLine, isSelection, isMultiLine, hasAnswer) =>

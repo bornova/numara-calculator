@@ -365,21 +365,18 @@ if (isElectron) {
   // Import calculations from file
   dom.importPageButton.addEventListener('click', numara.importPage)
 
-  numara.importData((event, data, msg) => {
+  numara.pageImported((data, msg) => {
     newPage(true)
     cm.setValue(data)
     notify(msg, 'success')
   })
-
   numara.importDataError((event, error) => notify(error, 'danger'))
-  numara.main.importPage(numara.importPage)
 
-  numara.exportData((event, msg) => notify(msg, 'success'))
+  numara.pageExported((msg) => notify(msg, 'success'))
   numara.exportDataError((event, error) => notify(error, 'danger'))
-  numara.main.exportPage(() => numara.exportPage(dom.newPageTitleInput.value, cm.getValue()))
 
   // Print window from main
-  numara.main.print(() => {
+  numara.print(() => {
     UIkit.offcanvas('#sidePanel').hide()
     window.print()
   })
