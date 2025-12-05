@@ -12,7 +12,7 @@
   
   Available for:
   
-  ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white) ![macOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
+  [![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)![macOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/bornova/numara-calculator/releases/latest)
   
   and on the web at https://numara.io
 </div>
@@ -52,15 +52,20 @@
 - Enables quick experimentation and iterative problem-solving.
 
 🔢 **Advanced Math with [Math.js](https://github.com/josdejong/mathjs), giving you a wide range of capabilities:**
-- Scientific functions (trig, logs, exponentials, statistics, etc.)
-- Unit handling and conversions (5 cm + 2 in, 1 hour to minutes, etc.)
-- Complex and symbolic expressions
-- Currency handling using symbols like $, €, £
-- Built-in constants and rich numerical operations
+- Scientific functions (trig, logs, exponentials, statistics, etc.).
+- Unit handling and conversions (5 cm + 2 in, 1 hour to minutes, etc.).
+- Complex and symbolic expressions including percentage operations (10% of 20, 40 + 5%, etc)
+- Currency handling using symbols like $, €, £.
+- Built-in constants and rich numerical operations.
+- And much more...
+
+📈 **Function Plotting**
+- Plot mathematical functions directly within Numara.
+- Useful for visualizing equations, exploring parameter changes, or checking how expressions behave.
 
 🔓 **Open Source**
-- MIT-licensed
-- Unlimited and free to use
+- MIT-licensed.
+- Unlimited and free to use.
 </div>
 
 ##
