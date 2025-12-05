@@ -8,8 +8,8 @@ Built on [Electron](https://github.com/electron/electron), powered by [Math.js](
 
 Available for Windows, MacOS, Linux and on the web at https://numara.io
 
-<img width="420" src="https://github.com/user-attachments/assets/cbd8f8e8-0ceb-4714-a682-c60159863099" />
-<img width="420" src="https://github.com/user-attachments/assets/d6e1e64f-8408-4fb7-821c-68e12f0f8af9" />
+<img width="400" src="https://github.com/user-attachments/assets/cbd8f8e8-0ceb-4714-a682-c60159863099" />
+<img width="400" src="https://github.com/user-attachments/assets/d6e1e64f-8408-4fb7-821c-68e12f0f8af9" />
 
 ##
 
