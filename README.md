@@ -8,14 +8,15 @@ Built on [Electron](https://github.com/electron/electron), powered by [Math.js](
 
 Available for Windows, MacOS, Linux and on the web at https://numara.io
 
-<img src='https://github.com/bornova/numara-calculator/assets/35872220/fcb5689d-a733-46eb-9b7e-32eae66b4282' width='400'>
-<img src='https://github.com/bornova/numara-calculator/assets/35872220/0bb9051e-7d1d-4ed4-bf4c-87e63ada3195' width='400'>
+<img width="420" src="https://github.com/user-attachments/assets/cbd8f8e8-0ceb-4714-a682-c60159863099" />
+<img width="420" src="https://github.com/user-attachments/assets/d6e1e64f-8408-4fb7-821c-68e12f0f8af9" />
 
 ##
 
 <img src='https://github.com/bornova/numara-calculator/assets/35872220/32dad6d0-ee06-4d5a-a197-44b7bb6b22f1' width='200'>
-<img src='https://github.com/bornova/numara-calculator/assets/35872220/8c8a7060-e9a0-4629-9429-5b0fad3c0a97' width='200'>
-<img src='https://github.com/bornova/numara-calculator/assets/35872220/7b51eff5-9fe5-44bf-ab8d-20f0e34116bd' width='200'>
-<img src='https://github.com/bornova/numara-calculator/assets/35872220/1097fb1f-745e-46bc-9ef6-c09ce3db4586' width='200'>
+<img width="200" src="https://github.com/user-attachments/assets/27c89eb8-1cd4-4be2-966c-01c5db3e43d5" />
+<img width="200" src="https://github.com/user-attachments/assets/7b6ed5f9-f7af-4166-a12a-5e402a86dfa8" />
+<img width="200" src="https://github.com/user-attachments/assets/4c5f0b35-bacf-4429-873d-0303bb0640c1" />
+
 
 Visit the [Wiki page](https://github.com/bornova/numara-calculator/wiki) to learn more about the features.
