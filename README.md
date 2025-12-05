@@ -1,15 +1,20 @@
 <div align="center">
   <img width="200" alt="Numara Calculator" src="https://github.com/user-attachments/assets/e6032c8f-a1e0-4c96-a686-9d29017baa36" />
+  <p></p>
+  
+  [![GitHub Release](https://img.shields.io/github/v/release/bornova/numara-calculator?display_name=tag&style=for-the-badge)](https://github.com/bornova/numara-calculator/releases/latest)
 </div>
 
 ##
 
 <div align="center">
-  <p>A simple but powerful notepad calculator which evaluates expressions as you type.</p>
+  <p>A sleek, minimal-but-powerful notepad calculator which evaluates expressions as you type.  It combines the flexibility of a text editor with the power of a scientific calculator.</p>
   
-  Built on [Electron](https://github.com/electron/electron), powered by [Math.js](https://github.com/josdejong/mathjs).
+  Available for:
   
-  Available for Windows, MacOS, Linux and on the web at https://numara.io
+  ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white) ![macOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
+  
+  and on the web at https://numara.io
 </div>
 
 <div align="center">
@@ -26,4 +31,41 @@
 
 ##
 
-Visit the [Wiki page](https://github.com/bornova/numara-calculator/wiki) to learn more about the features.
+<div align="center">
+  <h3>Why Numara?</h3>
+</div>
+
+<div>
+  Traditional calculators slow you down with buttons, modes, and rigid workflows. Numara takes a different approach: it treats math like writing. By combining a simple text-entry interface with real-time evaluation, Numara offers a faster, more natural way to calculate.
+  
+  Whether you're jotting down quick arithmetic, testing formulas, or mixing notes with numbers, Numara keeps you in the flow.
+</div>
+
+📝 **Notepad-Style Interface**
+- Write expressions as plain text, minimal interface with no buttons or rigid UI to slow you down.
+- Mix notes and calculations freely, perfect for jotting down ideas alongside math.
+- Change a value and the result updates instantly.
+
+⚡ **Real-Time Evaluation**
+- Results appear as you type, no equals button needed.
+- Automatically recalculates when expressions change.
+- Enables quick experimentation and iterative problem-solving.
+
+🔢 **Advanced Math with [Math.js](https://github.com/josdejong/mathjs), giving you a wide range of capabilities:**
+- Scientific functions (trig, logs, exponentials, statistics, etc.)
+- Unit handling and conversions (5 cm + 2 in, 1 hour to minutes, etc.)
+- Complex and symbolic expressions
+- Currency handling using symbols like $, €, £
+- Built-in constants and rich numerical operations
+
+🔓 **Open Source**
+- MIT-licensed
+- Unlimited and free to use
+</div>
+
+##
+
+<div align="center">
+  
+  Visit the [Wiki page](https://github.com/bornova/numara-calculator/wiki) to learn more about the features.
+</div>
