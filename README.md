@@ -42,16 +42,19 @@
 </div>
 
 📝 **Notepad-Style Interface**
+
 - Write expressions as plain text, minimal interface with no buttons or rigid UI to slow you down.
 - Mix notes and calculations freely, perfect for jotting down ideas alongside math.
 - Change a value and the result updates instantly.
 
 ⚡ **Real-Time Evaluation**
+
 - Results appear as you type, no equals button needed.
 - Automatically recalculates when expressions change.
 - Enables quick experimentation and iterative problem-solving.
 
 🔢 **Advanced Math with [Math.js](https://github.com/josdejong/mathjs), giving you a wide range of capabilities:**
+
 - Scientific functions (trig, logs, exponentials, statistics, etc.).
 - Unit handling and conversions (5 cm + 2 in, 1 hour to minutes, etc.).
 - Complex and symbolic expressions including percentage operations (10% of 20, 40 + 5%, etc)
@@ -60,10 +63,12 @@
 - And much more...
 
 📈 **Function Plotting**
+
 - Plot mathematical functions directly within Numara.
 - Useful for visualizing equations, exploring parameter changes, or checking how expressions behave.
 
 🔓 **Open Source**
+
 - MIT-licensed.
 - Unlimited and free to use.
 </div>
