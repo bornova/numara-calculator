@@ -293,7 +293,9 @@ cm.on('paste', (cm, event) => {
     cm.replaceSelection(pastedText)
   } else {
     try {
-      math.evaluate(pastedText, app.mathScope)
+      pastedText.split(/\n|\r/).forEach((line) => {
+        math.evaluate(line, app.mathScope)
+      })
       cm.replaceSelection(pastedText)
     } catch {
       const modifiedText = pastedText.replaceAll(localeUsesComma() ? '.' : ',', '')
