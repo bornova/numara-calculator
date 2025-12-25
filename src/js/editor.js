@@ -27,6 +27,7 @@ const CLASS_NAMES = {
   FUNCTION: 'cm-function',
   KEYWORD: 'cm-keyword',
   LINE_NO: 'cm-lineNo',
+  NERDAMER: 'cm-nerdamer',
   UDF: 'cm-udf',
   UDU: 'cm-udu',
   UNIT: 'cm-unit',
@@ -71,7 +72,7 @@ const functionTokens = mathFunctions.map(([f]) => f)
 const constantTokens = mathConstants.map(([c]) => c)
 const unitTokens = units().map((u) => u.token)
 const keywordTokens = keywords.map((key) => key.text)
-const excelTokens = Object.keys(formulajs).map((f) => 'xls.' + f)
+const excelTokens = Object.keys(formulajs).map((f) => 'formulajs.' + f)
 const currencyTokens = Object.entries(currencySymbols).map((c) => c[1])
 
 // Codemirror syntax templates
@@ -80,7 +81,8 @@ CodeMirror.defineMode('numara', () => ({
     if (stream.match(/\/\/.*/) || stream.match(/#.*/)) return 'comment'
     if (stream.match(/\d/)) return 'number'
     if (stream.match(/(?:\+|-|\*|\/|,|;|\.|:|@|~|=|>|<|&|\||`|'|\^|\?|!|%)/)) return 'operator'
-    if (stream.match(/\b(?:xls.)\b/)) return 'formulajs'
+    if (stream.match(/\bformulajs(?=[.]|\b)/)) return 'formulajs'
+    if (stream.match(/\bnerdamer(?=[.(]|\b)/)) return 'nerdamer'
     if (currencyTokens.some((token) => stream.match(token))) return 'currency'
 
     stream.eatWhile(/\w/)
@@ -152,7 +154,7 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
   // Keywords that are already included in the keyword hints
   const keywordNames = keywords.map((k) => k.text)
 
-  for (const key of Object.keys(app.mathScope)) {
+  for (const key of app.mathScope.keys()) {
     // Skip variables that are already in keyword hints to avoid duplicates
     if (keywordNames.includes(key)) continue
 
@@ -181,7 +183,7 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
 
   return {
     list:
-      curStr && (!curStr.endsWith('.') || curStr === 'xls.') && curWordRegex
+      curStr && (!curStr.endsWith('.') || curStr === 'formulajs.') && curWordRegex
         ? allHints.filter(({ text }) => curWordRegex.test(text)).sort((a, b) => a.text.localeCompare(b.text))
         : [],
     from: CodeMirror.Pos(cmCursor.line, start),
@@ -293,12 +295,19 @@ cm.on('paste', (cm, event) => {
     cm.replaceSelection(pastedText)
   } else {
     try {
-      pastedText.split(/\n|\r/).forEach((line) => {
+      const lineIndex = cm.getCursor().line
+      let line = cm.getLine(lineIndex)
+
+      pastedText.split(/\n|\r/).forEach((text) => {
+        line = line.replace(cm.getSelection(), text)
         math.evaluate(line, app.mathScope)
       })
+
       cm.replaceSelection(pastedText)
     } catch {
+      console.log('Modifying pasted text to remove thousand separators.')
       const modifiedText = pastedText.replaceAll(localeUsesComma() ? '.' : ',', '')
+
       cm.replaceSelection(modifiedText)
     }
   }
@@ -309,6 +318,7 @@ cm.on('cursorActivity', (cm) => {
 
   cm.eachLine((line) => {
     const cmLineNo = cm.getLineNumber(line)
+
     cm[cmLineNo === activeLine ? 'addLineClass' : 'removeLineClass'](cmLineNo, 'gutter', 'activeLine')
   })
 
@@ -397,8 +407,7 @@ function handleCurrencyTooltip(target) {
       currency.toUpperCase() === 'USD' ? 'U.S. Dollar' : app.currencyRates[currency.toLowerCase()].name
 
     showTooltip(target, currencyName)
-  } catch (e) {
-    console.log(e)
+  } catch {
     showTooltip(target, 'Description not available')
   }
 }
@@ -430,15 +439,9 @@ function handleConstantTooltip(target) {
  * @param {HTMLElement} target - The DOM element representing the variable.
  */
 function handleVariableTooltip(target) {
-  if (!app.mathScope[target.innerText] || typeof app.mathScope[target.innerText] === 'function') return
+  if (!app.mathScope.get(target.innerText) || typeof app.mathScope.get(target.innerText) === 'function') return
 
-  let varTooltip
-
-  try {
-    varTooltip = formatAnswer(math.evaluate(target.innerText, app.mathScope))
-  } catch {
-    varTooltip = 'Undefined'
-  }
+  let varTooltip = formatAnswer(app.mathScope.get(target.innerText) ?? 'Undefined')
 
   showTooltip(target, varTooltip)
 }
@@ -448,16 +451,10 @@ function handleVariableTooltip(target) {
  * @param {HTMLElement} target - The DOM element representing the line number.
  */
 function handleLineNoTooltip(target) {
-  let tooltip
-
-  try {
-    tooltip =
-      typeof app.mathScope[target.innerText] === 'function'
-        ? 'Function'
-        : formatAnswer(math.evaluate(target.innerText, app.mathScope))
-  } catch {
-    tooltip = 'Undefined'
-  }
+  let tooltip =
+    typeof app.mathScope.get(target.innerText) === 'function'
+      ? 'Function'
+      : formatAnswer(app.mathScope.get(target.innerText) ?? 'Undefined')
 
   showTooltip(target, tooltip)
 }
@@ -483,6 +480,7 @@ const TOOLTIP_HANDLERS = {
   [CLASS_NAMES.LINE_NO]: handleLineNoTooltip,
   [CLASS_NAMES.KEYWORD]: handleKeywordTooltip,
   [CLASS_NAMES.FORMULAJS]: (target) => showTooltip(target, 'Formulajs'),
+  [CLASS_NAMES.NERDAMER]: (target) => showTooltip(target, 'Nerdamer'),
   [CLASS_NAMES.EXCEL]: (target) => showTooltip(target, 'Excel function')
 }
 

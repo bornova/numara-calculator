@@ -57,7 +57,7 @@ const setupResultActions = () => {
 
     if (plotEl) {
       const func = plotEl.getAttribute('data-plot')
-      app.plotFunction = func.startsWith('line') ? app.mathScope[func] : func
+      app.plotFunction = func.startsWith('line') ? app.mathScope.get(func) : func
 
       try {
         dom.plotCrossModal.checked = app.plotSettings.showCross
