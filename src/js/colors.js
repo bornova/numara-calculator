@@ -47,7 +47,12 @@ export const colors = {
       light: '#b10e0e'
     },
     excel: { title: 'Excel', class: '.cm-excel', dark: '#3cc383', light: '#197b43' },
-    function: { title: 'Functions', class: '.cm-formulajs, .cm-function, .cm-udf', dark: '#cb82f5', light: '#6f42c1' },
+    function: {
+      title: 'Functions',
+      class: '.cm-formulajs, .cm-function, .cm-nerdamer, .cm-udf',
+      dark: '#cb82f5',
+      light: '#6f42c1'
+    },
     keyword: { title: 'Keywords', class: '.cm-keyword, .cm-lineNo', dark: '#e78c3f', light: '#be6317' },
     number: { title: 'Numbers', class: '.cm-number', dark: '#e6e6e6', light: '#333333' },
     operator: { title: 'Operators', class: '.cm-operator', dark: '#bbbbbb', light: '#888888' },
