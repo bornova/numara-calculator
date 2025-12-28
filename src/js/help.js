@@ -28,7 +28,6 @@ const helpTooltips = {
   notifyDuration: 'Set how long notifications are displayed on the screen.',
   notifyLocation: 'Set the position on the screen where notifications appear.',
   numericOutput: 'Set the format for numeric output display.',
-  pasteThouSep: 'Enable thousands separator when pasting numbers into the calculator.',
   precision: 'Set the number of significant digits for numeric calculations and display.',
   predictable: 'Enable predictable mode for consistent results across different platforms.',
   rulers: 'Show rulers in the calculator display for better alignment.',

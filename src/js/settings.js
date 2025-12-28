@@ -82,7 +82,6 @@ export const settings = {
     notifyDuration: '5000',
     notifyLocation: 'bottom-center',
     numericOutput: 'number',
-    pasteThouSep: false,
     precision: '4',
     predictable: false,
     rulers: false,
@@ -336,7 +335,6 @@ export const settings = {
     toggle(dom.expUpper, app.settings.notation === 'auto')
     toggle(dom.expLower, app.settings.notation === 'auto')
     toggle(dom.copyThouSep, app.settings.thouSep)
-    toggle(dom.pasteThouSep, app.settings.thouSep)
 
     dom.currencyInterval.disabled = !app.settings.currency
     dom.updateRatesLink.dataset.enabled = app.settings.currency

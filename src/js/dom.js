@@ -88,7 +88,6 @@ export const dom = {
   localeWarn: document.getElementById('localeWarn'),
   inputLocale: document.getElementById('inputLocale'),
   copyThouSep: document.getElementById('copyThouSep'),
-  pasteThouSep: document.getElementById('pasteThouSep'),
   currency: document.getElementById('currency'),
   currencyWarn: document.getElementById('currencyWarn'),
   currencyInterval: document.getElementById('currencyInterval'),

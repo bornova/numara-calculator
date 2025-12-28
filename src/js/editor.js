@@ -2,7 +2,7 @@ import { dom } from './dom'
 import { calculate, formatAnswer, math } from './eval'
 import { currencySymbols } from './forex'
 import { showError } from './modal'
-import { app, localeUsesComma, store } from './utils'
+import { app, store } from './utils'
 
 import UIkit from 'uikit'
 import CodeMirror from 'codemirror'
@@ -284,33 +284,6 @@ cm.on('inputRead', (cm) => {
   if (!app.settings.autocomplete) return
 
   CodeMirror.commands.autocomplete(cm)
-})
-
-cm.on('paste', (cm, event) => {
-  event.preventDefault()
-
-  let pastedText = event.clipboardData.getData('text/plain')
-
-  if (app.settings.thouSep && app.settings.pasteThouSep) {
-    cm.replaceSelection(pastedText)
-  } else {
-    try {
-      const lineIndex = cm.getCursor().line
-      let line = cm.getLine(lineIndex)
-
-      pastedText.split(/\n|\r/).forEach((text) => {
-        line = line.replace(cm.getSelection(), text)
-        math.evaluate(line, app.mathScope)
-      })
-
-      cm.replaceSelection(pastedText)
-    } catch {
-      console.log('Modifying pasted text to remove thousand separators.')
-      const modifiedText = pastedText.replaceAll(localeUsesComma() ? '.' : ',', '')
-
-      cm.replaceSelection(modifiedText)
-    }
-  }
 })
 
 cm.on('cursorActivity', (cm) => {
