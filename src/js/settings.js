@@ -3,7 +3,7 @@ import { dom } from './dom'
 import { cm, udfInput, uduInput } from './editor'
 import { calculate, math } from './eval'
 import { getRates } from './forex'
-import { confirm, showError } from './modal'
+import { confirm, modal, showError } from './modal'
 import { app, checkSize, getTheme, isElectron, store } from './utils'
 
 import { applyChange, observableDiff } from 'deep-diff-esm'
@@ -404,7 +404,11 @@ dom.els('.settingItem').forEach((el) => {
 })
 
 if (isElectron) {
-  dom.resetSizeButton.addEventListener('click', numara.resetSize)
+  dom.resetSizeButton.addEventListener('click', () => {
+    numara.resetSize()
 
-  numara.themeUpdate(settings.apply)
+    setTimeout(() => {
+      modal.show('#dialogSettings')
+    }, 10)
+  })
 }
