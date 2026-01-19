@@ -99,10 +99,11 @@ const setupUserDefined = () => {
 
 const setupPanelResizer = () => {
   const defaultWidth = settings.defaults.inputWidth
+  const inputWidth = store.get('inputWidth') ?? defaultWidth
+
   let resizeDelay
   let isResizing = false
 
-  let inputWidth = store.get('inputWidth') ?? defaultWidth
   if (app.settings.answerPosition === 'left') {
     dom.input.style.width = `${inputWidth}%`
   } else if (app.settings.answerPosition === 'bottom') {
@@ -138,10 +139,12 @@ const setupPanelResizer = () => {
       inputWidth = Math.max(0, Math.min(100, inputWidth))
 
       dom.input.style.width = inputWidth + '%'
-      store.set('inputWidth', inputWidth)
 
       clearTimeout(resizeDelay)
-      resizeDelay = setTimeout(calculate, 10)
+      resizeDelay = setTimeout(() => {
+        store.set('inputWidth', inputWidth)
+        calculate()
+      }, 10)
     }
   })
 
@@ -152,36 +155,41 @@ const setupSyncScroll = () => {
   const inputPanel = dom.el('.CodeMirror-scroll')
   const outputPanel = dom.output
 
-  let inputScroll = false
-  let outputScroll = false
+  let isSyncing = false
 
   inputPanel.addEventListener('scroll', () => {
-    if (!inputScroll) {
-      outputScroll = true
-      outputPanel.scrollTop = inputPanel.scrollTop
-    }
+    if (isSyncing) return
 
-    inputScroll = false
+    isSyncing = true
+    outputPanel.scrollTop = inputPanel.scrollTop
+    requestAnimationFrame(() => {
+      isSyncing = false
+    })
   })
 
   outputPanel.addEventListener('scroll', () => {
-    if (!outputScroll) {
-      inputScroll = true
-      inputPanel.scrollTop = outputPanel.scrollTop
-    }
+    if (isSyncing) return
 
-    outputScroll = false
+    isSyncing = true
+    inputPanel.scrollTop = outputPanel.scrollTop
     dom.scrollTop.style.display = outputPanel.scrollTop > 50 ? 'block' : 'none'
+    requestAnimationFrame(() => {
+      isSyncing = false
+    })
   })
 
   dom.scrollTop.addEventListener('click', () => {
+    isSyncing = true
     inputPanel.scroll({ top: 0, behavior: 'smooth' })
     outputPanel.scroll({ top: 0, behavior: 'smooth' })
+    setTimeout(() => {
+      isSyncing = false
+    }, 500)
   })
 }
 
 const setupAppInfo = () => {
-  dom.dialogAboutCopyright.innerHTML = `Copyright &copy; ${new Date().getFullYear()} ${author.name}`
+  dom.dialogAboutCopyright.textContent = `Copyright © ${new Date().getFullYear()} ${author.name}`
   dom.dialogAboutAppVersion.innerHTML = isElectron
     ? `Version ${version}`
     : `Version ${version}
@@ -321,16 +329,14 @@ const setupUIkitUtils = () => {
 
   let udTab = 1
 
-  UIkit.util.on('#dialogUdfu', 'shown', (event) => {
-    if (event.target.id === 'dialogUdfu') {
-      const udf = store.get('udf').trim()
-      const udu = store.get('udu').trim()
+  UIkit.util.on('#dialogUdfu', 'shown', () => {
+    const udf = store.get('udf').trim()
+    const udu = store.get('udu').trim()
 
-      refreshEditor(udTab === 1 ? udfInput : uduInput)
+    refreshEditor(udTab === 1 ? udfInput : uduInput)
 
-      udfInput.setValue(udf)
-      uduInput.setValue(udu)
-    }
+    udfInput.setValue(udf)
+    uduInput.setValue(udu)
   })
 
   UIkit.util.on('#udfTab', 'shown', () => {

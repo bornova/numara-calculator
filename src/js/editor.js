@@ -62,6 +62,7 @@ export const keywords = [
   { text: 'ans', desc: 'Answer from last calculated line' },
   { text: 'avg', desc: 'Average of previous line values' },
   { text: 'now', desc: 'Current date and time' },
+  { text: 'subavg', desc: 'Average of all lines in previous block' },
   { text: 'subtotal', desc: 'Total of all lines in previous block' },
   { text: 'today', desc: 'Current date' },
   { text: 'total', desc: 'Total of previous line values' }
