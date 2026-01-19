@@ -75,7 +75,7 @@ const CLASS_LINE_ERROR_LINK = 'lineError'
  * @param {string} line - The line to evaluate.
  * @param {number} lineIndex - The line index (0-based).
  * @param {object} lineHandle - The CodeMirror line handle.
- * @param {Object} stats - Object holding runningSum, runningCount, runningTotal, runningSubtotal and invalidAvg/invalidTotal/invalidSubtotal flags.
+ * @param {Object} stats - Object holding runningTotal and runningSubtotal.
  * @returns {string} - The evaluated answer or an error link.
  */
 function evaluateLine(line, lineIndex, lineHandle, stats) {
@@ -103,11 +103,6 @@ function evaluateLine(line, lineIndex, lineHandle, stats) {
       }
     }
 
-    // Set avg, total and subtotal in scope before evaluating the current line.
-    setScope('avg', stats.invalidAvg ? 'n/a' : stats.runningCount > 0 ? stats.runningSum / stats.runningCount : 0)
-    setScope('total', stats.invalidTotal ? 'n/a' : stats.runningTotal)
-    setScope('subtotal', stats.invalidSubtotal ? 'n/a' : stats.runningSubtotal)
-
     // Evaluate the expression. Try compiled evaluation first;
     // fall back to altEvaluate if compilation fails.
     try {
@@ -117,15 +112,14 @@ function evaluateLine(line, lineIndex, lineHandle, stats) {
 
       answer = compiled.evaluate(app.mathScope)
     } catch {
-      answer = altEvaluate(line)
+      answer = altEvaluate(line, stats)
     }
     // If the answer is empty/undefined/null, reset subtotal and return early.
     if (answer === undefined || answer === null || answer === '') {
       // Reset running subtotal when encountering an empty answer.
-      stats.runningSubtotal = 0
-      stats.invalidSubtotal = false
+      stats.runningSubtotal.length = 0
 
-      return ``
+      return ''
     }
 
     // Update the scope with the new answer. Use both Map and property for compatibility.
@@ -134,25 +128,8 @@ function evaluateLine(line, lineIndex, lineHandle, stats) {
     setScope(`line${lineIndex + 1}`, answer)
 
     // Update stats after evaluation
-    if (typeof answer === 'number' && !Number.isNaN(answer)) {
-      if (!stats.invalidAvg) {
-        stats.runningSum += answer
-        stats.runningCount += 1
-      }
-
-      if (!stats.invalidTotal) {
-        stats.runningTotal += answer
-      }
-
-      if (!stats.invalidSubtotal) {
-        stats.runningSubtotal += answer
-      }
-    } else {
-      // Mark statistics as invalid when encountering a non-numeric answer.
-      stats.invalidAvg = true
-      stats.invalidTotal = true
-      stats.invalidSubtotal = true
-    }
+    stats.runningTotal.push(answer)
+    stats.runningSubtotal.push(answer)
 
     // Format the answer for display and copying.
     answerCopy = formatAnswer(answer, app.settings.thouSep && app.settings.copyThouSep)
@@ -187,12 +164,12 @@ function evaluateLine(line, lineIndex, lineHandle, stats) {
 
 /**
  * Secondary evaluate method to try if math.evaluate fails. This function
- * supports features such as date/time arithmetic and percentage of syntax.
+ * supports features such as date/time arithmetic, totals, averages, percentage operations, etc.
  *
  * @param {string} line - The line to evaluate.
  * @returns {*} - The evaluated result.
  */
-function altEvaluate(line) {
+function altEvaluate(line, stats) {
   // Support expression before colon for separate evaluation
   if (line.includes(':')) {
     try {
@@ -207,6 +184,24 @@ function altEvaluate(line) {
     const regex = new RegExp(`\\b${key}\\b`, 'g')
 
     line = line.replace(regex, value)
+  }
+
+  // Calculate and return avg, subavg, total and subtotal values.
+  const replacements = [
+    { key: 'avg', fn: () => math.mean(stats.runningTotal) },
+    { key: 'subavg', fn: () => math.mean(stats.runningSubtotal) },
+    { key: 'total', fn: () => math.sum(stats.runningTotal) },
+    { key: 'subtotal', fn: () => math.sum(stats.runningSubtotal) }
+  ]
+
+  for (const { key, fn } of replacements) {
+    const regex = new RegExp(`\\b${key}\\b`, 'g')
+
+    try {
+      line = line.replace(regex, fn())
+    } catch {
+      line = line.replace(regex, '"n/a"')
+    }
   }
 
   // Handle date/time arithmetic.
@@ -261,6 +256,18 @@ function stripAnswer(answer) {
 }
 
 /**
+ * Format currency answers.
+ * @param {string} str - The input string containing amount and currency code.
+ * @returns {string} - The formatted currency string.
+ */
+function formatCurrency(str) {
+  const codes = Object.keys(currencySymbols).join('|')
+  const regex = new RegExp(`(-?\\d{1,3}(?:,\\d{3})*(?:\\.\\d+)?|-?\\d+(?:\\.\\d+)?)\\s*(${codes})`, 'gi')
+
+  return str.replace(regex, (_, amount, code) => `${currencySymbols[code.toUpperCase()]}${amount}`)
+}
+
+/**
  * Format answer.
  *
  * @param {*} answer Value to format.
@@ -282,7 +289,8 @@ export function formatAnswer(answer, useGrouping) {
 
   const formatOptions = { notation, lowerExp, upperExp }
   const localeOptions = { maximumFractionDigits, useGrouping }
-  const formattedAnswer = math.format(answer, (value) => {
+
+  let formattedAnswer = math.format(answer, (value) => {
     value = math.format(value, formatOptions)
 
     if (value.includes('e')) {
@@ -293,6 +301,11 @@ export function formatAnswer(answer, useGrouping) {
 
     return (+value).toLocaleString(locale, localeOptions)
   })
+
+  // Handle currency formatting
+  if (app.settings.currency) {
+    formattedAnswer = formatCurrency(formattedAnswer)
+  }
 
   return stripAnswer(formattedAnswer)
 }
@@ -359,13 +372,8 @@ export function calculate() {
 
   // Initialize running statistics for averages, totals and subtotals.
   const stats = {
-    runningSum: 0,
-    runningCount: 0,
-    runningTotal: 0,
-    runningSubtotal: 0,
-    invalidAvg: false,
-    invalidTotal: false,
-    invalidSubtotal: false
+    runningTotal: [],
+    runningSubtotal: []
   }
 
   // Set initial date/time variables in the scope.
@@ -382,7 +390,7 @@ export function calculate() {
 
   for (let lineIndex = 0; lineIndex < totalLines; lineIndex++) {
     const lineHandle = cm.getLineHandle(lineIndex)
-    let line = stripComments(lineHandle.text.trim())
+    const line = stripComments(lineHandle.text.trim())
 
     cm.removeLineClass(lineHandle, 'gutter', CLASS_LINE_ERROR)
 
@@ -394,14 +402,13 @@ export function calculate() {
       cm.addLineClass(lineHandle, 'wrap', CLASS_NO_RULER)
     }
 
-    let result = ``
+    let result = ''
 
     if (line) {
       result = evaluateLine(line, lineIndex, lineHandle, stats)
     } else {
-      // Reset running subtotal and invalidSubtotal when encountering a blank line.
-      stats.runningSubtotal = 0
-      stats.invalidSubtotal = false
+      // Reset running subtotal when encountering a blank line.
+      stats.runningSubtotal.length = 0
     }
 
     const lineHeight = lineHeights[lineIndex]
