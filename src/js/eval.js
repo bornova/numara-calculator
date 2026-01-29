@@ -19,6 +19,9 @@ math.import(factory('nerdamer', [], () => nerdamer))
 
 // Expose math to global scope for use in user defined functions.
 window.math = math
+window.luxon = DateTime
+window.nerdamer = nerdamer
+window.formulajs = formulajs
 
 // Cache for compiled expressions
 const compiledExpressions = new Map()
