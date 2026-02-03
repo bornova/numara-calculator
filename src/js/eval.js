@@ -23,6 +23,33 @@ window.luxon = DateTime
 window.nerdamer = nerdamer
 window.formulajs = formulajs
 
+const nowFormat = 'D t'
+const nowDayFormat = 'ccc, D t'
+const todayFormat = 'D'
+const todayDayFormat = 'ccc, D'
+
+const REGEX_CONTINUATION = /[+\-*/]/
+const REGEX_DATE_TIME =
+  /[+-] * .* *(millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia)s?/g
+const REGEX_PCNT_OF = /%[ ]*of[ ]*/g
+const REGEX_PCNT_OF_VAL = /[\w.]*%[ ]*of[ ]*/g
+const REGEX_PLOT = /\w\(x\)\s*=/
+
+const CLASS_RULER = 'ruler'
+const CLASS_NO_RULER = 'noRuler'
+const CLASS_LINE_ERROR = 'lineNoError'
+const CLASS_ANSWER = 'answer'
+const CLASS_PLOT_BUTTON = 'plotButton answer'
+const CLASS_LINE_ERROR_LINK = 'lineError'
+
+const keywords = [
+  { key: 'avg', fn: (stats) => math.mean(stats.runningTotal) },
+  { key: 'subavg', fn: (stats) => math.mean(stats.runningSubtotal) },
+  { key: 'total', fn: (stats) => math.sum(stats.runningTotal) },
+  { key: 'subtotal', fn: (stats) => math.sum(stats.runningSubtotal) },
+  { key: '=', fn: () => '' }
+]
+
 // Cache for compiled expressions
 const compiledExpressions = new Map()
 
@@ -52,25 +79,6 @@ function getCompiledExpression(expr) {
 function setScope(key, value) {
   app.mathScope.set(key, value)
 }
-
-const nowFormat = 'D t'
-const nowDayFormat = 'ccc, D t'
-const todayFormat = 'D'
-const todayDayFormat = 'ccc, D'
-
-const REGEX_CONTINUATION = /[+\-*/]/
-const REGEX_DATE_TIME =
-  /[+-] * .* *(millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia)s?/g
-const REGEX_PCNT_OF = /%[ ]*of[ ]*/g
-const REGEX_PCNT_OF_VAL = /[\w.]*%[ ]*of[ ]*/g
-const REGEX_PLOT = /\w\(x\)\s*=/
-
-const CLASS_RULER = 'ruler'
-const CLASS_NO_RULER = 'noRuler'
-const CLASS_LINE_ERROR = 'lineNoError'
-const CLASS_ANSWER = 'answer'
-const CLASS_PLOT_BUTTON = 'plotButton answer'
-const CLASS_LINE_ERROR_LINK = 'lineError'
 
 /**
  * Evaluate a single line and return the answer.
@@ -131,8 +139,10 @@ function evaluateLine(line, lineIndex, lineHandle, stats) {
     setScope(`line${lineIndex + 1}`, answer)
 
     // Update stats after evaluation
-    stats.runningTotal.push(answer)
-    stats.runningSubtotal.push(answer)
+    if (!keywords.some((kw) => line.includes(kw.key))) {
+      stats.runningTotal.push(answer)
+      stats.runningSubtotal.push(answer)
+    }
 
     // Format the answer for display and copying.
     answerCopy = formatAnswer(answer, app.settings.thouSep && app.settings.copyThouSep)
@@ -152,6 +162,8 @@ function evaluateLine(line, lineIndex, lineHandle, stats) {
           ${dom.icons.ChartSpline}
         </a>`
     }
+
+    if (line.includes('=')) return ''
 
     return `<span class="${CLASS_ANSWER}" data-answer="${answerCopy}">${answer}</span>`
   } catch (error) {
@@ -190,18 +202,12 @@ function altEvaluate(line, stats) {
   }
 
   // Calculate and return avg, subavg, total and subtotal values.
-  const replacements = [
-    { key: 'avg', fn: () => math.mean(stats.runningTotal) },
-    { key: 'subavg', fn: () => math.mean(stats.runningSubtotal) },
-    { key: 'total', fn: () => math.sum(stats.runningTotal) },
-    { key: 'subtotal', fn: () => math.sum(stats.runningSubtotal) }
-  ]
 
-  for (const { key, fn } of replacements) {
+  for (const { key, fn } of keywords) {
     const regex = new RegExp(`\\b${key}\\b`, 'g')
 
     try {
-      line = line.replace(regex, fn())
+      line = line.replace(regex, fn(stats))
     } catch {
       line = line.replace(regex, '"n/a"')
     }
