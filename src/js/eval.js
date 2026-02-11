@@ -46,8 +46,7 @@ const keywords = [
   { key: 'avg', fn: (stats) => math.mean(stats.runningTotal) },
   { key: 'subavg', fn: (stats) => math.mean(stats.runningSubtotal) },
   { key: 'total', fn: (stats) => math.sum(stats.runningTotal) },
-  { key: 'subtotal', fn: (stats) => math.sum(stats.runningSubtotal) },
-  { key: '=', fn: () => '' }
+  { key: 'subtotal', fn: (stats) => math.sum(stats.runningSubtotal) }
 ]
 
 // Cache for compiled expressions
@@ -162,8 +161,6 @@ function evaluateLine(line, lineIndex, lineHandle, stats) {
           ${dom.icons.ChartSpline}
         </a>`
     }
-
-    if (line.includes('=')) return ''
 
     return `<span class="${CLASS_ANSWER}" data-answer="${answerCopy}">${answer}</span>`
   } catch (error) {
