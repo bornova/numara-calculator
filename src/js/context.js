@@ -24,19 +24,19 @@ const safeCopy = (text, message) => (text ? copyToClipboard(text, message) : not
  * Main context menus for input.
  */
 function inputContext() {
-  setTimeout(() => {
+  requestAnimationFrame(() => {
     const lineIndex = cm.getCursor().line
     const line = cm.getLine(lineIndex)
     const isLine = line.length > 0
     const isEmpty = cm.getValue() === ''
     const isSelection = cm.somethingSelected()
-    const answer = dom.el(`[data-index="${lineIndex}"]`).textContent
+    const answer = dom.el(`[data-index="${lineIndex}"]`)?.textContent ?? ''
     const hasAnswer = answer !== '' && answer !== 'Error' && answer !== 'Plot'
     const selections = cm.listSelections()
     const isMultiLine = selections.length > 1 || selections[0].anchor.line !== selections[0].head.line
 
     numara.inputContextMenu(lineIndex, isEmpty, isLine, isSelection, isMultiLine, hasAnswer)
-  }, 20)
+  })
 }
 
 /**
@@ -56,7 +56,7 @@ export function outputContext(event) {
  * Textbox context menu.
  */
 function textboxContext() {
-  setTimeout(numara.textboxContextMenu, 20)
+  requestAnimationFrame(() => numara.textboxContextMenu())
 }
 
 /**
