@@ -352,7 +352,7 @@ function showTooltip(target, title) {
  */
 function handleFunctionTooltip(target) {
   try {
-    const tip = math.help(target.innerText).toJSON()
+    const tip = math.help(target.textContent).toJSON()
     const syntax = tip.syntax.map((s) => s.replaceAll(/,/g, app.settings.inputLocale ? ';' : ','))
 
     showTooltip(
@@ -371,7 +371,7 @@ function handleFunctionTooltip(target) {
  */
 function handleCurrencyTooltip(target) {
   try {
-    let currency = target.innerText
+    let currency = target.textContent
 
     if (currencyTokens.includes(currency)) {
       currency = Object.keys(currencySymbols).find((key) => currencySymbols[key] === currency)
@@ -391,7 +391,7 @@ function handleCurrencyTooltip(target) {
  * @param {HTMLElement} target - The DOM element representing the unit.
  */
 function handleUnitTooltip(target) {
-  const hint = numaraHints.find((hint) => hint.text === target.innerText)
+  const hint = numaraHints.find((hint) => hint.text === target.textContent)
 
   showTooltip(target, hint.desc)
 }
@@ -402,7 +402,7 @@ function handleUnitTooltip(target) {
  */
 function handleConstantTooltip(target) {
   try {
-    showTooltip(target, math.help(target.innerText).doc.description)
+    showTooltip(target, math.help(target.textContent).doc.description)
   } catch {
     /* No tooltip */
   }
@@ -413,9 +413,9 @@ function handleConstantTooltip(target) {
  * @param {HTMLElement} target - The DOM element representing the variable.
  */
 function handleVariableTooltip(target) {
-  if (!app.mathScope.get(target.innerText) || typeof app.mathScope.get(target.innerText) === 'function') return
+  if (!app.mathScope.get(target.textContent) || typeof app.mathScope.get(target.textContent) === 'function') return
 
-  let varTooltip = formatAnswer(app.mathScope.get(target.innerText) ?? 'Undefined')
+  let varTooltip = formatAnswer(app.mathScope.get(target.textContent) ?? 'Undefined')
 
   showTooltip(target, varTooltip)
 }
@@ -426,9 +426,9 @@ function handleVariableTooltip(target) {
  */
 function handleLineNoTooltip(target) {
   let tooltip =
-    typeof app.mathScope.get(target.innerText) === 'function'
+    typeof app.mathScope.get(target.textContent) === 'function'
       ? 'Function'
-      : formatAnswer(app.mathScope.get(target.innerText) ?? 'Undefined')
+      : formatAnswer(app.mathScope.get(target.textContent) ?? 'Undefined')
 
   showTooltip(target, tooltip)
 }
@@ -438,7 +438,7 @@ function handleLineNoTooltip(target) {
  * @param {HTMLElement} target - The DOM element representing the keyword.
  */
 function handleKeywordTooltip(target) {
-  const keyword = keywords.find((key) => target.innerText === key.text)
+  const keyword = keywords.find((key) => target.textContent === key.text)
 
   showTooltip(target, keyword?.desc)
 }
@@ -462,8 +462,11 @@ const TOOLTIP_HANDLERS = {
  * Refreshes the given CodeMirror editor and focuses it after a short delay.
  * @param {CodeMirror} editor - CodeMirror instance to refresh and focus.
  */
-export function refreshEditor(editor) {
-  editor.refresh()
+export function refreshEditor(editor = cm) {
+  editor.operation(() => {
+    editor.refresh()
+    editor.setOption('mode', editor.getOption('mode'))
+  })
 
   setTimeout(() => editor.focus(), 100)
 }
@@ -481,16 +484,16 @@ document.addEventListener('mouseover', (event) => {
 
   const line = cm.getCursor().line
   const activeLine = line + 1
-  const isValid = activeLine > +event.target.innerText
+  const isValid = activeLine > +event.target.textContent
   const hasError = event.target.parentElement.classList.contains('lineNoError')
 
   event.target.style.cursor = isValid || hasError ? 'pointer' : 'default'
   event.target.setAttribute(
     'title',
     hasError
-      ? `Line ${event.target.innerText} has an error`
+      ? `Line ${event.target.textContent} has an error`
       : isValid && app.settings.keywordTips
-        ? `Insert 'line${event.target.innerText}' to Line ${activeLine}`
+        ? `Insert 'line${event.target.textContent}' to Line ${activeLine}`
         : ''
   )
 })
