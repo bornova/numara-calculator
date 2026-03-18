@@ -408,11 +408,11 @@ const setupUIkitUtils = () => {
   })
 }
 
-const initializeApp = () => {
+const initializeApp = async () => {
   generateIcons()
 
-  settings.initialize()
-  settings.apply()
+  await settings.initialize()
+  await settings.apply()
 
   colors.initialize()
   colors.apply()
