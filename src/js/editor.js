@@ -69,12 +69,12 @@ export const keywords = [
 ]
 
 // Mode tokens
-const functionTokens = mathFunctions.map(([f]) => f)
-const constantTokens = mathConstants.map(([c]) => c)
-const unitTokens = units().map((u) => u.token)
-const keywordTokens = keywords.map((key) => key.text)
-const excelTokens = Object.keys(formulajs).map((f) => 'formulajs.' + f)
-const currencyTokens = Object.entries(currencySymbols).map((c) => c[1])
+const functionTokens = new Set(mathFunctions.map(([f]) => f))
+const constantTokens = new Set(mathConstants.map(([c]) => c))
+const unitTokens = new Set(units().map((u) => u.token))
+const keywordTokens = new Set(keywords.map((key) => key.text))
+const excelTokens = new Set(Object.keys(formulajs).map((f) => 'formulajs.' + f))
+const currencyTokens = new Set(Object.values(currencySymbols))
 
 // Codemirror syntax templates
 CodeMirror.defineMode('numara', () => ({
@@ -84,32 +84,32 @@ CodeMirror.defineMode('numara', () => ({
     if (stream.match(/(?:\+|-|\*|\/|,|;|\.|:|@|~|=|>|<|&|\||`|'|\^|\?|!|%)/)) return 'operator'
     if (stream.match(/\bformulajs(?=[.]|\b)/)) return 'formulajs'
     if (stream.match(/\bnerdamer(?=[.(]|\b)/)) return 'nerdamer'
-    if (currencyTokens.some((token) => stream.match(token))) return 'currency'
+
+    const startChar = stream.peek()
+    if (currencyTokens.has(startChar)) {
+      stream.next()
+      return 'currency'
+    }
 
     stream.eatWhile(/\w/)
 
     const cmStream = stream.current()
 
-    if (math.Unit.UNITS[cmStream]?.base.key === 'USD_STUFF') return 'currency'
-    if (functionTokens.includes(cmStream)) return 'function'
-    if (constantTokens.includes(cmStream)) return 'constant'
-    if (unitTokens.includes(cmStream)) return 'unit'
-    if (keywordTokens.includes(cmStream)) return 'keyword'
+    if (currencyTokens.has(cmStream)) return 'currency'
     if (/\bline\d+\b/.test(cmStream)) return 'lineNo'
+    if (keywordTokens.has(cmStream)) return 'keyword'
+    if (app.mathScope.has(cmStream) && typeof app.mathScope.get(cmStream) !== 'function') return 'variable'
+    if (math.Unit.UNITS[cmStream]?.base.key === 'USD_STUFF') return 'currency'
+    if (functionTokens.has(cmStream)) return 'function'
+    if (constantTokens.has(cmStream)) return 'constant'
+    if (unitTokens.has(cmStream)) return 'unit'
     if (app.udfList.includes(cmStream)) return 'udf'
     if (app.uduList.includes(cmStream)) return 'udu'
-    if (excelTokens.includes(cmStream)) return 'excel'
-
-    // Variable fallback
-    try {
-      math.evaluate(cmStream)
-    } catch {
-      return 'variable'
-    }
+    if (excelTokens.has(cmStream)) return 'excel'
 
     stream.next()
 
-    return 'space'
+    return 'text'
   }
 }))
 
@@ -129,7 +129,7 @@ const constantHints = mathConstants.map(([c]) => ({
 }))
 const unitHints = units().map((u) => u.hint)
 const keywordHints = keywords.map((key) => ({ ...key, className: CLASS_NAMES.KEYWORD }))
-const excelHints = excelTokens.map((f) => ({ text: f, className: CLASS_NAMES.EXCEL }))
+const excelHints = [...excelTokens].map((f) => ({ text: f, className: CLASS_NAMES.EXCEL }))
 
 export const numaraHints = [...functionHints, ...constantHints, ...unitHints, ...keywordHints, ...excelHints]
 
@@ -145,48 +145,31 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
 
   let curStr = cmCursorLine.slice(start, end)
   let curWord = start !== end && curStr
+  let list = []
 
-  const curWordRegex = curWord ? new RegExp('^' + curWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null
+  if (curStr && (!curStr.endsWith('.') || curStr === 'formulajs.') && curWord) {
+    const curWordRegex = new RegExp('^' + curWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
+    const match = ({ text }) => curWordRegex.test(text)
 
-  // Build hints for all variables from the current math scope
-  // This shows users all available variables with their current values
-  const variableHints = []
+    // Build hints for all variables from the current math scope
+    const variableHints = []
+    for (const key of app.mathScope.keys()) {
+      if (!keywordTokens.has(key)) variableHints.push({ text: key, className: CLASS_NAMES.VARIABLE })
+    }
 
-  // Keywords that are already included in the keyword hints
-  const keywordNames = keywords.map((k) => k.text)
+    const userFunctionHints = app.udfList.map((funcName) => ({ text: funcName, className: CLASS_NAMES.FUNCTION }))
+    const userUnitHints = app.uduList.map((unitName) => ({ text: unitName, className: CLASS_NAMES.UNIT }))
 
-  for (const key of app.mathScope.keys()) {
-    // Skip variables that are already in keyword hints to avoid duplicates
-    if (keywordNames.includes(key)) continue
-
-    variableHints.push({
-      text: key,
-      className: CLASS_NAMES.VARIABLE
-    })
+    list = [
+      ...numaraHints.filter(match),
+      ...variableHints.filter(match),
+      ...userFunctionHints.filter(match),
+      ...userUnitHints.filter(match)
+    ].sort((a, b) => a.text.localeCompare(b.text, undefined, { numeric: true }))
   }
 
-  // Add user-defined functions from udfList
-  // These are custom functions created by the user
-  const userFunctionHints = app.udfList.map((funcName) => ({
-    text: funcName,
-    className: CLASS_NAMES.FUNCTION
-  }))
-
-  // Add user-defined units from uduList
-  // These are custom units created by the user
-  const userUnitHints = app.uduList.map((unitName) => ({
-    text: unitName,
-    className: CLASS_NAMES.UNIT
-  }))
-
-  // Combine all hint sources: built-in hints, user variables, user functions, and user units
-  const allHints = [...numaraHints, ...variableHints, ...userFunctionHints, ...userUnitHints]
-
   return {
-    list:
-      curStr && (!curStr.endsWith('.') || curStr === 'formulajs.') && curWordRegex
-        ? allHints.filter(({ text }) => curWordRegex.test(text)).sort((a, b) => a.text.localeCompare(b.text))
-        : [],
+    list,
     from: CodeMirror.Pos(cmCursor.line, start),
     to: CodeMirror.Pos(cmCursor.line, end)
   }
@@ -373,7 +356,7 @@ function handleCurrencyTooltip(target) {
   try {
     let currency = target.textContent
 
-    if (currencyTokens.includes(currency)) {
+    if (currencyTokens.has(currency)) {
       currency = Object.keys(currencySymbols).find((key) => currencySymbols[key] === currency)
     }
 
