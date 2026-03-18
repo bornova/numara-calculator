@@ -17,12 +17,6 @@ export const math = create(all)
 math.import(factory('formulajs', [], () => formulajs))
 math.import(factory('nerdamer', [], () => nerdamer))
 
-// Expose math to global scope for use in user defined functions.
-window.math = math
-window.luxon = DateTime
-window.nerdamer = nerdamer
-window.formulajs = formulajs
-
 const nowFormat = 'D t'
 const nowDayFormat = 'ccc, D t'
 const todayFormat = 'D'
