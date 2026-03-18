@@ -2,7 +2,7 @@ import { outputContext } from './context'
 import { dom } from './dom'
 import { cm } from './editor'
 import { currencySymbols } from './forex'
-import { app, localeUsesComma, store } from './utils'
+import { app, escapeHTML, escapeRegExp, localeUsesComma, store } from './utils'
 
 import { DateTime } from 'luxon'
 import { all, create, factory } from 'mathjs'
@@ -89,7 +89,7 @@ function setScope(key, value) {
  * @returns {string} - The evaluated answer or an error link.
  */
 function evaluateLine(line, lineIndex, lineHandle, stats) {
-  let answer, answerCopy
+  let answer
 
   try {
     // Pre‑process locale and currency symbols
@@ -144,7 +144,6 @@ function evaluateLine(line, lineIndex, lineHandle, stats) {
     }
 
     // Format the answer for display and copying.
-    answerCopy = formatAnswer(answer, app.settings.thouSep && app.settings.copyThouSep)
     answer = formatAnswer(answer, app.settings.thouSep)
 
     // Handle plotting lines.
@@ -162,7 +161,7 @@ function evaluateLine(line, lineIndex, lineHandle, stats) {
         </a>`
     }
 
-    return `<span class="${CLASS_ANSWER}" data-answer="${answerCopy}">${answer}</span>`
+    return `<span class="${CLASS_ANSWER}" data-answer>${escapeHTML(answer)}</span>`
   } catch (error) {
     // Highlight the error line and return an error link.
     cm.addLineClass(cm.getLineNumber(lineHandle), 'gutter', CLASS_LINE_ERROR)
@@ -182,39 +181,40 @@ function evaluateLine(line, lineIndex, lineHandle, stats) {
  * @returns {*} - The evaluated result.
  */
 function altEvaluate(line, stats) {
+  let parsedLine = line
   // Support expression before colon for separate evaluation
-  if (line.includes(':')) {
+  if (parsedLine.includes(':')) {
     try {
-      math.evaluate(line.split(':')[0])
+      math.evaluate(parsedLine.split(':')[0])
     } catch {
-      line = line.substring(line.indexOf(':') + 1)
+      parsedLine = parsedLine.substring(parsedLine.indexOf(':') + 1)
     }
   }
 
   // Replace variables in the expression with values from the mathScope Map.
   for (const [key, value] of app.mathScope.entries()) {
-    const regex = new RegExp(`\\b${key}\\b`, 'g')
+    const safeKey = escapeRegExp(key)
+    const regex = new RegExp(`\\b${safeKey}\\b`, 'g')
 
-    line = line.replace(regex, value)
+    parsedLine = parsedLine.replace(regex, value)
   }
 
   // Calculate and return avg, subavg, total and subtotal values.
-
   for (const { key, fn } of keywords) {
     const regex = new RegExp(`\\b${key}\\b`, 'g')
 
     try {
-      line = line.replace(regex, fn(stats))
+      parsedLine = parsedLine.replace(regex, fn(stats))
     } catch {
-      line = line.replace(regex, '"n/a"')
+      parsedLine = parsedLine.replace(regex, '"n/a"')
     }
   }
 
   // Handle date/time arithmetic.
-  if (line.match(REGEX_DATE_TIME)) {
+  if (parsedLine.match(REGEX_DATE_TIME)) {
     const locale = { locale: app.settings.locale }
-    const lineDate = line.replace(REGEX_DATE_TIME, '').trim()
-    const lineDateRight = line.replace(lineDate, '').trim()
+    const lineDate = parsedLine.replace(REGEX_DATE_TIME, '').trim()
+    const lineDateRight = parsedLine.replace(lineDate, '').trim()
     const lineDateNow = DateTime.fromFormat(lineDate, nowFormat, locale)
     const lineDateToday = DateTime.fromFormat(lineDate, todayFormat, locale)
     const lineDateTodayDay = DateTime.fromFormat(lineDate, todayDayFormat, locale)
@@ -242,13 +242,13 @@ function altEvaluate(line, stats) {
             : todayFormat
       )
 
-    line = `"${dtLine}"`
+    parsedLine = `"${dtLine}"`
   }
 
   // Convert "% of" syntax to arithmetic
-  line = line.match(REGEX_PCNT_OF_VAL) ? line.replaceAll(REGEX_PCNT_OF, '/100*') : line
+  parsedLine = parsedLine.match(REGEX_PCNT_OF_VAL) ? parsedLine.replaceAll(REGEX_PCNT_OF, '/100*') : parsedLine
 
-  return math.evaluate(line, app.mathScope)
+  return math.evaluate(parsedLine, app.mathScope)
 }
 
 /**
@@ -371,8 +371,7 @@ export function calculate() {
   const dateTime = DateTime.now().setLocale(app.settings.locale)
   const cmValue = cm.getValue()
   const cmHistory = cm.getHistory()
-
-  let answers = ''
+  const answers = []
 
   app.mathScope = new Map()
 
@@ -422,14 +421,18 @@ export function calculate() {
     if (app.settings.answerPosition === 'bottom') {
       updateLineWidget(lineHandle, result)
     } else {
-      answers += `<div class="${classRuler}" data-index="${lineIndex}" style="height:${lineHeight}px">${result}</div>`
+      answers.push(
+        `<div class="${classRuler}" data-index="${lineIndex}" style="height:${lineHeight}px">${result}</div>`
+      )
     }
   }
 
+  const outputResults = answers.join('')
+
   if (app.settings.answerPosition === 'bottom') {
     dom.output.innerHTML = `<div style="height: ${dom.el('.CodeMirror-scroll').scrollHeight - 50}px;"></div>`
-  } else if (dom.output.innerHTML !== answers) {
-    dom.output.innerHTML = answers
+  } else if (dom.output.innerHTML !== outputResults) {
+    dom.output.innerHTML = outputResults
   }
 
   if (app.activePage) {
