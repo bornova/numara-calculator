@@ -81,8 +81,15 @@ const setupResultActions = () => {
     }
 
     if (answerEl) {
-      navigator.clipboard.writeText(answerEl.dataset.answer)
-      notify(`Copied '${answerEl.dataset.answer}' to clipboard.`)
+      const textToCopy = answerEl.textContent
+
+      navigator.clipboard.writeText(textToCopy)
+
+      const safeDiv = document.createElement('div')
+      safeDiv.textContent = textToCopy
+      const safeText = safeDiv.innerHTML
+
+      notify(`Copied '${safeText}' to clipboard.`)
       return
     }
   })
@@ -101,8 +108,9 @@ const setupPanelResizer = () => {
   const defaultWidth = settings.defaults.inputWidth
   const inputWidth = store.get('inputWidth') ?? defaultWidth
 
-  let resizeDelay
   let isResizing = false
+  let resizeRaf // Request Animation Frame reference
+  let calcTimeout
 
   if (app.settings.answerPosition === 'left') {
     dom.input.style.width = `${inputWidth}%`
@@ -132,7 +140,11 @@ const setupPanelResizer = () => {
   })
 
   dom.mainPanel.addEventListener('mousemove', (event) => {
-    if (isResizing) {
+    if (!isResizing) return
+
+    if (resizeRaf) cancelAnimationFrame(resizeRaf)
+
+    resizeRaf = requestAnimationFrame(() => {
       const offset = 10
       const pointerRelativeXpos = event.clientX - dom.mainPanel.offsetLeft - offset
       let inputWidth = (pointerRelativeXpos / dom.mainPanel.clientWidth) * 100
@@ -140,12 +152,12 @@ const setupPanelResizer = () => {
 
       dom.input.style.width = inputWidth + '%'
 
-      clearTimeout(resizeDelay)
-      resizeDelay = setTimeout(() => {
+      clearTimeout(calcTimeout)
+      calcTimeout = setTimeout(() => {
         store.set('inputWidth', inputWidth)
         calculate()
-      }, 10)
-    }
+      }, 50)
+    })
   })
 
   dom.panelDivider.addEventListener('mousemove', dividerTooltip)
@@ -222,6 +234,8 @@ const setupAppInfo = () => {
   }
 }
 
+const isModalOpen = () => dom.els('.uk-open').length > 0
+
 const setupKeyboardShortcuts = () => {
   const keys = {
     clearButton: ['$mod+D'],
@@ -235,9 +249,7 @@ const setupKeyboardShortcuts = () => {
       [command]: (event) => {
         event.preventDefault()
 
-        const modalOpen = dom.els('.uk-open').length > 0
-
-        if (!modalOpen) {
+        if (!isModalOpen()) {
           document.getElementById(button).click()
         } else if (dom.sidePanel.classList.contains('uk-open') && !dom.dialogNewPage.classList.contains('uk-open')) {
           dom.closeSidePanelButton.click()
@@ -259,7 +271,7 @@ const setupPrintArea = () => {
       const lineIndex = cm.getLineNumber(line)
       const input = cm.getLine(lineIndex)
       const answerEl = dom.el(`[data-index="${lineIndex}"]`)
-      const answer = answerEl ? answerEl.innerText : ''
+      const answer = answerEl ? answerEl.textContent : ''
       const trHeader = `<tr style="
         height: ${app.settings.lineHeight};
         font-size: ${app.settings.fontSize};
