@@ -3,6 +3,9 @@ import { refreshEditor, udfInput, uduInput } from './editor'
 import { calculate, math } from './eval'
 import { modal, showError } from './modal'
 import { app, store } from './utils'
+import { DateTime as luxon } from 'luxon'
+import * as formulajs from '@formulajs/formulajs'
+import nerdamer from 'nerdamer-prime/all.js'
 
 let previouslyImportedUDFs = []
 let previouslyCreatedUnits = []
@@ -49,8 +52,8 @@ export function applyUdfu(input, type) {
   return new Promise((resolve, reject) => {
     try {
       const isFunc = type === 'func'
-      const UDFunc = new Function(`'use strict'; return {${input}}`)
-      const udfObj = UDFunc()
+      const UDFunc = new Function('math', 'luxon', 'nerdamer', 'formulajs', `'use strict'; return {${input}}`)
+      const udfObj = UDFunc(math, luxon, nerdamer, formulajs)
 
       if (isFunc) {
         updateUserDefinedFunctions(udfObj)
