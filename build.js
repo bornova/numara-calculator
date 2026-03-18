@@ -29,7 +29,7 @@ async function buildNumara() {
     banner: { css: cssBanner },
     bundle: true,
     minify: true,
-    entryPoints: ['src/css/app.css', 'src/css/light.css', 'src/css/dark.css'],
+    entryPoints: ['src/css/app.css'],
     outdir: `${buildPath}/css`
   })
 
