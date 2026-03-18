@@ -54,9 +54,9 @@ export const isMac = userAgent.includes('mac')
 export const isElectron = userAgent.includes('electron')
 
 /** Get app theme */
-export function getTheme() {
+export async function getTheme() {
   if (app.settings.theme === 'dark') return 'dark'
-  if (app.settings.theme === 'system' && isElectron) return numara.isDark() ? 'dark' : 'light'
+  if (app.settings.theme === 'system' && isElectron) return (await numara.isDark()) ? 'dark' : 'light'
 
   if (app.settings.theme === 'system') {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
@@ -66,8 +66,9 @@ export function getTheme() {
 }
 
 /** Check window size. */
-export function checkSize() {
-  dom.resetSizeButton.style.display = isElectron && numara.isResized() && !numara.isMaximized() ? 'block' : 'none'
+export async function checkSize() {
+  dom.resetSizeButton.style.display =
+    isElectron && (await numara.isResized()) && !(await numara.isMaximized()) ? 'block' : 'none'
 }
 
 /** Check user locale for thousands separator. */
