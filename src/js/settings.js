@@ -198,8 +198,11 @@ export const settings = {
   /** Apply settings. */
   apply: () => {
     const appTheme = getTheme()
+    const cssColorScheme =
+      app.settings.theme === 'light' ? 'light' : app.settings.theme === 'dark' ? 'dark' : 'light dark'
 
-    dom.inlineStyle.setAttribute('href', 'css/' + appTheme + '.css')
+    document.documentElement.style.colorScheme = cssColorScheme
+
     dom.numaraLogo.setAttribute('src', 'assets/logo-' + appTheme + '.png')
 
     setTimeout(colors.apply, 50)
