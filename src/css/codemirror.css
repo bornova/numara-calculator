@@ -1,0 +1,171 @@
+/* Imports */
+@import url('./../../node_modules/codemirror/lib/codemirror.css');
+@import url('./../../node_modules/codemirror/addon/dialog/dialog.css');
+@import url('./../../node_modules/codemirror/addon/hint/show-hint.css');
+@import url('./../../node_modules/codemirror/theme/material-darker.css');
+
+/* Editor theme */
+.cm-s-numara {
+  background: none !important;
+  height: 100% !important;
+  color: light-dark(#000000, #e6e6e6) !important;
+  font-family: 'Roboto Mono' !important;
+}
+
+.cm-s-numara .CodeMirror-gutters {
+  border: none !important;
+  background: none !important;
+}
+
+.cm-s-numara .CodeMirror-lines {
+  padding: 0 !important;
+}
+
+.CodeMirror-linenumber {
+  color: light-dark(#cccccc, #666666);
+}
+
+.cm-s-numara .CodeMirror-linenumber {
+  background-color: light-dark(#ffffff, #1f1f1f) !important;
+  padding: 0 10px 0 0 !important;
+}
+
+.cm-s-numara .CodeMirror-selected {
+  background: light-dark(#c9e0f7, #193552) !important;
+}
+
+.cm-s-numara .CodeMirror-matchingbracket {
+  color: light-dark(#999999, #999999) !important;
+}
+
+.CodeMirror-placeholder {
+  color: light-dark(#eaeaea, #444444) !important;
+}
+
+/* Cursor */
+.CodeMirror-cursor {
+  border: none !important;
+}
+
+.CodeMirror-cursor:before {
+  position: absolute;
+  top: calc(12% + 1px);
+  background: light-dark(#000000, #e6e6e6);
+  width: 1px;
+  height: calc(76% - 1px);
+  content: '';
+}
+
+/* Scrollbars and sizing */
+.cm-s-numara .CodeMirror-vscrollbar {
+  display: none !important;
+}
+
+.cm-s-numara .CodeMirror-hscrollbar,
+.cm-s-numara .CodeMirror-gutter-filler {
+  display: block !important;
+  width: auto;
+  height: 8px !important;
+}
+
+.cm-s-numara .CodeMirror-hscrollbar {
+  right: 8px !important;
+}
+
+.cm-s-numara .CodeMirror-hscrollbar,
+.cm-s-numara .CodeMirror-scrollbar-filler,
+.cm-s-numara .CodeMirror-gutter-filler {
+  background-color: light-dark(#ffffff, #1f1f1f) !important;
+}
+
+.cm-s-numara .CodeMirror-dialog-top {
+  border-color: light-dark(#eeeeee, #666666);
+  background-color: light-dark(#ffffff, #1f1f1f) !important;
+  color: light-dark(#222222, #e6e6e6) !important;
+}
+
+.CodeMirror-linenumber {
+  color: light-dark(#cccccc, #666666);
+}
+
+.cm-s-numara .CodeMirror-selected {
+  background: light-dark(#c9e0f7, #193552) !important;
+}
+
+.cm-s-numara .CodeMirror-linenumber {
+  background-color: light-dark(#ffffff, #1f1f1f) !important;
+  padding: 0 10px 0 0 !important;
+}
+
+.cm-s-numara .CodeMirror-sizer {
+  padding-right: 0 !important;
+  padding-bottom: 8px !important;
+}
+
+/* Search and dialog UI */
+.cm-s-numara .CodeMirror-dialog input {
+  font-family: inherit !important;
+}
+
+.cm-s-numara .CodeMirror-search-hint {
+  display: none !important;
+}
+
+.cm-searching {
+  background-color: rgba(255, 250, 82, 0.5) !important;
+}
+
+.cm-s-numara .CodeMirror-search-label {
+  font-size: 1rem !important;
+}
+
+/* Buttons */
+.cm-s-numara button {
+  color: light-dark(#1e87f0, #e6e6e6) !important;
+  font-size: inherit !important;
+}
+
+.cm-s-numara button:hover {
+  cursor: pointer !important;
+  color: light-dark(#5286b9, #5286b9) !important;
+}
+
+/* Dialog editor variants */
+#dialogUdfu .CodeMirror {
+  padding: 5px;
+  height: calc(100vh - 235px);
+  max-height: 600px;
+  font-size: 1.1em;
+}
+
+.cm-s-default {
+  border: 1px solid light-dark(#eaeaea, #666666);
+}
+
+.CodeMirror.cm-s-material-darker {
+  border: 1px solid light-dark(#666666, #666666);
+}
+
+/* Hints */
+.CodeMirror-hints {
+  border-color: light-dark(#c0c0c0, #222222) !important;
+  background-color: light-dark(#ffffff, #333333) !important;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.CodeMirror-hint:hover {
+  background-color: light-dark(#f1f1f1, #222222) !important;
+  color: initial !important;
+}
+
+li.CodeMirror-hint-active {
+  background-color: light-dark(#f1f1f1, #222222) !important;
+  color: light-dark(#000000, #e6e6e6) !important;
+}
+
+/* Inline operator spacing */
+.cm-operator::before {
+  display: inline-block;
+  width: 0;
+  content: ' ';
+}

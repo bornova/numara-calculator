@@ -1,0 +1,69 @@
+/* Print style */
+.printArea {
+  display: none;
+}
+
+@media print {
+  .appWrapper,
+  .uk-open,
+  .uk-tooltip {
+    display: none !important;
+  }
+
+  .printArea {
+    display: block;
+  }
+
+  .printTitle {
+    padding-bottom: 10px;
+    font-size: 1.1em;
+    font-family: 'Numara';
+    text-align: center;
+  }
+
+  .printPage {
+    border-collapse: collapse;
+    width: 100%;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  .printPage tr td {
+    vertical-align: top;
+    padding-top: 3px;
+    padding-right: 10px;
+    padding-bottom: 3px;
+  }
+
+  .printLineNumCol {
+    width: 1px;
+    color: #cccccc !important;
+  }
+
+  .printAnswerLeft {
+    border-left: 1px solid #eaeaea;
+  }
+
+  .printAnswerRight {
+    text-align: right;
+  }
+
+  .printPage tr td:nth-child(1) {
+    padding-right: 10px;
+  }
+
+  .printPage tr td:last-child {
+    padding-left: 10px;
+  }
+
+  .printRulers tr td {
+    border-bottom: 1px solid #eaeaea;
+  }
+
+  .scrollTop {
+    display: none !important;
+  }
+}
+
+@page {
+  margin: 15mm 10mm;
+}
