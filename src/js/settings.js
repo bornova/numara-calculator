@@ -91,7 +91,7 @@ export const settings = {
   },
 
   /** Initialize settings. */
-  initialize: () => {
+  initialize: async () => {
     app.settings = store.get('settings')
 
     if (app.settings) {
@@ -113,14 +113,14 @@ export const settings = {
       span.setAttribute('id', item.getAttribute('id') + 'Mod')
       span.setAttribute('class', item.getAttribute('type') === 'checkbox' ? 'settingModToggle' : 'settingMod')
       span.innerHTML = icon
-      span.addEventListener('click', () => {
+      span.addEventListener('click', async () => {
         const key = item.getAttribute('id')
 
         app.settings[key] = settings.defaults[key]
 
-        settings.prep()
+        await settings.prep()
         settings.save()
-        settings.apply()
+        await settings.apply()
       })
 
       item.getAttribute('type') === 'checkbox' ? item.parentElement.before(span) : item.before(span)
@@ -130,7 +130,7 @@ export const settings = {
   },
 
   /** Prepare settings dialog items. */
-  prep: () => {
+  prep: async () => {
     const locales = [
       { system: 'System' },
       { 'zh-CN': 'Chinese (PRC)' },
@@ -187,7 +187,7 @@ export const settings = {
       checkMods(key)
     })
 
-    checkSize()
+    await checkSize()
     checkDefaults()
     localeWarning()
     bigNumberWarning()
@@ -196,8 +196,8 @@ export const settings = {
   },
 
   /** Apply settings. */
-  apply: () => {
-    const appTheme = getTheme()
+  apply: async () => {
+    const appTheme = await getTheme()
     const cssColorScheme =
       app.settings.theme === 'light' ? 'light' : app.settings.theme === 'dark' ? 'dark' : 'light dark'
 
@@ -210,7 +210,7 @@ export const settings = {
     const udfuTheme =
       app.settings.theme === 'system'
         ? isElectron
-          ? numara.isDark()
+          ? (await numara.isDark())
             ? 'material-darker'
             : 'default'
           : 'default'
@@ -345,11 +345,11 @@ export const settings = {
 }
 
 dom.defaultSettingsButton.addEventListener('click', () => {
-  confirm('All settings will revert back to defaults.', () => {
+  confirm('All settings will revert back to defaults.', async () => {
     app.settings = { ...settings.defaults }
 
-    settings.prep()
-    settings.apply()
+    await settings.prep()
+    await settings.apply()
     settings.save()
   })
 })
@@ -400,9 +400,9 @@ dom.expUpper.addEventListener('input', () => {
 dom.updateRatesLink.addEventListener('click', getRates)
 
 dom.els('.settingItem').forEach((el) => {
-  el.addEventListener('change', () => {
+  el.addEventListener('change', async () => {
     settings.save()
-    settings.apply()
+    await settings.apply()
   })
 })
 
