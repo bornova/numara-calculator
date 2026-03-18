@@ -1,13 +1,9 @@
 import { dom } from './dom'
 import { confirm, modal } from './modal'
-import { app, getTheme, store } from './utils'
+import { app, store } from './utils'
 
 import Coloris from '@melloware/coloris'
 import { applyChange, diff, observableDiff } from 'deep-diff-esm'
-
-const BORDER_LIGHT = '1px solid #eaeaea'
-const BORDER_DARK = '1px solid #666666'
-const BORDER_CHANGED = '2px solid #dd9359'
 
 const COLOR_INPUT_SELECTOR = '.colorInput'
 const colorInputs = dom.els(COLOR_INPUT_SELECTOR)
@@ -25,12 +21,11 @@ function resetActivePickerColor() {
 }
 
 export function checkColorChange() {
-  const theme = getTheme()
-
   colorInputs.forEach((picker) => {
     const isSame = picker.value === colors.defaults[picker.dataset.class][picker.dataset.theme]
 
-    picker.style.borderLeft = isSame ? (theme === 'light' ? BORDER_LIGHT : BORDER_DARK) : BORDER_CHANGED
+    picker.classList.toggle('colorInputDefault', isSame)
+    picker.classList.toggle('colorInputChanged', !isSame)
   })
 }
 
@@ -124,7 +119,6 @@ export const colors = {
   },
 
   apply: () => {
-    const appTheme = getTheme()
     let colorSheet = ''
 
     app.colors = store.get('colors')
@@ -133,10 +127,12 @@ export const colors = {
       Object.values(app.colors).forEach((color) => {
         if (color.title === 'Plain') return
 
-        colorSheet += `${color.class} { color: ${color[appTheme]};}\n`
+        colorSheet += `${color.class} { color: light-dark(${color.light}, ${color.dark});}\n`
       })
     } else {
-      colorSheet += `${app.colors.plain.class} { color: ${app.colors.plain[appTheme]};}\n`
+      colorSheet += `
+        ${app.colors.plain.class} { color: light-dark(${app.colors.plain.light}, ${app.colors.plain.dark});}\n
+      `
     }
 
     dom.colorSheet.textContent = colorSheet

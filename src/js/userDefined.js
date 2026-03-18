@@ -1,8 +1,46 @@
 import { dom } from './dom'
-import { udfInput, uduInput } from './editor'
-import { math } from './eval'
-import { showError } from './modal'
+import { refreshEditor, udfInput, uduInput } from './editor'
+import { calculate, math } from './eval'
+import { modal, showError } from './modal'
 import { app, store } from './utils'
+import { DateTime as luxon } from 'luxon'
+import * as formulajs from '@formulajs/formulajs'
+import nerdamer from 'nerdamer-prime/all.js'
+
+let previouslyImportedUDFs = []
+let previouslyCreatedUnits = []
+
+function updateUserDefinedFunctions(newUdfObj) {
+  previouslyImportedUDFs.forEach((key) => {
+    delete math[key]
+
+    if (math.expression && math.expression.mathWithTransform) {
+      delete math.expression.mathWithTransform[key]
+    }
+  })
+
+  math.import(newUdfObj, { override: true })
+
+  previouslyImportedUDFs = Object.keys(newUdfObj)
+}
+
+function updateUserDefinedUnits(newUduObj) {
+  previouslyCreatedUnits.forEach((unitName) => {
+    if (math.Unit && math.Unit.UNITS) {
+      delete math.Unit.UNITS[unitName]
+    }
+
+    delete math[unitName]
+
+    if (math.expression && math.expression.mathWithTransform) {
+      delete math.expression.mathWithTransform[unitName]
+    }
+  })
+
+  math.createUnit(newUduObj, { override: true })
+
+  previouslyCreatedUnits = Object.keys(newUduObj)
+}
 
 /**
  * Apply user defined functions or units.
@@ -14,14 +52,16 @@ export function applyUdfu(input, type) {
   return new Promise((resolve, reject) => {
     try {
       const isFunc = type === 'func'
-      const UDFunc = new Function(`'use strict'; return {${input}}`)
-      const udfObj = UDFunc()
+      const UDFunc = new Function('math', 'luxon', 'nerdamer', 'formulajs', `'use strict'; return {${input}}`)
+      const udfObj = UDFunc(math, luxon, nerdamer, formulajs)
 
       if (isFunc) {
-        math.import(udfObj, { override: true })
+        updateUserDefinedFunctions(udfObj)
       } else {
-        math.createUnit(udfObj, { override: true })
+        updateUserDefinedUnits(udfObj)
       }
+
+      app[isFunc ? 'udfList' : 'uduList'].length = 0
 
       for (const f in udfObj) {
         app[isFunc ? 'udfList' : 'uduList'].push(f)
@@ -42,7 +82,12 @@ export function applyUdfu(input, type) {
  */
 function saveUserDefined(input, type) {
   applyUdfu(input.getValue().trim(), type)
-    .then(() => location.reload())
+    .then(() => {
+      refreshEditor()
+      calculate()
+
+      modal.hide('#dialogUdfu')
+    })
     .catch((error) => showError(error.name, error.message))
 }
 

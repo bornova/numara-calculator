@@ -9,13 +9,13 @@ contextBridge.exposeInMainWorld('numara', {
   },
 
   // App theme
-  isDark: () => ipcRenderer.sendSync('isDark'),
+  isDark: () => ipcRenderer.invoke('isDark'),
   setTheme: (theme) => ipcRenderer.send('setTheme', theme),
   themeUpdate: (callback) => ipcRenderer.on('themeUpdate', callback),
 
   // Window controls
-  isMaximized: () => ipcRenderer.sendSync('isMaximized'),
-  isResized: () => ipcRenderer.sendSync('isResized'),
+  isMaximized: () => ipcRenderer.invoke('isMaximized'),
+  isResized: () => ipcRenderer.invoke('isResized'),
   resetSize: () => ipcRenderer.send('resetSize'),
   setOnTop: (callback) => ipcRenderer.send('setOnTop', callback),
   transControls: (isTrans) => ipcRenderer.send('transControls', isTrans),

@@ -1,0 +1,65 @@
+/* Imports */
+@import url('./../../node_modules/@melloware/coloris/dist/coloris.css');
+
+.clr-picker,
+input.clr-color {
+  background: light-dark(#ffffff, #333333);
+  color: light-dark(#222222, #e6e6e6);
+}
+
+.clr-picker {
+  border-radius: 3px;
+  width: 160px;
+}
+
+.clr-gradient {
+  margin-bottom: 10px;
+  height: 80px;
+}
+
+.clr-hue,
+.clr-alpha {
+  margin: 5px 15px;
+  width: calc(100% - 30px);
+}
+
+.clr-preview {
+  margin: 10px auto 10px 10px;
+  width: 25px;
+  height: 25px;
+}
+
+input.clr-color {
+  margin: 10px auto 10px auto;
+  height: 25px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.clr-preview button {
+  border: 1px solid light-dark(#ffffff, #ffffff);
+}
+
+.clr-field button {
+  width: 20px;
+}
+
+.clr-field button,
+.colorInput {
+  border: 1px solid light-dark(#eaeaea, #666666);
+}
+
+.clr-field button:after {
+  box-shadow: none;
+}
+
+.clr-custom-reset {
+  order: 2;
+  cursor: pointer;
+  margin: auto 10px auto 5px;
+}
+
+.clr-custom-reset > svg {
+  width: 16px;
+  height: 16px;
+}

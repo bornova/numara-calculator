@@ -185,11 +185,11 @@ function setupEventListeners() {
   })
 
   let windowResizeDelay
-  window.addEventListener('resize', () => {
+  window.addEventListener('resize', async () => {
     if (app.activePlot && dom.dialogPlot.classList.contains('uk-open')) plot()
     clearTimeout(windowResizeDelay)
     windowResizeDelay = setTimeout(calculate, 10)
-    checkSize()
+    await checkSize()
   })
 }
 

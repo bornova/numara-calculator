@@ -8,7 +8,7 @@ export const app = {
   colors: null,
   currencyRates: {},
   iconCache: {},
-  mathScope: {},
+  mathScope: new Map(),
   plotFunction: null,
   plotSettings: null,
   refreshCM: true,
@@ -25,7 +25,17 @@ export const store = {
    * @param {string} key - The key of the item to retrieve.
    * @returns {any} The parsed value from local storage.
    */
-  get: (key) => JSON.parse(localStorage.getItem(key)),
+  get: (key) => {
+    try {
+      const item = localStorage.getItem(key)
+
+      return item ? JSON.parse(item) : null
+    } catch (error) {
+      console.error(`Error parsing local storage for key "${key}":`, error)
+
+      return null
+    }
+  },
 
   /**
    * Save value to local storage.
@@ -44,16 +54,21 @@ export const isMac = userAgent.includes('mac')
 export const isElectron = userAgent.includes('electron')
 
 /** Get app theme */
-export function getTheme() {
+export async function getTheme() {
   if (app.settings.theme === 'dark') return 'dark'
-  if (app.settings.theme === 'system' && isElectron) return numara.isDark() ? 'dark' : 'light'
+  if (app.settings.theme === 'system' && isElectron) return (await numara.isDark()) ? 'dark' : 'light'
+
+  if (app.settings.theme === 'system') {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  }
 
   return 'light'
 }
 
 /** Check window size. */
-export function checkSize() {
-  dom.resetSizeButton.style.display = isElectron && numara.isResized() && !numara.isMaximized() ? 'block' : 'none'
+export async function checkSize() {
+  dom.resetSizeButton.style.display =
+    isElectron && (await numara.isResized()) && !(await numara.isMaximized()) ? 'block' : 'none'
 }
 
 /** Check user locale for thousands separator. */
@@ -67,7 +82,7 @@ export function localeUsesComma() {
 
   const test = (1.11).toLocaleString(locale)
 
-  return test.match(/[,]/)
+  return test.includes(',')
 }
 
 /** Check for app update */
@@ -121,4 +136,34 @@ export function checkAppUpdate() {
         updateStatusMessage('Unable to check for update.')
     }
   })
+}
+
+/**
+ * Escape HTML special characters in a string.
+ *
+ * @param {string} str - The string to escape.
+ * @returns {string} - The escaped string.
+ */
+export function escapeHTML(str) {
+  if (typeof str !== 'string') return str
+  return str.replace(
+    /[&<>'"]/g,
+    (tag) =>
+      ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+      })[tag]
+  )
+}
+
+/**
+ * Escape special characters in a string for use in a regular expression.
+ * @param {string} string - The string to escape.
+ * @returns {string} - The escaped string.
+ */
+export function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }

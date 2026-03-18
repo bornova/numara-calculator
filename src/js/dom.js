@@ -145,6 +145,5 @@ export const dom = {
 
   // Other elements
   scrollTop: document.getElementById('scrollTop'),
-  colorSheet: document.getElementById('colorSheet'),
-  inlineStyle: document.getElementById('style')
+  colorSheet: document.getElementById('colorSheet')
 }
