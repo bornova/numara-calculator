@@ -6,8 +6,6 @@ import updater from 'electron-updater'
 import * as path from 'node:path'
 import * as fs from 'node:fs'
 
-process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
-
 log.info(`Starting Numara... [v${app.getVersion()}] ${app.isPackaged ? '' : '(Dev)'}`)
 log.initialize({ spyRendererConsole: true })
 log.errorHandler.startCatching()
@@ -121,7 +119,7 @@ nativeTheme.on('updated', () => {
   setTitleBarOverlay()
 })
 
-ipcMain.on('isDark', (event) => (event.returnValue = nativeTheme.shouldUseDarkColors))
+ipcMain.handle('isDark', () => nativeTheme.shouldUseDarkColors)
 ipcMain.on('setTheme', (event, mode) => {
   config.set('theme', mode)
   setTitleBarOverlay(true)
@@ -129,11 +127,11 @@ ipcMain.on('setTheme', (event, mode) => {
 ipcMain.on('transControls', (event, isTrans) => setTitleBarOverlay(isTrans))
 
 ipcMain.on('setOnTop', (event, bool) => win.setAlwaysOnTop(bool))
-ipcMain.on('isMaximized', (event) => (event.returnValue = win.isMaximized()))
-ipcMain.on('isResized', (event) => {
+ipcMain.handle('isMaximized', () => win.isMaximized())
+ipcMain.handle('isResized', () => {
   const [width, height] = win.getSize()
 
-  event.returnValue = width !== schema.appWidth.default || height !== schema.appHeight.default
+  return width !== schema.appWidth.default || height !== schema.appHeight.default
 })
 
 ipcMain.on('importPage', (event) => {
