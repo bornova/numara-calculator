@@ -54,28 +54,25 @@ export function getRates() {
 function updateCurrencyRates(rates) {
   if (!rates || typeof rates !== 'object') return
 
+  app.currencyRates = rates
   let lastDate = null
 
-  app.currencyRates = rates
-
-  for (const rateCode in rates) {
-    const { code, inverseRate, name, date } = rates[rateCode]
-
+  Object.values(rates).forEach(({ code, inverseRate, name, date }) => {
     math.createUnit(
       code,
       {
-        aliases: Object.keys(math.Unit.UNITS).includes(code.toLowerCase()) ? [] : [code.toLowerCase()],
-        definition: math.unit(inverseRate + USD_UNIT)
+        aliases: code.toLowerCase() in math.Unit.UNITS ? [] : [code.toLowerCase()],
+        definition: math.unit(`${inverseRate} ${USD_UNIT}`)
       },
       { override: true }
     )
 
-    if (numaraHints.every((hint) => hint.text !== code)) {
+    if (!numaraHints.some((hint) => hint.text === code)) {
       numaraHints.push({ text: code, desc: name, className: 'cm-currency' })
     }
 
     lastDate = date
-  }
+  })
 
   if (lastDate) store.set('rateDate', lastDate)
 }
