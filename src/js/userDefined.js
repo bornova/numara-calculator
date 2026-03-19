@@ -61,11 +61,7 @@ export function applyUdfu(input, type) {
         updateUserDefinedUnits(udfObj)
       }
 
-      app[isFunc ? 'udfList' : 'uduList'].length = 0
-
-      for (const f in udfObj) {
-        app[isFunc ? 'udfList' : 'uduList'].push(f)
-      }
+      app[isFunc ? 'udfList' : 'uduList'] = Object.keys(udfObj)
 
       store.set(isFunc ? 'udf' : 'udu', input)
       resolve()
