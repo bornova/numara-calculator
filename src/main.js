@@ -78,9 +78,11 @@ function createAppWindow() {
   win.loadFile('build/index.html')
 
   win.webContents.on('did-finish-load', () => {
+    const pos = config.get('position')
+
     if (config.get('fullSize') && isWin) win.maximize()
-    if (config.get('position')) win.setPosition(config.get('position')[0], config.get('position')[1])
-    if ((isMac || isWin) && !app.isPackaged) win.webContents.openDevTools()
+    if (pos) win.setPosition(...pos)
+    if (!app.isPackaged) win.webContents.openDevTools()
 
     setTitleBarOverlay()
 
@@ -299,12 +301,9 @@ ipcMain.on('outputContextMenu', (event, index, isEmpty, hasAnswer) => {
   contextMenu.popup()
 })
 
-ipcMain.on('textboxContextMenu', () => {
-  const contextMenuTemplate = [{ role: 'cut' }, { role: 'copy' }, { role: 'paste' }]
-  const contextMenu = Menu.buildFromTemplate(contextMenuTemplate)
-
-  contextMenu.popup()
-})
+ipcMain.on('textboxContextMenu', () =>
+  Menu.buildFromTemplate([{ role: 'cut' }, { role: 'copy' }, { role: 'paste' }]).popup()
+)
 
 ipcMain.on('checkUpdate', () => {
   autoUpdater.checkForUpdatesAndNotify({
