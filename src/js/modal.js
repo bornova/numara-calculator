@@ -8,16 +8,13 @@ export const modal = {
    * Show modal dialog for given id.
    * @param {string} id Modal Id.
    */
-  show: (id) => {
-    UIkit.modal(id, { bgClose: false, stack: true }).show()
-  },
+  show: (id) => UIkit.modal(id, { bgClose: false, stack: true }).show(),
+
   /**
    * Hide modal dialog for given id.
    * @param {string} id Modal Id.
    */
-  hide: (id) => {
-    UIkit.modal(id).hide()
-  }
+  hide: (id) => UIkit.modal(id).hide()
 }
 
 /**
@@ -71,9 +68,11 @@ export function notify(msg, stat = 'primary') {
  */
 const centerModal = (modal) => {
   requestAnimationFrame(() => {
-    modal.style.left = `${(window.innerWidth - modal.offsetWidth) / 2}px`
-    modal.style.top = `${(window.innerHeight - modal.offsetHeight) / 2}px`
-    modal.style.visibility = ''
+    Object.assign(modal.style, {
+      left: `${(window.innerWidth - modal.offsetWidth) / 2}px`,
+      top: `${(window.innerHeight - modal.offsetHeight) / 2}px`,
+      visibility: ''
+    })
   })
 }
 
