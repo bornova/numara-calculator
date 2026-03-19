@@ -238,25 +238,27 @@ const isModalOpen = () => dom.els('.uk-open').length > 0
 
 const setupKeyboardShortcuts = () => {
   const keys = {
-    clearButton: ['$mod+D'],
-    newPageButton: ['$mod+N'],
-    printButton: ['$mod+P'],
-    sidePanelButton: ['Shift+TAB']
+    '$mod+D': 'clearButton',
+    '$mod+N': 'newPageButton',
+    '$mod+P': 'printButton',
+    'Shift+TAB': 'sidePanelButton'
   }
 
-  for (const [button, command] of Object.entries(keys)) {
-    tinykeys(window, {
-      [command]: (event) => {
-        event.preventDefault()
+  const shortcuts = {}
 
-        if (!isModalOpen()) {
-          document.getElementById(button).click()
-        } else if (dom.sidePanel.classList.contains('uk-open') && !dom.dialogNewPage.classList.contains('uk-open')) {
-          dom.closeSidePanelButton.click()
-        }
+  for (const [command, button] of Object.entries(keys)) {
+    shortcuts[command] = (event) => {
+      event.preventDefault()
+
+      if (!isModalOpen()) {
+        dom[button].click()
+      } else if (dom.sidePanel.classList.contains('uk-open') && !dom.dialogNewPage.classList.contains('uk-open')) {
+        dom.closeSidePanelButton.click()
       }
-    })
+    }
   }
+
+  tinykeys(window, shortcuts)
 }
 
 const setupPrintArea = () => {
@@ -325,9 +327,7 @@ const setupUIkitUtils = () => {
   })
 
   UIkit.util.on('.modal, #sidePanel', 'hidden', () => {
-    const modalOpen = dom.els('.uk-open').length > 0
-
-    if (isElectron) numara.transControls(modalOpen)
+    if (isElectron) numara.transControls(isModalOpen())
 
     setTimeout(() => cm.focus(), 100)
   })
