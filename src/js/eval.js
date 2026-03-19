@@ -54,13 +54,14 @@ const compiledExpressions = new Map()
  * @returns {Object} - Compiled expression with an evaluate method.
  */
 function getCompiledExpression(expr) {
-  if (!compiledExpressions.has(expr)) {
-    const compiled = math.compile(expr)
+  let compiled = compiledExpressions.get(expr)
 
+  if (!compiled) {
+    compiled = math.compile(expr)
     compiledExpressions.set(expr, compiled)
   }
 
-  return compiledExpressions.get(expr)
+  return compiled
 }
 
 /**
@@ -320,17 +321,8 @@ export function formatAnswer(answer, useGrouping) {
  * @returns {string} - The line without comments.
  */
 function stripComments(line) {
-  const commentIdx = line.indexOf('//')
-  const hashIdx = line.indexOf('#')
-
-  if (commentIdx !== -1 || hashIdx !== -1) {
-    const idx =
-      commentIdx !== -1 && hashIdx !== -1 ? Math.min(commentIdx, hashIdx) : commentIdx !== -1 ? commentIdx : hashIdx
-
-    return line.substring(0, idx)
-  }
-
-  return line
+  const match = line.match(/\/\/|#/)
+  return match ? line.substring(0, match.index) : line
 }
 
 /**
