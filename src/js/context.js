@@ -17,9 +17,6 @@ function copyToClipboard(text, message) {
   navigator.clipboard.writeText(text).then(() => notify(message))
 }
 
-const nothingToCopy = () => notify('Nothing to copy.')
-const safeCopy = (text, message) => (text ? copyToClipboard(text, message) : nothingToCopy())
-
 /**
  * Main context menus for input.
  */
@@ -95,46 +92,46 @@ function copyAnswer(event, lineIndex, withLines) {
  * Copy all inputs.
  */
 function copyAllLines() {
-  safeCopy(cm.getValue(), 'Copied all lines to clipboard.')
+  copyToClipboard(cm.getValue(), 'Copied all lines to clipboard.')
 }
 
 /**
  * Copy all answers.
  */
 function copyAllAnswers() {
-  if (cm.getValue() === '') return nothingToCopy()
+  if (cm.getValue() === '') return copyToClipboard()
 
   let copiedOutputs = ''
 
   cm.eachLine((line) => {
     const index = cm.getLineNumber(line)
 
-    copiedOutputs += `${dom.el(`[data-index="${index}"]`).textContent ?? ''}\n`
+    copiedOutputs += `${dom.el(`[data-index="${index}"]`)?.textContent ?? ''}\n`
   })
 
-  safeCopy(copiedOutputs, 'Copied all answers to clipboard.')
+  copyToClipboard(copiedOutputs, 'Copied all answers to clipboard.')
 }
 
 /**
  * Copy page.
  */
 export function copyAll() {
-  if (cm.getValue() === '') return nothingToCopy()
+  if (cm.getValue() === '') return copyToClipboard()
 
   let copiedCalc = ''
 
   cm.eachLine((line) => {
     const lineIndex = cm.getLineNumber(line)
-    const text = line.text.trim()
+    const text = cm.getLine(lineIndex).trim()
 
     copiedCalc += text
       ? text.match(/^(#|\/\/)/)
         ? `${text}\n`
-        : `${text} = ${dom.el(`[data-index="${lineIndex}"]`).textContent ?? ''}\n`
+        : `${text} = ${dom.el(`[data-index="${lineIndex}"]`)?.textContent ?? ''}\n`
       : '\n'
   })
 
-  safeCopy(copiedCalc, 'Copied page to clipboard.')
+  copyToClipboard(copiedCalc, 'Copied page to clipboard.')
 }
 
 // Context menus
