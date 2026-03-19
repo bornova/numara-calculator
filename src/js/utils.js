@@ -74,11 +74,7 @@ export async function checkSize() {
 /** Check user locale for thousands separator. */
 export function localeUsesComma() {
   const locale =
-    app.settings.locale === 'system'
-      ? navigator.languages && navigator.languages.length
-        ? navigator.languages[0]
-        : navigator.language
-      : app.settings.locale
+    app.settings.locale === 'system' ? (navigator.languages?.[0] ?? navigator.language) : app.settings.locale
 
   const test = (1.11).toLocaleString(locale)
 
