@@ -21,13 +21,9 @@ function checkMods(key) {
   }
 }
 
-/** Show warning if big number option is selected. */
-function bigNumberWarning() {
+/** Configures warnings by checking a condition mapped to a dom component. */
+function checkWarnings() {
   dom.bigNumWarn.style.display = app.settings.numericOutput === 'BigNumber' ? 'inline-block' : 'none'
-}
-
-/** Show warning if locale uses comma as decimal point separator. */
-function localeWarning() {
   dom.localeWarn.style.display = app.settings.inputLocale ? 'inline-block' : 'none'
 }
 
@@ -189,8 +185,7 @@ export const settings = {
 
     await checkSize()
     checkDefaults()
-    localeWarning()
-    bigNumberWarning()
+    checkWarnings()
 
     settings.toggleSubs()
   },
@@ -311,8 +306,7 @@ export const settings = {
     if (!store.get('rateDate') && app.settings.currency) getRates()
 
     checkDefaults()
-    bigNumberWarning()
-    localeWarning()
+    checkWarnings()
 
     settings.toggleSubs()
 
@@ -326,17 +320,18 @@ export const settings = {
       el.disabled = !enabled
       el.parentNode.style.opacity = enabled ? '1' : '0.5'
 
-      const mod = dom.el('#' + el.id + 'Mod')
-      if (!mod) return
-
-      mod.style.pointerEvents = enabled ? 'auto' : 'none'
-      mod.parentNode.style.opacity = enabled ? '1' : '0.5'
+      const mod = dom.el(`#${el.id}Mod`)
+      if (mod) {
+        mod.style.pointerEvents = enabled ? 'auto' : 'none'
+        mod.parentNode.style.opacity = enabled ? '1' : '0.5'
+      }
     }
 
     toggle(dom.keywordTips, app.settings.syntax)
     toggle(dom.matchBrackets, app.settings.syntax)
-    toggle(dom.expUpper, app.settings.notation === 'auto')
-    toggle(dom.expLower, app.settings.notation === 'auto')
+    const isAutoNotation = app.settings.notation === 'auto'
+    toggle(dom.expUpper, isAutoNotation)
+    toggle(dom.expLower, isAutoNotation)
     toggle(dom.copyThouSep, app.settings.thouSep)
 
     dom.currencyInterval.disabled = !app.settings.currency
