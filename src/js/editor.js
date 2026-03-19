@@ -196,38 +196,30 @@ function cmForceBottom() {
  * @param {CodeMirror} cm - The CodeMirror instance to toggle comments on.
  */
 function toggleComment(cm) {
-  const selections = cm.listSelections()
-
   cm.operation(() => {
-    for (const selection of selections) {
+    for (const selection of cm.listSelections()) {
       const startLine = Math.min(selection.anchor.line, selection.head.line)
       const endLine = Math.max(selection.anchor.line, selection.head.line)
 
-      // Check if all selected lines are already commented
-      let allCommented = true
+      // Get lines to toggle
+      const lines = []
       for (let i = startLine; i <= endLine; i++) {
         const line = cm.getLine(i)
-        if (line !== null && line !== undefined && !line.trim().startsWith('//')) {
-          allCommented = false
-          break
-        }
+        if (line !== null && line !== undefined) lines.push(line)
       }
+
+      const allCommented = lines.every((line) => line.trim().startsWith('//'))
 
       // Toggle comments
       for (let i = startLine; i <= endLine; i++) {
         const line = cm.getLine(i)
         if (line === null || line === undefined) continue
 
-        if (allCommented) {
-          // Remove comment
-          const uncommented = line.replace(/^(\s*)\/\/\s?/, '$1')
-          cm.replaceRange(uncommented, { line: i, ch: 0 }, { line: i, ch: line.length })
-        } else {
-          // Add comment
-          const leadingWhitespace = line.match(/^\s*/)[0]
-          const commented = leadingWhitespace + '// ' + line.slice(leadingWhitespace.length)
-          cm.replaceRange(commented, { line: i, ch: 0 }, { line: i, ch: line.length })
-        }
+        const newLine = allCommented
+          ? line.replace(/^(\s*)\/\/\s?/, '$1') // Remove comment
+          : line.replace(/^(\s*)/, '$1// ') // Add comment
+
+        cm.replaceRange(newLine, { line: i, ch: 0 }, { line: i, ch: line.length })
       }
     }
   })
