@@ -167,21 +167,22 @@ function setupEventListeners() {
   dom.plotAutoDomain.addEventListener('change', () => {
     const isAutoDomain = dom.plotAutoDomain.checked
 
-    dom.plotXMin.disabled = isAutoDomain
-    dom.plotXMax.disabled = isAutoDomain
-    dom.plotYMin.disabled = isAutoDomain
-    dom.plotYMax.disabled = isAutoDomain
+    const inputs = [dom.plotXMin, dom.plotXMax, dom.plotYMin, dom.plotYMax]
+    inputs.forEach((input) => (input.disabled = isAutoDomain))
   })
 
   dom.defaultDomainsButton.addEventListener('click', () => {
-    dom.plotXPrecision.value = plotSettings.defaults.domain.xPrecision
-    dom.plotXPrecisionLabel.innerHTML = plotSettings.defaults.domain.xPrecision
-    dom.plotAutoDomain.checked = true
+    const { auto, x, y, xPrecision } = plotSettings.defaults.domain
+
+    dom.plotXPrecision.value = xPrecision
+    dom.plotXPrecisionLabel.innerHTML = xPrecision
+    dom.plotAutoDomain.checked = auto
     dom.plotAutoDomain.dispatchEvent(new Event('change'))
-    dom.plotXMin.value = plotSettings.defaults.domain.x[0]
-    dom.plotXMax.value = plotSettings.defaults.domain.x[1]
-    dom.plotYMin.value = plotSettings.defaults.domain.y[0]
-    dom.plotYMax.value = plotSettings.defaults.domain.y[1]
+
+    dom.plotXMin.value = x[0]
+    dom.plotXMax.value = x[1]
+    dom.plotYMin.value = y[0]
+    dom.plotYMax.value = y[1]
   })
 
   let windowResizeDelay
