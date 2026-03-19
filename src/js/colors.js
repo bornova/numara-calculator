@@ -119,23 +119,16 @@ export const colors = {
   },
 
   apply: () => {
-    let colorSheet = ''
-
     app.colors = store.get('colors')
 
-    if (app.settings.syntax) {
-      Object.values(app.colors).forEach((color) => {
-        if (color.title === 'Plain') return
+    const sheet = app.settings.syntax
+      ? Object.values(app.colors)
+          .filter((c) => c.title !== 'Plain')
+          .map((c) => `${c.class} { color: light-dark(${c.light}, ${c.dark}); }`)
+          .join('\n')
+      : `${app.colors.plain.class} { color: light-dark(${app.colors.plain.light}, ${app.colors.plain.dark}); }`
 
-        colorSheet += `${color.class} { color: light-dark(${color.light}, ${color.dark});}\n`
-      })
-    } else {
-      colorSheet += `
-        ${app.colors.plain.class} { color: light-dark(${app.colors.plain.light}, ${app.colors.plain.dark});}\n
-      `
-    }
-
-    dom.colorSheet.textContent = colorSheet
+    dom.colorSheet.textContent = sheet
   },
 
   save: () => {
