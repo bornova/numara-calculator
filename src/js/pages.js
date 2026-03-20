@@ -16,8 +16,8 @@ export function getPageName() {
   const usedNumbers = new Set(
     pages.map((page) => Number(page.name.trim().replace(/^Page (\d+)$/, '$1')) || null).filter((n) => n !== null)
   )
-
   let pageNo = 1
+
   while (usedNumbers.has(pageNo)) pageNo++
 
   return `Page ${pageNo}`
