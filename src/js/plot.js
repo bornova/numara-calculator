@@ -111,6 +111,8 @@ function resetPlot() {
   plot()
 }
 
+const minMaxInputs = [dom.plotXMin, dom.plotXMax, dom.plotYMin, dom.plotYMax]
+
 function setupEventListeners() {
   dom.plotCrossModal.addEventListener('click', () => updatePlotSetting('showCross', dom.plotCrossModal.checked))
   dom.plotGridModal.addEventListener('click', () => updatePlotSetting('showGrid', dom.plotGridModal.checked))
@@ -137,10 +139,7 @@ function setupEventListeners() {
 
   dom.dialogPlotAxisSettingsSave.addEventListener('click', () => {
     const isAutoDomain = dom.plotAutoDomain.checked
-    const xMin = parseFloat(dom.plotXMin.value)
-    const xMax = parseFloat(dom.plotXMax.value)
-    const yMin = parseFloat(dom.plotYMin.value)
-    const yMax = parseFloat(dom.plotYMax.value)
+    const [xMin, xMax, yMin, yMax] = minMaxInputs.map((input) => parseFloat(input.value))
 
     if (!validateDomain(xMin, xMax, yMin, yMax)) {
       showError(
@@ -167,8 +166,7 @@ function setupEventListeners() {
   dom.plotAutoDomain.addEventListener('change', () => {
     const isAutoDomain = dom.plotAutoDomain.checked
 
-    const inputs = [dom.plotXMin, dom.plotXMax, dom.plotYMin, dom.plotYMax]
-    inputs.forEach((input) => (input.disabled = isAutoDomain))
+    minMaxInputs.forEach((input) => (input.disabled = isAutoDomain))
   })
 
   dom.defaultDomainsButton.addEventListener('click', () => {
@@ -179,10 +177,7 @@ function setupEventListeners() {
     dom.plotAutoDomain.checked = auto
     dom.plotAutoDomain.dispatchEvent(new Event('change'))
 
-    dom.plotXMin.value = x[0]
-    dom.plotXMax.value = x[1]
-    dom.plotYMin.value = y[0]
-    dom.plotYMax.value = y[1]
+    minMaxInputs.forEach((input, i) => (input.value = [...x, ...y][i]))
   })
 
   let windowResizeDelay

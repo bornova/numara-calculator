@@ -10,6 +10,9 @@ import nerdamer from 'nerdamer-prime/all.js'
 let previouslyImportedUDFs = []
 let previouslyCreatedUnits = []
 
+/** Update user defined functions.
+ * @param {object} newUdfObj Object containing new user defined functions to import.
+ */
 function updateUserDefinedFunctions(newUdfObj) {
   previouslyImportedUDFs.forEach((key) => {
     delete math[key]
@@ -24,6 +27,9 @@ function updateUserDefinedFunctions(newUdfObj) {
   previouslyImportedUDFs = Object.keys(newUdfObj)
 }
 
+/** Update user defined units.
+ * @param {object} newUduObj Object containing new user defined units to import.
+ */
 function updateUserDefinedUnits(newUduObj) {
   previouslyCreatedUnits.forEach((unitName) => {
     if (math.Unit && math.Unit.UNITS) {

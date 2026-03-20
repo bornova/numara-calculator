@@ -54,8 +54,9 @@ export function getRates() {
 function updateCurrencyRates(rates) {
   if (!rates || typeof rates !== 'object') return
 
-  app.currencyRates = rates
   let lastDate = null
+
+  app.currencyRates = rates
 
   Object.values(rates).forEach(({ code, inverseRate, name, date }) => {
     math.createUnit(
