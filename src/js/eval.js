@@ -17,6 +17,12 @@ export const math = create(all)
 math.import(factory('formulajs', [], () => formulajs))
 math.import(factory('nerdamer', [], () => nerdamer))
 
+// Override the isAlpha function to support Unicode letters, allowing for variable names in non-Latin characters.
+const isAlphaOriginal = math.parse.isAlpha
+const universalRegex = /[\p{L}\p{M}]/u
+
+math.parse.isAlpha = (c, cPrev, cNext) => isAlphaOriginal(c, cPrev, cNext) || universalRegex.test(c)
+
 const nowFormat = 'D t'
 const nowDayFormat = 'ccc, D t'
 const todayFormat = 'D'
