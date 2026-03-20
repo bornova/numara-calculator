@@ -86,12 +86,13 @@ CodeMirror.defineMode('numara', () => ({
     if (stream.match(/\bnerdamer(?=[.(]|\b)/)) return 'nerdamer'
 
     const startChar = stream.peek()
+
     if (currencyTokens.has(startChar)) {
       stream.next()
       return 'currency'
     }
 
-    stream.eatWhile(/\w/)
+    stream.eatWhile(/[\w\p{L}\p{M}]/u)
 
     const cmStream = stream.current()
 
@@ -140,8 +141,8 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
   let start = cmCursor.ch
   let end = start
 
-  while (end < cmCursorLine.length && /[\w.$]/.test(cmCursorLine.charAt(end))) ++end
-  while (start && /[\w.$]/.test(cmCursorLine.charAt(start - 1))) --start
+  while (end < cmCursorLine.length && /[\w.$\p{L}\p{M}]/u.test(cmCursorLine.charAt(end))) ++end
+  while (start && /[\w.$\p{L}\p{M}]/u.test(cmCursorLine.charAt(start - 1))) --start
 
   let curStr = cmCursorLine.slice(start, end)
   let curWord = start !== end && curStr
@@ -150,9 +151,9 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
   if (curStr && (!curStr.endsWith('.') || curStr === 'formulajs.') && curWord) {
     const curWordRegex = new RegExp('^' + curWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
     const match = ({ text }) => curWordRegex.test(text)
+    const variableHints = []
 
     // Build hints for all variables from the current math scope
-    const variableHints = []
     for (const key of app.mathScope.keys()) {
       if (!keywordTokens.has(key)) variableHints.push({ text: key, className: CLASS_NAMES.VARIABLE })
     }
@@ -200,19 +201,19 @@ function toggleComment(cm) {
     for (const selection of cm.listSelections()) {
       const startLine = Math.min(selection.anchor.line, selection.head.line)
       const endLine = Math.max(selection.anchor.line, selection.head.line)
-
-      // Get lines to toggle
       const lines = []
+
       for (let i = startLine; i <= endLine; i++) {
         const line = cm.getLine(i)
+
         if (line !== null && line !== undefined) lines.push(line)
       }
 
       const allCommented = lines.every((line) => line.trim().startsWith('//'))
 
-      // Toggle comments
       for (let i = startLine; i <= endLine; i++) {
         const line = cm.getLine(i)
+
         if (line === null || line === undefined) continue
 
         const newLine = allCommented
