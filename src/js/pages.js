@@ -7,6 +7,13 @@ import { DateTime } from 'luxon'
 
 import UIkit from 'uikit'
 
+function updatePageName(name, pageId) {
+  const pageDate = DateTime.fromFormat(pageId, 'yyyyMMddHHmmssSSS').toFormat('FF')
+
+  dom.pageName.innerHTML = name
+  dom.pageName.title = `${name} - ${pageDate}`
+}
+
 /**
  * Get page name/number to use.
  * @returns {string} The page name.
@@ -63,8 +70,7 @@ export function newPage(isImport) {
   cm.setValue('')
 
   populatePages()
-
-  dom.pageName.innerHTML = pageName
+  updatePageName(pageName, pageId)
 
   modal.hide('#dialogNewPage')
 }
@@ -161,7 +167,9 @@ export function renamePage(pageId) {
 
     populatePages()
 
-    dom.pageName.innerHTML = page.name
+    if (pageId === app.activePage) {
+      updatePageName(page.name, pageId)
+    }
 
     modal.hide('#dialogRenamePage')
   }
@@ -180,8 +188,7 @@ export function loadPage(pageId) {
   app.activePage = pageId
   store.set('lastPage', pageId)
 
-  dom.pageName.innerHTML = name
-  dom.pageName.title = name
+  updatePageName(name, pageId)
 
   cm.setValue(data)
 
@@ -383,6 +390,10 @@ if (isElectron) {
 } else {
   dom.els('#importPageButton, #spDivider').forEach((el) => el.remove())
 }
+
+dom.pageName.addEventListener('dblclick', () => {
+  if (app.activePage) renamePage(app.activePage)
+})
 
 document.addEventListener('click', (event) => {
   if (event.target.parentNode?.dataset?.action === 'load') {
