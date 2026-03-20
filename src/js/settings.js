@@ -16,6 +16,7 @@ function checkDefaults() {
 /** Check for app settings modifications. */
 function checkMods(key) {
   const el = dom.el('#' + key + 'Mod')
+
   if (el) {
     el.style.display = app.settings[key] !== settings.defaults[key] ? 'inline-block' : 'none'
   }
@@ -315,7 +316,6 @@ export const settings = {
 
   /** Toggle settings sliders to enabled/disabled based on parent setting. */
   toggleSubs: () => {
-    // Helper to enable/disable and set opacity for related controls
     const toggle = (el, enabled) => {
       el.disabled = !enabled
       el.parentNode.style.opacity = enabled ? '1' : '0.5'
