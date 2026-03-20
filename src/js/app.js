@@ -21,15 +21,13 @@ import UIkit from 'uikit'
 document.title = description
 
 const setupHeaders = () => {
-  if (isElectron && !isMac) {
-    dom.headerMac.remove()
-    dom.headerWin.style.display = 'block'
-    dom.headerWinTitle.innerHTML = name
-  } else {
-    dom.headerWin.remove()
-    dom.headerMac.style.display = 'block'
-    dom.headerMacTitle.innerHTML = name
-  }
+  const isWin = isElectron && !isMac
+  const active = isWin ? 'Win' : 'Mac'
+  const inactive = isWin ? 'Mac' : 'Win'
+
+  dom[`header${inactive}`].remove()
+  dom[`header${active}`].style.display = 'block'
+  dom[`header${active}Title`].innerHTML = name
 }
 
 const setupAppButtons = () => {
@@ -57,6 +55,7 @@ const setupResultActions = () => {
 
     if (plotEl) {
       const func = plotEl.getAttribute('data-plot')
+
       app.plotFunction = func.startsWith('line') ? app.mathScope.get(func) : func
 
       try {
@@ -82,12 +81,13 @@ const setupResultActions = () => {
 
     if (answerEl) {
       const textToCopy = answerEl.textContent
+      const safeDiv = document.createElement('div')
+
+      safeDiv.textContent = textToCopy
+
+      const safeText = safeDiv.innerHTML
 
       navigator.clipboard.writeText(textToCopy)
-
-      const safeDiv = document.createElement('div')
-      safeDiv.textContent = textToCopy
-      const safeText = safeDiv.innerHTML
 
       notify(`Copied '${safeText}' to clipboard.`)
       return
@@ -148,6 +148,7 @@ const setupPanelResizer = () => {
       const offset = 10
       const pointerRelativeXpos = event.clientX - dom.mainPanel.offsetLeft - offset
       let inputWidth = (pointerRelativeXpos / dom.mainPanel.clientWidth) * 100
+
       inputWidth = Math.max(0, Math.min(100, inputWidth))
 
       dom.input.style.width = inputWidth + '%'
@@ -210,10 +211,10 @@ const setupAppInfo = () => {
           <a href="https://github.com/bornova/numara-calculator/releases" target="_blank">Download desktop version</a>
         </div>
       </div>`
-  dom.gitLink.setAttribute('href', homepage)
-  dom.webLink.setAttribute('href', author.url)
-  dom.licenseLink.setAttribute('href', `${homepage}/blob/master/LICENSE`)
-  dom.helpLink.setAttribute('href', `${homepage}/wiki`)
+  dom.gitLink.href = homepage
+  dom.webLink.href = author.url
+  dom.licenseLink.href = `${homepage}/blob/master/LICENSE`
+  dom.helpLink.href = `${homepage}/wiki`
 
   if (isElectron) {
     dom.dialogAboutAppVersion.title = `
@@ -280,6 +281,7 @@ const setupPrintArea = () => {
         font-weight: ${app.settings.fontWeight};"
       >`
       const noBB = app.settings.answerPosition ? 'border-bottom: none !important;' : ''
+
       tableRows +=
         app.settings.answerPosition === 'bottom'
           ? `
@@ -315,6 +317,7 @@ const setupPrintArea = () => {
 
   window.addEventListener('afterprint', () => {
     const printArea = document.getElementById('printArea')
+
     if (printArea) printArea.remove()
   })
 }
@@ -367,21 +370,16 @@ const setupUIkitUtils = () => {
   })
 
   UIkit.util.on('#dialogPlotAxisSettings', 'shown', () => {
-    const { auto, x, y } = app.plotSettings.domain
-    const domainSettings = [
-      [dom.plotXMin, x[0]],
-      [dom.plotXMax, x[1]],
-      [dom.plotYMin, y[0]],
-      [dom.plotYMax, y[1]]
-    ]
+    const { auto, x, y, xPrecision } = app.plotSettings.domain
+    const minMaxInputs = [dom.plotXMin, dom.plotXMax, dom.plotYMin, dom.plotYMax]
 
     dom.plotAutoDomain.checked = auto
-    dom.plotXPrecision.value = app.plotSettings.domain.xPrecision
-    dom.plotXPrecisionLabel.innerHTML = app.plotSettings.domain.xPrecision
+    dom.plotXPrecision.value = xPrecision
+    dom.plotXPrecisionLabel.innerHTML = xPrecision
 
-    domainSettings.forEach(([el, val]) => {
-      el.value = val
-      el.disabled = auto
+    minMaxInputs.forEach((input, i) => {
+      input.value = [...x, ...y][i]
+      input.disabled = auto
     })
   })
 
