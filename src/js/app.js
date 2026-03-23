@@ -1,5 +1,5 @@
 import { checkColorChange, colors } from './colors'
-import { copyAll, initializeContextMenus } from './context'
+import { copyAll, initializeContextMenus, safeCopyText } from './context'
 import { dom } from './dom'
 import { cm, refreshEditor, udfInput, uduInput } from './editor'
 import { calculate } from './eval'
@@ -80,12 +80,8 @@ const setupResultActions = () => {
     }
 
     if (answerEl) {
-      const textToCopy = answerEl.textContent
-      const safeDiv = document.createElement('div')
-
-      safeDiv.textContent = textToCopy
-
-      const safeText = safeDiv.innerHTML
+      const textToCopy = answerEl.dataset.answer
+      const safeText = safeCopyText(textToCopy)
 
       navigator.clipboard.writeText(textToCopy)
 

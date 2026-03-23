@@ -90,7 +90,7 @@ function setScope(key, value) {
  * @returns {string} - The evaluated answer or an error link.
  */
 function evaluateLine(line, lineIndex, lineHandle, stats) {
-  let answer
+  let answer, answerCopy, answerOut
 
   try {
     // Pre‑process locale and currency symbols
@@ -145,11 +145,12 @@ function evaluateLine(line, lineIndex, lineHandle, stats) {
     }
 
     // Format the answer for display and copying.
-    answer = formatAnswer(answer, app.settings.thouSep)
+    answerCopy = formatAnswer(answer, app.settings.thouSep && app.settings.copyThouSep)
+    answerOut = formatAnswer(answer, app.settings.thouSep)
 
     // Handle plotting lines.
-    if (REGEX_PLOT.test(line) || REGEX_PLOT.test(answer)) {
-      const plotAns = REGEX_PLOT.test(line) ? line : answer
+    if (REGEX_PLOT.test(line) || REGEX_PLOT.test(answerOut)) {
+      const plotAns = REGEX_PLOT.test(line) ? line : answerOut
 
       setScope('ans', plotAns)
       setScope(`line${lineIndex + 1}`, plotAns)
@@ -162,7 +163,7 @@ function evaluateLine(line, lineIndex, lineHandle, stats) {
         </a>`
     }
 
-    return `<span class="${CLASS_ANSWER}" data-answer>${escapeHTML(answer)}</span>`
+    return `<span class="${CLASS_ANSWER}" data-answer="${escapeHTML(answerCopy)}">${escapeHTML(answerOut)}</span>`
   } catch (error) {
     // Highlight the error line and return an error link.
     cm.addLineClass(cm.getLineNumber(lineHandle), 'gutter', CLASS_LINE_ERROR)

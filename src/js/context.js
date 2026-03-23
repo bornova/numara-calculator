@@ -69,6 +69,12 @@ function copyLine(event, index) {
   copyToClipboard(line, `Copied Line ${index + 1} to clipboard.`)
 }
 
+export function safeCopyText(text) {
+  const safeDiv = document.createElement('div')
+  safeDiv.textContent = text
+  return safeDiv.innerHTML
+}
+
 /**
  * Copy line answer.
  * @param {Event} event - The event object.
@@ -79,12 +85,14 @@ function copyAnswer(event, lineIndex, withLines) {
   lineIndex = +lineIndex
 
   const line = cm.getLine(lineIndex).trim()
-  const answer = dom.el(`[data-index="${lineIndex}"]`).firstChild.textContent
+  const answer = dom.el(`[data-index="${lineIndex}"]`).firstChild.dataset.answer
   const copiedText = withLines ? `${line} = ${answer}` : `${answer}`
+
+  const safeText = safeCopyText(copiedText)
 
   copyToClipboard(
     copiedText,
-    withLines ? `Copied Line ${lineIndex} with answer to clipboard.` : `Copied '${answer}' to clipboard.`
+    withLines ? `Copied Line ${lineIndex + 1} with answer to clipboard.` : `Copied '${safeText}' to clipboard.`
   )
 }
 
