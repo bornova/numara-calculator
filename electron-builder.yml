@@ -43,6 +43,11 @@ mac:
 # Windows configuration
 win:
   verifyUpdateCodeSignature: false
+  azureSignOptions:
+    publisherName: 'Timur Atalay'
+    endpoint: 'https://wus.codesigning.azure.net'
+    certificateProfileName: 'NumaraCertProfile'
+    codeSigningAccountName: 'Numara'
 
 # NSIS installer configuration
 nsis:
