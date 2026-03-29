@@ -6,10 +6,15 @@
 
 /* Editor theme */
 .cm-s-numara {
-  background: none !important;
+  background-color: light-dark(#ffffff, #1f1f1f);
   height: 100% !important;
   color: light-dark(#000000, #e6e6e6) !important;
   font-family: 'Roboto Mono' !important;
+}
+
+.cm-s-default {
+  border: 1px solid light-dark(#eaeaea, #666666);
+  background-color: light-dark(#ffffff, #1f1f1f);
 }
 
 .cm-s-numara .CodeMirror-gutters {
@@ -136,10 +141,6 @@
   height: calc(100vh - 235px);
   max-height: 600px;
   font-size: 1.1em;
-}
-
-.cm-s-default {
-  border: 1px solid light-dark(#eaeaea, #666666);
 }
 
 .CodeMirror.cm-s-material-darker {

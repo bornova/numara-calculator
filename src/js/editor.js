@@ -206,7 +206,7 @@ function toggleComment(cm) {
       for (let i = startLine; i <= endLine; i++) {
         const line = cm.getLine(i)
 
-        if (line !== null && line !== undefined) lines.push(line)
+        if (line != null) lines.push(line)
       }
 
       const allCommented = lines.every((line) => line.trim().startsWith('//'))
@@ -214,7 +214,7 @@ function toggleComment(cm) {
       for (let i = startLine; i <= endLine; i++) {
         const line = cm.getLine(i)
 
-        if (line === null || line === undefined) continue
+        if (line == null) continue
 
         const newLine = allCommented
           ? line.replace(/^(\s*)\/\/\s?/, '$1') // Remove comment
@@ -275,7 +275,7 @@ cm.on('cursorActivity', (cm) => {
   setTimeout(cmForceBottom, 20)
 
   const pages = store.get('pages')
-  const page = pages.find((page) => page.id == app.activePage)
+  const page = pages.find((page) => page.id === app.activePage)
 
   page.cursor = cm.getCursor()
 

@@ -22,29 +22,46 @@ export function initializeUSD() {
 }
 
 /**
+ * Fetch a URL and return parsed JSON, retrying on failure.
+ * @param {string} url - The URL to fetch.
+ * @param {number} retries - Number of attempts.
+ * @returns {Promise<any>} Parsed JSON response.
+ */
+async function fetchWithRetry(url, retries = 3) {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const response = await fetch(url)
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      return await response.json()
+    } catch (error) {
+      if (attempt === retries - 1) throw error
+      await new Promise((resolve) => setTimeout(resolve, 1000 * Math.pow(2, attempt)))
+    }
+  }
+}
+
+/**
  * Get exchange rates and update the application.
  */
-export function getRates() {
+export async function getRates() {
   if (!navigator.onLine) {
-    dom.lastUpdated.innerHTML = 'No internet connection.'
+    dom.lastUpdated.textContent = 'No internet connection.'
     notify('No internet connection. Could not update exchange rates.', 'warning')
     return
   }
 
   dom.lastUpdated.innerHTML = '<div uk-spinner="ratio: 0.3"></div>'
 
-  fetch(EXCHANGE_RATE_URL)
-    .then((response) => response.json())
-    .then((rates) => {
-      updateCurrencyRates(rates)
-      dom.lastUpdated.innerHTML = store.get('rateDate')
-      cm.setOption('mode', app.settings.syntax ? 'numara' : 'plain')
-      calculate()
-    })
-    .catch((error) => {
-      dom.lastUpdated.innerHTML = 'n/a'
-      notify('Failed to get exchange rates (' + error + ')', 'warning')
-    })
+  try {
+    const rates = await fetchWithRetry(EXCHANGE_RATE_URL)
+    updateCurrencyRates(rates)
+    dom.lastUpdated.textContent = store.get('rateDate')
+    cm.setOption('mode', app.settings.syntax ? 'numara' : 'plain')
+    calculate()
+  } catch (error) {
+    dom.lastUpdated.textContent = 'n/a'
+    notify('Failed to get exchange rates (' + error + ')', 'warning')
+  }
 }
 
 /**
