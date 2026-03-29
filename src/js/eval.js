@@ -270,10 +270,7 @@ function stripAnswer(answer) {
  */
 function formatCurrency(str) {
   const codes = Object.keys(currencySymbols).join('|')
-  const regex = new RegExp(
-    `(-?\\d{1,3}(?:,\\d{3})*(?:\\.\\d+)?(?:e[+-]?\\d+)?|-?\\d+(?:\\.\\d+)?(?:e[+-]?\\d+)?)\\s*(${codes})`,
-    'gi'
-  )
+  const regex = new RegExp(`(-?[\\d.,]+(?:e[+-]?\\d+)?)\\s*(${codes})`, 'gi')
 
   return str.replace(regex, (_, amount, code) => `${currencySymbols[code.toUpperCase()]}${amount}`)
 }
