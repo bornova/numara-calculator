@@ -1,9 +1,9 @@
+import Coloris from '@melloware/coloris'
+import { applyChange, diff, observableDiff } from 'deep-diff-esm'
+
 import { dom } from './dom'
 import { confirm, modal } from './modal'
 import { app, store } from './utils'
-
-import Coloris from '@melloware/coloris'
-import { applyChange, diff, observableDiff } from 'deep-diff-esm'
 
 const COLOR_INPUT_SELECTOR = '.colorInput'
 const colorInputs = dom.els(COLOR_INPUT_SELECTOR)
@@ -82,13 +82,18 @@ export const colors = {
 
     Coloris.init()
 
+    let colorChangeTimeout = null
+
     Coloris({
       el: COLOR_INPUT_SELECTOR,
       parent: '#dialogTheme',
       alpha: false,
       onChange: () => {
-        checkColorChange()
-        colors.save()
+        clearTimeout(colorChangeTimeout)
+        colorChangeTimeout = setTimeout(() => {
+          checkColorChange()
+          colors.save()
+        }, 50)
       }
     })
 
@@ -96,7 +101,7 @@ export const colors = {
       const picker = dom.el('#clr-color-value')
       const button = document.createElement('a')
 
-      picker.after(button)
+      picker.parentNode.insertBefore(button, picker.nextSibling)
       button.setAttribute('title', 'Reset color')
       button.classList.add('clr-custom-reset')
       button.innerHTML = dom.icons.RotateCcw
@@ -115,7 +120,8 @@ export const colors = {
   },
 
   checkDefaults: () => {
-    dom.defaultColorsButton.style.display = diff(app.colors, colors.defaults) ? 'inline' : 'none'
+    const hasDiff = !!diff(app.colors, colors.defaults)
+    dom.defaultColorsButton.style.display = hasDiff ? 'inline' : 'none'
   },
 
   apply: () => {
@@ -142,7 +148,8 @@ export const colors = {
   },
 
   reset: () => {
-    store.set('colors', colors.defaults)
+    const clonedDefaults = structuredClone(colors.defaults)
+    store.set('colors', clonedDefaults)
     app.colors = store.get('colors')
 
     colorInputs.forEach((picker) => {
