@@ -87,7 +87,7 @@ function makeModalDraggable(modal) {
   if (!dialog || !header) return
 
   UIkit.util.on(modal, 'beforeshow', () => {
-    if (dom.els('#dialogUdfu.uk-open').length > 0) return
+    if (dom.el('#dialogUdfu')?.classList.contains('uk-open')) return
 
     Object.assign(dialog.style, { visibility: 'hidden', display: 'block', position: 'absolute' })
 
