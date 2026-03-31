@@ -13,7 +13,7 @@ const plotSettings = {
   defaults: {
     domain: {
       auto: true,
-      xPrecision: 4,
+      axisPrecision: 4,
       x: [-10, 10],
       y: [-10, 10]
     },
@@ -40,13 +40,20 @@ const plotSettings = {
 
 function getDomains() {
   if (app.plotSettings.domain.auto) {
+    if (app.activePlot) {
+      return {
+        x: app.activePlot.meta.xScale.domain(),
+        y: app.activePlot.meta.yScale.domain()
+      }
+    }
+
     let domain = math.abs(math.evaluate(app.plotFunction.split('=')[1], { x: 0 })) * 2
 
     if (!isFinite(domain) || domain === 0) domain = 10
 
     return {
-      x: app.activePlot ? app.activePlot.meta.xScale.domain() : [-domain, domain],
-      y: app.activePlot ? app.activePlot.meta.yScale.domain() : [-domain, domain]
+      x: [-domain, domain],
+      y: [-domain, domain]
     }
   }
 
@@ -79,13 +86,13 @@ export function plot() {
       xLine: app.plotSettings.showCross,
       yLine: app.plotSettings.showCross,
       renderer: (x, y) => {
-        x = x.toFixed(app.plotSettings.domain.xPrecision)
-        y = math.evaluate(f, { x }).toFixed(app.settings.precision)
+        x = x.toFixed(app.plotSettings.domain.axisPrecision)
+        y = math.evaluate(f, { x }).toFixed(app.plotSettings.domain.axisPrecision)
 
         return ` x: ${x}, y: ${y}
           ${
             app.plotSettings.showDerivative
-              ? ', d: ' + math.evaluate(derivative, { x }).toFixed(app.settings.precision)
+              ? ', d: ' + math.evaluate(derivative, { x }).toFixed(app.plotSettings.domain.axisPrecision)
               : ''
           }`
       }
@@ -123,14 +130,17 @@ function setupEventListeners() {
   dom.exportPlot.addEventListener('click', () => {
     const svg = dom.el('.function-plot')
     svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
-    const fileName = `${productName} Plot ${app.plotFunction}`
+    const fileName = `${productName} Plot ${app.plotFunction}.svg`
     const preface = '<?xml version="1.0" standalone="no"?>\r\n'
     const svgBlob = new Blob([preface, svg.outerHTML], { type: 'image/svg+xml;charset=utf-8' })
     const downloadLink = document.createElement('a')
-    downloadLink.href = URL.createObjectURL(svgBlob)
+    const objectUrl = URL.createObjectURL(svgBlob)
+
+    downloadLink.href = objectUrl
     downloadLink.download = fileName
     downloadLink.click()
-    setTimeout(() => URL.revokeObjectURL(downloadLink.href), 60000)
+
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 100)
   })
 
   dom.axisSettingsButton.addEventListener('click', () => modal.show(dom.dialogPlotAxisSettings))
@@ -141,7 +151,8 @@ function setupEventListeners() {
     const isAutoDomain = dom.plotAutoDomain.checked
     const [xMin, xMax, yMin, yMax] = minMaxInputs.map((input) => parseFloat(input.value))
 
-    if (!validateDomain(xMin, xMax, yMin, yMax)) {
+    // Skip domain validation if Auto Domain is checked
+    if (!isAutoDomain && !validateDomain(xMin, xMax, yMin, yMax)) {
       showError(
         'Invalid Domain',
         'Please ensure all fields contain valid numbers and that the minimum values are less than the maximum values.'
@@ -149,7 +160,7 @@ function setupEventListeners() {
       return
     }
 
-    app.plotSettings.domain.xPrecision = parseFloat(dom.plotXPrecision.value)
+    app.plotSettings.domain.axisPrecision = parseFloat(dom.plotAxisPrecision.value)
     app.plotSettings.domain.auto = isAutoDomain
     app.plotSettings.domain.x = [xMin, xMax]
     app.plotSettings.domain.y = [yMin, yMax]
@@ -159,8 +170,8 @@ function setupEventListeners() {
     resetPlot()
   })
 
-  dom.plotXPrecision.addEventListener('input', () => {
-    dom.plotXPrecisionLabel.innerHTML = dom.plotXPrecision.value
+  dom.plotAxisPrecision.addEventListener('input', () => {
+    dom.plotAxisPrecisionLabel.innerHTML = dom.plotAxisPrecision.value
   })
 
   dom.plotAutoDomain.addEventListener('change', () => {
@@ -170,10 +181,10 @@ function setupEventListeners() {
   })
 
   dom.defaultDomainsButton.addEventListener('click', () => {
-    const { auto, x, y, xPrecision } = plotSettings.defaults.domain
+    const { auto, x, y, axisPrecision } = plotSettings.defaults.domain
 
-    dom.plotXPrecision.value = xPrecision
-    dom.plotXPrecisionLabel.innerHTML = xPrecision
+    dom.plotAxisPrecision.value = axisPrecision
+    dom.plotAxisPrecisionLabel.innerHTML = axisPrecision
     dom.plotAutoDomain.checked = auto
     dom.plotAutoDomain.dispatchEvent(new Event('change'))
 
