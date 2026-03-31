@@ -85,7 +85,7 @@ function copyAnswer(event, lineIndex, withLines) {
   lineIndex = +lineIndex
 
   const line = cm.getLine(lineIndex).trim()
-  const answer = dom.el(`[data-index="${lineIndex}"]`).firstChild.dataset.answer
+  const answer = dom.el(`[data-index="${lineIndex}"]`)?.firstChild?.dataset.answer
   const copiedText = withLines ? `${line} = ${answer}` : `${answer}`
 
   const safeText = safeCopyText(copiedText)
