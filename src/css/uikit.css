@@ -241,7 +241,7 @@
 
 .uk-tooltip {
   z-index: 1000000;
-  background-color: light-dark(#eeeeee, #000000);
+  background-color: light-dark(#f4f6f8, #000000);
   max-width: 60vw !important;
   color: light-dark(#000000, #ffffff);
   word-break: break-word;
@@ -251,25 +251,10 @@
   width: 100% !important;
 }
 
-.uk-notification {
-  margin-top: 30px;
-  margin-bottom: 30px;
-}
-
-.uk-notification-top-left,
-.uk-notification-bottom-left {
-  left: 25px;
-}
-
-.uk-notification-top-right,
-.uk-notification-bottom-right {
-  right: 25px;
-}
-
 .uk-notification-message {
   border: 1px solid light-dark(#efefef, #333333);
-  background-color: light-dark(#f8f8f8, #252525);
-  padding: 8px 35px 8px 10px;
+  background-color: light-dark(#fdfdfd, #252525);
+  padding: 5px 35px 5px 10px;
   font-size: 1rem;
 }
 
@@ -279,7 +264,7 @@
 
 .uk-notification-close {
   display: block;
-  top: 11px;
+  top: 9px;
   right: 10px;
 }
 
