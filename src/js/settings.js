@@ -36,14 +36,12 @@ function checkWarnings() {
  * @param {string|null} [disabledValue=null] - An optional value to disable in the select options.
  */
 function populateSelect(selectEl, options, disabledValue = null) {
-  selectEl.innerHTML = ''
-
-  options.forEach((option) => {
+  const htmlOptions = options.map((option) => {
     const [value, opt] = Object.entries(option)[0]
-
-    selectEl.innerHTML +=
-      value === disabledValue ? `<option disabled>${opt}</option>` : `<option value="${value}">${opt}</option>`
+    return value === disabledValue ? `<option disabled>${opt}</option>` : `<option value="${value}">${opt}</option>`
   })
+
+  selectEl.innerHTML = htmlOptions.join('')
 }
 
 let updateInterval
@@ -365,7 +363,7 @@ dom.bigNumWarn.addEventListener('click', () => {
     'Caution: BigNumber Limitations',
     `Using the BigNumber may break function plotting and is not compatible with some math functions. 
       It may also cause unexpected behavior and affect overall performance.<br><br>
-      <a target="_blank" href="https://mathjs.org/docs/datatypes/bignumbers.html">Read more on BigNumbers</a>`
+      <a target="_blank" rel="noopener noreferrer" href="https://mathjs.org/docs/datatypes/bignumbers.html">Read more on BigNumbers</a>`
   )
 })
 
