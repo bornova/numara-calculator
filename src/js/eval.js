@@ -35,6 +35,24 @@ const REGEX_PCNT_OF = /%[ ]*of[ ]*/g
 const REGEX_PCNT_OF_VAL = /[\w.]*%[ ]*of[ ]*/g
 const REGEX_PLOT = /\w\(x\)\s*=/
 
+const CURRENCY_CODES_PATTERN = Object.keys(currencySymbols).join('|')
+const REGEX_CURRENCY_FORMAT = new RegExp(`(-?[\\d.,]+(?:e[+-]?\\d+)?)\\s*(${CURRENCY_CODES_PATTERN})`, 'gi')
+
+// Helper to sort by length descending so longer symbols (e.g. "US$") match before shorter ones ("$")
+const CURRENCY_SYMBOLS_PATTERN = Object.values(currencySymbols)
+  .sort((a, b) => b.length - a.length)
+  .map(escapeRegExp)
+  .join('|')
+const REGEX_CURRENCY_SYMBOLS = new RegExp(`(${CURRENCY_SYMBOLS_PATTERN})`, 'g')
+
+/**
+ * Helper to replace a currency symbol with its code
+ */
+function replaceCurrencySymbol(symbol) {
+  const code = Object.keys(currencySymbols).find((k) => currencySymbols[k] === symbol)
+  return code ? code + ' ' : symbol
+}
+
 const CLASS_RULER = 'ruler'
 const CLASS_NO_RULER = 'noRuler'
 const CLASS_LINE_ERROR = 'lineNoError'
@@ -100,9 +118,7 @@ function evaluateLine(line, lineIndex, lineHandle, stats) {
     }
 
     if (app.settings.currency) {
-      Object.entries(currencySymbols).forEach(([code, symbol]) => {
-        line = line.replaceAll(symbol, code + ' ')
-      })
+      line = line.replace(REGEX_CURRENCY_SYMBOLS, replaceCurrencySymbol)
     }
 
     // Handle line continuation
@@ -194,11 +210,14 @@ function altEvaluate(line, stats) {
   }
 
   // Replace variables in the expression with values from the mathScope Map.
-  for (const [key, value] of app.mathScope.entries()) {
-    const safeKey = escapeRegExp(key)
-    const regex = new RegExp(`\\b${safeKey}\\b`, 'g')
-
-    parsedLine = parsedLine.replace(regex, value)
+  const scopeKeys = Array.from(app.mathScope.keys())
+  if (scopeKeys.length > 0) {
+    const scopeKeysPattern = scopeKeys
+      .sort((a, b) => b.length - a.length)
+      .map(escapeRegExp)
+      .join('|')
+    const scopeRegex = new RegExp(`\\b(${scopeKeysPattern})\\b`, 'g')
+    parsedLine = parsedLine.replace(scopeRegex, (match) => app.mathScope.get(match))
   }
 
   // Calculate and return avg, subavg, total and subtotal values.
@@ -269,10 +288,7 @@ function stripAnswer(answer) {
  * @returns {string} - The formatted currency string.
  */
 function formatCurrency(str) {
-  const codes = Object.keys(currencySymbols).join('|')
-  const regex = new RegExp(`(-?[\\d.,]+(?:e[+-]?\\d+)?)\\s*(${codes})`, 'gi')
-
-  return str.replace(regex, (_, amount, code) => `${currencySymbols[code.toUpperCase()]}${amount}`)
+  return str.replace(REGEX_CURRENCY_FORMAT, (_, amount, code) => `${currencySymbols[code.toUpperCase()]}${amount}`)
 }
 
 /**
