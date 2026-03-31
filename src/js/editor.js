@@ -149,8 +149,8 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
   let list = []
 
   if (curStr && (!curStr.endsWith('.') || curStr === 'formulajs.') && curWord) {
-    const curWordRegex = new RegExp('^' + curWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
-    const match = ({ text }) => curWordRegex.test(text)
+    const searchWord = curWord.toLowerCase()
+    const match = ({ text }) => text.toLowerCase().startsWith(searchWord)
     const variableHints = []
 
     // Build hints for all variables from the current math scope
@@ -185,12 +185,16 @@ CodeMirror.commands.autocomplete = (cm) => {
 
 // Force editor line bottom alignment
 function cmForceBottom() {
-  const lineTop = cm.display.lineDiv.children[cm.getCursor().line].getBoundingClientRect().top
-  const lineBottom = cm.display.lineDiv.children[cm.getCursor().line].getBoundingClientRect().bottom
-  const barTop = dom.el('.CodeMirror-hscrollbar').getBoundingClientRect().top
-  const lineHeight = lineBottom - lineTop
+  const lineEl = cm.display.lineDiv.children[cm.getCursor().line]
+  if (!lineEl) return
 
-  if (barTop - lineTop < lineHeight) dom.output.scrollTop = dom.output.scrollTop + (lineHeight - (barTop - lineTop))
+  const lineRect = lineEl.getBoundingClientRect()
+  const barTop = dom.el('.CodeMirror-hscrollbar').getBoundingClientRect().top
+  const lineHeight = lineRect.bottom - lineRect.top
+
+  if (barTop - lineRect.top < lineHeight) {
+    dom.output.scrollTop += lineHeight - (barTop - lineRect.top)
+  }
 }
 
 /** Toggles comments on the selected lines.
@@ -263,14 +267,17 @@ cm.on('inputRead', (cm) => {
   CodeMirror.commands.autocomplete(cm)
 })
 
+let previousActiveLine = -1
+
 cm.on('cursorActivity', (cm) => {
   const activeLine = cm.getCursor().line
 
-  cm.eachLine((line) => {
-    const cmLineNo = cm.getLineNumber(line)
+  if (previousActiveLine !== -1 && previousActiveLine !== activeLine) {
+    cm.removeLineClass(previousActiveLine, 'gutter', 'activeLine')
+  }
 
-    cm[cmLineNo === activeLine ? 'addLineClass' : 'removeLineClass'](cmLineNo, 'gutter', 'activeLine')
-  })
+  cm.addLineClass(activeLine, 'gutter', 'activeLine')
+  previousActiveLine = activeLine
 
   setTimeout(cmForceBottom, 20)
 
@@ -389,9 +396,11 @@ function handleConstantTooltip(target) {
  * @param {HTMLElement} target - The DOM element representing the variable.
  */
 function handleVariableTooltip(target) {
-  if (!app.mathScope.get(target.textContent) || typeof app.mathScope.get(target.textContent) === 'function') return
+  const text = target.textContent
+  const val = app.mathScope.get(text)
+  if (!val || typeof val === 'function') return
 
-  let varTooltip = formatAnswer(app.mathScope.get(target.textContent) ?? 'Undefined')
+  let varTooltip = formatAnswer(val ?? 'Undefined')
 
   showTooltip(target, varTooltip)
 }
@@ -401,10 +410,8 @@ function handleVariableTooltip(target) {
  * @param {HTMLElement} target - The DOM element representing the line number.
  */
 function handleLineNoTooltip(target) {
-  let tooltip =
-    typeof app.mathScope.get(target.textContent) === 'function'
-      ? 'Function'
-      : formatAnswer(app.mathScope.get(target.textContent) ?? 'Undefined')
+  const val = app.mathScope.get(target.textContent)
+  let tooltip = typeof val === 'function' ? 'Function' : formatAnswer(val ?? 'Undefined')
 
   showTooltip(target, tooltip)
 }
