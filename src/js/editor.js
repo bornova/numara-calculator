@@ -284,6 +284,8 @@ cm.on('cursorActivity', (cm) => {
   const pages = store.get('pages')
   const page = pages.find((page) => page.id === app.activePage)
 
+  if (!page) return
+
   page.cursor = cm.getCursor()
 
   store.set('pages', pages)
@@ -292,7 +294,7 @@ cm.on('cursorActivity', (cm) => {
 cm.on('gutterClick', (cm, line) => {
   const lineNo = line + 1
   const activeLine = cm.getCursor().line + 1
-  const error = dom.el('[data-index="' + line + '"]').firstChild?.dataset.error
+  const error = dom.el('[data-index="' + line + '"]')?.firstChild?.dataset.error
 
   if (error) {
     showError(`Error on Line ${lineNo}`, error)
