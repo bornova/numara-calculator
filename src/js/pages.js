@@ -116,7 +116,11 @@ export function duplicatePage(pageId) {
  */
 export function deletePage(pageId) {
   let pages = store.get('pages')
-  const pageName = pages.find((page) => page.id === pageId).name
+  const found = pages.find((page) => page.id === pageId)
+
+  if (!found) return
+
+  const pageName = found.name
 
   confirm(`"${pageName}" will be deleted.`, () => {
     pages = pages.filter((page) => page.id !== pageId)
