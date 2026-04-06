@@ -204,7 +204,7 @@ const setupAppInfo = () => {
     : `Version ${version}
       <div class="versionCtnr">
         <div>
-          <a href="https://github.com/bornova/numara-calculator/releases" target="_blank">Download desktop version</a>
+          <a href="https://github.com/bornova/numara-calculator/releases" target="_blank" rel="noopener noreferrer">Download desktop version</a>
         </div>
       </div>`
   dom.gitLink.href = homepage
@@ -231,7 +231,8 @@ const setupAppInfo = () => {
   }
 }
 
-const isModalOpen = () => dom.els('.uk-open').length > 0
+let modalOpenState = false
+const isModalOpen = () => modalOpenState
 
 const setupKeyboardShortcuts = () => {
   const keys = {
@@ -261,7 +262,7 @@ const setupKeyboardShortcuts = () => {
 const setupPrintArea = () => {
   window.addEventListener('beforeprint', () => {
     const printArea = document.createElement('div')
-    let tableRows = ''
+    const tableRows = []
 
     printArea.setAttribute('id', 'printArea')
     printArea.className = 'printArea'
@@ -278,7 +279,7 @@ const setupPrintArea = () => {
       >`
       const noBB = app.settings.answerPosition ? 'border-bottom: none !important;' : ''
 
-      tableRows +=
+      const rowHtml =
         app.settings.answerPosition === 'bottom'
           ? `
           ${trHeader}
@@ -295,6 +296,8 @@ const setupPrintArea = () => {
             <td style="width:${app.settings.inputWidth}%;">${input}</td>
             <td class="printAnswer${app.settings.answerPosition === 'left' ? 'Left' : 'Right'}">${answer}</td>
           </tr>`
+
+      tableRows.push(rowHtml)
     })
 
     printArea.innerHTML = `
@@ -306,7 +309,7 @@ const setupPrintArea = () => {
           font-size: ${app.settings.fontSize};
           font-weight: ${app.settings.fontWeight};
           line-height: ${app.settings.lineHeight};"
-      >${tableRows}</table>`
+      >${tableRows.join('')}</table>`
 
     document.body.appendChild(printArea)
   })
@@ -326,7 +329,8 @@ const setupUIkitUtils = () => {
   })
 
   UIkit.util.on('.modal, #sidePanel', 'hidden', () => {
-    if (isElectron) numara.transControls(isModalOpen())
+    modalOpenState = dom.els('.uk-open').length > 0
+    if (isElectron) numara.transControls(modalOpenState)
 
     setTimeout(() => cm.focus(), 100)
   })
@@ -366,12 +370,12 @@ const setupUIkitUtils = () => {
   })
 
   UIkit.util.on('#dialogPlotAxisSettings', 'shown', () => {
-    const { auto, x, y, xPrecision } = app.plotSettings.domain
+    const { auto, x, y, axisPrecision } = app.plotSettings.domain
     const minMaxInputs = [dom.plotXMin, dom.plotXMax, dom.plotYMin, dom.plotYMax]
 
     dom.plotAutoDomain.checked = auto
-    dom.plotXPrecision.value = xPrecision
-    dom.plotXPrecisionLabel.innerHTML = xPrecision
+    dom.plotAxisPrecision.value = axisPrecision
+    dom.plotAxisPrecisionLabel.innerHTML = axisPrecision
 
     minMaxInputs.forEach((input, i) => {
       input.value = [...x, ...y][i]

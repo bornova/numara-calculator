@@ -21,7 +21,12 @@ function updatePageName(name, pageId) {
 export function getPageName() {
   const pages = store.get('pages') || []
   const usedNumbers = new Set(
-    pages.map((page) => Number(page.name.trim().replace(/^Page (\d+)$/, '$1')) || null).filter((n) => n !== null)
+    pages
+      .map((page) => {
+        const match = page.name.trim().match(/^Page (\d+)$/)
+        return match ? Number(match[1]) : null
+      })
+      .filter((n) => n !== null)
   )
   let pageNo = 1
 
@@ -111,7 +116,11 @@ export function duplicatePage(pageId) {
  */
 export function deletePage(pageId) {
   let pages = store.get('pages')
-  const pageName = pages.find((page) => page.id === pageId).name
+  const found = pages.find((page) => page.id === pageId)
+
+  if (!found) return
+
+  const pageName = found.name
 
   confirm(`"${pageName}" will be deleted.`, () => {
     pages = pages.filter((page) => page.id !== pageId)
@@ -360,11 +369,21 @@ dom.renamePageTitleInput.addEventListener('keyup', (event) => {
   if (event.key === 'Enter') dom.dialogRenamePageSave.click()
 })
 
-dom.pageList.addEventListener('scroll', () => {
-  dom.els('.uk-dropdown').forEach((el) => {
-    const dropdown = UIkit.dropdown(el)
+let isScrolling = false
 
-    if (dropdown) dropdown.hide(0)
+dom.pageList.addEventListener('scroll', () => {
+  if (isScrolling) return
+  isScrolling = true
+
+  requestAnimationFrame(() => {
+    const openDropdowns = dom.els('.uk-dropdown.uk-open')
+    if (openDropdowns.length > 0) {
+      openDropdowns.forEach((el) => {
+        const dropdown = UIkit.dropdown(el)
+        if (dropdown) dropdown.hide(0)
+      })
+    }
+    isScrolling = false
   })
 })
 

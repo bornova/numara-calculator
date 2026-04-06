@@ -17,7 +17,7 @@ function updateUserDefinedFunctions(newUdfObj) {
   previouslyImportedUDFs.forEach((key) => {
     delete math[key]
 
-    if (math.expression && math.expression.mathWithTransform) {
+    if (math.expression?.mathWithTransform) {
       delete math.expression.mathWithTransform[key]
     }
   })
@@ -32,13 +32,13 @@ function updateUserDefinedFunctions(newUdfObj) {
  */
 function updateUserDefinedUnits(newUduObj) {
   previouslyCreatedUnits.forEach((unitName) => {
-    if (math.Unit && math.Unit.UNITS) {
+    if (math.Unit?.UNITS) {
       delete math.Unit.UNITS[unitName]
     }
 
     delete math[unitName]
 
-    if (math.expression && math.expression.mathWithTransform) {
+    if (math.expression?.mathWithTransform) {
       delete math.expression.mathWithTransform[unitName]
     }
   })
@@ -73,28 +73,26 @@ function validateUdfObj(obj) {
  * @returns {Promise<void>}
  */
 export function applyUdfu(input, type) {
-  return new Promise((resolve, reject) => {
-    try {
-      const isFunc = type === 'func'
-      const UDFunc = new Function('math', 'luxon', 'nerdamer', 'formulajs', `'use strict'; return {${input}}`)
-      const udfObj = UDFunc(math, luxon, nerdamer, formulajs)
+  try {
+    const isFunc = type === 'func'
+    const UDFunc = new Function('math', 'luxon', 'nerdamer', 'formulajs', `'use strict'; return {${input}}`)
+    const udfObj = UDFunc(math, luxon, nerdamer, formulajs)
 
-      validateUdfObj(udfObj)
+    validateUdfObj(udfObj)
 
-      if (isFunc) {
-        updateUserDefinedFunctions(udfObj)
-      } else {
-        updateUserDefinedUnits(udfObj)
-      }
-
-      app[isFunc ? 'udfList' : 'uduList'] = Object.keys(udfObj)
-
-      store.set(isFunc ? 'udf' : 'udu', input)
-      resolve()
-    } catch (error) {
-      reject(error)
+    if (isFunc) {
+      updateUserDefinedFunctions(udfObj)
+    } else {
+      updateUserDefinedUnits(udfObj)
     }
-  })
+
+    app[isFunc ? 'udfList' : 'uduList'] = Object.keys(udfObj)
+
+    store.set(isFunc ? 'udf' : 'udu', input)
+  } catch (error) {
+    if (app.settings.lineErrors) showError(error.name, error.message)
+    throw error
+  }
 }
 
 /**
@@ -103,14 +101,16 @@ export function applyUdfu(input, type) {
  * @param {string} type 'func' | 'unit'
  */
 function saveUserDefined(input, type) {
-  applyUdfu(input.getValue().trim(), type)
-    .then(() => {
-      refreshEditor()
-      calculate()
+  try {
+    applyUdfu(input.getValue().trim(), type)
 
-      modal.hide('#dialogUdfu')
-    })
-    .catch((error) => showError(error.name, error.message))
+    refreshEditor()
+    calculate()
+
+    modal.hide('#dialogUdfu')
+  } catch (error) {
+    showError(error.name, error.message)
+  }
 }
 
 // Event listeners for saving user defined functions and units

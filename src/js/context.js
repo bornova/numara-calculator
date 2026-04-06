@@ -85,7 +85,7 @@ function copyAnswer(event, lineIndex, withLines) {
   lineIndex = +lineIndex
 
   const line = cm.getLine(lineIndex).trim()
-  const answer = dom.el(`[data-index="${lineIndex}"]`).firstChild.dataset.answer
+  const answer = dom.el(`[data-index="${lineIndex}"]`)?.firstChild?.dataset.answer
   const copiedText = withLines ? `${line} = ${answer}` : `${answer}`
 
   const safeText = safeCopyText(copiedText)
@@ -109,15 +109,15 @@ function copyAllLines() {
 function copyAllAnswers() {
   if (cm.getValue() === '') return copyToClipboard()
 
-  let copiedOutputs = ''
+  const copiedOutputs = []
 
   cm.eachLine((line) => {
     const index = cm.getLineNumber(line)
 
-    copiedOutputs += `${dom.el(`[data-index="${index}"]`)?.textContent ?? ''}\n`
+    copiedOutputs.push(dom.el(`[data-index="${index}"]`)?.textContent ?? '')
   })
 
-  copyToClipboard(copiedOutputs, 'Copied all answers to clipboard.')
+  copyToClipboard(copiedOutputs.join('\n'), 'Copied all answers to clipboard.')
 }
 
 /**
@@ -126,20 +126,22 @@ function copyAllAnswers() {
 export function copyAll() {
   if (cm.getValue() === '') return copyToClipboard()
 
-  let copiedCalc = ''
+  const copiedCalc = []
 
   cm.eachLine((line) => {
     const lineIndex = cm.getLineNumber(line)
     const text = cm.getLine(lineIndex).trim()
 
-    copiedCalc += text
-      ? text.match(/^(#|\/\/)/)
-        ? `${text}\n`
-        : `${text} = ${dom.el(`[data-index="${lineIndex}"]`)?.textContent ?? ''}\n`
-      : '\n'
+    if (text) {
+      copiedCalc.push(
+        text.match(/^(#|\/\/)/) ? text : `${text} = ${dom.el(`[data-index="${lineIndex}"]`)?.textContent ?? ''}`
+      )
+    } else {
+      copiedCalc.push('')
+    }
   })
 
-  copyToClipboard(copiedCalc, 'Copied page to clipboard.')
+  copyToClipboard(copiedCalc.join('\n'), 'Copied page to clipboard.')
 }
 
 // Context menus

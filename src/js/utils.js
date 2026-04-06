@@ -1,5 +1,4 @@
 import { dom } from './dom'
-import { notify } from './modal'
 
 /** App globals. */
 export const app = {
@@ -71,14 +70,12 @@ export async function checkSize() {
     isElectron && (await numara.isResized()) && !(await numara.isMaximized()) ? 'block' : 'none'
 }
 
-/** Check user locale for thousands separator. */
+/** Check user locale for decimal separator. */
 export function localeUsesComma() {
   const locale =
     app.settings.locale === 'system' ? (navigator.languages?.[0] ?? navigator.language) : app.settings.locale
 
-  const test = (1.11).toLocaleString(locale)
-
-  return test.includes(',')
+  return (1.11).toLocaleString(locale).includes(',')
 }
 
 /** Check for app update */
@@ -97,10 +94,6 @@ export function checkAppUpdate() {
         updateStatusMessage('Checking for updates...')
         break
       case 'available':
-        notify(
-          `A new updated version ${version} is available. <a class="notificationLink" onclick="document.querySelector('#aboutButton').click()">Update status</a>`
-        )
-
         dom.notificationDot.style.display = 'block'
         break
 
@@ -115,12 +108,6 @@ export function checkAppUpdate() {
 
         updateStatusMessage(notice)
 
-        if (!dom.dialogAbout.classList.contains('uk-open')) {
-          notify(
-            `${notice} <a class="notificationLink" onclick="document.querySelector('#updateButton').click()">Install Now</a>`
-          )
-        }
-
         dom.updateButton.style.display = 'inline-block'
         dom.updateButton.addEventListener('click', () => numara.updateApp())
         break
@@ -134,6 +121,14 @@ export function checkAppUpdate() {
   })
 }
 
+const HTML_ESCAPES = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  "'": '&#39;',
+  '"': '&quot;'
+}
+
 /**
  * Escape HTML special characters in a string.
  *
@@ -142,17 +137,7 @@ export function checkAppUpdate() {
  */
 export function escapeHTML(str) {
   if (typeof str !== 'string') return str
-  return str.replace(
-    /[&<>'"]/g,
-    (tag) =>
-      ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        "'": '&#39;',
-        '"': '&quot;'
-      })[tag]
-  )
+  return str.replace(/[&<>'"]/g, (tag) => HTML_ESCAPES[tag])
 }
 
 /**
