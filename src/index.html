@@ -43,22 +43,22 @@
       </div>
 
       <div id="actions" class="actions uk-flex uk-flex-middle">
-        <div id="leftActions" class="leftActions uk-flex uk-flex-middle uk-flex-1">
+        <div id="leftActions" class="leftActions uk-flex-left uk-flex-middle">
           <a id="sidePanelButton" class="action" title="Pages" uk-toggle="target: #sidePanel" uk-tooltip>
             <i data-lucide="panel-left"></i>
           </a>
           <a id="newPageButton" class="action newPageButton" title="New page" uk-tooltip>
             <i data-lucide="plus"></i>
           </a>
-          <span class="actionDivider"></span>
+          <span id="actionDivider" class="actionDivider"></span>
           <a id="printButton" class="action" title="Print page" uk-tooltip><i data-lucide="printer"></i></a>
           <a id="clearButton" class="action" title="Clear page" uk-tooltip><i data-lucide="brush-cleaning"></i></a>
           <a id="copyButton" class="action" title="Copy page" uk-tooltip><i data-lucide="copy"></i></a>
         </div>
-        <div id="centerActions" class="centerActions uk-flex uk-flex-middle">
-          <span id="pageName" class="pageName uk-text-center" uk-tooltip="delay: 1000"></span>
+        <div id="centerActions" class="centerActions uk-flex-center uk-flex-middle uk-flex-1 uk-text-center">
+          <span id="pageName" class="pageName" uk-tooltip="delay: 1000"></span>
         </div>
-        <div id="rightActions" class="rightActions uk-flex uk-flex-middle uk-flex-right uk-flex-1">
+        <div id="rightActions" class="rightActions uk-flex-right uk-flex-middle">
           <a id="udfuButton" class="action" title="User functions and units" uk-tooltip><i data-lucide="braces"></i></a>
           <a id="settingsButton" class="action" title="Settings" uk-tooltip><i data-lucide="settings"></i></a>
           <a id="aboutButton" class="action" title="About" uk-tooltip><i data-lucide="info"></i></a>
@@ -67,7 +67,8 @@
       </div>
     </div>
 
-    <div id="sidePanel" uk-offcanvas="overlay: true">
+    <div id="sidePanel">
+      <div id="sidePanelResizer" class="sidePanelResizer"></div>
       <div class="uk-offcanvas-bar uk-flex uk-flex-column">
         <div id="pageListHeader" class="pageListHeader">
           <span id="pageListSort" class="pageListSort uk-float-right" title="Sort">
@@ -249,6 +250,16 @@
                 <input id="alwaysOnTop" type="checkbox" class="settingItem" />
                 <span class="slider round"></span>
               </label>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div class="padTop1" data-help="pageListPosition">Page list position</div>
+            <div class="uk-text-right uk-position-relative">
+              <select id="pageListPosition" class="uk-select settingItem">
+                <option value="auto">Auto</option>
+                <option value="slide">Slide out</option>
+                <option value="dock">Docked</option>
+              </select>
             </div>
           </div>
 
