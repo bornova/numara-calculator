@@ -7,6 +7,83 @@ import { DateTime } from 'luxon'
 
 import UIkit from 'uikit'
 
+// Side bar management
+const SIDEBAR_MIN_WIDTH = 180
+const SIDEBAR_MAX_WIDTH = 400
+const SIDEBAR_DEFAULT_WIDTH = 240
+
+/* Apply sidebar width */
+function applySidebarWidth(width) {
+  const bar = dom.el('#sidePanel .uk-offcanvas-bar')
+  const resizer = dom.el('#sidePanelResizer')
+  if (bar) bar.style.width = `${width}px`
+  if (resizer) resizer.style.left = `${width}px`
+  dom.appWrapper.style.left = `${width}px`
+}
+
+let sidePanelResizerSetup = false
+
+/* Setup side panel resizer */
+function setupSidePanelResizer() {
+  if (sidePanelResizerSetup) return
+  sidePanelResizerSetup = true
+
+  const resizer = dom.el('#sidePanelResizer')
+
+  resizer.addEventListener('mousedown', (e) => {
+    e.preventDefault()
+    resizer.classList.add('resizing')
+
+    const onMouseMove = (e) => {
+      const width = Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, e.clientX))
+      applySidebarWidth(width)
+    }
+
+    const onMouseUp = (e) => {
+      resizer.classList.remove('resizing')
+      const width = Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, e.clientX))
+      store.set('sidePanelWidth', width)
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
+
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+  })
+
+  resizer.addEventListener('dblclick', () => {
+    applySidebarWidth(SIDEBAR_DEFAULT_WIDTH)
+    store.set('sidePanelWidth', SIDEBAR_DEFAULT_WIDTH)
+  })
+}
+
+/* Setup side panel based on settings and window size */
+export function setupSidePanel() {
+  const { pageListPosition } = app.settings
+  const isWide = (window.visualViewport?.width ?? window.innerWidth) > 900
+  const dock = pageListPosition === 'dock' || (pageListPosition === 'auto' && isWide)
+
+  app.sidebarDocked = dock
+
+  dom.sidePanel.classList.toggle('sidebar-docked', dock)
+  dom.sidePanelButton.style.display = dock ? 'none' : ''
+  dom.closeSidePanelButton.style.display = dock ? 'none' : ''
+  dom.newPageButton.style.display = dock ? 'none' : ''
+  dom.actionDivider.style.display = dock ? 'none' : ''
+
+  if (dock) {
+    const width = store.get('sidePanelWidth') ?? SIDEBAR_DEFAULT_WIDTH
+
+    applySidebarWidth(width)
+    setupSidePanelResizer()
+    UIkit.offcanvas('#sidePanel', { overlay: false, mode: 'none', escClose: false, bgClose: false }).show()
+  } else {
+    dom.appWrapper.style.left = '0'
+
+    UIkit.offcanvas('#sidePanel', { overlay: true, mode: 'slide', escClose: true, bgClose: true })
+  }
+}
+
 function updatePageName(name, pageId) {
   const pageDate = DateTime.fromFormat(pageId, 'yyyyMMddHHmmssSSS').toFormat('FF')
 
@@ -424,7 +501,9 @@ document.addEventListener('click', (event) => {
   if (event.target.parentNode?.dataset?.action === 'load') {
     let pageId = event.target.parentNode.parentNode.id
     loadPage(pageId)
-    UIkit.offcanvas('#sidePanel').hide()
+
+    if (!app.sidebarDocked) UIkit.offcanvas('#sidePanel').hide()
+
     return
   }
 
