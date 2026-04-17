@@ -1,7 +1,7 @@
 import { dom } from './dom'
 import { cm } from './editor'
 import { confirm, modal, notify } from './modal'
-import { app, isElectron, store } from './utils'
+import { app, escapeHTML, isElectron, store } from './utils'
 
 import { DateTime } from 'luxon'
 
@@ -10,7 +10,7 @@ import UIkit from 'uikit'
 function updatePageName(name, pageId) {
   const pageDate = DateTime.fromFormat(pageId, 'yyyyMMddHHmmssSSS').toFormat('FF')
 
-  dom.pageName.innerHTML = name
+  dom.pageName.textContent = name
   dom.pageName.title = `${name} - ${pageDate}`
 }
 
@@ -192,6 +192,12 @@ export function renamePage(pageId) {
  */
 export function loadPage(pageId) {
   const page = store.get('pages').find((p) => p.id === pageId)
+
+  if (!page) {
+    notify('Page not found.', 'danger')
+    return
+  }
+
   const { name, data, history, cursor } = page
 
   app.activePage = pageId
@@ -270,7 +276,7 @@ export function populatePages() {
     )
     pageListItem.innerHTML = `
       <div class="uk-flex-1" data-action="load" data-page="${page.id}">
-        <div class="pageListItemTitle" title="${page.name}">${page.name}</div>
+        <div class="pageListItemTitle" title="${escapeHTML(page.name)}">${escapeHTML(page.name)}</div>
         <div class="dialog-open-date">${DateTime.fromFormat(page.id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
       </div>
       <div class="uk-flex-right uk-margin-small-right">
