@@ -167,10 +167,10 @@ export const settings = {
     populateSelect(dom.notation, notations, 'spacer')
     populateSelect(dom.matrixType, matrixTypes)
 
-    dom.precisionLabel.innerHTML = app.settings.precision
-    dom.expLowerLabel.innerHTML = app.settings.expLower
-    dom.expUpperLabel.innerHTML = app.settings.expUpper
-    dom.lastUpdated.innerHTML = app.settings.currency ? store.get('rateDate') : ''
+    dom.precisionLabel.textContent = app.settings.precision
+    dom.expLowerLabel.textContent = app.settings.expLower
+    dom.expUpperLabel.textContent = app.settings.expUpper
+    dom.lastUpdated.textContent = app.settings.currency ? store.get('rateDate') : ''
     dom.currencyUpdate.style.visibility = app.settings.currency ? 'visible' : 'hidden'
 
     Object.keys(app.settings).forEach((key) => {
