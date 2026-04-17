@@ -189,7 +189,8 @@ function cmForceBottom() {
   if (!lineEl) return
 
   const lineRect = lineEl.getBoundingClientRect()
-  const barTop = dom.el('.CodeMirror-hscrollbar').getBoundingClientRect().top
+  const barTop = dom.el('.CodeMirror-hscrollbar')?.getBoundingClientRect()?.top
+  if (barTop === undefined) return
   const lineHeight = lineRect.bottom - lineRect.top
 
   if (barTop - lineRect.top < lineHeight) {
