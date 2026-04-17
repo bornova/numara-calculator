@@ -4,6 +4,7 @@ import { cm, udfInput, uduInput } from './editor'
 import { calculate, math } from './eval'
 import { getRates } from './forex'
 import { confirm, modal, showError } from './modal'
+import { setupSidePanel } from './pages'
 import { app, checkSize, getTheme, isElectron, store } from './utils'
 
 import { applyChange, observableDiff } from 'deep-diff-esm'
@@ -77,6 +78,7 @@ export const settings = {
     notifyDuration: '5000',
     notifyLocation: 'bottom-center',
     numericOutput: 'number',
+    pageListPosition: 'auto',
     precision: '4',
     predictable: false,
     rulers: false,
@@ -225,6 +227,8 @@ export const settings = {
       el.style.fontWeight = app.settings.fontWeight
       el.style.setProperty('line-height', app.settings.lineHeight, 'important')
     })
+
+    setupSidePanel()
 
     if (app.settings.answerPosition !== 'bottom') {
       cm.eachLine((cmLine) => {
