@@ -243,8 +243,20 @@ function altEvaluate(line, stats) {
   // Handle date/time arithmetic.
   if (parsedLine.match(REGEX_DATE_TIME)) {
     const locale = { locale: app.settings.locale }
-    const lineDate = parsedLine.replace(REGEX_DATE_TIME, '').trim()
-    const lineDateRight = parsedLine.replace(lineDate, '').trim()
+
+    // Strip assignment prefix (e.g. "tmrw = today + 1 day" → prefix="tmrw = ", datePart="today + 1 day")
+    let assignPrefix = ''
+    let datePart = parsedLine
+
+    const assignMatch = parsedLine.match(/^([\p{L}\p{M}_][\p{L}\p{M}\w]*)\s*=\s*(.+)$/u)
+
+    if (assignMatch) {
+      assignPrefix = `${assignMatch[1]} = `
+      datePart = assignMatch[2]
+    }
+
+    const lineDate = datePart.replace(REGEX_DATE_TIME, '').trim()
+    const lineDateRight = datePart.replace(lineDate, '').trim()
 
     const formats = [
       { fmt: nowDayFormat, dt: DateTime.fromFormat(lineDate, nowDayFormat, locale) },
@@ -261,7 +273,7 @@ function altEvaluate(line, stats) {
     const durHrs = Number(rightOfDate.split(' ')[0])
     const dtLine = found.dt.plus({ hours: durHrs }).toFormat(found.fmt)
 
-    parsedLine = `"${dtLine}"`
+    parsedLine = `${assignPrefix}"${dtLine}"`
   }
 
   // Convert "% of" syntax to arithmetic
