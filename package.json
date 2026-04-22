@@ -30,7 +30,7 @@
     "@melloware/coloris": "^0.25.0",
     "codemirror": "^5.65.21",
     "deep-diff-esm": "^2.0.0",
-    "electron": "^41.2.1",
+    "electron": "^41.2.2",
     "electron-builder": "^26.8.1",
     "esbuild": "^0.28.0",
     "eslint": "^10.2.1",
@@ -43,7 +43,7 @@
     "nerdamer-prime": "^1.4.0",
     "prettier": "^3.8.3",
     "tinykeys": "^3.0.0",
-    "uikit": "^3.25.15"
+    "uikit": "^3.25.16"
   },
   "dependencies": {
     "electron-log": "^5.4.3",
