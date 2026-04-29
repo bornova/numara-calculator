@@ -76,7 +76,15 @@ export function setupSidePanel() {
 
     applySidebarWidth(width)
     setupSidePanelResizer()
-    UIkit.offcanvas('#sidePanel', { overlay: false, mode: 'none', escClose: false, bgClose: false }).show()
+
+    const isVisible = dom.sidePanel.classList.contains('uk-open')
+
+    UIkit.offcanvas('#sidePanel', {
+      overlay: false,
+      mode: isVisible ? 'none' : 'slide',
+      escClose: false,
+      bgClose: false
+    }).show()
   } else {
     dom.appWrapper.style.left = '0'
 
