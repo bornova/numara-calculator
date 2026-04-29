@@ -4,6 +4,7 @@ import { cm, udfInput, uduInput } from './editor'
 import { calculate, math } from './eval'
 import { getRates } from './forex'
 import { confirm, modal, showError } from './modal'
+import { setupSidePanel } from './pages'
 import { app, checkSize, getTheme, isElectron, store } from './utils'
 
 import { applyChange, observableDiff } from 'deep-diff-esm'
@@ -77,6 +78,7 @@ export const settings = {
     notifyDuration: '5000',
     notifyLocation: 'bottom-center',
     numericOutput: 'number',
+    pageListPosition: 'auto',
     precision: '4',
     predictable: false,
     rulers: false,
@@ -167,10 +169,10 @@ export const settings = {
     populateSelect(dom.notation, notations, 'spacer')
     populateSelect(dom.matrixType, matrixTypes)
 
-    dom.precisionLabel.innerHTML = app.settings.precision
-    dom.expLowerLabel.innerHTML = app.settings.expLower
-    dom.expUpperLabel.innerHTML = app.settings.expUpper
-    dom.lastUpdated.innerHTML = app.settings.currency ? store.get('rateDate') : ''
+    dom.precisionLabel.textContent = app.settings.precision
+    dom.expLowerLabel.textContent = app.settings.expLower
+    dom.expUpperLabel.textContent = app.settings.expUpper
+    dom.lastUpdated.textContent = app.settings.currency ? store.get('rateDate') : ''
     dom.currencyUpdate.style.visibility = app.settings.currency ? 'visible' : 'hidden'
 
     Object.keys(app.settings).forEach((key) => {
@@ -278,6 +280,8 @@ export const settings = {
     } else {
       store.set('rateInterval', false)
     }
+
+    setupSidePanel()
 
     setTimeout(calculate, 10)
   },

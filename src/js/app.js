@@ -7,7 +7,7 @@ import { initializeUSD } from './forex'
 import { initializeHelpTooltips } from './help'
 import { generateIcons } from './icons'
 import { modal, notify, showError } from './modal'
-import { getPageName, initializePages, pageOrder, populatePages } from './pages'
+import { getPageName, initializePages, pageOrder, populatePages, setupSidePanel } from './pages'
 import { plot } from './plot'
 import { settings } from './settings'
 import { applyUdfu } from './userDefined'
@@ -142,7 +142,7 @@ const setupPanelResizer = () => {
 
     resizeRaf = requestAnimationFrame(() => {
       const offset = 10
-      const pointerRelativeXpos = event.clientX - dom.mainPanel.offsetLeft - offset
+      const pointerRelativeXpos = event.clientX - dom.mainPanel.getBoundingClientRect().left - offset
       let inputWidth = (pointerRelativeXpos / dom.mainPanel.clientWidth) * 100
 
       inputWidth = Math.max(0, Math.min(100, inputWidth))
@@ -406,6 +406,16 @@ const setupUIkitUtils = () => {
   })
 }
 
+function initializeSidePanel() {
+  let resizeTimer
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer)
+    resizeTimer = setTimeout(setupSidePanel, 100)
+  })
+
+  setupSidePanel()
+}
+
 const initializeApp = async () => {
   generateIcons()
 
@@ -425,6 +435,7 @@ const initializeApp = async () => {
   setupKeyboardShortcuts()
   setupPrintArea()
   setupUIkitUtils()
+  initializeSidePanel()
   initializePages()
   initializeContextMenus()
   initializeHelpTooltips()

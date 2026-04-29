@@ -70,6 +70,10 @@ const keywords = [
 // Cache for compiled expressions
 const compiledExpressions = new Map()
 
+// Cache for the scope variable regex used in altEvaluate
+let cachedScopeRegex = null
+let cachedScopePattern = ''
+
 /**
  * Retrieve a compiled Math.js expression. If the expression has not been
  * compiled before, compile it and store it in the cache.
@@ -216,8 +220,13 @@ function altEvaluate(line, stats) {
       .sort((a, b) => b.length - a.length)
       .map(escapeRegExp)
       .join('|')
-    const scopeRegex = new RegExp(`\\b(${scopeKeysPattern})\\b`, 'g')
-    parsedLine = parsedLine.replace(scopeRegex, (match) => app.mathScope.get(match))
+
+    if (scopeKeysPattern !== cachedScopePattern) {
+      cachedScopePattern = scopeKeysPattern
+      cachedScopeRegex = new RegExp(`\\b(${scopeKeysPattern})\\b`, 'g')
+    }
+
+    parsedLine = parsedLine.replace(cachedScopeRegex, (match) => app.mathScope.get(match))
   }
 
   // Calculate and return avg, subavg, total and subtotal values.
@@ -234,36 +243,37 @@ function altEvaluate(line, stats) {
   // Handle date/time arithmetic.
   if (parsedLine.match(REGEX_DATE_TIME)) {
     const locale = { locale: app.settings.locale }
-    const lineDate = parsedLine.replace(REGEX_DATE_TIME, '').trim()
-    const lineDateRight = parsedLine.replace(lineDate, '').trim()
-    const lineDateNow = DateTime.fromFormat(lineDate, nowFormat, locale)
-    const lineDateToday = DateTime.fromFormat(lineDate, todayFormat, locale)
-    const lineDateTodayDay = DateTime.fromFormat(lineDate, todayDayFormat, locale)
-    const lineDateTime = lineDateNow.isValid
-      ? lineDateNow
-      : lineDateToday.isValid
-        ? lineDateToday
-        : lineDateTodayDay.isValid
-          ? lineDateTodayDay
-          : false
 
-    if (!lineDateTime) return 'Invalid Date'
+    // Strip assignment prefix (e.g. "tmrw = today + 1 day" → prefix="tmrw = ", datePart="today + 1 day")
+    let assignPrefix = ''
+    let datePart = parsedLine
+
+    const assignMatch = parsedLine.match(/^([\p{L}\p{M}_][\p{L}\p{M}\w]*)\s*=\s*(.+)$/u)
+
+    if (assignMatch) {
+      assignPrefix = `${assignMatch[1]} = `
+      datePart = assignMatch[2]
+    }
+
+    const lineDate = datePart.replace(REGEX_DATE_TIME, '').trim()
+    const lineDateRight = datePart.replace(lineDate, '').trim()
+
+    const formats = [
+      { fmt: nowDayFormat, dt: DateTime.fromFormat(lineDate, nowDayFormat, locale) },
+      { fmt: nowFormat, dt: DateTime.fromFormat(lineDate, nowFormat, locale) },
+      { fmt: todayDayFormat, dt: DateTime.fromFormat(lineDate, todayDayFormat, locale) },
+      { fmt: todayFormat, dt: DateTime.fromFormat(lineDate, todayFormat, locale) }
+    ]
+
+    const found = formats.find((f) => f.dt.isValid)
+
+    if (!found) return 'Invalid Date'
 
     const rightOfDate = String(math.evaluate(lineDateRight + ' to hours', app.mathScope))
     const durHrs = Number(rightOfDate.split(' ')[0])
-    const dtLine = lineDateTime
-      .plus({ hours: durHrs })
-      .toFormat(
-        lineDateNow.isValid
-          ? app.settings.dateDay
-            ? nowDayFormat
-            : nowFormat
-          : app.settings.dateDay
-            ? todayDayFormat
-            : todayFormat
-      )
+    const dtLine = found.dt.plus({ hours: durHrs }).toFormat(found.fmt)
 
-    parsedLine = `"${dtLine}"`
+    parsedLine = `${assignPrefix}"${dtLine}"`
   }
 
   // Convert "% of" syntax to arithmetic

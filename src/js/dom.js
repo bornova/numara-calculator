@@ -20,6 +20,7 @@ export const dom = {
   icons: {},
 
   // Cached elements
+  appWrapper: document.getElementById('appWrapper'),
   mainPanel: document.getElementById('mainPanel'),
   input: document.getElementById('input'),
   inputArea: document.getElementById('inputArea'),
@@ -33,7 +34,9 @@ export const dom = {
   headerMacTitle: document.getElementById('macHeaderTitle'),
 
   // Actions
+  sidePanelButton: document.getElementById('sidePanelButton'),
   newPageButton: document.getElementById('newPageButton'),
+  actionDivider: document.getElementById('actionDivider'),
   clearButton: document.getElementById('clearButton'),
   copyButton: document.getElementById('copyButton'),
   pageName: document.getElementById('pageName'),

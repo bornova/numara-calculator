@@ -12,6 +12,7 @@ export const app = {
   plotSettings: null,
   refreshCM: true,
   settings: null,
+  sidebarDocked: null,
   udfList: [],
   uduList: [],
   widgetMap: new WeakMap()

@@ -124,7 +124,7 @@ text {
 .winHeader {
   -webkit-app-region: drag !important;
   display: none;
-  position: fixed;
+  position: absolute;
   top: 5px;
   right: 0;
   left: 0;
@@ -142,7 +142,7 @@ text {
 .macHeader {
   -webkit-app-region: drag !important;
   display: none;
-  position: fixed;
+  position: absolute;
   top: 0;
   right: 0;
   left: 0;
@@ -165,7 +165,7 @@ text {
 
 .mainPanel {
   display: flex;
-  position: fixed;
+  position: absolute;
   top: 50px;
   right: 8px;
   bottom: 42px;
@@ -295,7 +295,7 @@ text {
 }
 
 .gutterBlock {
-  position: fixed;
+  position: absolute;
   bottom: 50px;
   left: 0;
   z-index: 5;
@@ -305,7 +305,7 @@ text {
 /* Actions */
 
 .actions {
-  position: fixed;
+  position: absolute;
   right: 10px;
   bottom: 10px;
   left: 10px;
@@ -377,7 +377,7 @@ text {
 
 .notificationDot {
   display: none;
-  position: fixed;
+  position: absolute;
   right: 10px;
   bottom: 18px;
 }
@@ -399,6 +399,40 @@ text {
 
 .closeSidePanelButton {
   -webkit-app-region: no-drag !important;
+}
+
+.sidePanelResizer {
+  display: none;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  z-index: 1000;
+  cursor: ew-resize;
+  background: transparent;
+  width: 5px;
+}
+
+.sidePanelResizer::after {
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0px;
+  width: 1px;
+  content: '';
+}
+
+.sidePanelResizer:hover::after,
+.sidePanelResizer.resizing::after {
+  background: light-dark(#b7d5e6, #405062);
+}
+
+.sidebar-docked {
+  left: 0;
+}
+
+.sidebar-docked .sidePanelResizer {
+  display: block;
 }
 
 .closeSidePanelButton svg {
@@ -475,7 +509,6 @@ text {
 
 .pageListItemTitle {
   padding: 5px 5px 2px 5px;
-  width: 180px;
   overflow: hidden;
   font-weight: 600;
   text-overflow: ellipsis;
