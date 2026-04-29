@@ -228,8 +228,6 @@ export const settings = {
       el.style.setProperty('line-height', app.settings.lineHeight, 'important')
     })
 
-    setupSidePanel()
-
     if (app.settings.answerPosition !== 'bottom') {
       cm.eachLine((cmLine) => {
         const existingWidget = app.widgetMap.get(cmLine)
@@ -282,6 +280,8 @@ export const settings = {
     } else {
       store.set('rateInterval', false)
     }
+
+    setupSidePanel()
 
     setTimeout(calculate, 10)
   },
