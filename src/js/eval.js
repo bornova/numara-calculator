@@ -36,7 +36,10 @@ const REGEX_PCNT_OF_VAL = /[\w.]*%[ ]*of[ ]*/g
 const REGEX_PLOT = /\w\(x\)\s*=/
 
 const CURRENCY_CODES_PATTERN = Object.keys(currencySymbols).join('|')
-const REGEX_CURRENCY_FORMAT = new RegExp(`(-?[\\d.,]+(?:e[+-]?\\d+)?)\\s*(${CURRENCY_CODES_PATTERN})`, 'gi')
+const REGEX_CURRENCY_FORMAT = new RegExp(
+  `(-?\\d[\\d.,'\\u00A0\\u202F\\u2009 ]*(?:e[+-]?\\d+)?)\\s*\\b(${CURRENCY_CODES_PATTERN})\\b`,
+  'gi'
+)
 
 // Helper to sort by length descending so longer symbols (e.g. "US$") match before shorter ones ("$")
 const CURRENCY_SYMBOLS_PATTERN = Object.values(currencySymbols)
@@ -298,7 +301,10 @@ function stripAnswer(answer) {
  * @returns {string} - The formatted currency string.
  */
 function formatCurrency(str) {
-  return str.replace(REGEX_CURRENCY_FORMAT, (_, amount, code) => `${currencySymbols[code.toUpperCase()]}${amount}`)
+  return str.replace(
+    REGEX_CURRENCY_FORMAT,
+    (_, amount, code) => `${currencySymbols[code.toUpperCase()]}${amount.trim()}`
+  )
 }
 
 /**
