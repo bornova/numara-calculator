@@ -96,6 +96,7 @@ export function checkAppUpdate() {
         break
       case 'available':
         dom.notificationDot.style.display = 'block'
+        dom.notificationDot.setAttribute('uk-tooltip', `New version available`)
         break
 
       case 'notAvailable':
