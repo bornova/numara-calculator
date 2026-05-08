@@ -1,6 +1,5 @@
 import { dom } from './dom'
 import { calculate, formatAnswer, math } from './eval'
-import { currencySymbols } from './forex'
 import { showError } from './modal'
 import { app, store } from './utils'
 
@@ -74,7 +73,17 @@ const constantTokens = new Set(mathConstants.map(([c]) => c))
 const unitTokens = new Set(units().map((u) => u.token))
 const keywordTokens = new Set(keywords.map((key) => key.text))
 const excelTokens = new Set(Object.keys(formulajs).map((f) => 'formulajs.' + f))
-const currencyTokens = new Set(Object.values(currencySymbols))
+
+let currencyTokens = new Set()
+
+/** Rebuild the set of currency symbol glyphs from app.currencies. */
+export function refreshCurrencyTokens() {
+  currencyTokens = new Set(
+    Object.values(app.currencies || {})
+      .map((c) => c?.symbol)
+      .filter(Boolean)
+  )
+}
 
 // Codemirror syntax templates
 CodeMirror.defineMode('numara', () => ({
@@ -87,7 +96,7 @@ CodeMirror.defineMode('numara', () => ({
 
     const startChar = stream.peek()
 
-    if (currencyTokens.has(startChar)) {
+    if (currencyTokens.has(startChar) && !/[\p{L}]/u.test(startChar)) {
       stream.next()
       return 'currency'
     }
@@ -357,16 +366,12 @@ function handleFunctionTooltip(target) {
  */
 function handleCurrencyTooltip(target) {
   try {
-    let currency = target.textContent
+    const text = target.textContent
+    const code = currencyTokens.has(text)
+      ? Object.keys(app.currencies).find((c) => app.currencies[c].symbol === text)
+      : text?.toUpperCase()
 
-    if (currencyTokens.has(currency)) {
-      currency = Object.keys(currencySymbols).find((key) => currencySymbols[key] === currency)
-    }
-
-    const currencyName =
-      currency.toUpperCase() === 'USD' ? 'U.S. Dollar' : app.currencyRates[currency.toLowerCase()].name
-
-    showTooltip(target, currencyName)
+    showTooltip(target, app.currencies[code]?.name || 'Description not available')
   } catch {
     showTooltip(target, 'Description not available')
   }
