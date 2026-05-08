@@ -1,7 +1,6 @@
 import { outputContext } from './context'
 import { dom } from './dom'
 import { cm } from './editor'
-import { currencySymbols } from './forex'
 import { app, escapeHTML, escapeRegExp, localeUsesComma, store } from './utils'
 
 import { DateTime } from 'luxon'
@@ -35,24 +34,46 @@ const REGEX_PCNT_OF = /%[ ]*of[ ]*/g
 const REGEX_PCNT_OF_VAL = /[\w.]*%[ ]*of[ ]*/g
 const REGEX_PLOT = /\w\(x\)\s*=/
 
-const CURRENCY_CODES_PATTERN = Object.keys(currencySymbols).join('|')
-const REGEX_CURRENCY_FORMAT = new RegExp(
-  `(-?\\d[\\d.,'\\u00A0\\u202F\\u2009 ]*(?:e[+-]?\\d+)?)\\s*\\b(${CURRENCY_CODES_PATTERN})\\b`,
-  'gi'
-)
+let currencySymbolsRegex = null
+let currencyFormatRegex = null
+let currencySymbolToCode = {}
 
-// Helper to sort by length descending so longer symbols (e.g. "US$") match before shorter ones ("$")
-const CURRENCY_SYMBOLS_PATTERN = Object.values(currencySymbols)
-  .sort((a, b) => b.length - a.length)
-  .map(escapeRegExp)
-  .join('|')
-const REGEX_CURRENCY_SYMBOLS = new RegExp(`(${CURRENCY_SYMBOLS_PATTERN})`, 'g')
+/** Rebuild the currency regexes and symbol→code map from app.currencies. */
+export function refreshCurrencyState() {
+  const entries = Object.entries(app.currencies || {})
+  const codes = []
+  const symbols = []
 
-/**
- * Helper to replace a currency symbol with its code
- */
+  currencySymbolToCode = {}
+
+  for (const [code, info] of entries) {
+    codes.push(code)
+
+    if (info?.symbol && !(info.symbol in currencySymbolToCode)) {
+      currencySymbolToCode[info.symbol] = code
+      symbols.push(info.symbol)
+    }
+  }
+
+  currencySymbolsRegex = symbols.length
+    ? new RegExp(
+        `(?<![\\p{L}])(${symbols
+          .sort((a, b) => b.length - a.length)
+          .map(escapeRegExp)
+          .join('|')})(?![\\p{L}])`,
+        'gu'
+      )
+    : null
+
+  currencyFormatRegex = codes.length
+    ? new RegExp(`(-?\\d[\\d.,'\\u00A0\\u202F\\u2009 ]*(?:e[+-]?\\d+)?)\\s*\\b(${codes.join('|')})\\b`, 'gi')
+    : null
+}
+
+/** Replace a matched currency symbol with its ISO code (used inside evaluateLine). */
 function replaceCurrencySymbol(symbol) {
-  const code = Object.keys(currencySymbols).find((k) => currencySymbols[k] === symbol)
+  const code = currencySymbolToCode[symbol]
+
   return code ? code + ' ' : symbol
 }
 
@@ -124,8 +145,8 @@ function evaluateLine(line, lineIndex, lineHandle, stats) {
       line = line.replace(/;/g, ',')
     }
 
-    if (app.settings.currency) {
-      line = line.replace(REGEX_CURRENCY_SYMBOLS, replaceCurrencySymbol)
+    if (app.settings.currency && currencySymbolsRegex) {
+      line = line.replace(currencySymbolsRegex, replaceCurrencySymbol)
     }
 
     // Handle line continuation
@@ -295,16 +316,81 @@ function stripAnswer(answer) {
   return typeof answer === 'string' ? answer.replace(/^"|"$/g, '') : answer
 }
 
+// Cache locale-separator info so we can parse math.js-formatted amounts back to numbers.
+const localeSeparatorCache = new Map()
+
+/** Get { group, decimal } separators for a given locale. */
+function getLocaleSeparators(locale) {
+  let sep = localeSeparatorCache.get(locale)
+
+  if (sep) return sep
+
+  const parts = new Intl.NumberFormat(locale).formatToParts(12345.6)
+
+  sep = {
+    group: parts.find((p) => p.type === 'group')?.value ?? ',',
+    decimal: parts.find((p) => p.type === 'decimal')?.value ?? '.'
+  }
+
+  localeSeparatorCache.set(locale, sep)
+
+  return sep
+}
+
+/** Parse a locale-formatted number string back to a Number. */
+function parseLocaleNumber(str, locale) {
+  const { group, decimal } = getLocaleSeparators(locale)
+  const cleaned = str
+    .replace(new RegExp(escapeRegExp(group), 'g'), '')
+    .replace(/[\u00A0\u202F\u2009 ]/g, '')
+    .replace(decimal, '.')
+
+  return parseFloat(cleaned)
+}
+
 /**
- * Format currency answers.
+ * Format currency answers in the currency's native locale.
  * @param {string} str - The input string containing amount and currency code.
  * @returns {string} - The formatted currency string.
  */
 function formatCurrency(str) {
-  return str.replace(
-    REGEX_CURRENCY_FORMAT,
-    (_, amount, code) => `${currencySymbols[code.toUpperCase()]}${amount.trim()}`
-  )
+  if (!currencyFormatRegex) return str
+
+  const appLocale = app.settings.locale
+  const useGrouping = app.settings.thouSep
+  const maximumFractionDigits = app.settings.precision
+
+  return str.replace(currencyFormatRegex, (match, amount, code) => {
+    const upperCode = code.toUpperCase()
+    const info = app.currencies[upperCode]
+
+    if (!info) return match
+
+    // Preserve any exponent suffix unchanged.
+    const trimmed = amount.trim()
+    const eIndex = trimmed.search(/e[+-]?\d+$/i)
+    const baseStr = eIndex >= 0 ? trimmed.slice(0, eIndex) : trimmed
+    const expStr = eIndex >= 0 ? trimmed.slice(eIndex) : ''
+    const value = parseLocaleNumber(baseStr, appLocale)
+
+    if (!Number.isFinite(value)) return `${info.symbol ?? ''}${trimmed}`
+
+    const locale = info.locale || appLocale
+
+    try {
+      const formatted = new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: upperCode,
+        currencyDisplay: 'narrowSymbol',
+        useGrouping,
+        maximumFractionDigits
+      }).format(value)
+
+      return formatted + expStr
+    } catch {
+      return `${info.symbol ?? ''}${trimmed}${expStr}`
+    }
+  })
 }
 
 /**

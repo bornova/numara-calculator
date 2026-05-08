@@ -5,7 +5,7 @@ export const app = {
   activePlot: null,
   activePage: null,
   colors: null,
-  currencyRates: {},
+  currencies: {},
   iconCache: {},
   mathScope: new Map(),
   plotFunction: null,

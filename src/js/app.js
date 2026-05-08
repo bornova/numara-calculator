@@ -3,7 +3,7 @@ import { copyAll, initializeContextMenus, safeCopyText } from './context'
 import { dom } from './dom'
 import { cm, refreshEditor, udfInput, uduInput } from './editor'
 import { calculate } from './eval'
-import { initializeUSD } from './forex'
+import { initCurrencies } from './forex'
 import { initializeHelpTooltips } from './help'
 import { generateIcons } from './icons'
 import { modal, notify, showError } from './modal'
@@ -408,16 +408,22 @@ const setupUIkitUtils = () => {
 
 function initializeSidePanel() {
   let resizeTimer
+
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer)
-    resizeTimer = setTimeout(setupSidePanel, 100)
+
+    resizeTimer = setTimeout(() => {
+      setupSidePanel(true)
+      calculate()
+    }, 100)
   })
 
-  setupSidePanel()
+  setupSidePanel(true)
 }
 
 const initializeApp = async () => {
   generateIcons()
+  initCurrencies()
 
   await settings.initialize()
   await settings.apply()
@@ -439,7 +445,6 @@ const initializeApp = async () => {
   initializePages()
   initializeContextMenus()
   initializeHelpTooltips()
-  initializeUSD()
   checkAppUpdate()
 
   setTimeout(() => cm.focus(), 500)
