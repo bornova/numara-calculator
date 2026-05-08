@@ -1,96 +1,145 @@
 import { dom } from './dom'
-import { cm, numaraHints } from './editor'
-import { calculate, math } from './eval'
+import { cm, numaraHints, refreshCurrencyTokens } from './editor'
+import { calculate, math, refreshCurrencyState } from './eval'
 import { notify } from './modal'
 import { app, store } from './utils'
 
 const USD_UNIT = 'USD'
-const EXCHANGE_RATE_URL = 'https://www.floatrates.com/widget/1030/cfc5515dfc13ada8d7b0e50b8143d55f/usd.json'
+const RATES_URL = 'https://api.frankfurter.dev/v2/rates?base=USD'
+const SYMBOLS_URL = 'https://api.frankfurter.dev/v2/currencies'
 
-export const currencySymbols = {
-  CNY: '¥',
-  GBP: '£',
-  EUR: '€',
-  RUB: '₽',
-  TRY: '₺',
-  USD: '$'
+const DEFAULTS = {
+  USD: { symbol: '$', name: 'U.S. Dollar', locale: 'en-US' },
+  EUR: { symbol: '€', name: 'Euro', locale: 'de-DE' },
+  GBP: { symbol: '£', name: 'British Pound', locale: 'en-GB' },
+  CNY: { symbol: '¥', name: 'Chinese Yuan', locale: 'zh-CN' },
+  RUB: { symbol: '₽', name: 'Russian Ruble', locale: 'ru-RU' },
+  TRY: { symbol: '₺', name: 'Turkish Lira', locale: 'tr-TR' }
 }
 
-export function initializeUSD() {
+/** Register a currency code as a math unit (USD-relative) and an autocomplete hint. */
+function registerCurrencyUnit(code, name, rate) {
+  if (code !== USD_UNIT && rate) {
+    math.createUnit(
+      code,
+      {
+        aliases: code.toLowerCase() in math.Unit.UNITS ? [] : [code.toLowerCase()],
+        definition: math.unit(`${rate} ${USD_UNIT}`)
+      },
+      { override: true }
+    )
+  }
+
+  if (!numaraHints.some((h) => h.text === code)) {
+    numaraHints.push({ text: code, desc: name, className: 'cm-currency' })
+  }
+}
+
+/** Initialize USD as the base unit and refresh currencies. */
+export function initCurrencies() {
   math.createUnit(USD_UNIT, { aliases: [USD_UNIT.toLowerCase()] })
-  numaraHints.push({ text: USD_UNIT, desc: 'U.S. Dollar', className: 'cm-currency' })
+
+  const stored = store.get('currencies') || { USD: { ...DEFAULTS.USD } }
+
+  for (const [code, def] of Object.entries(DEFAULTS)) {
+    stored[code] = { ...(stored[code] || {}), ...def }
+  }
+
+  app.currencies = stored
+
+  for (const [code, { name, rate }] of Object.entries(app.currencies)) {
+    registerCurrencyUnit(code, name, rate)
+  }
+
+  refreshCurrencyState()
+  refreshCurrencyTokens()
 }
 
-/**
- * Fetch a URL and return parsed JSON, retrying on failure.
- * @param {string} url - The URL to fetch.
- * @param {number} retries - Number of attempts.
- * @returns {Promise<any>} Parsed JSON response.
- */
-async function fetchWithRetry(url, retries = 3) {
+/** Fetch a URL and return parsed JSON, retrying on failure. */
+async function fetchJSON(url, retries = 3) {
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       const response = await fetch(url)
+
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
+
       return await response.json()
     } catch (error) {
       if (attempt === retries - 1) throw error
-      await new Promise((resolve) => setTimeout(resolve, 1000 * Math.pow(2, attempt)))
+
+      await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** attempt))
     }
   }
 }
 
-/**
- * Get exchange rates and update the application.
- */
+/** Build the unified currencies map from API responses. */
+function buildCurrencies(symbolList, rateList) {
+  const currencies = {}
+
+  // 1) Curated defaults first (insertion order matters for any first-wins lookup).
+  for (const [code, def] of Object.entries(DEFAULTS)) {
+    currencies[code] = { ...def }
+  }
+
+  // 2) API symbols — only fill in non-curated codes.
+  if (Array.isArray(symbolList)) {
+    for (const { iso_code: code, symbol, name } of symbolList) {
+      if (!code || currencies[code]) continue
+
+      currencies[code] = { symbol: symbol || code, name: name || code }
+    }
+  }
+
+  // 3) Rates — attach to existing entries or create minimal ones for unknown codes.
+  let lastDate = null
+
+  if (Array.isArray(rateList)) {
+    for (const { quote: code, rate, date } of rateList) {
+      if (!code || !rate) continue
+
+      currencies[code] = currencies[code] || { symbol: code, name: code }
+      currencies[code].rate = 1 / rate
+      lastDate = date
+    }
+  }
+
+  return { currencies, lastDate }
+}
+
+/** Fetch latest rates and refresh the application's currency state. */
 export async function getRates() {
   if (!navigator.onLine) {
-    dom.lastUpdated.textContent = 'No internet connection.'
+    dom.lastUpdated.textContent = 'Offline'
+
     notify('No internet connection. Could not update exchange rates.', 'warning')
+
     return
   }
 
   dom.lastUpdated.innerHTML = '<div uk-spinner="ratio: 0.3"></div>'
 
   try {
-    const rates = await fetchWithRetry(EXCHANGE_RATE_URL)
-    updateCurrencyRates(rates)
+    const [symbols, rates] = await Promise.all([fetchJSON(SYMBOLS_URL), fetchJSON(RATES_URL)])
+    const { currencies, lastDate } = buildCurrencies(symbols, rates)
+
+    for (const [code, { name, rate }] of Object.entries(currencies)) {
+      registerCurrencyUnit(code, name, rate)
+    }
+
+    app.currencies = currencies
+    store.set('currencies', currencies)
+
+    if (lastDate) store.set('rateDate', lastDate)
+
+    refreshCurrencyState()
+    refreshCurrencyTokens()
+
     dom.lastUpdated.textContent = store.get('rateDate')
     cm.setOption('mode', app.settings.syntax ? 'numara' : 'plain')
+
     calculate()
   } catch (error) {
     dom.lastUpdated.textContent = 'n/a'
     notify('Failed to get exchange rates (' + error + ')', 'warning')
   }
-}
-
-/**
- * Update currency rates in the application.
- * @param {Object} rates - The exchange rates data.
- */
-function updateCurrencyRates(rates) {
-  if (!rates || typeof rates !== 'object') return
-
-  let lastDate = null
-
-  app.currencyRates = rates
-
-  Object.values(rates).forEach(({ code, inverseRate, name, date }) => {
-    math.createUnit(
-      code,
-      {
-        aliases: code.toLowerCase() in math.Unit.UNITS ? [] : [code.toLowerCase()],
-        definition: math.unit(`${inverseRate} ${USD_UNIT}`)
-      },
-      { override: true }
-    )
-
-    if (!numaraHints.some((hint) => hint.text === code)) {
-      numaraHints.push({ text: code, desc: name, className: 'cm-currency' })
-    }
-
-    lastDate = date
-  })
-
-  if (lastDate) store.set('rateDate', lastDate)
 }
