@@ -653,7 +653,7 @@ text {
 }
 
 .lastUpdated {
-  display: block;
+  display: inline-block;
   margin-right: 3px;
   color: light-dark(#999999, #999999);
   font-size: 0.9rem;
