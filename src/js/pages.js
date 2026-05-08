@@ -105,11 +105,29 @@ export function setupSidePanel(show = false) {
       bgClose: false
     })
 
-    if (show && !isVisible) offcanvas.show()
+    if (!isVisible && (show || dockChanged)) {
+      if (document.querySelector('.uk-modal.uk-open')) {
+        dom.sidePanel.classList.add('uk-open')
+        dom.sidePanel.style.display = 'block'
+
+        const bar = dom.el('#sidePanel .uk-offcanvas-bar')
+
+        if (bar) bar.classList.add('uk-open')
+      } else {
+        offcanvas.show()
+      }
+    }
   } else {
     dom.appWrapper.style.left = '0'
 
     if (!dockChanged) return
+
+    dom.sidePanel.classList.remove('uk-open')
+    dom.sidePanel.style.display = ''
+
+    const bar = dom.el('#sidePanel .uk-offcanvas-bar')
+
+    if (bar) bar.classList.remove('uk-open')
 
     UIkit.offcanvas('#sidePanel', { overlay: true, mode: 'slide', escClose: true, bgClose: true })
   }
@@ -136,6 +154,7 @@ export function getPageName() {
       })
       .filter((n) => n !== null)
   )
+
   let pageNo = 1
 
   while (usedNumbers.has(pageNo)) pageNo++

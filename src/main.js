@@ -1,4 +1,15 @@
-import { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, nativeTheme, session, shell } from 'electron'
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  globalShortcut,
+  ipcMain,
+  Menu,
+  nativeTheme,
+  Notification,
+  session,
+  shell
+} from 'electron'
 import log from 'electron-log'
 import Store from 'electron-store'
 import updater from 'electron-updater'
@@ -306,10 +317,7 @@ ipcMain.on('textboxContextMenu', () =>
 )
 
 ipcMain.on('checkUpdate', () => {
-  autoUpdater.checkForUpdatesAndNotify({
-    title: 'A new update is ready to install',
-    body: '{appName} version {version} has been downloaded and is ready to install.'
-  })
+  autoUpdater.checkForUpdates()
 })
 
 ipcMain.on('updateApp', () => setImmediate(() => autoUpdater.quitAndInstall(true, true)))
@@ -318,7 +326,27 @@ autoUpdater.on('checking-for-update', () => win.webContents.send('updateStatus',
 autoUpdater.on('update-available', (info) => win.webContents.send('updateStatus', 'available', info.version))
 autoUpdater.on('update-not-available', () => win.webContents.send('updateStatus', 'notAvailable'))
 autoUpdater.on('download-progress', (progress) => win.webContents.send('updateStatus', 'downloading', null, progress))
-autoUpdater.on('update-downloaded', (info) => win.webContents.send('updateStatus', 'downloaded', info.version))
+autoUpdater.on('update-downloaded', (info) => {
+  win.webContents.send('updateStatus', 'downloaded', info.version)
+
+  if (Notification.isSupported()) {
+    const notification = new Notification({
+      title: 'A new update is ready to install',
+      body: `${app.getName()} version ${info.version} has been downloaded and is ready to install.`
+    })
+
+    notification.on('click', () => {
+      if (!win) return
+
+      if (win.isMinimized()) win.restore()
+      win.show()
+      win.focus()
+      win.webContents.send('showAbout')
+    })
+
+    notification.show()
+  }
+})
 autoUpdater.on('error', () => win.webContents.send('updateStatus', 'error'))
 
 const menuTemplate = [
