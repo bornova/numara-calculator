@@ -123,7 +123,7 @@ export const settings = {
       item.getAttribute('type') === 'checkbox' ? item.parentElement.before(span) : item.before(span)
     })
 
-    if (app.settings.currency) getRates()
+    if (app.settings.currency && (app.settings.currencyInterval !== 'manual' || !store.get('rateDate'))) getRates()
   },
 
   /** Prepare settings dialog items. */
@@ -274,8 +274,12 @@ export const settings = {
     })
 
     clearInterval(updateInterval)
-    if (app.settings.currency && app.settings.currencyInterval !== '0') {
-      updateInterval = setInterval(getRates, +app.settings.currencyInterval)
+
+    const interval = +app.settings.currencyInterval
+
+    if (app.settings.currency && interval > 0) {
+      updateInterval = setInterval(getRates, interval)
+
       store.set('rateInterval', true)
     } else {
       store.set('rateInterval', false)
@@ -299,8 +303,6 @@ export const settings = {
 
     if (!dom.currency.checked) {
       localStorage.removeItem('rateDate')
-
-      app.currencyRates = {}
     }
 
     dom.currencyUpdate.style.visibility = dom.currency.checked ? 'visible' : 'hidden'
