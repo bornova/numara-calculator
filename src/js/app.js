@@ -230,6 +230,8 @@ const setupAppInfo = () => {
     dom.dialogAboutAppVersion.addEventListener('click', (event) => {
       if (event.detail === 9) numara.openDevTools()
     })
+
+    numara.showAbout(() => modal.show('#dialogAbout'))
   }
 }
 
