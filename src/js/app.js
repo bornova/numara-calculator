@@ -177,11 +177,13 @@ const setupSyncScroll = () => {
   })
 
   outputPanel.addEventListener('scroll', () => {
+    dom.scrollTop.style.display = outputPanel.scrollTop > 50 ? 'block' : 'none'
+
     if (isSyncing) return
 
     isSyncing = true
     inputPanel.scrollTop = outputPanel.scrollTop
-    dom.scrollTop.style.display = outputPanel.scrollTop > 50 ? 'block' : 'none'
+
     requestAnimationFrame(() => {
       isSyncing = false
     })
