@@ -307,7 +307,7 @@ text {
 .actions {
   position: absolute;
   right: 10px;
-  bottom: 10px;
+  bottom: 8px;
   left: 10px;
   height: 25px;
 }
@@ -355,8 +355,6 @@ text {
 }
 
 .pageName {
-  position: relative;
-  top: 2px;
   opacity: 0.9;
   width: calc(100vw - 300px);
   overflow: hidden;
@@ -378,8 +376,8 @@ text {
 .notificationDot {
   display: none;
   position: absolute;
-  right: 10px;
-  bottom: 18px;
+  right: 0px;
+  bottom: 12px;
 }
 
 .notificationDot > svg {
@@ -394,7 +392,7 @@ text {
   right: 0;
   bottom: 0;
   left: 0;
-  margin: 10px 10px 14px 10px;
+  margin: 10px 10px 12px 10px;
 }
 
 .closeSidePanelButton {
