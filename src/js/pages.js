@@ -1,5 +1,6 @@
 import { dom } from './dom'
 import { cm } from './editor'
+import { calculate } from './eval'
 import { confirm, modal, notify } from './modal'
 import { app, escapeHTML, isElectron, store } from './utils'
 
@@ -26,25 +27,32 @@ let sidePanelResizerSetup = false
 /* Setup side panel resizer */
 function setupSidePanelResizer() {
   if (sidePanelResizerSetup) return
+
   sidePanelResizerSetup = true
 
   const resizer = dom.el('#sidePanelResizer')
 
   resizer.addEventListener('mousedown', (e) => {
     e.preventDefault()
+
     resizer.classList.add('resizing')
 
     const onMouseMove = (e) => {
       const width = Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, e.clientX))
+
       applySidebarWidth(width)
     }
 
     const onMouseUp = (e) => {
       resizer.classList.remove('resizing')
+
       const width = Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, e.clientX))
+
       store.set('sidePanelWidth', width)
       document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseup', onMouseUp)
+
+      calculate()
     }
 
     document.addEventListener('mousemove', onMouseMove)
@@ -54,15 +62,24 @@ function setupSidePanelResizer() {
   resizer.addEventListener('dblclick', () => {
     applySidebarWidth(SIDEBAR_DEFAULT_WIDTH)
     store.set('sidePanelWidth', SIDEBAR_DEFAULT_WIDTH)
+    calculate()
   })
 }
 
-/* Setup side panel based on settings and window size */
-export function setupSidePanel() {
+let lastDockState = null
+
+/** Setup side panel based on settings and window size.
+ *
+ * @param {boolean} show - When true, ensure the docked panel is visible.
+ *
+ */
+export function setupSidePanel(show = false) {
   const { pageListPosition } = app.settings
   const isWide = (window.visualViewport?.width ?? window.innerWidth) > 900
   const dock = pageListPosition === 'dock' || (pageListPosition === 'auto' && isWide)
+  const dockChanged = dock !== lastDockState
 
+  lastDockState = dock
   app.sidebarDocked = dock
 
   dom.sidePanel.classList.toggle('sidebar-docked', dock)
@@ -79,14 +96,20 @@ export function setupSidePanel() {
 
     const isVisible = dom.sidePanel.classList.contains('uk-open')
 
-    UIkit.offcanvas('#sidePanel', {
+    if (!dockChanged && !(show && !isVisible)) return
+
+    const offcanvas = UIkit.offcanvas('#sidePanel', {
       overlay: false,
       mode: isVisible ? 'none' : 'slide',
       escClose: false,
       bgClose: false
-    }).show()
+    })
+
+    if (show && !isVisible) offcanvas.show()
   } else {
     dom.appWrapper.style.left = '0'
+
+    if (!dockChanged) return
 
     UIkit.offcanvas('#sidePanel', { overlay: true, mode: 'slide', escClose: true, bgClose: true })
   }
