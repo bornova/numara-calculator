@@ -17,6 +17,16 @@ const DEFAULTS = {
   TRY: { symbol: '₺', name: 'Turkish Lira', locale: 'tr-TR' }
 }
 
+// Snapshot of built-in mathjs unit names/aliases captured before any currency is registered.
+const BUILTIN_UNIT_KEYS = new Set(Object.keys(math.Unit.UNITS))
+
+/** Return true if the code or symbol conflicts with a built-in mathjs unit. */
+function isMathUnit(code, symbol) {
+  if (BUILTIN_UNIT_KEYS.has(code) || BUILTIN_UNIT_KEYS.has(code.toLowerCase())) return true
+  if (symbol && (BUILTIN_UNIT_KEYS.has(symbol) || BUILTIN_UNIT_KEYS.has(symbol.toLowerCase()))) return true
+  return false
+}
+
 /** Register a currency code as a math unit (USD-relative) and an autocomplete hint. */
 function registerCurrencyUnit(code, name, rate) {
   if (code !== USD_UNIT && rate) {
@@ -43,6 +53,11 @@ export function initCurrencies() {
 
   for (const [code, def] of Object.entries(DEFAULTS)) {
     stored[code] = { ...(stored[code] || {}), ...def }
+  }
+
+  for (const code of Object.keys(stored)) {
+    const { symbol } = stored[code]
+    if (!DEFAULTS[code] && isMathUnit(code, symbol)) delete stored[code]
   }
 
   app.currencies = stored
@@ -84,7 +99,7 @@ function buildCurrencies(symbolList, rateList) {
   // 2) API symbols — only fill in non-curated codes.
   if (Array.isArray(symbolList)) {
     for (const { iso_code: code, symbol, name } of symbolList) {
-      if (!code || currencies[code]) continue
+      if (!code || currencies[code] || isMathUnit(code, symbol)) continue
 
       currencies[code] = { symbol: symbol || code, name: name || code }
     }
@@ -96,6 +111,7 @@ function buildCurrencies(symbolList, rateList) {
   if (Array.isArray(rateList)) {
     for (const { quote: code, rate, date } of rateList) {
       if (!code || !rate) continue
+      if (!currencies[code] && isMathUnit(code, null)) continue
 
       currencies[code] = currencies[code] || { symbol: code, name: code }
       currencies[code].rate = 1 / rate
