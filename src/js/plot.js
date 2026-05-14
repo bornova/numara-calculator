@@ -5,7 +5,7 @@ import { app, checkSize, store } from './utils'
 
 import { productName } from './../../package.json'
 
-import { applyChange, observableDiff } from 'deep-diff-esm'
+import { applyChange, observableDiff } from '@bornova/deep-diff'
 
 import functionPlot from 'function-plot'
 

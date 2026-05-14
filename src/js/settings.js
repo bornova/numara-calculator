@@ -7,7 +7,7 @@ import { confirm, modal, showError } from './modal'
 import { setupSidePanel } from './pages'
 import { app, checkSize, getTheme, isElectron, store } from './utils'
 
-import { applyChange, observableDiff } from 'deep-diff-esm'
+import { applyChange, observableDiff } from '@bornova/deep-diff'
 
 /** Show/hide Defaults link. */
 function checkDefaults() {
