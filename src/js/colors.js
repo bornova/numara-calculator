@@ -1,5 +1,5 @@
 import Coloris from '@melloware/coloris'
-import { applyChange, diff, observableDiff } from 'deep-diff-esm'
+import { applyChange, diff, observableDiff } from '@bornova/deep-diff'
 
 import { dom } from './dom'
 import { confirm, modal } from './modal'
