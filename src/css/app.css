@@ -691,7 +691,7 @@ text {
   margin-right: -8px;
   padding-right: 10px;
   height: calc(100vh - 200px);
-  max-height: 420px;
+  max-height: 450px;
   overflow: scroll;
 }
 
