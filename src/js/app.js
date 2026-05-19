@@ -6,6 +6,7 @@ import { calculate } from './eval'
 import { initCurrencies } from './forex'
 import { initializeHelpTooltips } from './help'
 import { generateIcons } from './icons'
+import { numaraKeys } from './keybindings.js'
 import { modal, notify, showError } from './modal'
 import { getPageName, initializePages, pageOrder, populatePages, setupSidePanel } from './pages'
 import { plot } from './plot'
@@ -14,7 +15,6 @@ import { applyUdfu } from './userDefined'
 import { app, checkAppUpdate, isMac, isElectron, store } from './utils'
 
 import { author, description, homepage, name, version } from './../../package.json'
-import { tinykeys } from 'tinykeys'
 
 import UIkit from 'uikit'
 
@@ -260,7 +260,7 @@ const setupKeyboardShortcuts = () => {
     }
   }
 
-  tinykeys(window, shortcuts)
+  numaraKeys(window, shortcuts)
 }
 
 const setupPrintArea = () => {
