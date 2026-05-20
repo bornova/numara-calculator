@@ -1,7 +1,7 @@
 /* Overrides */
 @import url('./uikit.css');
 @import url('./codemirror.css');
-@import url('./coloris.css');
+@import url('./colorpicker.css');
 /* Print styles */
 @import url('./print.css');
 

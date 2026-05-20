@@ -1,5 +1,5 @@
 /* Imports */
-@import url('./../../node_modules/@melloware/coloris/dist/coloris.css');
+@import url('./../../node_modules/@bornova/colorpicker/dist/colorpicker.css');
 
 .clr-picker,
 input.clr-color {

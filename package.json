@@ -25,10 +25,10 @@
     "wiki": "node src/misc/wiki.js"
   },
   "devDependencies": {
+    "@bornova/colorpicker": "^1.0.0",
     "@bornova/deep-diff": "^1.0.0",
     "@eslint/js": "^10.0.1",
     "@formulajs/formulajs": "^4.6.0",
-    "@melloware/coloris": "^0.25.0",
     "codemirror": "^5.65.21",
     "electron": "^42.2.0",
     "electron-builder": "^26.8.1",
