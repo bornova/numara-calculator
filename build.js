@@ -1,7 +1,7 @@
 import { build } from 'esbuild'
-import fs from 'fs-extra'
+import { readFileSync, promises as fs } from 'fs'
 
-const pkg = JSON.parse(fs.readFileSync('./package.json'))
+const pkg = JSON.parse(readFileSync('./package.json'))
 const buildPath = 'build'
 
 const jsBanner = `/**
@@ -17,12 +17,13 @@ const jsBanner = `/**
 const cssBanner = `/* ${pkg.description} ${pkg.version} */\n`
 
 async function buildNumara() {
-  await fs.emptyDir(buildPath)
+  await fs.rm(buildPath, { recursive: true, force: true })
+  await fs.mkdir(buildPath, { recursive: true })
 
   await Promise.all([
-    fs.copy('src/assets', `${buildPath}/assets`),
-    fs.copy('src/index.html', `${buildPath}/index.html`),
-    fs.copy('src/misc/numara.webmanifest', `${buildPath}/numara.webmanifest`)
+    fs.cp('src/assets', `${buildPath}/assets`, { recursive: true }),
+    fs.cp('src/index.html', `${buildPath}/index.html`),
+    fs.cp('src/misc/numara.webmanifest', `${buildPath}/numara.webmanifest`)
   ])
 
   await build({

@@ -1,4 +1,4 @@
-import Coloris from '@melloware/coloris'
+import ColorPicker from '@bornova/colorpicker'
 import { applyChange, diff, observableDiff } from '@bornova/deep-diff'
 
 import { dom } from './dom'
@@ -81,11 +81,9 @@ export const colors = {
       })
     })
 
-    Coloris.init()
-
     let colorChangeTimeout = null
 
-    Coloris({
+    ColorPicker({
       el: COLOR_INPUT_SELECTOR,
       parent: '#dialogTheme',
       alpha: false,
@@ -98,7 +96,7 @@ export const colors = {
       }
     })
 
-    Coloris.ready(() => {
+    ColorPicker.ready(() => {
       const picker = dom.el('#clr-color-value')
       const button = document.createElement('a')
 

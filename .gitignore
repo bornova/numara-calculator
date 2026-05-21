@@ -1,8 +1,6 @@
 # Directories
 .devcontainer
+build
 dist
 node_modules
 wiki
-
-# Hidden
-.DS_Store
