@@ -1,6 +1,6 @@
 import { colors } from './colors'
 import { dom } from './dom'
-import { cm, udfInput, uduInput } from './editor'
+import { cm, debouncedCalculate, udfInput, uduInput } from './editor'
 import { calculate, math } from './eval'
 import { getRates } from './forex'
 import { confirm, modal, showError } from './modal'
@@ -272,7 +272,11 @@ export const settings = {
 
     setupSidePanel()
 
-    setTimeout(calculate, 10)
+    if (debouncedCalculate && typeof debouncedCalculate.flush === 'function') {
+      debouncedCalculate.flush()
+    } else {
+      setTimeout(calculate, 10)
+    }
   },
 
   /** Save settings to local storage. */
