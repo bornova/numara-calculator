@@ -71,10 +71,20 @@ export async function checkSize() {
     isElectron && (await numara.isResized()) && !(await numara.isMaximized()) ? 'block' : 'none'
 }
 
+/** Get standard BCP 47 standard locale tag based on selection */
+export function getAppLocale() {
+  const loc = app.settings.locale || 'system'
+  if (loc === 'period') return 'en-US'
+  if (loc === 'comma') return 'tr-TR'
+  return navigator.languages?.[0] ?? navigator.language
+}
+
 /** Check user locale for decimal separator. */
 export function localeUsesComma() {
-  const locale =
-    app.settings.locale === 'system' ? (navigator.languages?.[0] ?? navigator.language) : app.settings.locale
+  const loc = app.settings.locale || 'system'
+  if (loc === 'period') return false
+  if (loc === 'comma') return true
+  const locale = navigator.languages?.[0] ?? navigator.language
 
   return (1.11).toLocaleString(locale).includes(',')
 }
