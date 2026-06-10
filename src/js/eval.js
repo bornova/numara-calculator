@@ -31,7 +31,6 @@ const REGEX_CONTINUATION = /[+\-*/]/
 const REGEX_DATE_TIME =
   /[+-] * .* *(millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia)s?/g
 const REGEX_PCNT_OF = /%[ ]*of[ ]*/g
-const REGEX_PCNT_OF_VAL = /[\w.]*%[ ]*of[ ]*/g
 const REGEX_PLOT = /\w\(x\)\s*=/
 
 let currencySymbolsRegex = null
@@ -55,9 +54,12 @@ export function refreshCurrencyState() {
     }
   }
 
+  const numPattern =
+    '\\b0[xX][0-9a-fA-F]+\\b|\\b0[bB][01]+\\b|\\b0[oO][0-7]+\\b|\\b(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?\\b'
+
   currencySymbolsRegex = symbols.length
     ? new RegExp(
-        `(?<![\\p{L}])(${symbols
+        `(${numPattern})|(?<![\\p{L}])(${symbols
           .sort((a, b) => b.length - a.length)
           .map(escapeRegExp)
           .join('|')})(?![\\p{L}])`,
@@ -93,10 +95,22 @@ const keywords = [
 
 // Cache for compiled expressions
 const compiledExpressions = new Map()
+const MAX_CACHE_SIZE = 1000
 
-// Cache for the scope variable regex used in altEvaluate
-let cachedScopeRegex = null
-let cachedScopePattern = ''
+// Cache for Intl.NumberFormat formatters
+const numberFormatCache = new Map()
+
+function getNumberFormatter(locale, options) {
+  const key = `${locale}_${options.useGrouping ?? ''}_${options.maximumFractionDigits ?? ''}_${options.style ?? ''}_${options.currency ?? ''}`
+  let formatter = numberFormatCache.get(key)
+
+  if (!formatter) {
+    formatter = new Intl.NumberFormat(locale, options)
+    numberFormatCache.set(key, formatter)
+  }
+
+  return formatter
+}
 
 /**
  * Retrieve a compiled Math.js expression. If the expression has not been
@@ -109,6 +123,10 @@ function getCompiledExpression(expr) {
   let compiled = compiledExpressions.get(expr)
 
   if (!compiled) {
+    if (compiledExpressions.size >= MAX_CACHE_SIZE) {
+      compiledExpressions.clear()
+    }
+
     compiled = math.compile(expr)
     compiledExpressions.set(expr, compiled)
   }
@@ -135,7 +153,7 @@ function setScope(key, value) {
  * @param {Object} stats - Object holding runningTotal and runningSubtotal.
  * @returns {string} - The evaluated answer or an error link.
  */
-function evaluateLine(line, lineIndex, lineHandle, stats) {
+function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
   let answer, answerCopy, answerOut
 
   try {
@@ -146,14 +164,16 @@ function evaluateLine(line, lineIndex, lineHandle, stats) {
     }
 
     if (app.settings.currency && currencySymbolsRegex) {
-      line = line.replace(currencySymbolsRegex, replaceCurrencySymbol)
+      line = line.replace(currencySymbolsRegex, (match, num, symbol) => {
+        if (num) return num
+
+        return replaceCurrencySymbol(symbol)
+      })
     }
 
     // Handle line continuation
     if (lineIndex > 0 && REGEX_CONTINUATION.test(line.charAt(0)) && app.settings.contPrevLine) {
-      const prevLine = cm.getLine(lineIndex - 1)
-
-      if (prevLine && prevLine.length > 0) {
+      if (prevLineText && prevLineText.length > 0) {
         line = (app.mathScope.get('ans') ?? '') + line
       }
     }
@@ -228,30 +248,23 @@ function evaluateLine(line, lineIndex, lineHandle, stats) {
  */
 function altEvaluate(line, stats) {
   let parsedLine = line
-  // Support expression before colon for separate evaluation
+
   if (parsedLine.includes(':')) {
+    const left = parsedLine.split(':')[0].trim()
+
     try {
-      math.evaluate(parsedLine.split(':')[0])
+      const val = math.evaluate(left)
+      if (typeof val === 'function') {
+        throw new Error('function')
+      }
     } catch {
       parsedLine = parsedLine.substring(parsedLine.indexOf(':') + 1)
     }
   }
 
-  // Replace variables in the expression with values from the mathScope Map.
-  const scopeKeys = Array.from(app.mathScope.keys())
-  if (scopeKeys.length > 0) {
-    const scopeKeysPattern = scopeKeys
-      .sort((a, b) => b.length - a.length)
-      .map(escapeRegExp)
-      .join('|')
-
-    if (scopeKeysPattern !== cachedScopePattern) {
-      cachedScopePattern = scopeKeysPattern
-      cachedScopeRegex = new RegExp(`\\b(${scopeKeysPattern})\\b`, 'g')
-    }
-
-    parsedLine = parsedLine.replace(cachedScopeRegex, (match) => app.mathScope.get(match))
-  }
+  parsedLine = parsedLine.replace(/(?:[\p{L}_][\p{L}\p{M}\w]*)/gu, (match) =>
+    app.mathScope.has(match) ? app.mathScope.get(match) : match
+  )
 
   // Calculate and return avg, subavg, total and subtotal values.
   for (const { key, fn } of keywords) {
@@ -268,7 +281,6 @@ function altEvaluate(line, stats) {
   if (parsedLine.match(REGEX_DATE_TIME)) {
     const locale = { locale: app.settings.locale }
 
-    // Strip assignment prefix (e.g. "tmrw = today + 1 day" → prefix="tmrw = ", datePart="today + 1 day")
     let assignPrefix = ''
     let datePart = parsedLine
 
@@ -282,14 +294,17 @@ function altEvaluate(line, stats) {
     const lineDate = datePart.replace(REGEX_DATE_TIME, '').trim()
     const lineDateRight = datePart.replace(lineDate, '').trim()
 
-    const formats = [
-      { fmt: nowDayFormat, dt: DateTime.fromFormat(lineDate, nowDayFormat, locale) },
-      { fmt: nowFormat, dt: DateTime.fromFormat(lineDate, nowFormat, locale) },
-      { fmt: todayDayFormat, dt: DateTime.fromFormat(lineDate, todayDayFormat, locale) },
-      { fmt: todayFormat, dt: DateTime.fromFormat(lineDate, todayFormat, locale) }
-    ]
+    // Lazily evaluate date formats to avoid redundant parsing operations
+    const formatTypes = [nowDayFormat, nowFormat, todayDayFormat, todayFormat]
+    let found = null
 
-    const found = formats.find((f) => f.dt.isValid)
+    for (const fmt of formatTypes) {
+      const dt = DateTime.fromFormat(lineDate, fmt, locale)
+      if (dt.isValid) {
+        found = { fmt, dt }
+        break
+      }
+    }
 
     if (!found) return 'Invalid Date'
 
@@ -301,7 +316,7 @@ function altEvaluate(line, stats) {
   }
 
   // Convert "% of" syntax to arithmetic
-  parsedLine = parsedLine.match(REGEX_PCNT_OF_VAL) ? parsedLine.replaceAll(REGEX_PCNT_OF, '/100*') : parsedLine
+  parsedLine = parsedLine.replaceAll(REGEX_PCNT_OF, '/100*')
 
   return math.evaluate(parsedLine, app.mathScope)
 }
@@ -316,10 +331,14 @@ function stripAnswer(answer) {
   return typeof answer === 'string' ? answer.replace(/^"|"$/g, '') : answer
 }
 
-// Cache locale-separator info so we can parse math.js-formatted amounts back to numbers.
 const localeSeparatorCache = new Map()
 
-/** Get { group, decimal } separators for a given locale. */
+/**
+ * Get the decimal and group separators for a given locale, using caching to optimize performance.
+ *
+ * @param {string} locale - The locale identifier (e.g., 'en-US').
+ * @returns {{group: string, decimal: string}} - The group and decimal separators.
+ */
 function getLocaleSeparators(locale) {
   let sep = localeSeparatorCache.get(locale)
 
@@ -337,7 +356,13 @@ function getLocaleSeparators(locale) {
   return sep
 }
 
-/** Parse a locale-formatted number string back to a Number. */
+/**
+ * Parse a locale-formatted number string back to a Number.
+ *
+ * @param {string} str - The locale-formatted number string.
+ * @param {string} locale - The locale identifier (e.g., 'en-US').
+ * @returns {number} - The parsed number.
+ */
 function parseLocaleNumber(str, locale) {
   const { group, decimal } = getLocaleSeparators(locale)
   const cleaned = str
@@ -378,15 +403,15 @@ function formatCurrency(str) {
     const locale = info.locale || appLocale
 
     try {
-      const formatted = new Intl.NumberFormat(locale, {
+      const formatter = getNumberFormatter(locale, {
         style: 'currency',
         currency: upperCode,
         currencyDisplay: 'narrowSymbol',
         useGrouping,
         maximumFractionDigits
-      }).format(value)
+      })
 
-      return formatted + expStr
+      return formatter.format(value) + expStr
     } catch {
       return `${info.symbol ?? ''}${trimmed}${expStr}`
     }
@@ -415,6 +440,7 @@ export function formatAnswer(answer, useGrouping) {
 
   const formatOptions = { notation, lowerExp, upperExp }
   const localeOptions = { maximumFractionDigits, useGrouping }
+  const formatter = getNumberFormatter(locale, localeOptions)
 
   let formattedAnswer = math.format(answer, (value) => {
     value = math.format(value, formatOptions)
@@ -422,10 +448,10 @@ export function formatAnswer(answer, useGrouping) {
     if (value.includes('e')) {
       const [base, exponent] = value.split('e')
 
-      return (+base).toLocaleString(locale, localeOptions) + 'e' + exponent
+      return formatter.format(+base) + 'e' + exponent
     }
 
-    return (+value).toLocaleString(locale, localeOptions)
+    return formatter.format(+value)
   })
 
   // Handle currency formatting
@@ -499,14 +525,42 @@ export function calculate() {
   dom.clearButton.setAttribute('disabled', cmValue === '')
   dom.copyButton.setAttribute('disabled', cmValue === '')
 
-  const lineHeights = Array.from(cm.display.lineDiv.children).map((child) => child.clientHeight ?? 0)
+  // Find all folded lines
+  const foldedLines = new Set()
+  if (typeof cm !== 'undefined' && typeof cm.getAllMarks === 'function') {
+    for (const mark of cm.getAllMarks()) {
+      if (mark.__isFold) {
+        const range = mark.find()
+        if (range) {
+          for (let i = range.from.line + 1; i <= range.to.line; i++) {
+            foldedLines.add(i)
+          }
+        }
+      }
+    }
+  }
+
+  const totalLines = cm.lineCount()
+  const lineHeights = []
+  const visibleChildren = Array.from(cm.display.lineDiv.children)
+  let visibleIndex = 0
+  for (let i = 0; i < totalLines; i++) {
+    const lineHandle = cm.getLineHandle(i)
+    if (lineHandle.hidden || foldedLines.has(i)) {
+      lineHeights.push(0)
+    } else {
+      const child = visibleChildren[visibleIndex++]
+      lineHeights.push(child ? (child.clientHeight ?? 27) : 27)
+    }
+  }
   const useRulers = app.settings.rulers
   const classRuler = useRulers ? CLASS_RULER : CLASS_NO_RULER
-  const totalLines = cm.lineCount()
 
+  let prevLineText = ''
   for (let lineIndex = 0; lineIndex < totalLines; lineIndex++) {
     const lineHandle = cm.getLineHandle(lineIndex)
-    const line = stripComments(lineHandle.text.trim())
+    const rawText = lineHandle.text
+    const line = stripComments(rawText.trim())
 
     cm.removeLineClass(lineHandle, 'gutter', CLASS_LINE_ERROR)
 
@@ -521,7 +575,7 @@ export function calculate() {
     let result = ''
 
     if (line) {
-      result = evaluateLine(line, lineIndex, lineHandle, stats)
+      result = evaluateLine(line, lineIndex, lineHandle, stats, prevLineText)
     } else {
       // Reset running subtotal when encountering a blank line.
       stats.runningSubtotal.length = 0
@@ -532,10 +586,11 @@ export function calculate() {
     if (app.settings.answerPosition === 'bottom') {
       updateLineWidget(lineHandle, result)
     } else {
-      answers.push(
-        `<div class="${classRuler}" data-index="${lineIndex}" style="height:${lineHeight}px">${result}</div>`
-      )
+      const displayStyle = lineHeight === 0 ? 'display: none;' : `height:${lineHeight}px`
+      answers.push(`<div class="${classRuler}" data-index="${lineIndex}" style="${displayStyle}">${result}</div>`)
     }
+
+    prevLineText = rawText
   }
 
   const outputResults = answers.join('')
@@ -550,10 +605,29 @@ export function calculate() {
     const pages = store.get('pages')
     const page = pages.find((page) => page.id === app.activePage)
 
-    if (!page || (page.data === cmValue && JSON.stringify(page.history) === JSON.stringify(cmHistory))) return
+    const folds = []
+    if (typeof cm !== 'undefined' && typeof cm.getAllMarks === 'function') {
+      for (const mark of cm.getAllMarks()) {
+        if (mark.__isFold) {
+          const range = mark.find()
+          if (range) {
+            folds.push({ from: range.from.line, to: range.to.line })
+          }
+        }
+      }
+    }
+
+    if (
+      !page ||
+      (page.data === cmValue &&
+        JSON.stringify(page.history) === JSON.stringify(cmHistory) &&
+        JSON.stringify(page.folds) === JSON.stringify(folds))
+    )
+      return
 
     page.data = cmValue
     page.history = cmHistory
+    page.folds = folds
 
     store.set('pages', pages)
   }
