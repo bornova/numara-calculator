@@ -15,6 +15,8 @@ import 'codemirror/addon/hint/show-hint'
 import 'codemirror/addon/search/jump-to-line'
 import 'codemirror/addon/search/search'
 import 'codemirror/addon/search/searchcursor'
+import 'codemirror/addon/fold/foldcode'
+import 'codemirror/addon/fold/foldgutter'
 
 import * as formulajs from '@formulajs/formulajs'
 
@@ -192,6 +194,81 @@ CodeMirror.commands.autocomplete = (cm) => {
   })
 }
 
+const HEADER_REGEXP = /^\s*(?:\/\/\s*)?(#{1,6})\s+(.*)$/
+const REGION_START_REGEXP = /^\s*(?:\/\/\s*|#\s*)region\b/i
+const REGION_END_REGEXP = /^\s*(?:\/\/\s*|#\s*)endregion\b/i
+const END_SECTION_REGEXP = /^\s*(?:\/\/\s*)?#[!\s]*$/
+
+CodeMirror.registerHelper('fold', 'numara', (cm, start) => {
+  const startLineText = cm.getLine(start.line)
+  if (!startLineText) return
+
+  // 1. Check for custom region start
+  if (REGION_START_REGEXP.test(startLineText)) {
+    let depth = 1
+    let endLine = -1
+    const lastLine = cm.lineCount() - 1
+    for (let i = start.line + 1; i <= lastLine; i++) {
+      const text = cm.getLine(i)
+      if (REGION_START_REGEXP.test(text)) {
+        depth++
+      } else if (REGION_END_REGEXP.test(text)) {
+        depth--
+        if (depth === 0) {
+          endLine = i
+          break
+        }
+      }
+    }
+    if (endLine > start.line) {
+      return {
+        from: CodeMirror.Pos(start.line, startLineText.length),
+        to: CodeMirror.Pos(endLine, cm.getLine(endLine).length)
+      }
+    }
+  }
+
+  // 2. Check for markdown headers
+  const match = HEADER_REGEXP.exec(startLineText)
+  if (match) {
+    const headerLevel = match[1].length
+    let endLine = -1
+    const lastLine = cm.lineCount() - 1
+    for (let i = start.line + 1; i <= lastLine; i++) {
+      const text = cm.getLine(i)
+
+      if (END_SECTION_REGEXP.test(text)) {
+        endLine = i
+        break
+      }
+
+      const m = HEADER_REGEXP.exec(text)
+      if (m) {
+        const nextLevel = m[1].length
+        if (nextLevel <= headerLevel) {
+          endLine = i - 1
+          break
+        }
+      }
+    }
+    if (endLine === -1) {
+      endLine = lastLine
+    }
+    if (endLine > start.line) {
+      // Trim empty lines from the end of fold range to look clean
+      while (endLine > start.line && cm.getLine(endLine).trim() === '') {
+        endLine--
+      }
+      if (endLine > start.line) {
+        return {
+          from: CodeMirror.Pos(start.line, startLineText.length),
+          to: CodeMirror.Pos(endLine, cm.getLine(endLine).length)
+        }
+      }
+    }
+  }
+})
+
 // Force editor line bottom alignment
 function cmForceBottom() {
   const lineEl = cm.display.lineDiv.children[cm.getCursor().line]
@@ -247,9 +324,14 @@ export const cm = CodeMirror.fromTextArea(dom.inputArea, {
   extraKeys: {
     'Ctrl-Space': 'autocomplete',
     'Cmd-/': toggleComment,
-    'Ctrl-/': toggleComment
+    'Ctrl-/': toggleComment,
+    'Ctrl-Q': (cm) => cm.foldCode(cm.getCursor())
   },
   flattenSpans: true,
+  foldGutter: {
+    rangeFinder: CodeMirror.fold.numara
+  },
+  gutters: ['CodeMirror-foldgutter', 'CodeMirror-linenumbers'],
   mode: 'numara',
   smartIndent: false,
   theme: 'numara',
@@ -270,6 +352,8 @@ export const uduInput = CodeMirror.fromTextArea(dom.uduInput, udOptions)
 
 // Codemirror handlers
 cm.on('changes', calculate)
+cm.on('fold', () => setTimeout(calculate, 0))
+cm.on('unfold', () => setTimeout(calculate, 0))
 
 cm.on('inputRead', (cm) => {
   if (!app.settings.autocomplete) return
@@ -301,7 +385,9 @@ cm.on('cursorActivity', (cm) => {
   store.set('pages', pages)
 })
 
-cm.on('gutterClick', (cm, line) => {
+cm.on('gutterClick', (cm, line, gutter) => {
+  if (gutter !== 'CodeMirror-linenumbers') return
+
   const lineNo = line + 1
   const activeLine = cm.getCursor().line + 1
   const error = dom.el('[data-index="' + line + '"]')?.firstChild?.dataset.error
