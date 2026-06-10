@@ -325,7 +325,7 @@ export function loadPage(pageId) {
     return
   }
 
-  const { name, data, history, cursor } = page
+  const { name, data, history, cursor, folds } = page
 
   app.activePage = pageId
   store.set('lastPage', pageId)
@@ -335,6 +335,14 @@ export function loadPage(pageId) {
   cm.setValue(data)
 
   if (history) cm.setHistory(history)
+
+  if (folds && folds.length > 0) {
+    for (const fold of folds) {
+      if (typeof fold.from === 'number') {
+        cm.foldCode({ line: fold.from, ch: 0 }, null, 'fold')
+      }
+    }
+  }
 
   cm.execCommand('goLineEnd')
 
