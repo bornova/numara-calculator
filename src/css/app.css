@@ -169,7 +169,7 @@ text {
   top: 50px;
   right: 8px;
   bottom: 42px;
-  left: 8px;
+  left: 10px;
   align-content: flex-start;
 }
 
@@ -1012,7 +1012,7 @@ input:checked + .slider:before {
 .CodeMirror-foldgutter {
   cursor: pointer;
   background-color: transparent;
-  width: 14px;
+  width: 12px;
 }
 
 .CodeMirror-foldgutter-open,
