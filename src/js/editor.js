@@ -1,7 +1,7 @@
 import { dom } from './dom'
 import { calculate, formatAnswer, math } from './eval'
 import { showError } from './modal'
-import { app, store } from './utils'
+import { app, debounce, store } from './utils'
 
 import UIkit from 'uikit'
 import CodeMirror from 'codemirror'
@@ -329,7 +329,9 @@ export const cm = CodeMirror.fromTextArea(dom.inputArea, {
   },
   flattenSpans: true,
   foldGutter: {
-    rangeFinder: CodeMirror.fold.numara
+    rangeFinder: CodeMirror.fold.numara,
+    foldOnChangeTimeSpan: 1,
+    updateViewportTimeSpan: 1
   },
   gutters: ['CodeMirror-foldgutter', 'CodeMirror-linenumbers'],
   mode: 'numara',
@@ -351,7 +353,21 @@ export const udfInput = CodeMirror.fromTextArea(dom.udfInput, udOptions)
 export const uduInput = CodeMirror.fromTextArea(dom.uduInput, udOptions)
 
 // Codemirror handlers
-cm.on('changes', calculate)
+export const debouncedCalculate = debounce(calculate, 150)
+cm.on('changes', (cm, changes) => {
+  // If the change includes entering a new line (origin is "+input" and text contains empty string or has multiple lines)
+  // or if lines were removed, let's flush changes immediately so that ruler elements and side panels align instantly.
+  const hasNewLine = changes.some(
+    (change) =>
+      change.text.length > 1 || change.removed?.length > 1 || (change.origin === '+input' && change.text.includes(''))
+  )
+  if (hasNewLine) {
+    debouncedCalculate.flush()
+    calculate()
+  } else {
+    debouncedCalculate()
+  }
+})
 cm.on('fold', () => setTimeout(calculate, 0))
 cm.on('unfold', () => setTimeout(calculate, 0))
 
