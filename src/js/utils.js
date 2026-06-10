@@ -160,3 +160,25 @@ export function escapeHTML(str) {
 export function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
+
+/**
+ * Creates a debounced function that delays invoking func until after wait milliseconds have elapsed
+ * @param {Function} func - The function to debounce
+ * @param {number} wait - The delay in milliseconds
+ * @returns {Function} - The debounced function
+ */
+export function debounce(func, wait) {
+  let timeout
+  const debounced = function (...args) {
+    const context = this
+    clearTimeout(timeout)
+    timeout = setTimeout(() => func.apply(context, args), wait)
+  }
+  debounced.flush = function () {
+    if (timeout) {
+      clearTimeout(timeout)
+      func()
+    }
+  }
+  return debounced
+}
