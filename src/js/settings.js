@@ -128,22 +128,7 @@ export const settings = {
 
   /** Prepare settings dialog items. */
   prep: async () => {
-    const locales = [
-      { system: 'System' },
-      { 'zh-CN': 'Chinese (PRC)' },
-      { 'en-CA': 'English (Canada)' },
-      { 'en-GB': 'English (UK)' },
-      { 'en-US': 'English (US)' },
-      { 'fr-FR': 'French (France)' },
-      { 'de-DE': 'German (Germany)' },
-      { 'it-IT': 'Italian (Italy)' },
-      { 'ja-JP': 'Japanese (Japan)' },
-      { 'pt-BR': 'Portuguese (Brazil)' },
-      { 'ru-RU': 'Russian (Russia)' },
-      { 'es-MX': 'Spanish (Mexico)' },
-      { 'es-ES': 'Spanish (Spain)' },
-      { 'tr-TR': 'Turkish (Turkiye)' }
-    ]
+    const locales = [{ system: 'System' }, { period: 'Period (1,234.56)' }, { comma: 'Comma (1.234,56)' }]
 
     const answerPositions = [
       { left: 'Left (with divider)' },
