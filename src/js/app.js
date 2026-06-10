@@ -121,21 +121,29 @@ const setupPanelResizer = () => {
       dom.input.style.width === `${defaultWidth}%` ? 'Drag to resize' : 'Double click to reset position'
   }
 
-  dom.panelDivider.addEventListener('dblclick', () => {
+  dom.panelDivider.addEventListener('dblclick', (event) => {
+    event.preventDefault()
+    window.getSelection()?.removeAllRanges()
     dom.input.style.width = `${defaultWidth}%`
     store.set('inputWidth', defaultWidth)
     dividerTooltip()
+    cm.refresh()
+    calculate()
   })
 
   dom.panelDivider.addEventListener('mousedown', (event) => {
     isResizing = event.target === dom.panelDivider
   })
 
-  dom.mainPanel.addEventListener('mouseup', () => {
-    isResizing = false
+  document.addEventListener('mouseup', () => {
+    if (isResizing) {
+      isResizing = false
+      cm.refresh()
+      calculate()
+    }
   })
 
-  dom.mainPanel.addEventListener('mousemove', (event) => {
+  document.addEventListener('mousemove', (event) => {
     if (!isResizing) return
 
     if (resizeRaf) cancelAnimationFrame(resizeRaf)
