@@ -1,7 +1,7 @@
 import { outputContext } from './context'
 import { dom } from './dom'
 import { cm } from './editor'
-import { app, escapeHTML, escapeRegExp, localeUsesComma, store } from './utils'
+import { app, escapeHTML, escapeRegExp, getAppLocale, localeUsesComma, store } from './utils'
 
 import { DateTime } from 'luxon'
 import { all, create, factory } from 'mathjs'
@@ -159,7 +159,52 @@ function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
   try {
     // Pre‑process locale and currency symbols
     if (app.settings.inputLocale) {
-      line = localeUsesComma() ? line.replace(/\./g, '').replace(/,/g, '.') : line.replace(/,/g, '')
+      const usesComma = localeUsesComma()
+      // Match contiguous digit sequences with embedded commas/periods (ignoring isolated separators)
+      line = line.replace(/\b\d+(?:[.,]\d+)+\b/g, (numToken) => {
+        const commas = (numToken.match(/,/g) || []).length
+        const periods = (numToken.match(/\./g) || []).length
+
+        // 1. Both commas and periods are present (e.g. 1.234,56 or 1,234.56)
+        if (commas > 0 && periods > 0) {
+          const lastComma = numToken.lastIndexOf(',')
+          const lastPeriod = numToken.lastIndexOf('.')
+          if (lastComma > lastPeriod) {
+            return numToken.replace(/\./g, '').replace(/,/g, '.')
+          } else {
+            return numToken.replace(/,/g, '')
+          }
+        }
+
+        // 2. Only periods are present (e.g. 1.234.567 or 1.23 or 1.234)
+        if (periods > 0 && commas === 0) {
+          if (periods > 1) {
+            return numToken.replace(/\./g, '')
+          }
+          const parts = numToken.split('.')
+          if (parts[1].length === 3) {
+            return usesComma ? numToken.replace(/\./g, '') : numToken
+          }
+          return numToken
+        }
+
+        // 3. Only commas are present (e.g. 1,234,567 or 1,23 or 1,234)
+        if (commas > 0 && periods === 0) {
+          if (commas > 1) {
+            return numToken.replace(/,/g, '')
+          }
+          const parts = numToken.split(',')
+          if (parts[1].length === 3) {
+            return usesComma ? numToken.replace(/,/g, '.') : numToken.replace(/,/g, '')
+          }
+          return numToken.replace(/,/g, '.')
+        }
+
+        return numToken
+      })
+
+      // Since arguments inside functions also use comma or semicolon depending on separator setting,
+      // mapping semicolon to comma lets the parser interpret arguments uniformly (e.g., sum(1;3) -> sum(1,3))
       line = line.replace(/;/g, ',')
     }
 
@@ -279,7 +324,7 @@ function altEvaluate(line, stats) {
 
   // Handle date/time arithmetic.
   if (parsedLine.match(REGEX_DATE_TIME)) {
-    const locale = { locale: app.settings.locale }
+    const locale = { locale: getAppLocale() }
 
     let assignPrefix = ''
     let datePart = parsedLine
@@ -381,7 +426,7 @@ function parseLocaleNumber(str, locale) {
 function formatCurrency(str) {
   if (!currencyFormatRegex) return str
 
-  const appLocale = app.settings.locale
+  const appLocale = getAppLocale()
   const useGrouping = app.settings.thouSep
   const maximumFractionDigits = app.settings.precision
 
@@ -429,7 +474,7 @@ export function formatAnswer(answer, useGrouping) {
   const notation = app.settings.notation
   const lowerExp = +app.settings.expLower
   const upperExp = +app.settings.expUpper
-  const locale = app.settings.locale
+  const locale = getAppLocale()
   const maximumFractionDigits = app.settings.precision
 
   if (['bin', 'hex', 'oct'].includes(notation)) {
@@ -505,7 +550,7 @@ function updateLineWidget(lineHandle, answer) {
 export function calculate() {
   if (app.refreshCM) cm.refresh()
 
-  const dateTime = DateTime.now().setLocale(app.settings.locale)
+  const dateTime = DateTime.now().setLocale(getAppLocale())
   const cmValue = cm.getValue()
   const cmHistory = cm.getHistory()
   const answers = []
