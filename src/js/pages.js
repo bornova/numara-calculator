@@ -556,8 +556,9 @@ dom.pageName.addEventListener('dblclick', () => {
 })
 
 document.addEventListener('click', (event) => {
-  if (event.target.parentNode?.dataset?.action === 'load') {
-    let pageId = event.target.parentNode.parentNode.id
+  const loadButton = event.target.closest?.('[data-action="load"]')
+  if (loadButton) {
+    const pageId = loadButton.dataset.page
     loadPage(pageId)
 
     if (!app.sidebarDocked) UIkit.offcanvas('#sidePanel').hide()
@@ -565,27 +566,30 @@ document.addEventListener('click', (event) => {
     return
   }
 
-  let pageId = event.target?.dataset?.page
+  const pageId = event.target?.dataset?.page
+  const action = event.target?.dataset?.action
 
-  switch (event.target.dataset.action) {
-    case 'rename':
-      UIkit.dropdown(event.target.parentNode).hide(0)
-      renamePage(pageId)
-      break
-    case 'delete':
-      deletePage(pageId)
-      break
-    case 'duplicate':
-      duplicatePage(pageId)
-      UIkit.dropdown(event.target.parentNode).hide(0)
-      break
-    case 'export':
-      if (isElectron) {
-        const pages = store.get('pages')
-        const page = pages.find((page) => page.id === pageId)
-
-        numara.exportPage(page.name, page.data)
+  if (action) {
+    switch (action) {
+      case 'rename':
         UIkit.dropdown(event.target.parentNode).hide(0)
-      }
+        renamePage(pageId)
+        break
+      case 'delete':
+        deletePage(pageId)
+        break
+      case 'duplicate':
+        duplicatePage(pageId)
+        UIkit.dropdown(event.target.parentNode).hide(0)
+        break
+      case 'export':
+        if (isElectron) {
+          const pages = store.get('pages')
+          const page = pages.find((page) => page.id === pageId)
+
+          numara.exportPage(page.name, page.data)
+          UIkit.dropdown(event.target.parentNode).hide(0)
+        }
+    }
   }
 })
