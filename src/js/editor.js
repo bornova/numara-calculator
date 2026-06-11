@@ -271,7 +271,8 @@ CodeMirror.registerHelper('fold', 'numara', (cm, start) => {
 
 // Force editor line bottom alignment
 function cmForceBottom() {
-  const lineEl = cm.display.lineDiv.children[cm.getCursor().line]
+  const line = cm.getCursor().line
+  const lineEl = cm.display.lineDiv.children[line - cm.display.viewFrom]
   if (!lineEl) return
 
   const lineRect = lineEl.getBoundingClientRect()
