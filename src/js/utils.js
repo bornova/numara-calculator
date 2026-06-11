@@ -99,7 +99,7 @@ export function checkAppUpdate() {
 
   numara.checkUpdate()
 
-  numara.updateStatus((event, status, version, progress) => {
+  numara.updateStatus((status, version, progress) => {
     switch (status) {
       case 'checking':
         updateStatusMessage('Checking for updates...')

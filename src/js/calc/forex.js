@@ -1,8 +1,8 @@
-import { dom } from './dom'
-import { cm, numaraHints, refreshCurrencyTokens } from './editor'
-import { calculate, math, refreshCurrencyState } from './eval'
-import { notify } from './modal'
-import { app, store } from './utils'
+import { dom } from '../dom'
+import { cm, numaraHints, refreshCurrencyTokens } from '../editor/editor'
+import { calculate, math, refreshCurrencyState } from '../eval'
+import { notify } from '../ui/modal'
+import { app, store } from '../utils'
 
 const USD_UNIT = 'USD'
 const RATES_URL = 'https://api.frankfurter.dev/v2/rates?base=USD'

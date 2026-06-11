@@ -10,6 +10,7 @@ const helpTooltips = {
   currency: 'Enable currency conversion using up-to-date exchange rates.',
   currencyInterval: 'Set how often the currency exchange rates are updated.',
   dateDay: 'Show the day of the week when displaying dates.',
+  dateFormat: 'Set the date format for date and time calculations.',
   expLower: 'Set the lower threshold for scientific notation display.',
   expUpper: 'Set the upper threshold for scientific notation display.',
   fontSize: 'Set the font size for the calculator display.',

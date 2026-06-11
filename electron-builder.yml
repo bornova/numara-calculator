@@ -17,8 +17,8 @@ directories:
 # Files to include in the build
 files:
   - build
-  - src/main.js
-  - src/preload.cjs
+  - src/electron/main.js
+  - src/electron/preload.cjs
 
 # Linux configuration
 linux:

@@ -11,7 +11,7 @@ contextBridge.exposeInMainWorld('numara', {
   // App theme
   isDark: () => ipcRenderer.invoke('isDark'),
   setTheme: (theme) => ipcRenderer.send('setTheme', theme),
-  themeUpdate: (callback) => ipcRenderer.on('themeUpdate', callback),
+  themeUpdate: (callback) => ipcRenderer.on('themeUpdate', (event, isDark) => callback(isDark)),
 
   // Window controls
   isMaximized: () => ipcRenderer.invoke('isMaximized'),
@@ -23,15 +23,15 @@ contextBridge.exposeInMainWorld('numara', {
   // Import
   importPage: () => ipcRenderer.send('importPage'),
   pageImported: (callback) => ipcRenderer.on('pageImported', (event, data, msg) => callback(data, msg)),
-  importDataError: (callback) => ipcRenderer.on('importDataError', callback),
+  importDataError: (callback) => ipcRenderer.on('importDataError', (event, error) => callback(error)),
 
   //Export
   exportPage: (pageName, pageData) => ipcRenderer.send('exportPage', pageName, pageData),
   pageExported: (callback) => ipcRenderer.on('pageExported', (event, data) => callback(data)),
-  exportDataError: (callback) => ipcRenderer.on('exportDataError', callback),
+  exportDataError: (callback) => ipcRenderer.on('exportDataError', (event, error) => callback(error)),
 
   // Print
-  print: (callback) => ipcRenderer.on('print', callback),
+  print: (callback) => ipcRenderer.on('print', () => callback()),
 
   // Context menus
   inputContextMenu: (index, isEmpty, isLine, isSelection, isMultiLine, hasAnswer) =>
@@ -39,18 +39,18 @@ contextBridge.exposeInMainWorld('numara', {
   outputContextMenu: (index, isEmpty, hasAnswer) => ipcRenderer.send('outputContextMenu', index, isEmpty, hasAnswer),
   textboxContextMenu: () => ipcRenderer.send('textboxContextMenu'),
 
-  copyAll: (callback) => ipcRenderer.on('copyAll', callback),
-  copyAllLines: (callback) => ipcRenderer.on('copyAllLines', callback),
-  copyAllAnswers: (callback) => ipcRenderer.on('copyAllAnswers', callback),
-  copyLine: (callback) => ipcRenderer.on('copyLine', callback),
-  copyAnswer: (callback) => ipcRenderer.on('copyAnswer', callback),
-  copyLineWithAnswer: (callback) => ipcRenderer.on('copyLineWithAnswer', callback),
+  copyAll: (callback) => ipcRenderer.on('copyAll', () => callback()),
+  copyAllLines: (callback) => ipcRenderer.on('copyAllLines', () => callback()),
+  copyAllAnswers: (callback) => ipcRenderer.on('copyAllAnswers', () => callback()),
+  copyLine: (callback) => ipcRenderer.on('copyLine', (event, index) => callback(index)),
+  copyAnswer: (callback) => ipcRenderer.on('copyAnswer', (event, index, withLines) => callback(index, withLines)),
+  copyLineWithAnswer: (callback) => ipcRenderer.on('copyLineWithAnswer', (event, index) => callback(index)),
 
   // Update app
   updateApp: () => ipcRenderer.send('updateApp'),
   checkUpdate: () => ipcRenderer.send('checkUpdate'),
-  updateStatus: (callback) => ipcRenderer.on('updateStatus', callback),
-  showAbout: (callback) => ipcRenderer.on('showAbout', callback),
+  updateStatus: (callback) => ipcRenderer.on('updateStatus', (event, status) => callback(status)),
+  showAbout: (callback) => ipcRenderer.on('showAbout', (event, data) => callback(data)),
 
   // Developer Tools
   openDevTools: () => ipcRenderer.send('openDevTools'),

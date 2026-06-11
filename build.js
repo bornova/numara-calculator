@@ -42,6 +42,14 @@ async function buildNumara() {
     outfile: `${buildPath}/js/numara.js`,
     sourcemap: !process.env.PROD
   })
+
+  await build({
+    bundle: true,
+    minify: true,
+    entryPoints: ['src/js/calc/calc.worker.js'],
+    outfile: `${buildPath}/js/calc.worker.js`,
+    sourcemap: !process.env.PROD
+  })
 }
 
 buildNumara()

@@ -1,11 +1,11 @@
 import { colors } from './colors'
-import { dom } from './dom'
-import { cm, debouncedCalculate, udfInput, uduInput } from './editor'
-import { calculate, math } from './eval'
-import { getRates } from './forex'
+import { dom } from '../dom'
+import { cm, udfInput, uduInput } from '../editor/editor'
+import { calculate, clearEvaluationCache, math } from '../eval'
+import { getRates } from '../calc/forex'
 import { confirm, modal, showError } from './modal'
 import { setupSidePanel } from './pages'
-import { app, checkSize, getTheme, isElectron, store } from './utils'
+import { app, checkSize, getTheme, isElectron, store } from '../utils'
 
 import { applyChange, observableDiff } from '@bornova/deep-diff'
 
@@ -26,7 +26,7 @@ function checkMods(key) {
 /** Configures warnings by checking a condition mapped to a dom component. */
 function checkWarnings() {
   dom.bigNumWarn.style.display = app.settings.numericOutput === 'BigNumber' ? 'inline-block' : 'none'
-  dom.localeWarn.style.display = app.settings.inputLocale ? 'inline-block' : 'none'
+  dom.localeWarn.style.display = app.settings.thouSep && app.settings.inputLocale ? 'inline-block' : 'none'
 }
 
 /**
@@ -59,6 +59,7 @@ export const settings = {
     currency: true,
     currencyInterval: '0',
     dateDay: false,
+    dateFormat: 'system',
     expLower: '-12',
     expUpper: '12',
     fontSize: '1.1rem',
@@ -80,6 +81,7 @@ export const settings = {
     numericOutput: 'number',
     pageListPosition: 'auto',
     precision: '4',
+    calcTimeout: '10',
     predictable: false,
     rulers: false,
     syntax: true,
@@ -128,7 +130,18 @@ export const settings = {
 
   /** Prepare settings dialog items. */
   prep: async () => {
-    const locales = [{ system: 'System' }, { period: 'Period (1,234.56)' }, { comma: 'Comma (1.234,56)' }]
+    const locales = [
+      { system: 'System' },
+      { period: 'Comma (1,234.56)' },
+      { comma: 'Period (1.234,56)' },
+      { disabled: 'Disabled' }
+    ]
+    const dateFormats = [
+      { system: 'System' },
+      { 'MM/dd/yyyy': 'MM/DD/YYYY' },
+      { 'dd/MM/yyyy': 'DD/MM/YYYY' },
+      { 'yyyy-MM-dd': 'YYYY-MM-DD' }
+    ]
 
     const answerPositions = [
       { left: 'Left (with divider)' },
@@ -150,11 +163,13 @@ export const settings = {
 
     populateSelect(dom.answerPosition, answerPositions)
     populateSelect(dom.locale, locales)
+    populateSelect(dom.dateFormat, dateFormats)
     populateSelect(dom.numericOutput, numericOutputs)
     populateSelect(dom.notation, notations, 'spacer')
     populateSelect(dom.matrixType, matrixTypes)
 
     dom.precisionLabel.textContent = app.settings.precision
+    dom.calcTimeoutLabel.textContent = app.settings.calcTimeout
     dom.expLowerLabel.textContent = app.settings.expLower
     dom.expUpperLabel.textContent = app.settings.expUpper
     dom.lastUpdated.textContent = app.settings.currency ? store.get('rateDate') : ''
@@ -178,6 +193,8 @@ export const settings = {
 
   /** Apply settings. */
   apply: async () => {
+    clearEvaluationCache()
+
     const appTheme = await getTheme()
     const cssColorScheme =
       app.settings.theme === 'light' ? 'light' : app.settings.theme === 'dark' ? 'dark' : 'light dark'
@@ -212,6 +229,8 @@ export const settings = {
       el.style.fontWeight = app.settings.fontWeight
       el.style.setProperty('line-height', app.settings.lineHeight, 'important')
     })
+
+    dom.mainPanel.classList.toggle('showRulers', app.settings.rulers)
 
     if (app.settings.answerPosition !== 'bottom') {
       cm.eachLine((cmLine) => {
@@ -272,11 +291,7 @@ export const settings = {
 
     setupSidePanel()
 
-    if (debouncedCalculate && typeof debouncedCalculate.flush === 'function') {
-      debouncedCalculate.flush()
-    } else {
-      setTimeout(calculate, 10)
-    }
+    calculate()
   },
 
   /** Save settings to local storage. */
@@ -320,11 +335,14 @@ export const settings = {
       }
     }
 
+    app.settings.thouSep = app.settings.locale !== 'disabled'
+
     toggle(dom.keywordTips, app.settings.syntax)
     toggle(dom.matchBrackets, app.settings.syntax)
     const isAutoNotation = app.settings.notation === 'auto'
     toggle(dom.expUpper, isAutoNotation)
     toggle(dom.expLower, isAutoNotation)
+    toggle(dom.inputLocale, app.settings.thouSep)
     toggle(dom.copyThouSep, app.settings.thouSep)
 
     dom.currencyInterval.disabled = !app.settings.currency
@@ -375,6 +393,10 @@ dom.currencyWarn.addEventListener('click', () => {
 
 dom.precision.addEventListener('input', () => {
   dom.precisionLabel.innerHTML = dom.precision.value
+})
+
+dom.calcTimeout.addEventListener('input', () => {
+  dom.calcTimeoutLabel.innerHTML = dom.calcTimeout.value
 })
 
 dom.expLower.addEventListener('input', () => {

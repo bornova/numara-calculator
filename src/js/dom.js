@@ -83,11 +83,14 @@ export const dom = {
   expUpperLabel: document.getElementById('expUpperLabel'),
   expLower: document.getElementById('expLower'),
   expLowerLabel: document.getElementById('expLowerLabel'),
+  calcTimeout: document.getElementById('calcTimeout'),
+  calcTimeoutLabel: document.getElementById('calcTimeoutLabel'),
   matrixType: document.getElementById('matrixType'),
   answerPosition: document.getElementById('answerPosition'),
   keywordTips: document.getElementById('keywordTips'),
   matchBrackets: document.getElementById('matchBrackets'),
   locale: document.getElementById('locale'),
+  dateFormat: document.getElementById('dateFormat'),
   localeWarn: document.getElementById('localeWarn'),
   inputLocale: document.getElementById('inputLocale'),
   copyThouSep: document.getElementById('copyThouSep'),
@@ -145,6 +148,12 @@ export const dom = {
   // Confirm dialog
   confirmMsg: document.getElementById('confirmMsg'),
   confirmYes: document.getElementById('confirmYes'),
+
+  // Calc Timeout dialog
+  dialogCalcTimeout: document.getElementById('dialogCalcTimeout'),
+  calcTimeoutMsg: document.getElementById('calcTimeoutMsg'),
+  calcTimeoutContinue: document.getElementById('calcTimeoutContinue'),
+  calcTimeoutIgnore: document.getElementById('calcTimeoutIgnore'),
 
   // Other elements
   scrollTop: document.getElementById('scrollTop'),

@@ -1,7 +1,7 @@
-import { dom } from './dom'
-import { calculate, formatAnswer, math } from './eval'
-import { showError } from './modal'
-import { app, debounce, store } from './utils'
+import { dom } from '../dom'
+import { calculate, formatAnswer, math } from '../eval'
+import { showError } from '../ui/modal'
+import { app, debounce, store } from '../utils'
 
 import UIkit from 'uikit'
 import CodeMirror from 'codemirror'
@@ -166,7 +166,16 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
 
     // Build hints for all variables from the current math scope
     for (const key of app.mathScope.keys()) {
-      if (!keywordTokens.has(key)) variableHints.push({ text: key, className: CLASS_NAMES.VARIABLE })
+      if (!keywordTokens.has(key)) {
+        const lineMatch = key.match(/^line(\d+)$/)
+        if (lineMatch) {
+          const lineNum = parseInt(lineMatch[1], 10)
+          if (lineNum >= cmCursor.line + 1) {
+            continue
+          }
+        }
+        variableHints.push({ text: key, className: CLASS_NAMES.VARIABLE })
+      }
     }
 
     const userFunctionHints = app.udfList.map((funcName) => ({ text: funcName, className: CLASS_NAMES.FUNCTION }))
@@ -340,6 +349,8 @@ export const cm = CodeMirror.fromTextArea(dom.inputArea, {
   theme: 'numara',
   viewportMargin: Infinity
 })
+cm.getInputField().setAttribute('id', 'inputAreaCodeMirror')
+cm.getInputField().setAttribute('name', 'inputAreaCodeMirror')
 
 const udOptions = { autoCloseBrackets: true, autofocus: true, mode: 'javascript', smartIndent: false, tabSize: 2 }
 
@@ -352,16 +363,21 @@ dom.uduInput.setAttribute('placeholder', uduPlaceholder)
 
 export const udfInput = CodeMirror.fromTextArea(dom.udfInput, udOptions)
 export const uduInput = CodeMirror.fromTextArea(dom.uduInput, udOptions)
+udfInput.getInputField().setAttribute('id', 'udfInputCodeMirror')
+udfInput.getInputField().setAttribute('name', 'udfInputCodeMirror')
+uduInput.getInputField().setAttribute('id', 'uduInputCodeMirror')
+uduInput.getInputField().setAttribute('name', 'uduInputCodeMirror')
 
 // Codemirror handlers
 export const debouncedCalculate = debounce(calculate, 150)
 cm.on('changes', (cm, changes) => {
-  // If the change includes entering a new line (origin is "+input" and text contains empty string or has multiple lines)
-  // or if lines were removed, let's flush changes immediately so that ruler elements and side panels align instantly.
+  if (app.loadingPage) return
+
   const hasNewLine = changes.some(
     (change) =>
       change.text.length > 1 || change.removed?.length > 1 || (change.origin === '+input' && change.text.includes(''))
   )
+
   if (hasNewLine) {
     debouncedCalculate.flush()
     calculate()
@@ -369,8 +385,14 @@ cm.on('changes', (cm, changes) => {
     debouncedCalculate()
   }
 })
-cm.on('fold', () => setTimeout(calculate, 0))
-cm.on('unfold', () => setTimeout(calculate, 0))
+cm.on('fold', () => {
+  if (app.loadingPage) return
+  setTimeout(calculate, 0)
+})
+cm.on('unfold', () => {
+  if (app.loadingPage) return
+  setTimeout(calculate, 0)
+})
 
 cm.on('inputRead', (cm) => {
   if (!app.settings.autocomplete) return
@@ -451,7 +473,9 @@ function showTooltip(target, title) {
 function handleFunctionTooltip(target) {
   try {
     const tip = math.help(target.textContent).toJSON()
-    const syntax = tip.syntax.map((s) => s.replaceAll(/,/g, app.settings.inputLocale ? ';' : ','))
+    const syntax = tip.syntax.map((s) =>
+      s.replaceAll(/,/g, app.settings.thouSep && app.settings.inputLocale ? ';' : ',')
+    )
 
     showTooltip(
       target,

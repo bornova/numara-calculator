@@ -1,17 +1,17 @@
-import { checkColorChange, colors } from './colors'
-import { copyAll, initializeContextMenus, safeCopyText } from './context'
+import { checkColorChange, colors } from './ui/colors'
+import { copyAll, initializeContextMenus, safeCopyText } from './ui/context'
 import { dom } from './dom'
-import { cm, refreshEditor, udfInput, uduInput } from './editor'
+import { cm, refreshEditor, udfInput, uduInput } from './editor/editor'
 import { calculate } from './eval'
-import { initCurrencies } from './forex'
-import { initializeHelpTooltips } from './help'
-import { generateIcons } from './icons'
-import { numaraKeys } from './keybindings.js'
-import { modal, notify, showError } from './modal'
-import { getPageName, initializePages, pageOrder, populatePages, setupSidePanel } from './pages'
-import { plot } from './plot'
-import { settings } from './settings'
-import { applyUdfu } from './userDefined'
+import { initCurrencies } from './calc/forex'
+import { initializeHelpTooltips } from './ui/help'
+import { generateIcons } from './ui/icons'
+import { numaraKeys } from './editor/keybindings.js'
+import { modal, notify, showError } from './ui/modal'
+import { getPageName, initializePages, pageOrder, populatePages, setupSidePanel } from './ui/pages'
+import { plot } from './ui/plot'
+import { settings } from './ui/settings'
+import { applyUdfu } from './calc/userDefined'
 import { app, checkAppUpdate, isMac, isElectron, store } from './utils'
 
 import { author, description, homepage, name, version } from './../../package.json'
@@ -345,6 +345,12 @@ const setupUIkitUtils = () => {
     if (isElectron) numara.transControls(modalOpenState)
 
     setTimeout(() => cm.focus(), 100)
+  })
+
+  UIkit.util.on('#sidePanel', 'beforehide', (event) => {
+    if (app.sidebarDocked) {
+      event.preventDefault()
+    }
   })
 
   UIkit.util.on('#dialogTheme', 'shown', () => {

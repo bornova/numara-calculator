@@ -1,8 +1,8 @@
-import { dom } from './dom'
-import { cm } from './editor'
-import { calculate } from './eval'
+import { dom } from '../dom'
+import { cm } from '../editor/editor'
+import { calculate } from '../eval'
 import { confirm, modal, notify } from './modal'
-import { app, escapeHTML, isElectron, store } from './utils'
+import { app, escapeHTML, isElectron, store } from '../utils'
 
 import { DateTime } from 'luxon'
 
@@ -332,6 +332,8 @@ export function loadPage(pageId) {
 
   updatePageName(name, pageId)
 
+  app.loadingPage = true
+
   cm.setValue(data)
 
   if (history) cm.setHistory(history)
@@ -343,6 +345,10 @@ export function loadPage(pageId) {
       }
     }
   }
+
+  app.loadingPage = false
+
+  calculate()
 
   cm.execCommand('goLineEnd')
 
@@ -396,6 +402,9 @@ export function populatePages() {
   const pages = store.get('pages')
 
   if (!pages || pages.length === 0) defaultPage()
+
+  // Clean up any orphaned UIkit dropdown DOM elements appended to <body> before clearing pageList
+  document.querySelectorAll('body > .uk-dropdown').forEach((el) => el.remove())
 
   dom.pageList.innerHTML = ''
 

@@ -294,6 +294,15 @@ text {
   border-bottom: 1px solid transparent;
 }
 
+/* Static, high-performance CSS rulers */
+.CodeMirror-code > div {
+  border-bottom: 1px solid transparent;
+}
+
+.showRulers .CodeMirror-code > div {
+  border-bottom: 1px solid light-dark(#f1f1f1, #303030);
+}
+
 .gutterBlock {
   position: absolute;
   bottom: 50px;
@@ -426,7 +435,13 @@ text {
 }
 
 .sidebar-docked {
-  left: 0;
+  display: block !important;
+  left: 0 !important;
+}
+
+.sidebar-docked .uk-offcanvas-bar {
+  display: flex !important;
+  transform: none !important;
 }
 
 .sidebar-docked .sidePanelResizer {
@@ -566,6 +581,10 @@ text {
   display: flex;
   align-items: center;
   margin-top: 15px;
+}
+
+.dialog-buttons > button:focus {
+  background-color: transparent;
 }
 
 .dialog-open-date {
@@ -1017,14 +1036,17 @@ input:checked + .slider:before {
 
 .CodeMirror-foldgutter-open,
 .CodeMirror-foldgutter-folded {
+  cursor: pointer;
   opacity: 0.5;
   transition:
     opacity 0.2s,
     color 0.1s;
   color: light-dark(#888888, #b8b8b8);
   font-size: 1.4rem;
-  line-height: inherit;
-  text-align: center;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .CodeMirror-foldgutter-open:hover,
@@ -1034,11 +1056,11 @@ input:checked + .slider:before {
 }
 
 .CodeMirror-foldgutter-open::after {
-  content: '▾';
+  content: '-';
 }
 
 .CodeMirror-foldgutter-folded::after {
-  content: '▸';
+  content: '+';
 }
 
 /* CodeMirror Fold Marker in-editor styling */

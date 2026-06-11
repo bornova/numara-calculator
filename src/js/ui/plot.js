@@ -1,9 +1,9 @@
-import { dom } from './dom'
-import { calculate, math } from './eval'
+import { dom } from '../dom'
+import { calculate, math } from '../eval'
 import { modal, showError } from './modal'
-import { app, checkSize, store } from './utils'
+import { app, checkSize, store } from '../utils'
 
-import { productName } from './../../package.json'
+import { productName } from './../../../package.json'
 
 import { applyChange, observableDiff } from '@bornova/deep-diff'
 

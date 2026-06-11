@@ -244,7 +244,7 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1" data-help="pageListPosition">Show pages</div>
+            <div class="padTop1" data-help="pageListPosition">Show page list</div>
             <div class="uk-text-right uk-position-relative">
               <select id="pageListPosition" class="uk-select settingItem">
                 <option value="auto">Auto</option>
@@ -368,6 +368,12 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
+            <div class="padTop1" data-help="matrixType">Matrix type</div>
+            <div class="uk-text-right uk-position-relative">
+              <select id="matrixType" class="uk-select settingItem"></select>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
             <div class="uk-width-1-2 pr-lh" data-help="precision">Precision</div>
             <div class="uk-text-right uk-width-1-2">
               <div class="uk-child-width-expand" uk-grid>
@@ -407,9 +413,16 @@
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1" data-help="matrixType">Matrix type</div>
-            <div class="uk-text-right uk-position-relative">
-              <select id="matrixType" class="uk-select settingItem"></select>
+            <div class="uk-width-1-2 pr-lh">Calculation timeout (seconds)</div>
+            <div class="uk-text-right uk-width-1-2">
+              <div class="uk-child-width-expand" uk-grid>
+                <div class="uk-text-right uk-width-1-6">
+                  <span id="calcTimeoutLabel" class="uk-label precision"></span>
+                </div>
+                <div class="uk-text-right range uk-position-relative">
+                  <input id="calcTimeout" class="uk-range settingItem" type="range" min="1" max="60" step="1" />
+                </div>
+              </div>
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
@@ -442,27 +455,22 @@
 
           <h3>Locale</h3>
           <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1" data-help="locale">Decimal/thousands separator</div>
+            <div class="padTop1" data-help="locale">Thousands separator</div>
             <div class="uk-text-right uk-position-relative">
               <select id="locale" class="uk-select settingItem"></select>
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
             <div data-help="inputLocale">
-              Enable for input<a id="localeWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
+              <i class="subSwitchIcon" data-lucide="corner-down-right"></i>Enable for input<a
+                id="localeWarn"
+                class="warn-icon"
+                ><i data-lucide="alert-circle"></i
+              ></a>
             </div>
             <div class="uk-text-right uk-position-relative">
               <label class="switch">
                 <input id="inputLocale" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div data-help="thouSep">Show thousands separator</div>
-            <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="thouSep" type="checkbox" class="settingItem" />
                 <span class="slider round"></span>
               </label>
             </div>
@@ -476,6 +484,12 @@
                 <input id="copyThouSep" type="checkbox" class="settingItem" />
                 <span class="slider round"></span>
               </label>
+            </div>
+          </div>
+          <div class="uk-child-width-expand" uk-grid>
+            <div class="padTop1" data-help="dateFormat">Date format</div>
+            <div class="uk-text-right uk-position-relative">
+              <select id="dateFormat" class="uk-select settingItem"></select>
             </div>
           </div>
           <div class="uk-child-width-expand" uk-grid>
@@ -812,6 +826,17 @@
         <div class="dialog-buttons uk-flex-right">
           <button id="confirmYes" class="uk-button uk-button-danger uk-button-small">Yes</button>
           <button class="uk-button uk-button-default uk-modal-close uk-button-small">No</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="dialogCalcTimeout" class="dialogConfirm" uk-modal>
+      <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
+        <h2 class="uk-modal-title">Calculation Timeout</h2>
+        <span id="calcTimeoutMsg"></span>
+        <div class="dialog-buttons uk-flex-right">
+          <button id="calcTimeoutContinue" class="uk-button uk-button-primary uk-button-small">Wait</button>
+          <button id="calcTimeoutIgnore" class="uk-button uk-button-danger uk-button-small">Ignore Line</button>
         </div>
       </div>
     </div>

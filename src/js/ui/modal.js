@@ -1,5 +1,5 @@
-import { dom } from './dom'
-import { app } from './utils'
+import { dom } from '../dom'
+import { app } from '../utils'
 
 import UIkit from 'uikit'
 
@@ -40,9 +40,11 @@ export function confirm(msg, action) {
   modal.show('#dialogConfirm')
 
   const yesAction = (event) => {
-    action()
+    if (dom.confirmYes) dom.confirmYes.blur()
     event.stopPropagation()
     UIkit.modal('#dialogConfirm').hide()
+    // Run the heavy actions asynchronously to prevent blocking the UI/button state/modal close transition
+    setTimeout(action, 50)
   }
 
   dom.confirmYes.onclick = yesAction

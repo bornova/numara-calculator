@@ -1,7 +1,7 @@
-import { dom } from './dom'
-import { cm, udfInput, uduInput } from './editor'
+import { dom } from '../dom'
+import { cm, udfInput, uduInput } from '../editor/editor'
 import { notify } from './modal'
-import { isElectron } from './utils'
+import { isElectron } from '../utils'
 
 /**
  * Helper to safely copy text to clipboard and show notification.
@@ -110,11 +110,15 @@ function copyAllAnswers() {
   if (cm.getValue() === '') return copyToClipboard()
 
   const copiedOutputs = []
+  const answersMap = {}
+  document.querySelectorAll('#output [data-index]').forEach((el) => {
+    answersMap[el.getAttribute('data-index')] = el.textContent ?? ''
+  })
 
-  cm.eachLine((line) => {
-    const index = cm.getLineNumber(line)
-
-    copiedOutputs.push(dom.el(`[data-index="${index}"]`)?.textContent ?? '')
+  let lineIdx = 0
+  cm.eachLine(() => {
+    copiedOutputs.push(answersMap[lineIdx] ?? '')
+    lineIdx++
   })
 
   copyToClipboard(copiedOutputs.join('\n'), 'Copied all answers to clipboard.')
@@ -127,18 +131,21 @@ export function copyAll() {
   if (cm.getValue() === '') return copyToClipboard()
 
   const copiedCalc = []
+  const answersMap = {}
+  document.querySelectorAll('#output [data-index]').forEach((el) => {
+    answersMap[el.getAttribute('data-index')] = el.textContent ?? ''
+  })
 
+  let lineIdx = 0
   cm.eachLine((line) => {
-    const lineIndex = cm.getLineNumber(line)
-    const text = cm.getLine(lineIndex).trim()
+    const text = line.text.trim()
 
     if (text) {
-      copiedCalc.push(
-        text.match(/^(#|\/\/)/) ? text : `${text} = ${dom.el(`[data-index="${lineIndex}"]`)?.textContent ?? ''}`
-      )
+      copiedCalc.push(text.match(/^(#|\/\/)/) ? text : `${text} = ${answersMap[lineIdx] ?? ''}`)
     } else {
       copiedCalc.push('')
     }
+    lineIdx++
   })
 
   copyToClipboard(copiedCalc.join('\n'), 'Copied page to clipboard.')
