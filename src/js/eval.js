@@ -29,7 +29,7 @@ const todayDayFormat = 'ccc, D'
 
 const REGEX_CONTINUATION = /[+\-*/]/
 const REGEX_DATE_TIME =
-  /[+-] * .* *(millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia)s?/g
+  /[+-] * .*? *(millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia)s?/gi
 const REGEX_PCNT_OF = /%[ ]*of[ ]*/g
 const REGEX_PLOT = /\w\(x\)\s*=/
 
@@ -277,6 +277,13 @@ function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
     // Highlight the error line and return an error link.
     cm.addLineClass(cm.getLineNumber(lineHandle), 'gutter', CLASS_LINE_ERROR)
 
+    // Clear out stale 'ans', '_' and runningSubtotal on failure so downstream continuations don't use stale states
+    app.mathScope.delete('ans')
+    app.mathScope.delete('_')
+    if (stats && stats.runningSubtotal) {
+      stats.runningSubtotal.length = 0
+    }
+
     const errorMessage = escapeHTML(String(error))
     const errorLink = app.settings.lineErrors ? 'Error' : ''
 
@@ -307,9 +314,27 @@ function altEvaluate(line, stats) {
     }
   }
 
-  parsedLine = parsedLine.replace(/(?:[\p{L}_][\p{L}\p{M}\w]*)/gu, (match) =>
-    app.mathScope.has(match) ? app.mathScope.get(match) : match
-  )
+  // Handle variable assignments inside altEvaluate
+  // Avoid replacing the variable name on the left-hand side of assignments (e.g. x = x + 1)
+  const assignmentMatch = parsedLine.match(/^(\s*[\p{L}_][\p{L}\p{M}\w]*\s*=)([^=].*|)$/u)
+  if (
+    assignmentMatch &&
+    !parsedLine.includes('==') &&
+    !parsedLine.includes('!=') &&
+    !parsedLine.includes('<=') &&
+    !parsedLine.includes('>=')
+  ) {
+    const assignVar = assignmentMatch[1]
+    let exprPart = assignmentMatch[2]
+    exprPart = exprPart.replace(/(?:[\p{L}_][\p{L}\p{M}\w]*)/gu, (match) =>
+      app.mathScope.has(match) ? app.mathScope.get(match) : match
+    )
+    parsedLine = assignVar + exprPart
+  } else {
+    parsedLine = parsedLine.replace(/(?:[\p{L}_][\p{L}\p{M}\w]*)/gu, (match) =>
+      app.mathScope.has(match) ? app.mathScope.get(match) : match
+    )
+  }
 
   // Calculate and return avg, subavg, total and subtotal values.
   for (const { key, fn } of keywords) {
@@ -487,16 +512,67 @@ export function formatAnswer(answer, useGrouping) {
   const localeOptions = { maximumFractionDigits, useGrouping }
   const formatter = getNumberFormatter(locale, localeOptions)
 
-  let formattedAnswer = math.format(answer, (value) => {
-    value = math.format(value, formatOptions)
+  // Retrieve dynamic decimal and group separators for this locale
+  let decimalSeparator = '.'
+  let groupSeparator = ','
+  try {
+    const parts = getNumberFormatter(locale, { useGrouping: true }).formatToParts(123456.78)
+    for (const part of parts) {
+      if (part.type === 'decimal') decimalSeparator = part.value
+      if (part.type === 'group') groupSeparator = part.value
+    }
+  } catch {
+    // Fallback to defaults
+  }
 
-    if (value.includes('e')) {
-      const [base, exponent] = value.split('e')
+  function formatNumericString(numStr, decSep, grpSep, useGrp) {
+    const parts = numStr.split('.')
+    let integerPart = parts[0]
+    const decimalPart = parts[1] || ''
 
-      return formatter.format(+base) + 'e' + exponent
+    if (useGrp && grpSep) {
+      const isNegative = integerPart.startsWith('-')
+      if (isNegative) {
+        integerPart = integerPart.slice(1)
+      }
+      integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, grpSep)
+      if (isNegative) {
+        integerPart = '-' + integerPart
+      }
     }
 
-    return formatter.format(+value)
+    if (decimalPart) {
+      return integerPart + decSep + decimalPart
+    }
+    return integerPart
+  }
+
+  let processedAnswer = answer
+  if (typeof maximumFractionDigits === 'number') {
+    try {
+      if (math.typeOf(answer) === 'BigNumber') {
+        processedAnswer = math.round(answer, maximumFractionDigits)
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  let formattedAnswer = math.format(processedAnswer, (value) => {
+    const valueStr = math.format(value, formatOptions)
+
+    // For standard float numbers, use built-in formatter for safety
+    if (typeof value === 'number') {
+      return formatter.format(value)
+    }
+
+    // For BigNumbers and high precision, format as localized numeric string
+    if (valueStr.includes('e')) {
+      const [base, exponent] = valueStr.split('e')
+      return formatNumericString(base, decimalSeparator, groupSeparator, useGrouping) + 'e' + exponent
+    }
+
+    return formatNumericString(valueStr, decimalSeparator, groupSeparator, useGrouping)
   })
 
   // Handle currency formatting
