@@ -190,6 +190,7 @@
           <li><a href="#">Editor</a></li>
           <li><a href="#">Calculator</a></li>
           <li><a href="#">Locale</a></li>
+          <li id="syncTab"><a href="#">Sync</a></li>
         </ul>
         <ul id="settingsSwitcher" class="uk-switcher dialog-settings-body">
           <!-- Tab 1: General Settings -->
@@ -597,6 +598,36 @@
               <div id="currencyUpdate">
                 <span class="lastUpdated">As of:</span>
                 <span id="lastUpdated" class="lastUpdated"></span>
+              </div>
+            </div>
+          </li>
+
+          <!-- Tab 5: Sync Settings -->
+          <li>
+            <h3>Local Directory Sync</h3>
+            <div class="uk-child-width-expand" uk-grid>
+              <div data-help="syncDirEnabled">Enable sync</div>
+              <div class="uk-text-right uk-position-relative">
+                <label class="switch">
+                  <input id="syncDirEnabled" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+            <div id="syncDirSection" class="uk-margin-small-top" style="display: none">
+              <div class="uk-child-width-expand uk-flex uk-flex-middle" uk-grid>
+                <div data-help="syncDir">Sync folder</div>
+                <div class="uk-text-right">
+                  <button id="selectSyncDirButton" class="uk-button uk-button-default uk-button-small" type="button">
+                    Choose Folder
+                  </button>
+                </div>
+              </div>
+              <div class="uk-text-right uk-position-relative">
+                <div id="syncDirPathDisplay" class="uk-text-meta uk-margin-xsmall-top" style="word-break: break-all">
+                  No folder chosen
+                </div>
+                <input type="hidden" id="syncDir" class="settingItem" />
               </div>
             </div>
           </li>

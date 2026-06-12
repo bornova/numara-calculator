@@ -205,6 +205,116 @@ ipcMain.on('openLogs', () => {
   shell.openPath(path.join(app.getPath('logs'), 'main.log'))
 })
 
+let syncWatcher = null
+
+ipcMain.handle('selectSyncDirectory', async () => {
+  const result = await dialog.showOpenDialog(win, {
+    properties: ['openDirectory', 'createDirectory'],
+    title: 'Select Local Sync Directory'
+  })
+
+  return result.canceled ? null : result.filePaths[0]
+})
+
+ipcMain.handle('readSyncDirectory', async (event, dirPath) => {
+  try {
+    const files = await fs.promises.readdir(dirPath)
+    const txtFiles = files.filter((f) => f.endsWith('.txt'))
+    const fileContents = []
+
+    for (const file of txtFiles) {
+      const filePath = path.join(dirPath, file)
+      const content = await fs.promises.readFile(filePath, 'utf8')
+      const name = path.basename(file, '.txt')
+      fileContents.push({ name, content })
+    }
+
+    return fileContents
+  } catch (error) {
+    log.error('Error reading sync directory:', error)
+    throw error
+  }
+})
+
+ipcMain.handle('writeSyncFile', async (event, dirPath, filename, content) => {
+  try {
+    const filePath = path.join(dirPath, filename + '.txt')
+
+    await fs.promises.writeFile(filePath, content, 'utf8')
+
+    return true
+  } catch (error) {
+    log.error('Error writing sync file:', error)
+    throw error
+  }
+})
+
+ipcMain.handle('deleteSyncFile', async (event, dirPath, filename) => {
+  try {
+    const filePath = path.join(dirPath, filename + '.txt')
+
+    if (fs.existsSync(filePath)) {
+      await fs.promises.unlink(filePath)
+    }
+
+    return true
+  } catch (error) {
+    log.error('Error deleting sync file:', error)
+    throw error
+  }
+})
+
+ipcMain.handle('renameSyncFile', async (event, dirPath, oldFilename, newFilename) => {
+  try {
+    const oldPath = path.join(dirPath, oldFilename + '.txt')
+    const newPath = path.join(dirPath, newFilename + '.txt')
+
+    if (fs.existsSync(oldPath)) {
+      await fs.promises.rename(oldPath, newPath)
+    }
+
+    return true
+  } catch (error) {
+    log.error('Error renaming sync file:', error)
+    throw error
+  }
+})
+
+ipcMain.on('startWatchingSyncDir', (event, dirPath) => {
+  if (syncWatcher) {
+    syncWatcher.close()
+    syncWatcher = null
+  }
+
+  if (!dirPath || !fs.existsSync(dirPath)) return
+
+  try {
+    let fsTimeout = null
+    syncWatcher = fs.watch(dirPath, (eventType, filename) => {
+      if (filename && filename.endsWith('.txt')) {
+        if (fsTimeout) return
+
+        fsTimeout = setTimeout(() => {
+          fsTimeout = null
+        }, 100)
+
+        if (win && !win.isDestroyed()) {
+          win.webContents.send('syncDirChanged')
+        }
+      }
+    })
+  } catch (error) {
+    log.error('Error starting sync watcher:', error)
+  }
+})
+
+ipcMain.on('stopWatchingSyncDir', () => {
+  if (syncWatcher) {
+    syncWatcher.close()
+    syncWatcher = null
+  }
+})
+
 /**
  * Generate context menu header.
  * @param {number} index - The line index.

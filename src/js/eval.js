@@ -2,6 +2,7 @@ import { outputContext } from './ui/context'
 import { dom } from './dom'
 import { cm, debouncedCalculate } from './editor/editor'
 import { app, store } from './utils'
+import { syncPageSaveDebounced } from './sync'
 import { notify } from './ui/modal'
 import {
   app as coreApp,
@@ -318,6 +319,7 @@ function applyCalculationResults(answers, errorLines) {
         page.history = cmHistory
         page.folds = folds
         store.set('pages', pages)
+        syncPageSaveDebounced(page.name, cmValue)
       }
     }
   }
@@ -455,7 +457,7 @@ export function calculate() {
   }
 
   const timeoutDuration = (parseInt(app.settings.calcTimeout) || 10) * 1000
-  const slowDuration = Math.min(3000, timeoutDuration / 2)
+  const slowDuration = Math.min(5000, timeoutDuration / 2)
 
   slowCalcTimeout = setTimeout(() => {
     notify('Calculations are running but taking longer than expected...', 'warning')

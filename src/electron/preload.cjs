@@ -52,6 +52,17 @@ contextBridge.exposeInMainWorld('numara', {
   updateStatus: (callback) => ipcRenderer.on('updateStatus', (event, status) => callback(status)),
   showAbout: (callback) => ipcRenderer.on('showAbout', (event, data) => callback(data)),
 
+  // Directory Sync
+  selectSyncDirectory: () => ipcRenderer.invoke('selectSyncDirectory'),
+  readSyncDirectory: (dirPath) => ipcRenderer.invoke('readSyncDirectory', dirPath),
+  writeSyncFile: (dirPath, filename, content) => ipcRenderer.invoke('writeSyncFile', dirPath, filename, content),
+  deleteSyncFile: (dirPath, filename) => ipcRenderer.invoke('deleteSyncFile', dirPath, filename),
+  renameSyncFile: (dirPath, oldFilename, newFilename) =>
+    ipcRenderer.invoke('renameSyncFile', dirPath, oldFilename, newFilename),
+  startWatchingSyncDir: (dirPath) => ipcRenderer.send('startWatchingSyncDir', dirPath),
+  stopWatchingSyncDir: () => ipcRenderer.send('stopWatchingSyncDir'),
+  onSyncDirChanged: (callback) => ipcRenderer.on('syncDirChanged', () => callback()),
+
   // Developer Tools
   openDevTools: () => ipcRenderer.send('openDevTools'),
   openLogs: () => ipcRenderer.send('openLogs'),

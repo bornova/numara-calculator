@@ -33,9 +33,25 @@ export const store = {
    */
   get: (key) => {
     try {
-      const item = localStorage.getItem(key)
+      const consolidated = localStorage.getItem('numara')
+      if (consolidated) {
+        const obj = JSON.parse(consolidated)
 
-      return item ? JSON.parse(item) : null
+        return obj[key] !== undefined ? obj[key] : null
+      }
+
+      const rootItem = localStorage.getItem(key)
+
+      if (rootItem) {
+        const parsed = JSON.parse(rootItem)
+
+        store.set(key, parsed)
+        localStorage.removeItem(key)
+
+        return parsed
+      }
+
+      return null
     } catch (error) {
       console.error(`Error parsing local storage for key "${key}":`, error)
 
@@ -49,7 +65,36 @@ export const store = {
    * @param {any} value - The value to store.
    */
   set: (key, value) => {
-    localStorage.setItem(key, JSON.stringify(value))
+    try {
+      const consolidated = localStorage.getItem('numara')
+      const obj = consolidated ? JSON.parse(consolidated) : {}
+
+      obj[key] = value
+      localStorage.setItem('numara', JSON.stringify(obj))
+    } catch (error) {
+      console.error(`Error writing key "${key}" to local storage:`, error)
+    }
+  },
+
+  /**
+   * Remove value from local storage.
+   * @param {string} key - The key of the item to remove.
+   */
+  remove: (key) => {
+    try {
+      localStorage.removeItem(key)
+
+      const consolidated = localStorage.getItem('numara')
+
+      if (consolidated) {
+        const obj = JSON.parse(consolidated)
+
+        delete obj[key]
+        localStorage.setItem('numara', JSON.stringify(obj))
+      }
+    } catch (error) {
+      console.error(`Error removing key "${key}" from local storage:`, error)
+    }
   }
 }
 

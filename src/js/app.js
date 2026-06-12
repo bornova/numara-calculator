@@ -13,6 +13,7 @@ import { plot } from './ui/plot'
 import { settings } from './ui/settings'
 import { applyUdfu } from './calc/userDefined'
 import { app, checkAppUpdate, isMac, isElectron, store } from './utils'
+import { triggerFolderSync } from './sync'
 
 import { author, description, homepage, name, version } from './../../package.json'
 
@@ -464,6 +465,17 @@ const initializeApp = async () => {
   initializeContextMenus()
   initializeHelpTooltips()
   checkAppUpdate()
+
+  if (isElectron) {
+    if (app.settings.syncDirEnabled && app.settings.syncDir) {
+      numara.startWatchingSyncDir(app.settings.syncDir)
+      triggerFolderSync().catch(console.error)
+    }
+
+    numara.onSyncDirChanged(() => {
+      triggerFolderSync().catch(console.error)
+    })
+  }
 
   setTimeout(() => cm.focus(), 500)
 }

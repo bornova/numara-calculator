@@ -6,6 +6,7 @@ import { getRates } from '../calc/forex'
 import { confirm, modal, showError } from './modal'
 import { setupSidePanel } from './pages'
 import { app, checkSize, getTheme, isElectron, store } from '../utils'
+import { triggerFolderSync } from '../sync'
 
 import { applyChange, observableDiff } from '@bornova/deep-diff'
 
@@ -52,6 +53,8 @@ export const settings = {
   /** Default settings. */
   defaults: {
     alwaysOnTop: false,
+    syncDirEnabled: false,
+    syncDir: '',
     answerPosition: 'left',
     autocomplete: true,
     closeBrackets: true,
@@ -107,7 +110,7 @@ export const settings = {
     }
 
     dom.els('.settingItem').forEach((item) => {
-      if (item.getAttribute('id') === 'theme') return
+      if (item.getAttribute('id') === 'theme' || item.getAttribute('id') === 'syncDir') return
 
       const span = document.createElement('span')
       const icon = dom.icons.Dot
@@ -193,6 +196,20 @@ export const settings = {
     dom.els('.theme-pill-button').forEach((btn) => {
       btn.classList.toggle('active', btn.getAttribute('data-theme-value') === currentTheme)
     })
+
+    const syncDirPathDisplay = dom.el('#syncDirPathDisplay')
+    if (syncDirPathDisplay) {
+      syncDirPathDisplay.textContent = app.settings.syncDir || 'No folder chosen'
+    }
+    const syncDirSection = dom.el('#syncDirSection')
+    if (syncDirSection) {
+      syncDirSection.style.display = app.settings.syncDirEnabled ? 'grid' : 'none'
+    }
+
+    const syncTab = dom.el('#syncTab')
+    if (syncTab) {
+      syncTab.style.display = isElectron ? '' : 'none'
+    }
 
     await checkSize()
     checkDefaults()
@@ -299,6 +316,28 @@ export const settings = {
       store.set('rateInterval', false)
     }
 
+    if (app.settings.syncDirEnabled && !app.settings.syncDir) {
+      app.settings.syncDirEnabled = false
+      store.set('settings', app.settings)
+      const syncDirEnabledCheckbox = dom.el('#syncDirEnabled')
+      if (syncDirEnabledCheckbox) {
+        syncDirEnabledCheckbox.checked = false
+      }
+    }
+
+    const syncDirSection = dom.el('#syncDirSection')
+    if (syncDirSection) {
+      syncDirSection.style.display = app.settings.syncDirEnabled ? 'grid' : 'none'
+    }
+
+    if (isElectron) {
+      if (app.settings.syncDirEnabled && app.settings.syncDir) {
+        numara.startWatchingSyncDir(app.settings.syncDir)
+      } else {
+        numara.stopWatchingSyncDir()
+      }
+    }
+
     setupSidePanel()
 
     calculate()
@@ -316,7 +355,7 @@ export const settings = {
     })
 
     if (!dom.currency.checked) {
-      localStorage.removeItem('rateDate')
+      store.remove('rateDate')
     }
 
     dom.currencyUpdate.style.visibility = dom.currency.checked ? 'visible' : 'hidden'
@@ -440,10 +479,52 @@ dom.els('.theme-pill-button').forEach((btn) => {
   })
 })
 
+if (isElectron) {
+  const selectSyncDirButton = dom.el('#selectSyncDirButton')
+  if (selectSyncDirButton) {
+    selectSyncDirButton.addEventListener('click', async () => {
+      const path = await numara.selectSyncDirectory()
+      if (path) {
+        const syncDirInput = dom.el('#syncDir')
+        if (syncDirInput) {
+          syncDirInput.value = path
+          syncDirInput.dispatchEvent(new Event('change'))
+        }
+        const syncDirPathDisplay = dom.el('#syncDirPathDisplay')
+        if (syncDirPathDisplay) {
+          syncDirPathDisplay.textContent = path
+        }
+      }
+    })
+  }
+}
+
 dom.els('.settingItem').forEach((el) => {
   el.addEventListener('change', async () => {
+    const id = el.getAttribute('id')
+
+    if (id === 'syncDirEnabled' && el.checked && !dom.el('#syncDir').value) {
+      const path = await numara.selectSyncDirectory()
+      if (path) {
+        dom.el('#syncDir').value = path
+        const syncDirPathDisplay = dom.el('#syncDirPathDisplay')
+        if (syncDirPathDisplay) {
+          syncDirPathDisplay.textContent = path
+        }
+      } else {
+        el.checked = false
+        showError('Sync Folder Required', 'A folder must be chosen to enable directory sync.')
+      }
+    }
+
     settings.save()
     await settings.apply()
+
+    if (id === 'syncDirEnabled' || id === 'syncDir') {
+      if (app.settings.syncDirEnabled && app.settings.syncDir) {
+        triggerFolderSync().catch(console.error)
+      }
+    }
   })
 })
 

@@ -3,6 +3,7 @@ import { cm } from '../editor/editor'
 import { calculate } from '../eval'
 import { confirm, modal, notify } from './modal'
 import { app, escapeHTML, isElectron, store } from '../utils'
+import { syncPageSave, syncPageRename, syncPageDelete } from '../sync'
 
 import { DateTime } from 'luxon'
 
@@ -184,7 +185,7 @@ export function defaultPage() {
   const pageName = getPageName()
 
   store.set('pages', [{ id: pageId, name: pageName, data: store.get('input') || '' }])
-  localStorage.removeItem('input')
+  store.remove('input')
 
   loadPage(pageId)
 }
@@ -217,6 +218,7 @@ export function newPage(isImport) {
 
   populatePages()
   updatePageName(pageName, pageId)
+  syncPageSave(pageName, '')
 
   modal.hide('#dialogNewPage')
 }
@@ -249,6 +251,7 @@ export function duplicatePage(pageId) {
   store.set('pages', pages)
 
   loadPage(dupPageId)
+  syncPageSave(dupPageName, dupPageData)
 }
 
 /**
@@ -275,6 +278,7 @@ export function deletePage(pageId) {
     }
 
     populatePages()
+    syncPageDelete(pageName)
   })
 }
 
@@ -283,6 +287,9 @@ export function deletePage(pageId) {
  */
 export function deleteAllPages() {
   confirm('All pages will be deleted permanently.', () => {
+    const pages = store.get('pages') || []
+    pages.forEach((p) => syncPageDelete(p.name))
+
     store.set('pages', [])
 
     defaultPage()
@@ -312,6 +319,7 @@ export function renamePage(pageId) {
       return
     }
 
+    const oldName = page.name
     page.name = newName
     store.set('pages', pages)
 
@@ -320,6 +328,8 @@ export function renamePage(pageId) {
     if (pageId === app.activePage) {
       updatePageName(page.name, pageId)
     }
+
+    syncPageRename(oldName, newName)
 
     modal.hide('#dialogRenamePage')
   }
