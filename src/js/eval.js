@@ -34,6 +34,14 @@ const REGEX_PCNT_OF = /%[ ]*of[ ]*/g
 const REGEX_PCNT_OF_VAL = /[\w.]*%[ ]*of[ ]*/g
 const REGEX_PLOT = /\w\(x\)\s*=/
 
+// Number literals whose letters must not be mistaken for currency symbols.
+// Covers hex/binary/octal literals (e.g. 0x1539687E, where E is also the SZL
+// currency symbol) and decimal scientific notation (e.g. 1E5). The currency
+// symbol replacement matches these first and leaves them untouched, otherwise
+// it would corrupt them (0x1539687E -> 0x1539687SZL) and break evaluation.
+const REGEX_NUMBER_LITERAL =
+  '0[xX][0-9a-fA-F]+(?:\\.[0-9a-fA-F]+)?|0[bB][01]+(?:\\.[01]+)?|0[oO][0-7]+(?:\\.[0-7]+)?|(?:\\d+(?:\\.\\d+)?|\\.\\d+)[eE][+-]?\\d+'
+
 let currencySymbolsRegex = null
 let currencyFormatRegex = null
 let currencySymbolToCode = {}
@@ -57,7 +65,7 @@ export function refreshCurrencyState() {
 
   currencySymbolsRegex = symbols.length
     ? new RegExp(
-        `(?<![\\p{L}])(${symbols
+        `(${REGEX_NUMBER_LITERAL})|(?<![\\p{L}])(${symbols
           .sort((a, b) => b.length - a.length)
           .map(escapeRegExp)
           .join('|')})(?![\\p{L}])`,
@@ -70,8 +78,15 @@ export function refreshCurrencyState() {
     : null
 }
 
-/** Replace a matched currency symbol with its ISO code (used inside evaluateLine). */
-function replaceCurrencySymbol(symbol) {
+/**
+ * Replace a matched currency symbol with its ISO code (used inside evaluateLine).
+ * The first capture group matches number literals (hex/binary/octal/scientific),
+ * which are returned unchanged so their letters (e.g. the E in 0x1539687E) are
+ * never mistaken for currency symbols.
+ */
+function replaceCurrencySymbol(match, numberLiteral, symbol) {
+  if (numberLiteral) return numberLiteral
+
   const code = currencySymbolToCode[symbol]
 
   return code ? code + ' ' : symbol
