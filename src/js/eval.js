@@ -9,6 +9,7 @@ import {
   formatAnswer as coreFormatAnswer,
   refreshCurrencyState as coreRefreshCurrencyState
 } from './calc/evalCore'
+
 import UIkit from 'uikit'
 
 export const math = coreMath
@@ -282,6 +283,8 @@ function applyCalculationResults(answers, errorLines) {
       dom.output.innerHTML = outputResults
     }
   }
+
+  dom.output.scrollTop = dom.el('.CodeMirror-scroll').scrollTop
 
   // Update page lists / storage
   if (app.activePage) {

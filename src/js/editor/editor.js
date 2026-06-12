@@ -19,10 +19,12 @@ import 'codemirror/addon/fold/foldcode'
 import 'codemirror/addon/fold/foldgutter'
 
 import * as formulajs from '@formulajs/formulajs'
+import { DateTime } from 'luxon'
 
 const CLASS_NAMES = {
   CONSTANT: 'cm-constant',
   CURRENCY: 'cm-currency',
+  DATETIME: 'cm-datetime',
   EXCEL: 'cm-excel',
   FORMULAJS: 'cm-formulajs',
   FUNCTION: 'cm-function',
@@ -89,17 +91,56 @@ export function refreshCurrencyTokens() {
 
 // Codemirror syntax templates
 CodeMirror.defineMode('numara', () => ({
-  token: (stream) => {
-    if (stream.match(/\/\/.*/) || stream.match(/#.*/)) return 'comment'
-    if (stream.match(/\d/)) return 'number'
-    if (stream.match(/(?:\+|-|\*|\/|,|;|\.|:|@|~|=|>|<|&|\||`|'|\^|\?|!|%)/)) return 'operator'
-    if (stream.match(/\bformulajs(?=[.]|\b)/)) return 'formulajs'
-    if (stream.match(/\bnerdamer(?=[.(]|\b)/)) return 'nerdamer'
+  startState: () => ({
+    lastToken: null
+  }),
+  token: (stream, state) => {
+    if (stream.eatSpace()) return null
+
+    if (stream.match(/\/\/.*/) || stream.match(/#.*/)) {
+      state.lastToken = 'comment'
+      return 'comment'
+    }
+
+    if (stream.match(/\d/)) {
+      state.lastToken = 'number'
+      return 'number'
+    }
+
+    if (stream.match(/(?:\+|-|\*|\/|,|;|\.|:|@|~|=|>|<|&|\||`|'|\^|\?|!|%)/)) {
+      const isDot = stream.current() === '.'
+      let nextState = 'operator'
+
+      if (isDot) {
+        if (state.lastToken === 'formulajs') nextState = 'formulajs.'
+        else if (state.lastToken === 'nerdamer') nextState = 'nerdamer.'
+        else if (state.lastToken === 'datetime') nextState = 'datetime.'
+      }
+
+      state.lastToken = nextState
+
+      return 'operator'
+    }
+    if (stream.match(/\bformulajs(?=[.]|\b)/)) {
+      state.lastToken = 'formulajs'
+      return 'formulajs'
+    }
+
+    if (stream.match(/\bnerdamer(?=[.(]|\b)/)) {
+      state.lastToken = 'nerdamer'
+      return 'nerdamer'
+    }
+
+    if (stream.match(/\bDateTime(?=[.]|\b)/)) {
+      state.lastToken = 'datetime'
+      return 'datetime'
+    }
 
     const startChar = stream.peek()
 
     if (currencyTokens.has(startChar) && !/[\p{L}]/u.test(startChar)) {
       stream.next()
+      state.lastToken = 'currency'
       return 'currency'
     }
 
@@ -107,20 +148,37 @@ CodeMirror.defineMode('numara', () => ({
 
     const cmStream = stream.current()
 
-    if (currencyTokens.has(cmStream)) return 'currency'
-    if (/\bline\d+\b/.test(cmStream)) return 'lineNo'
-    if (keywordTokens.has(cmStream)) return 'keyword'
-    if (app.mathScope.has(cmStream) && typeof app.mathScope.get(cmStream) !== 'function') return 'variable'
-    if (math.Unit.UNITS[cmStream]?.base.key === 'USD_STUFF') return 'currency'
-    if (functionTokens.has(cmStream)) return 'function'
-    if (constantTokens.has(cmStream)) return 'constant'
-    if (unitTokens.has(cmStream)) return 'unit'
-    if (app.udfList.includes(cmStream)) return 'udf'
-    if (app.uduList.includes(cmStream)) return 'udu'
-    if (excelTokens.has(cmStream)) return 'excel'
+    let style = null
+    if (cmStream) {
+      if (state.lastToken === 'formulajs.') {
+        style = 'excel'
+      } else if (state.lastToken === 'nerdamer.') {
+        style = 'nerdamer'
+      } else if (state.lastToken === 'datetime.') {
+        style = 'function'
+      } else {
+        if (currencyTokens.has(cmStream)) style = 'currency'
+        else if (/\bline\d+\b/.test(cmStream)) style = 'lineNo'
+        else if (keywordTokens.has(cmStream)) style = 'keyword'
+        else if (app.mathScope.has(cmStream) && typeof app.mathScope.get(cmStream) !== 'function') style = 'variable'
+        else if (math.Unit.UNITS[cmStream]?.base.key === 'USD_STUFF') style = 'currency'
+        else if (functionTokens.has(cmStream) || dateTimeMethodsSet.has(cmStream)) style = 'function'
+        else if (constantTokens.has(cmStream)) style = 'constant'
+        else if (unitTokens.has(cmStream)) style = 'unit'
+        else if (app.udfList.includes(cmStream)) style = 'udf'
+        else if (app.uduList.includes(cmStream)) style = 'udu'
+        else if (excelTokens.has(cmStream)) style = 'excel'
+        else style = 'text'
+      }
+    }
+
+    if (style) {
+      state.lastToken = style
+      return style
+    }
 
     stream.next()
-
+    state.lastToken = 'text'
     return 'text'
   }
 }))
@@ -133,7 +191,9 @@ CodeMirror.defineMode('plain', () => ({
 }))
 
 // Editor hints
-const functionHints = mathFunctions.map(([f]) => ({ text: f, className: CLASS_NAMES.FUNCTION }))
+const functionHints = mathFunctions
+  .filter(([f]) => f !== 'DateTime')
+  .map(([f]) => ({ text: f, className: CLASS_NAMES.FUNCTION }))
 const constantHints = mathConstants.map(([c]) => ({
   text: c,
   desc: math.help(c).doc.description,
@@ -143,7 +203,36 @@ const unitHints = units().map((u) => u.hint)
 const keywordHints = keywords.map((key) => ({ ...key, className: CLASS_NAMES.KEYWORD }))
 const excelHints = [...excelTokens].map((f) => ({ text: f, className: CLASS_NAMES.EXCEL }))
 
-export const numaraHints = [...functionHints, ...constantHints, ...unitHints, ...keywordHints, ...excelHints]
+const dateTimeStaticMethods = Object.getOwnPropertyNames(DateTime).filter(
+  (prop) => typeof DateTime[prop] === 'function'
+)
+
+const dateTimeStaticHints = [
+  { text: 'DateTime', className: CLASS_NAMES.DATETIME, desc: 'Luxon DateTime class' },
+  ...dateTimeStaticMethods.map((m) => ({
+    text: `DateTime.${m}`,
+    className: CLASS_NAMES.DATETIME,
+    desc: `DateTime.${m} static method`,
+    render: (el) => {
+      el.innerHTML = `<span class="cm-datetime">DateTime</span>.<span class="cm-function">${m}</span>`
+    }
+  }))
+]
+
+const dateTimeInstanceMethods = Object.getOwnPropertyNames(DateTime.prototype).filter(
+  (prop) => typeof DateTime.prototype[prop] === 'function' && prop !== 'constructor' && !prop.startsWith('_')
+)
+
+const dateTimeMethodsSet = new Set([...dateTimeStaticMethods, ...dateTimeInstanceMethods])
+
+export const numaraHints = [
+  ...functionHints,
+  ...constantHints,
+  ...unitHints,
+  ...keywordHints,
+  ...excelHints,
+  ...dateTimeStaticHints
+]
 
 CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
   const cmCursor = editor.getCursor()
@@ -159,9 +248,8 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
   let curWord = start !== end && curStr
   let list = []
 
-  if (curStr && (!curStr.endsWith('.') || curStr === 'formulajs.') && curWord) {
+  if (curStr && curWord) {
     const searchWord = curWord.toLowerCase()
-    const match = ({ text }) => text.toLowerCase().startsWith(searchWord)
     const variableHints = []
 
     // Build hints for all variables from the current math scope
@@ -181,12 +269,41 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
     const userFunctionHints = app.udfList.map((funcName) => ({ text: funcName, className: CLASS_NAMES.FUNCTION }))
     const userUnitHints = app.uduList.map((unitName) => ({ text: unitName, className: CLASS_NAMES.UNIT }))
 
-    list = [
-      ...numaraHints.filter(match),
-      ...variableHints.filter(match),
-      ...userFunctionHints.filter(match),
-      ...userUnitHints.filter(match)
-    ].sort((a, b) => a.text.localeCompare(b.text, undefined, { numeric: true }))
+    let matches
+
+    if (curStr.includes('.')) {
+      const dotIndex = curStr.lastIndexOf('.')
+      const prefix = curStr.slice(0, dotIndex + 1)
+      const suffix = curStr.slice(dotIndex + 1).toLowerCase()
+
+      if (prefix.toLowerCase() === 'datetime.') {
+        matches = dateTimeStaticHints.filter(({ text }) => text.toLowerCase().startsWith(searchWord))
+      } else if (prefix.toLowerCase() === 'formulajs.') {
+        matches = excelHints.filter(({ text }) => text.toLowerCase().startsWith(searchWord))
+      } else {
+        matches = dateTimeInstanceMethods
+          .filter((m) => m.toLowerCase().startsWith(suffix))
+          .map((m) => ({
+            text: prefix + m,
+            className: CLASS_NAMES.DATETIME,
+            desc: `DateTime.${m} instance method`,
+            render: (el) => {
+              el.innerHTML = `<span class="cm-variable">${prefix.slice(0, -1)}</span>.<span class="cm-function">${m}</span>`
+            }
+          }))
+      }
+    } else {
+      const match = ({ text }) => text.toLowerCase().startsWith(searchWord)
+
+      matches = [
+        ...numaraHints.filter(match),
+        ...variableHints.filter(match),
+        ...userFunctionHints.filter(match),
+        ...userUnitHints.filter(match)
+      ]
+    }
+
+    list = matches.sort((a, b) => a.text.localeCompare(b.text, undefined, { numeric: true }))
   }
 
   return {
@@ -289,6 +406,17 @@ CodeMirror.registerHelper('fold', 'numara', (cm, start) => {
 // Force editor line bottom alignment
 function cmForceBottom() {
   const line = cm.getCursor().line
+  const totalLines = cm.lineCount()
+
+  if (line === totalLines - 1) {
+    const inputScroll = dom.el('.CodeMirror-scroll')
+
+    inputScroll.scrollTop = inputScroll.scrollHeight
+    dom.output.scrollTop = dom.output.scrollHeight
+
+    return
+  }
+
   const lineEl = cm.display.lineDiv.children[line - cm.display.viewFrom]
 
   if (!lineEl) return
@@ -485,12 +613,67 @@ function showTooltip(target, title) {
 }
 
 /**
+ * Helper to check if a token element is preceded by a specific keyword/namespace.
+ * Uses node-walking to skip any text nodes (like whitespace).
+ * @param {HTMLElement} target - The DOM element to check.
+ * @param {string} name - The keyword name (e.g. 'DateTime', 'formulajs', 'nerdamer').
+ * @returns {boolean} True if preceded by the keyword and dot.
+ */
+function isPrecededBy(target, name) {
+  let node = target.previousSibling
+  const parts = []
+
+  while (node && parts.length < 2) {
+    const text = node.textContent?.trim()
+
+    if (text) {
+      parts.push(text)
+    }
+
+    node = node.previousSibling
+  }
+
+  return parts[0] === '.' && parts[1] === name
+}
+
+/**
  * Displays a tooltip with the description and syntax of a mathematical function.
  * @param {HTMLElement} target - The DOM element representing the function for which to show the tooltip.
  */
 function handleFunctionTooltip(target) {
+  const text = target.textContent
+
+  if (isPrecededBy(target, 'formulajs')) {
+    showTooltip(target, 'Excel function')
+    return
+  }
+
+  if (isPrecededBy(target, 'nerdamer')) {
+    showTooltip(target, 'Nerdamer')
+    return
+  }
+
+  if (isPrecededBy(target, 'DateTime')) {
+    showTooltip(
+      target,
+      `<div>Luxon DateTime method</div>
+      <div class="tooltipCode"><code>DateTime.${text}(...)</code></div>`
+    )
+    return
+  }
+
+  if (dateTimeInstanceMethods.includes(text)) {
+    showTooltip(
+      target,
+      `<div>Luxon DateTime method</div>
+      <div class="tooltipCode"><code>.${text}(...)</code></div>`
+    )
+    return
+  }
+
+  // 3. Fallback to standard Math.js help
   try {
-    const tip = math.help(target.textContent).toJSON()
+    const tip = math.help(text).toJSON()
     const syntax = tip.syntax.map((s) =>
       s.replaceAll(/,/g, app.settings.thouSep && app.settings.inputLocale ? ';' : ',')
     )
@@ -592,7 +775,8 @@ const TOOLTIP_HANDLERS = {
   [CLASS_NAMES.KEYWORD]: handleKeywordTooltip,
   [CLASS_NAMES.FORMULAJS]: (target) => showTooltip(target, 'Formulajs'),
   [CLASS_NAMES.NERDAMER]: (target) => showTooltip(target, 'Nerdamer'),
-  [CLASS_NAMES.EXCEL]: (target) => showTooltip(target, 'Excel function')
+  [CLASS_NAMES.EXCEL]: (target) => showTooltip(target, 'Excel function'),
+  [CLASS_NAMES.DATETIME]: (target) => showTooltip(target, 'Luxon DateTime')
 }
 
 /**

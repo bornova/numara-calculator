@@ -72,6 +72,7 @@
 }
 
 .uk-grid {
+  align-items: center;
   margin-left: -30px !important;
 }
 

@@ -25,7 +25,10 @@ import {
   Scaling,
   Settings,
   Trash,
-  Upload
+  Upload,
+  Monitor,
+  Sun,
+  Moon
 } from 'lucide'
 
 const icons = {
@@ -51,7 +54,10 @@ const icons = {
   Scaling,
   Settings,
   Trash,
-  Upload
+  Upload,
+  Monitor,
+  Sun,
+  Moon
 }
 
 /**

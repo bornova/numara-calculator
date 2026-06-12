@@ -196,14 +196,21 @@
           <li>
             <h3>Appearance</h3>
             <div class="uk-child-width-expand" uk-grid>
-              <div class="padTop1" data-help="theme">Theme</div>
+              <div data-help="theme">Theme</div>
               <div class="uk-text-right uk-position-relative">
-                <div class="uk-flex">
-                  <select id="theme" class="uk-select settingItem uk-flex-left">
-                    <option value="system">System</option>
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
-                  </select>
+                <div class="uk-flex uk-flex-right uk-flex-middle" style="width: 100%">
+                  <div class="theme-pill-group">
+                    <button type="button" class="theme-pill-button" data-theme-value="system" title="System" uk-tooltip>
+                      <i data-lucide="monitor"></i>
+                    </button>
+                    <button type="button" class="theme-pill-button" data-theme-value="light" title="Light" uk-tooltip>
+                      <i data-lucide="sun"></i>
+                    </button>
+                    <button type="button" class="theme-pill-button" data-theme-value="dark" title="Dark" uk-tooltip>
+                      <i data-lucide="moon"></i>
+                    </button>
+                  </div>
+                  <input type="hidden" id="theme" class="settingItem" />
                   <a
                     id="customizeThemeButton"
                     class="customizeThemeButton uk-flex-right uk-margin-small-left"
@@ -216,7 +223,7 @@
               </div>
             </div>
             <div class="uk-child-width-expand" uk-grid>
-              <div class="padTop1" data-help="fontSize">Font size</div>
+              <div data-help="fontSize">Font size</div>
               <div class="uk-text-right uk-position-relative">
                 <select id="fontSize" class="uk-select settingItem">
                   <option value="0.9rem">Tiny</option>
@@ -228,7 +235,7 @@
               </div>
             </div>
             <div class="uk-child-width-expand" uk-grid>
-              <div class="padTop1" data-help="fontWeight">Font weight</div>
+              <div data-help="fontWeight">Font weight</div>
               <div class="uk-text-right uk-position-relative">
                 <select id="fontWeight" class="uk-select settingItem">
                   <option value="200">Light</option>
@@ -240,7 +247,7 @@
               </div>
             </div>
             <div class="uk-child-width-expand" uk-grid>
-              <div class="padTop1" data-help="lineHeight">Line height</div>
+              <div data-help="lineHeight">Line height</div>
               <div class="uk-text-right uk-position-relative">
                 <select id="lineHeight" class="uk-select settingItem">
                   <option value="16px">Tiny</option>
@@ -252,7 +259,7 @@
               </div>
             </div>
             <div class="uk-child-width-expand" uk-grid>
-              <div class="padTop1" data-help="pageListPosition">Show page list</div>
+              <div data-help="pageListPosition">Show page list</div>
               <div class="uk-text-right uk-position-relative">
                 <select id="pageListPosition" class="uk-select settingItem">
                   <option value="auto">Auto</option>
@@ -273,7 +280,7 @@
 
             <h3>Notifications</h3>
             <div class="uk-child-width-expand" uk-grid>
-              <div class="padTop1" data-help="notifyLocation">Position</div>
+              <div data-help="notifyLocation">Position</div>
               <div class="uk-text-right uk-position-relative">
                 <select id="notifyLocation" class="uk-select settingItem">
                   <option value="top-left">Top Left</option>
@@ -287,7 +294,7 @@
               </div>
             </div>
             <div class="uk-child-width-expand" uk-grid>
-              <div class="padTop1" data-help="notifyDuration">Duration</div>
+              <div data-help="notifyDuration">Duration</div>
               <div class="uk-text-right uk-position-relative">
                 <select id="notifyDuration" class="uk-select settingItem">
                   <option value="1000">1 second</option>
@@ -391,13 +398,13 @@
           <li>
             <h3>Calculator</h3>
             <div class="uk-child-width-expand" uk-grid>
-              <div class="padTop1" data-help="answerPosition">Answer position</div>
+              <div data-help="answerPosition">Answer position</div>
               <div class="uk-text-right uk-position-relative">
                 <select id="answerPosition" class="uk-select settingItem"></select>
               </div>
             </div>
             <div class="uk-child-width-expand" uk-grid>
-              <div class="padTop1" data-help="numericOutput">
+              <div data-help="numericOutput">
                 Numeric output<a id="bigNumWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
               </div>
               <div class="uk-text-right uk-position-relative">
@@ -405,13 +412,13 @@
               </div>
             </div>
             <div class="uk-child-width-expand" uk-grid>
-              <div class="padTop1" data-help="notation">Notation</div>
+              <div data-help="notation">Notation</div>
               <div class="uk-text-right uk-position-relative">
                 <select id="notation" class="uk-select settingItem"></select>
               </div>
             </div>
             <div class="uk-child-width-expand" uk-grid>
-              <div class="padTop1" data-help="matrixType">Matrix type</div>
+              <div data-help="matrixType">Matrix type</div>
               <div class="uk-text-right uk-position-relative">
                 <select id="matrixType" class="uk-select settingItem"></select>
               </div>
@@ -501,7 +508,7 @@
           <li>
             <h3>Locale</h3>
             <div class="uk-child-width-expand" uk-grid>
-              <div class="padTop1" data-help="locale">Thousands separator</div>
+              <div data-help="locale">Thousands separator</div>
               <div class="uk-text-right uk-position-relative">
                 <select id="locale" class="uk-select settingItem"></select>
               </div>
@@ -533,7 +540,7 @@
               </div>
             </div>
             <div class="uk-child-width-expand" uk-grid>
-              <div class="padTop1" data-help="dateFormat">Date format</div>
+              <div data-help="dateFormat">Date format</div>
               <div class="uk-text-right uk-position-relative">
                 <select id="dateFormat" class="uk-select settingItem"></select>
               </div>
@@ -562,7 +569,7 @@
             </div>
 
             <div class="uk-child-width-expand" uk-grid>
-              <div class="padTop1" data-help="currencyInterval">Rate update interval</div>
+              <div data-help="currencyInterval">Rate update interval</div>
               <div class="uk-position-relative uk-text-right">
                 <div class="uk-flex">
                   <select id="currencyInterval" class="uk-select settingItem uk-flex-left">

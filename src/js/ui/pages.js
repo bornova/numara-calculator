@@ -522,7 +522,9 @@ dom.newPageButton.addEventListener('click', newPageDialog)
 dom.newPageButtonSP.addEventListener('click', newPageDialog)
 dom.dialogNewPageSave.addEventListener('click', () => newPage(false))
 dom.newPageTitleInput.addEventListener('keyup', (event) => {
-  if (event.key === 'Enter') dom.dialogNewPageSave.click()
+  if (event.key === 'Enter') {
+    dom.dialogNewPageSave.click()
+  }
 })
 dom.deleteAllPagesButton.addEventListener('click', deleteAllPages)
 dom.sortOldNew.addEventListener('click', () => sortPages('oldnew'))
@@ -552,6 +554,7 @@ dom.pageList.addEventListener('scroll', () => {
         }
       })
     }
+
     isScrolling = false
   })
 })

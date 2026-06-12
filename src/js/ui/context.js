@@ -143,11 +143,7 @@ export function copyAll() {
   cm.eachLine((line) => {
     const text = line.text.trim()
 
-    if (text) {
-      copiedCalc.push(text.match(/^(#|\/\/)/) ? text : `${text} = ${answersMap[lineIdx] ?? ''}`)
-    } else {
-      copiedCalc.push('')
-    }
+    copiedCalc.push(!text ? '' : text.match(/^(#|\/\/)/) ? text : `${text} = ${answersMap[lineIdx] ?? ''}`)
 
     lineIdx++
   })

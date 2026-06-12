@@ -107,6 +107,8 @@ export const settings = {
     }
 
     dom.els('.settingItem').forEach((item) => {
+      if (item.getAttribute('id') === 'theme') return
+
       const span = document.createElement('span')
       const icon = dom.icons.Dot
 
@@ -184,6 +186,12 @@ export const settings = {
       el[el.getAttribute('type') === 'checkbox' ? 'checked' : 'value'] = app.settings[key]
 
       checkMods(key)
+    })
+
+    const currentTheme = app.settings.theme
+
+    dom.els('.theme-pill-button').forEach((btn) => {
+      btn.classList.toggle('active', btn.getAttribute('data-theme-value') === currentTheme)
     })
 
     await checkSize()
@@ -314,7 +322,9 @@ export const settings = {
     dom.currencyUpdate.style.visibility = dom.currency.checked ? 'visible' : 'hidden'
     dom.currencyWarn.style.display = app.settings.currency ? 'none' : 'inline-block'
 
-    if (!store.get('rateDate') && app.settings.currency) getRates()
+    if (!store.get('rateDate') && app.settings.currency) {
+      getRates()
+    }
 
     checkDefaults()
     checkWarnings()
@@ -413,6 +423,22 @@ dom.expUpper.addEventListener('input', () => {
 })
 
 dom.updateRatesLink.addEventListener('click', getRates)
+
+dom.els('.theme-pill-button').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const val = btn.getAttribute('data-theme-value')
+    const themeInput = dom.el('#theme')
+
+    if (themeInput && themeInput.value !== val) {
+      themeInput.value = val
+      themeInput.dispatchEvent(new Event('change'))
+
+      dom.els('.theme-pill-button').forEach((b) => {
+        b.classList.toggle('active', b.getAttribute('data-theme-value') === val)
+      })
+    }
+  })
+})
 
 dom.els('.settingItem').forEach((el) => {
   el.addEventListener('change', async () => {

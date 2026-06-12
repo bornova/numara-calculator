@@ -42,6 +42,7 @@ self.onmessage = (event) => {
           })
         }
       })
+
       self.postMessage({
         type: 'calcResult',
         payload: {

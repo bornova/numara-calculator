@@ -146,7 +146,9 @@ export async function getRates() {
     app.currencies = currencies
     store.set('currencies', currencies)
 
-    if (lastDate) store.set('rateDate', lastDate)
+    if (lastDate) {
+      store.set('rateDate', lastDate)
+    }
 
     refreshCurrencyState()
     refreshCurrencyTokens()

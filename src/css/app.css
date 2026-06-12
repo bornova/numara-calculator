@@ -693,10 +693,59 @@ text {
   pointer-events: none;
 }
 
-.customizeThemeButton > svg,
+.customizeThemeButton > svg {
+  width: 18px;
+  height: 18px;
+}
+
 .updateRatesLink > svg {
   width: 20px;
   height: 20px;
+}
+
+/* Theme Pill Buttons */
+.theme-pill-group {
+  display: flex;
+  flex: 1;
+  vertical-align: middle;
+  border: 1px solid light-dark(#eaeaea, #3b3b3b);
+  border-radius: 30px;
+  background-color: light-dark(#f5f5f5, #2b2b2b);
+  padding: 3px;
+}
+
+.theme-pill-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  outline: none;
+  border: none;
+  border-radius: 30px;
+  background: transparent !important;
+  padding: 6px 14px;
+  color: light-dark(#777777, #999999);
+}
+
+.theme-pill-button:hover {
+  color: light-dark(#111111, #ffffff);
+}
+
+.theme-pill-button.active {
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+  background-color: light-dark(#ffffff, #1f1f1f) !important;
+  color: light-dark(#1e87f0, #1e87f0);
+}
+
+.theme-pill-button svg {
+  stroke-width: 2px;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
 }
 
 .defSettingsButton {
@@ -841,10 +890,6 @@ div:has(> #logsLink) {
 
 .pr-lh {
   line-height: 22px;
-}
-
-.padTop1 {
-  padding-top: 1px;
 }
 
 /* Plotting */

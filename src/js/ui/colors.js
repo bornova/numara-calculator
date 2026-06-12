@@ -44,7 +44,7 @@ export const colors = {
     excel: { title: 'Excel', class: '.cm-excel', dark: '#3cc383', light: '#197b43' },
     function: {
       title: 'Functions',
-      class: '.cm-formulajs, .cm-function, .cm-nerdamer, .cm-udf',
+      class: '.cm-formulajs, .cm-function, .cm-nerdamer, .cm-udf, .cm-datetime',
       dark: '#cb82f5',
       light: '#6f42c1'
     },
@@ -120,6 +120,7 @@ export const colors = {
 
   checkDefaults: () => {
     const hasDiff = !!diff(app.colors, colors.defaults)
+
     dom.defaultColorsButton.style.display = hasDiff ? 'inline' : 'none'
   },
 
@@ -148,6 +149,7 @@ export const colors = {
 
   reset: () => {
     const clonedDefaults = structuredClone(colors.defaults)
+
     store.set('colors', clonedDefaults)
     app.colors = store.get('colors')
 

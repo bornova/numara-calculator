@@ -36,6 +36,7 @@ export const math = create(all)
 // Import Formula.js and Nerdamer into MathJs
 math.import(factory('formulajs', [], () => formulajs))
 math.import(factory('nerdamer', [], () => nerdamer))
+math.import(factory('DateTime', [], () => DateTime))
 
 // Override the isAlpha function to support Unicode letters, allowing for variable names in non-Latin characters.
 const isAlphaOriginal = math.parse.isAlpha
