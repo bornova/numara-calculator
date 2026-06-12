@@ -649,6 +649,10 @@ text {
   width: 24px;
 }
 
+#dialogSettings #themeMod {
+  right: 171px;
+}
+
 #dialogSettings input:disabled + span.slider.round {
   cursor: default;
 }
@@ -716,9 +720,9 @@ text {
 
 .theme-pill-button {
   display: flex;
+  flex: 1;
   justify-content: center;
   align-items: center;
-  flex: 1;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   outline: none;
@@ -1082,55 +1086,4 @@ input:checked + .slider:before {
 
 .tooltipCode {
   margin: 6px 0 3px 0;
-}
-
-/* CodeMirror Fold Gutter styling */
-.CodeMirror-foldgutter {
-  cursor: pointer;
-  background-color: transparent;
-  width: 12px;
-}
-
-.CodeMirror-foldgutter-open,
-.CodeMirror-foldgutter-folded {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  opacity: 0.5;
-  transition:
-    opacity 0.2s,
-    color 0.1s;
-  cursor: pointer;
-  height: 100%;
-  color: light-dark(#888888, #b8b8b8);
-  font-size: 1.4rem;
-}
-
-.CodeMirror-foldgutter-open:hover,
-.CodeMirror-foldgutter-folded:hover {
-  opacity: 1;
-  color: #1e87f0;
-}
-
-.CodeMirror-foldgutter-open::after {
-  content: '-';
-}
-
-.CodeMirror-foldgutter-folded::after {
-  content: '+';
-}
-
-/* CodeMirror Fold Marker in-editor styling */
-.CodeMirror-foldmarker {
-  display: inline-block;
-  vertical-align: middle;
-  cursor: pointer;
-  margin-left: 5px;
-  border: 1px solid light-dark(#cccccc, #555555);
-  border-radius: 4px;
-  background-color: light-dark(#eaeaea, #333333);
-  padding: 0 5px;
-  color: #1e87f0;
-  font-size: 0.8rem;
-  line-height: 1;
 }

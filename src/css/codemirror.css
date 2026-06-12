@@ -170,3 +170,53 @@ li.CodeMirror-hint-active {
   width: 0;
   content: ' ';
 }
+
+/* CodeMirror Fold Gutter styling */
+.CodeMirror-foldgutter {
+  cursor: pointer;
+  background-color: transparent;
+  width: 12px;
+}
+
+.CodeMirror-foldgutter-open,
+.CodeMirror-foldgutter-folded {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.5;
+  transition:
+    opacity 0.2s,
+    color 0.1s;
+  cursor: pointer;
+  height: 100%;
+  color: light-dark(#888888, #b8b8b8);
+}
+
+.CodeMirror-foldgutter-open:hover,
+.CodeMirror-foldgutter-folded:hover {
+  opacity: 1;
+  color: #1e87f0;
+}
+
+.CodeMirror-foldgutter-open::after {
+  content: '-';
+}
+
+.CodeMirror-foldgutter-folded::after {
+  content: '+';
+}
+
+/* CodeMirror Fold Marker in-editor styling */
+.CodeMirror-foldmarker {
+  display: inline-block;
+  vertical-align: middle;
+  cursor: pointer;
+  margin-left: 5px;
+  border: 1px solid light-dark(#cccccc, #555555);
+  border-radius: 4px;
+  background-color: light-dark(#eaeaea, #333333);
+  padding: 0 5px;
+  color: #1e87f0;
+  font-size: 0.8rem;
+  line-height: 1;
+}

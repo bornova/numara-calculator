@@ -176,35 +176,42 @@ const setupSyncScroll = () => {
   const inputPanel = dom.el('.CodeMirror-scroll')
   const outputPanel = dom.output
 
-  let isSyncing = false
+  let activePanel = null
+  let scrollTimeout = null
+
+  const clearActivePanel = () => {
+    clearTimeout(scrollTimeout)
+    scrollTimeout = setTimeout(() => {
+      activePanel = null
+    }, 100)
+  }
 
   inputPanel.addEventListener('scroll', () => {
-    if (isSyncing) return
-    if (Math.abs(outputPanel.scrollTop - inputPanel.scrollTop) < 1) return
-
-    isSyncing = true
-    outputPanel.scrollTop = inputPanel.scrollTop
-    isSyncing = false
+    if (activePanel === null) {
+      activePanel = inputPanel
+    }
+    if (activePanel === inputPanel) {
+      outputPanel.scrollTop = inputPanel.scrollTop
+      clearActivePanel()
+    }
   })
 
   outputPanel.addEventListener('scroll', () => {
     dom.scrollTop.style.display = outputPanel.scrollTop > 50 ? 'block' : 'none'
 
-    if (isSyncing) return
-    if (Math.abs(inputPanel.scrollTop - outputPanel.scrollTop) < 1) return
-
-    isSyncing = true
-    inputPanel.scrollTop = outputPanel.scrollTop
-    isSyncing = false
+    if (activePanel === null) {
+      activePanel = outputPanel
+    }
+    if (activePanel === outputPanel) {
+      inputPanel.scrollTop = outputPanel.scrollTop
+      clearActivePanel()
+    }
   })
 
   dom.scrollTop.addEventListener('click', () => {
-    isSyncing = true
+    activePanel = null
     inputPanel.scroll({ top: 0, behavior: 'smooth' })
     outputPanel.scroll({ top: 0, behavior: 'smooth' })
-    setTimeout(() => {
-      isSyncing = false
-    }, 500)
   })
 }
 
@@ -330,7 +337,9 @@ const setupPrintArea = () => {
   window.addEventListener('afterprint', () => {
     const printArea = document.getElementById('printArea')
 
-    if (printArea) printArea.remove()
+    if (printArea) {
+      printArea.remove()
+    }
   })
 }
 
@@ -338,12 +347,16 @@ const setupUIkitUtils = () => {
   UIkit.mixin({ data: { offset: 5, delay: 300 } }, 'tooltip')
 
   UIkit.util.on('.modal, #sidePanel', 'beforeshow', () => {
-    if (isElectron) numara.transControls(true)
+    if (isElectron) {
+      numara.transControls(true)
+    }
   })
 
   UIkit.util.on('.modal, #sidePanel', 'hidden', () => {
     modalOpenState = dom.els('.uk-open').length > 0
-    if (isElectron) numara.transControls(modalOpenState)
+    if (isElectron) {
+      numara.transControls(modalOpenState)
+    }
 
     setTimeout(() => cm.focus(), 100)
   })

@@ -110,7 +110,7 @@ export const settings = {
     }
 
     dom.els('.settingItem').forEach((item) => {
-      if (item.getAttribute('id') === 'theme' || item.getAttribute('id') === 'syncDir') return
+      if (item.getAttribute('id') === 'syncDir') return
 
       const span = document.createElement('span')
       const icon = dom.icons.Dot
@@ -128,7 +128,7 @@ export const settings = {
         await settings.apply()
       })
 
-      item.getAttribute('type') === 'checkbox' ? item.parentElement.before(span) : item.before(span)
+      item.getAttribute('type') === 'checkbox' ? item.parentElement.before(span) : item.parentElement.prepend(span)
     })
 
     if (app.settings.currency && (app.settings.currencyInterval !== 'manual' || !store.get('rateDate'))) getRates()
@@ -198,17 +198,27 @@ export const settings = {
     })
 
     const syncDirPathDisplay = dom.el('#syncDirPathDisplay')
+
     if (syncDirPathDisplay) {
       syncDirPathDisplay.textContent = app.settings.syncDir || 'No folder chosen'
     }
+
     const syncDirSection = dom.el('#syncDirSection')
+
     if (syncDirSection) {
       syncDirSection.style.display = app.settings.syncDirEnabled ? 'grid' : 'none'
     }
 
     const syncTab = dom.el('#syncTab')
+
     if (syncTab) {
       syncTab.style.display = isElectron ? '' : 'none'
+    }
+
+    const alwaysOnTopContainer = dom.el('#alwaysOnTopContainer')
+
+    if (alwaysOnTopContainer) {
+      alwaysOnTopContainer.style.display = isElectron ? '' : 'none'
     }
 
     await checkSize()

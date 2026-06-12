@@ -66,7 +66,11 @@ function getDomains() {
 export function plot() {
   dom.plotTitle.innerHTML = app.plotFunction
 
-  const f = math.simplify(app.plotFunction.split('=')[1], app.mathScope).toString()
+  // Build a scope without 'x' so it stays symbolic for function-plot.
+  // Other user variables (e.g. `a = 2` in `f(x) = a * x`) are still substituted.
+  const plotScope = new Map(app.mathScope)
+  plotScope.delete('x')
+  const f = math.simplify(app.plotFunction.split('=')[1], plotScope).toString()
   const { x: xDomain, y: yDomain } = getDomains()
   const derivative = math.derivative(f, 'x').toString()
 

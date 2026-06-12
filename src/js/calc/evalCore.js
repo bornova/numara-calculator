@@ -109,7 +109,10 @@ export function refreshCurrencyState() {
         math.createUnit(
           code,
           {
-            aliases: code.toLowerCase() in math.Unit.UNITS ? [] : [code.toLowerCase()],
+            aliases:
+              code.toLowerCase() in math.Unit.UNITS || code.toLowerCase() in math.expression.mathWithTransform
+                ? []
+                : [code.toLowerCase()],
             definition: math.unit(`${info.rate} ${USD_UNIT}`)
           },
           { override: true }
@@ -128,7 +131,7 @@ export function refreshCurrencyState() {
         `(${numPattern})|(?<![\\p{L}])(${symbols
           .sort((a, b) => b.length - a.length)
           .map(escapeRegExp)
-          .join('|')})(?![\\p{L}])`,
+          .join('|')})`,
         'gu'
       )
     : null

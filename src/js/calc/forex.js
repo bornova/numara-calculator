@@ -20,10 +20,17 @@ const DEFAULTS = {
 // Snapshot of built-in mathjs unit names/aliases captured before any currency is registered.
 const BUILTIN_UNIT_KEYS = new Set(Object.keys(math.Unit.UNITS))
 
-/** Return true if the code or symbol conflicts with a built-in mathjs unit. */
+// Snapshot of mathjs function/constant names (e.g. 'mad', 'abs', 'mod') captured at init time.
+const BUILTIN_MATH_KEYS = new Set(Object.keys(math.expression.mathWithTransform))
+
+/**
+ * Return true if the code or symbol conflicts with a built-in mathjs unit OR function/constant.
+ * This prevents currency codes like MAD (Moroccan Dirham) from shadowing functions like mad().
+ */
 function isMathUnit(code, symbol) {
   if (BUILTIN_UNIT_KEYS.has(code) || BUILTIN_UNIT_KEYS.has(code.toLowerCase())) return true
   if (symbol && (BUILTIN_UNIT_KEYS.has(symbol) || BUILTIN_UNIT_KEYS.has(symbol.toLowerCase()))) return true
+  if (BUILTIN_MATH_KEYS.has(code.toLowerCase())) return true
 
   return false
 }
@@ -34,7 +41,10 @@ function registerCurrencyUnit(code, name, rate) {
     math.createUnit(
       code,
       {
-        aliases: code.toLowerCase() in math.Unit.UNITS ? [] : [code.toLowerCase()],
+        aliases:
+          code.toLowerCase() in math.Unit.UNITS || BUILTIN_MATH_KEYS.has(code.toLowerCase())
+            ? []
+            : [code.toLowerCase()],
         definition: math.unit(`${rate} ${USD_UNIT}`)
       },
       { override: true }
