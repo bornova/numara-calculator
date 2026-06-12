@@ -1,4 +1,10 @@
 import { dom } from './dom'
+import {
+  escapeHTML as coreEscapeHTML,
+  escapeRegExp as coreEscapeRegExp,
+  getAppLocale as coreGetAppLocale,
+  localeUsesComma as coreLocaleUsesComma
+} from './coreUtils.js'
 
 /** App globals. */
 export const app = {
@@ -55,14 +61,19 @@ export const isElectron = userAgent.includes('electron')
 
 /** Get app theme */
 export async function getTheme() {
-  if (app.settings.theme === 'dark') return 'dark'
-  if (app.settings.theme === 'system' && isElectron) return (await numara.isDark()) ? 'dark' : 'light'
+  const theme = app.settings.theme
 
-  if (app.settings.theme === 'system') {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-  }
-
-  return 'light'
+  return theme === 'dark'
+    ? 'dark'
+    : theme === 'system'
+      ? isElectron
+        ? (await numara.isDark())
+          ? 'dark'
+          : 'light'
+        : window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light'
+      : 'light'
 }
 
 /** Check window size. */
@@ -73,20 +84,12 @@ export async function checkSize() {
 
 /** Get standard BCP 47 standard locale tag based on selection */
 export function getAppLocale() {
-  const loc = app.settings.locale || 'system'
-  if (loc === 'period') return 'en-US'
-  if (loc === 'comma') return 'tr-TR'
-  return navigator.languages?.[0] ?? navigator.language
+  return coreGetAppLocale(app.settings)
 }
 
 /** Check user locale for decimal separator. */
 export function localeUsesComma() {
-  const loc = app.settings.locale || 'system'
-  if (loc === 'period') return false
-  if (loc === 'comma') return true
-  const locale = navigator.languages?.[0] ?? navigator.language
-
-  return (1.11).toLocaleString(locale).includes(',')
+  return coreLocaleUsesComma(app.settings)
 }
 
 /** Check for app update */
@@ -121,7 +124,7 @@ export function checkAppUpdate() {
         updateStatusMessage(notice)
 
         dom.updateButton.style.display = 'inline-block'
-        dom.updateButton.addEventListener('click', () => numara.updateApp())
+        dom.updateButton.addEventListener('click', () => numara.updateApp(), { once: true })
         break
       }
       case 'error':
@@ -133,14 +136,6 @@ export function checkAppUpdate() {
   })
 }
 
-const HTML_ESCAPES = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  "'": '&#39;',
-  '"': '&quot;'
-}
-
 /**
  * Escape HTML special characters in a string.
  *
@@ -148,8 +143,7 @@ const HTML_ESCAPES = {
  * @returns {string} - The escaped string.
  */
 export function escapeHTML(str) {
-  if (typeof str !== 'string') return str
-  return str.replace(/[&<>'"]/g, (tag) => HTML_ESCAPES[tag])
+  return coreEscapeHTML(str)
 }
 
 /**
@@ -158,7 +152,7 @@ export function escapeHTML(str) {
  * @returns {string} - The escaped string.
  */
 export function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return coreEscapeRegExp(string)
 }
 
 /**
@@ -174,11 +168,13 @@ export function debounce(func, wait) {
     clearTimeout(timeout)
     timeout = setTimeout(() => func.apply(context, args), wait)
   }
+
   debounced.flush = function () {
     if (timeout) {
       clearTimeout(timeout)
       func()
     }
   }
+
   return debounced
 }

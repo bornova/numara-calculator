@@ -108,7 +108,7 @@
 }
 
 .uk-tab {
-  margin: 0px -20px;
+  margin: 0px -15px;
 }
 
 .uk-tab > * {
@@ -116,7 +116,7 @@
 }
 
 .uk-tab > *:first-child {
-  padding-left: 20px;
+  padding-left: 15px;
 }
 
 .uk-tab::before {

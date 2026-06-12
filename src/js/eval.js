@@ -12,8 +12,10 @@ import {
 import UIkit from 'uikit'
 
 export const math = coreMath
+
 export function formatAnswer(answer, useGrouping) {
   coreApp.settings = app.settings
+
   return coreFormatAnswer(answer, useGrouping)
 }
 
@@ -63,15 +65,19 @@ function getWorker() {
           clearTimeout(slowCalcTimeout)
           slowCalcTimeout = null
         }
+
         if (hardCalcTimeout) {
           clearTimeout(hardCalcTimeout)
           hardCalcTimeout = null
         }
+
         lastActiveLineIndex = -1
 
         if (isDialogVisible) {
           isDialogVisible = false
+
           const elapsed = Date.now() - lastDialogShowTime
+
           if (elapsed < 1000) {
             autoCloseTimeout = setTimeout(() => {
               UIkit.modal('#dialogCalcTimeout').hide()
@@ -92,24 +98,31 @@ function getWorker() {
         applyCalculationResults(answers, errorLines)
       } else if (type === 'lineStart') {
         const { lineIndex } = payload
+
         lastActiveLineIndex = lineIndex
       } else if (type === 'calcError') {
         const { taskId } = payload || {}
+
         if (taskId === currentTaskId) {
           isCalculating = false
+
           if (slowCalcTimeout) {
             clearTimeout(slowCalcTimeout)
             slowCalcTimeout = null
           }
+
           if (hardCalcTimeout) {
             clearTimeout(hardCalcTimeout)
             hardCalcTimeout = null
           }
+
           lastActiveLineIndex = -1
 
           if (isDialogVisible) {
             isDialogVisible = false
+
             const elapsed = Date.now() - lastDialogShowTime
+
             if (elapsed < 1000) {
               autoCloseTimeout = setTimeout(() => {
                 UIkit.modal('#dialogCalcTimeout').hide()
@@ -126,11 +139,13 @@ function getWorker() {
       }
     }
   }
+
   return worker
 }
 
 export function clearEvaluationCache() {
   const w = getWorker()
+
   w.postMessage({ type: 'clearCache' })
 }
 
@@ -150,6 +165,7 @@ function updateLineWidget(lineHandle, answer, lineIndex) {
     }
   } else {
     const node = document.createElement('div')
+
     node.dataset.index = lineIndex
     node.innerHTML = answer
     node.addEventListener('contextmenu', outputContext)
@@ -177,16 +193,16 @@ function applyCalculationResults(answers, errorLines) {
   }
 
   cm.operation(() => {
-    // Clear only previously registered gutter error states using line handles (O(Errors) and robust to shifts/deletions)
     for (const lh of lastErrorHandles) {
       cm.removeLineClass(lh, 'gutter', CLASS_LINE_ERROR)
     }
 
-    // Set line error classes on gutter and collect new handles
     const currentErrorHandles = []
+
     for (const lineIdx of errorLines) {
       if (lineIdx < totalLines) {
         const lh = cm.getLineHandle(lineIdx)
+
         if (lh) {
           cm.addLineClass(lh, 'gutter', CLASS_LINE_ERROR)
           currentErrorHandles.push(lh)
@@ -203,6 +219,7 @@ function applyCalculationResults(answers, errorLines) {
     for (const mark of cm.getAllMarks()) {
       if (mark.__isFold) {
         const range = mark.find()
+
         if (range) {
           for (let i = range.from.line + 1; i <= range.to.line; i++) {
             foldedLines.add(i)
@@ -216,9 +233,11 @@ function applyCalculationResults(answers, errorLines) {
   const lineHeights = []
   const visibleChildren = Array.from(cm.display.lineDiv.children)
   const lineToElementMap = new Map()
+
   for (const child of visibleChildren) {
     if (child.firstElementChild) {
       const lineAttr = child.firstElementChild.getAttribute('data-line')
+
       if (lineAttr !== null) {
         lineToElementMap.set(lineAttr, child)
       }
@@ -226,8 +245,10 @@ function applyCalculationResults(answers, errorLines) {
   }
 
   let visibleIndex = 0
+
   for (let i = 0; i < totalLines; i++) {
     const lineHandle = cm.getLineHandle(i)
+
     if (lineHandle.hidden || foldedLines.has(i)) {
       lineHeights.push(0)
     } else {
@@ -256,6 +277,7 @@ function applyCalculationResults(answers, errorLines) {
     dom.output.innerHTML = `<div style="height: ${dom.el('.CodeMirror-scroll').scrollHeight - 50}px;"></div>`
   } else {
     const outputResults = outputAnswers.join('')
+
     if (dom.output.innerHTML !== outputResults) {
       dom.output.innerHTML = outputResults
     }
@@ -267,10 +289,12 @@ function applyCalculationResults(answers, errorLines) {
     const page = pages.find((page) => page.id === app.activePage)
 
     const folds = []
+
     if (typeof cm !== 'undefined' && typeof cm.getAllMarks === 'function') {
       for (const mark of cm.getAllMarks()) {
         if (mark.__isFold) {
           const range = mark.find()
+
           if (range) {
             folds.push({ from: range.from.line, to: range.to.line })
           }
@@ -299,6 +323,7 @@ function applyCalculationResults(answers, errorLines) {
 function showTimeoutDialog(lines) {
   lastDialogShowTime = Date.now()
   isDialogVisible = true
+
   if (autoCloseTimeout) {
     clearTimeout(autoCloseTimeout)
     autoCloseTimeout = null
@@ -317,20 +342,26 @@ function showTimeoutDialog(lines) {
 
   dom.calcTimeoutContinue.onclick = () => {
     UIkit.modal('#dialogCalcTimeout').hide()
+
     isDialogVisible = false
+
     if (autoCloseTimeout) {
       clearTimeout(autoCloseTimeout)
       autoCloseTimeout = null
     }
+
     if (isCalculating) {
       const timeoutDuration = (parseInt(app.settings.calcTimeout) || 10) * 1000
+
       hardCalcTimeout = setTimeout(() => showTimeoutDialog(lines), timeoutDuration)
     }
   }
 
   dom.calcTimeoutIgnore.onclick = () => {
     UIkit.modal('#dialogCalcTimeout').hide()
+
     isDialogVisible = false
+
     if (autoCloseTimeout) {
       clearTimeout(autoCloseTimeout)
       autoCloseTimeout = null
@@ -347,9 +378,11 @@ function showTimeoutDialog(lines) {
 
     if (currentStuckIndex !== -1 && currentStuckIndex < cm.lineCount()) {
       const lineText = cm.getLine(currentStuckIndex)
+
       if (lineText !== null && !lineText.trim().startsWith('//') && !lineText.trim().startsWith('#')) {
         cm.replaceRange('// ', { line: currentStuckIndex, ch: 0 })
       }
+
       if (debouncedCalculate) {
         debouncedCalculate.flush()
       } else {
@@ -368,11 +401,13 @@ export function calculate() {
   if (app.refreshCM) cm.refresh()
 
   const cmValue = cm.getValue()
+
   dom.clearButton.setAttribute('disabled', cmValue === '')
   dom.copyButton.setAttribute('disabled', cmValue === '')
 
   const totalLines = cm.lineCount()
   const lines = []
+
   for (let i = 0; i < totalLines; i++) {
     lines.push(cm.getLine(i))
   }
@@ -380,6 +415,7 @@ export function calculate() {
   if (!app.timedOutLines) {
     app.timedOutLines = new Map()
   }
+
   for (const [idx, text] of app.timedOutLines.entries()) {
     if (idx >= totalLines || lines[idx] !== text) {
       app.timedOutLines.delete(idx)
@@ -387,6 +423,7 @@ export function calculate() {
   }
 
   let sharedBuffer = null
+
   if (typeof SharedArrayBuffer !== 'undefined') {
     sharedBuffer = new SharedArrayBuffer(4)
     sharedArray = new Int32Array(sharedBuffer)
@@ -396,6 +433,7 @@ export function calculate() {
   }
 
   isCalculating = true
+
   if (autoCloseTimeout) {
     clearTimeout(autoCloseTimeout)
     autoCloseTimeout = null
@@ -407,6 +445,7 @@ export function calculate() {
     clearTimeout(slowCalcTimeout)
     slowCalcTimeout = null
   }
+
   if (hardCalcTimeout) {
     clearTimeout(hardCalcTimeout)
     hardCalcTimeout = null
@@ -424,6 +463,7 @@ export function calculate() {
   }, timeoutDuration)
 
   const w = getWorker()
+
   w.postMessage({
     type: 'calculate',
     payload: {

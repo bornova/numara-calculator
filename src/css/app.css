@@ -295,12 +295,14 @@ text {
 }
 
 /* Static, high-performance CSS rulers */
-.CodeMirror-code > div {
-  border-bottom: 1px solid transparent;
+.CodeMirror-code > div,
+.CodeMirror-code > pre {
+  border-bottom: 1px solid transparent !important;
 }
 
-.showRulers .CodeMirror-code > div {
-  border-bottom: 1px solid light-dark(#f1f1f1, #303030);
+.showRulers .CodeMirror-code > div,
+.showRulers .CodeMirror-code > pre {
+  border-bottom: 1px solid light-dark(#f1f1f1, #303030) !important;
 }
 
 .gutterBlock {
@@ -597,14 +599,24 @@ text {
   z-index: 10010;
 }
 
+.uk-tab > * > a {
+  border-bottom-width: 2px;
+}
+
+#settingsTabs::before {
+  right: 15px;
+  left: 15px;
+  border-bottom: 1px solid light-dark(#e5e5e5, #333333);
+}
+
 /* Settings dialog */
 
 .dialog-settings-body {
   margin-right: -8px;
   padding-right: 10px;
-  height: calc(100vh - 200px);
-  max-height: 600px;
-  overflow: scroll;
+  height: 360px;
+  max-height: calc(100vh - 240px);
+  overflow-y: auto;
 }
 
 #dialogSettings .uk-overflow-auto {
@@ -1036,17 +1048,17 @@ input:checked + .slider:before {
 
 .CodeMirror-foldgutter-open,
 .CodeMirror-foldgutter-folded {
-  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   opacity: 0.5;
   transition:
     opacity 0.2s,
     color 0.1s;
+  cursor: pointer;
+  height: 100%;
   color: light-dark(#888888, #b8b8b8);
   font-size: 1.4rem;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .CodeMirror-foldgutter-open:hover,

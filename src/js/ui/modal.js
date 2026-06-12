@@ -41,9 +41,11 @@ export function confirm(msg, action) {
 
   const yesAction = (event) => {
     if (dom.confirmYes) dom.confirmYes.blur()
+
     event.stopPropagation()
+
     UIkit.modal('#dialogConfirm').hide()
-    // Run the heavy actions asynchronously to prevent blocking the UI/button state/modal close transition
+
     setTimeout(action, 50)
   }
 
@@ -88,7 +90,8 @@ function makeModalDraggable(modal) {
 
   if (!dialog || !header) return
 
-  UIkit.util.on(modal, 'beforeshow', () => {
+  UIkit.util.on(modal, 'beforeshow', (e) => {
+    if (e.target !== modal) return
     if (dom.el('#dialogUdfu')?.classList.contains('uk-open')) return
 
     Object.assign(dialog.style, { visibility: 'hidden', display: 'block', position: 'absolute' })

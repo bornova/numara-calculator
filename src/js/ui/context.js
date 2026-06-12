@@ -87,7 +87,6 @@ function copyAnswer(event, lineIndex, withLines) {
   const line = cm.getLine(lineIndex).trim()
   const answer = dom.el(`[data-index="${lineIndex}"]`)?.firstChild?.dataset.answer
   const copiedText = withLines ? `${line} = ${answer}` : `${answer}`
-
   const safeText = safeCopyText(copiedText)
 
   copyToClipboard(
@@ -111,11 +110,13 @@ function copyAllAnswers() {
 
   const copiedOutputs = []
   const answersMap = {}
+
   document.querySelectorAll('#output [data-index]').forEach((el) => {
     answersMap[el.getAttribute('data-index')] = el.textContent ?? ''
   })
 
   let lineIdx = 0
+
   cm.eachLine(() => {
     copiedOutputs.push(answersMap[lineIdx] ?? '')
     lineIdx++
@@ -132,11 +133,13 @@ export function copyAll() {
 
   const copiedCalc = []
   const answersMap = {}
+
   document.querySelectorAll('#output [data-index]').forEach((el) => {
     answersMap[el.getAttribute('data-index')] = el.textContent ?? ''
   })
 
   let lineIdx = 0
+
   cm.eachLine((line) => {
     const text = line.text.trim()
 
@@ -145,6 +148,7 @@ export function copyAll() {
     } else {
       copiedCalc.push('')
     }
+
     lineIdx++
   })
 

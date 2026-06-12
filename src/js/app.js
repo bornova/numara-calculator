@@ -68,6 +68,7 @@ const setupResultActions = () => {
       } catch (error) {
         showError('Error', error)
       }
+
       return
     }
 
@@ -76,6 +77,7 @@ const setupResultActions = () => {
         `Error on Line ${+errorEl.parentElement.getAttribute('data-index') + 1}`,
         errorEl.getAttribute('data-error')
       )
+
       return
     }
 
@@ -86,6 +88,7 @@ const setupResultActions = () => {
       navigator.clipboard.writeText(textToCopy)
 
       notify(`Copied '${safeText}' to clipboard.`)
+
       return
     }
   })

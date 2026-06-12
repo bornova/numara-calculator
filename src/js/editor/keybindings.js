@@ -137,7 +137,6 @@ export function matchKeyBindingPress(event, [mods, key]) {
 export function createKeybindingsHandler(keyBindingMap, options = {}) {
   const keyBindings = Object.keys(keyBindingMap).map((key) => [parseKeybinding(key), keyBindingMap[key]])
   const possibleMatches = new Map()
-
   const timeout = options.timeout ?? DEFAULT_TIMEOUT
   let timer = null
 

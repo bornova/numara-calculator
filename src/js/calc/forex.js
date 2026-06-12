@@ -24,6 +24,7 @@ const BUILTIN_UNIT_KEYS = new Set(Object.keys(math.Unit.UNITS))
 function isMathUnit(code, symbol) {
   if (BUILTIN_UNIT_KEYS.has(code) || BUILTIN_UNIT_KEYS.has(code.toLowerCase())) return true
   if (symbol && (BUILTIN_UNIT_KEYS.has(symbol) || BUILTIN_UNIT_KEYS.has(symbol.toLowerCase()))) return true
+
   return false
 }
 

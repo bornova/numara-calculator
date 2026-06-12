@@ -4,41 +4,21 @@ import { all, create, factory } from 'mathjs'
 import * as formulajs from '@formulajs/formulajs'
 import nerdamer from 'nerdamer-prime/all.js'
 
-// Copy of needed utils to remain independent of DOM‑bound utils.js
-const HTML_ESCAPES = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  "'": '&#39;',
-  '"': '&quot;'
-}
+import {
+  escapeHTML,
+  escapeRegExp,
+  getAppLocale as coreGetAppLocale,
+  localeUsesComma as coreLocaleUsesComma
+} from '../coreUtils.js'
 
-export function escapeHTML(str) {
-  if (typeof str !== 'string') return str
-  return str.replace(/[&<>'"]/g, (tag) => HTML_ESCAPES[tag])
-}
-
-export function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
+export { escapeHTML, escapeRegExp }
 
 export function getAppLocale() {
-  const loc = app.settings.locale || 'system'
-  if (loc === 'period') return 'en-US'
-  if (loc === 'comma') return 'tr-TR'
-  const nav =
-    typeof navigator !== 'undefined' ? navigator : typeof self !== 'undefined' && self.navigator ? self.navigator : null
-  return nav?.languages?.[0] ?? nav?.language ?? 'en-US'
+  return coreGetAppLocale(app.settings)
 }
 
 export function localeUsesComma() {
-  const loc = app.settings.locale || 'system'
-  if (loc === 'period') return false
-  if (loc === 'comma') return true
-  const nav =
-    typeof navigator !== 'undefined' ? navigator : typeof self !== 'undefined' && self.navigator ? self.navigator : null
-  const locale = nav?.languages?.[0] ?? nav?.language ?? 'en-US'
-  return (1.11).toLocaleString(locale).includes(',')
+  return coreLocaleUsesComma(app.settings)
 }
 
 // App configuration state inside calculation engine
@@ -65,26 +45,24 @@ math.parse.isAlpha = (c, cPrev, cNext) => isAlphaOriginal(c, cPrev, cNext) || un
 
 export function getDateFormatSettings() {
   const fmt = app.settings.dateFormat || 'system'
-  if (fmt === 'system') {
-    return {
-      todayFormat: 'D',
-      todayDayFormat: 'ccc, D',
-      nowFormat: 'D t',
-      nowDayFormat: 'ccc, D t'
-    }
-  } else {
-    return {
-      todayFormat: fmt,
-      todayDayFormat: 'ccc, ' + fmt,
-      nowFormat: fmt + ' t',
-      nowDayFormat: 'ccc, ' + fmt + ' t'
-    }
-  }
+
+  return fmt === 'system'
+    ? {
+        todayFormat: 'D',
+        todayDayFormat: 'ccc, D',
+        nowFormat: 'D t',
+        nowDayFormat: 'ccc, D t'
+      }
+    : {
+        todayFormat: fmt,
+        todayDayFormat: 'ccc, ' + fmt,
+        nowFormat: fmt + ' t',
+        nowDayFormat: 'ccc, ' + fmt + ' t'
+      }
 }
 
 export function getFlexibleFormat(fmt) {
-  if (!fmt) return fmt
-  return fmt.replace(/dd/g, 'd').replace(/MM/g, 'M')
+  return !fmt ? fmt : fmt.replace(/dd/g, 'd').replace(/MM/g, 'M')
 }
 
 const REGEX_CONTINUATION = /[+\-*/]/
@@ -261,34 +239,29 @@ function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
         if (commas > 0 && periods > 0) {
           const lastComma = numToken.lastIndexOf(',')
           const lastPeriod = numToken.lastIndexOf('.')
-          if (lastComma > lastPeriod) {
-            return numToken.replace(/\./g, '').replace(/,/g, '.')
-          } else {
-            return numToken.replace(/,/g, '')
-          }
+
+          return lastComma > lastPeriod ? numToken.replace(/\./g, '').replace(/,/g, '.') : numToken.replace(/,/g, '')
         }
 
         // 2. Only periods are present (e.g. 1.234.567 or 1.23 or 1.234)
         if (periods > 0 && commas === 0) {
-          if (periods > 1) {
-            return numToken.replace(/\./g, '')
-          }
+          if (periods > 1) return numToken.replace(/\./g, '')
+
           const parts = numToken.split('.')
-          if (parts[1].length === 3) {
-            return usesComma ? numToken.replace(/\./g, '') : numToken
-          }
+
+          if (parts[1].length === 3) return usesComma ? numToken.replace(/\./g, '') : numToken
+
           return numToken
         }
 
         // 3. Only commas are present (e.g. 1,234,567 or 1,23 or 1,234)
         if (commas > 0 && periods === 0) {
-          if (commas > 1) {
-            return numToken.replace(/,/g, '')
-          }
+          if (commas > 1) return numToken.replace(/,/g, '')
+
           const parts = numToken.split(',')
-          if (parts[1].length === 3) {
-            return usesComma ? numToken.replace(/,/g, '.') : numToken.replace(/,/g, '')
-          }
+
+          if (parts[1].length === 3) return usesComma ? numToken.replace(/,/g, '.') : numToken.replace(/,/g, '')
+
           return numToken.replace(/,/g, '.')
         }
 
@@ -363,6 +336,7 @@ function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
           <path d="M7 16c.5-2 1.5-6 4-6 2.5 0 3 3 5.5 3 2.5 0 3.5-3 4-4"/>
         </svg>
       `
+
       return `<a
         class="${CLASS_PLOT_BUTTON}"
         data-plot="${escapeHTML(plotAns)}"
@@ -402,6 +376,7 @@ function altEvaluate(line, stats) {
 
     try {
       const val = math.evaluate(left)
+
       if (typeof val === 'function') {
         throw new Error('function')
       }
@@ -425,6 +400,7 @@ function altEvaluate(line, stats) {
     exprPart = exprPart.replace(/(?:[\p{L}_][\p{L}\p{M}\w]*)/gu, (match) =>
       app.mathScope.has(match) ? app.mathScope.get(match) : match
     )
+
     parsedLine = assignVar + exprPart
   } else {
     parsedLine = parsedLine.replace(/(?:[\p{L}_][\p{L}\p{M}\w]*)/gu, (match) =>
@@ -468,6 +444,7 @@ function altEvaluate(line, stats) {
       { parse: getFlexibleFormat(dateFormats.todayDayFormat), display: dateFormats.todayDayFormat },
       { parse: getFlexibleFormat(dateFormats.todayFormat), display: dateFormats.todayFormat }
     ]
+
     if (app.settings.dateFormat && app.settings.dateFormat !== 'system') {
       formats.push(
         { parse: 'ccc, D t', display: 'ccc, D t' },
@@ -476,25 +453,31 @@ function altEvaluate(line, stats) {
         { parse: 'D', display: 'D' }
       )
     }
+
     let found = null
 
     for (const fmt of formats) {
       const dt = DateTime.fromFormat(lineDate, fmt.parse, locale)
+
       if (dt.isValid) {
         found = { fmt: fmt.display, dt }
         break
       }
     }
 
-    if (!found) return 'Invalid Date'
+    if (!found) {
+      return 'Invalid Date'
+    }
 
     const rightOfDate = String(math.evaluate(lineDateRight + ' to hours', app.mathScope))
     const durHrs = Number(rightOfDate.split(' ')[0])
 
     let outputFmt = found.fmt
+
     if (app.settings.dateDay && !outputFmt.includes('ccc')) {
       outputFmt = 'ccc, ' + outputFmt
     }
+
     const dtLine = found.dt.plus({ hours: durHrs }).toFormat(outputFmt)
 
     parsedLine = `${assignPrefix}"${dtLine}"`
@@ -630,11 +613,18 @@ export function formatAnswer(answer, useGrouping) {
   // Retrieve dynamic decimal and group separators for this locale
   let decimalSeparator = '.'
   let groupSeparator = ','
+
   try {
     const parts = getNumberFormatter(locale, { useGrouping: true }).formatToParts(123456.78)
+
     for (const part of parts) {
-      if (part.type === 'decimal') decimalSeparator = part.value
-      if (part.type === 'group') groupSeparator = part.value
+      if (part.type === 'decimal') {
+        decimalSeparator = part.value
+      }
+
+      if (part.type === 'group') {
+        groupSeparator = part.value
+      }
     }
   } catch {
     // Fallback to defaults
@@ -647,22 +637,25 @@ export function formatAnswer(answer, useGrouping) {
 
     if (useGrp && grpSep) {
       const isNegative = integerPart.startsWith('-')
+
       if (isNegative) {
         integerPart = integerPart.slice(1)
       }
+
       integerPart = integerPart.slice(0).replace(/\B(?=(\d{3})+(?!\d))/g, grpSep)
+
       if (isNegative) {
         integerPart = '-' + integerPart
       }
     }
 
-    if (decimalPart) {
-      return integerPart + decSep + decimalPart
-    }
+    if (decimalPart) return integerPart + decSep + decimalPart
+
     return integerPart
   }
 
   let processedAnswer = answer
+
   if (typeof maximumFractionDigits === 'number') {
     try {
       if (math.typeOf(answer) === 'BigNumber') {
@@ -684,6 +677,7 @@ export function formatAnswer(answer, useGrouping) {
     // For BigNumbers, high precision, or custom notations, format as localized numeric string
     if (valueStr.includes('e')) {
       const [base, exponent] = valueStr.split('e')
+
       return formatNumericString(base, decimalSeparator, groupSeparator, useGrouping) + 'e' + exponent
     }
 
@@ -706,6 +700,7 @@ export function formatAnswer(answer, useGrouping) {
  */
 function stripComments(line) {
   const match = line.match(/\/\/|#/)
+
   return match ? line.substring(0, match.index) : line
 }
 
@@ -731,10 +726,12 @@ export function applyUdfu(isFunc, input) {
     if (isFunc) {
       previouslyImportedUDFs.forEach((key) => {
         delete math[key]
+
         if (math.expression?.mathWithTransform) {
           delete math.expression.mathWithTransform[key]
         }
       })
+
       math.import(udfObj, { override: true })
       previouslyImportedUDFs = Object.keys(udfObj)
       app.udfList = Object.keys(udfObj)
@@ -744,11 +741,14 @@ export function applyUdfu(isFunc, input) {
         if (math.Unit?.UNITS) {
           delete math.Unit.UNITS[unitName]
         }
+
         delete math[unitName]
+
         if (math.expression?.mathWithTransform) {
           delete math.expression.mathWithTransform[unitName]
         }
       })
+
       math.createUnit(udfObj, { override: true })
       previouslyCreatedUnits = Object.keys(udfObj)
       app.uduList = Object.keys(udfObj)
@@ -796,6 +796,7 @@ export function runCalculation({
   }
 
   const dateTime = DateTime.now().setLocale(getAppLocale())
+
   app.mathScope = new Map()
 
   const stats = {
@@ -804,6 +805,7 @@ export function runCalculation({
   }
 
   const dateFormats = getDateFormatSettings()
+
   setScope('now', dateTime.toFormat(app.settings.dateDay ? dateFormats.nowDayFormat : dateFormats.nowFormat))
   setScope('today', dateTime.toFormat(app.settings.dateDay ? dateFormats.todayDayFormat : dateFormats.todayFormat))
 
@@ -814,10 +816,12 @@ export function runCalculation({
   const errorLines = []
 
   let prevLineText = ''
+
   for (let lineIndex = 0; lineIndex < totalLines; lineIndex++) {
     if (sharedArray) {
       sharedArray[0] = lineIndex
     }
+
     if (typeof onLineStart === 'function') {
       onLineStart(lineIndex)
     }
@@ -830,10 +834,12 @@ export function runCalculation({
     if (timedOutSet.has(lineIndex)) {
       const errorMessage = 'Timeout (Took too long)'
       const errorLink = app.settings.lineErrors ? 'Timeout' : ''
+
       result = `<a class="${CLASS_LINE_ERROR_LINK}" data-error="${errorMessage}">${errorLink}</a>`
       stats.runningSubtotal.length = 0
     } else {
       const cached = evaluationCache[lineIndex]
+
       if (
         canUseCache &&
         cached &&
@@ -841,9 +847,11 @@ export function runCalculation({
         (lineIndex === 0 || evaluationCache[lineIndex - 1].rawText === prevLineText)
       ) {
         result = cached.result
+
         app.mathScope = new Map(cached.mathScope)
         stats.runningTotal = [...cached.stats.runningTotal]
         stats.runningSubtotal = [...cached.stats.runningSubtotal]
+
         if (cached.hasError) {
           errorLines.push(lineIndex)
         }
@@ -859,6 +867,7 @@ export function runCalculation({
     }
 
     const hasError = result.includes(CLASS_LINE_ERROR_LINK)
+
     if (hasError) {
       errorLines.push(lineIndex)
     }
@@ -882,6 +891,7 @@ export function runCalculation({
 
   // Convert app.mathScope Map to a serializable object of pre‑formatted answers
   const serializedScope = {}
+
   for (const [key, value] of app.mathScope.entries()) {
     if (typeof value === 'function') {
       serializedScope[key] = 'Function'

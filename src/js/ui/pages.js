@@ -17,8 +17,15 @@ const SIDEBAR_DEFAULT_WIDTH = 240
 function applySidebarWidth(width) {
   const bar = dom.el('#sidePanel .uk-offcanvas-bar')
   const resizer = dom.el('#sidePanelResizer')
-  if (bar) bar.style.width = `${width}px`
-  if (resizer) resizer.style.left = `${width}px`
+
+  if (bar) {
+    bar.style.width = `${width}px`
+  }
+
+  if (resizer) {
+    resizer.style.left = `${width}px`
+  }
+
   dom.appWrapper.style.left = `${width}px`
 }
 
@@ -49,6 +56,7 @@ function setupSidePanelResizer() {
       const width = Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, e.clientX))
 
       store.set('sidePanelWidth', width)
+
       document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseup', onMouseUp)
 
@@ -61,7 +69,9 @@ function setupSidePanelResizer() {
 
   resizer.addEventListener('dblclick', () => {
     applySidebarWidth(SIDEBAR_DEFAULT_WIDTH)
+
     store.set('sidePanelWidth', SIDEBAR_DEFAULT_WIDTH)
+
     calculate()
   })
 }
@@ -112,7 +122,9 @@ export function setupSidePanel(show = false) {
 
         const bar = dom.el('#sidePanel .uk-offcanvas-bar')
 
-        if (bar) bar.classList.add('uk-open')
+        if (bar) {
+          bar.classList.add('uk-open')
+        }
       } else {
         offcanvas.show()
       }
@@ -127,7 +139,9 @@ export function setupSidePanel(show = false) {
 
     const bar = dom.el('#sidePanel .uk-offcanvas-bar')
 
-    if (bar) bar.classList.remove('uk-open')
+    if (bar) {
+      bar.classList.remove('uk-open')
+    }
 
     UIkit.offcanvas('#sidePanel', { overlay: true, mode: 'slide', escClose: true, bgClose: true })
   }
@@ -523,14 +537,19 @@ let isScrolling = false
 
 dom.pageList.addEventListener('scroll', () => {
   if (isScrolling) return
+
   isScrolling = true
 
   requestAnimationFrame(() => {
     const openDropdowns = dom.els('.uk-dropdown.uk-open')
+
     if (openDropdowns.length > 0) {
       openDropdowns.forEach((el) => {
         const dropdown = UIkit.dropdown(el)
-        if (dropdown) dropdown.hide(0)
+
+        if (dropdown) {
+          dropdown.hide(0)
+        }
       })
     }
     isScrolling = false
@@ -547,7 +566,6 @@ if (isElectron) {
     notify(msg, 'success')
   })
   numara.importDataError((event, error) => notify(error, 'danger'))
-
   numara.pageExported((msg) => notify(msg, 'success'))
   numara.exportDataError((event, error) => notify(error, 'danger'))
 
@@ -568,9 +586,12 @@ document.addEventListener('click', (event) => {
   const loadButton = event.target.closest?.('[data-action="load"]')
   if (loadButton) {
     const pageId = loadButton.dataset.page
+
     loadPage(pageId)
 
-    if (!app.sidebarDocked) UIkit.offcanvas('#sidePanel').hide()
+    if (!app.sidebarDocked) {
+      UIkit.offcanvas('#sidePanel').hide()
+    }
 
     return
   }

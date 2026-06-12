@@ -39,6 +39,7 @@ function checkWarnings() {
 function populateSelect(selectEl, options, disabledValue = null) {
   const htmlOptions = options.map((option) => {
     const [value, opt] = Object.entries(option)[0]
+
     return value === disabledValue ? `<option disabled>${opt}</option>` : `<option value="${value}">${opt}</option>`
   })
 
@@ -181,6 +182,7 @@ export const settings = {
       if (!el) return
 
       el[el.getAttribute('type') === 'checkbox' ? 'checked' : 'value'] = app.settings[key]
+
       checkMods(key)
     })
 
@@ -329,6 +331,7 @@ export const settings = {
       el.parentNode.style.opacity = enabled ? '1' : '0.5'
 
       const mod = dom.el(`#${el.id}Mod`)
+
       if (mod) {
         mod.style.pointerEvents = enabled ? 'auto' : 'none'
         mod.parentNode.style.opacity = enabled ? '1' : '0.5'
@@ -339,7 +342,9 @@ export const settings = {
 
     toggle(dom.keywordTips, app.settings.syntax)
     toggle(dom.matchBrackets, app.settings.syntax)
+
     const isAutoNotation = app.settings.notation === 'auto'
+
     toggle(dom.expUpper, isAutoNotation)
     toggle(dom.expLower, isAutoNotation)
     toggle(dom.inputLocale, app.settings.thouSep)

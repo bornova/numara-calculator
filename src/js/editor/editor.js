@@ -168,11 +168,11 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
     for (const key of app.mathScope.keys()) {
       if (!keywordTokens.has(key)) {
         const lineMatch = key.match(/^line(\d+)$/)
+
         if (lineMatch) {
           const lineNum = parseInt(lineMatch[1], 10)
-          if (lineNum >= cmCursor.line + 1) {
-            continue
-          }
+
+          if (lineNum >= cmCursor.line + 1) continue
         }
         variableHints.push({ text: key, className: CLASS_NAMES.VARIABLE })
       }
@@ -210,6 +210,7 @@ const END_SECTION_REGEXP = /^\s*(?:\/\/\s*)?#[!\s]*$/
 
 CodeMirror.registerHelper('fold', 'numara', (cm, start) => {
   const startLineText = cm.getLine(start.line)
+
   if (!startLineText) return
 
   // 1. Check for custom region start
@@ -217,12 +218,15 @@ CodeMirror.registerHelper('fold', 'numara', (cm, start) => {
     let depth = 1
     let endLine = -1
     const lastLine = cm.lineCount() - 1
+
     for (let i = start.line + 1; i <= lastLine; i++) {
       const text = cm.getLine(i)
+
       if (REGION_START_REGEXP.test(text)) {
         depth++
       } else if (REGION_END_REGEXP.test(text)) {
         depth--
+
         if (depth === 0) {
           endLine = i
           break
@@ -239,10 +243,12 @@ CodeMirror.registerHelper('fold', 'numara', (cm, start) => {
 
   // 2. Check for markdown headers
   const match = HEADER_REGEXP.exec(startLineText)
+
   if (match) {
     const headerLevel = match[1].length
     let endLine = -1
     const lastLine = cm.lineCount() - 1
+
     for (let i = start.line + 1; i <= lastLine; i++) {
       const text = cm.getLine(i)
 
@@ -252,8 +258,10 @@ CodeMirror.registerHelper('fold', 'numara', (cm, start) => {
       }
 
       const m = HEADER_REGEXP.exec(text)
+
       if (m) {
         const nextLevel = m[1].length
+
         if (nextLevel <= headerLevel) {
           endLine = i - 1
           break
@@ -264,10 +272,10 @@ CodeMirror.registerHelper('fold', 'numara', (cm, start) => {
       endLine = lastLine
     }
     if (endLine > start.line) {
-      // Trim empty lines from the end of fold range to look clean
       while (endLine > start.line && cm.getLine(endLine).trim() === '') {
         endLine--
       }
+
       if (endLine > start.line) {
         return {
           from: CodeMirror.Pos(start.line, startLineText.length),
@@ -282,11 +290,14 @@ CodeMirror.registerHelper('fold', 'numara', (cm, start) => {
 function cmForceBottom() {
   const line = cm.getCursor().line
   const lineEl = cm.display.lineDiv.children[line - cm.display.viewFrom]
+
   if (!lineEl) return
 
   const lineRect = lineEl.getBoundingClientRect()
   const barTop = dom.el('.CodeMirror-hscrollbar')?.getBoundingClientRect()?.top
+
   if (barTop === undefined) return
+
   const lineHeight = lineRect.bottom - lineRect.top
 
   if (barTop - lineRect.top < lineHeight) {
@@ -349,6 +360,7 @@ export const cm = CodeMirror.fromTextArea(dom.inputArea, {
   theme: 'numara',
   viewportMargin: Infinity
 })
+
 cm.getInputField().setAttribute('id', 'inputAreaCodeMirror')
 cm.getInputField().setAttribute('name', 'inputAreaCodeMirror')
 
@@ -363,6 +375,7 @@ dom.uduInput.setAttribute('placeholder', uduPlaceholder)
 
 export const udfInput = CodeMirror.fromTextArea(dom.udfInput, udOptions)
 export const uduInput = CodeMirror.fromTextArea(dom.uduInput, udOptions)
+
 udfInput.getInputField().setAttribute('id', 'udfInputCodeMirror')
 udfInput.getInputField().setAttribute('name', 'udfInputCodeMirror')
 uduInput.getInputField().setAttribute('id', 'uduInputCodeMirror')
@@ -370,6 +383,7 @@ uduInput.getInputField().setAttribute('name', 'uduInputCodeMirror')
 
 // Codemirror handlers
 export const debouncedCalculate = debounce(calculate, 150)
+
 cm.on('changes', (cm, changes) => {
   if (app.loadingPage) return
 
@@ -385,12 +399,16 @@ cm.on('changes', (cm, changes) => {
     debouncedCalculate()
   }
 })
+
 cm.on('fold', () => {
   if (app.loadingPage) return
+
   setTimeout(calculate, 0)
 })
+
 cm.on('unfold', () => {
   if (app.loadingPage) return
+
   setTimeout(calculate, 0)
 })
 
@@ -533,6 +551,7 @@ function handleConstantTooltip(target) {
 function handleVariableTooltip(target) {
   const text = target.textContent
   const val = app.mathScope.get(text)
+
   if (!val || typeof val === 'function') return
 
   let varTooltip = formatAnswer(val ?? 'Undefined')
