@@ -36,7 +36,6 @@ export const dom = {
   // Actions
   sidePanelButton: document.getElementById('sidePanelButton'),
   newPageButton: document.getElementById('newPageButton'),
-  actionDivider: document.getElementById('actionDivider'),
   clearButton: document.getElementById('clearButton'),
   copyButton: document.getElementById('copyButton'),
   pageName: document.getElementById('pageName'),

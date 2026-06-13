@@ -149,7 +149,7 @@ ipcMain.handle('isResized', () => {
 
 ipcMain.on('importPage', (event) => {
   const file = dialog.showOpenDialogSync(win, {
-    filters: [{ name: 'Numara', extensions: ['numara'] }],
+    filters: [{ name: 'Numara', extensions: ['num'] }],
     properties: ['openFile'],
     title: 'Import Page'
   })
@@ -169,7 +169,7 @@ ipcMain.on('importPage', (event) => {
 ipcMain.on('exportPage', (event, fileName, content) => {
   const file = dialog.showSaveDialogSync(win, {
     defaultPath: fileName,
-    filters: [{ name: 'Numara', extensions: ['numara'] }],
+    filters: [{ name: 'Numara', extensions: ['num'] }],
     title: 'Export Page'
   })
 
@@ -219,13 +219,13 @@ ipcMain.handle('selectSyncDirectory', async () => {
 ipcMain.handle('readSyncDirectory', async (event, dirPath) => {
   try {
     const files = await fs.promises.readdir(dirPath)
-    const txtFiles = files.filter((f) => f.endsWith('.txt'))
+    const numFiles = files.filter((f) => f.endsWith('.num'))
     const fileContents = []
 
-    for (const file of txtFiles) {
+    for (const file of numFiles) {
       const filePath = path.join(dirPath, file)
       const content = await fs.promises.readFile(filePath, 'utf8')
-      const name = path.basename(file, '.txt')
+      const name = path.basename(file, '.num')
       fileContents.push({ name, content })
     }
 
@@ -238,7 +238,7 @@ ipcMain.handle('readSyncDirectory', async (event, dirPath) => {
 
 ipcMain.handle('writeSyncFile', async (event, dirPath, filename, content) => {
   try {
-    const filePath = path.join(dirPath, filename + '.txt')
+    const filePath = path.join(dirPath, filename + '.num')
 
     await fs.promises.writeFile(filePath, content, 'utf8')
 
@@ -251,7 +251,7 @@ ipcMain.handle('writeSyncFile', async (event, dirPath, filename, content) => {
 
 ipcMain.handle('deleteSyncFile', async (event, dirPath, filename) => {
   try {
-    const filePath = path.join(dirPath, filename + '.txt')
+    const filePath = path.join(dirPath, filename + '.num')
 
     if (fs.existsSync(filePath)) {
       await fs.promises.unlink(filePath)
@@ -266,8 +266,8 @@ ipcMain.handle('deleteSyncFile', async (event, dirPath, filename) => {
 
 ipcMain.handle('renameSyncFile', async (event, dirPath, oldFilename, newFilename) => {
   try {
-    const oldPath = path.join(dirPath, oldFilename + '.txt')
-    const newPath = path.join(dirPath, newFilename + '.txt')
+    const oldPath = path.join(dirPath, oldFilename + '.num')
+    const newPath = path.join(dirPath, newFilename + '.num')
 
     if (fs.existsSync(oldPath)) {
       await fs.promises.rename(oldPath, newPath)
@@ -291,7 +291,7 @@ ipcMain.on('startWatchingSyncDir', (event, dirPath) => {
   try {
     let fsTimeout = null
     syncWatcher = fs.watch(dirPath, (eventType, filename) => {
-      if (filename && filename.endsWith('.txt')) {
+      if (filename && filename.endsWith('.num')) {
         if (fsTimeout) return
 
         fsTimeout = setTimeout(() => {

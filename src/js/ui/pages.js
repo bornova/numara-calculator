@@ -97,7 +97,6 @@ export function setupSidePanel(show = false) {
   dom.sidePanelButton.style.display = dock ? 'none' : ''
   dom.closeSidePanelButton.style.display = dock ? 'none' : ''
   dom.newPageButton.style.display = dock ? 'none' : ''
-  dom.actionDivider.style.display = dock ? 'none' : ''
 
   if (dock) {
     const width = store.get('sidePanelWidth') ?? SIDEBAR_DEFAULT_WIDTH

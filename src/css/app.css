@@ -318,7 +318,7 @@ text {
 .actions {
   position: absolute;
   right: 10px;
-  bottom: 8px;
+  bottom: 10px;
   left: 10px;
   height: 25px;
 }
@@ -376,10 +376,16 @@ text {
 
 .leftActions a svg,
 .centerActions a svg,
-.rightActions a svg,
-.sidePanelActions a svg {
+.rightActions a svg {
   width: 14px;
   height: 14px;
+  pointer-events: none;
+  color: inherit !important;
+}
+
+.sidePanelActions a:not(.newPageButtonSP) svg {
+  width: 14px !important;
+  height: 14px !important;
   pointer-events: none;
   color: inherit !important;
 }
@@ -650,7 +656,7 @@ text {
 }
 
 #dialogSettings #themeMod {
-  right: 171px;
+  right: 167px;
 }
 
 #dialogSettings input:disabled + span.slider.round {
@@ -713,7 +719,7 @@ text {
   flex: 1;
   vertical-align: middle;
   border: 1px solid light-dark(#eaeaea, #3b3b3b);
-  border-radius: 30px;
+  border-radius: 8px;
   background-color: light-dark(#f5f5f5, #2b2b2b);
   padding: 3px;
 }
@@ -727,9 +733,9 @@ text {
   cursor: pointer;
   outline: none;
   border: none;
-  border-radius: 30px;
+  border-radius: 6px;
   background: transparent !important;
-  padding: 6px 14px;
+  padding: 3px 14px;
   color: light-dark(#777777, #999999);
 }
 

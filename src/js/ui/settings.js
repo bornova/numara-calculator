@@ -6,7 +6,7 @@ import { getRates } from '../calc/forex'
 import { confirm, modal, showError } from './modal'
 import { setupSidePanel } from './pages'
 import { app, checkSize, getTheme, isElectron, store } from '../utils'
-import { triggerFolderSync } from '../sync'
+import { triggerFolderSync, clearSyncCache } from '../sync'
 
 import { applyChange, observableDiff } from '@bornova/deep-diff'
 
@@ -345,6 +345,7 @@ export const settings = {
         numara.startWatchingSyncDir(app.settings.syncDir)
       } else {
         numara.stopWatchingSyncDir()
+        clearSyncCache()
       }
     }
 
@@ -533,6 +534,8 @@ dom.els('.settingItem').forEach((el) => {
     if (id === 'syncDirEnabled' || id === 'syncDir') {
       if (app.settings.syncDirEnabled && app.settings.syncDir) {
         triggerFolderSync().catch(console.error)
+      } else {
+        clearSyncCache()
       }
     }
   })
