@@ -10,7 +10,7 @@ import { numaraKeys } from './editor/keybindings.js'
 import { modal, notify, showError } from './ui/modal'
 import { getPageName, initializePages, pageOrder, populatePages, setupSidePanel } from './ui/pages'
 import { plot } from './ui/plot'
-import { settings } from './ui/settings'
+import { applyAnswerPositionLayout, settings } from './ui/settings'
 import { applyUdfu } from './calc/userDefined'
 import { app, checkAppUpdate, isMac, isElectron, store } from './utils'
 import { triggerFolderSync } from './sync'
@@ -119,19 +119,12 @@ const setupUserDefined = () => {
 
 const setupPanelResizer = () => {
   const defaultWidth = settings.defaults.inputWidth
-  const inputWidth = store.get('inputWidth') ?? defaultWidth
 
   let isResizing = false
   let resizeRaf // Request Animation Frame reference
   let calcTimeout
 
-  if (app.settings.answerPosition === 'left') {
-    dom.input.style.width = `${inputWidth}%`
-  } else if (app.settings.answerPosition === 'bottom') {
-    dom.input.style.width = '100%'
-  } else {
-    dom.input.style.width = `${defaultWidth}%`
-  }
+  applyAnswerPositionLayout()
 
   const dividerTooltip = () => {
     dom.panelDivider.title =

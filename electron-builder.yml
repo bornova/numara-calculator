@@ -19,6 +19,7 @@ files:
   - build
   - src/electron/main.js
   - src/electron/preload.cjs
+  - '!**/*.map'
 
 # Linux configuration
 linux:

@@ -636,26 +636,7 @@ export function formatAnswer(answer, useGrouping) {
   const formatOptions = { notation, lowerExp, upperExp }
   const localeOptions = { maximumFractionDigits, useGrouping }
   const formatter = getNumberFormatter(locale, localeOptions)
-
-  // Retrieve dynamic decimal and group separators for this locale
-  let decimalSeparator = '.'
-  let groupSeparator = ','
-
-  try {
-    const parts = getNumberFormatter(locale, { useGrouping: true }).formatToParts(123456.78)
-
-    for (const part of parts) {
-      if (part.type === 'decimal') {
-        decimalSeparator = part.value
-      }
-
-      if (part.type === 'group') {
-        groupSeparator = part.value
-      }
-    }
-  } catch {
-    // Fallback to defaults
-  }
+  const { decimal: decimalSeparator, group: groupSeparator } = getLocaleSeparators(locale)
 
   function formatNumericString(numStr, decSep, grpSep, useGrp) {
     const parts = numStr.split('.')

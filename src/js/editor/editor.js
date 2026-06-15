@@ -475,8 +475,7 @@ udfInput.getInputField().setAttribute('name', 'udfInputCodeMirror')
 uduInput.getInputField().setAttribute('id', 'uduInputCodeMirror')
 uduInput.getInputField().setAttribute('name', 'uduInputCodeMirror')
 
-// Codemirror handlers
-export const debouncedCalculate = debounce(calculate, 150)
+export const debouncedCalculate = debounce(calculate, 100)
 
 cm.on('changes', (cm, changes) => {
   if (app.loadingPage) return

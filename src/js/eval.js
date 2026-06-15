@@ -299,12 +299,15 @@ export function renderAnswersToHTML(answers) {
 
   for (let lineIndex = 0; lineIndex < answers.length; lineIndex++) {
     const result = answers[lineIndex] || ''
-    const tooltipAttr =
-      app.settings.truncateAnswers && result
-        ? ` uk-tooltip="title: ${result.replace(/<[^>]*>/g, '').replace(/"/g, '&quot;')}"`
-        : ''
+    let displayResult = result
 
-    outputAnswers.push(`<div class="${classRuler}" data-index="${lineIndex}"${tooltipAttr}>${result}</div>`)
+    if (app.settings.truncateAnswers && result && result.includes('class="answer"')) {
+      const tooltipText = result.replace(/<[^>]*>/g, '').replace(/"/g, '&quot;')
+
+      displayResult = result.replace('class="answer"', `class="answer" uk-tooltip="title: ${tooltipText}"`)
+    }
+
+    outputAnswers.push(`<div class="${classRuler}" data-index="${lineIndex}">${displayResult}</div>`)
   }
 
   return `<div class="outputWrapper">${outputAnswers.join('')}</div>`

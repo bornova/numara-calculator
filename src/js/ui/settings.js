@@ -10,6 +10,33 @@ import { triggerFolderSync, clearSyncCache } from '../sync'
 
 import { applyChange, observableDiff } from '@bornova/deep-diff'
 
+/**
+ * Apply input/output panel widths and styles based on the current answerPosition setting.
+ * Called on startup (setupPanelResizer) and on every settings change (settings.apply).
+ */
+export function applyAnswerPositionLayout() {
+  switch (app.settings.answerPosition) {
+    case 'bottom':
+      dom.input.style.width = '100%'
+      dom.output.style.width = '20px'
+      dom.output.style.minWidth = '20px'
+      dom.output.style.textAlign = 'right'
+      break
+    case 'left':
+      dom.input.style.width = (store.get('inputWidth') || 60) + '%'
+      dom.output.style.minWidth = '120px'
+      dom.output.style.textAlign = 'left'
+      break
+    case 'right':
+    default:
+      dom.input.style.width = '60%'
+      dom.output.style.textAlign = 'right'
+      break
+  }
+
+  dom.panelDivider.style.display = app.settings.answerPosition === 'left' ? 'block' : 'none'
+}
+
 /** Show/hide Defaults link. */
 function checkDefaults() {
   const diffs = observableDiff(app.settings, settings.defaults) || []
@@ -309,28 +336,7 @@ export const settings = {
       })
     }
 
-    // Set input/output widths and styles based on answer position
-    switch (app.settings.answerPosition) {
-      case 'bottom':
-        dom.input.style.width = '100%'
-        dom.output.style.width = '20px'
-        dom.output.style.minWidth = '20px'
-        dom.output.style.textAlign = 'right'
-        break
-      case 'left':
-        dom.input.style.width = (store.get('inputWidth') || 60) + '%'
-        dom.output.style.minWidth = '120px'
-        dom.output.style.textAlign = 'left'
-        break
-      case 'right':
-      default:
-        dom.input.style.width = '60%'
-        dom.output.style.textAlign = 'right'
-        break
-    }
-
-    dom.panelDivider.style.display = app.settings.answerPosition === 'left' ? 'block' : 'none'
-
+    applyAnswerPositionLayout()
     cm.setOption('mode', app.settings.syntax ? 'numara' : 'plain')
     cm.setOption('lineNumbers', app.settings.lineNumbers)
     cm.setOption('lineWrapping', app.settings.lineWrap)

@@ -89,19 +89,6 @@
   color: light-dark(#222222, #e6e6e6) !important;
 }
 
-.CodeMirror-linenumber {
-  color: light-dark(#cccccc, #666666);
-}
-
-.cm-s-numara .CodeMirror-selected {
-  background: light-dark(#c9e0f7, #193552) !important;
-}
-
-.cm-s-numara .CodeMirror-linenumber {
-  background-color: light-dark(#ffffff, #1f1f1f) !important;
-  padding: 0 10px 0 0 !important;
-}
-
 .cm-s-numara .CodeMirror-sizer {
   padding-right: 0 !important;
   padding-bottom: 8px !important;
