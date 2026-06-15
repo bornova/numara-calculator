@@ -1,6 +1,6 @@
 import { dom } from '../dom'
 import { cm } from '../editor/editor'
-import { calculate } from '../eval'
+import { calculate, renderAnswersToHTML, syncOutputHeights } from '../eval'
 import { confirm, modal, notify } from './modal'
 import { app, escapeHTML, isElectron, store } from '../utils'
 import { syncPageSave, syncPageRename, syncPageDelete } from '../sync'
@@ -97,6 +97,7 @@ export function setupSidePanel(show = false) {
   dom.sidePanelButton.style.display = dock ? 'none' : ''
   dom.closeSidePanelButton.style.display = dock ? 'none' : ''
   dom.newPageButton.style.display = dock ? 'none' : ''
+  dom.leftActionsDivider.style.display = dock ? 'none' : ''
 
   if (dock) {
     const width = store.get('sidePanelWidth') ?? SIDEBAR_DEFAULT_WIDTH
@@ -348,7 +349,7 @@ export function loadPage(pageId) {
     return
   }
 
-  const { name, data, history, cursor, folds } = page
+  const { name, data, history, cursor, folds, answers } = page
 
   app.activePage = pageId
   store.set('lastPage', pageId)
@@ -356,6 +357,12 @@ export function loadPage(pageId) {
   updatePageName(name, pageId)
 
   app.loadingPage = true
+
+  if (answers && answers.length > 0 && app.settings.answerPosition !== 'bottom') {
+    dom.output.innerHTML = renderAnswersToHTML(answers)
+  } else {
+    dom.output.innerHTML = ''
+  }
 
   cm.setValue(data)
 
@@ -370,6 +377,10 @@ export function loadPage(pageId) {
   }
 
   app.loadingPage = false
+
+  if (answers && answers.length > 0 && app.settings.answerPosition !== 'bottom') {
+    syncOutputHeights()
+  }
 
   calculate()
 

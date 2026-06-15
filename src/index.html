@@ -270,6 +270,15 @@
                 </select>
               </div>
             </div>
+            <div class="uk-child-width-expand" uk-grid>
+              <div data-help="newPageOnStart">Start with blank page</div>
+              <div class="uk-text-right uk-width-2-5 uk-position-relative">
+                <label class="switch">
+                  <input id="newPageOnStart" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
             <div id="alwaysOnTopContainer" class="uk-child-width-expand" uk-grid>
               <div data-help="alwaysOnTop">Always on top</div>
               <div class="uk-text-right uk-position-relative">
@@ -368,10 +377,19 @@
               </div>
             </div>
             <div class="uk-child-width-expand" uk-grid>
-              <div data-help="lineWrap">Wrap lines (input only)</div>
+              <div data-help="lineWrap">Wrap input expressions</div>
               <div class="uk-text-right uk-width-2-5 uk-position-relative">
                 <label class="switch">
                   <input id="lineWrap" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+            <div class="uk-child-width-expand" uk-grid>
+              <div data-help="truncateAnswers">Truncate answers</div>
+              <div class="uk-text-right uk-width-2-5 uk-position-relative">
+                <label class="switch">
+                  <input id="truncateAnswers" type="checkbox" class="settingItem" />
                   <span class="slider round"></span>
                 </label>
               </div>
@@ -381,15 +399,6 @@
               <div class="uk-text-right uk-width-2-5 uk-position-relative">
                 <label class="switch">
                   <input id="rulers" type="checkbox" class="settingItem" />
-                  <span class="slider round"></span>
-                </label>
-              </div>
-            </div>
-            <div class="uk-child-width-expand" uk-grid>
-              <div data-help="newPageOnStart">Start with blank page</div>
-              <div class="uk-text-right uk-width-2-5 uk-position-relative">
-                <label class="switch">
-                  <input id="newPageOnStart" type="checkbox" class="settingItem" />
                   <span class="slider round"></span>
                 </label>
               </div>
@@ -487,7 +496,7 @@
               </div>
             </div>
             <div class="uk-child-width-expand" uk-grid>
-              <div data-help="contPrevLine">Continue previous line</div>
+              <div data-help="contPrevLine">Continue from previous line</div>
               <div class="uk-text-right uk-position-relative">
                 <label class="switch">
                   <input id="contPrevLine" type="checkbox" class="settingItem" />

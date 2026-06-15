@@ -126,16 +126,39 @@ export function refreshCurrencyState() {
   const numPattern =
     '\\b0[xX][0-9a-fA-F]+\\b|\\b0[bB][01]+\\b|\\b0[oO][0-7]+\\b|\\b(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?\\b'
 
-  currencySymbolsRegex = symbols.length
-    ? new RegExp(
-        `(${numPattern})|(?<![\\p{L}])(${symbols
-          .sort((a, b) => b.length - a.length)
-          .map(escapeRegExp)
-          .join('|')})(?![\\p{L}])`,
-        'gu'
-      )
-    : null
+  const letterSymbols = []
+  const nonLetterSymbols = []
+  const letterRegex = /[\p{L}]/u
 
+  for (const symbol of symbols) {
+    if (letterRegex.test(symbol)) {
+      letterSymbols.push(symbol)
+    } else {
+      nonLetterSymbols.push(symbol)
+    }
+  }
+
+  const parts = []
+
+  if (letterSymbols.length) {
+    parts.push(
+      `(?<![\\p{L}])(?:${letterSymbols
+        .sort((a, b) => b.length - a.length)
+        .map(escapeRegExp)
+        .join('|')})(?![\\p{L}])`
+    )
+  }
+
+  if (nonLetterSymbols.length) {
+    parts.push(
+      `(?:${nonLetterSymbols
+        .sort((a, b) => b.length - a.length)
+        .map(escapeRegExp)
+        .join('|')})`
+    )
+  }
+
+  currencySymbolsRegex = symbols.length ? new RegExp(`(${numPattern})|(${parts.join('|')})`, 'gu') : null
   currencyFormatRegex = codes.length
     ? new RegExp(`(-?\\d[\\d.,'\\u00A0\\u202F\\u2009 ]*(?:e[+-]?\\d+)?)\\s*\\b(${codes.join('|')})\\b`, 'gi')
     : null

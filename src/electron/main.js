@@ -201,6 +201,9 @@ ipcMain.on('resetApp', () => {
   })
 })
 ipcMain.on('openDevTools', () => win.webContents.openDevTools())
+ipcMain.on('openPath', (event, dirPath) => {
+  shell.openPath(dirPath)
+})
 ipcMain.on('openLogs', () => {
   shell.openPath(path.join(app.getPath('logs'), 'main.log'))
 })

@@ -94,6 +94,7 @@ export const settings = {
     lineHeight: '24px',
     lineNumbers: true,
     lineWrap: true,
+    truncateAnswers: true,
     locale: 'system',
     matchBrackets: true,
     matrixType: 'Matrix',
@@ -295,6 +296,7 @@ export const settings = {
     })
 
     dom.mainPanel.classList.toggle('showRulers', app.settings.rulers)
+    dom.output.classList.toggle('truncateAnswers', app.settings.truncateAnswers)
 
     if (app.settings.answerPosition !== 'bottom') {
       cm.eachLine((cmLine) => {
@@ -377,7 +379,6 @@ export const settings = {
     }
 
     setupSidePanel()
-
     calculate()
   },
 

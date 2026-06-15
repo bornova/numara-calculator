@@ -21,6 +21,7 @@ const helpTooltips = {
   lineHeight: 'Set the line height for the calculator display.',
   lineNumbers: 'Show line numbers in the calculator display.',
   lineWrap: 'Enable or disable line wrapping in the calculator display.',
+  truncateAnswers: 'Truncate long answers with ellipses instead of showing a horizontal scrollbar.',
   locale: 'Set the locale for number formatting and other locale-specific settings.',
   matchBrackets: 'Highlight matching brackets when the cursor is next to a bracket.',
   matrixType: 'Set the default type for matrices.',

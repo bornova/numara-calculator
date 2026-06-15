@@ -233,12 +233,31 @@ text {
   overflow: scroll;
 }
 
-.output > div {
+.outputWrapper {
+  display: inline-block;
+  min-width: 100%;
+}
+
+.outputWrapper > div {
   -webkit-user-select: text;
   display: block;
-  width: 100%;
+  min-width: 100%;
   height: 27px;
   user-select: text;
+}
+
+.truncateAnswers .outputWrapper {
+  display: block;
+  width: 100%;
+}
+
+.truncateAnswers .outputWrapper > div {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .panelFont {
@@ -318,7 +337,7 @@ text {
 .actions {
   position: absolute;
   right: 10px;
-  bottom: 10px;
+  bottom: 8px;
   left: 10px;
   height: 25px;
 }
@@ -418,7 +437,7 @@ text {
   right: 0;
   bottom: 0;
   left: 0;
-  margin: 10px 10px 12px 10px;
+  margin: 10px 10px 10px 10px;
 }
 
 .closeSidePanelButton {
@@ -665,7 +684,7 @@ text {
 }
 
 #dialogSettings #themeMod {
-  right: 167px;
+  position: relative;
 }
 
 #dialogSettings input:disabled + span.slider.round {

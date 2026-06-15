@@ -136,14 +136,14 @@ function buildCurrencies(symbolList, rateList) {
 /** Fetch latest rates and refresh the application's currency state. */
 export async function getRates() {
   if (!navigator.onLine) {
-    dom.lastUpdated.textContent = 'Offline'
+    if (dom.lastUpdated) dom.lastUpdated.textContent = 'Offline'
 
     notify('No internet connection. Could not update exchange rates.', 'warning')
 
     return
   }
 
-  dom.lastUpdated.innerHTML = '<div uk-spinner="ratio: 0.3"></div>'
+  if (dom.lastUpdated) dom.lastUpdated.innerHTML = '<div uk-spinner="ratio: 0.3"></div>'
 
   try {
     const [symbols, rates] = await Promise.all([fetchJSON(SYMBOLS_URL), fetchJSON(RATES_URL)])
@@ -163,12 +163,18 @@ export async function getRates() {
     refreshCurrencyState()
     refreshCurrencyTokens()
 
-    dom.lastUpdated.textContent = store.get('rateDate')
+    if (dom.lastUpdated) {
+      dom.lastUpdated.textContent = store.get('rateDate')
+    }
+
     cm.setOption('mode', app.settings.syntax ? 'numara' : 'plain')
 
     calculate()
   } catch (error) {
-    dom.lastUpdated.textContent = 'n/a'
+    if (dom.lastUpdated) {
+      dom.lastUpdated.textContent = 'n/a'
+    }
+
     notify('Failed to get exchange rates (' + error + ')', 'warning')
   }
 }

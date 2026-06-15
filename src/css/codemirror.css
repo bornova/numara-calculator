@@ -174,7 +174,7 @@ li.CodeMirror-hint-active {
 /* CodeMirror Fold Gutter styling */
 .CodeMirror-foldgutter {
   cursor: pointer;
-  background-color: transparent;
+  background-color: light-dark(#ffffff, #1f1f1f);
   width: 12px;
 }
 

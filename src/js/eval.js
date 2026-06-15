@@ -58,6 +58,26 @@ function checkScopeKeysChanged(serializedScope, udfList, uduList) {
   return false
 }
 
+/** Hides the timeout dialog smoothly after a calculation completes or errors. */
+function hideTimeoutDialogAfterCalc() {
+  if (isDialogVisible) {
+    isDialogVisible = false
+
+    const elapsed = Date.now() - lastDialogShowTime
+
+    if (elapsed < 1000) {
+      autoCloseTimeout = setTimeout(() => {
+        UIkit.modal('#dialogCalcTimeout').hide()
+        autoCloseTimeout = null
+      }, 1000 - elapsed)
+    } else {
+      UIkit.modal('#dialogCalcTimeout').hide()
+    }
+  } else {
+    UIkit.modal('#dialogCalcTimeout').hide()
+  }
+}
+
 function getWorker() {
   if (!worker) {
     worker = new Worker('js/calc.worker.js')
@@ -93,22 +113,7 @@ function getWorker() {
 
         lastActiveLineIndex = -1
 
-        if (isDialogVisible) {
-          isDialogVisible = false
-
-          const elapsed = Date.now() - lastDialogShowTime
-
-          if (elapsed < 1000) {
-            autoCloseTimeout = setTimeout(() => {
-              UIkit.modal('#dialogCalcTimeout').hide()
-              autoCloseTimeout = null
-            }, 1000 - elapsed)
-          } else {
-            UIkit.modal('#dialogCalcTimeout').hide()
-          }
-        } else {
-          UIkit.modal('#dialogCalcTimeout').hide()
-        }
+        hideTimeoutDialogAfterCalc()
 
         // Update the main thread's math scope mapping keys to serialized strings
         const keysChanged = checkScopeKeysChanged(serializedScope, udfList, uduList)
@@ -144,22 +149,7 @@ function getWorker() {
 
           lastActiveLineIndex = -1
 
-          if (isDialogVisible) {
-            isDialogVisible = false
-
-            const elapsed = Date.now() - lastDialogShowTime
-
-            if (elapsed < 1000) {
-              autoCloseTimeout = setTimeout(() => {
-                UIkit.modal('#dialogCalcTimeout').hide()
-                autoCloseTimeout = null
-              }, 1000 - elapsed)
-            } else {
-              UIkit.modal('#dialogCalcTimeout').hide()
-            }
-          } else {
-            UIkit.modal('#dialogCalcTimeout').hide()
-          }
+          hideTimeoutDialogAfterCalc()
         }
         console.error('Calculation worker returned error:', payload.error)
       }
@@ -297,13 +287,34 @@ export function syncOutputHeights() {
 }
 
 /**
+ * Generate output panel HTML for a list of answers.
+ *
+ * @param {Array<string>} answers - The list of answer HTML strings.
+ * @returns {string} - The complete outputResults HTML string.
+ */
+export function renderAnswersToHTML(answers) {
+  const useRulers = app.settings.rulers
+  const classRuler = useRulers ? 'ruler' : 'noRuler'
+  const outputAnswers = []
+
+  for (let lineIndex = 0; lineIndex < answers.length; lineIndex++) {
+    const result = answers[lineIndex] || ''
+    const tooltipAttr =
+      app.settings.truncateAnswers && result
+        ? ` uk-tooltip="title: ${result.replace(/<[^>]*>/g, '').replace(/"/g, '&quot;')}"`
+        : ''
+
+    outputAnswers.push(`<div class="${classRuler}" data-index="${lineIndex}"${tooltipAttr}>${result}</div>`)
+  }
+
+  return `<div class="outputWrapper">${outputAnswers.join('')}</div>`
+}
+
+/**
  * Apply results received asynchronously from the worker to CodeMirror and the DOM.
  */
 function applyCalculationResults(answers, errorLines) {
   const totalLines = cm.lineCount()
-  const useRulers = app.settings.rulers
-  const classRuler = useRulers ? 'ruler' : 'noRuler'
-
   const CLASS_LINE_ERROR = 'lineNoError'
 
   if (lastActivePage !== app.activePage) {
@@ -348,24 +359,17 @@ function applyCalculationResults(answers, errorLines) {
     }
   }
 
-  const outputAnswers = []
   const hasLineWidget = app.settings.answerPosition === 'bottom'
 
-  for (let lineIndex = 0; lineIndex < totalLines; lineIndex++) {
-    const lineHandle = cm.getLineHandle(lineIndex)
-    const result = answers[lineIndex] || ''
-
-    if (hasLineWidget) {
-      updateLineWidget(lineHandle, result, lineIndex, foldedLines.has(lineIndex))
-    } else {
-      outputAnswers.push(`<div class="${classRuler}" data-index="${lineIndex}">${result}</div>`)
-    }
-  }
-
   if (hasLineWidget) {
+    for (let lineIndex = 0; lineIndex < totalLines; lineIndex++) {
+      const lineHandle = cm.getLineHandle(lineIndex)
+      const result = answers[lineIndex] || ''
+      updateLineWidget(lineHandle, result, lineIndex, foldedLines.has(lineIndex))
+    }
     dom.output.innerHTML = `<div style="height: ${dom.el('.CodeMirror-scroll').scrollHeight - 50}px;"></div>`
   } else {
-    const outputResults = outputAnswers.join('')
+    const outputResults = renderAnswersToHTML(answers)
 
     if (dom.output.innerHTML !== outputResults) {
       dom.output.innerHTML = outputResults
@@ -400,11 +404,13 @@ function applyCalculationResults(answers, errorLines) {
       if (
         page.data !== cmValue ||
         JSON.stringify(page.history) !== JSON.stringify(cmHistory) ||
-        JSON.stringify(page.folds) !== JSON.stringify(folds)
+        JSON.stringify(page.folds) !== JSON.stringify(folds) ||
+        JSON.stringify(page.answers) !== JSON.stringify(answers)
       ) {
         page.data = cmValue
         page.history = cmHistory
         page.folds = folds
+        page.answers = answers
         store.set('pages', pages)
         syncPageSaveDebounced(page.name, cmValue)
       }
