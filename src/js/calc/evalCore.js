@@ -131,7 +131,7 @@ export function refreshCurrencyState() {
         `(${numPattern})|(?<![\\p{L}])(${symbols
           .sort((a, b) => b.length - a.length)
           .map(escapeRegExp)
-          .join('|')})`,
+          .join('|')})(?![\\p{L}])`,
         'gu'
       )
     : null

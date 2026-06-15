@@ -365,9 +365,18 @@ text {
   height: 16px !important;
 }
 
+.leftActions,
+.rightActions {
+  flex-shrink: 0;
+}
+
+.centerActions {
+  min-width: 0;
+}
+
 .pageName {
   opacity: 0.9;
-  width: calc(100vw - 300px);
+  max-width: 100%;
   overflow: hidden;
   color: light-dark(#687e89, #627d9c);
   text-overflow: ellipsis;
@@ -620,8 +629,8 @@ text {
 .dialog-settings-body {
   margin-right: -8px;
   padding-right: 10px;
-  height: 360px;
-  max-height: calc(100vh - 240px);
+  height: 400px;
+  max-height: calc(100vh - 200px);
   overflow-y: auto;
 }
 

@@ -36,6 +36,7 @@ export const dom = {
   // Actions
   sidePanelButton: document.getElementById('sidePanelButton'),
   newPageButton: document.getElementById('newPageButton'),
+  leftActionsDivider: document.getElementById('leftActionsDivider'),
   clearButton: document.getElementById('clearButton'),
   copyButton: document.getElementById('copyButton'),
   pageName: document.getElementById('pageName'),
@@ -96,8 +97,6 @@ export const dom = {
   currency: document.getElementById('currency'),
   currencyWarn: document.getElementById('currencyWarn'),
   currencyInterval: document.getElementById('currencyInterval'),
-  currencyUpdate: document.getElementById('currencyUpdate'),
-  lastUpdated: document.getElementById('lastUpdated'),
   updateRatesLink: document.getElementById('updateRatesLink'),
   dialogSettingsReset: document.getElementById('dialogSettingsReset'),
   resetSizeButton: document.getElementById('resetSizeButton'),

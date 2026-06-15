@@ -50,6 +50,9 @@
           <a id="newPageButton" class="action newPageButton" title="New page" uk-tooltip>
             <i data-lucide="plus"></i>
           </a>
+          <span id="leftActionsDivider" class="actionDivider"></span>
+          <a id="clearButton" class="action" title="Clear page" uk-tooltip><i data-lucide="brush-cleaning"></i></a>
+          <a id="copyButton" class="action" title="Copy page" uk-tooltip><i data-lucide="copy"></i></a>
         </div>
         <div id="centerActions" class="centerActions uk-flex uk-flex-center uk-flex-middle uk-flex-1 uk-text-center">
           <span id="pageName" class="pageName" uk-tooltip="delay: 1000"></span>
@@ -98,8 +101,6 @@
             </div>
             <div class="rightActions uk-flex uk-flex-middle uk-flex-right uk-text-right">
               <a id="printButton" class="action" title="Print page" uk-tooltip><i data-lucide="printer"></i></a>
-              <a id="clearButton" class="action" title="Clear page" uk-tooltip><i data-lucide="brush-cleaning"></i></a>
-              <a id="copyButton" class="action" title="Copy page" uk-tooltip><i data-lucide="copy"></i></a>
               <a id="importPageButton" class="action importPageButton" title="Import Page" uk-tooltip>
                 <i data-lucide="download"></i>
               </a>
@@ -593,13 +594,6 @@
                 </div>
               </div>
             </div>
-
-            <div class="uk-child-width-expand uk-margin-xsmall-top">
-              <div id="currencyUpdate">
-                <span class="lastUpdated">As of:</span>
-                <span id="lastUpdated" class="lastUpdated"></span>
-              </div>
-            </div>
           </li>
 
           <!-- Tab 5: Sync Settings -->
@@ -646,7 +640,7 @@
           </div>
           <div class="dialog-buttons resetButtons uk-width-1-2 uk-flex-right">
             <a id="defaultSettingsButton" class="defSettingsButton" title="Restore default settings" uk-tooltip>
-              Restore default
+              Restore defaults
             </a>
             <button class="uk-button uk-button-default uk-modal-close uk-button-small">Close</button>
           </div>
@@ -740,7 +734,7 @@
         <div uk-grid>
           <div class="dialog-buttons uk-width-1-5 uk-flex-left"></div>
           <div class="dialog-buttons uk-width-4-5 uk-flex-right">
-            <a id="defaultColorsButton" class="defSettingsButton uk-margin-small-right">Restore default</a>
+            <a id="defaultColorsButton" class="defSettingsButton uk-margin-small-right">Restore defaults</a>
             <button class="uk-button uk-button-default uk-modal-close uk-button-small">Close</button>
           </div>
         </div>
@@ -879,6 +873,9 @@
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
         <h2 class="uk-modal-title">Are you sure?</h2>
         <span id="confirmMsg"></span>
+        <div id="confirmKeepSyncContainer" style="display: none; margin-top: 10px; margin-bottom: 10px">
+          <label><input type="checkbox" id="confirmKeepSync" class="uk-checkbox" checked /> Keep sync enabled</label>
+        </div>
         <div class="dialog-buttons uk-flex-right">
           <button id="confirmYes" class="uk-button uk-button-danger uk-button-small">Yes</button>
           <button class="uk-button uk-button-default uk-modal-close uk-button-small">No</button>

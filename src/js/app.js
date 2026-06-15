@@ -33,13 +33,26 @@ const setupHeaders = () => {
 
 const setupAppButtons = () => {
   const buttons = {
-    printButton: () => window.print(),
+    printButton: () => {
+      window.print()
+      if (!app.sidebarDocked) {
+        UIkit.offcanvas('#sidePanel').hide()
+      }
+    },
     clearButton: () => {
       cm.setValue('')
       cm.focus()
       calculate()
+      if (!app.sidebarDocked) {
+        UIkit.offcanvas('#sidePanel').hide()
+      }
     },
-    copyButton: copyAll,
+    copyButton: () => {
+      copyAll()
+      if (!app.sidebarDocked) {
+        UIkit.offcanvas('#sidePanel').hide()
+      }
+    },
     udfuButton: () => modal.show('#dialogUdfu'),
     settingsButton: () => modal.show('#dialogSettings'),
     aboutButton: () => modal.show('#dialogAbout')
@@ -178,6 +191,7 @@ const setupSyncScroll = () => {
 
   let activePanel = null
   let scrollTimeout = null
+  let ticking = false
 
   const clearActivePanel = () => {
     clearTimeout(scrollTimeout)
@@ -186,27 +200,47 @@ const setupSyncScroll = () => {
     }, 100)
   }
 
-  inputPanel.addEventListener('scroll', () => {
-    if (activePanel === null) {
-      activePanel = inputPanel
-    }
-    if (activePanel === inputPanel) {
-      outputPanel.scrollTop = inputPanel.scrollTop
-      clearActivePanel()
-    }
-  })
+  inputPanel.addEventListener(
+    'scroll',
+    () => {
+      if (activePanel === null) {
+        activePanel = inputPanel
+      }
+      if (activePanel === inputPanel) {
+        if (!ticking) {
+          requestAnimationFrame(() => {
+            outputPanel.scrollTop = inputPanel.scrollTop
+            ticking = false
+          })
+          ticking = true
+        }
+        clearActivePanel()
+      }
+    },
+    { passive: true }
+  )
 
-  outputPanel.addEventListener('scroll', () => {
-    dom.scrollTop.style.display = outputPanel.scrollTop > 50 ? 'block' : 'none'
+  outputPanel.addEventListener(
+    'scroll',
+    () => {
+      dom.scrollTop.style.display = outputPanel.scrollTop > 50 ? 'block' : 'none'
 
-    if (activePanel === null) {
-      activePanel = outputPanel
-    }
-    if (activePanel === outputPanel) {
-      inputPanel.scrollTop = outputPanel.scrollTop
-      clearActivePanel()
-    }
-  })
+      if (activePanel === null) {
+        activePanel = outputPanel
+      }
+      if (activePanel === outputPanel) {
+        if (!ticking) {
+          requestAnimationFrame(() => {
+            inputPanel.scrollTop = outputPanel.scrollTop
+            ticking = false
+          })
+          ticking = true
+        }
+        clearActivePanel()
+      }
+    },
+    { passive: true }
+  )
 
   dom.scrollTop.addEventListener('click', () => {
     activePanel = null

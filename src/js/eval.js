@@ -39,6 +39,24 @@ let isCalculating = false
 let isDialogVisible = false
 let lastDialogShowTime = 0
 let autoCloseTimeout = null
+let lastScopeKeysSignature = ''
+
+function checkScopeKeysChanged(serializedScope, udfList, uduList) {
+  const currentKeys = [
+    ...Object.keys(serializedScope || {}).filter((k) => typeof (serializedScope || {})[k] !== 'function'),
+    ...(udfList || []),
+    ...(uduList || [])
+  ].sort()
+
+  const currentSignature = currentKeys.join(',')
+
+  if (currentSignature !== lastScopeKeysSignature) {
+    lastScopeKeysSignature = currentSignature
+    return true
+  }
+
+  return false
+}
 
 function getWorker() {
   if (!worker) {
@@ -93,11 +111,17 @@ function getWorker() {
         }
 
         // Update the main thread's math scope mapping keys to serialized strings
+        const keysChanged = checkScopeKeysChanged(serializedScope, udfList, uduList)
+
         app.mathScope = new Map(Object.entries(serializedScope))
         app.udfList = udfList
         app.uduList = uduList
 
         applyCalculationResults(answers, errorLines)
+
+        if (keysChanged) {
+          cm.setOption('mode', cm.getOption('mode'))
+        }
       } else if (type === 'lineStart') {
         const { lineIndex } = payload
 
@@ -158,12 +182,26 @@ export function clearEvaluationCache() {
  * @param {string} answer - The answer to display.
  * @param {number} lineIndex - The absolute 0-based line index.
  */
-function updateLineWidget(lineHandle, answer, lineIndex) {
+function updateLineWidget(lineHandle, answer, lineIndex, isFolded) {
   let widget = app.widgetMap.get(lineHandle)
 
   if (widget) {
+    let changed = false
+
     if (widget.node.innerHTML !== answer) {
       widget.node.innerHTML = answer
+      changed = true
+    }
+
+    const newDisplay = isFolded ? 'none' : ''
+
+    if (widget.node.style.display !== newDisplay) {
+      widget.node.style.display = newDisplay
+      changed = true
+    }
+
+    if (changed) {
+      widget.changed()
     }
   } else {
     const node = document.createElement('div')
@@ -171,11 +209,90 @@ function updateLineWidget(lineHandle, answer, lineIndex) {
     node.dataset.index = lineIndex
     node.innerHTML = answer
     node.addEventListener('contextmenu', outputContext)
+    node.style.display = isFolded ? 'none' : ''
 
     widget = cm.addLineWidget(lineHandle, node, { above: false, coverGutter: false, noHScroll: true })
     widget.node = node
 
     app.widgetMap.set(lineHandle, widget)
+  }
+}
+
+export function syncOutputHeights() {
+  if (app.settings.answerPosition === 'bottom') {
+    const newHeight = dom.el('.CodeMirror-scroll').scrollHeight - 50
+    const currentEl = dom.output.firstElementChild
+
+    if (!currentEl || currentEl.style.height !== `${newHeight}px`) {
+      dom.output.innerHTML = `<div style="height: ${newHeight}px;"></div>`
+    }
+
+    if (Math.abs(dom.output.scrollTop - dom.el('.CodeMirror-scroll').scrollTop) > 1) {
+      dom.output.scrollTop = dom.el('.CodeMirror-scroll').scrollTop
+    }
+
+    return
+  }
+
+  const totalLines = cm.lineCount()
+  const foldedLines = new Set()
+
+  if (typeof cm !== 'undefined' && typeof cm.getAllMarks === 'function') {
+    for (const mark of cm.getAllMarks()) {
+      if (mark.__isFold) {
+        const range = mark.find()
+
+        if (range) {
+          for (let i = range.from.line + 1; i <= range.to.line; i++) {
+            foldedLines.add(i)
+          }
+        }
+      }
+    }
+  }
+
+  const visibleChildren = Array.from(cm.display.lineDiv.children)
+  const lineToElementMap = new Map()
+
+  for (const child of visibleChildren) {
+    if (child.firstElementChild) {
+      const lineAttr = child.firstElementChild.getAttribute('data-line')
+
+      if (lineAttr !== null) {
+        lineToElementMap.set(lineAttr, child)
+      }
+    }
+  }
+
+  let visibleIndex = 0
+
+  for (let i = 0; i < totalLines; i++) {
+    const lineHandle = cm.getLineHandle(i)
+    const el = dom.el(`[data-index="${i}"]`)
+
+    if (el) {
+      if (lineHandle.hidden || foldedLines.has(i)) {
+        if (el.style.display !== 'none') {
+          el.style.display = 'none'
+        }
+      } else {
+        const child = lineToElementMap.get(String(i)) || visibleChildren[visibleIndex++]
+        const height = child ? (child.clientHeight ?? 27) : 27
+        const newHeightStr = `${height}px`
+
+        if (el.style.display !== '') {
+          el.style.display = ''
+        }
+
+        if (el.style.height !== newHeightStr) {
+          el.style.height = newHeightStr
+        }
+      }
+    }
+  }
+
+  if (Math.abs(dom.output.scrollTop - dom.el('.CodeMirror-scroll').scrollTop) > 1) {
+    dom.output.scrollTop = dom.el('.CodeMirror-scroll').scrollTop
   }
 }
 
@@ -231,34 +348,6 @@ function applyCalculationResults(answers, errorLines) {
     }
   }
 
-  // Calculate visible line heights (Optimized pre-index mapping O(N) instead of nested arrays O(N*M))
-  const lineHeights = []
-  const visibleChildren = Array.from(cm.display.lineDiv.children)
-  const lineToElementMap = new Map()
-
-  for (const child of visibleChildren) {
-    if (child.firstElementChild) {
-      const lineAttr = child.firstElementChild.getAttribute('data-line')
-
-      if (lineAttr !== null) {
-        lineToElementMap.set(lineAttr, child)
-      }
-    }
-  }
-
-  let visibleIndex = 0
-
-  for (let i = 0; i < totalLines; i++) {
-    const lineHandle = cm.getLineHandle(i)
-
-    if (lineHandle.hidden || foldedLines.has(i)) {
-      lineHeights.push(0)
-    } else {
-      const child = lineToElementMap.get(String(i)) || visibleChildren[visibleIndex++]
-      lineHeights.push(child ? (child.clientHeight ?? 27) : 27)
-    }
-  }
-
   const outputAnswers = []
   const hasLineWidget = app.settings.answerPosition === 'bottom'
 
@@ -267,11 +356,9 @@ function applyCalculationResults(answers, errorLines) {
     const result = answers[lineIndex] || ''
 
     if (hasLineWidget) {
-      updateLineWidget(lineHandle, result, lineIndex)
+      updateLineWidget(lineHandle, result, lineIndex, foldedLines.has(lineIndex))
     } else {
-      const lineHeight = lineHeights[lineIndex]
-      const displayStyle = lineHeight === 0 ? 'display: none;' : `height:${lineHeight}px`
-      outputAnswers.push(`<div class="${classRuler}" data-index="${lineIndex}" style="${displayStyle}">${result}</div>`)
+      outputAnswers.push(`<div class="${classRuler}" data-index="${lineIndex}">${result}</div>`)
     }
   }
 
@@ -285,7 +372,7 @@ function applyCalculationResults(answers, errorLines) {
     }
   }
 
-  dom.output.scrollTop = dom.el('.CodeMirror-scroll').scrollTop
+  syncOutputHeights()
 
   // Update page lists / storage
   if (app.activePage) {

@@ -1,5 +1,5 @@
 import { dom } from '../dom'
-import { calculate, formatAnswer, math } from '../eval'
+import { calculate, formatAnswer, math, syncOutputHeights } from '../eval'
 import { showError } from '../ui/modal'
 import { app, debounce, store } from '../utils'
 
@@ -321,8 +321,6 @@ CodeMirror.commands.autocomplete = (cm) => {
 }
 
 const HEADER_REGEXP = /^\s*(?:\/\/\s*)?(#{1,6})\s+(.*)$/
-const REGION_START_REGEXP = /^\s*(?:\/\/\s*|#\s*)region\b/i
-const REGION_END_REGEXP = /^\s*(?:\/\/\s*|#\s*)endregion\b/i
 const END_SECTION_REGEXP = /^\s*(?:\/\/\s*)?#[!\s]*$/
 
 CodeMirror.registerHelper('fold', 'numara', (cm, start) => {
@@ -330,35 +328,7 @@ CodeMirror.registerHelper('fold', 'numara', (cm, start) => {
 
   if (!startLineText) return
 
-  // 1. Check for custom region start
-  if (REGION_START_REGEXP.test(startLineText)) {
-    let depth = 1
-    let endLine = -1
-    const lastLine = cm.lineCount() - 1
-
-    for (let i = start.line + 1; i <= lastLine; i++) {
-      const text = cm.getLine(i)
-
-      if (REGION_START_REGEXP.test(text)) {
-        depth++
-      } else if (REGION_END_REGEXP.test(text)) {
-        depth--
-
-        if (depth === 0) {
-          endLine = i
-          break
-        }
-      }
-    }
-    if (endLine > start.line) {
-      return {
-        from: CodeMirror.Pos(start.line, startLineText.length),
-        to: CodeMirror.Pos(endLine, cm.getLine(endLine).length)
-      }
-    }
-  }
-
-  // 2. Check for markdown headers
+  // Check for markdown headers
   const match = HEADER_REGEXP.exec(startLineText)
 
   if (match) {
@@ -417,11 +387,7 @@ function cmForceBottom() {
     return
   }
 
-  const lineEl = cm.display.lineDiv.children[line - cm.display.viewFrom]
-
-  if (!lineEl) return
-
-  const lineRect = lineEl.getBoundingClientRect()
+  const lineRect = cm.charCoords({ line, ch: 0 }, 'window')
   const barTop = dom.el('.CodeMirror-hscrollbar')?.getBoundingClientRect()?.top
 
   if (barTop === undefined) return
@@ -528,16 +494,51 @@ cm.on('changes', (cm, changes) => {
   }
 })
 
-cm.on('fold', () => {
+function toggleFoldedOutputs(fromLine, toLine, isFolded) {
+  const hasLineWidget = app.settings.answerPosition === 'bottom'
+
+  for (let i = fromLine + 1; i <= toLine; i++) {
+    if (hasLineWidget) {
+      const lineHandle = cm.getLineHandle(i)
+
+      if (lineHandle) {
+        const widget = app.widgetMap.get(lineHandle)
+
+        if (widget) {
+          const newDisplay = isFolded ? 'none' : ''
+
+          if (widget.node.style.display !== newDisplay) {
+            widget.node.style.display = newDisplay
+            widget.changed()
+          }
+        }
+      }
+    } else {
+      const el = dom.el(`[data-index="${i}"]`)
+
+      if (el) {
+        el.style.display = isFolded ? 'none' : ''
+      }
+    }
+  }
+}
+
+cm.on('fold', (cm, from, to) => {
   if (app.loadingPage) return
 
-  setTimeout(calculate, 0)
+  toggleFoldedOutputs(from.line, to.line, true)
 })
 
-cm.on('unfold', () => {
+cm.on('unfold', (cm, from, to) => {
   if (app.loadingPage) return
 
-  setTimeout(calculate, 0)
+  toggleFoldedOutputs(from.line, to.line, false)
+})
+
+cm.on('update', () => {
+  if (app.loadingPage) return
+
+  syncOutputHeights()
 })
 
 cm.on('inputRead', (cm) => {

@@ -12,7 +12,9 @@ import { applyChange, observableDiff } from '@bornova/deep-diff'
 
 /** Show/hide Defaults link. */
 function checkDefaults() {
-  dom.defaultSettingsButton.style.display = observableDiff(app.settings, settings.defaults).length ? 'inline' : 'none'
+  const diffs = observableDiff(app.settings, settings.defaults) || []
+  const nonSyncDiffs = diffs.filter((d) => d.path && d.path[0] !== 'syncDir' && d.path[0] !== 'syncDirEnabled')
+  dom.defaultSettingsButton.style.display = nonSyncDiffs.length ? 'inline' : 'none'
 }
 
 /** Check for app settings modifications. */
@@ -28,6 +30,23 @@ function checkMods(key) {
 function checkWarnings() {
   dom.bigNumWarn.style.display = app.settings.numericOutput === 'BigNumber' ? 'inline-block' : 'none'
   dom.localeWarn.style.display = app.settings.thouSep && app.settings.inputLocale ? 'inline-block' : 'none'
+}
+
+/** Updates the sync directory path display text and styles. */
+function updateSyncDirPathDisplay(path) {
+  const syncDirPathDisplay = dom.el('#syncDirPathDisplay')
+
+  if (syncDirPathDisplay) {
+    syncDirPathDisplay.textContent = path || 'No folder chosen'
+
+    if (path) {
+      syncDirPathDisplay.style.cursor = 'pointer'
+      syncDirPathDisplay.style.textDecoration = 'underline'
+    } else {
+      syncDirPathDisplay.style.cursor = ''
+      syncDirPathDisplay.style.textDecoration = ''
+    }
+  }
 }
 
 /**
@@ -110,7 +129,9 @@ export const settings = {
     }
 
     dom.els('.settingItem').forEach((item) => {
-      if (item.getAttribute('id') === 'syncDir') return
+      const id = item.getAttribute('id')
+
+      if (id === 'syncDir' || id === 'syncDirEnabled') return
 
       const span = document.createElement('span')
       const icon = dom.icons.Dot
@@ -132,6 +153,18 @@ export const settings = {
     })
 
     if (app.settings.currency && (app.settings.currencyInterval !== 'manual' || !store.get('rateDate'))) getRates()
+
+    if (isElectron) {
+      const syncDirPathDisplay = dom.el('#syncDirPathDisplay')
+
+      if (syncDirPathDisplay) {
+        syncDirPathDisplay.addEventListener('click', () => {
+          if (app.settings.syncDir) {
+            numara.openPath(app.settings.syncDir)
+          }
+        })
+      }
+    }
   },
 
   /** Prepare settings dialog items. */
@@ -178,8 +211,6 @@ export const settings = {
     dom.calcTimeoutLabel.textContent = app.settings.calcTimeout
     dom.expLowerLabel.textContent = app.settings.expLower
     dom.expUpperLabel.textContent = app.settings.expUpper
-    dom.lastUpdated.textContent = app.settings.currency ? store.get('rateDate') : ''
-    dom.currencyUpdate.style.visibility = app.settings.currency ? 'visible' : 'hidden'
 
     Object.keys(app.settings).forEach((key) => {
       const el = dom.el('#' + key)
@@ -197,11 +228,7 @@ export const settings = {
       btn.classList.toggle('active', btn.getAttribute('data-theme-value') === currentTheme)
     })
 
-    const syncDirPathDisplay = dom.el('#syncDirPathDisplay')
-
-    if (syncDirPathDisplay) {
-      syncDirPathDisplay.textContent = app.settings.syncDir || 'No folder chosen'
-    }
+    updateSyncDirPathDisplay(app.settings.syncDir)
 
     const syncDirSection = dom.el('#syncDirSection')
 
@@ -369,7 +396,6 @@ export const settings = {
       store.remove('rateDate')
     }
 
-    dom.currencyUpdate.style.visibility = dom.currency.checked ? 'visible' : 'hidden'
     dom.currencyWarn.style.display = app.settings.currency ? 'none' : 'inline-block'
 
     if (!store.get('rateDate') && app.settings.currency) {
@@ -417,12 +443,35 @@ export const settings = {
 
 dom.defaultSettingsButton.addEventListener('click', () => {
   confirm('All settings will revert back to defaults.', async () => {
+    const keepSync = dom.el('#confirmKeepSync')?.checked
+
+    const currentSyncDir = app.settings.syncDir
+    const currentSyncDirEnabled = app.settings.syncDirEnabled
+
     app.settings = { ...settings.defaults }
+
+    if (keepSync) {
+      app.settings.syncDir = currentSyncDir
+      app.settings.syncDirEnabled = currentSyncDirEnabled
+    }
 
     await settings.prep()
     await settings.apply()
     settings.save()
   })
+
+  const syncContainer = dom.el('#confirmKeepSyncContainer')
+  const syncCheckbox = dom.el('#confirmKeepSync')
+
+  if (app.settings.syncDirEnabled) {
+    if (syncContainer) {
+      syncContainer.style.display = 'block'
+    }
+
+    if (syncCheckbox) {
+      syncCheckbox.checked = true
+    }
+  }
 })
 
 dom.dialogSettingsReset.addEventListener('click', () => {
@@ -501,10 +550,7 @@ if (isElectron) {
           syncDirInput.value = path
           syncDirInput.dispatchEvent(new Event('change'))
         }
-        const syncDirPathDisplay = dom.el('#syncDirPathDisplay')
-        if (syncDirPathDisplay) {
-          syncDirPathDisplay.textContent = path
-        }
+        updateSyncDirPathDisplay(path)
       }
     })
   }
@@ -516,12 +562,10 @@ dom.els('.settingItem').forEach((el) => {
 
     if (id === 'syncDirEnabled' && el.checked && !dom.el('#syncDir').value) {
       const path = await numara.selectSyncDirectory()
+
       if (path) {
         dom.el('#syncDir').value = path
-        const syncDirPathDisplay = dom.el('#syncDirPathDisplay')
-        if (syncDirPathDisplay) {
-          syncDirPathDisplay.textContent = path
-        }
+        updateSyncDirPathDisplay(path)
       } else {
         el.checked = false
         showError('Sync Folder Required', 'A folder must be chosen to enable directory sync.')
