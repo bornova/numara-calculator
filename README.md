@@ -2,7 +2,7 @@
   <img width="200" alt="Numara Calculator" src="https://github.com/user-attachments/assets/e6032c8f-a1e0-4c96-a686-9d29017baa36" />
   <p></p>
   
-  [![GitHub Release](https://img.shields.io/github/v/release/bornova/numara-calculator?display_name=tag&style=for-the-badge)](https://github.com/bornova/numara-calculator/releases/latest)
+  [![Release](https://www.shieldcn.dev/github/release/bornova/numara-calculator.svg?size=sm&font=roboto&mode=dark)](https://github.com/bornova/numara-calculator/releases/latest)
 </div>
 
 ##
