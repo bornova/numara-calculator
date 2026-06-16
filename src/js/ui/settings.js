@@ -5,7 +5,7 @@ import { calculate, clearEvaluationCache, math } from '../eval'
 import { getRates } from '../calc/forex'
 import { confirm, modal, showError } from './modal'
 import { setupSidePanel } from './pages'
-import { app, checkSize, getTheme, isElectron, store } from '../utils'
+import { app, checkSize, getSystemLocale, getTheme, isElectron, store } from '../utils'
 import { triggerFolderSync, clearSyncCache } from '../sync'
 
 import { applyChange, observableDiff } from '@bornova/deep-diff'
@@ -37,26 +37,11 @@ export function applyAnswerPositionLayout() {
   dom.panelDivider.style.display = app.settings.answerPosition === 'left' ? 'block' : 'none'
 }
 
-/** Show/hide Defaults link. */
-function checkDefaults() {
-  const diffs = observableDiff(app.settings, settings.defaults) || []
-  const nonSyncDiffs = diffs.filter((d) => d.path && d.path[0] !== 'syncDir' && d.path[0] !== 'syncDirEnabled')
-  dom.defaultSettingsButton.style.display = nonSyncDiffs.length ? 'inline' : 'none'
-}
-
-/** Check for app settings modifications. */
-function checkMods(key) {
-  const el = dom.el('#' + key + 'Mod')
-
-  if (el) {
-    el.style.display = app.settings[key] !== settings.defaults[key] ? 'inline-block' : 'none'
-  }
-}
-
 /** Configures warnings by checking a condition mapped to a dom component. */
 function checkWarnings() {
   dom.bigNumWarn.style.display = app.settings.numericOutput === 'BigNumber' ? 'inline-block' : 'none'
-  dom.localeWarn.style.display = app.settings.thouSep && app.settings.inputLocale ? 'inline-block' : 'none'
+  dom.localeWarn.style.display =
+    app.settings.thouSep !== 'disabled' && app.settings.inputLocale ? 'inline-block' : 'none'
 }
 
 /** Updates the sync directory path display text and styles. */
@@ -122,7 +107,6 @@ export const settings = {
     lineNumbers: true,
     lineWrap: true,
     truncateAnswers: true,
-    locale: 'system',
     matchBrackets: true,
     matrixType: 'Matrix',
     newPageOnStart: false,
@@ -137,7 +121,7 @@ export const settings = {
     rulers: false,
     syntax: true,
     theme: 'system',
-    thouSep: true
+    thouSep: 'system'
   },
 
   /** Initialize settings. */
@@ -145,6 +129,13 @@ export const settings = {
     app.settings = store.get('settings')
 
     if (app.settings) {
+      if (app.settings.locale !== undefined) {
+        app.settings.thouSep = app.settings.locale
+        delete app.settings.locale
+      } else if (typeof app.settings.thouSep === 'boolean') {
+        app.settings.thouSep = app.settings.thouSep ? 'system' : 'disabled'
+      }
+
       observableDiff(app.settings, settings.defaults, (diff) => {
         if (diff.kind === 'E') return
 
@@ -155,30 +146,6 @@ export const settings = {
       app.settings = { ...settings.defaults }
       store.set('settings', app.settings)
     }
-
-    dom.els('.settingItem').forEach((item) => {
-      const id = item.getAttribute('id')
-
-      if (id === 'syncDir' || id === 'syncDirEnabled') return
-
-      const span = document.createElement('span')
-      const icon = dom.icons.Dot
-
-      span.setAttribute('id', item.getAttribute('id') + 'Mod')
-      span.setAttribute('class', item.getAttribute('type') === 'checkbox' ? 'settingModToggle' : 'settingMod')
-      span.innerHTML = icon
-      span.addEventListener('click', async () => {
-        const key = item.getAttribute('id')
-
-        app.settings[key] = settings.defaults[key]
-
-        await settings.prep()
-        settings.save()
-        await settings.apply()
-      })
-
-      item.getAttribute('type') === 'checkbox' ? item.parentElement.before(span) : item.parentElement.prepend(span)
-    })
 
     if (app.settings.currency && (app.settings.currencyInterval !== 'manual' || !store.get('rateDate'))) getRates()
 
@@ -197,8 +164,9 @@ export const settings = {
 
   /** Prepare settings dialog items. */
   prep: async () => {
+    const sysLocale = getSystemLocale()
     const locales = [
-      { system: 'System' },
+      { system: `System (${sysLocale})` },
       { period: 'Comma (1,234.56)' },
       { comma: 'Period (1.234,56)' },
       { disabled: 'Disabled' }
@@ -229,7 +197,7 @@ export const settings = {
     ]
 
     populateSelect(dom.answerPosition, answerPositions)
-    populateSelect(dom.locale, locales)
+    populateSelect(dom.thouSep, locales)
     populateSelect(dom.dateFormat, dateFormats)
     populateSelect(dom.numericOutput, numericOutputs)
     populateSelect(dom.notation, notations, 'spacer')
@@ -246,8 +214,6 @@ export const settings = {
       if (!el) return
 
       el[el.getAttribute('type') === 'checkbox' ? 'checked' : 'value'] = app.settings[key]
-
-      checkMods(key)
     })
 
     const currentTheme = app.settings.theme
@@ -277,7 +243,6 @@ export const settings = {
     }
 
     await checkSize()
-    checkDefaults()
     checkWarnings()
 
     settings.toggleSubs()
@@ -395,7 +360,6 @@ export const settings = {
 
       if (el) {
         app.settings[key] = el.getAttribute('type') === 'checkbox' ? el.checked : el.value
-        checkMods(key)
       }
     })
 
@@ -409,7 +373,6 @@ export const settings = {
       getRates()
     }
 
-    checkDefaults()
     checkWarnings()
 
     settings.toggleSubs()
@@ -431,7 +394,7 @@ export const settings = {
       }
     }
 
-    app.settings.thouSep = app.settings.locale !== 'disabled'
+    const isThouSepEnabled = app.settings.thouSep !== 'disabled'
 
     toggle(dom.keywordTips, app.settings.syntax)
     toggle(dom.matchBrackets, app.settings.syntax)
@@ -440,8 +403,8 @@ export const settings = {
 
     toggle(dom.expUpper, isAutoNotation)
     toggle(dom.expLower, isAutoNotation)
-    toggle(dom.inputLocale, app.settings.thouSep)
-    toggle(dom.copyThouSep, app.settings.thouSep)
+    toggle(dom.inputLocale, isThouSepEnabled)
+    toggle(dom.copyThouSep, isThouSepEnabled)
 
     dom.currencyInterval.disabled = !app.settings.currency
     dom.updateRatesLink.dataset.enabled = app.settings.currency
