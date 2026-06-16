@@ -10,20 +10,36 @@ const lastSyncContent = new Map()
 let currentSyncDir = null
 let isSyncing = false
 
+/**
+ * Clears the folder synchronization cache state.
+ */
 export function clearSyncCache() {
   currentSyncDir = null
   lastSyncContent.clear()
 }
 
+/**
+ * Sanitizes a page name to ensure it's safe to use as a file name.
+ * @param {string} name - The page name.
+ * @returns {string} The safe file name.
+ */
 export function getSafeFilename(name) {
   return name.replace(/[/\\:*?"<>|]/g, '-').trim()
 }
 
+/**
+ * Displays a custom confirmation modal dialog with custom button labels.
+ * @param {string} msg - The message markup text to show.
+ * @param {string} yesLabel - Action button label.
+ * @param {string} noLabel - Dismiss button label.
+ * @param {function} yesAction - Callback fired on yes/action select.
+ * @param {function} noAction - Callback fired on no/dismiss select.
+ */
 function customConfirm(msg, yesLabel, noLabel, yesAction, noAction) {
   dom.confirmMsg.innerHTML = msg
+
   const yesBtn = dom.confirmYes
   const noBtn = document.querySelector('#dialogConfirm .uk-button-default')
-
   const originalYesText = yesBtn.textContent
   const originalNoText = noBtn.textContent
 
@@ -57,6 +73,11 @@ function customConfirm(msg, yesLabel, noLabel, yesAction, noAction) {
   }
 }
 
+/**
+ * Prompts the user to resolve a synchronization conflict.
+ * @param {string} pageName - The name of the conflicting page.
+ * @returns {Promise<string>} Resolves to 'overwrite' or 'sync_local'.
+ */
 function askSyncResolution(pageName) {
   return new Promise((resolve) => {
     customConfirm(
@@ -69,9 +90,14 @@ function askSyncResolution(pageName) {
   })
 }
 
+/**
+ * Triggers a full synchronization between local storage pages and the chosen sync directory.
+ * @returns {Promise<void>}
+ */
 export async function triggerFolderSync() {
   if (!isElectron) return
   if (isSyncing) return
+
   if (!app.settings.syncDirEnabled || !app.settings.syncDir) {
     clearSyncCache()
     return
@@ -79,6 +105,7 @@ export async function triggerFolderSync() {
 
   isSyncing = true
   const dirPath = app.settings.syncDir
+
   if (dirPath !== currentSyncDir) {
     currentSyncDir = dirPath
     lastSyncContent.clear()
@@ -103,6 +130,7 @@ export async function triggerFolderSync() {
       if (localPage && !lastSyncContent.has(safeName)) {
         if (localPage.data !== fileContent) {
           const resolution = await askSyncResolution(pageName)
+
           if (resolution === 'overwrite') {
             localPage.data = fileContent
             modified = true
@@ -111,14 +139,17 @@ export async function triggerFolderSync() {
             // If it is the active page, reload it in CodeMirror
             if (localPage.id === app.activePage) {
               const cursor = cm.getCursor()
+
               cm.setValue(fileContent)
               cm.setCursor(cursor)
             }
           } else {
             // Keep local: write local content to sync dir
             lastSyncContent.set(safeName, localPage.data || '')
+
             await numara.writeSyncFile(dirPath, safeName, localPage.data || '')
           }
+
           processedPageIds.add(localPage.id)
           continue
         }
@@ -142,6 +173,7 @@ export async function triggerFolderSync() {
           // If it is the active page, reload it in CodeMirror
           if (localPage.id === app.activePage) {
             const cursor = cm.getCursor()
+
             cm.setValue(fileContent)
             cm.setCursor(cursor)
           }
@@ -171,8 +203,10 @@ export async function triggerFolderSync() {
         const safeName = getSafeFilename(page.name)
         const content = page.data || ''
         const previousContent = lastSyncContent.get(safeName)
+
         try {
           lastSyncContent.set(safeName, content)
+
           await numara.writeSyncFile(dirPath, safeName, content)
         } catch (error) {
           if (previousContent === undefined) {
@@ -180,6 +214,7 @@ export async function triggerFolderSync() {
           } else {
             lastSyncContent.set(safeName, previousContent)
           }
+
           console.error(`Error writing local page ${page.name} to sync dir:`, error)
         }
       }
@@ -197,6 +232,12 @@ export async function triggerFolderSync() {
   }
 }
 
+/**
+ * Saves/writes a page's calculations content to the sync folder.
+ * @param {string} pageName - The name of the page to save.
+ * @param {string} content - The content string to write.
+ * @returns {Promise<void>}
+ */
 export async function syncPageSave(pageName, content) {
   if (!isElectron) return
   if (!app.settings.syncDirEnabled || !app.settings.syncDir) return
@@ -204,8 +245,10 @@ export async function syncPageSave(pageName, content) {
   const dirPath = app.settings.syncDir
   const safeName = getSafeFilename(pageName)
   const previousContent = lastSyncContent.get(safeName)
+
   try {
     lastSyncContent.set(safeName, content || '')
+
     await numara.writeSyncFile(dirPath, safeName, content || '')
   } catch (error) {
     if (previousContent === undefined) {
@@ -213,10 +256,17 @@ export async function syncPageSave(pageName, content) {
     } else {
       lastSyncContent.set(safeName, previousContent)
     }
+
     console.error(`Error saving page ${pageName} to sync dir:`, error)
   }
 }
 
+/**
+ * Renames a page's corresponding file in the sync folder.
+ * @param {string} oldName - The old page name.
+ * @param {string} newName - The new page name.
+ * @returns {Promise<void>}
+ */
 export async function syncPageRename(oldName, newName) {
   if (!isElectron) return
   if (!app.settings.syncDirEnabled || !app.settings.syncDir) return
@@ -225,17 +275,25 @@ export async function syncPageRename(oldName, newName) {
   const safeOldName = getSafeFilename(oldName)
   const safeNewName = getSafeFilename(newName)
   const content = lastSyncContent.get(safeOldName) || ''
+
   try {
     lastSyncContent.delete(safeOldName)
     lastSyncContent.set(safeNewName, content)
+
     await numara.renameSyncFile(dirPath, safeOldName, safeNewName)
   } catch (error) {
     lastSyncContent.delete(safeNewName)
     lastSyncContent.set(safeOldName, content)
+
     console.error(`Error renaming page ${oldName} to ${newName} in sync dir:`, error)
   }
 }
 
+/**
+ * Deletes a page's corresponding file from the sync folder.
+ * @param {string} pageName - The name of the page to delete.
+ * @returns {Promise<void>}
+ */
 export async function syncPageDelete(pageName) {
   if (!isElectron) return
   if (!app.settings.syncDirEnabled || !app.settings.syncDir) return
@@ -243,6 +301,7 @@ export async function syncPageDelete(pageName) {
   const dirPath = app.settings.syncDir
   const safeName = getSafeFilename(pageName)
   const previousContent = lastSyncContent.get(safeName)
+
   try {
     lastSyncContent.delete(safeName)
     await numara.deleteSyncFile(dirPath, safeName)
@@ -250,11 +309,17 @@ export async function syncPageDelete(pageName) {
     if (previousContent !== undefined) {
       lastSyncContent.set(safeName, previousContent)
     }
+
     console.error(`Error deleting page ${pageName} from sync dir:`, error)
   }
 }
 
 let debounceTimeout = null
+/**
+ * Triggers a debounced save of the page calculations to the sync folder.
+ * @param {string} pageName - The name of the page to save.
+ * @param {string} content - The content string to write.
+ */
 export function syncPageSaveDebounced(pageName, content) {
   if (!isElectron) return
   if (!app.settings.syncDirEnabled || !app.settings.syncDir) return
