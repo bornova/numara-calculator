@@ -186,7 +186,7 @@
         <a id="resetSizeButton" class="resetSizeButton" title="Reset window size" uk-tooltip>
           <i data-lucide="scaling"></i>
         </a>
-        <ul id="settingsTabs" class="uk-tab uk-margin-small-bottom" uk-tab="connect: #settingsSwitcher">
+        <ul id="settingsTabs" class="uk-tab" uk-tab="connect: #settingsSwitcher">
           <li class="uk-active"><a href="#">General</a></li>
           <li><a href="#">Editor</a></li>
           <li><a href="#">Calculator</a></li>
@@ -196,8 +196,7 @@
         <ul id="settingsSwitcher" class="uk-switcher dialog-settings-body">
           <!-- Tab 1: General Settings -->
           <li>
-            <h3>Appearance</h3>
-            <div class="uk-child-width-expand" uk-grid>
+            <div class="uk-child-width-expand uk-margin-small-bottom" uk-grid>
               <div data-help="theme">Theme</div>
               <div class="uk-text-right uk-position-relative">
                 <div class="uk-flex uk-flex-right uk-flex-middle" style="width: 100%">
@@ -224,6 +223,38 @@
                 </div>
               </div>
             </div>
+
+            <h3>General</h3>
+            <div class="uk-child-width-expand" uk-grid>
+              <div data-help="pageListPosition">Page list sidebar position</div>
+              <div class="uk-text-right uk-position-relative">
+                <select id="pageListPosition" class="uk-select settingItem">
+                  <option value="auto">Auto</option>
+                  <option value="slide">Slide out</option>
+                  <option value="dock">Docked</option>
+                </select>
+              </div>
+            </div>
+            <div class="uk-child-width-expand" uk-grid>
+              <div data-help="newPageOnStart">Start with blank page</div>
+              <div class="uk-text-right uk-width-2-5 uk-position-relative">
+                <label class="switch">
+                  <input id="newPageOnStart" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+            <div id="alwaysOnTopContainer" class="uk-child-width-expand" uk-grid>
+              <div data-help="alwaysOnTop">Always on top</div>
+              <div class="uk-text-right uk-position-relative">
+                <label class="switch">
+                  <input id="alwaysOnTop" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+
+            <h3>Typography</h3>
             <div class="uk-child-width-expand" uk-grid>
               <div data-help="fontSize">Font size</div>
               <div class="uk-text-right uk-position-relative">
@@ -260,34 +291,6 @@
                 </select>
               </div>
             </div>
-            <div class="uk-child-width-expand" uk-grid>
-              <div data-help="pageListPosition">Show page list</div>
-              <div class="uk-text-right uk-position-relative">
-                <select id="pageListPosition" class="uk-select settingItem">
-                  <option value="auto">Auto</option>
-                  <option value="slide">Slide out</option>
-                  <option value="dock">Docked</option>
-                </select>
-              </div>
-            </div>
-            <div class="uk-child-width-expand" uk-grid>
-              <div data-help="newPageOnStart">Start with blank page</div>
-              <div class="uk-text-right uk-width-2-5 uk-position-relative">
-                <label class="switch">
-                  <input id="newPageOnStart" type="checkbox" class="settingItem" />
-                  <span class="slider round"></span>
-                </label>
-              </div>
-            </div>
-            <div id="alwaysOnTopContainer" class="uk-child-width-expand" uk-grid>
-              <div data-help="alwaysOnTop">Always on top</div>
-              <div class="uk-text-right uk-position-relative">
-                <label class="switch">
-                  <input id="alwaysOnTop" type="checkbox" class="settingItem" />
-                  <span class="slider round"></span>
-                </label>
-              </div>
-            </div>
 
             <h3>Notifications</h3>
             <div class="uk-child-width-expand" uk-grid>
@@ -321,7 +324,6 @@
 
           <!-- Tab 2: Editor Settings -->
           <li>
-            <h3>Editor</h3>
             <div class="uk-child-width-expand" uk-grid>
               <div data-help="syntax">Syntax highlighting</div>
               <div class="uk-text-right uk-position-relative">
@@ -407,7 +409,6 @@
 
           <!-- Tab 3: Calculator Settings -->
           <li>
-            <h3>Calculator</h3>
             <div class="uk-child-width-expand" uk-grid>
               <div data-help="answerPosition">Answer position</div>
               <div class="uk-text-right uk-position-relative">
@@ -415,10 +416,9 @@
               </div>
             </div>
             <div class="uk-child-width-expand" uk-grid>
-              <div data-help="numericOutput">
-                Numeric output<a id="bigNumWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
-              </div>
+              <div data-help="numericOutput">Numeric output</div>
               <div class="uk-text-right uk-position-relative">
+                <a id="bigNumWarn" class="warn-icon-bignum"><i data-lucide="alert-circle"></i></a>
                 <select id="numericOutput" class="uk-select settingItem"></select>
               </div>
             </div>
@@ -487,19 +487,19 @@
               </div>
             </div>
             <div class="uk-child-width-expand" uk-grid>
-              <div data-help="predictable">Predictable output</div>
+              <div data-help="contPrevLine">Continue from previous line</div>
               <div class="uk-text-right uk-position-relative">
                 <label class="switch">
-                  <input id="predictable" type="checkbox" class="settingItem" />
+                  <input id="contPrevLine" type="checkbox" class="settingItem" />
                   <span class="slider round"></span>
                 </label>
               </div>
             </div>
             <div class="uk-child-width-expand" uk-grid>
-              <div data-help="contPrevLine">Continue from previous line</div>
+              <div data-help="predictable">Predictable output</div>
               <div class="uk-text-right uk-position-relative">
                 <label class="switch">
-                  <input id="contPrevLine" type="checkbox" class="settingItem" />
+                  <input id="predictable" type="checkbox" class="settingItem" />
                   <span class="slider round"></span>
                 </label>
               </div>
@@ -517,22 +517,19 @@
 
           <!-- Tab 4: Locale Settings -->
           <li>
-            <h3>Locale</h3>
+            <h3>Format</h3>
             <div class="uk-child-width-expand" uk-grid>
-              <div data-help="locale">Thousands separator</div>
+              <div data-help="thouSep">Thousands separator</div>
               <div class="uk-text-right uk-position-relative">
-                <select id="locale" class="uk-select settingItem"></select>
+                <select id="thouSep" class="uk-select settingItem"></select>
               </div>
             </div>
             <div class="uk-child-width-expand" uk-grid>
               <div data-help="inputLocale">
-                <i class="subSwitchIcon" data-lucide="corner-down-right"></i>Enable for input<a
-                  id="localeWarn"
-                  class="warn-icon"
-                  ><i data-lucide="alert-circle"></i
-                ></a>
+                <i class="subSwitchIcon" data-lucide="corner-down-right"></i>Enable for input
               </div>
               <div class="uk-text-right uk-position-relative">
+                <a id="localeWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
                 <label class="switch">
                   <input id="inputLocale" type="checkbox" class="settingItem" />
                   <span class="slider round"></span>
@@ -568,10 +565,9 @@
 
             <h3>Currency Conversion</h3>
             <div class="uk-child-width-expand" uk-grid>
-              <div data-help="currency">
-                Enabled<a id="currencyWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
-              </div>
+              <div data-help="currency">Enabled</div>
               <div class="uk-text-right uk-width-2-5 uk-position-relative">
+                <a id="currencyWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
                 <label class="switch">
                   <input id="currency" type="checkbox" class="settingItem" />
                   <span class="slider round"></span>
@@ -607,7 +603,6 @@
 
           <!-- Tab 5: Sync Settings -->
           <li>
-            <h3>Local Directory Sync</h3>
             <div class="uk-child-width-expand" uk-grid>
               <div data-help="syncDirEnabled">Enable sync</div>
               <div class="uk-text-right uk-position-relative">
