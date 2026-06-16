@@ -69,6 +69,11 @@ function copyLine(event, index) {
   copyToClipboard(line, `Copied Line ${index + 1} to clipboard.`)
 }
 
+/**
+ * Creates a temporary DOM element to safely resolve text content to escaped HTML tags.
+ * @param {string} text - The input text to escape.
+ * @returns {string} The HTML-safe representation of the text.
+ */
 export function safeCopyText(text) {
   const safeDiv = document.createElement('div')
   safeDiv.textContent = text
@@ -151,7 +156,9 @@ export function copyAll() {
   copyToClipboard(copiedCalc.join('\n'), 'Copied page to clipboard.')
 }
 
-// Context menus
+/**
+ * Binds mouse click context menu actions for input, outputs, and textboxes.
+ */
 export function initializeContextMenus() {
   if (!isElectron) return
 
