@@ -539,12 +539,14 @@ cm.on('fold', (cm, from, to) => {
   if (app.loadingPage) return
 
   toggleFoldedOutputs(from.line, to.line, true)
+  calculate()
 })
 
 cm.on('unfold', (cm, from, to) => {
   if (app.loadingPage) return
 
   toggleFoldedOutputs(from.line, to.line, false)
+  calculate()
 })
 
 cm.on('update', () => {
