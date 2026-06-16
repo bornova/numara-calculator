@@ -8,15 +8,32 @@ import {
   escapeHTML,
   escapeRegExp,
   getAppLocale as coreGetAppLocale,
+  getSystemLocale as coreGetSystemLocale,
   localeUsesComma as coreLocaleUsesComma
 } from '../coreUtils.js'
 
 export { escapeHTML, escapeRegExp }
 
+/**
+ * Get standard BCP 47 standard locale tag based on selection.
+ * @returns {string} The standard locale tag.
+ */
 export function getAppLocale() {
   return coreGetAppLocale(app.settings)
 }
 
+/**
+ * Get standard BCP 47 standard locale tag based on system preference.
+ * @returns {string} The system locale tag.
+ */
+export function getSystemLocale() {
+  return coreGetSystemLocale(app.settings)
+}
+
+/**
+ * Check user locale for decimal separator.
+ * @returns {boolean} True if locale uses comma.
+ */
 export function localeUsesComma() {
   return coreLocaleUsesComma(app.settings)
 }
@@ -44,6 +61,10 @@ const universalRegex = /[\p{L}\p{M}]/u
 
 math.parse.isAlpha = (c, cPrev, cNext) => isAlphaOriginal(c, cPrev, cNext) || universalRegex.test(c)
 
+/**
+ * Resolves local date formatting configuration preferences to format templates.
+ * @returns {{todayFormat: string, todayDayFormat: string, nowFormat: string, nowDayFormat: string}} Date format templates.
+ */
 export function getDateFormatSettings() {
   const fmt = app.settings.dateFormat || 'system'
 
@@ -62,6 +83,11 @@ export function getDateFormatSettings() {
       }
 }
 
+/**
+ * Formats date pattern strings to match flexible locale preferences (e.g. stripping double letters).
+ * @param {string} fmt - The input format string.
+ * @returns {string} The flexible formatted string.
+ */
 export function getFlexibleFormat(fmt) {
   return !fmt ? fmt : fmt.replace(/dd/g, 'd').replace(/MM/g, 'M')
 }
@@ -190,6 +216,9 @@ const MAX_CACHE_SIZE = 1000
 let evaluationCache = []
 let lastActivePage = null
 
+/**
+ * Clears the line-by-line calculation cache memory.
+ */
 export function clearEvaluationCache() {
   evaluationCache = []
 }
@@ -197,6 +226,12 @@ export function clearEvaluationCache() {
 // Cache for Intl.NumberFormat formatters
 const numberFormatCache = new Map()
 
+/**
+ * Retrieves a cached Intl.NumberFormat formatter, instantiating one if not cached.
+ * @param {string} locale - The BCP 47 locale tag.
+ * @param {object} options - Format options.
+ * @returns {Intl.NumberFormat} Cached or new Intl.NumberFormat formatter.
+ */
 function getNumberFormatter(locale, options) {
   const key = `${locale}_${options.useGrouping ?? ''}_${options.maximumFractionDigits ?? ''}_${options.style ?? ''}_${options.currency ?? ''}`
   let formatter = numberFormatCache.get(key)
@@ -248,6 +283,7 @@ function setScope(key, value) {
  * @param {number} lineIndex - The line index (0-based).
  * @param {object} lineHandle - Deprecated.
  * @param {Object} stats - Object holding runningTotal and runningSubtotal.
+ * @param {string} prevLineText - The raw text of the previous line.
  * @returns {string} - The evaluated answer or an error link.
  */
 function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
@@ -255,45 +291,66 @@ function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
 
   try {
     // Pre‑process locale and currency symbols
-    if (app.settings.thouSep && app.settings.inputLocale) {
+    if (app.settings.thouSep !== 'disabled' && app.settings.inputLocale) {
       const usesComma = localeUsesComma()
-      // Match contiguous digit sequences with embedded commas/periods (ignoring isolated separators)
-      line = line.replace(/\b\d+(?:[.,]\d+)+\b/g, (numToken) => {
-        const commas = (numToken.match(/,/g) || []).length
-        const periods = (numToken.match(/\./g) || []).length
+      const locale = getAppLocale()
+      const { group: groupSeparator } = getLocaleSeparators(locale)
+      const isSpaceGroup =
+        groupSeparator === ' ' ||
+        groupSeparator === '\u00A0' ||
+        groupSeparator === '\u202F' ||
+        groupSeparator === '\u2009' ||
+        groupSeparator.trim() === ''
+      const isApostropheGroup = groupSeparator === "'" || groupSeparator === '\u2019'
 
-        // 1. Both commas and periods are present (e.g. 1.234,56 or 1,234.56)
-        if (commas > 0 && periods > 0) {
-          const lastComma = numToken.lastIndexOf(',')
-          const lastPeriod = numToken.lastIndexOf('.')
+      if (isSpaceGroup || isApostropheGroup) {
+        const sepChars = isSpaceGroup ? ' \u00A0\u202F\u2009' : "'\u2019"
+        const regex = new RegExp(`\\b\\d{1,3}(?:[${sepChars}]\\d{3})+(?:[.,]\\d+)?\\b`, 'g')
 
-          return lastComma > lastPeriod ? numToken.replace(/\./g, '').replace(/,/g, '.') : numToken.replace(/,/g, '')
-        }
+        line = line.replace(regex, (numToken) => {
+          const stripped = numToken.replace(new RegExp(`[${sepChars}]`, 'g'), '')
 
-        // 2. Only periods are present (e.g. 1.234.567 or 1.23 or 1.234)
-        if (periods > 0 && commas === 0) {
-          if (periods > 1) return numToken.replace(/\./g, '')
+          return usesComma ? stripped.replace(/,/g, '.') : stripped
+        })
+      } else {
+        // Match contiguous digit sequences with embedded commas/periods (ignoring isolated separators)
+        line = line.replace(/\b\d+(?:[.,]\d+)+\b/g, (numToken) => {
+          const commas = (numToken.match(/,/g) || []).length
+          const periods = (numToken.match(/\./g) || []).length
 
-          const parts = numToken.split('.')
+          // 1. Both commas and periods are present (e.g. 1.234,56 or 1,234.56)
+          if (commas > 0 && periods > 0) {
+            const lastComma = numToken.lastIndexOf(',')
+            const lastPeriod = numToken.lastIndexOf('.')
 
-          if (parts[1].length === 3) return usesComma ? numToken.replace(/\./g, '') : numToken
+            return lastComma > lastPeriod ? numToken.replace(/\./g, '').replace(/,/g, '.') : numToken.replace(/,/g, '')
+          }
+
+          // 2. Only periods are present (e.g. 1.234.567 or 1.23 or 1.234)
+          if (periods > 0 && commas === 0) {
+            if (periods > 1) return numToken.replace(/\./g, '')
+
+            const parts = numToken.split('.')
+
+            if (parts[1].length === 3) return usesComma ? numToken.replace(/\./g, '') : numToken
+
+            return numToken
+          }
+
+          // 3. Only commas are present (e.g. 1,234,567 or 1,23 or 1,234)
+          if (commas > 0 && periods === 0) {
+            if (commas > 1) return numToken.replace(/,/g, '')
+
+            const parts = numToken.split(',')
+
+            if (parts[1].length === 3) return usesComma ? numToken.replace(/,/g, '.') : numToken.replace(/,/g, '')
+
+            return numToken.replace(/,/g, '.')
+          }
 
           return numToken
-        }
-
-        // 3. Only commas are present (e.g. 1,234,567 or 1,23 or 1,234)
-        if (commas > 0 && periods === 0) {
-          if (commas > 1) return numToken.replace(/,/g, '')
-
-          const parts = numToken.split(',')
-
-          if (parts[1].length === 3) return usesComma ? numToken.replace(/,/g, '.') : numToken.replace(/,/g, '')
-
-          return numToken.replace(/,/g, '.')
-        }
-
-        return numToken
-      })
+        })
+      }
 
       // Since arguments inside functions also use comma or semicolon depending on separator setting,
       // mapping semicolon to comma lets the parser interpret arguments uniformly (e.g., sum(1;3) -> sum(1,3))
@@ -346,8 +403,8 @@ function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
     }
 
     // Format the answer for display and copying.
-    answerCopy = formatAnswer(answer, app.settings.thouSep && app.settings.copyThouSep)
-    answerOut = formatAnswer(answer, app.settings.thouSep)
+    answerCopy = formatAnswer(answer, app.settings.thouSep !== 'disabled' && app.settings.copyThouSep)
+    answerOut = formatAnswer(answer, app.settings.thouSep !== 'disabled')
 
     // Handle plotting lines.
     if (REGEX_PLOT.test(line) || REGEX_PLOT.test(answerOut)) {
@@ -393,6 +450,7 @@ function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
  * supports features such as date/time arithmetic, totals, averages, percentage operations, etc.
  *
  * @param {string} line - The line to evaluate.
+ * @param {Object} stats - Object holding runningTotal and runningSubtotal.
  * @returns {*} - The evaluated result.
  */
 function altEvaluate(line, stats) {
@@ -448,7 +506,7 @@ function altEvaluate(line, stats) {
 
   // Handle date/time arithmetic.
   if (parsedLine.match(REGEX_DATE_TIME)) {
-    const locale = { locale: getAppLocale() }
+    const locale = { locale: getSystemLocale() }
 
     let assignPrefix = ''
     let datePart = parsedLine
@@ -577,7 +635,7 @@ function formatCurrency(str) {
   if (!currencyFormatRegex) return str
 
   const appLocale = getAppLocale()
-  const useGrouping = app.settings.thouSep
+  const useGrouping = app.settings.thouSep !== 'disabled'
   const maximumFractionDigits = app.settings.precision
 
   return str.replace(currencyFormatRegex, (match, amount, code) => {
@@ -717,6 +775,11 @@ let previouslyCreatedUnits = []
 let lastAppliedUdf = null
 let lastAppliedUdu = null
 
+/**
+ * Imports and applies user-defined functions or units into the MathJS context.
+ * @param {boolean} isFunc - True if parsing functions, false if units.
+ * @param {string} input - The raw definition string content.
+ */
 export function applyUdfu(isFunc, input) {
   if (isFunc && lastAppliedUdf === input) return
   if (!isFunc && lastAppliedUdu === input) return
@@ -768,7 +831,16 @@ export function applyUdfu(isFunc, input) {
 }
 
 /**
- * Perform all calculation operations line-by-line
+ * Perform all calculation operations line-by-line.
+ * @param {object} params - Calculation parameters.
+ * @param {string} params.activePage - The active page ID.
+ * @param {string[]} params.lines - The array of lines to evaluate.
+ * @param {object} params.settings - The application settings.
+ * @param {object} params.currencies - The application currencies config map.
+ * @param {SharedArrayBuffer} [params.sharedBuffer] - Shared buffer to communicate progress back to main thread.
+ * @param {number[]} [params.timedOutLines=[]] - Array of line indices that timed out previously.
+ * @param {function} [params.onLineStart] - Progress callback fired when starting to process a line.
+ * @returns {object} The answers, errorLines, serializedScope, and user defined lists.
  */
 export function runCalculation({
   activePage,
@@ -803,7 +875,7 @@ export function runCalculation({
     lastActivePage = activePage
   }
 
-  const dateTime = DateTime.now().setLocale(getAppLocale())
+  const dateTime = DateTime.now().setLocale(getSystemLocale())
 
   app.mathScope = new Map()
 
@@ -818,11 +890,10 @@ export function runCalculation({
   setScope('today', dateTime.toFormat(app.settings.dateDay ? dateFormats.todayDayFormat : dateFormats.todayFormat))
 
   const totalLines = lines.length
-  let canUseCache = true
   const newCache = []
   const answers = []
   const errorLines = []
-
+  let canUseCache = true
   let prevLineText = ''
 
   for (let lineIndex = 0; lineIndex < totalLines; lineIndex++) {
@@ -905,7 +976,7 @@ export function runCalculation({
       serializedScope[key] = 'Function'
     } else {
       try {
-        serializedScope[key] = formatAnswer(value, app.settings.thouSep)
+        serializedScope[key] = formatAnswer(value, app.settings.thouSep !== 'disabled')
       } catch {
         serializedScope[key] = String(value)
       }
