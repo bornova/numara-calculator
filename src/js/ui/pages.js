@@ -2,7 +2,8 @@ import { dom } from '../dom'
 import { cm } from '../editor/editor'
 import { calculate, renderAnswersToHTML, syncOutputHeights } from '../eval'
 import { confirm, modal, notify } from './modal'
-import { app, escapeHTML, isElectron, store } from '../utils'
+import { app, isElectron, store } from '../utils'
+import { escapeHTML } from '../coreUtils.js'
 import { syncPageSave, syncPageRename, syncPageDelete } from '../sync'
 
 import { DateTime } from 'luxon'
@@ -14,7 +15,10 @@ const SIDEBAR_MIN_WIDTH = 180
 const SIDEBAR_MAX_WIDTH = 400
 const SIDEBAR_DEFAULT_WIDTH = 240
 
-/* Apply sidebar width */
+/**
+ * Adjusts the width styles for the sidebar panel, resize handles, and main app container.
+ * @param {number} width - The width in pixels.
+ */
 function applySidebarWidth(width) {
   const bar = dom.el('#sidePanel .uk-offcanvas-bar')
   const resizer = dom.el('#sidePanelResizer')
@@ -32,7 +36,9 @@ function applySidebarWidth(width) {
 
 let sidePanelResizerSetup = false
 
-/* Setup side panel resizer */
+/**
+ * Binds mouse drag and double-click listeners on the side panel resizer bar.
+ */
 function setupSidePanelResizer() {
   if (sidePanelResizerSetup) return
 
@@ -148,6 +154,11 @@ export function setupSidePanel(show = false) {
   }
 }
 
+/**
+ * Updates the active page name label display and hover titles in the header.
+ * @param {string} name - The page name.
+ * @param {string} pageId - The page ID timestamp string.
+ */
 function updatePageName(name, pageId) {
   const pageDate = DateTime.fromFormat(pageId, 'yyyyMMddHHmmssSSS').toFormat('FF')
 
