@@ -10,6 +10,9 @@ const colorInputs = dom.els(COLOR_INPUT_SELECTOR)
 
 let activePicker = null
 
+/**
+ * Resets the currently active color picker back to its default color value.
+ */
 function resetActivePickerColor() {
   if (!activePicker) return
 
@@ -32,7 +35,7 @@ export function checkColorChange() {
 export const colors = {
   defaults: {
     answer: { title: 'Answers', class: '.answer', dark: '#1eb5f0', light: '#17586b' },
-    comment: { title: 'Comments', class: '.cm-comment', dark: '#5a5a5a', light: '#bebebe' },
+    comment: { title: 'Comments', class: '.cm-comment', dark: '#727272', light: '#bebebe' },
     constant: { title: 'Constants', class: '.cm-constant', dark: '#39baa0', light: '#2c917d' },
     currency: { title: 'Currencies', class: '.cm-currency', dark: '#009688', light: '#009688' },
     error: {
@@ -57,6 +60,9 @@ export const colors = {
     variable: { title: 'Variables', class: '.cm-variable', dark: '#96b4c4', light: '#57707c' }
   },
 
+  /**
+   * Initializes theme styling, deep-diff defaults checks, picker events, and confirm actions.
+   */
   initialize: () => {
     app.colors = store.get('colors')
 
@@ -118,12 +124,18 @@ export const colors = {
     })
   },
 
+  /**
+   * Checks color changes against defaults to show or hide the reset defaults button.
+   */
   checkDefaults: () => {
     const hasDiff = !!diff(app.colors, colors.defaults)
 
     dom.defaultColorsButton.style.display = hasDiff ? 'inline' : 'none'
   },
 
+  /**
+   * Generates and applies custom styling sheets to document DOM based on configured theme.
+   */
   apply: () => {
     app.colors = store.get('colors')
 
@@ -137,6 +149,9 @@ export const colors = {
     dom.colorSheet.textContent = sheet
   },
 
+  /**
+   * Saves updated custom colors from picker elements to storage and refreshes styles.
+   */
   save: () => {
     colorInputs.forEach((picker) => {
       app.colors[picker.dataset.class][picker.dataset.theme] = picker.value
@@ -147,6 +162,9 @@ export const colors = {
     colors.checkDefaults()
   },
 
+  /**
+   * Resets all custom colors back to application default settings.
+   */
   reset: () => {
     const clonedDefaults = structuredClone(colors.defaults)
 
