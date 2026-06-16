@@ -1,8 +1,7 @@
 import { dom } from './dom'
 import {
-  escapeHTML as coreEscapeHTML,
-  escapeRegExp as coreEscapeRegExp,
   getAppLocale as coreGetAppLocale,
+  getSystemLocale as coreGetSystemLocale,
   localeUsesComma as coreLocaleUsesComma
 } from './coreUtils.js'
 
@@ -128,13 +127,18 @@ export async function checkSize() {
 }
 
 /** Get standard BCP 47 standard locale tag based on selection */
-export function getAppLocale() {
-  return coreGetAppLocale(app.settings)
+export function getAppLocale(settings = app.settings) {
+  return coreGetAppLocale(settings)
+}
+
+/** Get standard BCP 47 standard locale tag based on system preference */
+export function getSystemLocale(settings = app.settings) {
+  return coreGetSystemLocale(settings)
 }
 
 /** Check user locale for decimal separator. */
-export function localeUsesComma() {
-  return coreLocaleUsesComma(app.settings)
+export function localeUsesComma(settings = app.settings) {
+  return coreLocaleUsesComma(settings)
 }
 
 /** Check for app update */
@@ -179,25 +183,6 @@ export function checkAppUpdate() {
         updateStatusMessage('Unable to check for update.')
     }
   })
-}
-
-/**
- * Escape HTML special characters in a string.
- *
- * @param {string} str - The string to escape.
- * @returns {string} - The escaped string.
- */
-export function escapeHTML(str) {
-  return coreEscapeHTML(str)
-}
-
-/**
- * Escape special characters in a string for use in a regular expression.
- * @param {string} string - The string to escape.
- * @returns {string} - The escaped string.
- */
-export function escapeRegExp(string) {
-  return coreEscapeRegExp(string)
 }
 
 /**
