@@ -43,9 +43,7 @@ export function confirm(msg, action) {
     if (dom.confirmYes) dom.confirmYes.blur()
 
     event.stopPropagation()
-
     UIkit.modal('#dialogConfirm').hide()
-
     setTimeout(action, 50)
   }
 
