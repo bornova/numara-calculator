@@ -38,6 +38,10 @@ const plotSettings = {
   }
 }
 
+/**
+ * Gets the current active domain values for X and Y axes.
+ * @returns {{x: number[], y: number[]}} The X and Y axis domains.
+ */
 function getDomains() {
   if (app.plotSettings.domain.auto) {
     if (app.activePlot) {
@@ -107,16 +111,32 @@ export function plot() {
   })
 }
 
+/**
+ * Updates a specific plot configuration setting and triggers a redrawing.
+ * @param {string} setting - The setting key.
+ * @param {*} value - The new setting value.
+ */
 function updatePlotSetting(setting, value) {
   app.plotSettings[setting] = value
   store.set('plotSettings', app.plotSettings)
   plot()
 }
 
+/**
+ * Validates the plot boundary domains ensuring they are numbers and valid ranges.
+ * @param {number} xMin - Minimum X axis boundary.
+ * @param {number} xMax - Maximum X axis boundary.
+ * @param {number} yMin - Minimum Y axis boundary.
+ * @param {number} yMax - Maximum Y axis boundary.
+ * @returns {boolean} True if the domains are valid.
+ */
 function validateDomain(xMin, xMax, yMin, yMax) {
   return !isNaN(xMin) && !isNaN(xMax) && !isNaN(yMin) && !isNaN(yMax) && xMin < xMax && yMin < yMax
 }
 
+/**
+ * Resets the plot zoom and domain state, redrawing from scratch.
+ */
 function resetPlot() {
   app.activePlot = null
   plot()
@@ -124,6 +144,9 @@ function resetPlot() {
 
 const minMaxInputs = [dom.plotXMin, dom.plotXMax, dom.plotYMin, dom.plotYMax]
 
+/**
+ * Sets up user event listeners for chart interactions, zoom adjustments, export buttons, etc.
+ */
 function setupEventListeners() {
   dom.plotCrossModal.addEventListener('click', () => updatePlotSetting('showCross', dom.plotCrossModal.checked))
   dom.plotGridModal.addEventListener('click', () => updatePlotSetting('showGrid', dom.plotGridModal.checked))
