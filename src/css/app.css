@@ -253,12 +253,12 @@ text {
 }
 
 .truncateAnswers .outputWrapper > div {
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
   width: 100%;
   min-width: 0;
   max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .panelFont {
@@ -620,10 +620,6 @@ text {
   margin-top: 15px;
 }
 
-.dialog-buttons > button:focus {
-  background-color: transparent;
-}
-
 .dialog-open-date {
   padding: 0 5px 5px 5px;
   color: #999999;
@@ -691,9 +687,9 @@ text {
 
 .warn-icon {
   display: none;
-  right: 32px;
-  top: -1px;
   position: absolute;
+  top: -1px;
+  right: 32px;
 }
 
 .warn-icon-bignum {
