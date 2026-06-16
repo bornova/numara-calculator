@@ -89,7 +89,7 @@ export const dom = {
   answerPosition: document.getElementById('answerPosition'),
   keywordTips: document.getElementById('keywordTips'),
   matchBrackets: document.getElementById('matchBrackets'),
-  locale: document.getElementById('locale'),
+  thouSep: document.getElementById('thouSep'),
   dateFormat: document.getElementById('dateFormat'),
   localeWarn: document.getElementById('localeWarn'),
   inputLocale: document.getElementById('inputLocale'),
