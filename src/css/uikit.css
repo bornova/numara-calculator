@@ -42,7 +42,7 @@
 }
 
 .uk-modal-title {
-  color: light-dark(#333333, #b2cfdd);
+  color: light-dark(#244061, #b2cfdd);
   font-weight: 600;
   font-size: 1rem;
 }
@@ -150,6 +150,7 @@
   border-radius: 3px;
   padding: 0 10px;
   line-height: 28px;
+  font-weight: 500;
 }
 
 .uk-button:enabled:active {
