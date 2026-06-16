@@ -27,7 +27,7 @@ body {
   height: 100%;
   color: light-dark(#444444, #ffffff);
   font-size: 12px;
-  font-family: 'Open Sans', sans-serif;
+  font-family: 'Google Sans', sans-serif;
 }
 
 ::-webkit-scrollbar {
@@ -52,6 +52,7 @@ body {
 
 h2 {
   margin: 0 0 15px 0;
+  font-family: inherit;
 }
 
 input {
@@ -559,7 +560,7 @@ text {
 .pageListItemTitle {
   padding: 5px 5px 2px 5px;
   overflow: hidden;
-  font-weight: 600;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -637,6 +638,10 @@ text {
   border-bottom-width: 2px;
 }
 
+#settingsTabs {
+  margin-bottom: 20px;
+}
+
 #settingsTabs::before {
   right: 15px;
   left: 15px;
@@ -662,37 +667,15 @@ text {
   color: light-dark(#1d3f5c, #a0d3ff);
   font-weight: 500;
   font-size: 1rem;
+  font-family: inherit;
 }
 
 #dialogSettings h3:first-of-type {
   margin: 0px 0 12px 0;
 }
 
-#dialogSettings .settingMod,
-#dialogSettings .settingModToggle {
-  display: none;
-  position: absolute;
-  cursor: pointer;
-  margin-top: -3px;
-  margin-left: -20px;
-  color: light-dark(#dd9359, #dd9359);
-}
-
-#dialogSettings .settingMod > svg,
-#dialogSettings .settingModToggle > svg {
-  width: 24px;
-}
-
-#dialogSettings #themeMod {
-  position: relative;
-}
-
 #dialogSettings input:disabled + span.slider.round {
   cursor: default;
-}
-
-#dialogSettings .range .settingMod {
-  margin-left: -54px;
 }
 
 .precision,
@@ -708,12 +691,19 @@ text {
 
 .warn-icon {
   display: none;
-  margin-left: 5px;
+  right: 32px;
+  top: -1px;
+  position: absolute;
 }
 
-.warn-icon svg {
+.warn-icon-bignum {
+  position: absolute;
+  left: 10px;
+}
+
+.warn-icon svg,
+.warn-icon-bignum svg {
   stroke: #faa05a;
-  margin-top: -3px;
   width: 14px;
   height: 14px;
   pointer-events: none;
@@ -763,7 +753,7 @@ text {
   border: none;
   border-radius: 6px;
   background: transparent !important;
-  padding: 3px 14px;
+  padding: 5px 10px;
   color: light-dark(#777777, #999999);
 }
 
