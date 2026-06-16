@@ -229,6 +229,7 @@ ipcMain.handle('readSyncDirectory', async (event, dirPath) => {
       const filePath = path.join(dirPath, file)
       const content = await fs.promises.readFile(filePath, 'utf8')
       const name = path.basename(file, '.num')
+
       fileContents.push({ name, content })
     }
 
