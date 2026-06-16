@@ -26,6 +26,9 @@ const BUILTIN_MATH_KEYS = new Set(Object.keys(math.expression.mathWithTransform)
 /**
  * Return true if the code or symbol conflicts with a built-in mathjs unit OR function/constant.
  * This prevents currency codes like MAD (Moroccan Dirham) from shadowing functions like mad().
+ * @param {string} code Currency code.
+ * @param {string} symbol Currency symbol.
+ * @returns {boolean} True if the code or symbol conflicts with a built-in mathjs unit or function/constant.
  */
 function isMathUnit(code, symbol) {
   if (BUILTIN_UNIT_KEYS.has(code) || BUILTIN_UNIT_KEYS.has(code.toLowerCase())) return true
@@ -35,7 +38,12 @@ function isMathUnit(code, symbol) {
   return false
 }
 
-/** Register a currency code as a math unit (USD-relative) and an autocomplete hint. */
+/**
+ * Register a currency code as a math unit and an autocomplete hint.
+ * @param {string} code Currency code.
+ * @param {string} name Currency name.
+ * @param {number} rate Currency rate.
+ */
 function registerCurrencyUnit(code, name, rate) {
   if (code !== USD_UNIT && rate) {
     math.createUnit(
@@ -81,13 +89,24 @@ export function initCurrencies() {
   refreshCurrencyTokens()
 }
 
-/** Fetch a URL and return parsed JSON, retrying on failure. */
+/**
+ * Fetch a URL and return parsed JSON, retrying on failure.
+ * @param {string} url URL to fetch.
+ * @param {number} retries Number of retries.
+ * @returns {Promise<object>} Parsed JSON response.
+ */
 async function fetchJSON(url, retries = 3) {
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       const response = await fetch(url)
 
-      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      if (!response.ok) throw new Error(`HTTP error ${response.status}`)
+
+      const contentType = response.headers.get('content-type') || ''
+
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Unexpected currency API response format (${contentType || 'unknown'})`)
+      }
 
       return await response.json()
     } catch (error) {
@@ -98,16 +117,19 @@ async function fetchJSON(url, retries = 3) {
   }
 }
 
-/** Build the unified currencies map from API responses. */
+/**
+ * Build the unified currencies map from API responses.
+ * @param {*} symbolList List of currency symbols.
+ * @param {*} rateList List of currency rates.
+ * @returns {{currencies: object, lastDate: string}} The unified currencies map and last date.
+ */
 function buildCurrencies(symbolList, rateList) {
   const currencies = {}
 
-  // 1) Curated defaults first (insertion order matters for any first-wins lookup).
   for (const [code, def] of Object.entries(DEFAULTS)) {
     currencies[code] = { ...def }
   }
 
-  // 2) API symbols — only fill in non-curated codes.
   if (Array.isArray(symbolList)) {
     for (const { iso_code: code, symbol, name } of symbolList) {
       if (!code || currencies[code] || isMathUnit(code, symbol)) continue
@@ -116,7 +138,6 @@ function buildCurrencies(symbolList, rateList) {
     }
   }
 
-  // 3) Rates — attach to existing entries or create minimal ones for unknown codes.
   let lastDate = null
 
   if (Array.isArray(rateList)) {
