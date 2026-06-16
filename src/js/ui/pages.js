@@ -117,7 +117,7 @@ export function setupSidePanel(show = false) {
 
     const offcanvas = UIkit.offcanvas('#sidePanel', {
       overlay: false,
-      mode: isVisible ? 'none' : 'slide',
+      mode: 'none',
       escClose: false,
       bgClose: false
     })
@@ -249,12 +249,12 @@ export function duplicatePage(pageId) {
   }
 
   const dupPageData = dupPage.data
-  const baseName = dupPage.name + ' (copy)'
+  const baseName = dupPage.name + ' - Copy'
   let dupPageName = baseName
   let count = 1
 
   while (pages.some((p) => p.name === dupPageName)) {
-    dupPageName = `${baseName} ${count++}`
+    dupPageName = `${baseName} (${count++})`
   }
 
   app.activePage = dupPageId
