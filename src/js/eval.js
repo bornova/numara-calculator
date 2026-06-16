@@ -1,7 +1,7 @@
 import { outputContext } from './ui/context'
 import { dom } from './dom'
 import { cm, debouncedCalculate } from './editor/editor'
-import { app, store } from './utils'
+import { app, store, getSystemLocale } from './utils'
 import { syncPageSaveDebounced } from './sync'
 import { notify } from './ui/modal'
 import {
@@ -15,15 +15,30 @@ import UIkit from 'uikit'
 
 export const math = coreMath
 
+/**
+ * Formats a calculation answer for display using application settings.
+ * @param {*} answer - The raw value to format.
+ * @param {boolean} useGrouping - Whether to use grouping/thousands separator.
+ * @returns {string} The formatted answer string.
+ */
 export function formatAnswer(answer, useGrouping) {
-  coreApp.settings = app.settings
+  coreApp.settings = {
+    ...app.settings,
+    systemLocale: getSystemLocale()
+  }
 
   return coreFormatAnswer(answer, useGrouping)
 }
 
+/**
+ * Synchronizes currency state with background calculation helper state.
+ */
 export function refreshCurrencyState() {
   coreApp.currencies = app.currencies
-  coreApp.settings = app.settings
+  coreApp.settings = {
+    ...app.settings,
+    systemLocale: getSystemLocale()
+  }
   coreRefreshCurrencyState()
 }
 
@@ -41,6 +56,13 @@ let lastDialogShowTime = 0
 let autoCloseTimeout = null
 let lastScopeKeysSignature = ''
 
+/**
+ * Compares current scope, UDF, and UDU list keys against the last state to check if keys changed.
+ * @param {object} serializedScope - The current serialized math scope.
+ * @param {string[]} udfList - List of user-defined function names.
+ * @param {string[]} uduList - List of user-defined unit names.
+ * @returns {boolean} True if keys changed, requiring a syntax mode reload.
+ */
 function checkScopeKeysChanged(serializedScope, udfList, uduList) {
   const currentKeys = [
     ...Object.keys(serializedScope || {}).filter((k) => typeof (serializedScope || {})[k] !== 'function'),
@@ -78,6 +100,10 @@ function hideTimeoutDialogAfterCalc() {
   }
 }
 
+/**
+ * Lazily spawns or retrieves the background Web Worker for calculation execution.
+ * @returns {Worker} The spawned web worker instance.
+ */
 function getWorker() {
   if (!worker) {
     worker = new Worker('js/calc.worker.js')
@@ -159,6 +185,9 @@ function getWorker() {
   return worker
 }
 
+/**
+ * Tells the background calculation worker to clear its evaluation cache.
+ */
 export function clearEvaluationCache() {
   const w = getWorker()
 
@@ -171,6 +200,7 @@ export function clearEvaluationCache() {
  * @param {number} lineHandle - The line handle.
  * @param {string} answer - The answer to display.
  * @param {number} lineIndex - The absolute 0-based line index.
+ * @param {boolean} isFolded - Whether the line is currently folded.
  */
 function updateLineWidget(lineHandle, answer, lineIndex, isFolded) {
   let widget = app.widgetMap.get(lineHandle)
@@ -208,6 +238,9 @@ function updateLineWidget(lineHandle, answer, lineIndex, isFolded) {
   }
 }
 
+/**
+ * Synchronizes the heights of output display items with their corresponding CodeMirror inputs.
+ */
 export function syncOutputHeights() {
   if (app.settings.answerPosition === 'bottom') {
     const newHeight = dom.el('.CodeMirror-scroll').scrollHeight - 50
@@ -421,6 +454,10 @@ function applyCalculationResults(answers, errorLines) {
   }
 }
 
+/**
+ * Displays a dialog warning the user that calculation is taking longer than expected.
+ * @param {string[]} lines - The array of lines being calculated.
+ */
 function showTimeoutDialog(lines) {
   lastDialogShowTime = Date.now()
   isDialogVisible = true
@@ -571,7 +608,10 @@ export function calculate() {
       taskId: currentTaskId,
       activePage: app.activePage,
       lines,
-      settings: app.settings,
+      settings: {
+        ...app.settings,
+        systemLocale: getSystemLocale()
+      },
       currencies: app.currencies,
       udf: store.get('udf') ?? '',
       udu: store.get('udu') ?? '',
