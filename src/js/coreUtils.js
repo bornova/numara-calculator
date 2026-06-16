@@ -26,16 +26,31 @@ export function escapeRegExp(string) {
 }
 
 /**
+ * Get standard BCP 47 standard locale tag based on system preference.
+ * @param {object} settings - The application settings.
+ * @returns {string} - The system locale.
+ */
+export function getSystemLocale(settings) {
+  if (settings?.systemLocale) return settings.systemLocale
+
+  const nav =
+    typeof navigator !== 'undefined' ? navigator : typeof self !== 'undefined' && self.navigator ? self.navigator : null
+
+  return nav?.languages?.[0] ?? nav?.language ?? 'en-US'
+}
+
+/**
  * Get standard BCP 47 standard locale tag based on selection.
  * @param {object} settings - The application settings.
  * @returns {string} - The standard locale.
  */
 export function getAppLocale(settings) {
-  const loc = settings?.locale || 'system'
-  const nav =
-    typeof navigator !== 'undefined' ? navigator : typeof self !== 'undefined' && self.navigator ? self.navigator : null
+  const loc = settings?.thouSep || 'system'
 
-  return loc === 'period' ? 'en-US' : loc === 'comma' ? 'tr-TR' : (nav?.languages?.[0] ?? nav?.language ?? 'en-US')
+  if (loc === 'period') return 'en-US'
+  if (loc === 'comma') return 'tr-TR'
+
+  return getSystemLocale(settings)
 }
 
 /**
@@ -44,10 +59,7 @@ export function getAppLocale(settings) {
  * @returns {boolean} - True if locale uses comma.
  */
 export function localeUsesComma(settings) {
-  const loc = settings?.locale || 'system'
-  const nav =
-    typeof navigator !== 'undefined' ? navigator : typeof self !== 'undefined' && self.navigator ? self.navigator : null
-  const locale = nav?.languages?.[0] ?? nav?.language ?? 'en-US'
+  const locale = getAppLocale(settings)
 
-  return loc === 'period' ? false : loc === 'comma' ? true : (1.11).toLocaleString(locale).includes(',')
+  return (1.11).toLocaleString(locale).includes(',')
 }
