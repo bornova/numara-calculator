@@ -21,6 +21,9 @@ import UIkit from 'uikit'
 
 document.title = description
 
+/**
+ * Configures the application title headers based on OS (Windows vs. macOS).
+ */
 const setupHeaders = () => {
   const isWin = isElectron && !isMac
   const active = isWin ? 'Win' : 'Mac'
@@ -31,6 +34,9 @@ const setupHeaders = () => {
   dom[`header${active}Title`].innerHTML = name
 }
 
+/**
+ * Binds click event handlers for main application buttons in the title bar / actions.
+ */
 const setupAppButtons = () => {
   const buttons = {
     printButton: () => {
@@ -61,6 +67,10 @@ const setupAppButtons = () => {
   Object.entries(buttons).forEach(([btn, action]) => dom[btn].addEventListener('click', action))
 }
 
+/**
+ * Sets up global click event listeners on the document to handle interactions
+ * with answers (copying to clipboard), errors (showing error modal), and plots.
+ */
 const setupResultActions = () => {
   document.addEventListener('click', (event) => {
     const answerEl = event.target.closest('[data-answer]')
@@ -112,11 +122,17 @@ const setupResultActions = () => {
   })
 }
 
+/**
+ * Loads and applies user defined functions and units from the local store.
+ */
 const setupUserDefined = () => {
   applyUdfu(store.get('udf') ?? '', 'func')
   applyUdfu(store.get('udu') ?? '', 'unit')
 }
 
+/**
+ * Initializes resizer interactions for adjusting the width ratio of input and output panels.
+ */
 const setupPanelResizer = () => {
   const defaultWidth = settings.defaults.inputWidth
 
@@ -178,6 +194,9 @@ const setupPanelResizer = () => {
   dom.panelDivider.addEventListener('mousemove', dividerTooltip)
 }
 
+/**
+ * Synchronizes scrolling between the CodeMirror editor and the output display panel.
+ */
 const setupSyncScroll = () => {
   const inputPanel = dom.el('.CodeMirror-scroll')
   const outputPanel = dom.output
@@ -242,6 +261,9 @@ const setupSyncScroll = () => {
   })
 }
 
+/**
+ * Configures the "About" dialog contents, version, copyright, and system dependencies info.
+ */
 const setupAppInfo = () => {
   dom.dialogAboutCopyright.textContent = `Copyright © ${new Date().getFullYear()} ${author.name}`
   dom.dialogAboutAppVersion.innerHTML = isElectron
@@ -279,8 +301,16 @@ const setupAppInfo = () => {
 }
 
 let modalOpenState = false
+
+/**
+ * Checks whether any modal dialog or offcanvas panel is currently open.
+ * @returns {boolean} True if any modal or side panel is open.
+ */
 const isModalOpen = () => modalOpenState
 
+/**
+ * Registers application-wide keyboard shortcuts using numaraKeys.
+ */
 const setupKeyboardShortcuts = () => {
   const keys = {
     '$mod+D': 'clearButton',
@@ -306,6 +336,9 @@ const setupKeyboardShortcuts = () => {
   numaraKeys(window, shortcuts)
 }
 
+/**
+ * Configures print area beforeprint/afterprint event listeners.
+ */
 const setupPrintArea = () => {
   window.addEventListener('beforeprint', () => {
     const printArea = document.createElement('div')
@@ -370,6 +403,9 @@ const setupPrintArea = () => {
   })
 }
 
+/**
+ * Configures UIkit helper events, modals, and tab initialization callbacks.
+ */
 const setupUIkitUtils = () => {
   UIkit.mixin({ data: { offset: 5, delay: 300 } }, 'tooltip')
 
@@ -465,6 +501,9 @@ const setupUIkitUtils = () => {
   })
 }
 
+/**
+ * Initializes the side panel settings, offcanvas drawer, and handles window resize changes.
+ */
 function initializeSidePanel() {
   let resizeTimer
 
@@ -480,6 +519,10 @@ function initializeSidePanel() {
   setupSidePanel(true)
 }
 
+/**
+ * Bootstraps the application, initialises settings, currencies, colors, and UI layout.
+ * @returns {Promise<void>}
+ */
 const initializeApp = async () => {
   generateIcons()
   initCurrencies()
