@@ -42,6 +42,11 @@ const mathFunctions = mathEntries.filter(([k]) => typeof math[k] === 'function')
 const mathConstants = mathEntries.filter(
   ([k]) => typeof math[k] !== 'function' && typeof math[k] !== 'boolean' && (math[k]?.value || !isNaN(math[k]))
 )
+
+/**
+ * Resolves all built-in Math.js units and their prefixes into helper hint structures.
+ * @returns {Array<{token: string, hint: {text: string, desc: string, className: string}}>} Array of hints.
+ */
 const units = () =>
   Object.values(math.Unit.UNITS).flatMap((unit) =>
     Object.values(unit.prefixes).map((prefix) => {
@@ -373,7 +378,9 @@ CodeMirror.registerHelper('fold', 'numara', (cm, start) => {
   }
 })
 
-// Force editor line bottom alignment
+/**
+ * Forces CodeMirror editor scroll to focus line alignment at the bottom of the visible screen.
+ */
 function cmForceBottom() {
   const line = cm.getCursor().line
   const totalLines = cm.lineCount()
@@ -493,6 +500,12 @@ cm.on('changes', (cm, changes) => {
   }
 })
 
+/**
+ * Toggle folded outputs.
+ * @param {number} fromLine Start line.
+ * @param {number} toLine End line.
+ * @param {boolean} isFolded Whether the outputs are folded.
+ */
 function toggleFoldedOutputs(fromLine, toLine, isFolded) {
   const hasLineWidget = app.settings.answerPosition === 'bottom'
 
@@ -675,7 +688,7 @@ function handleFunctionTooltip(target) {
   try {
     const tip = math.help(text).toJSON()
     const syntax = tip.syntax.map((s) =>
-      s.replaceAll(/,/g, app.settings.thouSep && app.settings.inputLocale ? ';' : ',')
+      s.replaceAll(/,/g, app.settings.thouSep !== 'disabled' && app.settings.inputLocale ? ';' : ',')
     )
 
     showTooltip(
