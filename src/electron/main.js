@@ -58,10 +58,7 @@ let isQuitting = false
 function getTrayIconPath() {
   const iconFileName = isWin ? 'icon.ico' : 'icon.png'
   const possiblePaths = [
-    path.join(import.meta.dirname, `../assets/${iconFileName}`),
     path.join(import.meta.dirname, `../../build/assets/${iconFileName}`),
-    path.join(import.meta.dirname, `../../src/assets/${iconFileName}`),
-    path.join(app.getAppPath(), `src/assets/${iconFileName}`),
     path.join(app.getAppPath(), `build/assets/${iconFileName}`)
   ]
 
@@ -107,6 +104,7 @@ function updateTrayState() {
 
       try {
         const trayIcon = getTrayIconPath()
+
         tray = new Tray(trayIcon)
         tray.setToolTip('Numara Calculator')
         tray.setContextMenu(contextMenu)
@@ -291,11 +289,24 @@ ipcMain.on('exportPage', (event, fileName, content) => {
 /**
  * Reset window size to default.
  */
-function resetSize() {
-  win.setSize(schema.appWidth.default, schema.appHeight.default)
+function resetSize(
+  appWrapperWidth = schema.appWidth.default,
+  appWrapperHeight = schema.appHeight.default,
+  sidebarWidth = 0
+) {
+  if (!win || win.isDestroyed()) return
+
+  const [minWidth, minHeight] = win.getMinimumSize()
+  const width = Math.round(Number(appWrapperWidth) || schema.appWidth.default)
+  const height = Math.round(Number(appWrapperHeight) || schema.appHeight.default)
+  const sidebar = Math.max(0, Math.round(Number(sidebarWidth) || 0))
+
+  win.setSize(Math.max(minWidth, width + sidebar), Math.max(minHeight, height))
 }
 
-ipcMain.on('resetSize', resetSize)
+ipcMain.on('resetSize', (event, appWrapperWidth, appWrapperHeight, sidebarWidth) => {
+  resetSize(appWrapperWidth, appWrapperHeight, sidebarWidth)
+})
 ipcMain.on('resetApp', () => {
   session.defaultSession.clearStorageData().then(() => {
     config.clear()
@@ -312,6 +323,14 @@ ipcMain.on('openLogs', () => {
 })
 
 let syncWatcher = null
+
+ipcMain.handle('checkSyncDirectory', async (event, dirPath) => {
+  try {
+    return fs.existsSync(dirPath) && fs.lstatSync(dirPath).isDirectory()
+  } catch {
+    return false
+  }
+})
 
 ipcMain.handle('selectSyncDirectory', async () => {
   const result = await dialog.showOpenDialog(win, {
@@ -398,6 +417,13 @@ ipcMain.on('startWatchingSyncDir', (event, dirPath) => {
   try {
     let fsTimeout = null
     syncWatcher = fs.watch(dirPath, (eventType, filename) => {
+      if (!fs.existsSync(dirPath)) {
+        if (win && !win.isDestroyed()) {
+          win.webContents.send('syncDirDeleted')
+        }
+        return
+      }
+
       if (filename && filename.endsWith('.num')) {
         if (fsTimeout) return
 
@@ -407,6 +433,15 @@ ipcMain.on('startWatchingSyncDir', (event, dirPath) => {
 
         if (win && !win.isDestroyed()) {
           win.webContents.send('syncDirChanged')
+        }
+      }
+    })
+
+    syncWatcher.on('error', (error) => {
+      log.error('Sync watcher error:', error)
+      if (!fs.existsSync(dirPath)) {
+        if (win && !win.isDestroyed()) {
+          win.webContents.send('syncDirDeleted')
         }
       }
     })
