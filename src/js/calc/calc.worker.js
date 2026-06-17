@@ -1,4 +1,4 @@
-import { applyUdfu, clearEvaluationCache, runCalculation } from '../core/evalCore'
+import { applyUdfu, clearEvaluationCache, runCalculation } from '../core/evaluator'
 
 self.onmessage = (event) => {
   const { type, payload } = event.data
