@@ -98,6 +98,11 @@
   height: 24px;
 }
 
+.uk-checkbox {
+  margin-right: 2px;
+  border-radius: 3px;
+}
+
 .uk-label {
   font-size: 1rem;
 }

@@ -1107,3 +1107,21 @@ input:checked + .slider:before {
 .tooltipCode {
   margin: 6px 0 3px 0;
 }
+
+/* Currency update button spin animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.updateRatesLink.spin > svg {
+  animation: spin 1s linear infinite;
+}
+
+.updateRatesLink.spin {
+  pointer-events: none;
+}
