@@ -56,19 +56,20 @@ let tray = null
 let isQuitting = false
 
 function getTrayIconPath() {
+  const iconFileName = isWin ? 'icon.ico' : 'icon.png'
   const possiblePaths = [
-    path.join(import.meta.dirname, '../assets/icon.png'),
-    path.join(import.meta.dirname, '../../build/assets/icon.png'),
-    path.join(import.meta.dirname, '../../src/assets/icon.png'),
-    path.join(app.getAppPath(), 'src/assets/icon.png'),
-    path.join(app.getAppPath(), 'build/assets/icon.png')
+    path.join(import.meta.dirname, `../assets/${iconFileName}`),
+    path.join(import.meta.dirname, `../../build/assets/${iconFileName}`),
+    path.join(import.meta.dirname, `../../src/assets/${iconFileName}`),
+    path.join(app.getAppPath(), `src/assets/${iconFileName}`),
+    path.join(app.getAppPath(), `build/assets/${iconFileName}`)
   ]
 
   for (const p of possiblePaths) {
     if (fs.existsSync(p)) return p
   }
 
-  return path.join(app.getAppPath(), 'build/assets/icon.png')
+  return path.join(app.getAppPath(), `build/assets/${iconFileName}`)
 }
 
 function updateTrayState() {
