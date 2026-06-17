@@ -1,19 +1,19 @@
-import { checkColorChange, colors } from './ui/colors'
-import { copyAll, initializeContextMenus, safeCopyText } from './ui/context'
+import { checkColorChange, colors } from './ui/theme'
+import { copyAll, initializeContextMenus, safeCopyText } from './ui/contextMenu'
 import { dom } from './dom'
-import { cm, refreshEditor, udfInput, uduInput } from './editor/editor'
-import { calculate } from './eval'
-import { initCurrencies } from './calc/forex'
-import { initializeHelpTooltips } from './ui/help'
+import { cm, refreshEditor, udfInput, uduInput } from './editor'
+import { calculate } from './calc/calcManager'
+import { initCurrencies } from './calc/currencies'
+import { initializeSettingsTooltips } from './ui/settingsTips'
 import { generateIcons } from './ui/icons'
 import { numaraKeys } from './editor/keybindings.js'
-import { modal, notify, showError } from './ui/modal'
-import { getPageName, initializePages, pageOrder, populatePages, setupSidePanel } from './ui/pages'
-import { plot } from './ui/plot'
+import { modal, notify, showError } from './ui/dialogs'
+import { getPageName, initializePages, pageOrder, populatePages, setupSidePanel } from './ui/pageManager'
+import { plot } from './ui/functionPlot'
 import { applyAnswerPositionLayout, settings } from './ui/settings'
 import { applyUdfu } from './calc/userDefined'
-import { app, checkAppUpdate, isMac, isElectron, store } from './appUtils'
-import { triggerFolderSync } from './sync'
+import { app, checkAppUpdate, isMac, isElectron, store } from './appState'
+import { triggerFolderSync } from './calc/sync'
 
 import { author, description, homepage, name, version } from './../../package.json'
 
@@ -224,8 +224,10 @@ const setupSyncScroll = () => {
             outputPanel.scrollTop = inputPanel.scrollTop
             ticking = false
           })
+
           ticking = true
         }
+
         clearActivePanel()
       }
     },
@@ -240,14 +242,17 @@ const setupSyncScroll = () => {
       if (activePanel === null) {
         activePanel = outputPanel
       }
+
       if (activePanel === outputPanel) {
         if (!ticking) {
           requestAnimationFrame(() => {
             inputPanel.scrollTop = outputPanel.scrollTop
             ticking = false
           })
+
           ticking = true
         }
+
         clearActivePanel()
       }
     },
@@ -417,6 +422,7 @@ const setupUIkitUtils = () => {
 
   UIkit.util.on('.modal, #sidePanel', 'hidden', () => {
     modalOpenState = dom.els('.uk-open').length > 0
+
     if (isElectron) {
       numara.transControls(modalOpenState)
     }
@@ -546,7 +552,7 @@ const initializeApp = async () => {
   initializeSidePanel()
   initializePages()
   initializeContextMenus()
-  initializeHelpTooltips()
+  initializeSettingsTooltips()
   checkAppUpdate()
 
   if (isElectron) {
