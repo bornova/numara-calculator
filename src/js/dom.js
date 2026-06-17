@@ -4,14 +4,14 @@
 export const dom = {
   /**
    * Query DOM element that matches the selector.
-   * @param {string} selector - The selector to match.
+   * @param {string} selector The selector to match.
    * @returns {Element} The first matching element.
    */
   el: (selector) => document.querySelector(selector),
 
   /**
    * Query all DOM elements matching the selector.
-   * @param {string} selector - The selector to match.
+   * @param {string} selector The selector to match.
    * @returns {NodeList} A list of matching elements.
    */
   els: (selector) => document.querySelectorAll(selector),
