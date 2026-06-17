@@ -8,7 +8,8 @@ import {
   nativeTheme,
   Notification,
   session,
-  shell
+  shell,
+  Tray
 } from 'electron'
 import log from 'electron-log'
 import Store from 'electron-store'
@@ -32,7 +33,8 @@ const schema = {
   appWidth: { type: 'number', default: 560 },
   fullSize: { type: 'boolean', default: false },
   position: { type: 'array', items: { type: 'integer' } },
-  theme: { type: 'string', default: 'system' }
+  theme: { type: 'string', default: 'system' },
+  showTray: { type: 'boolean', default: false }
 }
 
 const config = new Store({ schema, clearInvalidConfig: true, fileExtension: '' })
@@ -50,10 +52,89 @@ const getThemeColor = () =>
     : LIGHT_COLOR
 
 let win
+let tray = null
+let isQuitting = false
+
+function getTrayIconPath() {
+  const possiblePaths = [
+    path.join(import.meta.dirname, '../assets/icon.png'),
+    path.join(import.meta.dirname, '../../build/assets/icon.png'),
+    path.join(import.meta.dirname, '../../src/assets/icon.png'),
+    path.join(app.getAppPath(), 'src/assets/icon.png'),
+    path.join(app.getAppPath(), 'build/assets/icon.png')
+  ]
+
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) return p
+  }
+
+  return path.join(app.getAppPath(), 'build/assets/icon.png')
+}
+
+function updateTrayState() {
+  const showTray = config.get('showTray')
+
+  if (showTray) {
+    if (!tray) {
+      const contextMenu = Menu.buildFromTemplate([
+        {
+          label: 'Show Numara',
+          click: () => {
+            if (win) {
+              win.show()
+              win.focus()
+            }
+          }
+        },
+        {
+          label: 'Hide Numara',
+          click: () => {
+            if (win) {
+              win.hide()
+            }
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Quit',
+          click: () => {
+            isQuitting = true
+            app.quit()
+          }
+        }
+      ])
+
+      try {
+        const trayIcon = getTrayIconPath()
+        tray = new Tray(trayIcon)
+        tray.setToolTip('Numara Calculator')
+        tray.setContextMenu(contextMenu)
+
+        tray.on('click', () => {
+          if (win) {
+            if (win.isVisible()) {
+              win.hide()
+            } else {
+              win.show()
+              win.focus()
+            }
+          }
+        })
+      } catch (err) {
+        log.error('Failed to create tray:', err)
+      }
+    }
+  } else {
+    if (tray) {
+      tray.destroy()
+      tray = null
+    }
+  }
+}
 
 /**
  * Sets the title bar overlay configuration based on the transparency state.
- * @param {boolean} isTrans - Determines if the title bar should be transparent.
+ * @param {boolean} isTrans Determines if the title bar should be transparent.
  */
 function setTitleBarOverlay(isTrans) {
   if (!isWin) return
@@ -105,17 +186,27 @@ function createAppWindow() {
     return { action: 'deny' }
   })
 
-  win.on('close', () => {
+  win.on('close', (e) => {
     config.set('fullSize', win.isMaximized())
-    config.set('position', win.getPosition())
+    try {
+      config.set('position', win.getPosition())
+    } catch {
+      // Ignore
+    }
 
-    if (win.isMaximized()) return
+    if (!win.isMaximized()) {
+      const [width, height] = win.getSize()
+      config.set('appWidth', width)
+      config.set('appHeight', height)
+    }
 
-    const [width, height] = win.getSize()
-
-    config.set('appWidth', width)
-    config.set('appHeight', height)
+    if (config.get('showTray') && !isQuitting) {
+      e.preventDefault()
+      win.hide()
+    }
   })
+
+  updateTrayState()
 
   if (app.isPackaged) {
     win.on('focus', () => globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {}))
@@ -125,7 +216,14 @@ function createAppWindow() {
 
 app.setAppUserModelId('com.numara.app')
 app.whenReady().then(createAppWindow)
-app.requestSingleInstanceLock() ? app.on('second-instance', () => win.focus()) : app.quit()
+app.requestSingleInstanceLock()
+  ? app.on('second-instance', () => {
+      if (win) {
+        if (!win.isVisible()) win.show()
+        win.focus()
+      }
+    })
+  : app.quit()
 
 nativeTheme.on('updated', () => {
   win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors)
@@ -140,6 +238,10 @@ ipcMain.on('setTheme', (event, mode) => {
 ipcMain.on('transControls', (event, isTrans) => setTitleBarOverlay(isTrans))
 
 ipcMain.on('setOnTop', (event, bool) => win.setAlwaysOnTop(bool))
+ipcMain.on('setTray', (event, bool) => {
+  config.set('showTray', bool)
+  updateTrayState()
+})
 ipcMain.handle('isMaximized', () => win.isMaximized())
 ipcMain.handle('isResized', () => {
   const [width, height] = win.getSize()
@@ -321,10 +423,10 @@ ipcMain.on('stopWatchingSyncDir', () => {
 
 /**
  * Generate context menu header.
- * @param {number} index - The line index.
- * @param {boolean} isMultiLine - Is it a multi-line selection.
- * @param {boolean} hasAnswer - Does the line have an answer.
- * @returns {Array} - The context menu header template.
+ * @param {number} index The line index.
+ * @param {boolean} isMultiLine Is it a multi-line selection.
+ * @param {boolean} hasAnswer Does the line have an answer.
+ * @returns {Array} The context menu header template.
  */
 const contextHeader = (index, isMultiLine, hasAnswer) =>
   hasAnswer || index !== null
@@ -339,13 +441,13 @@ const contextHeader = (index, isMultiLine, hasAnswer) =>
 
 /**
  * Generate common context menu items.
- * @param {Event} event - The event object.
- * @param {number} index - The line index.
- * @param {boolean} isEmpty - Is the input empty.
- * @param {boolean} isSelection - Is there a selection.
- * @param {boolean} isMultiLine - Is it a multi-line selection.
- * @param {boolean} hasAnswer - Does the line have an answer.
- * @returns {Array} - The common context menu template.
+ * @param {Event} event The event object.
+ * @param {number} index The line index.
+ * @param {boolean} isEmpty Is the input empty.
+ * @param {boolean} isSelection Is there a selection.
+ * @param {boolean} isMultiLine Is it a multi-line selection.
+ * @param {boolean} hasAnswer Does the line have an answer.
+ * @returns {Array} The common context menu template.
  */
 const commonContext = (event, index, isEmpty, isSelection, isMultiLine, hasAnswer) => {
   const context = [
@@ -390,13 +492,13 @@ const commonContext = (event, index, isEmpty, isSelection, isMultiLine, hasAnswe
 /**
  * Handles the input context menu event.
  *
- * @param {Electron.IpcMainEvent} event - The IPC event object.
- * @param {number} index - The index of the line.
- * @param {boolean} isEmpty - Is the input is empty.
- * @param {boolean} isLine - Indicates if the current line is not empty.
- * @param {boolean} isSelection - Indicates if there is a selection.
- * @param {boolean} isMultiLine - Indicates if the selection spans multiple lines.
- * @param {boolean} hasAnswer - Indicates if the line has an answer.
+ * @param {Electron.IpcMainEvent} event The IPC event object.
+ * @param {number} index The index of the line.
+ * @param {boolean} isEmpty Is the input is empty.
+ * @param {boolean} isLine Indicates if the current line is not empty.
+ * @param {boolean} isSelection Indicates if there is a selection.
+ * @param {boolean} isMultiLine Indicates if the selection spans multiple lines.
+ * @param {boolean} hasAnswer Indicates if the line has an answer.
  */
 ipcMain.on('inputContextMenu', (event, index, isEmpty, isLine, isSelection, isMultiLine, hasAnswer) => {
   const contextMenuTemplate = [
@@ -411,10 +513,10 @@ ipcMain.on('inputContextMenu', (event, index, isEmpty, isLine, isSelection, isMu
 /**
  * Handles the output context menu event.
  *
- * @param {Electron.IpcMainEvent} event - The IPC event object.
- * @param {number} index - The index of the line.
- * @param {boolean} isEmpty - Indicates if the input is empty.
- * @param {boolean} hasAnswer - Indicates if the line has an answer.
+ * @param {Electron.IpcMainEvent} event The IPC event object.
+ * @param {number} index The index of the line.
+ * @param {boolean} isEmpty Indicates if the input is empty.
+ * @param {boolean} hasAnswer Indicates if the line has an answer.
  */
 ipcMain.on('outputContextMenu', (event, index, isEmpty, hasAnswer) => {
   const contextMenuTemplate = [
