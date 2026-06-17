@@ -9,7 +9,7 @@ import {
   math as coreMath,
   formatAnswer as coreFormatAnswer,
   refreshCurrencyState as coreRefreshCurrencyState
-} from './calc/evalCore'
+} from './core/evalCore'
 
 import UIkit from 'uikit'
 

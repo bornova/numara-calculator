@@ -3,7 +3,7 @@ import { cm } from '../editor/editor'
 import { calculate, renderAnswersToHTML, syncOutputHeights } from '../eval'
 import { confirm, modal, notify } from './modal'
 import { app, isElectron, store } from '../utils'
-import { escapeHTML } from '../coreUtils.js'
+import { escapeHTML } from '../core/coreUtils.js'
 import { syncPageSave, syncPageRename, syncPageDelete } from '../sync'
 
 import { DateTime } from 'luxon'

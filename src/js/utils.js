@@ -3,7 +3,7 @@ import {
   getAppLocale as coreGetAppLocale,
   getSystemLocale as coreGetSystemLocale,
   localeUsesComma as coreLocaleUsesComma
-} from './coreUtils.js'
+} from './core/coreUtils.js'
 
 /** App globals. */
 export const app = {

@@ -10,7 +10,7 @@ import {
   getAppLocale as coreGetAppLocale,
   getSystemLocale as coreGetSystemLocale,
   localeUsesComma as coreLocaleUsesComma
-} from '../coreUtils.js'
+} from './coreUtils.js'
 
 export { escapeHTML, escapeRegExp }
 
