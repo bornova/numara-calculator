@@ -16,7 +16,8 @@ contextBridge.exposeInMainWorld('numara', {
   // Window controls
   isMaximized: () => ipcRenderer.invoke('isMaximized'),
   isResized: () => ipcRenderer.invoke('isResized'),
-  resetSize: () => ipcRenderer.send('resetSize'),
+  resetSize: (appWrapperWidth, appWrapperHeight, sidebarWidth) =>
+    ipcRenderer.send('resetSize', appWrapperWidth, appWrapperHeight, sidebarWidth),
   setOnTop: (callback) => ipcRenderer.send('setOnTop', callback),
   setTray: (bool) => ipcRenderer.send('setTray', bool),
   transControls: (isTrans) => ipcRenderer.send('transControls', isTrans),
@@ -54,6 +55,7 @@ contextBridge.exposeInMainWorld('numara', {
   showAbout: (callback) => ipcRenderer.on('showAbout', (event, data) => callback(data)),
 
   // Directory Sync
+  checkSyncDirectory: (dirPath) => ipcRenderer.invoke('checkSyncDirectory', dirPath),
   selectSyncDirectory: () => ipcRenderer.invoke('selectSyncDirectory'),
   readSyncDirectory: (dirPath) => ipcRenderer.invoke('readSyncDirectory', dirPath),
   writeSyncFile: (dirPath, filename, content) => ipcRenderer.invoke('writeSyncFile', dirPath, filename, content),
@@ -63,6 +65,7 @@ contextBridge.exposeInMainWorld('numara', {
   startWatchingSyncDir: (dirPath) => ipcRenderer.send('startWatchingSyncDir', dirPath),
   stopWatchingSyncDir: () => ipcRenderer.send('stopWatchingSyncDir'),
   onSyncDirChanged: (callback) => ipcRenderer.on('syncDirChanged', () => callback()),
+  onSyncDirDeleted: (callback) => ipcRenderer.on('syncDirDeleted', () => callback()),
 
   // Open path in file explorer
   openPath: (path) => ipcRenderer.send('openPath', path),
