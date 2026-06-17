@@ -621,19 +621,14 @@
                 </label>
               </div>
             </div>
-            <div id="syncDirSection" class="uk-margin-small-top" style="display: none">
-              <div class="uk-child-width-expand uk-flex uk-flex-middle" uk-grid>
-                <div data-help="syncDir">Sync folder</div>
-                <div class="uk-text-right">
-                  <button id="selectSyncDirButton" class="uk-button uk-button-default uk-button-small" type="button">
-                    Choose Folder
-                  </button>
+            <div id="syncDirSection" class="uk-margin-small-top">
+              <div class="uk-flex uk-flex-middle" uk-grid>
+                <div class="uk-width-auto sync-label" data-help="syncDir">Sync folder</div>
+                <div class="uk-width-expand uk-text-right">
+                  <a id="selectSyncDirButton" href="#" class="action-link sync-path-link"> Choose Folder </a>
                 </div>
               </div>
-              <div class="uk-text-right uk-position-relative">
-                <div id="syncDirPathDisplay" class="uk-text-meta uk-margin-small-top" style="word-break: break-all">
-                  No folder chosen
-                </div>
+              <div id="syncDirHiddenWrapper" class="uk-text-right uk-position-relative">
                 <input type="hidden" id="syncDir" class="settingItem" />
               </div>
             </div>
