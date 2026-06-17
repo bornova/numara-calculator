@@ -1,12 +1,12 @@
-import { colors } from './colors'
+import { colors } from './theme'
 import { dom } from '../dom'
-import { cm, udfInput, uduInput } from '../editor/editor'
-import { calculate, clearEvaluationCache, math } from '../eval'
-import { getRates } from '../calc/forex'
-import { confirm, modal, showError } from './modal'
-import { setupSidePanel } from './pages'
-import { app, checkSize, getSystemLocale, getTheme, isElectron, store } from '../appUtils'
-import { triggerFolderSync, clearSyncCache } from '../sync'
+import { cm, udfInput, uduInput } from '../editor'
+import { calculate, clearEvaluationCache, math } from '../calc/calcManager'
+import { getRates } from '../calc/currencies'
+import { confirm, modal, showError } from './dialogs'
+import { setupSidePanel } from './pageManager'
+import { app, checkSize, getSystemLocale, getTheme, isElectron, store } from '../appState'
+import { triggerFolderSync, clearSyncCache } from '../calc/sync'
 
 import { applyChange, observableDiff } from '@bornova/deep-diff'
 
@@ -64,9 +64,9 @@ function updateSyncDirPathDisplay(path) {
 /**
  * Populates a select HTML element with given options.
  *
- * @param {HTMLSelectElement} selectEl - The select element to populate.
- * @param {Array<string|Array>} options - The options to add. Each option can be a string or an array [label, value].
- * @param {string|null} [disabledValue=null] - An optional value to disable in the select options.
+ * @param {HTMLSelectElement} selectEl The select element to populate.
+ * @param {Array<string|Array>} options The options to add. Each option can be a string or an array [label, value].
+ * @param {string|null} [disabledValue=null] An optional value to disable in the select options.
  */
 function populateSelect(selectEl, options, disabledValue = null) {
   const htmlOptions = options.map((option) => {
@@ -121,7 +121,8 @@ export const settings = {
     rulers: false,
     syntax: true,
     theme: 'system',
-    thouSep: 'system'
+    thouSep: 'system',
+    showTray: false
   },
 
   /** Initialize settings. */
@@ -242,6 +243,12 @@ export const settings = {
       alwaysOnTopContainer.style.display = isElectron ? '' : 'none'
     }
 
+    const showTrayContainer = dom.el('#showTrayContainer')
+
+    if (showTrayContainer) {
+      showTrayContainer.style.display = isElectron ? '' : 'none'
+    }
+
     await checkSize()
     checkWarnings()
 
@@ -279,6 +286,7 @@ export const settings = {
     if (isElectron) {
       numara.setTheme(app.settings.theme)
       numara.setOnTop(app.settings.alwaysOnTop)
+      numara.setTray(app.settings.showTray)
     }
 
     dom.els('.panelFont, .input .CodeMirror').forEach((el) => {
@@ -302,6 +310,7 @@ export const settings = {
     }
 
     applyAnswerPositionLayout()
+
     cm.setOption('mode', app.settings.syntax ? 'numara' : 'plain')
     cm.setOption('lineNumbers', app.settings.lineNumbers)
     cm.setOption('lineWrapping', app.settings.lineWrap)
@@ -329,7 +338,9 @@ export const settings = {
     if (app.settings.syncDirEnabled && !app.settings.syncDir) {
       app.settings.syncDirEnabled = false
       store.set('settings', app.settings)
+
       const syncDirEnabledCheckbox = dom.el('#syncDirEnabled')
+
       if (syncDirEnabledCheckbox) {
         syncDirEnabledCheckbox.checked = false
       }
@@ -511,15 +522,19 @@ dom.els('.theme-pill-button').forEach((btn) => {
 
 if (isElectron) {
   const selectSyncDirButton = dom.el('#selectSyncDirButton')
+
   if (selectSyncDirButton) {
     selectSyncDirButton.addEventListener('click', async () => {
       const path = await numara.selectSyncDirectory()
+
       if (path) {
         const syncDirInput = dom.el('#syncDir')
+
         if (syncDirInput) {
           syncDirInput.value = path
           syncDirInput.dispatchEvent(new Event('change'))
         }
+
         updateSyncDirPathDisplay(path)
       }
     })
