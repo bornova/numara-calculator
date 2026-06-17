@@ -1,0 +1,179 @@
+import { dom } from '../dom'
+import { cm, udfInput, uduInput } from '../editor'
+import { notify } from './dialogs'
+import { isElectron } from '../appState'
+
+/**
+ * Helper to safely copy text to clipboard and show notification.
+ * @param {string} text The text to copy.
+ * @param {string} message The notification message.
+ */
+function copyToClipboard(text, message) {
+  if (!text) {
+    notify('Nothing to copy.')
+    return
+  }
+
+  navigator.clipboard.writeText(text).then(() => notify(message))
+}
+
+/**
+ * Main context menus for input.
+ */
+function inputContext() {
+  requestAnimationFrame(() => {
+    const lineIndex = cm.getCursor().line
+    const line = cm.getLine(lineIndex)
+    const isLine = line.length > 0
+    const isEmpty = cm.getValue() === ''
+    const isSelection = cm.somethingSelected()
+    const answer = dom.el(`[data-index="${lineIndex}"]`)?.textContent ?? ''
+    const hasAnswer = answer !== '' && answer !== 'Error' && answer !== 'Plot'
+    const selections = cm.listSelections()
+    const isMultiLine = selections.length > 1 || selections[0].anchor.line !== selections[0].head.line
+
+    numara.inputContextMenu(lineIndex, isEmpty, isLine, isSelection, isMultiLine, hasAnswer)
+  })
+}
+
+/**
+ * Output panel context menu.
+ * @param {Event} event The event object.
+ */
+export function outputContext(event) {
+  const answer = event.target.textContent
+  const lineIndex = event.target.dataset.index || cm.lastLine()
+  const hasAnswer = lineIndex !== null && answer !== '' && answer !== 'Error' && answer !== 'Plot'
+  const isEmpty = cm.getValue() === ''
+
+  numara.outputContextMenu(lineIndex, isEmpty, hasAnswer)
+}
+
+/**
+ * Textbox context menu.
+ */
+function textboxContext() {
+  requestAnimationFrame(() => numara.textboxContextMenu())
+}
+
+/**
+ * Copy line answer.
+ * @param {Event} event The event object.
+ * @param {number} index The index of the line.
+ */
+function copyLine(event, index) {
+  index = +index
+
+  const line = cm.getLine(index).trim()
+
+  copyToClipboard(line, `Copied Line ${index + 1} to clipboard.`)
+}
+
+/**
+ * Creates a temporary DOM element to safely resolve text content to escaped HTML tags.
+ * @param {string} text The input text to escape.
+ * @returns {string} The HTML-safe representation of the text.
+ */
+export function safeCopyText(text) {
+  const safeDiv = document.createElement('div')
+  safeDiv.textContent = text
+  return safeDiv.innerHTML
+}
+
+/**
+ * Copy line answer.
+ * @param {Event} event The event object.
+ * @param {number} lineIndex The index of the line.
+ * @param {boolean} withLines Whether to include the line in the copied text.
+ */
+function copyAnswer(event, lineIndex, withLines) {
+  lineIndex = +lineIndex
+
+  const line = cm.getLine(lineIndex).trim()
+  const answer = dom.el(`[data-index="${lineIndex}"]`)?.firstChild?.dataset.answer
+  const copiedText = withLines ? `${line} = ${answer}` : `${answer}`
+  const safeText = safeCopyText(copiedText)
+
+  copyToClipboard(
+    copiedText,
+    withLines ? `Copied Line ${lineIndex + 1} with answer to clipboard.` : `Copied '${safeText}' to clipboard.`
+  )
+}
+
+/**
+ * Copy all inputs.
+ */
+function copyAllLines() {
+  copyToClipboard(cm.getValue(), 'Copied all lines to clipboard.')
+}
+
+/**
+ * Copy all answers.
+ */
+function copyAllAnswers() {
+  if (cm.getValue() === '') return copyToClipboard()
+
+  const copiedOutputs = []
+  const answersMap = {}
+
+  document.querySelectorAll('#output [data-index]').forEach((el) => {
+    answersMap[el.getAttribute('data-index')] = el.textContent ?? ''
+  })
+
+  let lineIdx = 0
+
+  cm.eachLine(() => {
+    copiedOutputs.push(answersMap[lineIdx] ?? '')
+    lineIdx++
+  })
+
+  copyToClipboard(copiedOutputs.join('\n'), 'Copied all answers to clipboard.')
+}
+
+/**
+ * Copy page.
+ */
+export function copyAll() {
+  if (cm.getValue() === '') return copyToClipboard()
+
+  const copiedCalc = []
+  const answersMap = {}
+
+  document.querySelectorAll('#output [data-index]').forEach((el) => {
+    answersMap[el.getAttribute('data-index')] = el.textContent ?? ''
+  })
+
+  let lineIdx = 0
+
+  cm.eachLine((line) => {
+    const text = line.text.trim()
+
+    copiedCalc.push(!text ? '' : text.match(/^(#|\/\/)/) ? text : `${text} = ${answersMap[lineIdx] ?? ''}`)
+
+    lineIdx++
+  })
+
+  copyToClipboard(copiedCalc.join('\n'), 'Copied page to clipboard.')
+}
+
+/**
+ * Binds mouse click context menu actions for input, outputs, and textboxes.
+ */
+export function initializeContextMenus() {
+  if (!isElectron) return
+
+  cm.on('contextmenu', inputContext)
+  udfInput.on('contextmenu', textboxContext)
+  uduInput.on('contextmenu', textboxContext)
+
+  dom.output.addEventListener('contextmenu', outputContext)
+
+  dom.els('.textBox').forEach((el) => el.addEventListener('contextmenu', textboxContext))
+
+  numara.copyLine(copyLine)
+  numara.copyAnswer(copyAnswer)
+  numara.copyLineWithAnswer(copyAnswer)
+  numara.copyAllLines(copyAllLines)
+  numara.copyAllAnswers(copyAllAnswers)
+  numara.copyAll(copyAll)
+}
