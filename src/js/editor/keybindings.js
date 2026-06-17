@@ -45,7 +45,7 @@ const ALT_GRAPH_ALIASES = PLATFORM === 'Win32' ? ['Control', 'Alt'] : APPLE_DEVI
  * There's a bug in Chrome that causes event.getModifierState not to exist on
  * KeyboardEvent's for F1/F2/etc keys.
  * @param {KeyboardEvent} event
- * @param {string} mod - Modifier key name (e.g. "Shift", "Control")
+ * @param {string} mod Modifier key name (e.g. "Shift", "Control")
  * @returns {boolean}
  */
 function getModifierState(event, mod) {
@@ -63,7 +63,7 @@ function getModifierState(event, mod) {
  * <mods>     = `<mod>+<mod>+...`
  * <key>      = `<KeyboardEvent.key>` or `<KeyboardEvent.code>` (case-insensitive)
  * <key>      = `(<regex>)` -> `/^(?:<regex>)$/` (case-insensitive)
- * @param {string} str - The keybinding string to parse
+ * @param {string} str The keybinding string to parse
  * @returns {Array<[string[], string|RegExp]>} Array of [modifiers, key] pairs
  */
 export function parseKeybinding(str) {
@@ -86,7 +86,7 @@ export function parseKeybinding(str) {
 /**
  * This tells us if a single keyboard event matches a single keybinding press.
  * @param {KeyboardEvent} event
- * @param {[string[], string|RegExp]} press - A [modifiers, key] pair from {@link parseKeybinding}
+ * @param {[string[], string|RegExp]} press A [modifiers, key] pair from {@link parseKeybinding}
  * @returns {boolean}
  */
 export function matchKeyBindingPress(event, [mods, key]) {
@@ -129,9 +129,9 @@ export function matchKeyBindingPress(event, [mods, key]) {
  *
  * window.addEventListener("keydown", handler)
  * ```
- * @param {Object} keyBindingMap - Map of keybinding strings to event handler callbacks
+ * @param {Object} keyBindingMap Map of keybinding strings to event handler callbacks
  * @param {Object} [options={}]
- * @param {number} [options.timeout] - ms to wait between key presses before cancelling a sequence (default: 1000)
+ * @param {number} [options.timeout] ms to wait between key presses before cancelling a sequence (default: 1000)
  * @returns {EventListener}
  */
 export function createKeybindingsHandler(keyBindingMap, options = {}) {
@@ -186,12 +186,12 @@ export function createKeybindingsHandler(keyBindingMap, options = {}) {
  *
  * Returns an unsubscribe method.
  *
- * @param {Window|HTMLElement} target - The element to listen for key events on
- * @param {Object} keyBindingMap - Map of keybinding strings to event handler callbacks
+ * @param {Window|HTMLElement} target The element to listen for key events on
+ * @param {Object} keyBindingMap Map of keybinding strings to event handler callbacks
  * @param {Object} [options={}]
  * @param {string} [options.event="keydown"] - The event type to listen for
- * @param {boolean} [options.capture] - Whether to use a capture listener
- * @param {number} [options.timeout] - ms to wait between key presses before cancelling a sequence
+ * @param {boolean} [options.capture] Whether to use a capture listener
+ * @param {number} [options.timeout] ms to wait between key presses before cancelling a sequence
  * @returns {() => void} Unsubscribe function
  */
 export function numaraKeys(target, keyBindingMap, { event = DEFAULT_EVENT, capture, timeout } = {}) {
