@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('numara', {
   isResized: () => ipcRenderer.invoke('isResized'),
   resetSize: () => ipcRenderer.send('resetSize'),
   setOnTop: (callback) => ipcRenderer.send('setOnTop', callback),
+  setTray: (bool) => ipcRenderer.send('setTray', bool),
   transControls: (isTrans) => ipcRenderer.send('transControls', isTrans),
 
   // Import
