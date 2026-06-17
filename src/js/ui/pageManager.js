@@ -2,7 +2,7 @@ import { dom } from '../dom'
 import { cm } from '../editor'
 import { calculate, renderAnswersToHTML, syncOutputHeights } from '../calc/calcManager'
 import { confirm, modal, notify } from './dialogs'
-import { app, isElectron, store } from '../appState'
+import { app, checkSize, isElectron, store } from '../appState'
 import { escapeHTML } from '../core/utils.js'
 import { syncPageSave, syncPageRename, syncPageDelete } from '../calc/sync'
 
@@ -14,6 +14,7 @@ import UIkit from 'uikit'
 const SIDEBAR_MIN_WIDTH = 180
 const SIDEBAR_MAX_WIDTH = 400
 const SIDEBAR_DEFAULT_WIDTH = 240
+const SIDEBAR_TRANSITION_MS = 180
 
 /**
  * Adjusts the width styles for the sidebar panel, resize handles, and main app container.
@@ -84,6 +85,43 @@ function setupSidePanelResizer() {
 }
 
 let lastDockState = null
+let sidebarTransitionTimer = null
+
+function triggerSidebarTransition() {
+  document.body.classList.add('sidebar-width-animating')
+
+  clearTimeout(sidebarTransitionTimer)
+  sidebarTransitionTimer = setTimeout(() => {
+    document.body.classList.remove('sidebar-width-animating')
+  }, SIDEBAR_TRANSITION_MS)
+}
+
+function getAppWrapperSize() {
+  const rect = dom.appWrapper.getBoundingClientRect()
+
+  return {
+    width: Math.round(rect.width),
+    height: Math.round(rect.height)
+  }
+}
+
+function resetWindowToAppWrapper(sidebarWidth = 0, appWrapperSize = getAppWrapperSize()) {
+  if (!isElectron) return
+
+  numara
+    .isMaximized()
+    .then((maximized) => {
+      if (maximized) return
+
+      numara.resetSize(appWrapperSize.width, appWrapperSize.height, sidebarWidth)
+      setTimeout(() => {
+        checkSize()
+      }, SIDEBAR_TRANSITION_MS + 40)
+    })
+    .catch(() => {
+      // Ignore
+    })
+}
 
 /** Setup side panel based on settings and window size.
  *
@@ -91,13 +129,19 @@ let lastDockState = null
  *
  */
 export function setupSidePanel(show = false) {
+  const appWrapperSize = getAppWrapperSize()
   const { pageListPosition } = app.settings
   const isWide = (window.visualViewport?.width ?? window.innerWidth) > 900
   const dock = pageListPosition === 'dock' || (pageListPosition === 'auto' && isWide)
   const dockChanged = dock !== lastDockState
+  const shouldAnimateDockChange = lastDockState !== null && dockChanged
 
   lastDockState = dock
   app.sidebarDocked = dock
+
+  if (shouldAnimateDockChange) {
+    triggerSidebarTransition()
+  }
 
   dom.sidePanel.classList.toggle('sidebar-docked', dock)
   dom.sidePanelButton.style.display = dock ? 'none' : ''
@@ -107,6 +151,10 @@ export function setupSidePanel(show = false) {
 
   if (dock) {
     const width = store.get('sidePanelWidth') ?? SIDEBAR_DEFAULT_WIDTH
+
+    if (dockChanged) {
+      resetWindowToAppWrapper(width, appWrapperSize)
+    }
 
     applySidebarWidth(width)
     setupSidePanelResizer()
@@ -137,6 +185,10 @@ export function setupSidePanel(show = false) {
       }
     }
   } else {
+    if (dockChanged) {
+      resetWindowToAppWrapper(0, appWrapperSize)
+    }
+
     dom.appWrapper.style.left = '0'
 
     if (!dockChanged) return
@@ -537,6 +589,62 @@ export function pageOrder() {
 
   store.set('pages', orderedPages)
 }
+
+let pageListScrollInterval = null
+let pageListScrollSpeed = 0
+const SCROLL_THRESHOLD = 30
+
+const stopPageListAutoScroll = () => {
+  if (pageListScrollInterval) {
+    clearInterval(pageListScrollInterval)
+    pageListScrollInterval = null
+  }
+}
+
+const startPageListAutoScroll = (direction) => {
+  stopPageListAutoScroll()
+
+  pageListScrollInterval = setInterval(() => {
+    const pageList = dom.el('#pageList')
+
+    if (pageList) {
+      pageList.scrollTop += direction * pageListScrollSpeed
+    }
+  }, 15)
+}
+
+const handlePageListDrag = (e) => {
+  const pageList = dom.el('#pageList')
+
+  if (!pageList) return
+
+  const rect = pageList.getBoundingClientRect()
+  const clientY = e.clientY || (e.touches && e.touches[0]?.clientY) || 0
+
+  const distTop = clientY - rect.top
+  const distBottom = rect.bottom - clientY
+
+  if (distTop >= 0 && distTop < SCROLL_THRESHOLD) {
+    pageListScrollSpeed = Math.max(2, Math.round((SCROLL_THRESHOLD - distTop) / 2))
+    startPageListAutoScroll(-1)
+  } else if (distBottom >= 0 && distBottom < SCROLL_THRESHOLD) {
+    pageListScrollSpeed = Math.max(2, Math.round((SCROLL_THRESHOLD - distBottom) / 2))
+    startPageListAutoScroll(1)
+  } else {
+    stopPageListAutoScroll()
+  }
+}
+
+UIkit.util.on('#pageList', 'start', () => {
+  window.addEventListener('pointermove', handlePageListDrag)
+  window.addEventListener('touchmove', handlePageListDrag)
+})
+
+UIkit.util.on('#pageList', 'stop', () => {
+  stopPageListAutoScroll()
+  window.removeEventListener('pointermove', handlePageListDrag)
+  window.removeEventListener('touchmove', handlePageListDrag)
+})
 
 /**
  * Show new page dialog.
