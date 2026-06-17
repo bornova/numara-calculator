@@ -5,6 +5,7 @@ import { calculate } from './calcManager'
 import { populatePages } from '../ui/pageManager'
 import { dom } from '../dom'
 import UIkit from 'uikit'
+import { notify } from '../ui/dialogs'
 
 const lastSyncContent = new Map()
 let currentSyncDir = null
@@ -16,6 +17,111 @@ let isSyncing = false
 export function clearSyncCache() {
   currentSyncDir = null
   lastSyncContent.clear()
+}
+
+/**
+ * Checks if the sync directory exists. If not, disables sync, clears cache, stops watching, and displays a notification.
+ * @returns {Promise<boolean>} Resolves to true if the directory exists, otherwise false.
+ */
+export async function checkSyncDir() {
+  if (!isElectron) return false
+  if (!app.settings.syncDirEnabled || !app.settings.syncDir) return false
+
+  try {
+    const exists = await numara.checkSyncDirectory(app.settings.syncDir)
+
+    if (!exists) {
+      disableSyncState('Sync directory could not be found. Sync has been disabled.')
+
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error checking sync directory:', error)
+    return false
+  }
+}
+
+let activeDeletionDialog = false
+
+/**
+ * Handles the event when the sync directory is deleted or no longer accessible, presenting options to select a new folder or disable sync.
+ */
+export async function handleSyncDirDeleted() {
+  if (!isElectron) return
+  if (!app.settings.syncDirEnabled || !app.settings.syncDir) return
+  if (activeDeletionDialog) return
+
+  activeDeletionDialog = true
+  numara.stopWatchingSyncDir()
+
+  customConfirm(
+    'The sync folder has been deleted or is no longer accessible. What would you like to do?',
+    'Disable Sync',
+    'Select New Folder',
+    () => {
+      activeDeletionDialog = false
+      disableSyncState('Sync has been disabled.')
+    },
+    async () => {
+      activeDeletionDialog = false
+
+      const path = await numara.selectSyncDirectory()
+
+      if (path) {
+        app.settings.syncDirEnabled = true
+        app.settings.syncDir = path
+        store.set('settings', app.settings)
+
+        const syncDirInput = dom.el('#syncDir')
+
+        if (syncDirInput) {
+          syncDirInput.value = path
+        }
+
+        const syncDirEnabledCheckbox = dom.el('#syncDirEnabled')
+
+        if (syncDirEnabledCheckbox) {
+          syncDirEnabledCheckbox.checked = true
+        }
+
+        const syncDirSection = dom.el('#syncDirSection')
+
+        if (syncDirSection) {
+          syncDirSection.style.display = 'grid'
+        }
+
+        numara.startWatchingSyncDir(path)
+        triggerFolderSync().catch(console.error)
+      } else {
+        disableSyncState('Sync has been disabled.')
+      }
+    }
+  )
+}
+
+function disableSyncState(message) {
+  app.settings.syncDirEnabled = false
+  app.settings.syncDir = ''
+  store.set('settings', app.settings)
+
+  clearSyncCache()
+  numara.stopWatchingSyncDir()
+
+  const syncDirEnabledCheckbox = dom.el('#syncDirEnabled')
+
+  if (syncDirEnabledCheckbox) {
+    syncDirEnabledCheckbox.checked = false
+  }
+
+  const syncDirSection = dom.el('#syncDirSection')
+
+  if (syncDirSection) {
+    syncDirSection.style.display = 'none'
+  }
+
+  notify(message, 'danger')
 }
 
 /**
@@ -104,6 +210,13 @@ export async function triggerFolderSync() {
   }
 
   isSyncing = true
+
+  const exists = await checkSyncDir()
+  if (!exists) {
+    isSyncing = false
+    return
+  }
+
   const dirPath = app.settings.syncDir
 
   if (dirPath !== currentSyncDir) {
@@ -227,6 +340,7 @@ export async function triggerFolderSync() {
     }
   } catch (error) {
     console.error('Error triggering folder sync:', error)
+    await checkSyncDir()
   } finally {
     isSyncing = false
   }
@@ -258,6 +372,7 @@ export async function syncPageSave(pageName, content) {
     }
 
     console.error(`Error saving page ${pageName} to sync dir:`, error)
+    await checkSyncDir()
   }
 }
 
@@ -286,6 +401,7 @@ export async function syncPageRename(oldName, newName) {
     lastSyncContent.set(safeOldName, content)
 
     console.error(`Error renaming page ${oldName} to ${newName} in sync dir:`, error)
+    await checkSyncDir()
   }
 }
 
@@ -311,6 +427,7 @@ export async function syncPageDelete(pageName) {
     }
 
     console.error(`Error deleting page ${pageName} from sync dir:`, error)
+    await checkSyncDir()
   }
 }
 
