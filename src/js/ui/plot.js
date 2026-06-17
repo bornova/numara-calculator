@@ -1,7 +1,7 @@
 import { dom } from '../dom'
-import { calculate, math } from '../eval'
-import { modal, showError } from './modal'
-import { app, checkSize, store } from '../appUtils'
+import { calculate, math } from '../calc/calcManager'
+import { modal, showError } from './dialogs'
+import { app, checkSize, store } from '../appState'
 
 import { applyChange, observableDiff } from '@bornova/deep-diff'
 
@@ -113,8 +113,8 @@ export function plot() {
 
 /**
  * Updates a specific plot configuration setting and triggers a redrawing.
- * @param {string} setting - The setting key.
- * @param {*} value - The new setting value.
+ * @param {string} setting The setting key.
+ * @param {*} value The new setting value.
  */
 function updatePlotSetting(setting, value) {
   app.plotSettings[setting] = value
@@ -124,10 +124,10 @@ function updatePlotSetting(setting, value) {
 
 /**
  * Validates the plot boundary domains ensuring they are numbers and valid ranges.
- * @param {number} xMin - Minimum X axis boundary.
- * @param {number} xMax - Maximum X axis boundary.
- * @param {number} yMin - Minimum Y axis boundary.
- * @param {number} yMax - Maximum Y axis boundary.
+ * @param {number} xMin Minimum X axis boundary.
+ * @param {number} xMax Maximum X axis boundary.
+ * @param {number} yMin Minimum Y axis boundary.
+ * @param {number} yMax Maximum Y axis boundary.
  * @returns {boolean} True if the domains are valid.
  */
 function validateDomain(xMin, xMax, yMin, yMax) {
