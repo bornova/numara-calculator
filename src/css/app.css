@@ -120,6 +120,14 @@ text {
   left: 0;
 }
 
+.sidebar-width-animating .appWrapper,
+.sidebar-width-animating #sidePanel .uk-offcanvas-bar,
+.sidebar-width-animating #sidePanelResizer {
+  transition:
+    left 180ms ease,
+    width 180ms ease;
+}
+
 /* Headers */
 
 .winHeader {
@@ -1124,4 +1132,27 @@ input:checked + .slider:before {
 
 .updateRatesLink.spin {
   pointer-events: none;
+}
+
+/* Sync folder tab layout styling */
+#syncDirSection {
+  display: none;
+}
+
+.sync-label {
+  min-width: 80px;
+}
+
+.sync-path-link {
+  display: block;
+  overflow: hidden;
+  direction: rtl;
+  text-align: right;
+  text-decoration: underline;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#syncDirHiddenWrapper {
+  display: none;
 }
