@@ -46,17 +46,15 @@ function checkWarnings() {
 
 /** Updates the sync directory path display text and styles. */
 function updateSyncDirPathDisplay(path) {
-  const syncDirPathDisplay = dom.el('#syncDirPathDisplay')
+  const selectSyncDirButton = dom.el('#selectSyncDirButton')
 
-  if (syncDirPathDisplay) {
-    syncDirPathDisplay.textContent = path || 'No folder chosen'
-
+  if (selectSyncDirButton) {
     if (path) {
-      syncDirPathDisplay.style.cursor = 'pointer'
-      syncDirPathDisplay.style.textDecoration = 'underline'
+      selectSyncDirButton.textContent = path
+      selectSyncDirButton.setAttribute('uk-tooltip', `title: ${path}; pos: bottom`)
     } else {
-      syncDirPathDisplay.style.cursor = ''
-      syncDirPathDisplay.style.textDecoration = ''
+      selectSyncDirButton.textContent = 'Choose Folder'
+      selectSyncDirButton.removeAttribute('uk-tooltip')
     }
   }
 }
@@ -149,18 +147,6 @@ export const settings = {
     }
 
     if (app.settings.currency && (app.settings.currencyInterval !== 'manual' || !store.get('rateDate'))) getRates()
-
-    if (isElectron) {
-      const syncDirPathDisplay = dom.el('#syncDirPathDisplay')
-
-      if (syncDirPathDisplay) {
-        syncDirPathDisplay.addEventListener('click', () => {
-          if (app.settings.syncDir) {
-            numara.openPath(app.settings.syncDir)
-          }
-        })
-      }
-    }
   },
 
   /** Prepare settings dialog items. */
@@ -362,6 +348,12 @@ export const settings = {
 
     setupSidePanel()
     calculate()
+
+    if (isElectron && dom.dialogSettings.classList.contains('uk-open')) {
+      setTimeout(() => {
+        modal.center('#dialogSettings')
+      }, 250) // wait for sidebar transition/animation to finish
+    }
   },
 
   /** Save settings to local storage. */
@@ -524,7 +516,8 @@ if (isElectron) {
   const selectSyncDirButton = dom.el('#selectSyncDirButton')
 
   if (selectSyncDirButton) {
-    selectSyncDirButton.addEventListener('click', async () => {
+    selectSyncDirButton.addEventListener('click', async (e) => {
+      e.preventDefault()
       const path = await numara.selectSyncDirectory()
 
       if (path) {
@@ -572,10 +565,13 @@ dom.els('.settingItem').forEach((el) => {
 
 if (isElectron) {
   dom.resetSizeButton.addEventListener('click', () => {
-    numara.resetSize()
+    const sidebarWidth = app.sidebarDocked ? (store.get('sidePanelWidth') ?? 240) : 0
+
+    numara.resetSize(560, 480, sidebarWidth)
 
     setTimeout(() => {
       modal.show('#dialogSettings')
-    }, 10)
+      modal.center('#dialogSettings')
+    }, 250)
   })
 }
