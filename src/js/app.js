@@ -13,7 +13,7 @@ import { plot } from './ui/functionPlot'
 import { applyAnswerPositionLayout, settings } from './ui/settings'
 import { applyUdfu } from './calc/userDefined'
 import { app, checkAppUpdate, isMac, isElectron, store } from './appState'
-import { triggerFolderSync } from './calc/sync'
+import { triggerFolderSync, checkSyncDir, handleSyncDirDeleted } from './calc/sync'
 
 import { author, description, homepage, name, version } from './../../package.json'
 
@@ -557,12 +557,20 @@ const initializeApp = async () => {
 
   if (isElectron) {
     if (app.settings.syncDirEnabled && app.settings.syncDir) {
-      numara.startWatchingSyncDir(app.settings.syncDir)
-      triggerFolderSync().catch(console.error)
+      const syncDirExists = await checkSyncDir()
+
+      if (syncDirExists) {
+        numara.startWatchingSyncDir(app.settings.syncDir)
+        triggerFolderSync().catch(console.error)
+      }
     }
 
     numara.onSyncDirChanged(() => {
       triggerFolderSync().catch(console.error)
+    })
+
+    numara.onSyncDirDeleted(() => {
+      handleSyncDirDeleted().catch(console.error)
     })
   }
 
