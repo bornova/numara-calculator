@@ -14,7 +14,25 @@ export const modal = {
    * Hide modal dialog for given id.
    * @param {string} id Modal Id.
    */
-  hide: (id) => UIkit.modal(id).hide()
+  hide: (id) => UIkit.modal(id).hide(),
+
+  /**
+   * Center the dialog of a modal. Uses requestAnimationFrame to center precisely.
+   * @param {string|HTMLElement} target Modal Id or modal dialog HTMLElement.
+   */
+  center: (target) => {
+    const element = typeof target === 'string' ? document.querySelector(`${target} .uk-modal-dialog`) : target
+
+    if (!element) return
+
+    requestAnimationFrame(() => {
+      Object.assign(element.style, {
+        left: `${(window.innerWidth - element.offsetWidth) / 2}px`,
+        top: `${(window.innerHeight - element.offsetHeight) / 2}px`,
+        visibility: ''
+      })
+    })
+  }
 }
 
 /**
@@ -65,36 +83,22 @@ export function notify(msg, stat = 'primary') {
 }
 
 /**
- * Centers the modal dialog on the screen.
- * @param {HTMLElement} modal The modal element to center.
- */
-const centerModal = (modal) => {
-  requestAnimationFrame(() => {
-    Object.assign(modal.style, {
-      left: `${(window.innerWidth - modal.offsetWidth) / 2}px`,
-      top: `${(window.innerHeight - modal.offsetHeight) / 2}px`,
-      visibility: ''
-    })
-  })
-}
-
-/**
  * Makes a UIkit modal dialog draggable by its title/header.
- * @param {HTMLElement} modal The root modal element containing the dialog and title.
+ * @param {HTMLElement} modalElement The root modal element containing the dialog and title.
  */
-function makeModalDraggable(modal) {
-  const dialog = modal.querySelector('.uk-modal-dialog')
+function makeModalDraggable(modalElement) {
+  const dialog = modalElement.querySelector('.uk-modal-dialog')
   const header = dialog?.querySelector('.uk-modal-title')
 
   if (!dialog || !header) return
 
-  UIkit.util.on(modal, 'beforeshow', (e) => {
-    if (e.target !== modal) return
+  UIkit.util.on(modalElement, 'beforeshow', (e) => {
+    if (e.target !== modalElement) return
     if (dom.el('#dialogUdfu')?.classList.contains('uk-open')) return
 
     Object.assign(dialog.style, { visibility: 'hidden', display: 'block', position: 'absolute' })
 
-    centerModal(dialog)
+    modal.center(dialog)
   })
 
   let dragging = false
@@ -123,7 +127,7 @@ function makeModalDraggable(modal) {
     document.addEventListener('mouseup', up)
   })
 
-  header.addEventListener('dblclick', () => centerModal(dialog))
+  header.addEventListener('dblclick', () => modal.center(dialog))
 }
 
 // Make all modals draggable
