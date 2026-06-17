@@ -501,7 +501,7 @@ export function populatePages() {
   if (!pages || pages.length === 0) defaultPage()
 
   // Clean up any orphaned UIkit dropdown DOM elements appended to <body> before clearing pageList
-  document.querySelectorAll('body > .uk-dropdown').forEach((el) => el.remove())
+  document.querySelectorAll('body > .uk-dropdown:not(#sortDropdown)').forEach((el) => el.remove())
 
   dom.pageList.innerHTML = ''
 
@@ -516,11 +516,11 @@ export function populatePages() {
       app.activePage === page.id ? 'activePage' : 'inactivePage'
     )
     pageListItem.innerHTML = `
-      <div class="uk-flex-1" data-action="load" data-page="${page.id}">
+      <div class="sortHandle uk-flex-1" data-action="load" data-page="${page.id}">
         <div class="pageListItemTitle" title="${escapeHTML(page.name)}">${escapeHTML(page.name)}</div>
         <div class="dialog-open-date">${DateTime.fromFormat(page.id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
       </div>
-      <div class="uk-flex-right uk-margin-small-right">
+      <div class="pageItemActions uk-flex-right uk-margin-small-right">
         <span class="drop-parent-icon">${dom.icons.EllipsisVertical}</span>
         <div uk-dropdown="mode: click; pos: right-top; bg-scroll: false; container: body">
           <div 
@@ -589,62 +589,6 @@ export function pageOrder() {
 
   store.set('pages', orderedPages)
 }
-
-let pageListScrollInterval = null
-let pageListScrollSpeed = 0
-const SCROLL_THRESHOLD = 30
-
-const stopPageListAutoScroll = () => {
-  if (pageListScrollInterval) {
-    clearInterval(pageListScrollInterval)
-    pageListScrollInterval = null
-  }
-}
-
-const startPageListAutoScroll = (direction) => {
-  stopPageListAutoScroll()
-
-  pageListScrollInterval = setInterval(() => {
-    const pageList = dom.el('#pageList')
-
-    if (pageList) {
-      pageList.scrollTop += direction * pageListScrollSpeed
-    }
-  }, 15)
-}
-
-const handlePageListDrag = (e) => {
-  const pageList = dom.el('#pageList')
-
-  if (!pageList) return
-
-  const rect = pageList.getBoundingClientRect()
-  const clientY = e.clientY || (e.touches && e.touches[0]?.clientY) || 0
-
-  const distTop = clientY - rect.top
-  const distBottom = rect.bottom - clientY
-
-  if (distTop >= 0 && distTop < SCROLL_THRESHOLD) {
-    pageListScrollSpeed = Math.max(2, Math.round((SCROLL_THRESHOLD - distTop) / 2))
-    startPageListAutoScroll(-1)
-  } else if (distBottom >= 0 && distBottom < SCROLL_THRESHOLD) {
-    pageListScrollSpeed = Math.max(2, Math.round((SCROLL_THRESHOLD - distBottom) / 2))
-    startPageListAutoScroll(1)
-  } else {
-    stopPageListAutoScroll()
-  }
-}
-
-UIkit.util.on('#pageList', 'start', () => {
-  window.addEventListener('pointermove', handlePageListDrag)
-  window.addEventListener('touchmove', handlePageListDrag)
-})
-
-UIkit.util.on('#pageList', 'stop', () => {
-  stopPageListAutoScroll()
-  window.removeEventListener('pointermove', handlePageListDrag)
-  window.removeEventListener('touchmove', handlePageListDrag)
-})
 
 /**
  * Show new page dialog.
