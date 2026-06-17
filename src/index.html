@@ -253,6 +253,15 @@
                 </label>
               </div>
             </div>
+            <div id="showTrayContainer" class="uk-child-width-expand" uk-grid>
+              <div data-help="showTray">Show system tray icon</div>
+              <div class="uk-text-right uk-position-relative">
+                <label class="switch">
+                  <input id="showTray" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
 
             <h3>Typography</h3>
             <div class="uk-child-width-expand" uk-grid>
@@ -622,7 +631,7 @@
                 </div>
               </div>
               <div class="uk-text-right uk-position-relative">
-                <div id="syncDirPathDisplay" class="uk-text-meta uk-margin-xsmall-top" style="word-break: break-all">
+                <div id="syncDirPathDisplay" class="uk-text-meta uk-margin-small-top" style="word-break: break-all">
                   No folder chosen
                 </div>
                 <input type="hidden" id="syncDir" class="settingItem" />
