@@ -99,6 +99,8 @@ export const store = {
 }
 
 const userAgent = navigator.userAgent.toLowerCase()
+const DEFAULT_APP_WIDTH = 560
+const DEFAULT_APP_HEIGHT = 480
 /** Check if app is running on MacOS. */
 export const isMac = userAgent.includes('mac')
 /** Check if app is running in Electron. */
@@ -123,8 +125,15 @@ export async function getTheme() {
 
 /** Check window size. */
 export async function checkSize() {
+  const appWrapperRect = dom.appWrapper.getBoundingClientRect()
+  const appWrapperWidth = Math.round(appWrapperRect.width)
+  const appWrapperHeight = Math.round(appWrapperRect.height)
+  const widthDiff = Math.abs(appWrapperWidth - DEFAULT_APP_WIDTH)
+  const heightDiff = Math.abs(appWrapperHeight - DEFAULT_APP_HEIGHT)
+  const isAppWrapperResized = widthDiff > 1 || heightDiff > 1
+
   dom.resetSizeButton.style.display =
-    isElectron && (await numara.isResized()) && !(await numara.isMaximized()) ? 'block' : 'none'
+    isElectron && isAppWrapperResized && !(await numara.isMaximized()) ? 'block' : 'none'
 }
 
 /** Get standard BCP 47 standard locale tag based on selection */
