@@ -1,7 +1,7 @@
 import { dom } from '../dom'
 import { cm, udfInput, uduInput } from '../editor/editor'
 import { notify } from './modal'
-import { isElectron } from '../utils'
+import { isElectron } from '../appUtils'
 
 /**
  * Helper to safely copy text to clipboard and show notification.

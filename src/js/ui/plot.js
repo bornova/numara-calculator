@@ -1,13 +1,13 @@
 import { dom } from '../dom'
 import { calculate, math } from '../eval'
 import { modal, showError } from './modal'
-import { app, checkSize, store } from '../utils'
-
-import { productName } from './../../../package.json'
+import { app, checkSize, store } from '../appUtils'
 
 import { applyChange, observableDiff } from '@bornova/deep-diff'
 
 import functionPlot from 'function-plot'
+
+import { productName } from './../../../package.json'
 
 const plotSettings = {
   defaults: {

@@ -2,7 +2,7 @@ import { dom } from '../dom'
 import { cm, numaraHints, refreshCurrencyTokens } from '../editor/editor'
 import { calculate, math, refreshCurrencyState } from '../eval'
 import { notify } from '../ui/modal'
-import { app, store } from '../utils'
+import { app, store } from '../appUtils'
 
 const USD_UNIT = 'USD'
 const RATES_URL = 'https://api.frankfurter.dev/v2/rates?base=USD'

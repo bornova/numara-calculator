@@ -3,7 +3,7 @@ import { applyChange, diff, observableDiff } from '@bornova/deep-diff'
 
 import { dom } from '../dom'
 import { confirm, modal } from './modal'
-import { app, store } from '../utils'
+import { app, store } from '../appUtils'
 
 const COLOR_INPUT_SELECTOR = '.colorInput'
 const colorInputs = dom.els(COLOR_INPUT_SELECTOR)

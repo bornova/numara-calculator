@@ -5,7 +5,7 @@ import { calculate, clearEvaluationCache, math } from '../eval'
 import { getRates } from '../calc/forex'
 import { confirm, modal, showError } from './modal'
 import { setupSidePanel } from './pages'
-import { app, checkSize, getSystemLocale, getTheme, isElectron, store } from '../utils'
+import { app, checkSize, getSystemLocale, getTheme, isElectron, store } from '../appUtils'
 import { triggerFolderSync, clearSyncCache } from '../sync'
 
 import { applyChange, observableDiff } from '@bornova/deep-diff'

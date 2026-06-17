@@ -1,7 +1,7 @@
 import { outputContext } from './ui/context'
 import { dom } from './dom'
 import { cm, debouncedCalculate } from './editor/editor'
-import { app, store, getSystemLocale } from './utils'
+import { app, store, getSystemLocale } from './appUtils'
 import { syncPageSaveDebounced } from './sync'
 import { notify } from './ui/modal'
 import {

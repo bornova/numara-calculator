@@ -12,7 +12,7 @@ import { getPageName, initializePages, pageOrder, populatePages, setupSidePanel 
 import { plot } from './ui/plot'
 import { applyAnswerPositionLayout, settings } from './ui/settings'
 import { applyUdfu } from './calc/userDefined'
-import { app, checkAppUpdate, isMac, isElectron, store } from './utils'
+import { app, checkAppUpdate, isMac, isElectron, store } from './appUtils'
 import { triggerFolderSync } from './sync'
 
 import { author, description, homepage, name, version } from './../../package.json'

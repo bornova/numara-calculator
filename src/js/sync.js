@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { app, store, isElectron } from './utils'
+import { app, store, isElectron } from './appUtils'
 import { cm } from './editor/editor'
 import { calculate } from './eval'
 import { populatePages } from './ui/pages'

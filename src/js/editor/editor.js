@@ -1,7 +1,7 @@
 import { dom } from '../dom'
 import { calculate, formatAnswer, math, syncOutputHeights } from '../eval'
 import { showError } from '../ui/modal'
-import { app, debounce, store } from '../utils'
+import { app, debounce, store } from '../appUtils'
 
 import UIkit from 'uikit'
 import CodeMirror from 'codemirror'
