@@ -1,8 +1,8 @@
 import { dom } from '../dom'
-import { refreshEditor, udfInput, uduInput } from '../editor/editor'
-import { calculate, math } from '../eval'
-import { modal, showError } from '../ui/modal'
-import { app, store } from '../appUtils'
+import { refreshEditor, udfInput, uduInput } from '../editor'
+import { calculate, math } from './calcManager'
+import { modal, showError } from '../ui/dialogs'
+import { app, store } from '../appState'
 import { DateTime as luxon } from 'luxon'
 import * as formulajs from '@formulajs/formulajs'
 import nerdamer from 'nerdamer-prime/all.js'
@@ -53,7 +53,7 @@ const RESERVED_KEYS = new Set(['__proto__', 'constructor', 'prototype'])
 
 /**
  * Validate user defined function/unit object keys and guard against prototype pollution.
- * @param {object} obj - The object to validate.
+ * @param {object} obj The object to validate.
  */
 function validateUdfObj(obj) {
   if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) {
