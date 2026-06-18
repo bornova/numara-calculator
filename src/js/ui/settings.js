@@ -39,9 +39,9 @@ export function applyAnswerPositionLayout() {
 
 /** Configures warnings by checking a condition mapped to a dom component. */
 function checkWarnings() {
-  dom.bigNumWarn.style.display = app.settings.numericOutput === 'BigNumber' ? 'inline-block' : 'none'
+  dom.bigNumWarn.style.display = app.settings.numericOutput === 'BigNumber' ? 'inline-flex' : 'none'
   dom.localeWarn.style.display =
-    app.settings.thouSep !== 'disabled' && app.settings.inputLocale ? 'inline-block' : 'none'
+    app.settings.thouSep !== 'disabled' && app.settings.inputLocale ? 'inline-flex' : 'none'
 }
 
 /** Updates the sync directory path display text and styles. */
@@ -348,12 +348,6 @@ export const settings = {
 
     setupSidePanel()
     calculate()
-
-    if (isElectron && dom.dialogSettings.classList.contains('uk-open')) {
-      setTimeout(() => {
-        modal.center('#dialogSettings')
-      }, 250) // wait for sidebar transition/animation to finish
-    }
   },
 
   /** Save settings to local storage. */
@@ -370,7 +364,7 @@ export const settings = {
       store.remove('rateDate')
     }
 
-    dom.currencyWarn.style.display = app.settings.currency ? 'none' : 'inline-block'
+    dom.currencyWarn.style.display = app.settings.currency ? 'none' : 'inline-flex'
 
     if (!store.get('rateDate') && app.settings.currency) {
       getRates()
