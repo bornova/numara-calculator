@@ -21,7 +21,6 @@
 
 .uk-modal {
   background-color: light-dark(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8));
-  padding: 0 30px !important;
 }
 
 .uk-modal-full {
@@ -71,23 +70,6 @@
   padding: 15px;
 }
 
-.uk-grid {
-  align-items: center;
-  margin-left: -30px !important;
-}
-
-.uk-grid > * {
-  padding-left: 30px !important;
-}
-
-.uk-grid + .uk-grid {
-  margin-top: 10px;
-}
-
-.uk-grid-small {
-  margin: 0 25px 0 0;
-}
-
 /* Form controls */
 
 .uk-select {
@@ -108,10 +90,6 @@
 }
 
 /* Tabs */
-
-.uk-switcher {
-  margin: 0 !important;
-}
 
 .uk-tab {
   margin: 0px -15px;
