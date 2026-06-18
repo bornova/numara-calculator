@@ -333,14 +333,6 @@ text {
   border-bottom: 1px solid light-dark(#f1f1f1, #303030) !important;
 }
 
-.gutterBlock {
-  position: absolute;
-  bottom: 50px;
-  left: 0;
-  z-index: 5;
-  height: 8px;
-}
-
 /* Actions */
 
 .actions {
@@ -643,7 +635,7 @@ text {
 }
 
 #settingsTabs {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 #settingsTabs::before {
@@ -656,10 +648,24 @@ text {
 
 .dialog-settings-body {
   margin-right: -8px;
-  padding-right: 10px;
-  height: 400px;
-  max-height: calc(100vh - 200px);
+  padding-right: 8px;
+  height: calc(100vh - 200px);
+  max-height: 420px;
+  overflow-x: hidden;
   overflow-y: auto;
+}
+
+.dialog-settings-body > li > div {
+  margin: 10px 0 0 0;
+  line-height: 16px;
+}
+
+.settingItem {
+  width: 150px;
+}
+
+#currencyInterval {
+  width: 125px;
 }
 
 #dialogSettings .uk-overflow-auto {
@@ -675,7 +681,7 @@ text {
 }
 
 #dialogSettings h3:first-of-type {
-  margin: 0px 0 12px 0;
+  margin: 5px 0 12px 0;
 }
 
 #dialogSettings input:disabled + span.slider.round {
@@ -695,18 +701,12 @@ text {
 
 .warn-icon {
   display: none;
-  position: absolute;
-  top: -1px;
-  right: 32px;
+  justify-content: center;
+  align-items: center;
+  vertical-align: middle;
 }
 
-.warn-icon-bignum {
-  position: absolute;
-  left: 10px;
-}
-
-.warn-icon svg,
-.warn-icon-bignum svg {
+.warn-icon svg {
   stroke: #faa05a;
   width: 14px;
   height: 14px;
@@ -731,8 +731,8 @@ text {
 }
 
 .updateRatesLink > svg {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
 }
 
 /* Theme Pill Buttons */
@@ -786,8 +786,8 @@ text {
 
 .resetSizeButton {
   position: absolute;
-  top: 10px;
-  right: 15px;
+  top: 2px;
+  right: 4px;
   color: light-dark(#666666, #999999);
 }
 
@@ -800,15 +800,17 @@ text {
 /* Color picker dialog */
 
 .colorPickerContainer {
-  margin-right: -8px;
-  padding-right: 10px;
   height: calc(100vh - 200px);
   max-height: 450px;
   overflow: scroll;
 }
 
-.colorPickerContainer .uk-first-column {
-  margin-top: 2px;
+.colorPickerContainer > div {
+  margin: 5px 0 0 0;
+}
+
+.colorPickerContainer > div > div:first-child {
+  margin-right: 10px;
 }
 
 .colorInput {
@@ -848,12 +850,6 @@ text {
   width: 128px;
 }
 
-.dialog-about-title {
-  vertical-align: middle;
-  margin-left: 5px;
-  color: light-dark(#162e44, #e6e6e6);
-}
-
 .dialogAbout p {
   clear: both;
   margin-top: 5px;
@@ -891,11 +887,6 @@ div:has(> #logsLink) {
   text-align: center;
 }
 
-.notificationLink {
-  margin-left: 8px;
-  color: #56b6c2;
-}
-
 .updateButton {
   display: none;
   margin-top: 10px;
@@ -916,10 +907,6 @@ div:has(> #logsLink) {
     opacity 0.3s linear;
 }
 
-.msgBox {
-  color: light-dark(#006699, #58a1c5);
-}
-
 .pr-lh {
   line-height: 22px;
 }
@@ -929,10 +916,6 @@ div:has(> #logsLink) {
 .function-plot {
   height: calc(100vh - 180px) !important;
   max-height: 800px;
-}
-
-.top-right-legend {
-  fill: light-dark(#4682b4, #58a1c5);
 }
 
 .domain {
@@ -1032,7 +1015,7 @@ div:has(> #logsLink) {
 .switch {
   display: inline-block;
   position: relative;
-  margin-top: 1px;
+  vertical-align: middle;
   width: 28px;
   height: 16px;
 }
