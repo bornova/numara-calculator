@@ -505,6 +505,16 @@ const setupUIkitUtils = () => {
     dom.errTitle.innerHTML = ''
     dom.errMsg.innerHTML = ''
   })
+
+  UIkit.util.on(document, 'beforeshow', '.uk-tooltip', (event) => {
+    const tooltipEl = event.target
+    const triggerEl = document.querySelector(`[aria-describedby="${tooltipEl.id}"]`)
+    const answerEl = triggerEl ? triggerEl.closest('.answer') : null
+
+    if (answerEl && answerEl.offsetWidth < dom.output.clientWidth - 8) {
+      event.preventDefault()
+    }
+  })
 }
 
 /**
