@@ -505,20 +505,18 @@ function showTimeoutDialog(lines) {
       autoCloseTimeout = null
     }
 
-    if (!isCalculating) return
-
-    const currentStuckIndex = sharedArray && sharedArray[0] !== -1 ? sharedArray[0] : lastActiveLineIndex
-
     if (worker) {
       worker.terminate()
       worker = null
     }
 
-    if (currentStuckIndex !== -1 && currentStuckIndex < cm.lineCount()) {
-      const lineText = cm.getLine(currentStuckIndex)
+    isCalculating = false
+
+    if (stuckLineIndex !== -1 && stuckLineIndex < cm.lineCount()) {
+      const lineText = cm.getLine(stuckLineIndex)
 
       if (lineText !== null && !lineText.trim().startsWith('//') && !lineText.trim().startsWith('#')) {
-        cm.replaceRange('// ', { line: currentStuckIndex, ch: 0 })
+        cm.replaceRange('// ', { line: stuckLineIndex, ch: 0 })
       }
 
       if (debouncedCalculate) {
