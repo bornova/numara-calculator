@@ -89,7 +89,7 @@ export async function handleSyncDirDeleted() {
         const syncDirSection = dom.el('#syncDirSection')
 
         if (syncDirSection) {
-          syncDirSection.style.display = 'grid'
+          syncDirSection.style.display = 'flex'
         }
 
         numara.startWatchingSyncDir(path)
