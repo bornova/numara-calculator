@@ -1,18 +1,38 @@
 {
+  "id": "numara-calculator",
   "name": "Numara Calculator",
   "short_name": "Numara",
+  "description": "A simple but powerful notepad calculator that gives answers as you type.",
+  "categories": ["productivity", "utilities"],
   "start_url": ".",
+  "scope": ".",
   "display": "standalone",
+  "theme_color": "#1f1f1f",
+  "background_color": "#1f1f1f",
   "icons": [
     {
-      "sizes": "192x192",
       "src": "assets/icon-192.png",
-      "type": "image/png"
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "sizes": "512x512",
       "src": "assets/icon-512.png",
-      "type": "image/png"
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
