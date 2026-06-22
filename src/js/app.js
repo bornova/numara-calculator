@@ -8,7 +8,7 @@ import { initializeSettingsTooltips } from './ui/settingsTips'
 import { generateIcons } from './ui/icons'
 import { numaraKeys } from './editor/keybindings.js'
 import { modal, notify, showError } from './ui/dialogs'
-import { getPageName, initializePages, pageOrder, populatePages, setupSidePanel } from './ui/pageManager'
+import { getPageName, initializePages, pageOrder, populatePages, setupSideBar } from './ui/pageManager'
 import { plot } from './ui/functionPlot'
 import { applyAnswerPositionLayout, settings } from './ui/settings'
 import { applyUdfu } from './calc/userDefined'
@@ -42,7 +42,7 @@ const setupAppButtons = () => {
     printButton: () => {
       window.print()
       if (!app.sidebarDocked) {
-        UIkit.offcanvas('#sidePanel').hide()
+        UIkit.offcanvas('#sideBar').hide()
       }
     },
     clearButton: () => {
@@ -50,13 +50,13 @@ const setupAppButtons = () => {
       cm.focus()
       calculate()
       if (!app.sidebarDocked) {
-        UIkit.offcanvas('#sidePanel').hide()
+        UIkit.offcanvas('#sideBar').hide()
       }
     },
     copyButton: () => {
       copyAll()
       if (!app.sidebarDocked) {
-        UIkit.offcanvas('#sidePanel').hide()
+        UIkit.offcanvas('#sideBar').hide()
       }
     },
     udfuButton: () => modal.show('#dialogUdfu'),
@@ -321,7 +321,7 @@ const setupKeyboardShortcuts = () => {
     '$mod+D': 'clearButton',
     '$mod+N': 'newPageButton',
     '$mod+P': 'printButton',
-    'Shift+TAB': 'sidePanelButton'
+    'Shift+TAB': 'sideBarButton'
   }
 
   const shortcuts = {}
@@ -332,8 +332,8 @@ const setupKeyboardShortcuts = () => {
 
       if (!isModalOpen()) {
         dom[button].click()
-      } else if (dom.sidePanel.classList.contains('uk-open') && !dom.dialogNewPage.classList.contains('uk-open')) {
-        dom.closeSidePanelButton.click()
+      } else if (dom.sideBar.classList.contains('uk-open') && !dom.dialogNewPage.classList.contains('uk-open')) {
+        dom.closeSideBarButton.click()
       }
     }
   }
@@ -414,13 +414,13 @@ const setupPrintArea = () => {
 const setupUIkitUtils = () => {
   UIkit.mixin({ data: { offset: 5, delay: 300 } }, 'tooltip')
 
-  UIkit.util.on('.modal, #sidePanel', 'beforeshow', () => {
+  UIkit.util.on('.modal, #sideBar', 'beforeshow', () => {
     if (isElectron) {
       numara.transControls(true)
     }
   })
 
-  UIkit.util.on('.modal, #sidePanel', 'hidden', () => {
+  UIkit.util.on('.modal, #sideBar', 'hidden', () => {
     modalOpenState = dom.els('.uk-open').length > 0
 
     if (isElectron) {
@@ -430,7 +430,7 @@ const setupUIkitUtils = () => {
     setTimeout(() => cm.focus(), 100)
   })
 
-  UIkit.util.on('#sidePanel', 'beforehide', (event) => {
+  UIkit.util.on('#sideBar', 'beforehide', (event) => {
     if (app.sidebarDocked) {
       event.preventDefault()
     }
@@ -520,19 +520,19 @@ const setupUIkitUtils = () => {
 /**
  * Initializes the side panel settings, offcanvas drawer, and handles window resize changes.
  */
-function initializeSidePanel() {
+function initializeSideBar() {
   let resizeTimer
 
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer)
 
     resizeTimer = setTimeout(() => {
-      setupSidePanel(true)
+      setupSideBar(true)
       calculate()
     }, 100)
   })
 
-  setupSidePanel(true)
+  setupSideBar(true)
 }
 
 /**
@@ -559,7 +559,7 @@ const initializeApp = async () => {
   setupKeyboardShortcuts()
   setupPrintArea()
   setupUIkitUtils()
-  initializeSidePanel()
+  initializeSideBar()
   initializePages()
   initializeContextMenus()
   initializeSettingsTooltips()
