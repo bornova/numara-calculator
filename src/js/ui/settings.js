@@ -4,7 +4,7 @@ import { cm, udfInput, uduInput } from '../editor'
 import { calculate, clearEvaluationCache, math } from '../calc/calcManager'
 import { getRates } from '../calc/currencies'
 import { confirm, modal, showError } from './dialogs'
-import { setupSidePanel } from './pageManager'
+import { setupSideBar } from './pageManager'
 import { app, checkSize, getSystemLocale, getTheme, isElectron, store } from '../appState'
 import { triggerFolderSync, clearSyncCache } from '../calc/sync'
 
@@ -214,7 +214,7 @@ export const settings = {
     const syncDirSection = dom.el('#syncDirSection')
 
     if (syncDirSection) {
-      syncDirSection.style.display = app.settings.syncDirEnabled ? 'grid' : 'none'
+      syncDirSection.style.display = app.settings.syncDirEnabled ? 'flex' : 'none'
     }
 
     const syncTab = dom.el('#syncTab')
@@ -334,7 +334,7 @@ export const settings = {
 
     const syncDirSection = dom.el('#syncDirSection')
     if (syncDirSection) {
-      syncDirSection.style.display = app.settings.syncDirEnabled ? 'grid' : 'none'
+      syncDirSection.style.display = app.settings.syncDirEnabled ? 'flex' : 'none'
     }
 
     if (isElectron) {
@@ -346,7 +346,7 @@ export const settings = {
       }
     }
 
-    setupSidePanel()
+    setupSideBar()
     calculate()
   },
 
@@ -425,6 +425,10 @@ dom.defaultSettingsButton.addEventListener('click', () => {
     await settings.prep()
     await settings.apply()
     settings.save()
+
+    setTimeout(() => {
+      modal.center('#dialogSettings')
+    }, 250)
   })
 
   const syncContainer = dom.el('#confirmKeepSyncContainer')
@@ -554,12 +558,18 @@ dom.els('.settingItem').forEach((el) => {
         clearSyncCache()
       }
     }
+
+    if (id === 'pageListPosition') {
+      setTimeout(() => {
+        modal.center('#dialogSettings')
+      }, 250)
+    }
   })
 })
 
 if (isElectron) {
   dom.resetSizeButton.addEventListener('click', () => {
-    const sidebarWidth = app.sidebarDocked ? (store.get('sidePanelWidth') ?? 240) : 0
+    const sidebarWidth = app.sidebarDocked ? (store.get('sideBarWidth') ?? 240) : 0
 
     numara.resetSize(560, 480, sidebarWidth)
 
