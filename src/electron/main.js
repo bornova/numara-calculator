@@ -574,6 +574,20 @@ ipcMain.on('textboxContextMenu', () =>
   Menu.buildFromTemplate([{ role: 'cut' }, { role: 'copy' }, { role: 'paste' }]).popup()
 )
 
+ipcMain.on('syncDirContextMenu', (event, dirPath) => {
+  const contextMenuTemplate = [
+    {
+      label: 'Open folder',
+      click: () => {
+        shell.openPath(dirPath)
+      }
+    }
+  ]
+  const contextMenu = Menu.buildFromTemplate(contextMenuTemplate)
+
+  contextMenu.popup()
+})
+
 ipcMain.on('checkUpdate', () => {
   autoUpdater.checkForUpdates()
 })
