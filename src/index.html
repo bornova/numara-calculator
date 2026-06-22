@@ -44,15 +44,14 @@
 
       <div id="actions" class="actions uk-flex uk-flex-middle">
         <div id="leftActions" class="leftActions uk-flex uk-flex-left uk-flex-middle">
-          <a id="sidePanelButton" class="action" title="Pages" uk-toggle="target: #sidePanel" uk-tooltip>
+          <a id="sideBarButton" class="action" title="Open Sidebar" uk-toggle="target: #sideBar" uk-tooltip>
             <i data-lucide="panel-left"></i>
           </a>
           <a id="newPageButton" class="action newPageButton" title="New page" uk-tooltip>
             <i data-lucide="plus"></i>
           </a>
           <span id="leftActionsDivider" class="actionDivider"></span>
-          <a id="clearButton" class="action" title="Clear page" uk-tooltip><i data-lucide="brush-cleaning"></i></a>
-          <a id="copyButton" class="action" title="Copy page" uk-tooltip><i data-lucide="copy"></i></a>
+          <a id="clearButton" class="action" title="Clear page" uk-tooltip><i data-lucide="eraser"></i></a>
         </div>
         <div id="centerActions" class="centerActions uk-flex uk-flex-center uk-flex-middle uk-flex-1 uk-text-center">
           <span id="pageName" class="pageName" uk-tooltip="delay: 1000"></span>
@@ -61,13 +60,17 @@
           <a id="udfuButton" class="action" title="User functions and units" uk-tooltip><i data-lucide="braces"></i></a>
           <a id="settingsButton" class="action" title="Settings" uk-tooltip><i data-lucide="settings"></i></a>
           <a id="aboutButton" class="action" title="About" uk-tooltip><i data-lucide="info"></i></a>
+          <div uk-dropdown="mode: click">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
+            dolore magna aliqua.
+          </div>
           <span id="notificationDot" class="notificationDot" uk-tooltip><i data-lucide="circle"></i></span>
         </div>
       </div>
     </div>
 
-    <div id="sidePanel">
-      <div id="sidePanelResizer" class="sidePanelResizer"></div>
+    <div id="sideBar">
+      <div id="sideBarResizer" class="sideBarResizer"></div>
       <div class="uk-offcanvas-bar uk-flex uk-flex-column">
         <div id="pageListHeader" class="pageListHeader">
           <span id="pageListSort" class="pageListSort uk-float-right" title="Sort">
@@ -90,9 +93,9 @@
         </div>
         <div id="pageList" class="pageList uk-flex-1" uk-sortable="handle: .pageListItem"></div>
         <div id="pageListFooter" class="pageListFooter uk-flex-bottom">
-          <div id="sidePanelActions" class="sidePanelActions uk-flex uk-flex-between uk-flex-middle">
+          <div id="sideBarActions" class="sideBarActions uk-flex uk-flex-between uk-flex-middle">
             <div class="leftActions uk-flex uk-flex-middle">
-              <a id="closeSidePanelButton" class="action closeSidePanelButton" title="Close" uk-tooltip>
+              <a id="closeSideBarButton" class="action closeSideBarButton" title="Close Sidebar" uk-tooltip>
                 <i data-lucide="panel-left-close"></i>
               </a>
               <a id="newPageButtonSP" class="action newPageButtonSP" title="New page" uk-tooltip>
@@ -100,6 +103,7 @@
               </a>
             </div>
             <div class="rightActions uk-flex uk-flex-middle uk-flex-right uk-text-right">
+              <a id="copyButton" class="action" title="Copy page" uk-tooltip><i data-lucide="copy"></i></a>
               <a id="printButton" class="action" title="Print page" uk-tooltip><i data-lucide="printer"></i></a>
               <a id="importPageButton" class="action importPageButton" title="Import Page" uk-tooltip>
                 <i data-lucide="download"></i>
@@ -183,9 +187,6 @@
     <div id="dialogSettings" class="modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
         <h2 class="uk-modal-title uk-text-center">Settings</h2>
-        <a id="resetSizeButton" class="resetSizeButton" title="Reset window size" uk-tooltip>
-          <i data-lucide="scaling"></i>
-        </a>
         <ul id="settingsTabs" class="uk-tab" uk-tab="connect: #settingsSwitcher">
           <li class="uk-active"><a href="#">General</a></li>
           <li><a href="#">Editor</a></li>
@@ -621,35 +622,32 @@
                 </label>
               </div>
             </div>
-            <div id="syncDirSection" class="uk-margin-small-top">
-              <div class="uk-flex uk-flex-middle">
-                <div class="uk-width-auto sync-label" data-help="syncDir">Sync folder</div>
-                <div class="uk-width-expand uk-text-right">
-                  <a id="selectSyncDirButton" href="#" class="action-link sync-path-link"> Choose Folder </a>
-                </div>
+
+            <div id="syncDirSection" class="uk-flex uk-flex-middle uk-flex-between">
+              <div class="uk-width-auto sync-label" data-help="syncDir">Sync folder</div>
+              <div class="sync-path">
+                <a id="selectSyncDirButton" href="#" class="action-link sync-path-link">Choose Folder</a>
               </div>
-              <div id="syncDirHiddenWrapper">
-                <input type="hidden" id="syncDir" class="settingItem" />
-              </div>
+            </div>
+            <div id="syncDirHiddenWrapper">
+              <input type="hidden" id="syncDir" class="settingItem" />
             </div>
           </li>
         </ul>
 
         <div class="uk-flex">
           <div class="dialog-buttons resetButtons uk-width-1-2 uk-flex-left">
-            <a
-              id="dialogSettingsReset"
-              class="resetButton uk-text-danger"
-              title="Reset all app settings and data"
-              uk-tooltip
-            >
-              Reset App
+            <a id="dialogSettingsReset" class="resetAppButton" title="Reset all app settings and data" uk-tooltip>
+              <i data-lucide="brush-cleaning">Reset all data</i>
+            </a>
+            <a id="defaultSettingsButton" class="defaultSettingsButton" title="Restore default settings" uk-tooltip>
+              <i data-lucide="list-restart">Restore defaults</i>
+            </a>
+            <a id="resetSizeButton" class="resetSizeButton" title="Reset window size" uk-tooltip>
+              <i data-lucide="scaling"></i>
             </a>
           </div>
-          <div class="dialog-buttons resetButtons uk-width-1-2 uk-flex-right">
-            <a id="defaultSettingsButton" class="defSettingsButton" title="Restore default settings" uk-tooltip>
-              Restore defaults
-            </a>
+          <div class="dialog-buttons uk-width-1-2 uk-flex-right">
             <button class="uk-button uk-button-default uk-modal-close uk-button-small">Close</button>
           </div>
         </div>
