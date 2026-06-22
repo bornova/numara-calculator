@@ -21,8 +21,8 @@ const SIDEBAR_TRANSITION_MS = 180
  * @param {number} width The width in pixels.
  */
 function applySidebarWidth(width) {
-  const bar = dom.el('#sidePanel .uk-offcanvas-bar')
-  const resizer = dom.el('#sidePanelResizer')
+  const bar = dom.el('#sideBar .uk-offcanvas-bar')
+  const resizer = dom.el('#sideBarResizer')
 
   if (bar) {
     bar.style.width = `${width}px`
@@ -35,17 +35,17 @@ function applySidebarWidth(width) {
   dom.appWrapper.style.left = `${width}px`
 }
 
-let sidePanelResizerSetup = false
+let sideBarResizerSetup = false
 
 /**
  * Binds mouse drag and double-click listeners on the side panel resizer bar.
  */
-function setupSidePanelResizer() {
-  if (sidePanelResizerSetup) return
+function setupSideBarResizer() {
+  if (sideBarResizerSetup) return
 
-  sidePanelResizerSetup = true
+  sideBarResizerSetup = true
 
-  const resizer = dom.el('#sidePanelResizer')
+  const resizer = dom.el('#sideBarResizer')
 
   resizer.addEventListener('mousedown', (e) => {
     e.preventDefault()
@@ -63,7 +63,7 @@ function setupSidePanelResizer() {
 
       const width = Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, e.clientX))
 
-      store.set('sidePanelWidth', width)
+      store.set('sideBarWidth', width)
 
       document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseup', onMouseUp)
@@ -78,7 +78,7 @@ function setupSidePanelResizer() {
   resizer.addEventListener('dblclick', () => {
     applySidebarWidth(SIDEBAR_DEFAULT_WIDTH)
 
-    store.set('sidePanelWidth', SIDEBAR_DEFAULT_WIDTH)
+    store.set('sideBarWidth', SIDEBAR_DEFAULT_WIDTH)
 
     calculate()
   })
@@ -128,7 +128,7 @@ function resetWindowToAppWrapper(sidebarWidth = 0, appWrapperSize = getAppWrappe
  * @param {boolean} show When true, ensure the docked panel is visible.
  *
  */
-export function setupSidePanel(show = false) {
+export function setupSideBar(show = false) {
   const appWrapperSize = getAppWrapperSize()
   const { pageListPosition } = app.settings
   const isWide = (window.visualViewport?.width ?? window.innerWidth) > 900
@@ -143,27 +143,27 @@ export function setupSidePanel(show = false) {
     triggerSidebarTransition()
   }
 
-  dom.sidePanel.classList.toggle('sidebar-docked', dock)
-  dom.sidePanelButton.style.display = dock ? 'none' : ''
-  dom.closeSidePanelButton.style.display = dock ? 'none' : ''
+  dom.sideBar.classList.toggle('sidebar-docked', dock)
+  dom.sideBarButton.style.display = dock ? 'none' : ''
+  dom.closeSideBarButton.style.display = dock ? 'none' : ''
   dom.newPageButton.style.display = dock ? 'none' : ''
   dom.leftActionsDivider.style.display = dock ? 'none' : ''
 
   if (dock) {
-    const width = store.get('sidePanelWidth') ?? SIDEBAR_DEFAULT_WIDTH
+    const width = store.get('sideBarWidth') ?? SIDEBAR_DEFAULT_WIDTH
 
     if (dockChanged) {
       resetWindowToAppWrapper(width, appWrapperSize)
     }
 
     applySidebarWidth(width)
-    setupSidePanelResizer()
+    setupSideBarResizer()
 
-    const isVisible = dom.sidePanel.classList.contains('uk-open')
+    const isVisible = dom.sideBar.classList.contains('uk-open')
 
     if (!dockChanged && !(show && !isVisible)) return
 
-    const offcanvas = UIkit.offcanvas('#sidePanel', {
+    const offcanvas = UIkit.offcanvas('#sideBar', {
       overlay: false,
       mode: 'none',
       escClose: false,
@@ -172,10 +172,10 @@ export function setupSidePanel(show = false) {
 
     if (!isVisible && (show || dockChanged)) {
       if (document.querySelector('.uk-modal.uk-open')) {
-        dom.sidePanel.classList.add('uk-open')
-        dom.sidePanel.style.display = 'block'
+        dom.sideBar.classList.add('uk-open')
+        dom.sideBar.style.display = 'block'
 
-        const bar = dom.el('#sidePanel .uk-offcanvas-bar')
+        const bar = dom.el('#sideBar .uk-offcanvas-bar')
 
         if (bar) {
           bar.classList.add('uk-open')
@@ -193,16 +193,16 @@ export function setupSidePanel(show = false) {
 
     if (!dockChanged) return
 
-    dom.sidePanel.classList.remove('uk-open')
-    dom.sidePanel.style.display = ''
+    dom.sideBar.classList.remove('uk-open')
+    dom.sideBar.style.display = ''
 
-    const bar = dom.el('#sidePanel .uk-offcanvas-bar')
+    const bar = dom.el('#sideBar .uk-offcanvas-bar')
 
     if (bar) {
       bar.classList.remove('uk-open')
     }
 
-    UIkit.offcanvas('#sidePanel', { overlay: true, mode: 'slide', escClose: true, bgClose: true })
+    UIkit.offcanvas('#sideBar', { overlay: true, mode: 'slide', escClose: true, bgClose: true })
   }
 }
 
@@ -600,7 +600,7 @@ function newPageDialog() {
   modal.show('#dialogNewPage')
 }
 
-dom.closeSidePanelButton.addEventListener('click', () => UIkit.offcanvas('#sidePanel').hide())
+dom.closeSideBarButton.addEventListener('click', () => UIkit.offcanvas('#sideBar').hide())
 dom.newPageButton.addEventListener('click', newPageDialog)
 dom.newPageButtonSP.addEventListener('click', newPageDialog)
 dom.dialogNewPageSave.addEventListener('click', () => newPage(false))
@@ -657,7 +657,7 @@ if (isElectron) {
 
   // Print window from main
   numara.print(() => {
-    UIkit.offcanvas('#sidePanel').hide()
+    UIkit.offcanvas('#sideBar').hide()
     window.print()
   })
 } else {
@@ -676,7 +676,7 @@ document.addEventListener('click', (event) => {
     loadPage(pageId)
 
     if (!app.sidebarDocked) {
-      UIkit.offcanvas('#sidePanel').hide()
+      UIkit.offcanvas('#sideBar').hide()
     }
 
     return
