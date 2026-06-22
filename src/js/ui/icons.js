@@ -1,4 +1,4 @@
-import { dom } from './dom'
+import { dom } from '../dom'
 
 import {
   createElement,
@@ -11,10 +11,11 @@ import {
   Circle,
   Copy,
   CornerDownRight,
-  Dot,
   Download,
   EllipsisVertical,
+  Eraser,
   Info,
+  ListRestart,
   Palette,
   PanelLeft,
   PanelLeftClose,
@@ -25,7 +26,9 @@ import {
   Scaling,
   Settings,
   Trash,
-  Upload
+  Monitor,
+  Sun,
+  Moon
 } from 'lucide'
 
 const icons = {
@@ -37,10 +40,11 @@ const icons = {
   Circle,
   Copy,
   CornerDownRight,
-  Dot,
   Download,
   EllipsisVertical,
+  Eraser,
   Info,
+  ListRestart,
   Palette,
   PanelLeft,
   PanelLeftClose,
@@ -51,7 +55,9 @@ const icons = {
   Scaling,
   Settings,
   Trash,
-  Upload
+  Monitor,
+  Sun,
+  Moon
 }
 
 /**

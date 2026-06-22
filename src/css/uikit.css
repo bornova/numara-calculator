@@ -21,7 +21,6 @@
 
 .uk-modal {
   background-color: light-dark(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8));
-  padding: 0 30px !important;
 }
 
 .uk-modal-full {
@@ -31,7 +30,7 @@
 
 .uk-modal-dialog {
   transition: 0s linear;
-  border-radius: 3px;
+  border-radius: 8px;
   background-color: light-dark(#ffffff, #1f1f1f);
   max-width: calc(100vw - 40px) !important;
 }
@@ -42,7 +41,7 @@
 }
 
 .uk-modal-title {
-  color: light-dark(#333333, #b2cfdd);
+  color: light-dark(#244061, #b2cfdd);
   font-weight: 600;
   font-size: 1rem;
 }
@@ -71,22 +70,6 @@
   padding: 15px;
 }
 
-.uk-grid {
-  margin-left: -30px !important;
-}
-
-.uk-grid > * {
-  padding-left: 30px !important;
-}
-
-.uk-grid + .uk-grid {
-  margin-top: 10px;
-}
-
-.uk-grid-small {
-  margin: 0 25px 0 0;
-}
-
 /* Form controls */
 
 .uk-select {
@@ -97,18 +80,19 @@
   height: 24px;
 }
 
+.uk-checkbox {
+  margin-right: 2px;
+  border-radius: 3px;
+}
+
 .uk-label {
   font-size: 1rem;
 }
 
 /* Tabs */
 
-.uk-switcher {
-  margin: 0 !important;
-}
-
 .uk-tab {
-  margin: 0px -20px;
+  margin: 0px -15px;
 }
 
 .uk-tab > * {
@@ -116,7 +100,7 @@
 }
 
 .uk-tab > *:first-child {
-  padding-left: 20px;
+  padding-left: 15px;
 }
 
 .uk-tab::before {
@@ -128,7 +112,7 @@
   margin-right: 0px;
   padding: 0 15px 5px 15px;
   color: light-dark(#999999, #999999);
-  font-weight: 600;
+  font-weight: 500;
   font-size: 1rem;
   text-transform: none;
 }
@@ -147,8 +131,8 @@
   transition: 0s ease-in-out;
   margin-left: 3px;
   border-radius: 3px;
-  padding: 0 10px;
-  line-height: 28px;
+  padding: 2px 10px 0px 10px;
+  font-weight: 500;
 }
 
 .uk-button:enabled:active {
@@ -186,7 +170,7 @@
 }
 
 .uk-button-danger:active {
-  background-color: light-dark(#ec2147, #ec2147);
+  color: light-dark(#bd2e2e, #ff7373);
 }
 
 .uk-button-danger:disabled {

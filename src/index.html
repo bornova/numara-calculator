@@ -43,32 +43,34 @@
       </div>
 
       <div id="actions" class="actions uk-flex uk-flex-middle">
-        <div id="leftActions" class="leftActions uk-flex-left uk-flex-middle">
-          <a id="sidePanelButton" class="action" title="Pages" uk-toggle="target: #sidePanel" uk-tooltip>
+        <div id="leftActions" class="leftActions uk-flex uk-flex-left uk-flex-middle">
+          <a id="sideBarButton" class="action" title="Open Sidebar" uk-toggle="target: #sideBar" uk-tooltip>
             <i data-lucide="panel-left"></i>
           </a>
           <a id="newPageButton" class="action newPageButton" title="New page" uk-tooltip>
             <i data-lucide="plus"></i>
           </a>
-          <span id="actionDivider" class="actionDivider"></span>
-          <a id="printButton" class="action" title="Print page" uk-tooltip><i data-lucide="printer"></i></a>
-          <a id="clearButton" class="action" title="Clear page" uk-tooltip><i data-lucide="brush-cleaning"></i></a>
-          <a id="copyButton" class="action" title="Copy page" uk-tooltip><i data-lucide="copy"></i></a>
+          <span id="leftActionsDivider" class="actionDivider"></span>
+          <a id="clearButton" class="action" title="Clear page" uk-tooltip><i data-lucide="eraser"></i></a>
         </div>
-        <div id="centerActions" class="centerActions uk-flex-center uk-flex-middle uk-flex-1 uk-text-center">
+        <div id="centerActions" class="centerActions uk-flex uk-flex-center uk-flex-middle uk-flex-1 uk-text-center">
           <span id="pageName" class="pageName" uk-tooltip="delay: 1000"></span>
         </div>
-        <div id="rightActions" class="rightActions uk-flex-right uk-flex-middle">
+        <div id="rightActions" class="rightActions uk-flex uk-flex-right uk-flex-middle">
           <a id="udfuButton" class="action" title="User functions and units" uk-tooltip><i data-lucide="braces"></i></a>
           <a id="settingsButton" class="action" title="Settings" uk-tooltip><i data-lucide="settings"></i></a>
           <a id="aboutButton" class="action" title="About" uk-tooltip><i data-lucide="info"></i></a>
+          <div uk-dropdown="mode: click">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
+            dolore magna aliqua.
+          </div>
           <span id="notificationDot" class="notificationDot" uk-tooltip><i data-lucide="circle"></i></span>
         </div>
       </div>
     </div>
 
-    <div id="sidePanel">
-      <div id="sidePanelResizer" class="sidePanelResizer"></div>
+    <div id="sideBar">
+      <div id="sideBarResizer" class="sideBarResizer"></div>
       <div class="uk-offcanvas-bar uk-flex uk-flex-column">
         <div id="pageListHeader" class="pageListHeader">
           <span id="pageListSort" class="pageListSort uk-float-right" title="Sort">
@@ -89,21 +91,24 @@
             <div id="sortZA" class="sortListItem uk-flex uk-flex-column" title="Sort Z to A">Z to A</div>
           </div>
         </div>
-        <div id="pageList" class="pageList uk-flex-1" uk-sortable="cls-custom: pageListItemDrag"></div>
+        <div id="pageList" class="pageList uk-flex-1" uk-sortable="handle: .pageListItem"></div>
         <div id="pageListFooter" class="pageListFooter uk-flex-bottom">
-          <div id="sidePanelActions" class="sidePanelActions uk-flex">
-            <div class="leftActions uk-flex uk-flex-middle uk-flex-1">
-              <a id="closeSidePanelButton" class="action closeSidePanelButton" title="Close" uk-tooltip>
+          <div id="sideBarActions" class="sideBarActions uk-flex uk-flex-between uk-flex-middle">
+            <div class="leftActions uk-flex uk-flex-middle">
+              <a id="closeSideBarButton" class="action closeSideBarButton" title="Close Sidebar" uk-tooltip>
                 <i data-lucide="panel-left-close"></i>
               </a>
               <a id="newPageButtonSP" class="action newPageButtonSP" title="New page" uk-tooltip>
                 <i data-lucide="plus"></i>
               </a>
             </div>
-            <div class="rightActions uk-flex uk-flex-middle uk-flex-right uk-flex-1 uk-text-right">
+            <div class="rightActions uk-flex uk-flex-middle uk-flex-right uk-text-right">
+              <a id="copyButton" class="action" title="Copy page" uk-tooltip><i data-lucide="copy"></i></a>
+              <a id="printButton" class="action" title="Print page" uk-tooltip><i data-lucide="printer"></i></a>
               <a id="importPageButton" class="action importPageButton" title="Import Page" uk-tooltip>
                 <i data-lucide="download"></i>
               </a>
+              <span class="actionDivider"></span>
               <a id="deleteAllPagesButton" class="action deleteAllPagesButton" title="Delete all pages" uk-tooltip>
                 <i data-lucide="trash"></i>
               </a>
@@ -155,7 +160,7 @@
             <div>
               <textarea id="udfInput" class="udfInput"></textarea>
             </div>
-            <div uk-grid>
+            <div class="uk-flex">
               <div class="dialog-buttons uk-width-1-2 uk-flex-left"></div>
               <div class="dialog-buttons uk-width-1-2 uk-flex-right">
                 <button id="dialogUdfuSaveF" class="uk-button uk-button-primary uk-button-small">Save</button>
@@ -167,7 +172,7 @@
             <div>
               <textarea id="uduInput" class="uduInput"></textarea>
             </div>
-            <div uk-grid>
+            <div class="uk-flex">
               <div class="dialog-buttons uk-width-1-2 uk-flex-left"></div>
               <div class="dialog-buttons uk-width-1-2 uk-flex-right">
                 <button id="dialogUdfuSaveU" class="uk-button uk-button-primary uk-button-small">Save</button>
@@ -182,402 +187,467 @@
     <div id="dialogSettings" class="modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
         <h2 class="uk-modal-title uk-text-center">Settings</h2>
-        <a id="resetSizeButton" class="resetSizeButton" title="Reset window size" uk-tooltip>
-          <i data-lucide="scaling"></i>
-        </a>
-        <div class="dialog-settings-body">
-          <h3>Appearance</h3>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1" data-help="theme">Theme</div>
-            <div class="uk-text-right uk-position-relative">
-              <div class="uk-flex">
-                <select id="theme" class="uk-select settingItem uk-flex-left">
-                  <option value="system">System</option>
-                  <option value="light">Light</option>
-                  <option value="dark">Dark</option>
+        <ul id="settingsTabs" class="uk-tab" uk-tab="connect: #settingsSwitcher">
+          <li class="uk-active"><a href="#">General</a></li>
+          <li><a href="#">Editor</a></li>
+          <li><a href="#">Calculator</a></li>
+          <li><a href="#">Locale</a></li>
+          <li id="syncTab"><a href="#">Sync</a></li>
+        </ul>
+        <ul id="settingsSwitcher" class="uk-switcher dialog-settings-body">
+          <!-- Tab 1: General Settings -->
+          <li>
+            <div class="uk-flex uk-flex-middle uk-flex-between uk-margin-small-bottom">
+              <div data-help="theme">Theme</div>
+              <div>
+                <div class="uk-flex uk-flex-right uk-flex-middle" style="width: 100%">
+                  <div class="theme-pill-group">
+                    <button type="button" class="theme-pill-button" data-theme-value="system" title="System" uk-tooltip>
+                      <i data-lucide="monitor"></i>
+                    </button>
+                    <button type="button" class="theme-pill-button" data-theme-value="light" title="Light" uk-tooltip>
+                      <i data-lucide="sun"></i>
+                    </button>
+                    <button type="button" class="theme-pill-button" data-theme-value="dark" title="Dark" uk-tooltip>
+                      <i data-lucide="moon"></i>
+                    </button>
+                  </div>
+                  <input type="hidden" id="theme" class="settingItem" />
+                  <a
+                    id="customizeThemeButton"
+                    class="customizeThemeButton uk-flex-right uk-margin-small-left"
+                    title="Customize theme"
+                    uk-tooltip
+                  >
+                    <i data-lucide="palette"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <h3>General</h3>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="pageListPosition">Page list sidebar position</div>
+              <div class="uk-position-relative">
+                <select id="pageListPosition" class="uk-select settingItem">
+                  <option value="auto">Auto</option>
+                  <option value="slide">Slide out</option>
+                  <option value="dock">Docked</option>
                 </select>
-                <a
-                  id="customizeThemeButton"
-                  class="customizeThemeButton uk-flex-right uk-margin-small-left"
-                  title="Customize theme"
-                  uk-tooltip
-                >
-                  <i data-lucide="palette"></i>
-                </a>
               </div>
             </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1" data-help="fontSize">Font size</div>
-            <div class="uk-text-right uk-position-relative">
-              <select id="fontSize" class="uk-select settingItem">
-                <option value="0.9rem">Tiny</option>
-                <option value="1.0rem">Small</option>
-                <option value="1.1rem">Normal</option>
-                <option value="1.2rem">Large</option>
-                <option value="1.3rem">X-Large</option>
-              </select>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1" data-help="fontWeight">Font weight</div>
-            <div class="uk-text-right uk-position-relative">
-              <select id="fontWeight" class="uk-select settingItem">
-                <option value="200">Light</option>
-                <option value="300">Thin</option>
-                <option value="400">Normal</option>
-                <option value="500">Semi Bold</option>
-                <option value="700">Bold</option>
-              </select>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1" data-help="lineHeight">Line height</div>
-            <div class="uk-text-right uk-position-relative">
-              <select id="lineHeight" class="uk-select settingItem">
-                <option value="16px">Tiny</option>
-                <option value="20px">Small</option>
-                <option value="24px">Normal</option>
-                <option value="28px">Large</option>
-                <option value="32px">X-Large</option>
-              </select>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1" data-help="pageListPosition">Show pages</div>
-            <div class="uk-text-right uk-position-relative">
-              <select id="pageListPosition" class="uk-select settingItem">
-                <option value="auto">Auto</option>
-                <option value="slide">Slide out</option>
-                <option value="dock">Docked</option>
-              </select>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div data-help="alwaysOnTop">Always on top</div>
-            <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="alwaysOnTop" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-
-          <h3>Editor</h3>
-          <div class="uk-child-width-expand" uk-grid>
-            <div data-help="syntax">Syntax highligting</div>
-            <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="syntax" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div data-help="keywordTips">Keyword tooltips</div>
-            <div class="uk-text-right uk-width-2-5 uk-position-relative">
-              <label class="switch">
-                <input id="keywordTips" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div data-help="matchBrackets">Highlight matching brackets</div>
-            <div class="uk-text-right uk-width-2-5 uk-position-relative">
-              <label class="switch">
-                <input id="matchBrackets" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div data-help="autocomplete">Autocomplete hints</div>
-            <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="autocomplete" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div data-help="closeBrackets">Close matching brackets</div>
-            <div class="uk-text-right uk-width-2-5 uk-position-relative">
-              <label class="switch">
-                <input id="closeBrackets" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div data-help="lineNumbers">Line numbers</div>
-            <div class="uk-text-right uk-width-2-5 uk-position-relative">
-              <label class="switch">
-                <input id="lineNumbers" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div data-help="lineWrap">Wrap lines (input only)</div>
-            <div class="uk-text-right uk-width-2-5 uk-position-relative">
-              <label class="switch">
-                <input id="lineWrap" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div data-help="rulers">Rulers</div>
-            <div class="uk-text-right uk-width-2-5 uk-position-relative">
-              <label class="switch">
-                <input id="rulers" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div data-help="newPageOnStart">Start with blank page</div>
-            <div class="uk-text-right uk-width-2-5 uk-position-relative">
-              <label class="switch">
-                <input id="newPageOnStart" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-
-          <h3>Calculator</h3>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1" data-help="answerPosition">Answer position</div>
-            <div class="uk-text-right uk-position-relative">
-              <select id="answerPosition" class="uk-select settingItem"></select>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1" data-help="numericOutput">
-              Numeric output<a id="bigNumWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
-            </div>
-            <div class="uk-text-right uk-position-relative">
-              <select id="numericOutput" class="uk-select settingItem"></select>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1" data-help="notation">Notation</div>
-            <div class="uk-text-right uk-position-relative">
-              <select id="notation" class="uk-select settingItem"></select>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="uk-width-1-2 pr-lh" data-help="precision">Precision</div>
-            <div class="uk-text-right uk-width-1-2">
-              <div class="uk-child-width-expand" uk-grid>
-                <div class="uk-text-right uk-width-1-6">
-                  <span id="precisionLabel" class="uk-label precision"></span>
-                </div>
-                <div class="uk-text-right range uk-position-relative">
-                  <input id="precision" class="uk-range settingItem" type="range" min="0" max="16" step="1" />
-                </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="newPageOnStart">Start with blank page</div>
+              <div>
+                <label class="switch">
+                  <input id="newPageOnStart" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
               </div>
             </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="uk-width-1-2 pr-lh" data-help="expUpper">Upper exponent limit</div>
-            <div class="uk-text-right uk-width-1-2">
-              <div class="uk-child-width-expand" uk-grid>
-                <div class="uk-text-right uk-width-1-6">
-                  <span id="expUpperLabel" class="uk-label expUpper"></span>
-                </div>
-                <div class="uk-text-right range uk-position-relative">
-                  <input id="expUpper" class="uk-range settingItem" type="range" min="0" max="32" step="1" />
-                </div>
+            <div id="alwaysOnTopContainer" class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="alwaysOnTop">Always on top</div>
+              <div>
+                <label class="switch">
+                  <input id="alwaysOnTop" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
               </div>
             </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="uk-width-1-2 pr-lh" data-help="expLower">Lower exponent limit</div>
-            <div class="uk-text-right uk-width-1-2">
-              <div class="uk-child-width-expand" uk-grid>
-                <div class="uk-text-right uk-width-1-6">
-                  <span id="expLowerLabel" class="uk-label expLower"></span>
-                </div>
-                <div class="uk-text-right range uk-position-relative">
-                  <input id="expLower" class="uk-range settingItem" type="range" min="-32" max="0" step="1" />
-                </div>
+            <div id="showTrayContainer" class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="showTray">Show system tray icon</div>
+              <div>
+                <label class="switch">
+                  <input id="showTray" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
               </div>
             </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1" data-help="matrixType">Matrix type</div>
-            <div class="uk-text-right uk-position-relative">
-              <select id="matrixType" class="uk-select settingItem"></select>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div data-help="predictable">Predictable output</div>
-            <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="predictable" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div data-help="contPrevLine">Continue previous line</div>
-            <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="contPrevLine" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div data-help="lineErrors">Line errors</div>
-            <div class="uk-text-right uk-width-2-5 uk-position-relative">
-              <label class="switch">
-                <input id="lineErrors" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
 
-          <h3>Locale</h3>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1" data-help="locale">User locale</div>
-            <div class="uk-text-right uk-position-relative">
-              <select id="locale" class="uk-select settingItem"></select>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div data-help="inputLocale">
-              Enable for input<a id="localeWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
-            </div>
-            <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="inputLocale" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div data-help="thouSep">Thousands separator</div>
-            <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="thouSep" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div data-help="copyThouSep">
-              <i class="subSwitchIcon" data-lucide="corner-down-right"></i>Copy with answer
-            </div>
-            <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="copyThouSep" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div data-help="dateDay">Show day with date</div>
-            <div class="uk-text-right uk-position-relative">
-              <label class="switch">
-                <input id="dateDay" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-
-          <h3>Notifications</h3>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1" data-help="notifyLocation">Position</div>
-            <div class="uk-text-right uk-position-relative">
-              <select id="notifyLocation" class="uk-select settingItem">
-                <option value="top-left">Top Left</option>
-                <option value="top-center">Top Center</option>
-                <option value="top-right">Top Right</option>
-                <option disabled>-</option>
-                <option value="bottom-left">Bottom Left</option>
-                <option value="bottom-center">Bottom Center</option>
-                <option value="bottom-right">Bottom Right</option>
-              </select>
-            </div>
-          </div>
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1" data-help="notifyDuration">Duration</div>
-            <div class="uk-text-right uk-position-relative">
-              <select id="notifyDuration" class="uk-select settingItem">
-                <option value="1000">1 second</option>
-                <option value="3000">3 seconds</option>
-                <option value="5000">5 seconds</option>
-                <option value="10000">10 seconds</option>
-                <option value="30000">30 seconds</option>
-                <option value="0">Close manualy</option>
-              </select>
-            </div>
-          </div>
-
-          <h3>Currency Conversion</h3>
-          <div class="uk-child-width-expand" uk-grid>
-            <div data-help="currency">
-              Enabled<a id="currencyWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
-            </div>
-            <div class="uk-text-right uk-width-2-5 uk-position-relative">
-              <label class="switch">
-                <input id="currency" type="checkbox" class="settingItem" />
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-
-          <div class="uk-child-width-expand" uk-grid>
-            <div class="padTop1" data-help="currencyInterval">Rate update interval</div>
-            <div class="uk-position-relative uk-text-right">
-              <div class="uk-flex">
-                <select id="currencyInterval" class="uk-select settingItem uk-flex-left">
-                  <option value="0">On start</option>
-                  <option value="3600000">1 hour</option>
-                  <option value="10800000">3 hours</option>
-                  <option value="21600000">6 hours</option>
-                  <option value="43200000">12 hours</option>
-                  <option value="manual">Manual</option>
+            <h3>Typography</h3>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="fontSize">Font size</div>
+              <div>
+                <select id="fontSize" class="uk-select settingItem">
+                  <option value="0.9rem">Tiny</option>
+                  <option value="1.0rem">Small</option>
+                  <option value="1.1rem">Normal</option>
+                  <option value="1.2rem">Large</option>
+                  <option value="1.3rem">X-Large</option>
                 </select>
-
-                <a
-                  id="updateRatesLink"
-                  class="updateRatesLink uk-flex-right uk-margin-small-left"
-                  title="Update now"
-                  uk-tooltip
-                >
-                  <i data-lucide="refresh-ccw"></i>
-                </a>
               </div>
             </div>
-          </div>
-
-          <div class="uk-child-width-expand uk-margin-xsmall-top">
-            <div id="currencyUpdate">
-              <span class="lastUpdated">As of:</span>
-              <span id="lastUpdated" class="lastUpdated"></span>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="fontWeight">Font weight</div>
+              <div>
+                <select id="fontWeight" class="uk-select settingItem">
+                  <option value="200">Light</option>
+                  <option value="300">Thin</option>
+                  <option value="400">Normal</option>
+                  <option value="500">Semi Bold</option>
+                  <option value="700">Bold</option>
+                </select>
+              </div>
             </div>
-          </div>
-        </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="lineHeight">Line height</div>
+              <div>
+                <select id="lineHeight" class="uk-select settingItem">
+                  <option value="16px">Tiny</option>
+                  <option value="20px">Small</option>
+                  <option value="24px">Normal</option>
+                  <option value="28px">Large</option>
+                  <option value="32px">X-Large</option>
+                </select>
+              </div>
+            </div>
 
-        <div uk-grid>
+            <h3>Notifications</h3>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="notifyLocation">Position</div>
+              <div>
+                <select id="notifyLocation" class="uk-select settingItem">
+                  <option value="top-left">Top Left</option>
+                  <option value="top-center">Top Center</option>
+                  <option value="top-right">Top Right</option>
+                  <option disabled>-</option>
+                  <option value="bottom-left">Bottom Left</option>
+                  <option value="bottom-center">Bottom Center</option>
+                  <option value="bottom-right">Bottom Right</option>
+                </select>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="notifyDuration">Duration</div>
+              <div>
+                <select id="notifyDuration" class="uk-select settingItem">
+                  <option value="1000">1 second</option>
+                  <option value="3000">3 seconds</option>
+                  <option value="5000">5 seconds</option>
+                  <option value="10000">10 seconds</option>
+                  <option value="30000">30 seconds</option>
+                  <option value="0">Close manually</option>
+                </select>
+              </div>
+            </div>
+          </li>
+
+          <!-- Tab 2: Editor Settings -->
+          <li>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="syntax">Syntax highlighting</div>
+              <div>
+                <label class="switch">
+                  <input id="syntax" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="keywordTips">Keyword tooltips</div>
+              <div class="uk-text-right uk-width-2-5 uk-position-relative">
+                <label class="switch">
+                  <input id="keywordTips" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="matchBrackets">Highlight matching brackets</div>
+              <div class="uk-text-right uk-width-2-5 uk-position-relative">
+                <label class="switch">
+                  <input id="matchBrackets" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="autocomplete">Autocomplete hints</div>
+              <div>
+                <label class="switch">
+                  <input id="autocomplete" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="closeBrackets">Close matching brackets</div>
+              <div class="uk-text-right uk-width-2-5 uk-position-relative">
+                <label class="switch">
+                  <input id="closeBrackets" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="lineNumbers">Line numbers</div>
+              <div class="uk-text-right uk-width-2-5 uk-position-relative">
+                <label class="switch">
+                  <input id="lineNumbers" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="lineWrap">Wrap input expressions</div>
+              <div class="uk-text-right uk-width-2-5 uk-position-relative">
+                <label class="switch">
+                  <input id="lineWrap" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="truncateAnswers">Truncate answers</div>
+              <div class="uk-text-right uk-width-2-5 uk-position-relative">
+                <label class="switch">
+                  <input id="truncateAnswers" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="rulers">Show rulers</div>
+              <div class="uk-text-right uk-width-2-5 uk-position-relative">
+                <label class="switch">
+                  <input id="rulers" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+          </li>
+
+          <!-- Tab 3: Calculator Settings -->
+          <li>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="answerPosition">Answer position</div>
+              <div>
+                <select id="answerPosition" class="uk-select settingItem"></select>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="numericOutput">Numeric output</div>
+              <div>
+                <a id="bigNumWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
+                <select id="numericOutput" class="uk-select settingItem"></select>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="notation">Notation</div>
+              <div>
+                <select id="notation" class="uk-select settingItem"></select>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="matrixType">Matrix type</div>
+              <div>
+                <select id="matrixType" class="uk-select settingItem"></select>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div class="uk-width-1-2 pr-lh" data-help="precision">Precision</div>
+              <div class="uk-text-right uk-width-1-2">
+                <div class="uk-flex uk-flex-middle uk-flex-between">
+                  <div class="uk-text-right uk-width-1-6">
+                    <span id="precisionLabel" class="uk-label precision"></span>
+                  </div>
+                  <div class="uk-text-right range uk-position-relative">
+                    <input id="precision" class="uk-range settingItem" type="range" min="0" max="16" step="1" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div class="uk-width-1-2 pr-lh" data-help="expUpper">Upper exponent limit</div>
+              <div class="uk-text-right uk-width-1-2">
+                <div class="uk-flex uk-flex-middle uk-flex-between">
+                  <div class="uk-text-right uk-width-1-6">
+                    <span id="expUpperLabel" class="uk-label expUpper"></span>
+                  </div>
+                  <div class="uk-text-right range uk-position-relative">
+                    <input id="expUpper" class="uk-range settingItem" type="range" min="0" max="32" step="1" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div class="uk-width-1-2 pr-lh" data-help="expLower">Lower exponent limit</div>
+              <div class="uk-text-right uk-width-1-2">
+                <div class="uk-flex uk-flex-middle uk-flex-between">
+                  <div class="uk-text-right uk-width-1-6">
+                    <span id="expLowerLabel" class="uk-label expLower"></span>
+                  </div>
+                  <div class="uk-text-right range uk-position-relative">
+                    <input id="expLower" class="uk-range settingItem" type="range" min="-32" max="0" step="1" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div class="uk-width-1-2 pr-lh">Calculation timeout (seconds)</div>
+              <div class="uk-text-right uk-width-1-2">
+                <div class="uk-flex uk-flex-middle uk-flex-between">
+                  <div class="uk-text-right uk-width-1-6">
+                    <span id="calcTimeoutLabel" class="uk-label precision"></span>
+                  </div>
+                  <div class="uk-text-right range uk-position-relative">
+                    <input id="calcTimeout" class="uk-range settingItem" type="range" min="1" max="60" step="1" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="contPrevLine">Continue from previous line</div>
+              <div>
+                <label class="switch">
+                  <input id="contPrevLine" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="predictable">Predictable output</div>
+              <div>
+                <label class="switch">
+                  <input id="predictable" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="lineErrors">Line errors</div>
+              <div class="uk-text-right uk-width-2-5 uk-position-relative">
+                <label class="switch">
+                  <input id="lineErrors" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+          </li>
+
+          <!-- Tab 4: Locale Settings -->
+          <li>
+            <h3>Format</h3>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="thouSep">Thousands separator</div>
+              <div>
+                <select id="thouSep" class="uk-select settingItem"></select>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="inputLocale">
+                <i class="subSwitchIcon" data-lucide="corner-down-right"></i>Enable for input
+              </div>
+              <div>
+                <a id="localeWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
+                <label class="switch">
+                  <input id="inputLocale" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="copyThouSep">
+                <i class="subSwitchIcon" data-lucide="corner-down-right"></i>Copy with answer
+              </div>
+              <div>
+                <label class="switch">
+                  <input id="copyThouSep" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="dateFormat">Date format</div>
+              <div>
+                <select id="dateFormat" class="uk-select settingItem"></select>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="dateDay">Show day with date</div>
+              <div>
+                <label class="switch">
+                  <input id="dateDay" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+
+            <h3>Currency Conversion</h3>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="currency">Enabled</div>
+              <div class="uk-text-right uk-width-2-5 uk-position-relative">
+                <a id="currencyWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
+                <label class="switch">
+                  <input id="currency" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="currencyInterval">Rate update interval</div>
+              <div class="uk-position-relative uk-text-right">
+                <div class="uk-flex">
+                  <select id="currencyInterval" class="uk-select settingItem uk-flex-left">
+                    <option value="0">On start</option>
+                    <option value="3600000">1 hour</option>
+                    <option value="10800000">3 hours</option>
+                    <option value="21600000">6 hours</option>
+                    <option value="43200000">12 hours</option>
+                    <option value="manual">Manual</option>
+                  </select>
+
+                  <a
+                    id="updateRatesLink"
+                    class="updateRatesLink uk-flex-right uk-margin-small-left"
+                    title="Update now"
+                    uk-tooltip
+                  >
+                    <i data-lucide="refresh-ccw"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </li>
+
+          <!-- Tab 5: Sync Settings -->
+          <li>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="syncDirEnabled">Enable sync</div>
+              <div>
+                <label class="switch">
+                  <input id="syncDirEnabled" type="checkbox" class="settingItem" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+
+            <div id="syncDirSection" class="uk-flex uk-flex-middle uk-flex-between">
+              <div class="uk-width-auto sync-label" data-help="syncDir">Sync folder</div>
+              <div class="sync-path">
+                <a id="selectSyncDirButton" href="#" class="action-link sync-path-link">Choose Folder</a>
+              </div>
+            </div>
+            <div id="syncDirHiddenWrapper">
+              <input type="hidden" id="syncDir" class="settingItem" />
+            </div>
+          </li>
+        </ul>
+
+        <div class="uk-flex">
           <div class="dialog-buttons resetButtons uk-width-1-2 uk-flex-left">
-            <a
-              id="dialogSettingsReset"
-              class="resetButton uk-text-danger"
-              title="Reset all app settings and data"
-              uk-tooltip
-            >
-              Reset App
+            <a id="dialogSettingsReset" class="resetAppButton" title="Reset all app settings and data" uk-tooltip>
+              <i data-lucide="brush-cleaning">Reset all data</i>
+            </a>
+            <a id="defaultSettingsButton" class="defaultSettingsButton" title="Restore default settings" uk-tooltip>
+              <i data-lucide="list-restart">Restore defaults</i>
+            </a>
+            <a id="resetSizeButton" class="resetSizeButton" title="Reset window size" uk-tooltip>
+              <i data-lucide="scaling"></i>
             </a>
           </div>
-          <div class="dialog-buttons resetButtons uk-width-1-2 uk-flex-right">
-            <a id="defaultSettingsButton" class="defSettingsButton" title="Restore default settings" uk-tooltip>
-              Restore default
-            </a>
+          <div class="dialog-buttons uk-width-1-2 uk-flex-right">
             <button class="uk-button uk-button-default uk-modal-close uk-button-small">Close</button>
           </div>
         </div>
@@ -587,90 +657,90 @@
     <div id="dialogTheme" class="dialogTheme modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
         <h2 class="uk-modal-title uk-text-center">Customize Theme</h2>
-        <div class="uk-child-width-expand uk-margin-small-bottom" uk-grid>
+        <div class="uk-flex uk-flex-middle uk-child-width-expand">
           <div class="uk-text-right"></div>
           <div class="uk-text-secondary">Light</div>
           <div class="uk-text-secondary">Dark</div>
         </div>
 
         <div class="colorPickerContainer">
-          <div class="uk-child-width-expand" uk-grid>
+          <div class="uk-flex uk-flex-middle uk-child-width-expand">
             <div class="uk-text-right">Answers</div>
             <div><input name="color" data-class="answer" data-theme="light" class="colorInput" readonly /></div>
             <div><input name="color" data-class="answer" data-theme="dark" class="colorInput" readonly /></div>
           </div>
-          <div class="uk-child-width-expand" uk-grid>
+          <div class="uk-flex uk-flex-middle uk-child-width-expand">
             <div class="uk-text-right">Comments</div>
             <div><input name="color" data-class="comment" data-theme="light" class="colorInput" readonly /></div>
             <div><input name="color" data-class="comment" data-theme="dark" class="colorInput" readonly /></div>
           </div>
-          <div class="uk-child-width-expand" uk-grid>
+          <div class="uk-flex uk-flex-middle uk-child-width-expand">
             <div class="uk-text-right">Constants</div>
             <div><input name="color" data-class="constant" data-theme="light" class="colorInput" readonly /></div>
             <div><input name="color" data-class="constant" data-theme="dark" class="colorInput" readonly /></div>
           </div>
-          <div class="uk-child-width-expand" uk-grid>
+          <div class="uk-flex uk-flex-middle uk-child-width-expand">
             <div class="uk-text-right">Currencies</div>
             <div><input name="color" data-class="currency" data-theme="light" class="colorInput" readonly /></div>
             <div><input name="color" data-class="currency" data-theme="dark" class="colorInput" readonly /></div>
           </div>
-          <div class="uk-child-width-expand" uk-grid>
+          <div class="uk-flex uk-flex-middle uk-child-width-expand">
             <div class="uk-text-right">Errors</div>
             <div><input name="color" data-class="error" data-theme="light" class="colorInput" readonly /></div>
             <div><input name="color" data-class="error" data-theme="dark" class="colorInput" readonly /></div>
           </div>
-          <div class="uk-child-width-expand" uk-grid>
+          <div class="uk-flex uk-flex-middle uk-child-width-expand">
             <div class="uk-text-right">Excel</div>
             <div><input name="color" data-class="excel" data-theme="light" class="colorInput" readonly /></div>
             <div><input name="color" data-class="excel" data-theme="dark" class="colorInput" readonly /></div>
           </div>
-          <div class="uk-child-width-expand" uk-grid>
+          <div class="uk-flex uk-flex-middle uk-child-width-expand">
             <div class="uk-text-right">Functions</div>
             <div><input name="color" data-class="function" data-theme="light" class="colorInput" readonly /></div>
             <div><input name="color" data-class="function" data-theme="dark" class="colorInput" readonly /></div>
           </div>
-          <div class="uk-child-width-expand" uk-grid>
+          <div class="uk-flex uk-flex-middle uk-child-width-expand">
             <div class="uk-text-right">Keywords</div>
             <div><input name="color" data-class="keyword" data-theme="light" class="colorInput" readonly /></div>
             <div><input name="color" data-class="keyword" data-theme="dark" class="colorInput" readonly /></div>
           </div>
-          <div class="uk-child-width-expand" uk-grid>
+          <div class="uk-flex uk-flex-middle uk-child-width-expand">
             <div class="uk-text-right">Numbers</div>
             <div><input name="color" data-class="number" data-theme="light" class="colorInput" readonly /></div>
             <div><input name="color" data-class="number" data-theme="dark" class="colorInput" readonly /></div>
           </div>
-          <div class="uk-child-width-expand" uk-grid>
+          <div class="uk-flex uk-flex-middle uk-child-width-expand">
             <div class="uk-text-right">Text</div>
             <div><input name="color" data-class="text" data-theme="light" class="colorInput" readonly /></div>
             <div><input name="color" data-class="text" data-theme="dark" class="colorInput" readonly /></div>
           </div>
-          <div class="uk-child-width-expand" uk-grid>
+          <div class="uk-flex uk-flex-middle uk-child-width-expand">
             <div class="uk-text-right">Operators</div>
             <div><input name="color" data-class="operator" data-theme="light" class="colorInput" readonly /></div>
             <div><input name="color" data-class="operator" data-theme="dark" class="colorInput" readonly /></div>
           </div>
-          <div class="uk-child-width-expand" uk-grid>
+          <div class="uk-flex uk-flex-middle uk-child-width-expand">
             <div class="uk-text-right">Units</div>
             <div><input name="color" data-class="unit" data-theme="light" class="colorInput" readonly /></div>
             <div><input name="color" data-class="unit" data-theme="dark" class="colorInput" readonly /></div>
           </div>
-          <div class="uk-child-width-expand" uk-grid>
+          <div class="uk-flex uk-flex-middle uk-child-width-expand">
             <div class="uk-text-right">Variables</div>
             <div><input name="color" data-class="variable" data-theme="light" class="colorInput" readonly /></div>
             <div><input name="color" data-class="variable" data-theme="dark" class="colorInput" readonly /></div>
           </div>
           <div class="colorHR uk-text-secondary uk-margin-small">No syntax</div>
-          <div class="uk-child-width-expand" uk-grid>
+          <div class="uk-flex uk-flex-middle uk-child-width-expand">
             <div class="uk-text-right">Plain</div>
             <div><input name="color" data-class="plain" data-theme="light" class="colorInput" readonly /></div>
             <div><input name="color" data-class="plain" data-theme="dark" class="colorInput" readonly /></div>
           </div>
         </div>
 
-        <div uk-grid>
+        <div class="uk-flex">
           <div class="dialog-buttons uk-width-1-5 uk-flex-left"></div>
           <div class="dialog-buttons uk-width-4-5 uk-flex-right">
-            <a id="defaultColorsButton" class="defSettingsButton uk-margin-small-right">Restore default</a>
+            <a id="defaultColorsButton" class="defSettingsButton uk-margin-small-right">Restore defaults</a>
             <button class="uk-button uk-button-default uk-modal-close uk-button-small">Close</button>
           </div>
         </div>
@@ -712,7 +782,7 @@
           <a id="axisSettingsButton" title="Change XY axis domain values">Axis Settings</a>
           <a id="resetPlot" class="uk-margin-small-left" title="Reset plot viewport">Reset View</a>
         </div>
-        <div uk-grid>
+        <div class="uk-flex">
           <div class="dialog-buttons uk-width-3-5 uk-flex-left uk-flex-middle">
             <div class="plotSwitches">
               <label class="switch">
@@ -744,10 +814,10 @@
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
         <h2 class="uk-modal-title">Plot Axis Settings</h2>
         <div>
-          <div class="uk-child-width-expand" uk-grid>
+          <div class="uk-flex uk-flex-middle uk-flex-between">
             <div class="uk-width-1-2 pr-lh">X-Axis Precision</div>
             <div class="uk-text-right uk-width-1-2">
-              <div class="uk-child-width-expand" uk-grid>
+              <div class="uk-flex uk-flex-middle uk-flex-between">
                 <div class="uk-text-right uk-width-1-6">
                   <span id="plotAxisPrecisionLabel" class="uk-label precision"></span>
                 </div>
@@ -758,7 +828,7 @@
             </div>
           </div>
 
-          <div class="uk-child-width-expand" uk-grid>
+          <div class="uk-flex uk-flex-middle uk-flex-between">
             <div>Auto Range</div>
             <div class="uk-text-right uk-width-2-5 uk-position-relative">
               <label class="switch">
@@ -809,9 +879,23 @@
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
         <h2 class="uk-modal-title">Are you sure?</h2>
         <span id="confirmMsg"></span>
+        <div id="confirmKeepSyncContainer" style="display: none; margin-top: 10px; margin-bottom: 10px">
+          <label><input type="checkbox" id="confirmKeepSync" class="uk-checkbox" checked /> Keep sync enabled</label>
+        </div>
         <div class="dialog-buttons uk-flex-right">
           <button id="confirmYes" class="uk-button uk-button-danger uk-button-small">Yes</button>
           <button class="uk-button uk-button-default uk-modal-close uk-button-small">No</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="dialogCalcTimeout" class="dialogConfirm" uk-modal>
+      <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
+        <h2 class="uk-modal-title">Calculation Timeout</h2>
+        <span id="calcTimeoutMsg"></span>
+        <div class="dialog-buttons uk-flex-right">
+          <button id="calcTimeoutContinue" class="uk-button uk-button-primary uk-button-small">Wait</button>
+          <button id="calcTimeoutIgnore" class="uk-button uk-button-danger uk-button-small">Ignore Line</button>
         </div>
       </div>
     </div>

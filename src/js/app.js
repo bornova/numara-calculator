@@ -1,18 +1,19 @@
-import { checkColorChange, colors } from './colors'
-import { copyAll, initializeContextMenus, safeCopyText } from './context'
+import { checkColorChange, colors } from './ui/theme'
+import { copyAll, initializeContextMenus, safeCopyText } from './ui/contextMenu'
 import { dom } from './dom'
 import { cm, refreshEditor, udfInput, uduInput } from './editor'
-import { calculate } from './eval'
-import { initCurrencies } from './forex'
-import { initializeHelpTooltips } from './help'
-import { generateIcons } from './icons'
-import { numaraKeys } from './keybindings.js'
-import { modal, notify, showError } from './modal'
-import { getPageName, initializePages, pageOrder, populatePages, setupSidePanel } from './pages'
-import { plot } from './plot'
-import { settings } from './settings'
-import { applyUdfu } from './userDefined'
-import { app, checkAppUpdate, isMac, isElectron, store } from './utils'
+import { calculate } from './calc/calcManager'
+import { initCurrencies } from './calc/currencies'
+import { initializeSettingsTooltips } from './ui/settingsTips'
+import { generateIcons } from './ui/icons'
+import { numaraKeys } from './editor/keybindings.js'
+import { modal, notify, showError } from './ui/dialogs'
+import { getPageName, initializePages, pageOrder, populatePages, setupSideBar } from './ui/pageManager'
+import { plot } from './ui/functionPlot'
+import { applyAnswerPositionLayout, settings } from './ui/settings'
+import { applyUdfu } from './calc/userDefined'
+import { app, checkAppUpdate, isMac, isElectron, store } from './appState'
+import { triggerFolderSync, checkSyncDir, handleSyncDirDeleted } from './calc/sync'
 
 import { author, description, homepage, name, version } from './../../package.json'
 
@@ -20,6 +21,9 @@ import UIkit from 'uikit'
 
 document.title = description
 
+/**
+ * Configures the application title headers based on OS (Windows vs. macOS).
+ */
 const setupHeaders = () => {
   const isWin = isElectron && !isMac
   const active = isWin ? 'Win' : 'Mac'
@@ -30,15 +34,31 @@ const setupHeaders = () => {
   dom[`header${active}Title`].innerHTML = name
 }
 
+/**
+ * Binds click event handlers for main application buttons in the title bar / actions.
+ */
 const setupAppButtons = () => {
   const buttons = {
-    printButton: () => window.print(),
+    printButton: () => {
+      window.print()
+      if (!app.sidebarDocked) {
+        UIkit.offcanvas('#sideBar').hide()
+      }
+    },
     clearButton: () => {
       cm.setValue('')
       cm.focus()
       calculate()
+      if (!app.sidebarDocked) {
+        UIkit.offcanvas('#sideBar').hide()
+      }
     },
-    copyButton: copyAll,
+    copyButton: () => {
+      copyAll()
+      if (!app.sidebarDocked) {
+        UIkit.offcanvas('#sideBar').hide()
+      }
+    },
     udfuButton: () => modal.show('#dialogUdfu'),
     settingsButton: () => modal.show('#dialogSettings'),
     aboutButton: () => modal.show('#dialogAbout')
@@ -47,6 +67,10 @@ const setupAppButtons = () => {
   Object.entries(buttons).forEach(([btn, action]) => dom[btn].addEventListener('click', action))
 }
 
+/**
+ * Sets up global click event listeners on the document to handle interactions
+ * with answers (copying to clipboard), errors (showing error modal), and plots.
+ */
 const setupResultActions = () => {
   document.addEventListener('click', (event) => {
     const answerEl = event.target.closest('[data-answer]')
@@ -68,6 +92,7 @@ const setupResultActions = () => {
       } catch (error) {
         showError('Error', error)
       }
+
       return
     }
 
@@ -76,6 +101,7 @@ const setupResultActions = () => {
         `Error on Line ${+errorEl.parentElement.getAttribute('data-index') + 1}`,
         errorEl.getAttribute('data-error')
       )
+
       return
     }
 
@@ -86,6 +112,7 @@ const setupResultActions = () => {
       navigator.clipboard.writeText(textToCopy)
 
       notify(`Copied '${safeText}' to clipboard.`)
+
       return
     }
   })
@@ -95,47 +122,54 @@ const setupResultActions = () => {
   })
 }
 
+/**
+ * Loads and applies user defined functions and units from the local store.
+ */
 const setupUserDefined = () => {
   applyUdfu(store.get('udf') ?? '', 'func')
   applyUdfu(store.get('udu') ?? '', 'unit')
 }
 
+/**
+ * Initializes resizer interactions for adjusting the width ratio of input and output panels.
+ */
 const setupPanelResizer = () => {
   const defaultWidth = settings.defaults.inputWidth
-  const inputWidth = store.get('inputWidth') ?? defaultWidth
 
   let isResizing = false
   let resizeRaf // Request Animation Frame reference
   let calcTimeout
 
-  if (app.settings.answerPosition === 'left') {
-    dom.input.style.width = `${inputWidth}%`
-  } else if (app.settings.answerPosition === 'bottom') {
-    dom.input.style.width = '100%'
-  } else {
-    dom.input.style.width = `${defaultWidth}%`
-  }
+  applyAnswerPositionLayout()
 
   const dividerTooltip = () => {
     dom.panelDivider.title =
       dom.input.style.width === `${defaultWidth}%` ? 'Drag to resize' : 'Double click to reset position'
   }
 
-  dom.panelDivider.addEventListener('dblclick', () => {
+  dom.panelDivider.addEventListener('dblclick', (event) => {
+    event.preventDefault()
+    window.getSelection()?.removeAllRanges()
     dom.input.style.width = `${defaultWidth}%`
     store.set('inputWidth', defaultWidth)
     dividerTooltip()
+    cm.refresh()
+    calculate()
   })
 
   dom.panelDivider.addEventListener('mousedown', (event) => {
     isResizing = event.target === dom.panelDivider
   })
 
-  dom.mainPanel.addEventListener('mouseup', () => {
-    isResizing = false
+  document.addEventListener('mouseup', () => {
+    if (isResizing) {
+      isResizing = false
+      cm.refresh()
+      calculate()
+    }
   })
 
-  dom.mainPanel.addEventListener('mousemove', (event) => {
+  document.addEventListener('mousemove', (event) => {
     if (!isResizing) return
 
     if (resizeRaf) cancelAnimationFrame(resizeRaf)
@@ -160,45 +194,81 @@ const setupPanelResizer = () => {
   dom.panelDivider.addEventListener('mousemove', dividerTooltip)
 }
 
+/**
+ * Synchronizes scrolling between the CodeMirror editor and the output display panel.
+ */
 const setupSyncScroll = () => {
   const inputPanel = dom.el('.CodeMirror-scroll')
   const outputPanel = dom.output
 
-  let isSyncing = false
+  let activePanel = null
+  let scrollTimeout = null
+  let ticking = false
 
-  inputPanel.addEventListener('scroll', () => {
-    if (isSyncing) return
+  const clearActivePanel = () => {
+    clearTimeout(scrollTimeout)
+    scrollTimeout = setTimeout(() => {
+      activePanel = null
+    }, 100)
+  }
 
-    isSyncing = true
-    outputPanel.scrollTop = inputPanel.scrollTop
-    requestAnimationFrame(() => {
-      isSyncing = false
-    })
-  })
+  inputPanel.addEventListener(
+    'scroll',
+    () => {
+      if (activePanel === null) {
+        activePanel = inputPanel
+      }
+      if (activePanel === inputPanel) {
+        if (!ticking) {
+          requestAnimationFrame(() => {
+            outputPanel.scrollTop = inputPanel.scrollTop
+            ticking = false
+          })
 
-  outputPanel.addEventListener('scroll', () => {
-    dom.scrollTop.style.display = outputPanel.scrollTop > 50 ? 'block' : 'none'
+          ticking = true
+        }
 
-    if (isSyncing) return
+        clearActivePanel()
+      }
+    },
+    { passive: true }
+  )
 
-    isSyncing = true
-    inputPanel.scrollTop = outputPanel.scrollTop
+  outputPanel.addEventListener(
+    'scroll',
+    () => {
+      dom.scrollTop.style.display = outputPanel.scrollTop > 50 ? 'block' : 'none'
 
-    requestAnimationFrame(() => {
-      isSyncing = false
-    })
-  })
+      if (activePanel === null) {
+        activePanel = outputPanel
+      }
+
+      if (activePanel === outputPanel) {
+        if (!ticking) {
+          requestAnimationFrame(() => {
+            inputPanel.scrollTop = outputPanel.scrollTop
+            ticking = false
+          })
+
+          ticking = true
+        }
+
+        clearActivePanel()
+      }
+    },
+    { passive: true }
+  )
 
   dom.scrollTop.addEventListener('click', () => {
-    isSyncing = true
+    activePanel = null
     inputPanel.scroll({ top: 0, behavior: 'smooth' })
     outputPanel.scroll({ top: 0, behavior: 'smooth' })
-    setTimeout(() => {
-      isSyncing = false
-    }, 500)
   })
 }
 
+/**
+ * Configures the "About" dialog contents, version, copyright, and system dependencies info.
+ */
 const setupAppInfo = () => {
   dom.dialogAboutCopyright.textContent = `Copyright © ${new Date().getFullYear()} ${author.name}`
   dom.dialogAboutAppVersion.innerHTML = isElectron
@@ -236,14 +306,22 @@ const setupAppInfo = () => {
 }
 
 let modalOpenState = false
+
+/**
+ * Checks whether any modal dialog or offcanvas panel is currently open.
+ * @returns {boolean} True if any modal or side panel is open.
+ */
 const isModalOpen = () => modalOpenState
 
+/**
+ * Registers application-wide keyboard shortcuts using numaraKeys.
+ */
 const setupKeyboardShortcuts = () => {
   const keys = {
     '$mod+D': 'clearButton',
     '$mod+N': 'newPageButton',
     '$mod+P': 'printButton',
-    'Shift+TAB': 'sidePanelButton'
+    'Shift+TAB': 'sideBarButton'
   }
 
   const shortcuts = {}
@@ -254,8 +332,8 @@ const setupKeyboardShortcuts = () => {
 
       if (!isModalOpen()) {
         dom[button].click()
-      } else if (dom.sidePanel.classList.contains('uk-open') && !dom.dialogNewPage.classList.contains('uk-open')) {
-        dom.closeSidePanelButton.click()
+      } else if (dom.sideBar.classList.contains('uk-open') && !dom.dialogNewPage.classList.contains('uk-open')) {
+        dom.closeSideBarButton.click()
       }
     }
   }
@@ -263,6 +341,9 @@ const setupKeyboardShortcuts = () => {
   numaraKeys(window, shortcuts)
 }
 
+/**
+ * Configures print area beforeprint/afterprint event listeners.
+ */
 const setupPrintArea = () => {
   window.addEventListener('beforeprint', () => {
     const printArea = document.createElement('div')
@@ -321,22 +402,38 @@ const setupPrintArea = () => {
   window.addEventListener('afterprint', () => {
     const printArea = document.getElementById('printArea')
 
-    if (printArea) printArea.remove()
+    if (printArea) {
+      printArea.remove()
+    }
   })
 }
 
+/**
+ * Configures UIkit helper events, modals, and tab initialization callbacks.
+ */
 const setupUIkitUtils = () => {
   UIkit.mixin({ data: { offset: 5, delay: 300 } }, 'tooltip')
 
-  UIkit.util.on('.modal, #sidePanel', 'beforeshow', () => {
-    if (isElectron) numara.transControls(true)
+  UIkit.util.on('.modal, #sideBar', 'beforeshow', () => {
+    if (isElectron) {
+      numara.transControls(true)
+    }
   })
 
-  UIkit.util.on('.modal, #sidePanel', 'hidden', () => {
+  UIkit.util.on('.modal, #sideBar', 'hidden', () => {
     modalOpenState = dom.els('.uk-open').length > 0
-    if (isElectron) numara.transControls(modalOpenState)
+
+    if (isElectron) {
+      numara.transControls(modalOpenState)
+    }
 
     setTimeout(() => cm.focus(), 100)
+  })
+
+  UIkit.util.on('#sideBar', 'beforehide', (event) => {
+    if (app.sidebarDocked) {
+      event.preventDefault()
+    }
   })
 
   UIkit.util.on('#dialogTheme', 'shown', () => {
@@ -408,23 +505,40 @@ const setupUIkitUtils = () => {
     dom.errTitle.innerHTML = ''
     dom.errMsg.innerHTML = ''
   })
+
+  UIkit.util.on(document, 'beforeshow', '.uk-tooltip', (event) => {
+    const tooltipEl = event.target
+    const triggerEl = document.querySelector(`[aria-describedby="${tooltipEl.id}"]`)
+    const answerEl = triggerEl ? triggerEl.closest('.answer') : null
+
+    if (answerEl && answerEl.offsetWidth < dom.output.clientWidth - 8) {
+      event.preventDefault()
+    }
+  })
 }
 
-function initializeSidePanel() {
+/**
+ * Initializes the side panel settings, offcanvas drawer, and handles window resize changes.
+ */
+function initializeSideBar() {
   let resizeTimer
 
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer)
 
     resizeTimer = setTimeout(() => {
-      setupSidePanel(true)
+      setupSideBar(true)
       calculate()
     }, 100)
   })
 
-  setupSidePanel(true)
+  setupSideBar(true)
 }
 
+/**
+ * Bootstraps the application, initialises settings, currencies, colors, and UI layout.
+ * @returns {Promise<void>}
+ */
 const initializeApp = async () => {
   generateIcons()
   initCurrencies()
@@ -445,11 +559,30 @@ const initializeApp = async () => {
   setupKeyboardShortcuts()
   setupPrintArea()
   setupUIkitUtils()
-  initializeSidePanel()
+  initializeSideBar()
   initializePages()
   initializeContextMenus()
-  initializeHelpTooltips()
+  initializeSettingsTooltips()
   checkAppUpdate()
+
+  if (isElectron) {
+    if (app.settings.syncDirEnabled && app.settings.syncDir) {
+      const syncDirExists = await checkSyncDir()
+
+      if (syncDirExists) {
+        numara.startWatchingSyncDir(app.settings.syncDir)
+        triggerFolderSync().catch(console.error)
+      }
+    }
+
+    numara.onSyncDirChanged(() => {
+      triggerFolderSync().catch(console.error)
+    })
+
+    numara.onSyncDirDeleted(() => {
+      handleSyncDirDeleted().catch(console.error)
+    })
+  }
 
   setTimeout(() => cm.focus(), 500)
 }

@@ -2,7 +2,7 @@
   "name": "numara",
   "productName": "Numara",
   "description": "Numara Calculator",
-  "version": "6.10.5",
+  "version": "7.0.0",
   "author": {
     "name": "Timur Atalay",
     "email": "mail@numara.io",
@@ -10,7 +10,7 @@
   },
   "license": "MIT",
   "homepage": "https://github.com/bornova/numara-calculator",
-  "main": "src/main.js",
+  "main": "src/electron/main.js",
   "type": "module",
   "scripts": {
     "prebuild": "npm run prettier && npm run lint",
@@ -25,28 +25,28 @@
     "wiki": "node src/misc/wiki.js"
   },
   "devDependencies": {
-    "@bornova/colorpicker": "^1.0.0",
+    "@bornova/colorpicker": "^1.0.1",
     "@bornova/deep-diff": "^1.0.0",
     "@eslint/js": "^10.0.1",
     "@formulajs/formulajs": "^4.6.0",
     "codemirror": "^5.65.21",
-    "electron": "^42.2.0",
-    "electron-builder": "^26.8.1",
-    "esbuild": "^0.28.0",
-    "eslint": "^10.4.0",
+    "electron": "^42.4.1",
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.1",
+    "eslint": "^10.5.0",
     "fs-extra": "^11.3.5",
     "function-plot": "^1.25.4",
-    "globals": "^17.6.0",
-    "lucide": "^1.16.0",
+    "globals": "^17.7.0",
+    "lucide": "^1.21.0",
     "luxon": "^3.7.2",
     "mathjs": "^15.2.0",
     "nerdamer-prime": "^1.4.0",
-    "prettier": "^3.8.3",
-    "uikit": "^3.25.16"
+    "prettier": "^3.8.4",
+    "uikit": "^3.25.17"
   },
   "dependencies": {
     "electron-log": "^5.4.4",
     "electron-store": "^11.0.2",
-    "electron-updater": "^6.8.3"
+    "electron-updater": "^6.8.9"
   }
 }

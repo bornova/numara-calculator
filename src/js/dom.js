@@ -4,14 +4,14 @@
 export const dom = {
   /**
    * Query DOM element that matches the selector.
-   * @param {string} selector - The selector to match.
+   * @param {string} selector The selector to match.
    * @returns {Element} The first matching element.
    */
   el: (selector) => document.querySelector(selector),
 
   /**
    * Query all DOM elements matching the selector.
-   * @param {string} selector - The selector to match.
+   * @param {string} selector The selector to match.
    * @returns {NodeList} A list of matching elements.
    */
   els: (selector) => document.querySelectorAll(selector),
@@ -34,9 +34,9 @@ export const dom = {
   headerMacTitle: document.getElementById('macHeaderTitle'),
 
   // Actions
-  sidePanelButton: document.getElementById('sidePanelButton'),
+  sideBarButton: document.getElementById('sideBarButton'),
   newPageButton: document.getElementById('newPageButton'),
-  actionDivider: document.getElementById('actionDivider'),
+  leftActionsDivider: document.getElementById('leftActionsDivider'),
   clearButton: document.getElementById('clearButton'),
   copyButton: document.getElementById('copyButton'),
   pageName: document.getElementById('pageName'),
@@ -46,13 +46,13 @@ export const dom = {
   notificationDot: document.getElementById('notificationDot'),
 
   // Side panel
-  sidePanel: document.getElementById('sidePanel'),
+  sideBar: document.getElementById('sideBar'),
   sortOldNew: document.getElementById('sortOldNew'),
   sortNewOld: document.getElementById('sortNewOld'),
   sortAZ: document.getElementById('sortAZ'),
   sortZA: document.getElementById('sortZA'),
   pageList: document.getElementById('pageList'),
-  closeSidePanelButton: document.getElementById('closeSidePanelButton'),
+  closeSideBarButton: document.getElementById('closeSideBarButton'),
   newPageButtonSP: document.getElementById('newPageButtonSP'),
   importPageButton: document.getElementById('importPageButton'),
   printButton: document.getElementById('printButton'),
@@ -83,19 +83,20 @@ export const dom = {
   expUpperLabel: document.getElementById('expUpperLabel'),
   expLower: document.getElementById('expLower'),
   expLowerLabel: document.getElementById('expLowerLabel'),
+  calcTimeout: document.getElementById('calcTimeout'),
+  calcTimeoutLabel: document.getElementById('calcTimeoutLabel'),
   matrixType: document.getElementById('matrixType'),
   answerPosition: document.getElementById('answerPosition'),
   keywordTips: document.getElementById('keywordTips'),
   matchBrackets: document.getElementById('matchBrackets'),
-  locale: document.getElementById('locale'),
+  thouSep: document.getElementById('thouSep'),
+  dateFormat: document.getElementById('dateFormat'),
   localeWarn: document.getElementById('localeWarn'),
   inputLocale: document.getElementById('inputLocale'),
   copyThouSep: document.getElementById('copyThouSep'),
   currency: document.getElementById('currency'),
   currencyWarn: document.getElementById('currencyWarn'),
   currencyInterval: document.getElementById('currencyInterval'),
-  currencyUpdate: document.getElementById('currencyUpdate'),
-  lastUpdated: document.getElementById('lastUpdated'),
   updateRatesLink: document.getElementById('updateRatesLink'),
   dialogSettingsReset: document.getElementById('dialogSettingsReset'),
   resetSizeButton: document.getElementById('resetSizeButton'),
@@ -145,6 +146,12 @@ export const dom = {
   // Confirm dialog
   confirmMsg: document.getElementById('confirmMsg'),
   confirmYes: document.getElementById('confirmYes'),
+
+  // Calc Timeout dialog
+  dialogCalcTimeout: document.getElementById('dialogCalcTimeout'),
+  calcTimeoutMsg: document.getElementById('calcTimeoutMsg'),
+  calcTimeoutContinue: document.getElementById('calcTimeoutContinue'),
+  calcTimeoutIgnore: document.getElementById('calcTimeoutIgnore'),
 
   // Other elements
   scrollTop: document.getElementById('scrollTop'),

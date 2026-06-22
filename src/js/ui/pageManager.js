@@ -1,8 +1,10 @@
-import { dom } from './dom'
-import { cm } from './editor'
-import { calculate } from './eval'
-import { confirm, modal, notify } from './modal'
-import { app, escapeHTML, isElectron, store } from './utils'
+import { dom } from '../dom'
+import { cm } from '../editor'
+import { calculate, renderAnswersToHTML, syncOutputHeights } from '../calc/calcManager'
+import { confirm, modal, notify } from './dialogs'
+import { app, checkSize, isElectron, store } from '../appState'
+import { escapeHTML } from '../core/utils.js'
+import { syncPageSave, syncPageRename, syncPageDelete } from '../calc/sync'
 
 import { DateTime } from 'luxon'
 
@@ -12,25 +14,38 @@ import UIkit from 'uikit'
 const SIDEBAR_MIN_WIDTH = 180
 const SIDEBAR_MAX_WIDTH = 400
 const SIDEBAR_DEFAULT_WIDTH = 240
+const SIDEBAR_TRANSITION_MS = 180
 
-/* Apply sidebar width */
+/**
+ * Adjusts the width styles for the sidebar panel, resize handles, and main app container.
+ * @param {number} width The width in pixels.
+ */
 function applySidebarWidth(width) {
-  const bar = dom.el('#sidePanel .uk-offcanvas-bar')
-  const resizer = dom.el('#sidePanelResizer')
-  if (bar) bar.style.width = `${width}px`
-  if (resizer) resizer.style.left = `${width}px`
+  const bar = dom.el('#sideBar .uk-offcanvas-bar')
+  const resizer = dom.el('#sideBarResizer')
+
+  if (bar) {
+    bar.style.width = `${width}px`
+  }
+
+  if (resizer) {
+    resizer.style.left = `${width}px`
+  }
+
   dom.appWrapper.style.left = `${width}px`
 }
 
-let sidePanelResizerSetup = false
+let sideBarResizerSetup = false
 
-/* Setup side panel resizer */
-function setupSidePanelResizer() {
-  if (sidePanelResizerSetup) return
+/**
+ * Binds mouse drag and double-click listeners on the side panel resizer bar.
+ */
+function setupSideBarResizer() {
+  if (sideBarResizerSetup) return
 
-  sidePanelResizerSetup = true
+  sideBarResizerSetup = true
 
-  const resizer = dom.el('#sidePanelResizer')
+  const resizer = dom.el('#sideBarResizer')
 
   resizer.addEventListener('mousedown', (e) => {
     e.preventDefault()
@@ -48,7 +63,8 @@ function setupSidePanelResizer() {
 
       const width = Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, e.clientX))
 
-      store.set('sidePanelWidth', width)
+      store.set('sideBarWidth', width)
+
       document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseup', onMouseUp)
 
@@ -61,78 +77,140 @@ function setupSidePanelResizer() {
 
   resizer.addEventListener('dblclick', () => {
     applySidebarWidth(SIDEBAR_DEFAULT_WIDTH)
-    store.set('sidePanelWidth', SIDEBAR_DEFAULT_WIDTH)
+
+    store.set('sideBarWidth', SIDEBAR_DEFAULT_WIDTH)
+
     calculate()
   })
 }
 
 let lastDockState = null
+let sidebarTransitionTimer = null
+
+function triggerSidebarTransition() {
+  document.body.classList.add('sidebar-width-animating')
+
+  clearTimeout(sidebarTransitionTimer)
+  sidebarTransitionTimer = setTimeout(() => {
+    document.body.classList.remove('sidebar-width-animating')
+  }, SIDEBAR_TRANSITION_MS)
+}
+
+function getAppWrapperSize() {
+  const rect = dom.appWrapper.getBoundingClientRect()
+
+  return {
+    width: Math.round(rect.width),
+    height: Math.round(rect.height)
+  }
+}
+
+function resetWindowToAppWrapper(sidebarWidth = 0, appWrapperSize = getAppWrapperSize()) {
+  if (!isElectron) return
+
+  numara
+    .isMaximized()
+    .then((maximized) => {
+      if (maximized) return
+
+      numara.resetSize(appWrapperSize.width, appWrapperSize.height, sidebarWidth)
+      setTimeout(() => {
+        checkSize()
+      }, SIDEBAR_TRANSITION_MS + 40)
+    })
+    .catch(() => {
+      // Ignore
+    })
+}
 
 /** Setup side panel based on settings and window size.
  *
- * @param {boolean} show - When true, ensure the docked panel is visible.
+ * @param {boolean} show When true, ensure the docked panel is visible.
  *
  */
-export function setupSidePanel(show = false) {
+export function setupSideBar(show = false) {
+  const appWrapperSize = getAppWrapperSize()
   const { pageListPosition } = app.settings
   const isWide = (window.visualViewport?.width ?? window.innerWidth) > 900
   const dock = pageListPosition === 'dock' || (pageListPosition === 'auto' && isWide)
   const dockChanged = dock !== lastDockState
+  const shouldAnimateDockChange = lastDockState !== null && dockChanged
 
   lastDockState = dock
   app.sidebarDocked = dock
 
-  dom.sidePanel.classList.toggle('sidebar-docked', dock)
-  dom.sidePanelButton.style.display = dock ? 'none' : ''
-  dom.closeSidePanelButton.style.display = dock ? 'none' : ''
+  if (shouldAnimateDockChange) {
+    triggerSidebarTransition()
+  }
+
+  dom.sideBar.classList.toggle('sidebar-docked', dock)
+  dom.sideBarButton.style.display = dock ? 'none' : ''
+  dom.closeSideBarButton.style.display = dock ? 'none' : ''
   dom.newPageButton.style.display = dock ? 'none' : ''
-  dom.actionDivider.style.display = dock ? 'none' : ''
+  dom.leftActionsDivider.style.display = dock ? 'none' : ''
 
   if (dock) {
-    const width = store.get('sidePanelWidth') ?? SIDEBAR_DEFAULT_WIDTH
+    const width = store.get('sideBarWidth') ?? SIDEBAR_DEFAULT_WIDTH
+
+    if (dockChanged) {
+      resetWindowToAppWrapper(width, appWrapperSize)
+    }
 
     applySidebarWidth(width)
-    setupSidePanelResizer()
+    setupSideBarResizer()
 
-    const isVisible = dom.sidePanel.classList.contains('uk-open')
+    const isVisible = dom.sideBar.classList.contains('uk-open')
 
     if (!dockChanged && !(show && !isVisible)) return
 
-    const offcanvas = UIkit.offcanvas('#sidePanel', {
+    const offcanvas = UIkit.offcanvas('#sideBar', {
       overlay: false,
-      mode: isVisible ? 'none' : 'slide',
+      mode: 'none',
       escClose: false,
       bgClose: false
     })
 
     if (!isVisible && (show || dockChanged)) {
       if (document.querySelector('.uk-modal.uk-open')) {
-        dom.sidePanel.classList.add('uk-open')
-        dom.sidePanel.style.display = 'block'
+        dom.sideBar.classList.add('uk-open')
+        dom.sideBar.style.display = 'block'
 
-        const bar = dom.el('#sidePanel .uk-offcanvas-bar')
+        const bar = dom.el('#sideBar .uk-offcanvas-bar')
 
-        if (bar) bar.classList.add('uk-open')
+        if (bar) {
+          bar.classList.add('uk-open')
+        }
       } else {
         offcanvas.show()
       }
     }
   } else {
+    if (dockChanged) {
+      resetWindowToAppWrapper(0, appWrapperSize)
+    }
+
     dom.appWrapper.style.left = '0'
 
     if (!dockChanged) return
 
-    dom.sidePanel.classList.remove('uk-open')
-    dom.sidePanel.style.display = ''
+    dom.sideBar.classList.remove('uk-open')
+    dom.sideBar.style.display = ''
 
-    const bar = dom.el('#sidePanel .uk-offcanvas-bar')
+    const bar = dom.el('#sideBar .uk-offcanvas-bar')
 
-    if (bar) bar.classList.remove('uk-open')
+    if (bar) {
+      bar.classList.remove('uk-open')
+    }
 
-    UIkit.offcanvas('#sidePanel', { overlay: true, mode: 'slide', escClose: true, bgClose: true })
+    UIkit.offcanvas('#sideBar', { overlay: true, mode: 'slide', escClose: true, bgClose: true })
   }
 }
 
+/**
+ * Updates the active page name label display and hover titles in the header.
+ * @param {string} name The page name.
+ * @param {string} pageId The page ID timestamp string.
+ */
 function updatePageName(name, pageId) {
   const pageDate = DateTime.fromFormat(pageId, 'yyyyMMddHHmmssSSS').toFormat('FF')
 
@@ -170,7 +248,7 @@ export function defaultPage() {
   const pageName = getPageName()
 
   store.set('pages', [{ id: pageId, name: pageName, data: store.get('input') || '' }])
-  localStorage.removeItem('input')
+  store.remove('input')
 
   loadPage(pageId)
 }
@@ -203,6 +281,7 @@ export function newPage(isImport) {
 
   populatePages()
   updatePageName(pageName, pageId)
+  syncPageSave(pageName, '')
 
   modal.hide('#dialogNewPage')
 }
@@ -222,12 +301,12 @@ export function duplicatePage(pageId) {
   }
 
   const dupPageData = dupPage.data
-  const baseName = dupPage.name + ' (copy)'
+  const baseName = dupPage.name + ' - Copy'
   let dupPageName = baseName
   let count = 1
 
   while (pages.some((p) => p.name === dupPageName)) {
-    dupPageName = `${baseName} ${count++}`
+    dupPageName = `${baseName} (${count++})`
   }
 
   app.activePage = dupPageId
@@ -235,6 +314,7 @@ export function duplicatePage(pageId) {
   store.set('pages', pages)
 
   loadPage(dupPageId)
+  syncPageSave(dupPageName, dupPageData)
 }
 
 /**
@@ -261,6 +341,7 @@ export function deletePage(pageId) {
     }
 
     populatePages()
+    syncPageDelete(pageName)
   })
 }
 
@@ -269,6 +350,9 @@ export function deletePage(pageId) {
  */
 export function deleteAllPages() {
   confirm('All pages will be deleted permanently.', () => {
+    const pages = store.get('pages') || []
+    pages.forEach((p) => syncPageDelete(p.name))
+
     store.set('pages', [])
 
     defaultPage()
@@ -298,6 +382,7 @@ export function renamePage(pageId) {
       return
     }
 
+    const oldName = page.name
     page.name = newName
     store.set('pages', pages)
 
@@ -306,6 +391,8 @@ export function renamePage(pageId) {
     if (pageId === app.activePage) {
       updatePageName(page.name, pageId)
     }
+
+    syncPageRename(oldName, newName)
 
     modal.hide('#dialogRenamePage')
   }
@@ -325,16 +412,40 @@ export function loadPage(pageId) {
     return
   }
 
-  const { name, data, history, cursor } = page
+  const { name, data, history, cursor, folds, answers } = page
 
   app.activePage = pageId
   store.set('lastPage', pageId)
 
   updatePageName(name, pageId)
 
+  app.loadingPage = true
+
+  if (answers && answers.length > 0 && app.settings.answerPosition !== 'bottom') {
+    dom.output.innerHTML = renderAnswersToHTML(answers)
+  } else {
+    dom.output.innerHTML = ''
+  }
+
   cm.setValue(data)
 
   if (history) cm.setHistory(history)
+
+  if (folds && folds.length > 0) {
+    for (const fold of folds) {
+      if (typeof fold.from === 'number') {
+        cm.foldCode({ line: fold.from, ch: 0 }, null, 'fold')
+      }
+    }
+  }
+
+  app.loadingPage = false
+
+  if (answers && answers.length > 0 && app.settings.answerPosition !== 'bottom') {
+    syncOutputHeights()
+  }
+
+  calculate()
 
   cm.execCommand('goLineEnd')
 
@@ -389,6 +500,9 @@ export function populatePages() {
 
   if (!pages || pages.length === 0) defaultPage()
 
+  // Clean up any orphaned UIkit dropdown DOM elements appended to <body> before clearing pageList
+  document.querySelectorAll('body > .uk-dropdown:not(#sortDropdown)').forEach((el) => el.remove())
+
   dom.pageList.innerHTML = ''
 
   pages.forEach((page) => {
@@ -402,11 +516,11 @@ export function populatePages() {
       app.activePage === page.id ? 'activePage' : 'inactivePage'
     )
     pageListItem.innerHTML = `
-      <div class="uk-flex-1" data-action="load" data-page="${page.id}">
+      <div class="sortHandle uk-flex-1" data-action="load" data-page="${page.id}">
         <div class="pageListItemTitle" title="${escapeHTML(page.name)}">${escapeHTML(page.name)}</div>
         <div class="dialog-open-date">${DateTime.fromFormat(page.id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
       </div>
-      <div class="uk-flex-right uk-margin-small-right">
+      <div class="pageItemActions uk-flex-right uk-margin-small-right">
         <span class="drop-parent-icon">${dom.icons.EllipsisVertical}</span>
         <div uk-dropdown="mode: click; pos: right-top; bg-scroll: false; container: body">
           <div 
@@ -486,12 +600,14 @@ function newPageDialog() {
   modal.show('#dialogNewPage')
 }
 
-dom.closeSidePanelButton.addEventListener('click', () => UIkit.offcanvas('#sidePanel').hide())
+dom.closeSideBarButton.addEventListener('click', () => UIkit.offcanvas('#sideBar').hide())
 dom.newPageButton.addEventListener('click', newPageDialog)
 dom.newPageButtonSP.addEventListener('click', newPageDialog)
 dom.dialogNewPageSave.addEventListener('click', () => newPage(false))
 dom.newPageTitleInput.addEventListener('keyup', (event) => {
-  if (event.key === 'Enter') dom.dialogNewPageSave.click()
+  if (event.key === 'Enter') {
+    dom.dialogNewPageSave.click()
+  }
 })
 dom.deleteAllPagesButton.addEventListener('click', deleteAllPages)
 dom.sortOldNew.addEventListener('click', () => sortPages('oldnew'))
@@ -506,16 +622,22 @@ let isScrolling = false
 
 dom.pageList.addEventListener('scroll', () => {
   if (isScrolling) return
+
   isScrolling = true
 
   requestAnimationFrame(() => {
     const openDropdowns = dom.els('.uk-dropdown.uk-open')
+
     if (openDropdowns.length > 0) {
       openDropdowns.forEach((el) => {
         const dropdown = UIkit.dropdown(el)
-        if (dropdown) dropdown.hide(0)
+
+        if (dropdown) {
+          dropdown.hide(0)
+        }
       })
     }
+
     isScrolling = false
   })
 })
@@ -530,13 +652,12 @@ if (isElectron) {
     notify(msg, 'success')
   })
   numara.importDataError((event, error) => notify(error, 'danger'))
-
   numara.pageExported((msg) => notify(msg, 'success'))
   numara.exportDataError((event, error) => notify(error, 'danger'))
 
   // Print window from main
   numara.print(() => {
-    UIkit.offcanvas('#sidePanel').hide()
+    UIkit.offcanvas('#sideBar').hide()
     window.print()
   })
 } else {
@@ -548,36 +669,43 @@ dom.pageName.addEventListener('dblclick', () => {
 })
 
 document.addEventListener('click', (event) => {
-  if (event.target.parentNode?.dataset?.action === 'load') {
-    let pageId = event.target.parentNode.parentNode.id
+  const loadButton = event.target.closest?.('[data-action="load"]')
+  if (loadButton) {
+    const pageId = loadButton.dataset.page
+
     loadPage(pageId)
 
-    if (!app.sidebarDocked) UIkit.offcanvas('#sidePanel').hide()
+    if (!app.sidebarDocked) {
+      UIkit.offcanvas('#sideBar').hide()
+    }
 
     return
   }
 
-  let pageId = event.target?.dataset?.page
+  const pageId = event.target?.dataset?.page
+  const action = event.target?.dataset?.action
 
-  switch (event.target.dataset.action) {
-    case 'rename':
-      UIkit.dropdown(event.target.parentNode).hide(0)
-      renamePage(pageId)
-      break
-    case 'delete':
-      deletePage(pageId)
-      break
-    case 'duplicate':
-      duplicatePage(pageId)
-      UIkit.dropdown(event.target.parentNode).hide(0)
-      break
-    case 'export':
-      if (isElectron) {
-        const pages = store.get('pages')
-        const page = pages.find((page) => page.id === pageId)
-
-        numara.exportPage(page.name, page.data)
+  if (action) {
+    switch (action) {
+      case 'rename':
         UIkit.dropdown(event.target.parentNode).hide(0)
-      }
+        renamePage(pageId)
+        break
+      case 'delete':
+        deletePage(pageId)
+        break
+      case 'duplicate':
+        duplicatePage(pageId)
+        UIkit.dropdown(event.target.parentNode).hide(0)
+        break
+      case 'export':
+        if (isElectron) {
+          const pages = store.get('pages')
+          const page = pages.find((page) => page.id === pageId)
+
+          numara.exportPage(page.name, page.data)
+          UIkit.dropdown(event.target.parentNode).hide(0)
+        }
+    }
   }
 })

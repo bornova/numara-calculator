@@ -1,44 +1,75 @@
-import { colors } from './colors'
-import { dom } from './dom'
-import { cm, udfInput, uduInput } from './editor'
-import { calculate, math } from './eval'
-import { getRates } from './forex'
-import { confirm, modal, showError } from './modal'
-import { setupSidePanel } from './pages'
-import { app, checkSize, getTheme, isElectron, store } from './utils'
+import { colors } from './theme'
+import { dom } from '../dom'
+import { cm, udfInput, uduInput } from '../editor'
+import { calculate, clearEvaluationCache, math } from '../calc/calcManager'
+import { getRates } from '../calc/currencies'
+import { confirm, modal, showError } from './dialogs'
+import { setupSideBar } from './pageManager'
+import { app, checkSize, getSystemLocale, getTheme, isElectron, store } from '../appState'
+import { triggerFolderSync, clearSyncCache } from '../calc/sync'
 
 import { applyChange, observableDiff } from '@bornova/deep-diff'
 
-/** Show/hide Defaults link. */
-function checkDefaults() {
-  dom.defaultSettingsButton.style.display = observableDiff(app.settings, settings.defaults).length ? 'inline' : 'none'
-}
-
-/** Check for app settings modifications. */
-function checkMods(key) {
-  const el = dom.el('#' + key + 'Mod')
-
-  if (el) {
-    el.style.display = app.settings[key] !== settings.defaults[key] ? 'inline-block' : 'none'
+/**
+ * Apply input/output panel widths and styles based on the current answerPosition setting.
+ * Called on startup (setupPanelResizer) and on every settings change (settings.apply).
+ */
+export function applyAnswerPositionLayout() {
+  switch (app.settings.answerPosition) {
+    case 'bottom':
+      dom.input.style.width = '100%'
+      dom.output.style.width = '20px'
+      dom.output.style.minWidth = '20px'
+      dom.output.style.textAlign = 'right'
+      break
+    case 'left':
+      dom.input.style.width = (store.get('inputWidth') || 60) + '%'
+      dom.output.style.minWidth = '120px'
+      dom.output.style.textAlign = 'left'
+      break
+    case 'right':
+    default:
+      dom.input.style.width = '60%'
+      dom.output.style.textAlign = 'right'
+      break
   }
+
+  dom.panelDivider.style.display = app.settings.answerPosition === 'left' ? 'block' : 'none'
 }
 
 /** Configures warnings by checking a condition mapped to a dom component. */
 function checkWarnings() {
-  dom.bigNumWarn.style.display = app.settings.numericOutput === 'BigNumber' ? 'inline-block' : 'none'
-  dom.localeWarn.style.display = app.settings.inputLocale ? 'inline-block' : 'none'
+  dom.bigNumWarn.style.display = app.settings.numericOutput === 'BigNumber' ? 'inline-flex' : 'none'
+  dom.localeWarn.style.display =
+    app.settings.thouSep !== 'disabled' && app.settings.inputLocale ? 'inline-flex' : 'none'
+}
+
+/** Updates the sync directory path display text and styles. */
+function updateSyncDirPathDisplay(path) {
+  const selectSyncDirButton = dom.el('#selectSyncDirButton')
+
+  if (selectSyncDirButton) {
+    if (path) {
+      selectSyncDirButton.textContent = path
+      selectSyncDirButton.setAttribute('uk-tooltip', `title: ${path}; pos: bottom`)
+    } else {
+      selectSyncDirButton.textContent = 'Choose Folder'
+      selectSyncDirButton.removeAttribute('uk-tooltip')
+    }
+  }
 }
 
 /**
  * Populates a select HTML element with given options.
  *
- * @param {HTMLSelectElement} selectEl - The select element to populate.
- * @param {Array<string|Array>} options - The options to add. Each option can be a string or an array [label, value].
- * @param {string|null} [disabledValue=null] - An optional value to disable in the select options.
+ * @param {HTMLSelectElement} selectEl The select element to populate.
+ * @param {Array<string|Array>} options The options to add. Each option can be a string or an array [label, value].
+ * @param {string|null} [disabledValue=null] An optional value to disable in the select options.
  */
 function populateSelect(selectEl, options, disabledValue = null) {
   const htmlOptions = options.map((option) => {
     const [value, opt] = Object.entries(option)[0]
+
     return value === disabledValue ? `<option disabled>${opt}</option>` : `<option value="${value}">${opt}</option>`
   })
 
@@ -51,6 +82,8 @@ export const settings = {
   /** Default settings. */
   defaults: {
     alwaysOnTop: false,
+    syncDirEnabled: false,
+    syncDir: '',
     answerPosition: 'left',
     autocomplete: true,
     closeBrackets: true,
@@ -59,6 +92,7 @@ export const settings = {
     currency: true,
     currencyInterval: '0',
     dateDay: false,
+    dateFormat: 'system',
     expLower: '-12',
     expUpper: '12',
     fontSize: '1.1rem',
@@ -70,7 +104,7 @@ export const settings = {
     lineHeight: '24px',
     lineNumbers: true,
     lineWrap: true,
-    locale: 'system',
+    truncateAnswers: true,
     matchBrackets: true,
     matrixType: 'Matrix',
     newPageOnStart: false,
@@ -80,11 +114,13 @@ export const settings = {
     numericOutput: 'number',
     pageListPosition: 'auto',
     precision: '4',
+    calcTimeout: '10',
     predictable: false,
     rulers: false,
     syntax: true,
     theme: 'system',
-    thouSep: true
+    thouSep: 'system',
+    showTray: false
   },
 
   /** Initialize settings. */
@@ -92,6 +128,13 @@ export const settings = {
     app.settings = store.get('settings')
 
     if (app.settings) {
+      if (app.settings.locale !== undefined) {
+        app.settings.thouSep = app.settings.locale
+        delete app.settings.locale
+      } else if (typeof app.settings.thouSep === 'boolean') {
+        app.settings.thouSep = app.settings.thouSep ? 'system' : 'disabled'
+      }
+
       observableDiff(app.settings, settings.defaults, (diff) => {
         if (diff.kind === 'E') return
 
@@ -103,46 +146,23 @@ export const settings = {
       store.set('settings', app.settings)
     }
 
-    dom.els('.settingItem').forEach((item) => {
-      const span = document.createElement('span')
-      const icon = dom.icons.Dot
-
-      span.setAttribute('id', item.getAttribute('id') + 'Mod')
-      span.setAttribute('class', item.getAttribute('type') === 'checkbox' ? 'settingModToggle' : 'settingMod')
-      span.innerHTML = icon
-      span.addEventListener('click', async () => {
-        const key = item.getAttribute('id')
-
-        app.settings[key] = settings.defaults[key]
-
-        await settings.prep()
-        settings.save()
-        await settings.apply()
-      })
-
-      item.getAttribute('type') === 'checkbox' ? item.parentElement.before(span) : item.before(span)
-    })
-
     if (app.settings.currency && (app.settings.currencyInterval !== 'manual' || !store.get('rateDate'))) getRates()
   },
 
   /** Prepare settings dialog items. */
   prep: async () => {
+    const sysLocale = getSystemLocale()
     const locales = [
+      { system: `System (${sysLocale})` },
+      { period: 'Comma (1,234.56)' },
+      { comma: 'Period (1.234,56)' },
+      { disabled: 'Disabled' }
+    ]
+    const dateFormats = [
       { system: 'System' },
-      { 'zh-CN': 'Chinese (PRC)' },
-      { 'en-CA': 'English (Canada)' },
-      { 'en-GB': 'English (UK)' },
-      { 'en-US': 'English (US)' },
-      { 'fr-FR': 'French (France)' },
-      { 'de-DE': 'German (Germany)' },
-      { 'it-IT': 'Italian (Italy)' },
-      { 'ja-JP': 'Japanese (Japan)' },
-      { 'pt-BR': 'Portuguese (Brazil)' },
-      { 'ru-RU': 'Russian (Russia)' },
-      { 'es-MX': 'Spanish (Mexico)' },
-      { 'es-ES': 'Spanish (Spain)' },
-      { 'tr-TR': 'Turkish (Turkiye)' }
+      { 'MM/dd/yyyy': 'MM/DD/YYYY' },
+      { 'dd/MM/yyyy': 'DD/MM/YYYY' },
+      { 'yyyy-MM-dd': 'YYYY-MM-DD' }
     ]
 
     const answerPositions = [
@@ -164,16 +184,16 @@ export const settings = {
     ]
 
     populateSelect(dom.answerPosition, answerPositions)
-    populateSelect(dom.locale, locales)
+    populateSelect(dom.thouSep, locales)
+    populateSelect(dom.dateFormat, dateFormats)
     populateSelect(dom.numericOutput, numericOutputs)
     populateSelect(dom.notation, notations, 'spacer')
     populateSelect(dom.matrixType, matrixTypes)
 
     dom.precisionLabel.textContent = app.settings.precision
+    dom.calcTimeoutLabel.textContent = app.settings.calcTimeout
     dom.expLowerLabel.textContent = app.settings.expLower
     dom.expUpperLabel.textContent = app.settings.expUpper
-    dom.lastUpdated.textContent = app.settings.currency ? store.get('rateDate') : ''
-    dom.currencyUpdate.style.visibility = app.settings.currency ? 'visible' : 'hidden'
 
     Object.keys(app.settings).forEach((key) => {
       const el = dom.el('#' + key)
@@ -181,11 +201,41 @@ export const settings = {
       if (!el) return
 
       el[el.getAttribute('type') === 'checkbox' ? 'checked' : 'value'] = app.settings[key]
-      checkMods(key)
     })
 
+    const currentTheme = app.settings.theme
+
+    dom.els('.theme-pill-button').forEach((btn) => {
+      btn.classList.toggle('active', btn.getAttribute('data-theme-value') === currentTheme)
+    })
+
+    updateSyncDirPathDisplay(app.settings.syncDir)
+
+    const syncDirSection = dom.el('#syncDirSection')
+
+    if (syncDirSection) {
+      syncDirSection.style.display = app.settings.syncDirEnabled ? 'flex' : 'none'
+    }
+
+    const syncTab = dom.el('#syncTab')
+
+    if (syncTab) {
+      syncTab.style.display = isElectron ? '' : 'none'
+    }
+
+    const alwaysOnTopContainer = dom.el('#alwaysOnTopContainer')
+
+    if (alwaysOnTopContainer) {
+      alwaysOnTopContainer.style.display = isElectron ? '' : 'none'
+    }
+
+    const showTrayContainer = dom.el('#showTrayContainer')
+
+    if (showTrayContainer) {
+      showTrayContainer.style.display = isElectron ? '' : 'none'
+    }
+
     await checkSize()
-    checkDefaults()
     checkWarnings()
 
     settings.toggleSubs()
@@ -193,6 +243,8 @@ export const settings = {
 
   /** Apply settings. */
   apply: async () => {
+    clearEvaluationCache()
+
     const appTheme = await getTheme()
     const cssColorScheme =
       app.settings.theme === 'light' ? 'light' : app.settings.theme === 'dark' ? 'dark' : 'light dark'
@@ -220,6 +272,7 @@ export const settings = {
     if (isElectron) {
       numara.setTheme(app.settings.theme)
       numara.setOnTop(app.settings.alwaysOnTop)
+      numara.setTray(app.settings.showTray)
     }
 
     dom.els('.panelFont, .input .CodeMirror').forEach((el) => {
@@ -227,6 +280,9 @@ export const settings = {
       el.style.fontWeight = app.settings.fontWeight
       el.style.setProperty('line-height', app.settings.lineHeight, 'important')
     })
+
+    dom.mainPanel.classList.toggle('showRulers', app.settings.rulers)
+    dom.output.classList.toggle('truncateAnswers', app.settings.truncateAnswers)
 
     if (app.settings.answerPosition !== 'bottom') {
       cm.eachLine((cmLine) => {
@@ -239,27 +295,7 @@ export const settings = {
       })
     }
 
-    // Set input/output widths and styles based on answer position
-    switch (app.settings.answerPosition) {
-      case 'bottom':
-        dom.input.style.width = '100%'
-        dom.output.style.width = '20px'
-        dom.output.style.minWidth = '20px'
-        dom.output.style.textAlign = 'right'
-        break
-      case 'left':
-        dom.input.style.width = (store.get('inputWidth') || 60) + '%'
-        dom.output.style.minWidth = '120px'
-        dom.output.style.textAlign = 'left'
-        break
-      case 'right':
-      default:
-        dom.input.style.width = '60%'
-        dom.output.style.textAlign = 'right'
-        break
-    }
-
-    dom.panelDivider.style.display = app.settings.answerPosition === 'left' ? 'block' : 'none'
+    applyAnswerPositionLayout()
 
     cm.setOption('mode', app.settings.syntax ? 'numara' : 'plain')
     cm.setOption('lineNumbers', app.settings.lineNumbers)
@@ -285,9 +321,33 @@ export const settings = {
       store.set('rateInterval', false)
     }
 
-    setupSidePanel()
+    if (app.settings.syncDirEnabled && !app.settings.syncDir) {
+      app.settings.syncDirEnabled = false
+      store.set('settings', app.settings)
 
-    setTimeout(calculate, 10)
+      const syncDirEnabledCheckbox = dom.el('#syncDirEnabled')
+
+      if (syncDirEnabledCheckbox) {
+        syncDirEnabledCheckbox.checked = false
+      }
+    }
+
+    const syncDirSection = dom.el('#syncDirSection')
+    if (syncDirSection) {
+      syncDirSection.style.display = app.settings.syncDirEnabled ? 'flex' : 'none'
+    }
+
+    if (isElectron) {
+      if (app.settings.syncDirEnabled && app.settings.syncDir) {
+        numara.startWatchingSyncDir(app.settings.syncDir)
+      } else {
+        numara.stopWatchingSyncDir()
+        clearSyncCache()
+      }
+    }
+
+    setupSideBar()
+    calculate()
   },
 
   /** Save settings to local storage. */
@@ -297,20 +357,19 @@ export const settings = {
 
       if (el) {
         app.settings[key] = el.getAttribute('type') === 'checkbox' ? el.checked : el.value
-        checkMods(key)
       }
     })
 
     if (!dom.currency.checked) {
-      localStorage.removeItem('rateDate')
+      store.remove('rateDate')
     }
 
-    dom.currencyUpdate.style.visibility = dom.currency.checked ? 'visible' : 'hidden'
-    dom.currencyWarn.style.display = app.settings.currency ? 'none' : 'inline-block'
+    dom.currencyWarn.style.display = app.settings.currency ? 'none' : 'inline-flex'
 
-    if (!store.get('rateDate') && app.settings.currency) getRates()
+    if (!store.get('rateDate') && app.settings.currency) {
+      getRates()
+    }
 
-    checkDefaults()
     checkWarnings()
 
     settings.toggleSubs()
@@ -325,18 +384,24 @@ export const settings = {
       el.parentNode.style.opacity = enabled ? '1' : '0.5'
 
       const mod = dom.el(`#${el.id}Mod`)
+
       if (mod) {
         mod.style.pointerEvents = enabled ? 'auto' : 'none'
         mod.parentNode.style.opacity = enabled ? '1' : '0.5'
       }
     }
 
+    const isThouSepEnabled = app.settings.thouSep !== 'disabled'
+
     toggle(dom.keywordTips, app.settings.syntax)
     toggle(dom.matchBrackets, app.settings.syntax)
+
     const isAutoNotation = app.settings.notation === 'auto'
+
     toggle(dom.expUpper, isAutoNotation)
     toggle(dom.expLower, isAutoNotation)
-    toggle(dom.copyThouSep, app.settings.thouSep)
+    toggle(dom.inputLocale, isThouSepEnabled)
+    toggle(dom.copyThouSep, isThouSepEnabled)
 
     dom.currencyInterval.disabled = !app.settings.currency
     dom.updateRatesLink.dataset.enabled = app.settings.currency
@@ -345,12 +410,39 @@ export const settings = {
 
 dom.defaultSettingsButton.addEventListener('click', () => {
   confirm('All settings will revert back to defaults.', async () => {
+    const keepSync = dom.el('#confirmKeepSync')?.checked
+
+    const currentSyncDir = app.settings.syncDir
+    const currentSyncDirEnabled = app.settings.syncDirEnabled
+
     app.settings = { ...settings.defaults }
+
+    if (keepSync) {
+      app.settings.syncDir = currentSyncDir
+      app.settings.syncDirEnabled = currentSyncDirEnabled
+    }
 
     await settings.prep()
     await settings.apply()
     settings.save()
+
+    setTimeout(() => {
+      modal.center('#dialogSettings')
+    }, 250)
   })
+
+  const syncContainer = dom.el('#confirmKeepSyncContainer')
+  const syncCheckbox = dom.el('#confirmKeepSync')
+
+  if (app.settings.syncDirEnabled) {
+    if (syncContainer) {
+      syncContainer.style.display = 'block'
+    }
+
+    if (syncCheckbox) {
+      syncCheckbox.checked = true
+    }
+  }
 })
 
 dom.dialogSettingsReset.addEventListener('click', () => {
@@ -388,6 +480,10 @@ dom.precision.addEventListener('input', () => {
   dom.precisionLabel.innerHTML = dom.precision.value
 })
 
+dom.calcTimeout.addEventListener('input', () => {
+  dom.calcTimeoutLabel.innerHTML = dom.calcTimeout.value
+})
+
 dom.expLower.addEventListener('input', () => {
   dom.expLowerLabel.innerHTML = dom.expLower.value
 })
@@ -398,19 +494,95 @@ dom.expUpper.addEventListener('input', () => {
 
 dom.updateRatesLink.addEventListener('click', getRates)
 
+dom.els('.theme-pill-button').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const val = btn.getAttribute('data-theme-value')
+    const themeInput = dom.el('#theme')
+
+    if (themeInput && themeInput.value !== val) {
+      themeInput.value = val
+      themeInput.dispatchEvent(new Event('change'))
+
+      dom.els('.theme-pill-button').forEach((b) => {
+        b.classList.toggle('active', b.getAttribute('data-theme-value') === val)
+      })
+    }
+  })
+})
+
+if (isElectron) {
+  const selectSyncDirButton = dom.el('#selectSyncDirButton')
+
+  if (selectSyncDirButton) {
+    selectSyncDirButton.addEventListener('click', async (e) => {
+      e.preventDefault()
+      const path = await numara.selectSyncDirectory()
+
+      if (path) {
+        const syncDirInput = dom.el('#syncDir')
+
+        if (syncDirInput) {
+          syncDirInput.value = path
+          syncDirInput.dispatchEvent(new Event('change'))
+        }
+
+        updateSyncDirPathDisplay(path)
+      }
+    })
+
+    selectSyncDirButton.addEventListener('contextmenu', (e) => {
+      e.preventDefault()
+      if (app.settings.syncDir) {
+        numara.syncDirContextMenu(app.settings.syncDir)
+      }
+    })
+  }
+}
+
 dom.els('.settingItem').forEach((el) => {
   el.addEventListener('change', async () => {
+    const id = el.getAttribute('id')
+
+    if (id === 'syncDirEnabled' && el.checked && !dom.el('#syncDir').value) {
+      const path = await numara.selectSyncDirectory()
+
+      if (path) {
+        dom.el('#syncDir').value = path
+        updateSyncDirPathDisplay(path)
+      } else {
+        el.checked = false
+        showError('Sync Folder Required', 'A folder must be chosen to enable directory sync.')
+      }
+    }
+
     settings.save()
     await settings.apply()
+
+    if (id === 'syncDirEnabled' || id === 'syncDir') {
+      if (app.settings.syncDirEnabled && app.settings.syncDir) {
+        triggerFolderSync().catch(console.error)
+      } else {
+        clearSyncCache()
+      }
+    }
+
+    if (id === 'pageListPosition') {
+      setTimeout(() => {
+        modal.center('#dialogSettings')
+      }, 250)
+    }
   })
 })
 
 if (isElectron) {
   dom.resetSizeButton.addEventListener('click', () => {
-    numara.resetSize()
+    const sidebarWidth = app.sidebarDocked ? (store.get('sideBarWidth') ?? 240) : 0
+
+    numara.resetSize(560, 480, sidebarWidth)
 
     setTimeout(() => {
       modal.show('#dialogSettings')
-    }, 10)
+      modal.center('#dialogSettings')
+    }, 250)
   })
 }

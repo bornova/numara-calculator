@@ -5,10 +5,12 @@ import {
   globalShortcut,
   ipcMain,
   Menu,
+  nativeImage,
   nativeTheme,
   Notification,
   session,
-  shell
+  shell,
+  Tray
 } from 'electron'
 import log from 'electron-log'
 import Store from 'electron-store'
@@ -32,7 +34,8 @@ const schema = {
   appWidth: { type: 'number', default: 560 },
   fullSize: { type: 'boolean', default: false },
   position: { type: 'array', items: { type: 'integer' } },
-  theme: { type: 'string', default: 'system' }
+  theme: { type: 'string', default: 'system' },
+  showTray: { type: 'boolean', default: false }
 }
 
 const config = new Store({ schema, clearInvalidConfig: true, fileExtension: '' })
@@ -50,10 +53,93 @@ const getThemeColor = () =>
     : LIGHT_COLOR
 
 let win
+let tray = null
+let isQuitting = false
+
+function getTrayIconPath() {
+  const iconFileName = isWin ? 'icon.ico' : isMac ? 'trayTemplate.png' : 'icon.png'
+  const possiblePaths = [
+    path.join(import.meta.dirname, `../../build/assets/${iconFileName}`),
+    path.join(app.getAppPath(), `build/assets/${iconFileName}`)
+  ]
+
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) return p
+  }
+
+  return path.join(app.getAppPath(), `build/assets/${iconFileName}`)
+}
+
+function updateTrayState() {
+  const showTray = config.get('showTray')
+
+  if (showTray) {
+    if (!tray) {
+      const contextMenu = Menu.buildFromTemplate([
+        {
+          label: 'Show Numara',
+          click: () => {
+            if (win) {
+              win.show()
+              win.focus()
+            }
+          }
+        },
+        {
+          label: 'Hide Numara',
+          click: () => {
+            if (win) {
+              win.hide()
+            }
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Quit',
+          click: () => {
+            isQuitting = true
+            app.quit()
+          }
+        }
+      ])
+
+      try {
+        const trayIconPath = getTrayIconPath()
+        let trayIcon = nativeImage.createFromPath(trayIconPath)
+
+        if (isMac) {
+          trayIcon.setTemplateImage(true)
+        }
+
+        tray = new Tray(trayIcon)
+        tray.setToolTip('Numara Calculator')
+        tray.setContextMenu(contextMenu)
+
+        tray.on('click', () => {
+          if (win) {
+            if (win.isVisible()) {
+              win.hide()
+            } else {
+              win.show()
+              win.focus()
+            }
+          }
+        })
+      } catch (err) {
+        log.error('Failed to create tray:', err)
+      }
+    }
+  } else {
+    if (tray) {
+      tray.destroy()
+      tray = null
+    }
+  }
+}
 
 /**
  * Sets the title bar overlay configuration based on the transparency state.
- * @param {boolean} isTrans - Determines if the title bar should be transparent.
+ * @param {boolean} isTrans Determines if the title bar should be transparent.
  */
 function setTitleBarOverlay(isTrans) {
   if (!isWin) return
@@ -105,17 +191,27 @@ function createAppWindow() {
     return { action: 'deny' }
   })
 
-  win.on('close', () => {
+  win.on('close', (e) => {
     config.set('fullSize', win.isMaximized())
-    config.set('position', win.getPosition())
+    try {
+      config.set('position', win.getPosition())
+    } catch {
+      // Ignore
+    }
 
-    if (win.isMaximized()) return
+    if (!win.isMaximized()) {
+      const [width, height] = win.getSize()
+      config.set('appWidth', width)
+      config.set('appHeight', height)
+    }
 
-    const [width, height] = win.getSize()
-
-    config.set('appWidth', width)
-    config.set('appHeight', height)
+    if (config.get('showTray') && !isQuitting) {
+      e.preventDefault()
+      win.hide()
+    }
   })
+
+  updateTrayState()
 
   if (app.isPackaged) {
     win.on('focus', () => globalShortcut.registerAll(['CommandOrControl+R', 'F5'], () => {}))
@@ -125,7 +221,14 @@ function createAppWindow() {
 
 app.setAppUserModelId('com.numara.app')
 app.whenReady().then(createAppWindow)
-app.requestSingleInstanceLock() ? app.on('second-instance', () => win.focus()) : app.quit()
+app.requestSingleInstanceLock()
+  ? app.on('second-instance', () => {
+      if (win) {
+        if (!win.isVisible()) win.show()
+        win.focus()
+      }
+    })
+  : app.quit()
 
 nativeTheme.on('updated', () => {
   win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors)
@@ -140,6 +243,10 @@ ipcMain.on('setTheme', (event, mode) => {
 ipcMain.on('transControls', (event, isTrans) => setTitleBarOverlay(isTrans))
 
 ipcMain.on('setOnTop', (event, bool) => win.setAlwaysOnTop(bool))
+ipcMain.on('setTray', (event, bool) => {
+  config.set('showTray', bool)
+  updateTrayState()
+})
 ipcMain.handle('isMaximized', () => win.isMaximized())
 ipcMain.handle('isResized', () => {
   const [width, height] = win.getSize()
@@ -149,7 +256,7 @@ ipcMain.handle('isResized', () => {
 
 ipcMain.on('importPage', (event) => {
   const file = dialog.showOpenDialogSync(win, {
-    filters: [{ name: 'Numara', extensions: ['numara'] }],
+    filters: [{ name: 'Numara', extensions: ['num'] }],
     properties: ['openFile'],
     title: 'Import Page'
   })
@@ -169,7 +276,7 @@ ipcMain.on('importPage', (event) => {
 ipcMain.on('exportPage', (event, fileName, content) => {
   const file = dialog.showSaveDialogSync(win, {
     defaultPath: fileName,
-    filters: [{ name: 'Numara', extensions: ['numara'] }],
+    filters: [{ name: 'Numara', extensions: ['num'] }],
     title: 'Export Page'
   })
 
@@ -188,11 +295,24 @@ ipcMain.on('exportPage', (event, fileName, content) => {
 /**
  * Reset window size to default.
  */
-function resetSize() {
-  win.setSize(schema.appWidth.default, schema.appHeight.default)
+function resetSize(
+  appWrapperWidth = schema.appWidth.default,
+  appWrapperHeight = schema.appHeight.default,
+  sidebarWidth = 0
+) {
+  if (!win || win.isDestroyed()) return
+
+  const [minWidth, minHeight] = win.getMinimumSize()
+  const width = Math.round(Number(appWrapperWidth) || schema.appWidth.default)
+  const height = Math.round(Number(appWrapperHeight) || schema.appHeight.default)
+  const sidebar = Math.max(0, Math.round(Number(sidebarWidth) || 0))
+
+  win.setSize(Math.max(minWidth, width + sidebar), Math.max(minHeight, height))
 }
 
-ipcMain.on('resetSize', resetSize)
+ipcMain.on('resetSize', (event, appWrapperWidth, appWrapperHeight, sidebarWidth) => {
+  resetSize(appWrapperWidth, appWrapperHeight, sidebarWidth)
+})
 ipcMain.on('resetApp', () => {
   session.defaultSession.clearStorageData().then(() => {
     config.clear()
@@ -201,16 +321,154 @@ ipcMain.on('resetApp', () => {
   })
 })
 ipcMain.on('openDevTools', () => win.webContents.openDevTools())
+ipcMain.on('openPath', (event, dirPath) => {
+  shell.openPath(dirPath)
+})
 ipcMain.on('openLogs', () => {
   shell.openPath(path.join(app.getPath('logs'), 'main.log'))
 })
 
+let syncWatcher = null
+
+ipcMain.handle('checkSyncDirectory', async (event, dirPath) => {
+  try {
+    return fs.existsSync(dirPath) && fs.lstatSync(dirPath).isDirectory()
+  } catch {
+    return false
+  }
+})
+
+ipcMain.handle('selectSyncDirectory', async () => {
+  const result = await dialog.showOpenDialog(win, {
+    properties: ['openDirectory', 'createDirectory'],
+    title: 'Select Local Sync Directory'
+  })
+
+  return result.canceled ? null : result.filePaths[0]
+})
+
+ipcMain.handle('readSyncDirectory', async (event, dirPath) => {
+  try {
+    const files = await fs.promises.readdir(dirPath)
+    const numFiles = files.filter((f) => f.endsWith('.num'))
+    const fileContents = []
+
+    for (const file of numFiles) {
+      const filePath = path.join(dirPath, file)
+      const content = await fs.promises.readFile(filePath, 'utf8')
+      const name = path.basename(file, '.num')
+
+      fileContents.push({ name, content })
+    }
+
+    return fileContents
+  } catch (error) {
+    log.error('Error reading sync directory:', error)
+    throw error
+  }
+})
+
+ipcMain.handle('writeSyncFile', async (event, dirPath, filename, content) => {
+  try {
+    const filePath = path.join(dirPath, filename + '.num')
+
+    await fs.promises.writeFile(filePath, content, 'utf8')
+
+    return true
+  } catch (error) {
+    log.error('Error writing sync file:', error)
+    throw error
+  }
+})
+
+ipcMain.handle('deleteSyncFile', async (event, dirPath, filename) => {
+  try {
+    const filePath = path.join(dirPath, filename + '.num')
+
+    if (fs.existsSync(filePath)) {
+      await fs.promises.unlink(filePath)
+    }
+
+    return true
+  } catch (error) {
+    log.error('Error deleting sync file:', error)
+    throw error
+  }
+})
+
+ipcMain.handle('renameSyncFile', async (event, dirPath, oldFilename, newFilename) => {
+  try {
+    const oldPath = path.join(dirPath, oldFilename + '.num')
+    const newPath = path.join(dirPath, newFilename + '.num')
+
+    if (fs.existsSync(oldPath)) {
+      await fs.promises.rename(oldPath, newPath)
+    }
+
+    return true
+  } catch (error) {
+    log.error('Error renaming sync file:', error)
+    throw error
+  }
+})
+
+ipcMain.on('startWatchingSyncDir', (event, dirPath) => {
+  if (syncWatcher) {
+    syncWatcher.close()
+    syncWatcher = null
+  }
+
+  if (!dirPath || !fs.existsSync(dirPath)) return
+
+  try {
+    let fsTimeout = null
+    syncWatcher = fs.watch(dirPath, (eventType, filename) => {
+      if (!fs.existsSync(dirPath)) {
+        if (win && !win.isDestroyed()) {
+          win.webContents.send('syncDirDeleted')
+        }
+        return
+      }
+
+      if (filename && filename.endsWith('.num')) {
+        if (fsTimeout) return
+
+        fsTimeout = setTimeout(() => {
+          fsTimeout = null
+        }, 100)
+
+        if (win && !win.isDestroyed()) {
+          win.webContents.send('syncDirChanged')
+        }
+      }
+    })
+
+    syncWatcher.on('error', (error) => {
+      log.error('Sync watcher error:', error)
+      if (!fs.existsSync(dirPath)) {
+        if (win && !win.isDestroyed()) {
+          win.webContents.send('syncDirDeleted')
+        }
+      }
+    })
+  } catch (error) {
+    log.error('Error starting sync watcher:', error)
+  }
+})
+
+ipcMain.on('stopWatchingSyncDir', () => {
+  if (syncWatcher) {
+    syncWatcher.close()
+    syncWatcher = null
+  }
+})
+
 /**
  * Generate context menu header.
- * @param {number} index - The line index.
- * @param {boolean} isMultiLine - Is it a multi-line selection.
- * @param {boolean} hasAnswer - Does the line have an answer.
- * @returns {Array} - The context menu header template.
+ * @param {number} index The line index.
+ * @param {boolean} isMultiLine Is it a multi-line selection.
+ * @param {boolean} hasAnswer Does the line have an answer.
+ * @returns {Array} The context menu header template.
  */
 const contextHeader = (index, isMultiLine, hasAnswer) =>
   hasAnswer || index !== null
@@ -225,13 +483,13 @@ const contextHeader = (index, isMultiLine, hasAnswer) =>
 
 /**
  * Generate common context menu items.
- * @param {Event} event - The event object.
- * @param {number} index - The line index.
- * @param {boolean} isEmpty - Is the input empty.
- * @param {boolean} isSelection - Is there a selection.
- * @param {boolean} isMultiLine - Is it a multi-line selection.
- * @param {boolean} hasAnswer - Does the line have an answer.
- * @returns {Array} - The common context menu template.
+ * @param {Event} event The event object.
+ * @param {number} index The line index.
+ * @param {boolean} isEmpty Is the input empty.
+ * @param {boolean} isSelection Is there a selection.
+ * @param {boolean} isMultiLine Is it a multi-line selection.
+ * @param {boolean} hasAnswer Does the line have an answer.
+ * @returns {Array} The common context menu template.
  */
 const commonContext = (event, index, isEmpty, isSelection, isMultiLine, hasAnswer) => {
   const context = [
@@ -276,13 +534,13 @@ const commonContext = (event, index, isEmpty, isSelection, isMultiLine, hasAnswe
 /**
  * Handles the input context menu event.
  *
- * @param {Electron.IpcMainEvent} event - The IPC event object.
- * @param {number} index - The index of the line.
- * @param {boolean} isEmpty - Is the input is empty.
- * @param {boolean} isLine - Indicates if the current line is not empty.
- * @param {boolean} isSelection - Indicates if there is a selection.
- * @param {boolean} isMultiLine - Indicates if the selection spans multiple lines.
- * @param {boolean} hasAnswer - Indicates if the line has an answer.
+ * @param {Electron.IpcMainEvent} event The IPC event object.
+ * @param {number} index The index of the line.
+ * @param {boolean} isEmpty Is the input is empty.
+ * @param {boolean} isLine Indicates if the current line is not empty.
+ * @param {boolean} isSelection Indicates if there is a selection.
+ * @param {boolean} isMultiLine Indicates if the selection spans multiple lines.
+ * @param {boolean} hasAnswer Indicates if the line has an answer.
  */
 ipcMain.on('inputContextMenu', (event, index, isEmpty, isLine, isSelection, isMultiLine, hasAnswer) => {
   const contextMenuTemplate = [
@@ -297,10 +555,10 @@ ipcMain.on('inputContextMenu', (event, index, isEmpty, isLine, isSelection, isMu
 /**
  * Handles the output context menu event.
  *
- * @param {Electron.IpcMainEvent} event - The IPC event object.
- * @param {number} index - The index of the line.
- * @param {boolean} isEmpty - Indicates if the input is empty.
- * @param {boolean} hasAnswer - Indicates if the line has an answer.
+ * @param {Electron.IpcMainEvent} event The IPC event object.
+ * @param {number} index The index of the line.
+ * @param {boolean} isEmpty Indicates if the input is empty.
+ * @param {boolean} hasAnswer Indicates if the line has an answer.
  */
 ipcMain.on('outputContextMenu', (event, index, isEmpty, hasAnswer) => {
   const contextMenuTemplate = [
@@ -315,6 +573,20 @@ ipcMain.on('outputContextMenu', (event, index, isEmpty, hasAnswer) => {
 ipcMain.on('textboxContextMenu', () =>
   Menu.buildFromTemplate([{ role: 'cut' }, { role: 'copy' }, { role: 'paste' }]).popup()
 )
+
+ipcMain.on('syncDirContextMenu', (event, dirPath) => {
+  const contextMenuTemplate = [
+    {
+      label: 'Open folder',
+      click: () => {
+        shell.openPath(dirPath)
+      }
+    }
+  ]
+  const contextMenu = Menu.buildFromTemplate(contextMenuTemplate)
+
+  contextMenu.popup()
+})
 
 ipcMain.on('checkUpdate', () => {
   autoUpdater.checkForUpdates()

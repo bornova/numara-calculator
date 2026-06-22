@@ -1,12 +1,12 @@
-import { dom } from './dom'
-import { cm, udfInput, uduInput } from './editor'
-import { notify } from './modal'
-import { isElectron } from './utils'
+import { dom } from '../dom'
+import { cm, udfInput, uduInput } from '../editor'
+import { notify } from './dialogs'
+import { isElectron } from '../appState'
 
 /**
  * Helper to safely copy text to clipboard and show notification.
- * @param {string} text - The text to copy.
- * @param {string} message - The notification message.
+ * @param {string} text The text to copy.
+ * @param {string} message The notification message.
  */
 function copyToClipboard(text, message) {
   if (!text) {
@@ -38,7 +38,7 @@ function inputContext() {
 
 /**
  * Output panel context menu.
- * @param {Event} event - The event object.
+ * @param {Event} event The event object.
  */
 export function outputContext(event) {
   const answer = event.target.textContent
@@ -58,8 +58,8 @@ function textboxContext() {
 
 /**
  * Copy line answer.
- * @param {Event} event - The event object.
- * @param {number} index - The index of the line.
+ * @param {Event} event The event object.
+ * @param {number} index The index of the line.
  */
 function copyLine(event, index) {
   index = +index
@@ -69,6 +69,11 @@ function copyLine(event, index) {
   copyToClipboard(line, `Copied Line ${index + 1} to clipboard.`)
 }
 
+/**
+ * Creates a temporary DOM element to safely resolve text content to escaped HTML tags.
+ * @param {string} text The input text to escape.
+ * @returns {string} The HTML-safe representation of the text.
+ */
 export function safeCopyText(text) {
   const safeDiv = document.createElement('div')
   safeDiv.textContent = text
@@ -77,9 +82,9 @@ export function safeCopyText(text) {
 
 /**
  * Copy line answer.
- * @param {Event} event - The event object.
- * @param {number} lineIndex - The index of the line.
- * @param {boolean} withLines - Whether to include the line in the copied text.
+ * @param {Event} event The event object.
+ * @param {number} lineIndex The index of the line.
+ * @param {boolean} withLines Whether to include the line in the copied text.
  */
 function copyAnswer(event, lineIndex, withLines) {
   lineIndex = +lineIndex
@@ -87,7 +92,6 @@ function copyAnswer(event, lineIndex, withLines) {
   const line = cm.getLine(lineIndex).trim()
   const answer = dom.el(`[data-index="${lineIndex}"]`)?.firstChild?.dataset.answer
   const copiedText = withLines ? `${line} = ${answer}` : `${answer}`
-
   const safeText = safeCopyText(copiedText)
 
   copyToClipboard(
@@ -110,11 +114,17 @@ function copyAllAnswers() {
   if (cm.getValue() === '') return copyToClipboard()
 
   const copiedOutputs = []
+  const answersMap = {}
 
-  cm.eachLine((line) => {
-    const index = cm.getLineNumber(line)
+  document.querySelectorAll('#output [data-index]').forEach((el) => {
+    answersMap[el.getAttribute('data-index')] = el.textContent ?? ''
+  })
 
-    copiedOutputs.push(dom.el(`[data-index="${index}"]`)?.textContent ?? '')
+  let lineIdx = 0
+
+  cm.eachLine(() => {
+    copiedOutputs.push(answersMap[lineIdx] ?? '')
+    lineIdx++
   })
 
   copyToClipboard(copiedOutputs.join('\n'), 'Copied all answers to clipboard.')
@@ -127,24 +137,28 @@ export function copyAll() {
   if (cm.getValue() === '') return copyToClipboard()
 
   const copiedCalc = []
+  const answersMap = {}
+
+  document.querySelectorAll('#output [data-index]').forEach((el) => {
+    answersMap[el.getAttribute('data-index')] = el.textContent ?? ''
+  })
+
+  let lineIdx = 0
 
   cm.eachLine((line) => {
-    const lineIndex = cm.getLineNumber(line)
-    const text = cm.getLine(lineIndex).trim()
+    const text = line.text.trim()
 
-    if (text) {
-      copiedCalc.push(
-        text.match(/^(#|\/\/)/) ? text : `${text} = ${dom.el(`[data-index="${lineIndex}"]`)?.textContent ?? ''}`
-      )
-    } else {
-      copiedCalc.push('')
-    }
+    copiedCalc.push(!text ? '' : text.match(/^(#|\/\/)/) ? text : `${text} = ${answersMap[lineIdx] ?? ''}`)
+
+    lineIdx++
   })
 
   copyToClipboard(copiedCalc.join('\n'), 'Copied page to clipboard.')
 }
 
-// Context menus
+/**
+ * Binds mouse click context menu actions for input, outputs, and textboxes.
+ */
 export function initializeContextMenus() {
   if (!isElectron) return
 

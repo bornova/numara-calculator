@@ -17,8 +17,9 @@ directories:
 # Files to include in the build
 files:
   - build
-  - src/main.js
-  - src/preload.cjs
+  - src/electron/main.js
+  - src/electron/preload.cjs
+  - '!**/*.map'
 
 # Linux configuration
 linux:
@@ -27,11 +28,6 @@ linux:
     - AppImage
     - deb
     - rpm
-
-# RPM specific configuration
-rpm:
-  depends:
-    - /usr/lib64/libuuid.so.1
 
 # macOS configuration
 mac:

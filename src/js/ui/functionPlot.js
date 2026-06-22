@@ -1,13 +1,13 @@
-import { dom } from './dom'
-import { calculate, math } from './eval'
-import { modal, showError } from './modal'
-import { app, checkSize, store } from './utils'
-
-import { productName } from './../../package.json'
+import { dom } from '../dom'
+import { calculate, math } from '../calc/calcManager'
+import { modal, showError } from './dialogs'
+import { app, checkSize, store } from '../appState'
 
 import { applyChange, observableDiff } from '@bornova/deep-diff'
 
 import functionPlot from 'function-plot'
+
+import { productName } from './../../../package.json'
 
 const plotSettings = {
   defaults: {
@@ -38,6 +38,10 @@ const plotSettings = {
   }
 }
 
+/**
+ * Gets the current active domain values for X and Y axes.
+ * @returns {{x: number[], y: number[]}} The X and Y axis domains.
+ */
 function getDomains() {
   if (app.plotSettings.domain.auto) {
     if (app.activePlot) {
@@ -47,7 +51,9 @@ function getDomains() {
       }
     }
 
-    let domain = math.abs(math.evaluate(app.plotFunction.split('=')[1], { x: 0 })) * 2
+    const match = app.plotFunction.match(/^\s*\w+\s*\(\s*(\w+)\s*\)\s*=/)
+    const paramName = match ? match[1] : 'x'
+    let domain = math.abs(math.evaluate(app.plotFunction.split('=')[1], { [paramName]: 0 })) * 2
 
     if (!isFinite(domain) || domain === 0) domain = 10
 
@@ -66,7 +72,32 @@ function getDomains() {
 export function plot() {
   dom.plotTitle.innerHTML = app.plotFunction
 
-  const f = math.simplify(app.plotFunction.split('=')[1], app.mathScope).toString()
+  const match = app.plotFunction.match(/^\s*\w+\s*\(\s*(\w+)\s*\)\s*=/)
+  const paramName = match ? match[1] : 'x'
+
+  // Build a scope without the parameter name so it stays symbolic for function-plot.
+  // Other user variables (e.g. `a = 2` in `f(x) = a * x`) are still substituted.
+  const plotScope = new Map(app.mathScope)
+  plotScope.delete(paramName)
+
+  let f = math.simplify(app.plotFunction.split('=')[1], plotScope).toString()
+
+  if (paramName !== 'x') {
+    try {
+      const parsed = math.parse(f)
+      const transformed = parsed.transform((node) => {
+        if (node.isSymbolNode && node.name === paramName) {
+          node.name = 'x'
+        }
+
+        return node
+      })
+      f = transformed.toString()
+    } catch {
+      f = f.replace(new RegExp('\\b' + paramName + '\\b', 'g'), 'x')
+    }
+  }
+
   const { x: xDomain, y: yDomain } = getDomains()
   const derivative = math.derivative(f, 'x').toString()
 
@@ -103,16 +134,32 @@ export function plot() {
   })
 }
 
+/**
+ * Updates a specific plot configuration setting and triggers a redrawing.
+ * @param {string} setting The setting key.
+ * @param {*} value The new setting value.
+ */
 function updatePlotSetting(setting, value) {
   app.plotSettings[setting] = value
   store.set('plotSettings', app.plotSettings)
   plot()
 }
 
+/**
+ * Validates the plot boundary domains ensuring they are numbers and valid ranges.
+ * @param {number} xMin Minimum X axis boundary.
+ * @param {number} xMax Maximum X axis boundary.
+ * @param {number} yMin Minimum Y axis boundary.
+ * @param {number} yMax Maximum Y axis boundary.
+ * @returns {boolean} True if the domains are valid.
+ */
 function validateDomain(xMin, xMax, yMin, yMax) {
   return !isNaN(xMin) && !isNaN(xMax) && !isNaN(yMin) && !isNaN(yMax) && xMin < xMax && yMin < yMax
 }
 
+/**
+ * Resets the plot zoom and domain state, redrawing from scratch.
+ */
 function resetPlot() {
   app.activePlot = null
   plot()
@@ -120,6 +167,9 @@ function resetPlot() {
 
 const minMaxInputs = [dom.plotXMin, dom.plotXMax, dom.plotYMin, dom.plotYMax]
 
+/**
+ * Sets up user event listeners for chart interactions, zoom adjustments, export buttons, etc.
+ */
 function setupEventListeners() {
   dom.plotCrossModal.addEventListener('click', () => updatePlotSetting('showCross', dom.plotCrossModal.checked))
   dom.plotGridModal.addEventListener('click', () => updatePlotSetting('showGrid', dom.plotGridModal.checked))
@@ -193,7 +243,10 @@ function setupEventListeners() {
 
   let windowResizeDelay
   window.addEventListener('resize', async () => {
-    if (app.activePlot && dom.dialogPlot.classList.contains('uk-open')) plot()
+    if (app.activePlot && dom.dialogPlot.classList.contains('uk-open')) {
+      plot()
+    }
+
     clearTimeout(windowResizeDelay)
     windowResizeDelay = setTimeout(calculate, 10)
     await checkSize()

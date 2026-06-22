@@ -5,8 +5,10 @@
 
 @media print {
   .appWrapper,
+  #sideBar,
   .uk-open,
-  .uk-tooltip {
+  .uk-tooltip,
+  .scrollTop {
     display: none !important;
   }
 
@@ -57,10 +59,6 @@
 
   .printRulers tr td {
     border-bottom: 1px solid #eaeaea;
-  }
-
-  .scrollTop {
-    display: none !important;
   }
 }
 
