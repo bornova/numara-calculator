@@ -66,6 +66,7 @@ contextBridge.exposeInMainWorld('numara', {
   stopWatchingSyncDir: () => ipcRenderer.send('stopWatchingSyncDir'),
   onSyncDirChanged: (callback) => ipcRenderer.on('syncDirChanged', () => callback()),
   onSyncDirDeleted: (callback) => ipcRenderer.on('syncDirDeleted', () => callback()),
+  syncDirContextMenu: (dirPath) => ipcRenderer.send('syncDirContextMenu', dirPath),
 
   // Open path in file explorer
   openPath: (path) => ipcRenderer.send('openPath', path),
