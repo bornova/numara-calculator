@@ -5,6 +5,7 @@ import {
   globalShortcut,
   ipcMain,
   Menu,
+  nativeImage,
   nativeTheme,
   Notification,
   session,
@@ -56,7 +57,7 @@ let tray = null
 let isQuitting = false
 
 function getTrayIconPath() {
-  const iconFileName = isWin ? 'icon.ico' : 'icon.png'
+  const iconFileName = isWin ? 'icon.ico' : isMac ? 'trayTemplate.png' : 'icon.png'
   const possiblePaths = [
     path.join(import.meta.dirname, `../../build/assets/${iconFileName}`),
     path.join(app.getAppPath(), `build/assets/${iconFileName}`)
@@ -103,7 +104,12 @@ function updateTrayState() {
       ])
 
       try {
-        const trayIcon = getTrayIconPath()
+        const trayIconPath = getTrayIconPath()
+        let trayIcon = nativeImage.createFromPath(trayIconPath)
+
+        if (isMac) {
+          trayIcon.setTemplateImage(true)
+        }
 
         tray = new Tray(trayIcon)
         tray.setToolTip('Numara Calculator')
