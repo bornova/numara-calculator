@@ -51,7 +51,9 @@ function getDomains() {
       }
     }
 
-    let domain = math.abs(math.evaluate(app.plotFunction.split('=')[1], { x: 0 })) * 2
+    const match = app.plotFunction.match(/^\s*\w+\s*\(\s*(\w+)\s*\)\s*=/)
+    const paramName = match ? match[1] : 'x'
+    let domain = math.abs(math.evaluate(app.plotFunction.split('=')[1], { [paramName]: 0 })) * 2
 
     if (!isFinite(domain) || domain === 0) domain = 10
 
@@ -70,11 +72,32 @@ function getDomains() {
 export function plot() {
   dom.plotTitle.innerHTML = app.plotFunction
 
-  // Build a scope without 'x' so it stays symbolic for function-plot.
+  const match = app.plotFunction.match(/^\s*\w+\s*\(\s*(\w+)\s*\)\s*=/)
+  const paramName = match ? match[1] : 'x'
+
+  // Build a scope without the parameter name so it stays symbolic for function-plot.
   // Other user variables (e.g. `a = 2` in `f(x) = a * x`) are still substituted.
   const plotScope = new Map(app.mathScope)
-  plotScope.delete('x')
-  const f = math.simplify(app.plotFunction.split('=')[1], plotScope).toString()
+  plotScope.delete(paramName)
+
+  let f = math.simplify(app.plotFunction.split('=')[1], plotScope).toString()
+
+  if (paramName !== 'x') {
+    try {
+      const parsed = math.parse(f)
+      const transformed = parsed.transform((node) => {
+        if (node.isSymbolNode && node.name === paramName) {
+          node.name = 'x'
+        }
+
+        return node
+      })
+      f = transformed.toString()
+    } catch {
+      f = f.replace(new RegExp('\\b' + paramName + '\\b', 'g'), 'x')
+    }
+  }
+
   const { x: xDomain, y: yDomain } = getDomains()
   const derivative = math.derivative(f, 'x').toString()
 
