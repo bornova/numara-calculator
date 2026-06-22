@@ -529,6 +529,13 @@ if (isElectron) {
         updateSyncDirPathDisplay(path)
       }
     })
+
+    selectSyncDirButton.addEventListener('contextmenu', (e) => {
+      e.preventDefault()
+      if (app.settings.syncDir) {
+        numara.syncDirContextMenu(app.settings.syncDir)
+      }
+    })
   }
 }
 
