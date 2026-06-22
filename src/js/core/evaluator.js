@@ -96,7 +96,7 @@ const REGEX_CONTINUATION = /[+\-*/]/
 const REGEX_DATE_TIME =
   /[+-] * .*? *(millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia)s?/gi
 const REGEX_PCNT_OF = /%[ ]*of[ ]*/g
-const REGEX_PLOT = /\w\(x\)\s*=/
+const REGEX_PLOT = /^\s*[a-zA-Z_]\w*\s*\(\s*[a-zA-Z_]\w*\s*\)\s*=/
 
 let currencySymbolsRegex = null
 let currencyFormatRegex = null
