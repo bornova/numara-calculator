@@ -30,7 +30,7 @@
 
 .uk-modal-dialog {
   transition: 0s linear;
-  border-radius: 3px;
+  border-radius: 8px;
   background-color: light-dark(#ffffff, #1f1f1f);
   max-width: calc(100vw - 40px) !important;
 }
@@ -112,7 +112,7 @@
   margin-right: 0px;
   padding: 0 15px 5px 15px;
   color: light-dark(#999999, #999999);
-  font-weight: 600;
+  font-weight: 500;
   font-size: 1rem;
   text-transform: none;
 }
