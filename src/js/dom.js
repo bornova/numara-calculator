@@ -34,7 +34,7 @@ export const dom = {
   headerMacTitle: document.getElementById('macHeaderTitle'),
 
   // Actions
-  sidePanelButton: document.getElementById('sidePanelButton'),
+  sideBarButton: document.getElementById('sideBarButton'),
   newPageButton: document.getElementById('newPageButton'),
   leftActionsDivider: document.getElementById('leftActionsDivider'),
   clearButton: document.getElementById('clearButton'),
@@ -46,13 +46,13 @@ export const dom = {
   notificationDot: document.getElementById('notificationDot'),
 
   // Side panel
-  sidePanel: document.getElementById('sidePanel'),
+  sideBar: document.getElementById('sideBar'),
   sortOldNew: document.getElementById('sortOldNew'),
   sortNewOld: document.getElementById('sortNewOld'),
   sortAZ: document.getElementById('sortAZ'),
   sortZA: document.getElementById('sortZA'),
   pageList: document.getElementById('pageList'),
-  closeSidePanelButton: document.getElementById('closeSidePanelButton'),
+  closeSideBarButton: document.getElementById('closeSideBarButton'),
   newPageButtonSP: document.getElementById('newPageButtonSP'),
   importPageButton: document.getElementById('importPageButton'),
   printButton: document.getElementById('printButton'),
