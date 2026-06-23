@@ -103,6 +103,10 @@ const DEFAULT_APP_WIDTH = 560
 const DEFAULT_APP_HEIGHT = 480
 /** Check if app is running on MacOS. */
 export const isMac = userAgent.includes('mac')
+/** Check if app is running on Windows. */
+export const isWindows = userAgent.includes('win')
+/** Check if app is running on Linux. */
+export const isLinux = userAgent.includes('linux')
 /** Check if app is running in Electron. */
 export const isElectron = userAgent.includes('electron')
 

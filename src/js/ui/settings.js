@@ -5,7 +5,7 @@ import { calculate, clearEvaluationCache, math } from '../calc/calcManager'
 import { getRates } from '../calc/currencies'
 import { confirm, modal, showError } from './dialogs'
 import { setupSideBar } from './pageManager'
-import { app, checkSize, getSystemLocale, getTheme, isElectron, store } from '../appState'
+import { app, checkSize, getSystemLocale, getTheme, isElectron, isMac, store } from '../appState'
 import { triggerFolderSync, clearSyncCache } from '../calc/sync'
 
 import { applyChange, observableDiff } from '@bornova/deep-diff'
@@ -233,6 +233,12 @@ export const settings = {
 
     if (showTrayContainer) {
       showTrayContainer.style.display = isElectron ? '' : 'none'
+
+      const showTrayLabel = showTrayContainer.querySelector('[data-help="showTray"]')
+
+      if (showTrayLabel) {
+        showTrayLabel.textContent = isMac ? 'Keep in menu bar' : 'Keep in system tray'
+      }
     }
 
     await checkSize()
