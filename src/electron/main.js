@@ -188,6 +188,8 @@ function createAppWindow() {
 
     if (!startHidden) {
       win.show()
+    } else if (isMac) {
+      app.dock.hide()
     }
   })
 
@@ -215,6 +217,16 @@ function createAppWindow() {
       win.hide()
     }
   })
+
+  if (isMac) {
+    win.on('show', () => {
+      app.dock.show()
+    })
+
+    win.on('hide', () => {
+      app.dock.hide()
+    })
+  }
 
   updateTrayState()
 
