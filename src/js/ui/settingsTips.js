@@ -1,9 +1,12 @@
 import UIkit from 'uikit'
+import { isMac } from '../appState'
 
 // Settings tooltips for settings in the application
 const settingsTooltips = {
   alwaysOnTop: 'Keep Numara on top off all other windows on the screen. (Default: Disabled)',
-  showTray: 'Show system tray icon in the taskbar. (Default: Disabled)',
+  showTray: isMac
+    ? 'Keep Numara in the menu bar. (Default: Disabled)'
+    : 'Keep Numara in the system tray. (Default: Disabled)',
   answerPosition: 'Position of the answer display area. (Default: Left)',
   autocomplete: 'Enable or disable autocomplete suggestions when typing expressions. (Default: Enabled)',
   closeBrackets: 'Automatically insert closing brackets when opening brackets are typed. (Default: Enabled)',
