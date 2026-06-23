@@ -120,7 +120,8 @@ export const settings = {
     syntax: true,
     theme: 'system',
     thouSep: 'system',
-    showTray: false
+    showTray: false,
+    openAtLogin: false
   },
 
   /** Initialize settings. */
@@ -241,6 +242,12 @@ export const settings = {
       }
     }
 
+    const openAtLoginContainer = dom.el('#openAtLoginContainer')
+
+    if (openAtLoginContainer) {
+      openAtLoginContainer.style.display = isElectron ? '' : 'none'
+    }
+
     await checkSize()
     checkWarnings()
 
@@ -279,6 +286,7 @@ export const settings = {
       numara.setTheme(app.settings.theme)
       numara.setOnTop(app.settings.alwaysOnTop)
       numara.setTray(app.settings.showTray)
+      numara.setOpenAtLogin(app.settings.openAtLogin)
     }
 
     dom.els('.panelFont, .input .CodeMirror').forEach((el) => {
