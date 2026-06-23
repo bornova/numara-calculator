@@ -415,6 +415,7 @@ const setupUIkitUtils = () => {
   UIkit.mixin({ data: { offset: 5, delay: 300 } }, 'tooltip')
 
   UIkit.util.on('.modal, #sideBar', 'beforeshow', () => {
+    modalOpenState = true
     if (isElectron) {
       numara.transControls(true)
     }
@@ -583,6 +584,12 @@ const initializeApp = async () => {
       handleSyncDirDeleted().catch(console.error)
     })
   }
+
+  window.addEventListener('focus', () => {
+    if (!isModalOpen()) {
+      cm.focus()
+    }
+  })
 
   setTimeout(() => cm.focus(), 500)
 }
