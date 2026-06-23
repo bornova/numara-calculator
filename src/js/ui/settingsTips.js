@@ -7,6 +7,7 @@ const settingsTooltips = {
   showTray: isMac
     ? 'Keep Numara in the menu bar. (Default: Disabled)'
     : 'Keep Numara in the system tray. (Default: Disabled)',
+  openAtLogin: 'Start Numara automatically when logging into the computer. (Default: Disabled)',
   answerPosition: 'Position of the answer display area. (Default: Left)',
   autocomplete: 'Enable or disable autocomplete suggestions when typing expressions. (Default: Enabled)',
   closeBrackets: 'Automatically insert closing brackets when opening brackets are typed. (Default: Enabled)',
