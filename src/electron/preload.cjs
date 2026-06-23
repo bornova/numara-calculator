@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld('numara', {
     ipcRenderer.send('resetSize', appWrapperWidth, appWrapperHeight, sidebarWidth),
   setOnTop: (callback) => ipcRenderer.send('setOnTop', callback),
   setTray: (bool) => ipcRenderer.send('setTray', bool),
+  setOpenAtLogin: (bool) => ipcRenderer.send('setOpenAtLogin', bool),
   transControls: (isTrans) => ipcRenderer.send('transControls', isTrans),
 
   // Import
