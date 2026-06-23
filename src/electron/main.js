@@ -183,7 +183,12 @@ function createAppWindow() {
 
     setTitleBarOverlay()
 
-    win.show()
+    const showTray = config.get('showTray')
+    const startHidden = showTray && process.argv.includes('--hidden')
+
+    if (!startHidden) {
+      win.show()
+    }
   })
 
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -246,6 +251,13 @@ ipcMain.on('setOnTop', (event, bool) => win.setAlwaysOnTop(bool))
 ipcMain.on('setTray', (event, bool) => {
   config.set('showTray', bool)
   updateTrayState()
+})
+ipcMain.on('setOpenAtLogin', (event, bool) => {
+  app.setLoginItemSettings({
+    openAtLogin: bool,
+    openAsHidden: true,
+    args: ['--hidden']
+  })
 })
 ipcMain.handle('isMaximized', () => win.isMaximized())
 ipcMain.handle('isResized', () => {
