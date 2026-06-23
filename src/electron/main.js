@@ -113,16 +113,15 @@ function updateTrayState() {
 
         tray = new Tray(trayIcon)
         tray.setToolTip('Numara Calculator')
-        tray.setContextMenu(contextMenu)
+
+        tray.on('right-click', () => {
+          tray.popUpContextMenu(contextMenu)
+        })
 
         tray.on('click', () => {
           if (win) {
-            if (win.isVisible()) {
-              win.hide()
-            } else {
-              win.show()
-              win.focus()
-            }
+            win.show()
+            win.focus()
           }
         })
       } catch (err) {
