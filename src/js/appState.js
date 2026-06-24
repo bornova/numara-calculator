@@ -37,7 +37,9 @@ export const store = {
       if (consolidated) {
         const obj = JSON.parse(consolidated)
 
-        return obj[key] !== undefined ? obj[key] : null
+        if (obj[key] !== undefined) {
+          return obj[key]
+        }
       }
 
       const rootItem = localStorage.getItem(key)
