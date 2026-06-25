@@ -61,5 +61,8 @@ export function getAppLocale(settings) {
 export function localeUsesComma(settings) {
   const locale = getAppLocale(settings)
 
+  if (locale === 'tr-TR') return true
+  if (locale === 'en-US') return false
+
   return (1.11).toLocaleString(locale).includes(',')
 }
