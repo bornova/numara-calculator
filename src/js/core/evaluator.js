@@ -291,8 +291,9 @@ function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
 
   try {
     // Pre‑process locale and currency symbols
+    const usesComma = localeUsesComma()
+
     if (app.settings.thouSep !== 'disabled' && app.settings.inputLocale) {
-      const usesComma = localeUsesComma()
       const locale = getAppLocale()
       const { group: groupSeparator } = getLocaleSeparators(locale)
       const isSpaceGroup =
@@ -332,7 +333,11 @@ function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
 
             const parts = numToken.split('.')
 
-            if (parts[1].length === 3) return usesComma ? numToken.replace(/\./g, '') : numToken
+            if (parts[1].length === 3) {
+              if (usesComma && /^0+$/.test(parts[0])) return numToken
+
+              return usesComma ? numToken.replace(/\./g, '') : numToken
+            }
 
             return numToken
           }
@@ -343,7 +348,11 @@ function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
 
             const parts = numToken.split(',')
 
-            if (parts[1].length === 3) return usesComma ? numToken.replace(/,/g, '.') : numToken.replace(/,/g, '')
+            if (parts[1].length === 3) {
+              if (!usesComma && /^0+$/.test(parts[0])) return numToken.replace(/,/g, '.')
+
+              return usesComma ? numToken.replace(/,/g, '.') : numToken.replace(/,/g, '')
+            }
 
             return numToken.replace(/,/g, '.')
           }
@@ -355,6 +364,17 @@ function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
       // Since arguments inside functions also use comma or semicolon depending on separator setting,
       // mapping semicolon to comma lets the parser interpret arguments uniformly (e.g., sum(1;3) -> sum(1,3))
       line = line.replace(/;/g, ',')
+    } else if (usesComma) {
+      // inputLocale is false, but the locale uses comma as decimal separator.
+      // So commas must be parsed as decimals, and periods should not be treated as decimals (cause error).
+      line = line.replace(/\b\d+(?:[.,]\d+)+\b/g, (numToken) => {
+        const commas = (numToken.match(/,/g) || []).length
+        const periods = (numToken.match(/\./g) || []).length
+
+        if (commas === 1 && periods === 0) return numToken.replace(/,/g, '.')
+
+        return numToken.replace(/[.,]/g, ' ')
+      })
     }
 
     if (app.settings.currency && currencySymbolsRegex) {
@@ -593,6 +613,9 @@ const localeSeparatorCache = new Map()
  * @returns {{group: string, decimal: string}} - The group and decimal separators.
  */
 function getLocaleSeparators(locale) {
+  if (locale === 'en-US') return { group: ',', decimal: '.' }
+  if (locale === 'tr-TR') return { group: '.', decimal: ',' }
+
   let sep = localeSeparatorCache.get(locale)
 
   if (sep) return sep
@@ -683,7 +706,7 @@ export function formatAnswer(answer, useGrouping) {
   const lowerExp = +app.settings.expLower
   const upperExp = +app.settings.expUpper
   const locale = getAppLocale()
-  const maximumFractionDigits = app.settings.precision
+  const maximumFractionDigits = +app.settings.precision
 
   if (['bin', 'hex', 'oct'].includes(notation)) {
     answer = math.format(answer, { notation })
@@ -722,11 +745,9 @@ export function formatAnswer(answer, useGrouping) {
 
   let processedAnswer = answer
 
-  if (typeof maximumFractionDigits === 'number') {
+  if (typeof maximumFractionDigits === 'number' && !isNaN(maximumFractionDigits)) {
     try {
-      if (math.typeOf(answer) === 'BigNumber') {
-        processedAnswer = math.round(answer, maximumFractionDigits)
-      }
+      processedAnswer = math.round(answer, maximumFractionDigits)
     } catch {
       // ignore
     }
@@ -737,7 +758,11 @@ export function formatAnswer(answer, useGrouping) {
 
     // For standard float numbers, use built-in formatter if notation is "auto"
     if (typeof value === 'number' && notation === 'auto' && !valueStr.includes('e')) {
-      return formatter.format(value)
+      const formatted = formatter.format(value)
+      const expectedDecimal = decimalSeparator
+      const hasDecimal = valueStr.includes('.')
+
+      if (!hasDecimal || formatted.includes(expectedDecimal)) return formatted
     }
 
     // For BigNumbers, high precision, or custom notations, format as localized numeric string
