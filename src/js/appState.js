@@ -157,15 +157,13 @@ export function localeUsesComma(settings = app.settings) {
   return coreLocaleUsesComma(settings)
 }
 
-/** Check for app update */
-export function checkAppUpdate() {
+/** Initialize app update listener */
+export function initAppUpdate() {
   if (!isElectron) return
 
   const updateStatusMessage = (message) => {
     dom.dialogAboutUpdateStatus.innerHTML = message
   }
-
-  numara.checkUpdate()
 
   numara.updateStatus((status, version, progress) => {
     switch (status) {
@@ -181,7 +179,7 @@ export function checkAppUpdate() {
         updateStatusMessage('Numara is up to date.')
         break
       case 'downloading':
-        updateStatusMessage(`Downloading update... (${Math.round(progress.percent)}%)`)
+        updateStatusMessage(`Downloading update... (${Math.round(progress?.percent ?? 0)}%)`)
         break
       case 'downloaded': {
         const notice = `New version ${version} is ready to install.`
@@ -199,6 +197,12 @@ export function checkAppUpdate() {
         updateStatusMessage('Unable to check for update.')
     }
   })
+}
+
+/** Check for app update */
+export function checkAppUpdate() {
+  if (!isElectron) return
+  numara.checkUpdate()
 }
 
 /**
