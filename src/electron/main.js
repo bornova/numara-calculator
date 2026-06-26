@@ -237,6 +237,9 @@ function createAppWindow() {
 
 app.setAppUserModelId('com.numara.app')
 app.whenReady().then(createAppWindow)
+app.on('before-quit', () => {
+  isQuitting = true
+})
 app.requestSingleInstanceLock()
   ? app.on('second-instance', () => {
       if (win) {
