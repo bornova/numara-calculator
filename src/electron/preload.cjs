@@ -52,7 +52,8 @@ contextBridge.exposeInMainWorld('numara', {
   // Update app
   updateApp: () => ipcRenderer.send('updateApp'),
   checkUpdate: () => ipcRenderer.send('checkUpdate'),
-  updateStatus: (callback) => ipcRenderer.on('updateStatus', (event, status) => callback(status)),
+  updateStatus: (callback) =>
+    ipcRenderer.on('updateStatus', (event, status, version, progress) => callback(status, version, progress)),
   showAbout: (callback) => ipcRenderer.on('showAbout', (event, data) => callback(data)),
 
   // Directory Sync
