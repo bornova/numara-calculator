@@ -12,7 +12,7 @@ import { getPageName, initializePages, pageOrder, populatePages, setupSideBar } 
 import { plot } from './ui/functionPlot'
 import { applyAnswerPositionLayout, settings } from './ui/settings'
 import { applyUdfu } from './calc/userDefined'
-import { app, checkAppUpdate, isMac, isElectron, store } from './appState'
+import { app, initAppUpdate, checkAppUpdate, isMac, isElectron, store } from './appState'
 import { triggerFolderSync, checkSyncDir, handleSyncDirDeleted } from './calc/sync'
 
 import { author, description, homepage, name, version } from './../../package.json'
@@ -502,6 +502,10 @@ const setupUIkitUtils = () => {
     }, 20)
   })
 
+  UIkit.util.on('#dialogAbout', 'shown', () => {
+    checkAppUpdate()
+  })
+
   UIkit.util.on('#dialogError', 'hidden', () => {
     dom.errTitle.innerHTML = ''
     dom.errMsg.innerHTML = ''
@@ -564,6 +568,7 @@ const initializeApp = async () => {
   initializePages()
   initializeContextMenus()
   initializeSettingsTooltips()
+  initAppUpdate()
   checkAppUpdate()
 
   if (isElectron) {
