@@ -227,6 +227,10 @@ function createAppWindow() {
     })
   }
 
+  win.on('closed', () => {
+    win = null
+  })
+
   updateTrayState()
 
   if (app.isPackaged) {
@@ -239,6 +243,14 @@ app.setAppUserModelId('com.numara.app')
 app.whenReady().then(createAppWindow)
 app.on('before-quit', () => {
   isQuitting = true
+})
+app.on('activate', () => {
+  if (win) {
+    if (win.isMinimized()) win.restore()
+    win.show()
+  } else if (app.isReady()) {
+    createAppWindow()
+  }
 })
 app.requestSingleInstanceLock()
   ? app.on('second-instance', () => {
