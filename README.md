@@ -1,20 +1,20 @@
 <div align="center">
   <img width="200" alt="Numara Calculator" src="https://github.com/user-attachments/assets/e6032c8f-a1e0-4c96-a686-9d29017baa36" />
   <p></p>
-  
-  [![Release](https://www.shieldcn.dev/github/release/bornova/numara-calculator.svg?size=sm&font=roboto&mode=dark)](https://github.com/bornova/numara-calculator/releases/latest)
+
+[![Release](https://www.shieldcn.dev/github/release/bornova/numara-calculator.svg?size=sm&font=roboto&mode=dark)](https://github.com/bornova/numara-calculator/releases/latest)
 </div>
 
 ##
 
 <div align="center">
   <p>A sleek, minimal-but-powerful notepad calculator which evaluates expressions as you type.  It combines the flexibility of a text editor with the power of a scientific calculator.</p>
-  
-  Available for:
-  
-  [![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)![macOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/bornova/numara-calculator/releases/latest)
-  
-  and on the web at https://numara.io
+
+Available for:
+
+[![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)![macOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/bornova/numara-calculator/releases/latest)
+
+and on the web at https://numara.io
 </div>
 
 <div align="center">
@@ -37,8 +37,8 @@
 
 <div>
   Traditional calculators slow you down with buttons, modes, and rigid workflows. Numara takes a different approach: it treats math like writing. By combining a simple text-entry interface with real-time evaluation, Numara offers a faster, more natural way to calculate.
-  
-  Whether you're jotting down quick arithmetic, testing formulas, or mixing notes with numbers, Numara keeps you in the flow.
+
+Whether you're jotting down quick arithmetic, testing formulas, or mixing notes with numbers, Numara keeps you in the flow.
 </div>
 
 📝 **Notepad-Style Interface**
@@ -71,11 +71,12 @@
 
 - MIT-licensed.
 - Unlimited and free to use.
+
 </div>
 
 ##
 
 <div align="center">
-  
-  Visit the [Wiki page](https://github.com/bornova/numara-calculator/wiki) to learn more about the features.
+
+Visit the [Wiki page](https://github.com/bornova/numara-calculator/wiki) to learn more about the features.
 </div>

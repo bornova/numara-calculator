@@ -111,6 +111,10 @@ export const isWindows = userAgent.includes('win')
 export const isLinux = userAgent.includes('linux')
 /** Check if app is running in Electron. */
 export const isElectron = userAgent.includes('electron')
+/** Check if app is running on a mobile device. */
+export const isMobile =
+  /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent) ||
+  (typeof navigator !== 'undefined' && !!navigator.userAgentData?.mobile)
 
 /** Get app theme */
 export async function getTheme() {
