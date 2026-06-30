@@ -1,7 +1,7 @@
 import { dom } from '../dom'
 import { calculate, math, syncOutputHeights } from '../calc/calcManager'
 import { showError } from '../ui/dialogs'
-import { app, debounce, store } from '../appState'
+import { app, debounce, store, isMobile } from '../appState'
 
 import CodeMirror from 'codemirror'
 
@@ -478,6 +478,11 @@ export const debouncedCalculate = debounce(calculate, 100)
 
 cm.on('changes', (cm, changes) => {
   if (app.loadingPage) return
+
+  if (isMobile) {
+    calculate()
+    return
+  }
 
   const hasNewLine = changes.some(
     (change) =>
