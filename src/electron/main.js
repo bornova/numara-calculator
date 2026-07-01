@@ -630,7 +630,10 @@ ipcMain.on('checkUpdate', () => {
   autoUpdater.checkForUpdates()
 })
 
-ipcMain.on('updateApp', () => setImmediate(() => autoUpdater.quitAndInstall(true, true)))
+ipcMain.on('updateApp', () => {
+  isQuitting = true
+  setImmediate(() => autoUpdater.quitAndInstall(true, true))
+})
 
 autoUpdater.on('checking-for-update', () => win.webContents.send('updateStatus', 'checking'))
 autoUpdater.on('update-available', (info) => win.webContents.send('updateStatus', 'available', info.version))
