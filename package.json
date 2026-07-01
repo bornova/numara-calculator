@@ -2,7 +2,7 @@
   "name": "numara",
   "productName": "Numara",
   "description": "Numara Calculator",
-  "version": "7.1.8",
+  "version": "7.1.9",
   "author": {
     "name": "Timur Atalay",
     "email": "mail@numara.io",
@@ -30,7 +30,7 @@
     "@eslint/js": "^10.0.1",
     "@formulajs/formulajs": "^4.6.0",
     "codemirror": "^5.65.21",
-    "electron": "^42.5.1",
+    "electron": "^43.0.0",
     "electron-builder": "^26.15.3",
     "esbuild": "^0.28.1",
     "eslint": "^10.6.0",
