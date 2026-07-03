@@ -168,10 +168,10 @@ export function refreshCurrencyState() {
 
   if (letterSymbols.length) {
     parts.push(
-      `(?<![\\p{L}])(?:${letterSymbols
+      `(?<![\\p{L}\\p{M}_][\\p{L}\\p{M}\\d_]*)(?:${letterSymbols
         .sort((a, b) => b.length - a.length)
         .map(escapeRegExp)
-        .join('|')})(?![\\p{L}])`
+        .join('|')})(?![\\p{L}\\p{M}\\d_])`
     )
   }
 
@@ -702,6 +702,8 @@ function formatCurrency(str) {
  * @returns {string} The formatted answer.
  */
 export function formatAnswer(answer, useGrouping) {
+  if (typeof answer === 'string') return stripAnswer(answer)
+
   const notation = app.settings.notation
   const lowerExp = +app.settings.expLower
   const upperExp = +app.settings.expUpper
