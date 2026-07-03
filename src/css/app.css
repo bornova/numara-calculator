@@ -396,6 +396,7 @@ text {
 
 .pageName {
   opacity: 0.9;
+  margin-top: 2px;
   max-width: 100%;
   overflow: hidden;
   color: light-dark(#687e89, #627d9c);
