@@ -1,201 +1,38 @@
 import { DateTime } from 'luxon'
-import { all, create, factory } from 'mathjs'
+import { factory } from 'mathjs'
 
 import * as formulajs from '@formulajs/formulajs'
 import nerdamer from 'nerdamer-prime/all.js'
 
 import {
+  math,
+  app,
+  getAppLocale,
+  getSystemLocale,
+  localeUsesComma,
+  getDateFormatSettings,
+  getFlexibleFormat,
+  getLocaleSeparators,
+  currencySymbolsRegex,
+  refreshCurrencyState,
+  replaceCurrencySymbol,
+  formatAnswer,
   escapeHTML,
-  escapeRegExp,
-  getAppLocale as coreGetAppLocale,
-  getSystemLocale as coreGetSystemLocale,
-  localeUsesComma as coreLocaleUsesComma
-} from './utils.js'
+  escapeRegExp
+} from './mathInstance.js'
 
 export { escapeHTML, escapeRegExp }
-
-/**
- * Get standard BCP 47 standard locale tag based on selection.
- * @returns {string} The standard locale tag.
- */
-export function getAppLocale() {
-  return coreGetAppLocale(app.settings)
-}
-
-/**
- * Get standard BCP 47 standard locale tag based on system preference.
- * @returns {string} The system locale tag.
- */
-export function getSystemLocale() {
-  return coreGetSystemLocale(app.settings)
-}
-
-/**
- * Check user locale for decimal separator.
- * @returns {boolean} True if locale uses comma.
- */
-export function localeUsesComma() {
-  return coreLocaleUsesComma(app.settings)
-}
-
-// App configuration state inside calculation engine
-export const app = {
-  settings: {},
-  currencies: {},
-  mathScope: new Map(),
-  udfList: [],
-  uduList: []
-}
-
-// Initialize a Math.js instance with all functions.
-export const math = create(all)
 
 // Import Formula.js and Nerdamer into MathJs
 math.import(factory('formulajs', [], () => formulajs))
 math.import(factory('nerdamer', [], () => nerdamer))
 math.import(factory('DateTime', [], () => DateTime))
 
-// Override the isAlpha function to support Unicode letters, allowing for variable names in non-Latin characters.
-const isAlphaOriginal = math.parse.isAlpha
-const universalRegex = /[\p{L}\p{M}]/u
-
-math.parse.isAlpha = (c, cPrev, cNext) => isAlphaOriginal(c, cPrev, cNext) || universalRegex.test(c)
-
-/**
- * Resolves local date formatting configuration preferences to format templates.
- * @returns {{todayFormat: string, todayDayFormat: string, nowFormat: string, nowDayFormat: string}} Date format templates.
- */
-export function getDateFormatSettings() {
-  const fmt = app.settings.dateFormat || 'system'
-
-  return fmt === 'system'
-    ? {
-        todayFormat: 'D',
-        todayDayFormat: 'ccc, D',
-        nowFormat: 'D t',
-        nowDayFormat: 'ccc, D t'
-      }
-    : {
-        todayFormat: fmt,
-        todayDayFormat: 'ccc, ' + fmt,
-        nowFormat: fmt + ' t',
-        nowDayFormat: 'ccc, ' + fmt + ' t'
-      }
-}
-
-/**
- * Formats date pattern strings to match flexible locale preferences (e.g. stripping double letters).
- * @param {string} fmt The input format string.
- * @returns {string} The flexible formatted string.
- */
-export function getFlexibleFormat(fmt) {
-  return !fmt ? fmt : fmt.replace(/dd/g, 'd').replace(/MM/g, 'M')
-}
-
 const REGEX_CONTINUATION = /[+\-*/]/
 const REGEX_DATE_TIME =
   /[+-] * .*? *(millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia)s?/gi
 const REGEX_PCNT_OF = /%[ ]*of[ ]*/g
 const REGEX_PLOT = /^\s*[a-zA-Z_]\w*\s*\(\s*[a-zA-Z_]\w*\s*\)\s*=/
-
-let currencySymbolsRegex = null
-let currencyFormatRegex = null
-let currencySymbolToCode = {}
-
-const USD_UNIT = 'USD'
-
-/** Rebuild the currency regexes and symbol→code map from app.currencies. */
-export function refreshCurrencyState() {
-  const entries = Object.entries(app.currencies || {})
-  const codes = []
-  const symbols = []
-
-  currencySymbolToCode = {}
-
-  // Ensure USD unit exists
-  try {
-    if (!math.Unit.UNITS[USD_UNIT] && !math.Unit.UNITS[USD_UNIT.toLowerCase()]) {
-      math.createUnit(USD_UNIT, { aliases: [USD_UNIT.toLowerCase()] })
-    }
-  } catch {
-    // Ignore
-  }
-
-  for (const [code, info] of entries) {
-    codes.push(code)
-
-    if (info?.symbol && !(info.symbol in currencySymbolToCode)) {
-      currencySymbolToCode[info.symbol] = code
-      symbols.push(info.symbol)
-    }
-
-    // Register active currency unit on background mathjs context
-    if (code !== USD_UNIT && info?.rate) {
-      try {
-        math.createUnit(
-          code,
-          {
-            aliases:
-              code.toLowerCase() in math.Unit.UNITS || code.toLowerCase() in math.expression.mathWithTransform
-                ? []
-                : [code.toLowerCase()],
-            definition: math.unit(`${info.rate} ${USD_UNIT}`)
-          },
-          { override: true }
-        )
-      } catch {
-        // Ignore
-      }
-    }
-  }
-
-  const numPattern =
-    '\\b0[xX][0-9a-fA-F]+\\b|\\b0[bB][01]+\\b|\\b0[oO][0-7]+\\b|\\b(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?\\b'
-
-  const letterSymbols = []
-  const nonLetterSymbols = []
-  const letterRegex = /[\p{L}]/u
-
-  for (const symbol of symbols) {
-    if (letterRegex.test(symbol)) {
-      letterSymbols.push(symbol)
-    } else {
-      nonLetterSymbols.push(symbol)
-    }
-  }
-
-  const parts = []
-
-  if (letterSymbols.length) {
-    parts.push(
-      `(?<![\\p{L}\\p{M}_][\\p{L}\\p{M}\\d_]*)(?:${letterSymbols
-        .sort((a, b) => b.length - a.length)
-        .map(escapeRegExp)
-        .join('|')})(?![\\p{L}\\p{M}\\d_])`
-    )
-  }
-
-  if (nonLetterSymbols.length) {
-    parts.push(
-      `(?:${nonLetterSymbols
-        .sort((a, b) => b.length - a.length)
-        .map(escapeRegExp)
-        .join('|')})`
-    )
-  }
-
-  currencySymbolsRegex = symbols.length ? new RegExp(`(${numPattern})|(${parts.join('|')})`, 'gu') : null
-  currencyFormatRegex = codes.length
-    ? new RegExp(`(-?\\d[\\d.,'\\u00A0\\u202F\\u2009 ]*(?:e[+-]?\\d+)?)\\s*\\b(${codes.join('|')})\\b`, 'gi')
-    : null
-}
-
-/** Replace a matched currency symbol with its ISO code (used inside evaluateLine). */
-function replaceCurrencySymbol(symbol) {
-  const code = currencySymbolToCode[symbol]
-
-  return code ? code + ' ' : symbol
-}
 
 const CLASS_ANSWER = 'answer'
 const CLASS_PLOT_BUTTON = 'plotButton answer'
@@ -221,27 +58,6 @@ let lastActivePage = null
  */
 export function clearEvaluationCache() {
   evaluationCache = []
-}
-
-// Cache for Intl.NumberFormat formatters
-const numberFormatCache = new Map()
-
-/**
- * Retrieves a cached Intl.NumberFormat formatter, instantiating one if not cached.
- * @param {string} locale The BCP 47 locale tag.
- * @param {object} options Format options.
- * @returns {Intl.NumberFormat} Cached or new Intl.NumberFormat formatter.
- */
-function getNumberFormatter(locale, options) {
-  const key = `${locale}_${options.useGrouping ?? ''}_${options.maximumFractionDigits ?? ''}_${options.style ?? ''}_${options.currency ?? ''}`
-  let formatter = numberFormatCache.get(key)
-
-  if (!formatter) {
-    formatter = new Intl.NumberFormat(locale, options)
-    numberFormatCache.set(key, formatter)
-  }
-
-  return formatter
 }
 
 /**
@@ -595,206 +411,18 @@ function altEvaluate(line, stats) {
 }
 
 /**
- * Strip quotes from the answer.
- *
- * @param {string} answer The answer to strip.
- * @returns {string} The stripped answer.
- */
-function stripAnswer(answer) {
-  return typeof answer === 'string' ? answer.replace(/^"|"$/g, '') : answer
-}
-
-const localeSeparatorCache = new Map()
-
-/**
- * Get the decimal and group separators for a given locale, using caching to optimize performance.
- *
- * @param {string} locale The locale identifier (e.g., 'en-US').
- * @returns {{group: string, decimal: string}} - The group and decimal separators.
- */
-function getLocaleSeparators(locale) {
-  if (locale === 'en-US') return { group: ',', decimal: '.' }
-  if (locale === 'tr-TR') return { group: '.', decimal: ',' }
-
-  let sep = localeSeparatorCache.get(locale)
-
-  if (sep) return sep
-
-  const parts = new Intl.NumberFormat(locale).formatToParts(12345.6)
-
-  sep = {
-    group: parts.find((p) => p.type === 'group')?.value ?? ',',
-    decimal: parts.find((p) => p.type === 'decimal')?.value ?? '.'
-  }
-
-  localeSeparatorCache.set(locale, sep)
-
-  return sep
-}
-
-/**
- * Parse a locale-formatted number string back to a Number.
- *
- * @param {string} str The locale-formatted number string.
- * @param {string} locale The locale identifier (e.g., 'en-US').
- * @returns {number} The parsed number.
- */
-function parseLocaleNumber(str, locale) {
-  const { group, decimal } = getLocaleSeparators(locale)
-  const cleaned = str
-    .replace(new RegExp(escapeRegExp(group), 'g'), '')
-    .replace(/[\u00A0\u202F\u2009 ]/g, '')
-    .replace(decimal, '.')
-
-  return parseFloat(cleaned)
-}
-
-/**
- * Format currency answers in the currency's native locale.
- * @param {string} str The input string containing amount and currency code.
- * @returns {string} The formatted currency string.
- */
-function formatCurrency(str) {
-  if (!currencyFormatRegex) return str
-
-  const appLocale = getAppLocale()
-  const useGrouping = app.settings.thouSep !== 'disabled'
-  const maximumFractionDigits = app.settings.precision
-
-  return str.replace(currencyFormatRegex, (match, amount, code) => {
-    const upperCode = code.toUpperCase()
-    const info = app.currencies[upperCode]
-
-    if (!info) return match
-
-    // Preserve any exponent suffix unchanged.
-    const trimmed = amount.trim()
-    const eIndex = trimmed.search(/e[+-]?\d+$/i)
-    const baseStr = eIndex >= 0 ? trimmed.slice(0, eIndex) : trimmed
-    const expStr = eIndex >= 0 ? trimmed.slice(eIndex) : ''
-    const value = parseLocaleNumber(baseStr, appLocale)
-
-    if (!Number.isFinite(value)) return `${info.symbol ?? ''}${trimmed}`
-
-    const locale = appLocale
-
-    try {
-      const formatter = getNumberFormatter(locale, {
-        style: 'currency',
-        currency: upperCode,
-        currencyDisplay: 'narrowSymbol',
-        useGrouping,
-        maximumFractionDigits
-      })
-
-      return formatter.format(value) + expStr
-    } catch {
-      return `${info.symbol ?? ''}${trimmed}${expStr}`
-    }
-  })
-}
-
-/**
- * Format answer.
- *
- * @param {*} answer Value to format.
- * @param {boolean} useGrouping Include thousands separator - True|False
- * @returns {string} The formatted answer.
- */
-export function formatAnswer(answer, useGrouping) {
-  if (typeof answer === 'string') return stripAnswer(answer)
-
-  const notation = app.settings.notation
-  const lowerExp = +app.settings.expLower
-  const upperExp = +app.settings.expUpper
-  const locale = getAppLocale()
-  const maximumFractionDigits = +app.settings.precision
-
-  if (['bin', 'hex', 'oct'].includes(notation)) {
-    answer = math.format(answer, { notation })
-
-    return stripAnswer(answer)
-  }
-
-  const formatOptions = { notation, lowerExp, upperExp }
-  const localeOptions = { maximumFractionDigits, useGrouping }
-  const formatter = getNumberFormatter(locale, localeOptions)
-  const { decimal: decimalSeparator, group: groupSeparator } = getLocaleSeparators(locale)
-
-  function formatNumericString(numStr, decSep, grpSep, useGrp) {
-    const parts = numStr.split('.')
-    let integerPart = parts[0]
-    const decimalPart = parts[1] || ''
-
-    if (useGrp && grpSep) {
-      const isNegative = integerPart.startsWith('-')
-
-      if (isNegative) {
-        integerPart = integerPart.slice(1)
-      }
-
-      integerPart = integerPart.slice(0).replace(/\B(?=(\d{3})+(?!\d))/g, grpSep)
-
-      if (isNegative) {
-        integerPart = '-' + integerPart
-      }
-    }
-
-    if (decimalPart) return integerPart + decSep + decimalPart
-
-    return integerPart
-  }
-
-  let processedAnswer = answer
-
-  if (typeof maximumFractionDigits === 'number' && !isNaN(maximumFractionDigits)) {
-    try {
-      processedAnswer = math.round(answer, maximumFractionDigits)
-    } catch {
-      // ignore
-    }
-  }
-
-  let formattedAnswer = math.format(processedAnswer, (value) => {
-    const valueStr = math.format(value, formatOptions)
-
-    // For standard float numbers, use built-in formatter if notation is "auto"
-    if (typeof value === 'number' && notation === 'auto' && !valueStr.includes('e')) {
-      const formatted = formatter.format(value)
-      const expectedDecimal = decimalSeparator
-      const hasDecimal = valueStr.includes('.')
-
-      if (!hasDecimal || formatted.includes(expectedDecimal)) return formatted
-    }
-
-    // For BigNumbers, high precision, or custom notations, format as localized numeric string
-    if (valueStr.includes('e')) {
-      const [base, exponent] = valueStr.split('e')
-
-      return formatNumericString(base, decimalSeparator, groupSeparator, useGrouping) + 'e' + exponent
-    }
-
-    return formatNumericString(valueStr, decimalSeparator, groupSeparator, useGrouping)
-  })
-
-  // Handle currency formatting
-  if (app.settings.currency) {
-    formattedAnswer = formatCurrency(formattedAnswer)
-  }
-
-  return stripAnswer(formattedAnswer)
-}
-
-/**
  * Strip comments from a line.
  *
  * @param {string} line The line to strip comments from.
  * @returns {string} The line without comments.
  */
 function stripComments(line) {
-  const match = line.match(/\/\/|#/)
-
-  return match ? line.substring(0, match.index) : line
+  return line.replace(
+    /("(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'|`(?:\\[\s\S]|[^`\\])*`)|(\/\/.*|#.*)/g,
+    (match, stringVal, commentVal) => {
+      return commentVal ? '' : match
+    }
+  )
 }
 
 let previouslyImportedUDFs = []

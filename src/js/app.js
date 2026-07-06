@@ -588,6 +588,8 @@ const initializeApp = async () => {
     numara.onSyncDirDeleted(() => {
       handleSyncDirDeleted().catch(console.error)
     })
+
+    numara.rendererReady()
   }
 
   window.addEventListener('focus', () => {

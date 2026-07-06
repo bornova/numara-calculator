@@ -118,14 +118,22 @@ export function plot() {
       yLine: app.plotSettings.showCross,
       renderer: (x, y) => {
         x = x.toFixed(app.plotSettings.domain.axisPrecision)
-        y = math.evaluate(f, { x }).toFixed(app.plotSettings.domain.axisPrecision)
 
-        return ` x: ${x}, y: ${y}
-          ${
-            app.plotSettings.showDerivative
-              ? ', d: ' + math.evaluate(derivative, { x }).toFixed(app.plotSettings.domain.axisPrecision)
-              : ''
-          }`
+        const evalVal = math.evaluate(f, { x })
+        const numVal = typeof evalVal?.toNumber === 'function' ? evalVal.toNumber() : Number(evalVal)
+
+        y = numVal.toFixed(app.plotSettings.domain.axisPrecision)
+
+        let dStr = ''
+
+        if (app.plotSettings.showDerivative) {
+          const derivVal = math.evaluate(derivative, { x })
+          const derivNum = typeof derivVal?.toNumber === 'function' ? derivVal.toNumber() : Number(derivVal)
+
+          dStr = ', d: ' + derivNum.toFixed(app.plotSettings.domain.axisPrecision)
+        }
+
+        return ` x: ${x}, y: ${y}${dStr}`
       }
     },
     width: dom.plot.clientWidth,

@@ -24,8 +24,9 @@ contextBridge.exposeInMainWorld('numara', {
   transControls: (isTrans) => ipcRenderer.send('transControls', isTrans),
 
   // Import
+  rendererReady: () => ipcRenderer.send('renderer-ready'),
   importPage: () => ipcRenderer.send('importPage'),
-  pageImported: (callback) => ipcRenderer.on('pageImported', (event, data, msg) => callback(data, msg)),
+  pageImported: (callback) => ipcRenderer.on('pageImported', (event, data, msg, name) => callback(data, msg, name)),
   importDataError: (callback) => ipcRenderer.on('importDataError', (event, error) => callback(error)),
 
   //Export
@@ -47,7 +48,7 @@ contextBridge.exposeInMainWorld('numara', {
   copyAllAnswers: (callback) => ipcRenderer.on('copyAllAnswers', () => callback()),
   copyLine: (callback) => ipcRenderer.on('copyLine', (event, index) => callback(index)),
   copyAnswer: (callback) => ipcRenderer.on('copyAnswer', (event, index, withLines) => callback(index, withLines)),
-  copyLineWithAnswer: (callback) => ipcRenderer.on('copyLineWithAnswer', (event, index) => callback(index)),
+  copyLineWithAnswer: (callback) => ipcRenderer.on('copyLineWithAnswer', (event, index) => callback(index, true)),
 
   // Update app
   updateApp: () => ipcRenderer.send('updateApp'),

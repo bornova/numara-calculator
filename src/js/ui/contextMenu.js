@@ -41,8 +41,9 @@ function inputContext() {
  * @param {Event} event The event object.
  */
 export function outputContext(event) {
-  const answer = event.target.textContent
-  const lineIndex = event.target.dataset.index || cm.lastLine()
+  const target = event.target.closest('[data-index]')
+  const lineIndex = target ? target.dataset.index : cm.lastLine()
+  const answer = target ? target.textContent : ''
   const hasAnswer = lineIndex !== null && answer !== '' && answer !== 'Error' && answer !== 'Plot'
   const isEmpty = cm.getValue() === ''
 
@@ -56,12 +57,7 @@ function textboxContext() {
   requestAnimationFrame(() => numara.textboxContextMenu())
 }
 
-/**
- * Copy line answer.
- * @param {Event} event The event object.
- * @param {number} index The index of the line.
- */
-function copyLine(event, index) {
+function copyLine(index) {
   index = +index
 
   const line = cm.getLine(index).trim()
@@ -82,11 +78,10 @@ export function safeCopyText(text) {
 
 /**
  * Copy line answer.
- * @param {Event} event The event object.
  * @param {number} lineIndex The index of the line.
  * @param {boolean} withLines Whether to include the line in the copied text.
  */
-function copyAnswer(event, lineIndex, withLines) {
+function copyAnswer(lineIndex, withLines) {
   lineIndex = +lineIndex
 
   const line = cm.getLine(lineIndex).trim()

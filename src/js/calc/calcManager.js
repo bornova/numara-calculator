@@ -9,7 +9,7 @@ import {
   math as coreMath,
   formatAnswer as coreFormatAnswer,
   refreshCurrencyState as coreRefreshCurrencyState
-} from '../core/evaluator'
+} from '../core/mathInstance'
 
 import UIkit from 'uikit'
 
@@ -55,6 +55,7 @@ let isDialogVisible = false
 let lastDialogShowTime = 0
 let autoCloseTimeout = null
 let lastScopeKeysSignature = ''
+let lastCalcStartTime = 0
 
 /**
  * Compares current scope, UDF, and UDU list keys against the last state to check if keys changed.
@@ -541,6 +542,34 @@ export function calculate() {
   dom.clearButton.setAttribute('disabled', cmValue === '')
   dom.copyButton.setAttribute('disabled', cmValue === '')
 
+  if (isCalculating) {
+    const elapsed = Date.now() - lastCalcStartTime
+
+    if (elapsed > 1000) {
+      if (worker) {
+        worker.terminate()
+        worker = null
+      }
+
+      isCalculating = false
+
+      if (slowCalcTimeout) {
+        clearTimeout(slowCalcTimeout)
+        slowCalcTimeout = null
+      }
+
+      if (hardCalcTimeout) {
+        clearTimeout(hardCalcTimeout)
+        hardCalcTimeout = null
+      }
+
+      if (isDialogVisible) {
+        isDialogVisible = false
+        UIkit.modal('#dialogCalcTimeout').hide()
+      }
+    }
+  }
+
   const totalLines = cm.lineCount()
   const lines = []
 
@@ -569,6 +598,7 @@ export function calculate() {
   }
 
   isCalculating = true
+  lastCalcStartTime = Date.now()
 
   if (autoCloseTimeout) {
     clearTimeout(autoCloseTimeout)

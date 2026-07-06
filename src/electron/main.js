@@ -19,6 +19,10 @@ import updater from 'electron-updater'
 import * as path from 'node:path'
 import * as fs from 'node:fs'
 
+if (!app.requestSingleInstanceLock()) {
+  app.exit(0)
+}
+
 log.info(`Starting Numara... [v${app.getVersion()}] ${app.isPackaged ? '' : '(Dev)'}`)
 log.initialize({ spyRendererConsole: true })
 log.errorHandler.startCatching()
@@ -167,7 +171,9 @@ function createAppWindow() {
     titleBarOverlay: true,
     webPreferences: {
       preload: path.join(import.meta.dirname, 'preload.cjs'),
-      spellcheck: false
+      spellcheck: false,
+      contextIsolation: true,
+      nodeIntegration: false
     }
   })
 
@@ -239,10 +245,79 @@ function createAppWindow() {
   }
 }
 
+let fileToOpen = null
+let isRendererReady = false
+
+function getNumFilePath(args) {
+  if (!args || !Array.isArray(args)) return null
+
+  return args.find((arg) => arg.toLowerCase().endsWith('.num') && fs.existsSync(arg)) || null
+}
+
+function openFileInRenderer(filePath) {
+  fs.readFile(filePath, 'utf8', (error, data) => {
+    if (error) {
+      if (win && !win.isDestroyed() && win.webContents) {
+        win.webContents.send('importDataError', error)
+      }
+
+      return
+    }
+
+    if (win && !win.isDestroyed() && win.webContents) {
+      win.webContents.send('pageImported', data, 'Imported from: ' + filePath, path.basename(filePath, '.num'))
+    }
+  })
+}
+
+// macOS open-file event handling
+app.on('open-file', (event, filePath) => {
+  event.preventDefault()
+  if (isRendererReady && win) {
+    openFileInRenderer(filePath)
+  } else {
+    fileToOpen = filePath
+  }
+})
+
+// Windows/Linux command-line argument checking at startup
+const startFile = getNumFilePath(process.argv)
+
+if (startFile) {
+  fileToOpen = startFile
+}
+
 app.setAppUserModelId('com.numara.app')
+app.userAgentFallback =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
 app.whenReady().then(createAppWindow)
-app.on('before-quit', () => {
-  isQuitting = true
+app.on('before-quit', (event) => {
+  if (app.isReady() && config.get('showTray') && !isQuitting) {
+    event.preventDefault()
+
+    const winValid = win && !win.isDestroyed()
+    if (winValid) {
+      if (!win.isVisible()) win.show()
+      win.focus()
+    }
+
+    const choice = dialog.showMessageBoxSync(winValid ? win : null, {
+      type: 'question',
+      buttons: ['Cancel', 'Quit'],
+      defaultId: 0,
+      cancelId: 0,
+      title: 'Quit Numara',
+      message: 'Are you sure you want to quit Numara?',
+      detail: 'This will close the calculator and remove it from the menu bar.'
+    })
+
+    if (choice === 1) {
+      isQuitting = true
+      app.quit()
+    }
+  } else {
+    isQuitting = true
+  }
 })
 app.on('activate', () => {
   if (win) {
@@ -252,18 +327,37 @@ app.on('activate', () => {
     createAppWindow()
   }
 })
-app.requestSingleInstanceLock()
-  ? app.on('second-instance', () => {
-      if (win) {
-        if (!win.isVisible()) win.show()
-        win.focus()
+app.on('second-instance', (event, commandLine) => {
+  const winValid = win && !win.isDestroyed()
+  if (winValid) {
+    if (win.isMinimized()) win.restore()
+    if (!win.isVisible()) win.show()
+
+    win.focus()
+
+    const fileArg = getNumFilePath(commandLine)
+    if (fileArg) {
+      if (isRendererReady) {
+        openFileInRenderer(fileArg)
+      } else {
+        fileToOpen = fileArg
       }
-    })
-  : app.quit()
+    }
+  }
+})
 
 nativeTheme.on('updated', () => {
   win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors)
   setTitleBarOverlay()
+})
+
+ipcMain.on('renderer-ready', () => {
+  isRendererReady = true
+
+  if (fileToOpen) {
+    openFileInRenderer(fileToOpen)
+    fileToOpen = null
+  }
 })
 
 ipcMain.handle('isDark', () => nativeTheme.shouldUseDarkColors)
@@ -307,7 +401,7 @@ ipcMain.on('importPage', (event) => {
       return
     }
 
-    event.sender.send('pageImported', data, 'Imported from: ' + file[0])
+    event.sender.send('pageImported', data, 'Imported from: ' + file[0], path.basename(file[0], '.num'))
   })
 })
 

@@ -4,7 +4,7 @@ import { calculate, renderAnswersToHTML, syncOutputHeights } from '../calc/calcM
 import { confirm, modal, notify } from './dialogs'
 import { app, checkSize, isElectron, store } from '../appState'
 import { escapeHTML } from '../core/utils.js'
-import { syncPageSave, syncPageRename, syncPageDelete } from '../calc/sync'
+import { syncPageSave, syncPageRename, syncPageDelete, getSafeFilename } from '../calc/sync'
 
 import { DateTime } from 'luxon'
 
@@ -260,14 +260,30 @@ export function defaultPage() {
 export function newPage(isImport) {
   const pageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
   const pages = store.get('pages')
-  const pageName =
+  let pageName =
     dom.newPageTitleInput.value.replace(/<|>/g, '').trim() || (isImport ? `Import #${pageId}` : getPageName())
 
-  const pageNames = pages.map(({ name }) => name)
+  const sanitizedNew = getSafeFilename(pageName)
 
-  if (pageNames.includes(pageName)) {
-    notify(`"${pageName}" already exists. Please choose a different page name.`, 'danger')
-    return
+  if (pages.some((p) => getSafeFilename(p.name) === sanitizedNew)) {
+    if (isImport) {
+      let counter = 1
+      let uniqueName = `${pageName} (${counter})`
+
+      while (pages.some((p) => getSafeFilename(p.name) === getSafeFilename(uniqueName))) {
+        counter++
+        uniqueName = `${pageName} (${counter})`
+      }
+
+      pageName = uniqueName
+    } else {
+      notify(
+        `"${pageName}" (or a page with a conflicting file name) already exists. Please choose a different page name.`,
+        'danger'
+      )
+
+      return
+    }
   }
 
   app.activePage = pageId
@@ -375,14 +391,20 @@ export function renamePage(pageId) {
   // Remove previous event listener to avoid stacking
   function newListener() {
     const newName = dom.renamePageTitleInput.value.replace(/<|>/g, '').trim() || getPageName()
+    const sanitizedNew = getSafeFilename(newName)
 
     // Prevent duplicate page names
-    if (pages.some((p) => p.name === newName && p.id !== pageId)) {
-      notify(`"${newName}" already exists. Please choose a different page name.`, 'danger')
+    if (pages.some((p) => getSafeFilename(p.name) === sanitizedNew && p.id !== pageId)) {
+      notify(
+        `"${newName}" (or a page with a conflicting file name) already exists. Please choose a different page name.`,
+        'danger'
+      )
+
       return
     }
 
     const oldName = page.name
+
     page.name = newName
     store.set('pages', pages)
 
@@ -482,8 +504,17 @@ export function initializePages() {
         newPage()
       }
     } else {
-      app.activePage = store.get('lastPage')
-      loadPage(app.activePage)
+      const pages = store.get('pages')
+      const lastPageId = store.get('lastPage')
+      const pageExists = pages.some((p) => p.id === lastPageId)
+
+      app.activePage = pageExists ? lastPageId : pages[0]?.id || null
+
+      if (app.activePage) {
+        loadPage(app.activePage)
+      } else {
+        defaultPage()
+      }
     }
   } else {
     defaultPage()
@@ -646,8 +677,13 @@ if (isElectron) {
   // Import calculations from file
   dom.importPageButton.addEventListener('click', numara.importPage)
 
-  numara.pageImported((data, msg) => {
+  numara.pageImported((data, msg, name) => {
+    if (name) {
+      dom.newPageTitleInput.value = name
+    }
+
     newPage(true)
+    dom.newPageTitleInput.value = ''
     cm.setValue(data)
     notify(msg, 'success')
   })
