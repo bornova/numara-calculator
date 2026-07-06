@@ -431,7 +431,7 @@ export async function syncPageDelete(pageName) {
   }
 }
 
-let debounceTimeout = null
+const debounceTimeouts = new Map()
 /**
  * Triggers a debounced save of the page calculations to the sync folder.
  * @param {string} pageName The name of the page to save.
@@ -441,8 +441,17 @@ export function syncPageSaveDebounced(pageName, content) {
   if (!isElectron) return
   if (!app.settings.syncDirEnabled || !app.settings.syncDir) return
 
-  clearTimeout(debounceTimeout)
-  debounceTimeout = setTimeout(() => {
+  const safeName = getSafeFilename(pageName)
+  const existingTimeout = debounceTimeouts.get(safeName)
+
+  if (existingTimeout) {
+    clearTimeout(existingTimeout)
+  }
+
+  const timeout = setTimeout(() => {
+    debounceTimeouts.delete(safeName)
     syncPageSave(pageName, content)
   }, 500)
+
+  debounceTimeouts.set(safeName, timeout)
 }
