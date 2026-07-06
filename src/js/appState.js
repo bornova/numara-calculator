@@ -110,7 +110,7 @@ export const isWindows = userAgent.includes('win')
 /** Check if app is running on Linux. */
 export const isLinux = userAgent.includes('linux')
 /** Check if app is running in Electron. */
-export const isElectron = userAgent.includes('electron')
+export const isElectron = typeof window !== 'undefined' && window.numara !== undefined
 /** Check if app is running on a mobile device. */
 export const isMobile =
   /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent) ||
