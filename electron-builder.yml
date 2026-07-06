@@ -49,3 +49,10 @@ win:
 nsis:
   deleteAppDataOnUninstall: true
   oneClick: false
+
+# File associations configuration
+fileAssociations:
+  - ext: num
+    name: Numara Document
+    role: Editor
+    description: Numara calculation file
