@@ -368,6 +368,15 @@ ipcMain.on('setTheme', (event, mode) => {
 ipcMain.on('transControls', (event, isTrans) => setTitleBarOverlay(isTrans))
 
 ipcMain.on('setOnTop', (event, bool) => win.setAlwaysOnTop(bool))
+ipcMain.on('close-window', () => {
+  if (win && !win.isDestroyed()) {
+    if (config.get('showTray')) {
+      win.hide()
+    } else {
+      win.minimize()
+    }
+  }
+})
 ipcMain.on('setTray', (event, bool) => {
   config.set('showTray', bool)
   updateTrayState()

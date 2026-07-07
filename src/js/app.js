@@ -339,6 +339,21 @@ const setupKeyboardShortcuts = () => {
   }
 
   numaraKeys(window, shortcuts)
+
+  // Listen to Escape key in the capture phase to close/hide the window safely.
+  window.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.key === 'Escape') {
+        if (isElectron && app.settings.escToClose && !isModalOpen() && (!cm || !cm.state.completionActive)) {
+          event.preventDefault()
+          event.stopPropagation()
+          numara.closeWindow()
+        }
+      }
+    },
+    true
+  )
 }
 
 /**

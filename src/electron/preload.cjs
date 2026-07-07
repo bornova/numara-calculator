@@ -26,6 +26,7 @@ contextBridge.exposeInMainWorld('numara', {
   setTray: (bool) => ipcRenderer.send('setTray', bool),
   setOpenAtLogin: (bool) => ipcRenderer.send('setOpenAtLogin', bool),
   transControls: (isTrans) => ipcRenderer.send('transControls', isTrans),
+  closeWindow: () => ipcRenderer.send('close-window'),
 
   // Import
   rendererReady: () => ipcRenderer.send('renderer-ready'),
