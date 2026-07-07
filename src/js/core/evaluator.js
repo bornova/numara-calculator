@@ -21,7 +21,7 @@ import {
   escapeRegExp
 } from './mathInstance.js'
 
-export { escapeHTML, escapeRegExp }
+export { escapeHTML, escapeRegExp, formatAnswer }
 
 // Import Formula.js and Nerdamer into MathJs
 math.import(factory('formulajs', [], () => formulajs))
@@ -386,9 +386,7 @@ function altEvaluate(line, stats) {
       }
     }
 
-    if (!found) {
-      return 'Invalid Date'
-    }
+    if (!found) return 'Invalid Date'
 
     const rightOfDate = String(math.evaluate(lineDateRight + ' to hours', app.mathScope))
     const durHrs = Number(rightOfDate.split(' ')[0])
