@@ -121,7 +121,8 @@ export const settings = {
     theme: 'system',
     thouSep: 'system',
     showTray: false,
-    openAtLogin: false
+    openAtLogin: false,
+    escToClose: false
   },
 
   /** Initialize settings. */
@@ -246,6 +247,12 @@ export const settings = {
 
     if (openAtLoginContainer) {
       openAtLoginContainer.style.display = isElectron ? '' : 'none'
+    }
+
+    const escToCloseContainer = dom.el('#escToCloseContainer')
+
+    if (escToCloseContainer) {
+      escToCloseContainer.style.display = isElectron ? '' : 'none'
     }
 
     await checkSize()
