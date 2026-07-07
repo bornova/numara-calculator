@@ -323,10 +323,20 @@ export function formatAnswer(answer, useGrouping) {
   }
 
   let formattedAnswer = math.format(processedAnswer, (value) => {
-    const valueStr = math.format(value, formatOptions)
+    let roundedValue = value
 
-    if (typeof value === 'number' && notation === 'auto' && !valueStr.includes('e')) {
-      const formatted = formatter.format(value)
+    if (typeof maximumFractionDigits === 'number' && !isNaN(maximumFractionDigits)) {
+      try {
+        roundedValue = math.round(value, maximumFractionDigits)
+      } catch {
+        // ignore
+      }
+    }
+
+    const valueStr = math.format(roundedValue, formatOptions)
+
+    if (typeof roundedValue === 'number' && notation === 'auto' && !valueStr.includes('e')) {
+      const formatted = formatter.format(roundedValue)
       const expectedDecimal = decimalSeparator
       const hasDecimal = valueStr.includes('.')
 
