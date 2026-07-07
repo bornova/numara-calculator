@@ -103,14 +103,16 @@ export const store = {
 const userAgent = navigator.userAgent.toLowerCase()
 const DEFAULT_APP_WIDTH = 560
 const DEFAULT_APP_HEIGHT = 480
-/** Check if app is running on MacOS. */
-export const isMac = userAgent.includes('mac')
-/** Check if app is running on Windows. */
-export const isWindows = userAgent.includes('win')
-/** Check if app is running on Linux. */
-export const isLinux = userAgent.includes('linux')
+
 /** Check if app is running in Electron. */
 export const isElectron = typeof window !== 'undefined' && window.numara !== undefined
+
+/** Check if app is running on MacOS. */
+export const isMac = isElectron ? window.numara.isMac : userAgent.includes('mac')
+/** Check if app is running on Windows. */
+export const isWindows = isElectron ? window.numara.isWindows : userAgent.includes('win')
+/** Check if app is running on Linux. */
+export const isLinux = isElectron ? window.numara.isLinux : userAgent.includes('linux')
 /** Check if app is running on a mobile device. */
 export const isMobile =
   /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent) ||
