@@ -101,6 +101,7 @@ export const dom = {
   dialogSettingsReset: document.getElementById('dialogSettingsReset'),
   resetSizeButton: document.getElementById('resetSizeButton'),
   defaultSettingsButton: document.getElementById('defaultSettingsButton'),
+  escToClose: document.getElementById('escToClose'),
 
   // Theme dialog
   defaultColorsButton: document.getElementById('defaultColorsButton'),
