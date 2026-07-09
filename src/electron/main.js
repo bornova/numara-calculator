@@ -329,13 +329,25 @@ app.on('activate', () => {
 })
 app.on('second-instance', (event, commandLine) => {
   const winValid = win && !win.isDestroyed()
+
   if (winValid) {
+    const fileArg = getNumFilePath(commandLine)
+
+    if (win.isFocused() && !fileArg) {
+      if (config.get('showTray')) {
+        win.hide()
+      } else {
+        win.minimize()
+      }
+
+      return
+    }
+
     if (win.isMinimized()) win.restore()
     if (!win.isVisible()) win.show()
 
     win.focus()
 
-    const fileArg = getNumFilePath(commandLine)
     if (fileArg) {
       if (isRendererReady) {
         openFileInRenderer(fileArg)
