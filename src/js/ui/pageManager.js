@@ -152,7 +152,7 @@ export function setupSideBar(show = false) {
   if (dock) {
     const width = store.get('sideBarWidth') ?? SIDEBAR_DEFAULT_WIDTH
 
-    if (dockChanged) {
+    if (shouldAnimateDockChange) {
       resetWindowToAppWrapper(width, appWrapperSize)
     }
 
@@ -185,7 +185,7 @@ export function setupSideBar(show = false) {
       }
     }
   } else {
-    if (dockChanged) {
+    if (shouldAnimateDockChange) {
       resetWindowToAppWrapper(0, appWrapperSize)
     }
 
