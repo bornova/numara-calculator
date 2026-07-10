@@ -345,7 +345,16 @@ const setupKeyboardShortcuts = () => {
     'keydown',
     (event) => {
       if (event.key === 'Escape') {
-        if (isElectron && app.settings.escToClose && !isModalOpen() && (!cm || !cm.state.completionActive)) {
+        const isSearchOpen = document.querySelector('.numara-search-panel:not(.hidden)') !== null
+        const isDialogOpen = document.querySelector('.CodeMirror-dialog') !== null || isSearchOpen
+
+        if (
+          isElectron &&
+          app.settings.escToClose &&
+          !isModalOpen() &&
+          !isDialogOpen &&
+          (!cm || !cm.state.completionActive)
+        ) {
           event.preventDefault()
           event.stopPropagation()
           numara.closeWindow()
