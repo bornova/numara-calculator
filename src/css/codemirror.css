@@ -39,6 +39,10 @@
   background: light-dark(#c9e0f7, #193552) !important;
 }
 
+body.numara-search-panel-open .CodeMirror-selected {
+  background: light-dark(#ffb74d, #f2a104) !important;
+}
+
 .cm-s-numara .CodeMirror-matchingbracket {
   color: light-dark(#999999, #999999) !important;
 }
@@ -83,43 +87,208 @@
   background-color: light-dark(#ffffff, #1f1f1f) !important;
 }
 
-.cm-s-numara .CodeMirror-dialog-top {
-  border-color: light-dark(#eeeeee, #666666);
-  background-color: light-dark(#ffffff, #1f1f1f) !important;
-  color: light-dark(#222222, #e6e6e6) !important;
-}
-
 .cm-s-numara .CodeMirror-sizer {
   padding-right: 0 !important;
   padding-bottom: 8px !important;
 }
 
-/* Search and dialog UI */
-.cm-s-numara .CodeMirror-dialog input {
-  font-family: inherit !important;
+.cm-searching {
+  border-bottom: 2px solid #1e87f0 !important;
+  background-color: rgba(30, 135, 240, 0.25) !important;
+  color: inherit !important;
 }
 
-.cm-s-numara .CodeMirror-search-hint {
+/* Custom Search & Replace Panel */
+.numara-search-panel {
+  display: flex !important;
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  flex-direction: column !important;
+  gap: 8px !important;
+  z-index: 100 !important;
+  animation: slideDown 0.15s ease-out !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  border-bottom: 1px solid light-dark(#e2e8f0, #2d3748) !important;
+  background-color: light-dark(#ffffff, #1e1e24) !important;
+  padding: 8px 0px !important;
+}
+
+.numara-search-panel.hidden {
   display: none !important;
 }
 
-.cm-searching {
-  background-color: rgba(255, 250, 82, 0.5) !important;
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
-.cm-s-numara .CodeMirror-search-label {
-  font-size: 1rem !important;
+.search-panel-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
 }
 
-/* Buttons */
-.cm-s-numara button {
-  color: light-dark(#1e87f0, #e6e6e6) !important;
-  font-size: inherit !important;
+.search-panel-row.hidden {
+  display: none !important;
 }
 
-.cm-s-numara button:hover {
+.replace-spacer {
+  flex-shrink: 0 !important;
+  width: 24px !important;
+}
+
+.search-toggle-replace {
+  display: flex !important;
+  flex-shrink: 0 !important;
+  justify-content: center !important;
+  align-items: center !important;
+  transition:
+    transform 0.2s,
+    background-color 0.2s !important;
   cursor: pointer !important;
-  color: light-dark(#5286b9, #5286b9) !important;
+  border: none !important;
+  border-radius: 4px !important;
+  background: transparent !important;
+  padding: 4px !important;
+  color: light-dark(#718096, #a0aec0) !important;
+}
+
+.search-toggle-replace:hover {
+  background-color: light-dark(#edf2f7, #2d3748) !important;
+  color: light-dark(#2d3748, #edf2f7) !important;
+}
+
+.search-toggle-replace.expanded {
+  transform: rotate(90deg) !important;
+}
+
+.search-input-wrapper {
+  position: relative !important;
+  flex-grow: 1 !important;
+  flex-shrink: 1 !important;
+  min-width: 140px !important;
+  max-width: 320px !important;
+}
+
+.search-input {
+  transition: all 0.2s ease-in-out !important;
+  box-sizing: border-box !important;
+  outline: none !important;
+  border: 1px solid light-dark(#cbd5e0, #4a5568) !important;
+  border-radius: 6px !important;
+  background-color: light-dark(#f7fafc, #121214) !important;
+  padding: 6px 80px 6px 10px !important;
+  width: 100% !important;
+  color: inherit !important;
+  font-size: 0.9rem !important;
+  font-family: inherit !important;
+}
+
+.replace-input {
+  padding-right: 10px !important;
+}
+
+.search-input:focus {
+  box-shadow: 0 0 0 3px rgba(30, 135, 240, 0.25) !important;
+  border-color: #1e87f0 !important;
+  background-color: light-dark(#ffffff, #1a1a1e) !important;
+}
+
+.search-count {
+  position: absolute !important;
+  top: 50% !important;
+  right: 10px !important;
+  transform: translateY(-50%) !important;
+  pointer-events: none !important;
+  color: light-dark(#718096, #a0aec0) !important;
+  font-size: 0.75rem !important;
+}
+
+.search-actions {
+  display: flex !important;
+  flex-shrink: 0 !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.search-btn {
+  display: flex !important;
+  flex-shrink: 0 !important;
+  justify-content: center !important;
+  align-items: center !important;
+  transition: background-color 0.2s !important;
+  cursor: pointer !important;
+  border: none !important;
+  border-radius: 4px !important;
+  background: transparent !important;
+  padding: 6px !important;
+  color: light-dark(#4a5568, #edf2f7) !important;
+}
+
+.search-btn:hover {
+  background-color: light-dark(#edf2f7, #2d3748) !important;
+}
+
+.search-close-btn {
+  display: flex !important;
+  flex-shrink: 0 !important;
+  justify-content: center !important;
+  align-items: center !important;
+  transition:
+    background-color 0.2s,
+    color 0.2s !important;
+  cursor: pointer !important;
+  border: none !important;
+  border-radius: 4px !important;
+  background: transparent !important;
+  padding: 6px !important;
+  color: light-dark(#718096, #a0aec0) !important;
+}
+
+.search-close-btn:hover {
+  background-color: light-dark(#edf2f7, #2d3748) !important;
+  color: light-dark(#e53e3e, #fc8181) !important;
+}
+
+.search-action-btn {
+  flex-shrink: 0 !important;
+  transition: all 0.2s !important;
+  cursor: pointer !important;
+  border: 1px solid light-dark(#cbd5e0, #4a5568) !important;
+  border-radius: 6px !important;
+  background-color: light-dark(#edf2f7, #2d3748) !important;
+  padding: 5px !important;
+  color: light-dark(#4a5568, #edf2f7) !important;
+  font-weight: 500 !important;
+  font-size: 0.85rem !important;
+}
+
+.numara-search-panel svg {
+  flex-shrink: 0 !important;
+}
+
+.search-action-btn:hover {
+  background-color: light-dark(#cbd5e0, #4a5568) !important;
+  color: light-dark(#1a202c, #ffffff) !important;
+}
+
+/* Dynamic padding adjustment to prevent search panel from covering text and keep input/output aligned */
+body.numara-search-panel-open .CodeMirror-lines,
+body.numara-search-panel-open .CodeMirror-gutters,
+body.numara-search-panel-open .outputWrapper {
+  padding-top: 48px !important;
+}
+
+body.numara-search-panel-open.numara-search-replace-open .CodeMirror-lines,
+body.numara-search-panel-open.numara-search-replace-open .CodeMirror-gutters,
+body.numara-search-panel-open.numara-search-replace-open .outputWrapper {
+  padding-top: 86px !important;
 }
 
 /* Dialog editor variants */
