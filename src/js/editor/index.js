@@ -7,6 +7,7 @@ import CodeMirror from 'codemirror'
 
 import './addons'
 import { initTooltips } from './tooltips'
+import { showSearchPanel, hideSearchPanel, isSearchPanelOpen } from './searchPanel'
 
 import * as formulajs from '@formulajs/formulajs'
 import { DateTime } from 'luxon'
@@ -439,7 +440,18 @@ export const cm = CodeMirror.fromTextArea(dom.inputArea, {
     'Ctrl-Space': 'autocomplete',
     'Cmd-/': toggleComment,
     'Ctrl-/': toggleComment,
-    'Ctrl-Q': (cm) => cm.foldCode(cm.getCursor())
+    'Ctrl-Q': (cm) => cm.foldCode(cm.getCursor()),
+    'Cmd-F': (cm) => showSearchPanel(cm, false),
+    'Ctrl-F': (cm) => showSearchPanel(cm, false),
+    'Cmd-Alt-F': (cm) => showSearchPanel(cm, true),
+    'Ctrl-H': (cm) => showSearchPanel(cm, true),
+    Esc: (cm) => {
+      if (isSearchPanelOpen()) {
+        hideSearchPanel(cm)
+      } else {
+        return CodeMirror.Pass
+      }
+    }
   },
   flattenSpans: true,
   foldGutter: {
