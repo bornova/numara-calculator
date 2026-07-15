@@ -513,7 +513,7 @@ dom.expUpper.addEventListener('input', () => {
   dom.expUpperLabel.innerHTML = dom.expUpper.value
 })
 
-dom.updateRatesLink.addEventListener('click', getRates)
+dom.updateRatesLink.addEventListener('click', () => getRates(true))
 
 dom.els('.theme-pill-button').forEach((btn) => {
   btn.addEventListener('click', () => {
