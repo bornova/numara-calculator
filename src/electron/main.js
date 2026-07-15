@@ -394,6 +394,10 @@ ipcMain.on('setTray', (event, bool) => {
   updateTrayState()
 })
 ipcMain.on('setOpenAtLogin', (event, bool) => {
+  if (!app.isPackaged) {
+    app.setLoginItemSettings({ openAtLogin: false })
+    return
+  }
   app.setLoginItemSettings({
     openAtLogin: bool,
     openAsHidden: true,
