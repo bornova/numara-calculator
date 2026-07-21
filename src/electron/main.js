@@ -189,7 +189,10 @@ function createAppWindow() {
     setTitleBarOverlay()
 
     const showTray = config.get('showTray')
-    const startHidden = showTray && process.argv.includes('--hidden')
+    const loginItemSettings = app.getLoginItemSettings()
+    const wasOpenedAtLogin =
+      loginItemSettings.wasOpenedAsHidden || loginItemSettings.wasOpenedAtLogin || process.argv.includes('--hidden')
+    const startHidden = showTray && wasOpenedAtLogin
 
     if (!startHidden) {
       win.show()
