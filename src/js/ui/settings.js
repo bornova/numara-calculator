@@ -513,7 +513,7 @@ dom.expUpper.addEventListener('input', () => {
   dom.expUpperLabel.innerHTML = dom.expUpper.value
 })
 
-dom.updateRatesLink.addEventListener('click', getRates)
+dom.updateRatesLink.addEventListener('click', () => getRates(true))
 
 dom.els('.theme-pill-button').forEach((btn) => {
   btn.addEventListener('click', () => {
@@ -563,6 +563,15 @@ if (isElectron) {
 dom.els('.settingItem').forEach((el) => {
   el.addEventListener('change', async () => {
     const id = el.getAttribute('id')
+
+    if (id === 'openAtLogin' && el.checked) {
+      const showTrayEl = dom.el('#showTray')
+
+      if (showTrayEl && !showTrayEl.checked) {
+        showTrayEl.checked = true
+        app.settings.showTray = true
+      }
+    }
 
     if (id === 'syncDirEnabled' && el.checked && !dom.el('#syncDir').value) {
       const path = await numara.selectSyncDirectory()

@@ -152,11 +152,13 @@ function buildCurrencies(symbolList, rateList) {
 }
 
 /** Fetch latest rates and refresh the application's currency state. */
-export async function getRates() {
+export async function getRates(isManual = false) {
   if (!navigator.onLine) {
     if (dom.lastUpdated) dom.lastUpdated.textContent = 'Offline'
 
-    notify('No internet connection. Could not update exchange rates.', 'warning')
+    if (isManual || !store.get('rateDate')) {
+      notify('No internet connection. Could not update exchange rates.', 'warning')
+    }
 
     return
   }
@@ -197,7 +199,9 @@ export async function getRates() {
       dom.lastUpdated.textContent = 'n/a'
     }
 
-    notify('Failed to get exchange rates (' + error + ')', 'warning')
+    if (isManual || !store.get('rateDate')) {
+      notify('Failed to get exchange rates (' + error + ')', 'warning')
+    }
   } finally {
     const elapsed = Date.now() - startTime
     const minDuration = 1000 // 1s matches CSS animation speed for 1 full rotation

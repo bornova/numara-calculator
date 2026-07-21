@@ -189,7 +189,10 @@ function createAppWindow() {
     setTitleBarOverlay()
 
     const showTray = config.get('showTray')
-    const startHidden = showTray && process.argv.includes('--hidden')
+    const loginItemSettings = app.getLoginItemSettings()
+    const wasOpenedAtLogin =
+      loginItemSettings.wasOpenedAsHidden || loginItemSettings.wasOpenedAtLogin || process.argv.includes('--hidden')
+    const startHidden = showTray && wasOpenedAtLogin
 
     if (!startHidden) {
       win.show()
@@ -394,6 +397,10 @@ ipcMain.on('setTray', (event, bool) => {
   updateTrayState()
 })
 ipcMain.on('setOpenAtLogin', (event, bool) => {
+  if (!app.isPackaged) {
+    app.setLoginItemSettings({ openAtLogin: false })
+    return
+  }
   app.setLoginItemSettings({
     openAtLogin: bool,
     openAsHidden: true,
