@@ -2,7 +2,7 @@ import { DateTime } from 'luxon'
 import { factory } from 'mathjs'
 
 import * as formulajs from '@formulajs/formulajs'
-import nerdamer from 'nerdamer-prime/all.js'
+import nerdamer from 'nerdamer-prime'
 
 import {
   math,
