@@ -275,16 +275,7 @@ export const settings = {
 
     setTimeout(colors.apply, 50)
 
-    const udfuTheme =
-      app.settings.theme === 'system'
-        ? isElectron
-          ? (await numara.isDark())
-            ? 'material-darker'
-            : 'default'
-          : 'default'
-        : app.settings.theme === 'light'
-          ? 'default'
-          : 'material-darker'
+    const udfuTheme = appTheme === 'dark' ? 'material-darker' : 'default'
 
     udfInput.setOption('theme', udfuTheme)
     uduInput.setOption('theme', udfuTheme)
