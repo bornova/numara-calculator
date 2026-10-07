@@ -4,9 +4,11 @@
   "short_name": "Numara",
   "description": "A simple but powerful notepad calculator that gives answers as you type.",
   "categories": ["productivity", "utilities"],
+  "lang": "en",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
+  "orientation": "any",
   "theme_color": "#1f1f1f",
   "background_color": "#1f1f1f",
   "icons": [
@@ -23,13 +25,13 @@
       "purpose": "any"
     },
     {
-      "src": "assets/icon-192.png",
+      "src": "assets/icon-maskable-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "assets/icon-512.png",
+      "src": "assets/icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

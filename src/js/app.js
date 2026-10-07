@@ -565,6 +565,19 @@ function initializeSideBar() {
 }
 
 /**
+ * Registers the service worker that enables offline use and PWA installation on the web.
+ */
+const registerServiceWorker = () => {
+  if (isElectron || !('serviceWorker' in navigator)) return
+
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch((error) => {
+      console.error('Service worker registration failed:', error)
+    })
+  })
+}
+
+/**
  * Bootstraps the application, initialises settings, currencies, colors, and UI layout.
  * @returns {Promise<void>}
  */
@@ -594,6 +607,7 @@ const initializeApp = async () => {
   initializeSettingsTooltips()
   initAppUpdate()
   checkAppUpdate()
+  registerServiceWorker()
 
   if (isElectron) {
     if (app.settings.syncDirEnabled && app.settings.syncDir) {
