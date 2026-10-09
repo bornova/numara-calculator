@@ -85,6 +85,15 @@ function handleFunctionTooltip(target) {
     return
   }
 
+  if (text === 'page') {
+    showTooltip(
+      target,
+      `<div>Import variables from another page</div>
+      <div class="tooltipCode"><code>page("pageName")</code></div>`
+    )
+    return
+  }
+
   // Fallback to standard Math.js help
   try {
     const tip = math.help(text).toJSON()
