@@ -46,6 +46,7 @@ const keywords = [
   { key: 'total', fn: (stats) => math.sum(stats.runningTotal) },
   { key: 'subtotal', fn: (stats) => math.sum(stats.runningSubtotal) }
 ]
+const KEYWORDS_REGEX = new RegExp(`\\b(?:${keywords.map((kw) => kw.key).join('|')})\\b`)
 
 // Cache for compiled expressions
 const compiledExpressions = new Map()
@@ -237,7 +238,7 @@ function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
     setScope(`line${lineIndex + 1}`, answer)
 
     // Update stats after evaluation
-    if (!keywords.some((kw) => line.includes(kw.key))) {
+    if (!KEYWORDS_REGEX.test(line)) {
       stats.runningTotal.push(answer)
       stats.runningSubtotal.push(answer)
     }
@@ -534,6 +535,9 @@ function loadPageScope(pageName) {
   const localScope = new Map()
 
   app.mathScope = localScope
+
+  if (savedScope.has('now')) localScope.set('now', savedScope.get('now'))
+  if (savedScope.has('today')) localScope.set('today', savedScope.get('today'))
 
   const localStats = {
     runningTotal: [],
