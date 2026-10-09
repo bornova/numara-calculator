@@ -242,8 +242,10 @@ export function formatCurrency(str) {
   if (!currencyFormatRegex) return str
 
   const appLocale = getAppLocale()
-  const useGrouping = app.settings.thouSep !== 'disabled'
-  const maximumFractionDigits = app.settings.precision
+  const useGrouping = app.settings?.thouSep !== 'disabled'
+  const maximumFractionDigits = Number.isFinite(+app.settings?.precision)
+    ? Math.max(0, Math.min(20, +app.settings.precision))
+    : 4
 
   return str.replace(currencyFormatRegex, (match, amount, code) => {
     const upperCode = code.toUpperCase()
@@ -283,11 +285,13 @@ export function formatAnswer(answer, useGrouping) {
     return answer.format()
   }
 
-  const notation = app.settings.notation
-  const lowerExp = +app.settings.expLower
-  const upperExp = +app.settings.expUpper
+  const notation = app.settings?.notation || 'auto'
+  const lowerExp = Number.isFinite(+app.settings?.expLower) ? +app.settings.expLower : -12
+  const upperExp = Number.isFinite(+app.settings?.expUpper) ? +app.settings.expUpper : 12
   const locale = getAppLocale()
-  const maximumFractionDigits = +app.settings.precision
+  const maximumFractionDigits = Number.isFinite(+app.settings?.precision)
+    ? Math.max(0, Math.min(20, +app.settings.precision))
+    : 4
 
   if (['bin', 'hex', 'oct'].includes(notation)) {
     answer = math.format(answer, { notation })
