@@ -393,6 +393,7 @@ describe('Numara Calculation Engine vs Math.js', function () {
         const numaraResult = runCalculation({
           activePage: pageId,
           lines: testCase.expressions,
+          pages: testCase.pages || [],
           settings: caseSettings,
           currencies: mockCurrencies
         })
