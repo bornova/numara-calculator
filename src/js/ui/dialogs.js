@@ -41,8 +41,8 @@ export const modal = {
  * @param {string} error Error message to show.
  */
 export function showError(title, error) {
-  dom.errTitle.innerHTML = title
-  dom.errMsg.innerHTML = error
+  dom.errTitle.textContent = title
+  dom.errMsg.textContent = error
 
   modal.show('#dialogError')
 }
@@ -53,7 +53,7 @@ export function showError(title, error) {
  * @param {function} action Function to run upon selecting Yes.
  */
 export function confirm(msg, action) {
-  dom.confirmMsg.innerHTML = msg
+  dom.confirmMsg.textContent = msg
 
   modal.show('#dialogConfirm')
 
