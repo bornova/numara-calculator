@@ -31,7 +31,7 @@ const setupHeaders = () => {
 
   dom[`header${inactive}`].remove()
   dom[`header${active}`].style.display = 'block'
-  dom[`header${active}Title`].innerHTML = name
+  dom[`header${active}Title`].textContent = name
 }
 
 /**
@@ -542,8 +542,8 @@ const setupUIkitUtils = () => {
   })
 
   UIkit.util.on('#dialogError', 'hidden', () => {
-    dom.errTitle.innerHTML = ''
-    dom.errMsg.innerHTML = ''
+    dom.errTitle.textContent = ''
+    dom.errMsg.textContent = ''
   })
 
   UIkit.util.on(document, 'beforeshow', '.uk-tooltip', (event) => {
