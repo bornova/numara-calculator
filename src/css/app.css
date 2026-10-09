@@ -296,6 +296,15 @@ text {
   pointer-events: none;
 }
 
+.pageLink {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.pageLink:hover {
+  text-decoration: none;
+}
+
 .lineError {
   margin: 0 12px 0 5px;
 }
