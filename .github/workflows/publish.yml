@@ -34,6 +34,9 @@ jobs:
           chmod 600 "$KEY_PATH"
           echo "APPLE_API_KEY=$KEY_PATH" >> "$GITHUB_ENV"
 
+      - name: Run tests
+        run: npm test
+
       - name: Build and Publish Numara
         run: npm run publish
         env:
