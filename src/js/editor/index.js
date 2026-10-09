@@ -2,6 +2,7 @@ import { dom } from '../dom'
 import { calculate, math, syncOutputHeights } from '../calc/calcManager'
 import { showError } from '../ui/dialogs'
 import { app, debounce, store, isMobile } from '../appState'
+import { escapeRegExp } from '../core/utils.js'
 
 import CodeMirror from 'codemirror'
 
@@ -284,7 +285,7 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
         if (!objectProps) {
           const docText = editor.getValue()
           const pageAssignRegex = new RegExp(
-            `^\\s*${baseVar}\\s*=\\s*page\\s*\\(\\s*["'\`]([^"'\`]+)["'\`]\\s*\\)`,
+            `^\\s*${escapeRegExp(baseVar)}\\s*=\\s*page\\s*\\(\\s*["'\`]([^"'\`]+)["'\`]\\s*\\)`,
             'm'
           )
           const pageMatch = docText.match(pageAssignRegex)
