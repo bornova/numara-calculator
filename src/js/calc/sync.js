@@ -5,6 +5,7 @@ import { calculate } from './calcManager'
 import { populatePages } from '../ui/pageManager'
 import { dom } from '../dom'
 import UIkit from 'uikit'
+import { escapeHTML } from '../core/utils.js'
 import { notify } from '../ui/dialogs'
 
 const lastSyncContent = new Map()
@@ -187,7 +188,7 @@ function customConfirm(msg, yesLabel, noLabel, yesAction, noAction) {
 function askSyncResolution(pageName) {
   return new Promise((resolve) => {
     customConfirm(
-      `A file named "<b>${pageName}.num</b>" already exists in the sync folder with different calculations than your local page. <br><br>Do you want to overwrite your local page with the sync folder file, or sync (keep) your local calculations?`,
+      `A file named "<b>${escapeHTML(pageName)}.num</b>" already exists in the sync folder with different calculations than your local page. <br><br>Do you want to overwrite your local page with the sync folder file, or sync (keep) your local calculations?`,
       'Overwrite Local',
       'Sync Local',
       () => resolve('overwrite'),
@@ -376,6 +377,8 @@ export async function syncPageSave(pageName, content) {
   }
 }
 
+const debounceTimeouts = new Map()
+
 /**
  * Renames a page's corresponding file in the sync folder.
  * @param {string} oldName The old page name.
@@ -389,6 +392,13 @@ export async function syncPageRename(oldName, newName) {
   const dirPath = app.settings.syncDir
   const safeOldName = getSafeFilename(oldName)
   const safeNewName = getSafeFilename(newName)
+  const pendingOldTimeout = debounceTimeouts.get(safeOldName)
+
+  if (pendingOldTimeout) {
+    clearTimeout(pendingOldTimeout)
+    debounceTimeouts.delete(safeOldName)
+  }
+
   const content = lastSyncContent.get(safeOldName) || ''
 
   try {
@@ -416,6 +426,13 @@ export async function syncPageDelete(pageName) {
 
   const dirPath = app.settings.syncDir
   const safeName = getSafeFilename(pageName)
+  const pendingTimeout = debounceTimeouts.get(safeName)
+
+  if (pendingTimeout) {
+    clearTimeout(pendingTimeout)
+    debounceTimeouts.delete(safeName)
+  }
+
   const previousContent = lastSyncContent.get(safeName)
 
   try {
@@ -431,7 +448,6 @@ export async function syncPageDelete(pageName) {
   }
 }
 
-const debounceTimeouts = new Map()
 /**
  * Triggers a debounced save of the page calculations to the sync folder.
  * @param {string} pageName The name of the page to save.
