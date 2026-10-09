@@ -3,7 +3,7 @@ import { isMac } from '../appState'
 
 // Settings tooltips for settings in the application
 const settingsTooltips = {
-  alwaysOnTop: 'Keep Numara on top off all other windows on the screen. (Default: Disabled)',
+  alwaysOnTop: 'Keep Numara on top of all other windows on the screen. (Default: Disabled)',
   showTray: isMac
     ? 'Keep Numara in the menu bar. (Default: Disabled)'
     : 'Keep Numara in the system tray. (Default: Disabled)',
@@ -39,7 +39,7 @@ const settingsTooltips = {
   precision: 'Set the number of significant digits for numeric calculations and display. (Default: 4)',
   predictable: 'Enable predictable mode for consistent results across different platforms. (Default: Disabled)',
   rulers: 'Show rulers in the calculator display for better alignment. (Default: Disabled)',
-  syntax: 'Enable syntax highligting mode for expression input and evaluation. (Default: Enabled)',
+  syntax: 'Enable syntax highlighting mode for expression input and evaluation. (Default: Enabled)',
   theme: 'Set the visual theme of the application. (Default: System)',
   thouSep: 'Set the thousands separator formatting. (Default: System)',
   truncateAnswers: 'Truncate long answers with ellipses instead of showing a horizontal scrollbar. (Default: Enabled)',
