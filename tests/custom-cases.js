@@ -121,6 +121,18 @@ export const customCases = [
     expected: ['425']
   },
   {
+    name: 'Cross-Page Import',
+    pages: [{ id: 'page-rates', name: 'Rates', data: 'hourly = 85\ngst = 0.05' }],
+    expressions: ['r = page("Rates")', '6 * r.hourly * (1 + r.gst)', 'p = page("rates")', 'p.hourly'],
+    expected: ['Rates', '535.5', 'Rates', '85']
+  },
+  {
+    name: 'Cross-Page User Variable Access',
+    pages: [{ id: 'page-q1', name: 'Q1', data: 'base = 600' }],
+    expressions: ['q = page("Q1")', 'q.base + 50'],
+    expected: ['Q1', '650']
+  },
+  {
     name: 'User Defined Units',
     udu: 'foo: { definition: "2 m" }',
     expressions: ['2 foo to m'],
