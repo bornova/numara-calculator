@@ -271,22 +271,79 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
       const dotIndex = curStr.lastIndexOf('.')
       const prefix = curStr.slice(0, dotIndex + 1)
       const suffix = curStr.slice(dotIndex + 1).toLowerCase()
+      const baseVar = prefix.slice(0, -1)
+      const baseVarLower = baseVar.toLowerCase()
 
-      if (prefix.toLowerCase() === 'datetime.') {
+      if (baseVarLower === 'datetime') {
         matches = dateTimeStaticHints.filter(({ text }) => text.toLowerCase().startsWith(searchWord))
-      } else if (prefix.toLowerCase() === 'formulajs.') {
+      } else if (baseVarLower === 'formulajs') {
         matches = excelHints.filter(({ text }) => text.toLowerCase().startsWith(searchWord))
       } else {
-        matches = dateTimeInstanceMethods
-          .filter((m) => m.toLowerCase().startsWith(suffix))
-          .map((m) => ({
-            text: prefix + m,
-            className: CLASS_NAMES.DATETIME,
-            desc: `DateTime.${m} instance method`,
-            render: (el) => {
-              el.innerHTML = `<span class="cm-variable">${prefix.slice(0, -1)}</span>.<span class="cm-function">${m}</span>`
+        let objectProps = app.scopeProperties?.[baseVar]
+
+        if (!objectProps) {
+          const docText = editor.getValue()
+          const pageAssignRegex = new RegExp(
+            `^\\s*${baseVar}\\s*=\\s*page\\s*\\(\\s*["'\`]([^"'\`]+)["'\`]\\s*\\)`,
+            'm'
+          )
+          const pageMatch = docText.match(pageAssignRegex)
+
+          if (pageMatch) {
+            const targetPageName = pageMatch[1].trim().toLowerCase()
+            const pages = store.get('pages') || []
+            const foundPage = pages.find(
+              (p) => (p.name || '').trim().toLowerCase() === targetPageName || p.id === pageMatch[1].trim()
+            )
+
+            if (foundPage && foundPage.data) {
+              const varNames = []
+
+              for (const line of foundPage.data.split('\n')) {
+                const assignMatch = line.trim().match(/^([a-zA-Z_$][\w$]*)\s*=/)
+
+                if (assignMatch && !['ans', '_', 'now', 'today'].includes(assignMatch[1])) {
+                  varNames.push(assignMatch[1])
+                }
+              }
+
+              if (varNames.length) {
+                objectProps = varNames
+              }
             }
-          }))
+          }
+        }
+
+        if (objectProps) {
+          matches = objectProps
+            .filter((prop) => prop.toLowerCase().startsWith(suffix))
+            .map((prop) => ({
+              text: prefix + prop,
+              className: CLASS_NAMES.VARIABLE,
+              desc: `${baseVar}.${prop}`,
+              render: (el) => {
+                el.innerHTML = `<span class="cm-variable">${baseVar}</span>.<span class="cm-variable">${prop}</span>`
+              }
+            }))
+        } else if (
+          baseVarLower === 'today' ||
+          baseVarLower === 'now' ||
+          app.scopeTypes?.[baseVar] === 'datetime' ||
+          prefix.toLowerCase().startsWith('datetime.')
+        ) {
+          matches = dateTimeInstanceMethods
+            .filter((m) => m.toLowerCase().startsWith(suffix))
+            .map((m) => ({
+              text: prefix + m,
+              className: CLASS_NAMES.DATETIME,
+              desc: `DateTime.${m} instance method`,
+              render: (el) => {
+                el.innerHTML = `<span class="cm-variable">${baseVar}</span>.<span class="cm-function">${m}</span>`
+              }
+            }))
+        } else {
+          matches = []
+        }
       }
     } else {
       const match = ({ text }) => text.toLowerCase().startsWith(searchWord)
