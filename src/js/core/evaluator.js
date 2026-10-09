@@ -4,6 +4,8 @@ import { factory } from 'mathjs'
 import * as formulajs from '@formulajs/formulajs'
 import nerdamer from 'nerdamer-prime'
 
+import { applyUdfuToMath } from './udfu.js'
+
 import {
   math,
   app,
@@ -58,6 +60,7 @@ let lastActivePage = null
  */
 export function clearEvaluationCache() {
   evaluationCache = []
+  compiledExpressions.clear()
 }
 
 /**
@@ -423,8 +426,10 @@ function stripComments(line) {
   )
 }
 
-let previouslyImportedUDFs = []
-let previouslyCreatedUnits = []
+const udfuState = {
+  previouslyImportedUDFs: [],
+  previouslyCreatedUnits: []
+}
 let lastAppliedUdf = null
 let lastAppliedUdu = null
 
@@ -440,42 +445,17 @@ export function applyUdfu(isFunc, input) {
   clearEvaluationCache()
 
   try {
-    const UDFunc = new Function('math', 'luxon', 'nerdamer', 'formulajs', `'use strict'; return {${input}}`)
-    const udfObj = UDFunc(math, DateTime, nerdamer, formulajs)
-
-    if (udfObj === null || typeof udfObj !== 'object' || Array.isArray(udfObj)) {
-      throw new TypeError('User defined input must resolve to an object.')
-    }
+    const keys = applyUdfuToMath(math, input, isFunc, udfuState, {
+      luxon: DateTime,
+      nerdamer,
+      formulajs
+    })
 
     if (isFunc) {
-      previouslyImportedUDFs.forEach((key) => {
-        delete math[key]
-
-        if (math.expression?.mathWithTransform) {
-          delete math.expression.mathWithTransform[key]
-        }
-      })
-
-      math.import(udfObj, { override: true })
-      previouslyImportedUDFs = Object.keys(udfObj)
-      app.udfList = Object.keys(udfObj)
+      app.udfList = keys
       lastAppliedUdf = input
     } else {
-      previouslyCreatedUnits.forEach((unitName) => {
-        if (math.Unit?.UNITS) {
-          delete math.Unit.UNITS[unitName]
-        }
-
-        delete math[unitName]
-
-        if (math.expression?.mathWithTransform) {
-          delete math.expression.mathWithTransform[unitName]
-        }
-      })
-
-      math.createUnit(udfObj, { override: true })
-      previouslyCreatedUnits = Object.keys(udfObj)
-      app.uduList = Object.keys(udfObj)
+      app.uduList = keys
       lastAppliedUdu = input
     }
   } catch (error) {

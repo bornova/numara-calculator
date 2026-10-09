@@ -115,6 +115,12 @@ export const customCases = [
     expected: ['30', '3,-3', '1+2*x+x^2']
   },
   {
+    name: 'User Defined Objects / Properties',
+    udf: 'sk: { BaseCarry: 300, SteedStone: 100, Necromage: 1.25 }',
+    expressions: ['sk.BaseCarry + sk.SteedStone * sk.Necromage'],
+    expected: ['425']
+  },
+  {
     name: 'User Defined Units',
     udu: 'foo: { definition: "2 m" }',
     expressions: ['2 foo to m'],

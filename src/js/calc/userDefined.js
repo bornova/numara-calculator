@@ -3,92 +3,25 @@ import { refreshEditor, udfInput, uduInput } from '../editor'
 import { calculate, math } from './calcManager'
 import { modal, showError } from '../ui/dialogs'
 import { app, store } from '../appState'
+import { applyUdfuToMath } from '../core/udfu'
 
-const externalProxy = new Proxy(() => externalProxy, {
-  get: () => externalProxy
-})
-
-let previouslyImportedUDFs = []
-let previouslyCreatedUnits = []
-
-/** Update user defined functions.
- * @param {object} newUdfObj Object containing new user defined functions to import.
- */
-function updateUserDefinedFunctions(newUdfObj) {
-  previouslyImportedUDFs.forEach((key) => {
-    delete math[key]
-
-    if (math.expression?.mathWithTransform) {
-      delete math.expression.mathWithTransform[key]
-    }
-  })
-
-  math.import(newUdfObj, { override: true })
-
-  previouslyImportedUDFs = Object.keys(newUdfObj)
-}
-
-/** Update user defined units.
- * @param {object} newUduObj Object containing new user defined units to import.
- */
-function updateUserDefinedUnits(newUduObj) {
-  previouslyCreatedUnits.forEach((unitName) => {
-    if (math.Unit?.UNITS) {
-      delete math.Unit.UNITS[unitName]
-    }
-
-    delete math[unitName]
-
-    if (math.expression?.mathWithTransform) {
-      delete math.expression.mathWithTransform[unitName]
-    }
-  })
-
-  math.createUnit(newUduObj, { override: true })
-
-  previouslyCreatedUnits = Object.keys(newUduObj)
-}
-
-const VALID_IDENTIFIER = /^[a-zA-Z_$][\w$]*$/
-const RESERVED_KEYS = new Set(['__proto__', 'constructor', 'prototype'])
-
-/**
- * Validate user defined function/unit object keys and guard against prototype pollution.
- * @param {object} obj The object to validate.
- */
-function validateUdfObj(obj) {
-  if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) {
-    throw new TypeError('User defined input must resolve to an object.')
-  }
-
-  for (const key of Object.keys(obj)) {
-    if (RESERVED_KEYS.has(key)) throw new Error(`Reserved key not allowed: "${key}"`)
-    if (!VALID_IDENTIFIER.test(key)) throw new Error(`Invalid identifier: "${key}"`)
-  }
+const udfuState = {
+  previouslyImportedUDFs: [],
+  previouslyCreatedUnits: []
 }
 
 /**
  * Apply user defined functions or units.
  * @param {string} input User defined function or unit to apply.
  * @param {string} type 'func' | 'unit'
- * @returns {Promise<void>}
+ * @returns {void}
  */
 export function applyUdfu(input, type) {
   try {
     const isFunc = type === 'func'
-    const UDFunc = new Function('math', 'luxon', 'nerdamer', 'formulajs', `'use strict'; return {${input}}`)
-    const udfObj = UDFunc(math, externalProxy, externalProxy, externalProxy)
+    const keys = applyUdfuToMath(math, input, isFunc, udfuState)
 
-    validateUdfObj(udfObj)
-
-    if (isFunc) {
-      updateUserDefinedFunctions(udfObj)
-    } else {
-      updateUserDefinedUnits(udfObj)
-    }
-
-    app[isFunc ? 'udfList' : 'uduList'] = Object.keys(udfObj)
-
+    app[isFunc ? 'udfList' : 'uduList'] = keys
     store.set(isFunc ? 'udf' : 'udu', input)
   } catch (error) {
     if (app.settings.lineErrors) {

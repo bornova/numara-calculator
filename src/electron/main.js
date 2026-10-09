@@ -19,6 +19,10 @@ import updater from 'electron-updater'
 import * as path from 'node:path'
 import * as fs from 'node:fs'
 
+if (!app.isPackaged) {
+  app.setPath('userData', path.join(app.getPath('appData'), 'Numara-Dev'))
+}
+
 if (!app.requestSingleInstanceLock()) {
   app.exit(0)
 }
@@ -335,6 +339,14 @@ app.on('second-instance', (event, commandLine) => {
 
   if (winValid) {
     const fileArg = getNumFilePath(commandLine)
+
+    if (!app.isPackaged && !fileArg) {
+      if (win.isMinimized()) win.restore()
+      if (!win.isVisible()) win.show()
+      win.reload()
+      win.focus()
+      return
+    }
 
     if (win.isFocused() && !fileArg) {
       if (config.get('showTray')) {
