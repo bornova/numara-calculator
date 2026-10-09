@@ -61,6 +61,8 @@ let lastActivePage = null
 export function clearEvaluationCache() {
   evaluationCache = []
   compiledExpressions.clear()
+  pageScopeCache.clear()
+  loadingStack.clear()
 }
 
 /**
@@ -267,6 +269,24 @@ function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
         </a>`
     }
 
+    // Handle page link lines
+    if (answer && typeof answer === 'object' && answer._pageId) {
+      const pageId = answer._pageId
+      const pageVarCount = answer._pageVarCount ?? 0
+      const pageVarDetails = answer._pageVarDetails || ''
+      const varText = `${pageVarCount} ${pageVarCount === 1 ? 'variable' : 'variables'}`
+      const tooltipText = pageVarDetails ? `${varText} (${pageVarDetails})` : varText
+
+      return `<a
+        class="pageLink ${CLASS_ANSWER}"
+        data-page-id="${escapeHTML(pageId)}"
+        data-answer="${escapeHTML(answerCopy)}"
+        title="${escapeHTML(tooltipText)}"
+        uk-tooltip>
+          ${escapeHTML(answerOut)}
+        </a>`
+    }
+
     return `<span class="${CLASS_ANSWER}" data-answer="${escapeHTML(answerCopy)}">${escapeHTML(answerOut)}</span>`
   } catch (error) {
     // Clear out stale 'ans', '_' and runningSubtotal on failure so downstream continuations don't use stale states
@@ -463,11 +483,150 @@ export function applyUdfu(isFunc, input) {
   }
 }
 
+let currentPages = []
+let activePageId = null
+
+const pageScopeCache = new Map()
+const loadingStack = new Set()
+
+/**
+ * Loads and evaluates another page's scope to return its exported variables.
+ * @param {string} pageName Name or ID of the page to load.
+ * @returns {object} Object containing variables from the page.
+ */
+function loadPageScope(pageName) {
+  if (pageName === undefined || pageName === null || typeof pageName !== 'string') {
+    throw new TypeError('Page name must be a string')
+  }
+
+  const query = pageName
+    .trim()
+    .toLowerCase()
+    .replace(/\.num$/, '')
+
+  const targetPage = currentPages.find((p) => {
+    if (!p) return false
+
+    const name = (p.name || '')
+      .trim()
+      .toLowerCase()
+      .replace(/\.num$/, '')
+
+    return name === query || p.id === pageName
+  })
+
+  if (!targetPage) {
+    throw new Error(`Page "${pageName}" not found`)
+  }
+
+  if (targetPage.id === activePageId || loadingStack.has(targetPage.id)) {
+    throw new Error(`Circular reference detected: "${targetPage.name || pageName}"`)
+  }
+
+  const cacheKey = `${targetPage.id}:${targetPage.data || ''}`
+
+  if (pageScopeCache.has(cacheKey)) {
+    return pageScopeCache.get(cacheKey)
+  }
+
+  const targetLines = (targetPage.data || '').split('\n')
+  const savedScope = app.mathScope
+  const localScope = new Map()
+
+  app.mathScope = localScope
+
+  const localStats = {
+    runningTotal: [],
+    runningSubtotal: []
+  }
+
+  try {
+    loadingStack.add(targetPage.id)
+    let prevText = ''
+
+    for (let i = 0; i < targetLines.length; i++) {
+      const rawText = targetLines[i]
+      const line = stripComments(rawText.trim())
+
+      if (!line) {
+        localStats.runningSubtotal.length = 0
+        continue
+      }
+
+      evaluateLine(line, i, null, localStats, prevText)
+      prevText = rawText
+    }
+  } finally {
+    loadingStack.delete(targetPage.id)
+    app.mathScope = savedScope
+  }
+
+  const result = {}
+
+  for (const [key, val] of localScope.entries()) {
+    if (!/^line\d+$/.test(key) && key !== '_' && key !== 'ans' && key !== 'now' && key !== 'today') {
+      result[key] = val
+    }
+  }
+
+  const varKeys = Object.keys(result)
+  const varCount = varKeys.length
+  const pageTitle = targetPage.name || pageName
+  const displayName = pageTitle
+
+  Object.defineProperty(result, '_pageId', {
+    value: targetPage.id,
+    enumerable: false
+  })
+
+  Object.defineProperty(result, '_pageName', {
+    value: pageTitle,
+    enumerable: false
+  })
+
+  Object.defineProperty(result, '_pageVarCount', {
+    value: varCount,
+    enumerable: false
+  })
+
+  Object.defineProperty(result, '_pageVarDetails', {
+    value: varKeys.join(', '),
+    enumerable: false
+  })
+
+  Object.defineProperty(result, 'format', {
+    value: () => displayName,
+    enumerable: false,
+    writable: true,
+    configurable: true
+  })
+
+  Object.defineProperty(result, 'toString', {
+    value: () => displayName,
+    enumerable: false,
+    writable: true,
+    configurable: true
+  })
+
+  pageScopeCache.set(cacheKey, result)
+
+  return result
+}
+
+// Register functional page cross-page function
+math.import(
+  {
+    page: (name) => loadPageScope(name)
+  },
+  { override: true }
+)
+
 /**
  * Perform all calculation operations line-by-line.
  * @param {object} params Calculation parameters.
  * @param {string} params.activePage The active page ID.
  * @param {string[]} params.lines The array of lines to evaluate.
+ * @param {object[]} [params.pages=[]] The full list of workbook pages.
  * @param {object} params.settings The application settings.
  * @param {object} params.currencies The application currencies config map.
  * @param {SharedArrayBuffer} [params.sharedBuffer] Shared buffer to communicate progress back to main thread.
@@ -478,12 +637,16 @@ export function applyUdfu(isFunc, input) {
 export function runCalculation({
   activePage,
   lines,
+  pages = [],
   settings,
   currencies,
   sharedBuffer,
   timedOutLines = [],
   onLineStart
 }) {
+  currentPages = pages
+  activePageId = activePage
+  loadingStack.clear()
   app.settings = settings
   app.currencies = currencies
 
@@ -603,10 +766,35 @@ export function runCalculation({
 
   // Convert app.mathScope Map to a serializable object of pre‑formatted answers
   const serializedScope = {}
+  const scopeProperties = {}
+  const scopeTypes = {}
+
+  for (const udfKey of app.udfList) {
+    if (math[udfKey] && typeof math[udfKey] === 'object' && !Array.isArray(math[udfKey])) {
+      scopeProperties[udfKey] = Object.keys(math[udfKey])
+      scopeTypes[udfKey] = 'object'
+    }
+  }
 
   for (const [key, value] of app.mathScope.entries()) {
     if (typeof value === 'function') {
       serializedScope[key] = 'Function'
+      scopeTypes[key] = 'function'
+    } else if (DateTime.isDateTime(value)) {
+      scopeTypes[key] = 'datetime'
+      try {
+        serializedScope[key] = formatAnswer(value, app.settings.thouSep !== 'disabled')
+      } catch {
+        serializedScope[key] = String(value)
+      }
+    } else if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof math.Unit)) {
+      scopeTypes[key] = value._pageId ? 'page' : 'object'
+      scopeProperties[key] = Object.keys(value).filter((k) => !k.startsWith('_'))
+      try {
+        serializedScope[key] = formatAnswer(value, app.settings.thouSep !== 'disabled')
+      } catch {
+        serializedScope[key] = String(value)
+      }
     } else {
       try {
         serializedScope[key] = formatAnswer(value, app.settings.thouSep !== 'disabled')
@@ -620,6 +808,8 @@ export function runCalculation({
     answers,
     errorLines,
     serializedScope,
+    scopeProperties,
+    scopeTypes,
     udfList: app.udfList,
     uduList: app.uduList
   }
