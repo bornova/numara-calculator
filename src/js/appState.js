@@ -13,6 +13,8 @@ export const app = {
   currencies: {},
   iconCache: {},
   mathScope: new Map(),
+  scopeProperties: {},
+  scopeTypes: {},
   plotFunction: null,
   plotSettings: null,
   refreshCM: true,
