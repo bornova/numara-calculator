@@ -541,8 +541,8 @@ export function calculate() {
 
   const cmValue = cm.getValue()
 
-  dom.clearButton.setAttribute('disabled', cmValue === '')
-  dom.copyButton.setAttribute('disabled', cmValue === '')
+  dom.clearButton.disabled = cmValue === ''
+  dom.copyButton.disabled = cmValue === ''
 
   if (isCalculating) {
     const elapsed = Date.now() - lastCalcStartTime
