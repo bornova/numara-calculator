@@ -122,7 +122,7 @@ function getWorker() {
       const { type, payload } = event.data
 
       if (type === 'calcResult') {
-        const { taskId, answers, errorLines, serializedScope, udfList, uduList } = payload
+        const { taskId, answers, errorLines, serializedScope, scopeProperties, scopeTypes, udfList, uduList } = payload
 
         if (taskId !== currentTaskId) return
 
@@ -146,6 +146,8 @@ function getWorker() {
         const keysChanged = checkScopeKeysChanged(serializedScope, udfList, uduList)
 
         app.mathScope = new Map(Object.entries(serializedScope))
+        app.scopeProperties = scopeProperties || {}
+        app.scopeTypes = scopeTypes || {}
         app.udfList = udfList
         app.uduList = uduList
 
@@ -335,7 +337,7 @@ export function renderAnswersToHTML(answers) {
     const result = answers[lineIndex] || ''
     let displayResult = result
 
-    if (app.settings.truncateAnswers && result && result.includes('class="answer"')) {
+    if (app.settings.truncateAnswers && result && result.includes('class="answer"') && !result.includes('uk-tooltip')) {
       const tooltipText = result.replace(/<[^>]*>/g, '').replace(/"/g, '&quot;')
 
       displayResult = result.replace('class="answer"', `class="answer" uk-tooltip="title: ${tooltipText}"`)
@@ -629,6 +631,7 @@ export function calculate() {
   }, timeoutDuration)
 
   const w = getWorker()
+  const allPages = (store.get('pages') ?? []).map((p) => (p.id === app.activePage ? { ...p, data: cm.getValue() } : p))
 
   w.postMessage({
     type: 'calculate',
@@ -636,6 +639,7 @@ export function calculate() {
       taskId: currentTaskId,
       activePage: app.activePage,
       lines,
+      pages: allPages,
       settings: {
         ...app.settings,
         systemLocale: getSystemLocale()
