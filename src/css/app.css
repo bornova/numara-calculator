@@ -155,11 +155,11 @@ text {
   top: 0;
   right: 0;
   left: 0;
-  height: 40px;
+  height: max(40px, calc(40px + env(safe-area-inset-top, 0px)));
 }
 
 .macHeaderTitle {
-  padding-top: 10px;
+  padding-top: max(10px, env(safe-area-inset-top, 10px));
   font-size: 1.1em;
   font-family: 'Numara';
   text-align: center;
@@ -175,10 +175,10 @@ text {
 .mainPanel {
   display: flex;
   position: absolute;
-  top: 50px;
-  right: 8px;
-  bottom: 42px;
-  left: 10px;
+  top: max(50px, calc(50px + env(safe-area-inset-top, 0px)));
+  right: max(8px, env(safe-area-inset-right, 8px));
+  bottom: calc(42px + env(safe-area-inset-bottom, 0px));
+  left: max(10px, env(safe-area-inset-left, 10px));
   align-content: flex-start;
 }
 
@@ -346,9 +346,9 @@ text {
 
 .actions {
   position: absolute;
-  right: 10px;
-  bottom: 8px;
-  left: 10px;
+  right: max(10px, env(safe-area-inset-right, 10px));
+  bottom: max(8px, env(safe-area-inset-bottom, 8px));
+  left: max(10px, env(safe-area-inset-left, 10px));
   height: 25px;
 }
 

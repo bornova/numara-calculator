@@ -526,6 +526,9 @@ export const cm = CodeMirror.fromTextArea(dom.inputArea, {
 
 cm.getInputField().setAttribute('id', 'inputAreaCodeMirror')
 cm.getInputField().setAttribute('name', 'inputAreaCodeMirror')
+cm.getInputField().setAttribute('autocorrect', 'off')
+cm.getInputField().setAttribute('autocapitalize', 'off')
+cm.getInputField().setAttribute('spellcheck', 'false')
 
 const udOptions = { autoCloseBrackets: true, autofocus: true, mode: 'javascript', smartIndent: false, tabSize: 2 }
 
@@ -541,8 +544,15 @@ export const uduInput = CodeMirror.fromTextArea(dom.uduInput, udOptions)
 
 udfInput.getInputField().setAttribute('id', 'udfInputCodeMirror')
 udfInput.getInputField().setAttribute('name', 'udfInputCodeMirror')
+udfInput.getInputField().setAttribute('autocorrect', 'off')
+udfInput.getInputField().setAttribute('autocapitalize', 'off')
+udfInput.getInputField().setAttribute('spellcheck', 'false')
+
 uduInput.getInputField().setAttribute('id', 'uduInputCodeMirror')
 uduInput.getInputField().setAttribute('name', 'uduInputCodeMirror')
+uduInput.getInputField().setAttribute('autocorrect', 'off')
+uduInput.getInputField().setAttribute('autocapitalize', 'off')
+uduInput.getInputField().setAttribute('spellcheck', 'false')
 
 export const debouncedCalculate = debounce(calculate, 100)
 

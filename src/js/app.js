@@ -625,6 +625,18 @@ const initializeApp = async () => {
     })
 
     numara.rendererReady()
+  } else if ('serviceWorker' in navigator) {
+    const registerSW = () => {
+      navigator.serviceWorker
+        .register('sw.js')
+        .catch((error) => console.error('Service worker registration failed:', error))
+    }
+
+    if (document.readyState === 'complete') {
+      registerSW()
+    } else {
+      window.addEventListener('load', registerSW)
+    }
   }
 
   window.addEventListener('focus', () => {
