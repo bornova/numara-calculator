@@ -2,7 +2,7 @@
   "name": "numara",
   "productName": "Numara",
   "description": "Numara Calculator",
-  "version": "7.5.0",
+  "version": "7.6.0",
   "author": {
     "name": "Timur Atalay",
     "email": "mail@numara.io",
@@ -22,6 +22,7 @@
     "prettier:fix": "prettier --write .",
     "publish": "npm run build && electron-builder --x64 --arm64 -p always",
     "start": "npm run build && electron .",
+    "test": "node --test tests/numara-tests.js",
     "wiki": "node src/misc/wiki.js"
   },
   "devDependencies": {
