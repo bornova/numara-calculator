@@ -3,6 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://api.frankfurter.dev;"
+    />
+    <meta
       name="description"
       content="A simple but powerful notepad calculator that gives answers as you type. Features support for symbolic computation, with a large set of built-in functions and constants, unit conversion including currencies, variables, function plotting, percentages, and much more."
     />
