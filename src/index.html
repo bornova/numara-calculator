@@ -3,6 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://api.frankfurter.dev;"
+    />
+    <meta
       name="description"
       content="A simple but powerful notepad calculator that gives answers as you type. Features support for symbolic computation, with a large set of built-in functions and constants, unit conversion including currencies, variables, function plotting, percentages, and much more."
     />
@@ -12,9 +16,20 @@
     />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content"
     />
+    <meta name="theme-color" content="#1f1f1f" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Numara" />
+    <meta name="application-name" content="Numara" />
+    <meta name="msapplication-TileColor" content="#1f1f1f" />
+    <meta name="msapplication-TileImage" content="assets/icon-192.png" />
     <link rel="icon" type="image/x-icon" href="assets/icon.ico" />
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/icon-512.png" />
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
     <link rel="manifest" href="numara.webmanifest" />
     <link rel="stylesheet" href="assets/fonts/fonts.css" />
     <link rel="stylesheet" href="css/app.css" />

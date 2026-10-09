@@ -70,7 +70,7 @@ function getDomains() {
 }
 
 export function plot() {
-  dom.plotTitle.innerHTML = app.plotFunction
+  dom.plotTitle.textContent = app.plotFunction
 
   const match = app.plotFunction.match(/^\s*\w+\s*\(\s*(\w+)\s*\)\s*=/)
   const paramName = match ? match[1] : 'x'
@@ -229,7 +229,7 @@ function setupEventListeners() {
   })
 
   dom.plotAxisPrecision.addEventListener('input', () => {
-    dom.plotAxisPrecisionLabel.innerHTML = dom.plotAxisPrecision.value
+    dom.plotAxisPrecisionLabel.textContent = dom.plotAxisPrecision.value
   })
 
   dom.plotAutoDomain.addEventListener('change', () => {
@@ -242,7 +242,7 @@ function setupEventListeners() {
     const { auto, x, y, axisPrecision } = plotSettings.defaults.domain
 
     dom.plotAxisPrecision.value = axisPrecision
-    dom.plotAxisPrecisionLabel.innerHTML = axisPrecision
+    dom.plotAxisPrecisionLabel.textContent = axisPrecision
     dom.plotAutoDomain.checked = auto
     dom.plotAutoDomain.dispatchEvent(new Event('change'))
 

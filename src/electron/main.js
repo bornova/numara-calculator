@@ -149,7 +149,7 @@ function updateTrayState() {
  * @param {boolean} isTrans Determines if the title bar should be transparent.
  */
 function setTitleBarOverlay(isTrans) {
-  if (!isWin) return
+  if (!isWin || !win || win.isDestroyed()) return
 
   const titleBarConfig = {
     color: isTrans ? TRANS_COLOR : getThemeColor(),
@@ -206,7 +206,14 @@ function createAppWindow() {
   })
 
   win.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url)
+    try {
+      const parsedUrl = new URL(url)
+      if (['http:', 'https:'].includes(parsedUrl.protocol)) {
+        shell.openExternal(url)
+      }
+    } catch {
+      // Ignore invalid URLs
+    }
     return { action: 'deny' }
   })
 
@@ -374,8 +381,10 @@ app.on('second-instance', (event, commandLine) => {
 })
 
 nativeTheme.on('updated', () => {
-  win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors)
-  setTitleBarOverlay()
+  if (win && !win.isDestroyed() && win.webContents) {
+    win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors)
+    setTitleBarOverlay()
+  }
 })
 
 ipcMain.on('renderer-ready', () => {
@@ -394,7 +403,11 @@ ipcMain.on('setTheme', (event, mode) => {
 })
 ipcMain.on('transControls', (event, isTrans) => setTitleBarOverlay(isTrans))
 
-ipcMain.on('setOnTop', (event, bool) => win.setAlwaysOnTop(bool))
+ipcMain.on('setOnTop', (event, bool) => {
+  if (win && !win.isDestroyed()) {
+    win.setAlwaysOnTop(bool)
+  }
+})
 ipcMain.on('close-window', () => {
   if (win && !win.isDestroyed()) {
     if (config.get('showTray')) {
@@ -419,8 +432,9 @@ ipcMain.on('setOpenAtLogin', (event, bool) => {
     args: ['--hidden']
   })
 })
-ipcMain.handle('isMaximized', () => win.isMaximized())
+ipcMain.handle('isMaximized', () => (win && !win.isDestroyed() ? win.isMaximized() : false))
 ipcMain.handle('isResized', () => {
+  if (!win || win.isDestroyed()) return false
   const [width, height] = win.getSize()
 
   return width !== schema.appWidth.default || height !== schema.appHeight.default
@@ -492,9 +506,15 @@ ipcMain.on('resetApp', () => {
     app.exit()
   })
 })
-ipcMain.on('openDevTools', () => win.webContents.openDevTools())
+ipcMain.on('openDevTools', () => {
+  if (win && !win.isDestroyed() && win.webContents) {
+    win.webContents.openDevTools()
+  }
+})
 ipcMain.on('openPath', (event, dirPath) => {
-  shell.openPath(dirPath)
+  if (typeof dirPath === 'string' && fs.existsSync(dirPath)) {
+    shell.openPath(dirPath)
+  }
 })
 ipcMain.on('openLogs', () => {
   shell.openPath(path.join(app.getPath('logs'), 'main.log'))
@@ -769,12 +789,24 @@ ipcMain.on('updateApp', () => {
   setImmediate(() => autoUpdater.quitAndInstall(true, true))
 })
 
-autoUpdater.on('checking-for-update', () => win.webContents.send('updateStatus', 'checking'))
-autoUpdater.on('update-available', (info) => win.webContents.send('updateStatus', 'available', info.version))
-autoUpdater.on('update-not-available', () => win.webContents.send('updateStatus', 'notAvailable'))
-autoUpdater.on('download-progress', (progress) => win.webContents.send('updateStatus', 'downloading', null, progress))
+autoUpdater.on('checking-for-update', () => {
+  if (win && !win.isDestroyed() && win.webContents) win.webContents.send('updateStatus', 'checking')
+})
+autoUpdater.on('update-available', (info) => {
+  if (win && !win.isDestroyed() && win.webContents) win.webContents.send('updateStatus', 'available', info.version)
+})
+autoUpdater.on('update-not-available', () => {
+  if (win && !win.isDestroyed() && win.webContents) win.webContents.send('updateStatus', 'notAvailable')
+})
+autoUpdater.on('download-progress', (progress) => {
+  if (win && !win.isDestroyed() && win.webContents) {
+    win.webContents.send('updateStatus', 'downloading', null, progress)
+  }
+})
 autoUpdater.on('update-downloaded', (info) => {
-  win.webContents.send('updateStatus', 'downloaded', info.version)
+  if (win && !win.isDestroyed() && win.webContents) {
+    win.webContents.send('updateStatus', 'downloaded', info.version)
+  }
 
   if (Notification.isSupported()) {
     const notification = new Notification({
@@ -783,18 +815,20 @@ autoUpdater.on('update-downloaded', (info) => {
     })
 
     notification.on('click', () => {
-      if (!win) return
+      if (!win || win.isDestroyed()) return
 
       if (win.isMinimized()) win.restore()
       win.show()
       win.focus()
-      win.webContents.send('showAbout')
+      if (win.webContents) win.webContents.send('showAbout')
     })
 
     notification.show()
   }
 })
-autoUpdater.on('error', () => win.webContents.send('updateStatus', 'error'))
+autoUpdater.on('error', () => {
+  if (win && !win.isDestroyed() && win.webContents) win.webContents.send('updateStatus', 'error')
+})
 
 const menuTemplate = [
   {

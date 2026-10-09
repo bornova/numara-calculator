@@ -489,19 +489,19 @@ dom.currencyWarn.addEventListener('click', () => {
 })
 
 dom.precision.addEventListener('input', () => {
-  dom.precisionLabel.innerHTML = dom.precision.value
+  dom.precisionLabel.textContent = dom.precision.value
 })
 
 dom.calcTimeout.addEventListener('input', () => {
-  dom.calcTimeoutLabel.innerHTML = dom.calcTimeout.value
+  dom.calcTimeoutLabel.textContent = dom.calcTimeout.value
 })
 
 dom.expLower.addEventListener('input', () => {
-  dom.expLowerLabel.innerHTML = dom.expLower.value
+  dom.expLowerLabel.textContent = dom.expLower.value
 })
 
 dom.expUpper.addEventListener('input', () => {
-  dom.expUpperLabel.innerHTML = dom.expUpper.value
+  dom.expUpperLabel.textContent = dom.expUpper.value
 })
 
 dom.updateRatesLink.addEventListener('click', () => getRates(true))

@@ -121,6 +121,18 @@ export const customCases = [
     expected: ['425']
   },
   {
+    name: 'Cross-Page Import',
+    pages: [{ id: 'page-rates', name: 'Rates', data: 'hourly = 85\ngst = 0.05' }],
+    expressions: ['r = page("Rates")', '6 * r.hourly * (1 + r.gst)', 'p = page("rates")', 'p.hourly'],
+    expected: ['Rates', '535.5', 'Rates', '85']
+  },
+  {
+    name: 'Cross-Page User Variable Access',
+    pages: [{ id: 'page-q1', name: 'Q1', data: 'base = 600' }],
+    expressions: ['q = page("Q1")', 'q.base + 50'],
+    expected: ['Q1', '650']
+  },
+  {
     name: 'User Defined Units',
     udu: 'foo: { definition: "2 m" }',
     expressions: ['2 foo to m'],
@@ -140,5 +152,16 @@ export const customCases = [
     name: 'Regression: Issue #279 (Unit values floor/ceil/abs)',
     expressions: ['C1 = 1000.5 W', 'floor(C1 / 1 W)', 'ceil(C1 / 1 W)', 'abs(C1)'],
     expected: ['1.0005 kW', '1000', '1001', '1.0005 kW']
+  },
+  {
+    name: 'Regression: Keyword Variable Collisions',
+    expressions: ['total_amount = 500', 'subtotal_count = 100', 'total'],
+    expected: ['500', '100', '600']
+  },
+  {
+    name: 'Regression: Cross-Page Today/Now Scope',
+    pages: [{ id: 'page-dates', name: 'Dates', data: 'd = today + 2 days' }],
+    expressions: ['p = page("Dates")', 'p.d'],
+    expected: ['Dates', /\d{1,2}\/\d{1,2}\/\d{4}/]
   }
 ]

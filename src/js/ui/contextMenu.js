@@ -111,7 +111,7 @@ function copyAllAnswers() {
   const copiedOutputs = []
   const answersMap = {}
 
-  document.querySelectorAll('#output [data-index]').forEach((el) => {
+  document.querySelectorAll('[data-index]').forEach((el) => {
     answersMap[el.getAttribute('data-index')] = el.textContent ?? ''
   })
 
@@ -134,7 +134,7 @@ export function copyAll() {
   const copiedCalc = []
   const answersMap = {}
 
-  document.querySelectorAll('#output [data-index]').forEach((el) => {
+  document.querySelectorAll('[data-index]').forEach((el) => {
     answersMap[el.getAttribute('data-index')] = el.textContent ?? ''
   })
 

@@ -14,7 +14,7 @@ self.onmessage = (event) => {
       applyUdfu(false, udu)
     }
   } else if (type === 'calculate') {
-    const { taskId, activePage, lines, settings, currencies, udf, udu, sharedBuffer, timedOutLines } = payload
+    const { taskId, activePage, lines, pages, settings, currencies, udf, udu, sharedBuffer, timedOutLines } = payload
 
     if (typeof udf === 'string') {
       applyUdfu(true, udf)
@@ -28,6 +28,7 @@ self.onmessage = (event) => {
       const result = runCalculation({
         activePage,
         lines,
+        pages,
         settings,
         currencies,
         sharedBuffer,

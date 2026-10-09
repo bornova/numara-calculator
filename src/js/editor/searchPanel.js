@@ -369,4 +369,10 @@ function createPanel(cm) {
   panelEl.querySelector('.search-close-btn').addEventListener('click', () => hideSearchPanel(cm))
   panelEl.querySelector('.btn-replace').addEventListener('click', () => replaceCurrent(cm))
   panelEl.querySelector('.btn-replace-all').addEventListener('click', () => replaceAll(cm))
+
+  cm.on('changes', () => {
+    if (isSearchPanelOpen()) {
+      updateSearch(cm)
+    }
+  })
 }

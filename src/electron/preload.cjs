@@ -1,5 +1,10 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
+const addIpcListener = (channel, wrapper) => {
+  ipcRenderer.on(channel, wrapper)
+  return () => ipcRenderer.removeListener(channel, wrapper)
+}
+
 contextBridge.exposeInMainWorld('numara', {
   isMac: process.platform === 'darwin',
   isWindows: process.platform === 'win32',
@@ -15,7 +20,7 @@ contextBridge.exposeInMainWorld('numara', {
   // App theme
   isDark: () => ipcRenderer.invoke('isDark'),
   setTheme: (theme) => ipcRenderer.send('setTheme', theme),
-  themeUpdate: (callback) => ipcRenderer.on('themeUpdate', (event, isDark) => callback(isDark)),
+  themeUpdate: (callback) => addIpcListener('themeUpdate', (event, isDark) => callback(isDark)),
 
   // Window controls
   isMaximized: () => ipcRenderer.invoke('isMaximized'),
@@ -31,16 +36,16 @@ contextBridge.exposeInMainWorld('numara', {
   // Import
   rendererReady: () => ipcRenderer.send('renderer-ready'),
   importPage: () => ipcRenderer.send('importPage'),
-  pageImported: (callback) => ipcRenderer.on('pageImported', (event, data, msg, name) => callback(data, msg, name)),
-  importDataError: (callback) => ipcRenderer.on('importDataError', (event, error) => callback(error)),
+  pageImported: (callback) => addIpcListener('pageImported', (event, data, msg, name) => callback(data, msg, name)),
+  importDataError: (callback) => addIpcListener('importDataError', (event, error) => callback(error)),
 
   //Export
   exportPage: (pageName, pageData) => ipcRenderer.send('exportPage', pageName, pageData),
-  pageExported: (callback) => ipcRenderer.on('pageExported', (event, data) => callback(data)),
-  exportDataError: (callback) => ipcRenderer.on('exportDataError', (event, error) => callback(error)),
+  pageExported: (callback) => addIpcListener('pageExported', (event, data) => callback(data)),
+  exportDataError: (callback) => addIpcListener('exportDataError', (event, error) => callback(error)),
 
   // Print
-  print: (callback) => ipcRenderer.on('print', () => callback()),
+  print: (callback) => addIpcListener('print', () => callback()),
 
   // Context menus
   inputContextMenu: (index, isEmpty, isLine, isSelection, isMultiLine, hasAnswer) =>
@@ -48,19 +53,19 @@ contextBridge.exposeInMainWorld('numara', {
   outputContextMenu: (index, isEmpty, hasAnswer) => ipcRenderer.send('outputContextMenu', index, isEmpty, hasAnswer),
   textboxContextMenu: () => ipcRenderer.send('textboxContextMenu'),
 
-  copyAll: (callback) => ipcRenderer.on('copyAll', () => callback()),
-  copyAllLines: (callback) => ipcRenderer.on('copyAllLines', () => callback()),
-  copyAllAnswers: (callback) => ipcRenderer.on('copyAllAnswers', () => callback()),
-  copyLine: (callback) => ipcRenderer.on('copyLine', (event, index) => callback(index)),
-  copyAnswer: (callback) => ipcRenderer.on('copyAnswer', (event, index, withLines) => callback(index, withLines)),
-  copyLineWithAnswer: (callback) => ipcRenderer.on('copyLineWithAnswer', (event, index) => callback(index, true)),
+  copyAll: (callback) => addIpcListener('copyAll', () => callback()),
+  copyAllLines: (callback) => addIpcListener('copyAllLines', () => callback()),
+  copyAllAnswers: (callback) => addIpcListener('copyAllAnswers', () => callback()),
+  copyLine: (callback) => addIpcListener('copyLine', (event, index) => callback(index)),
+  copyAnswer: (callback) => addIpcListener('copyAnswer', (event, index, withLines) => callback(index, withLines)),
+  copyLineWithAnswer: (callback) => addIpcListener('copyLineWithAnswer', (event, index) => callback(index, true)),
 
   // Update app
   updateApp: () => ipcRenderer.send('updateApp'),
   checkUpdate: () => ipcRenderer.send('checkUpdate'),
   updateStatus: (callback) =>
-    ipcRenderer.on('updateStatus', (event, status, version, progress) => callback(status, version, progress)),
-  showAbout: (callback) => ipcRenderer.on('showAbout', (event, data) => callback(data)),
+    addIpcListener('updateStatus', (event, status, version, progress) => callback(status, version, progress)),
+  showAbout: (callback) => addIpcListener('showAbout', (event, data) => callback(data)),
 
   // Directory Sync
   checkSyncDirectory: (dirPath) => ipcRenderer.invoke('checkSyncDirectory', dirPath),
@@ -72,8 +77,8 @@ contextBridge.exposeInMainWorld('numara', {
     ipcRenderer.invoke('renameSyncFile', dirPath, oldFilename, newFilename),
   startWatchingSyncDir: (dirPath) => ipcRenderer.send('startWatchingSyncDir', dirPath),
   stopWatchingSyncDir: () => ipcRenderer.send('stopWatchingSyncDir'),
-  onSyncDirChanged: (callback) => ipcRenderer.on('syncDirChanged', () => callback()),
-  onSyncDirDeleted: (callback) => ipcRenderer.on('syncDirDeleted', () => callback()),
+  onSyncDirChanged: (callback) => addIpcListener('syncDirChanged', () => callback()),
+  onSyncDirDeleted: (callback) => addIpcListener('syncDirDeleted', () => callback()),
   syncDirContextMenu: (dirPath) => ipcRenderer.send('syncDirContextMenu', dirPath),
 
   // Open path in file explorer

@@ -13,6 +13,8 @@ export const app = {
   currencies: {},
   iconCache: {},
   mathScope: new Map(),
+  scopeProperties: {},
+  scopeTypes: {},
   plotFunction: null,
   plotSettings: null,
   refreshCM: true,
@@ -168,7 +170,7 @@ export function initAppUpdate() {
   if (!isElectron) return
 
   const updateStatusMessage = (message) => {
-    dom.dialogAboutUpdateStatus.innerHTML = message
+    dom.dialogAboutUpdateStatus.textContent = message
   }
 
   numara.updateStatus((status, version, progress) => {
