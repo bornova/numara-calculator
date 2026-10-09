@@ -13,6 +13,8 @@ export const app = {
   settings: {},
   currencies: {},
   mathScope: new Map(),
+  scopeProperties: {},
+  scopeTypes: {},
   udfList: [],
   uduList: []
 }
@@ -23,6 +25,13 @@ const isAlphaOriginal = math.parse.isAlpha
 const universalRegex = /[\p{L}\p{M}]/u
 
 math.parse.isAlpha = (c, cPrev, cNext) => isAlphaOriginal(c, cPrev, cNext) || universalRegex.test(c)
+
+math.import(
+  {
+    page: () => ({})
+  },
+  { override: true }
+)
 
 export function getAppLocale() {
   return coreGetAppLocale(app.settings)
@@ -270,6 +279,9 @@ export function formatCurrency(str) {
 
 export function formatAnswer(answer, useGrouping) {
   if (typeof answer === 'string') return stripAnswer(answer)
+  if (answer && typeof answer === 'object' && answer._pageId && typeof answer.format === 'function') {
+    return answer.format()
+  }
 
   const notation = app.settings.notation
   const lowerExp = +app.settings.expLower
