@@ -8,7 +8,7 @@ import { initializeSettingsTooltips } from './ui/settingsTips'
 import { generateIcons } from './ui/icons'
 import { numaraKeys } from './editor/keybindings.js'
 import { modal, notify, showError } from './ui/dialogs'
-import { getPageName, initializePages, pageOrder, populatePages, setupSideBar } from './ui/pageManager'
+import { getPageName, initializePages, loadPage, pageOrder, populatePages, setupSideBar } from './ui/pageManager'
 import { plot } from './ui/functionPlot'
 import { applyAnswerPositionLayout, settings } from './ui/settings'
 import { applyUdfu } from './calc/userDefined'
@@ -73,9 +73,20 @@ const setupAppButtons = () => {
  */
 const setupResultActions = () => {
   document.addEventListener('click', (event) => {
+    const pageEl = event.target.closest('[data-page-id]')
     const answerEl = event.target.closest('[data-answer]')
     const errorEl = event.target.closest('[data-error]')
     const plotEl = event.target.closest('[data-plot]')
+
+    if (pageEl) {
+      const pageId = pageEl.getAttribute('data-page-id')
+
+      if (pageId) {
+        loadPage(pageId)
+      }
+
+      return
+    }
 
     if (plotEl) {
       const func = plotEl.getAttribute('data-plot')
@@ -540,7 +551,7 @@ const setupUIkitUtils = () => {
     const triggerEl = document.querySelector(`[aria-describedby="${tooltipEl.id}"]`)
     const answerEl = triggerEl ? triggerEl.closest('.answer') : null
 
-    if (answerEl && answerEl.offsetWidth < dom.output.clientWidth - 8) {
+    if (answerEl && !answerEl.classList.contains('pageLink') && answerEl.offsetWidth < dom.output.clientWidth - 8) {
       event.preventDefault()
     }
   })
