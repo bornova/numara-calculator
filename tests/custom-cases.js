@@ -152,5 +152,16 @@ export const customCases = [
     name: 'Regression: Issue #279 (Unit values floor/ceil/abs)',
     expressions: ['C1 = 1000.5 W', 'floor(C1 / 1 W)', 'ceil(C1 / 1 W)', 'abs(C1)'],
     expected: ['1.0005 kW', '1000', '1001', '1.0005 kW']
+  },
+  {
+    name: 'Regression: Keyword Variable Collisions',
+    expressions: ['total_amount = 500', 'subtotal_count = 100', 'total'],
+    expected: ['500', '100', '600']
+  },
+  {
+    name: 'Regression: Cross-Page Today/Now Scope',
+    pages: [{ id: 'page-dates', name: 'Dates', data: 'd = today + 2 days' }],
+    expressions: ['p = page("Dates")', 'p.d'],
+    expected: ['Dates', /\d{1,2}\/\d{1,2}\/\d{4}/]
   }
 ]
