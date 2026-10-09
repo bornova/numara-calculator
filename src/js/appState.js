@@ -170,7 +170,7 @@ export function initAppUpdate() {
   if (!isElectron) return
 
   const updateStatusMessage = (message) => {
-    dom.dialogAboutUpdateStatus.innerHTML = message
+    dom.dialogAboutUpdateStatus.textContent = message
   }
 
   numara.updateStatus((status, version, progress) => {
