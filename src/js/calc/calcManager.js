@@ -340,7 +340,7 @@ export function renderAnswersToHTML(answers) {
     if (app.settings.truncateAnswers && result && result.includes('class="answer"') && !result.includes('uk-tooltip')) {
       const tooltipText = result.replace(/<[^>]*>/g, '').replace(/"/g, '&quot;')
 
-      displayResult = result.replace('class="answer"', `class="answer" uk-tooltip="title: ${tooltipText}"`)
+      displayResult = result.replace('class="answer"', `class="answer" title="${tooltipText}" uk-tooltip`)
     }
 
     outputAnswers.push(`<div class="${classRuler}" data-index="${lineIndex}">${displayResult}</div>`)
@@ -579,16 +579,6 @@ export function calculate() {
     lines.push(cm.getLine(i))
   }
 
-  if (!app.timedOutLines) {
-    app.timedOutLines = new Map()
-  }
-
-  for (const [idx, text] of app.timedOutLines.entries()) {
-    if (idx >= totalLines || lines[idx] !== text) {
-      app.timedOutLines.delete(idx)
-    }
-  }
-
   let sharedBuffer = null
 
   if (typeof SharedArrayBuffer !== 'undefined') {
@@ -647,8 +637,7 @@ export function calculate() {
       currencies: app.currencies,
       udf: store.get('udf') ?? '',
       udu: store.get('udu') ?? '',
-      sharedBuffer,
-      timedOutLines: Array.from(app.timedOutLines.keys())
+      sharedBuffer
     }
   })
 }
