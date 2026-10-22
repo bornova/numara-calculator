@@ -1,6 +1,6 @@
 import { dom } from '../dom'
 import { cm, numaraHints, refreshCurrencyTokens } from '../editor'
-import { calculate, math, refreshCurrencyState } from './calcManager'
+import { calculate, clearEvaluationCache, math, refreshCurrencyState } from './calcManager'
 import { notify } from '../ui/dialogs'
 import { app, store } from '../appState'
 
@@ -193,6 +193,7 @@ export async function getRates(isManual = false) {
 
     cm.setOption('mode', app.settings.syntax ? 'numara' : 'plain')
 
+    clearEvaluationCache()
     calculate()
   } catch (error) {
     if (dom.lastUpdated) {
