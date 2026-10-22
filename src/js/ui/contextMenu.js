@@ -2,6 +2,7 @@ import { dom } from '../dom'
 import { cm, udfInput, uduInput } from '../editor'
 import { notify } from './dialogs'
 import { isElectron } from '../appState'
+import { escapeHTML } from '../core/utils.js'
 
 /**
  * Helper to safely copy text to clipboard and show notification.
@@ -66,17 +67,6 @@ function copyLine(index) {
 }
 
 /**
- * Creates a temporary DOM element to safely resolve text content to escaped HTML tags.
- * @param {string} text The input text to escape.
- * @returns {string} The HTML-safe representation of the text.
- */
-export function safeCopyText(text) {
-  const safeDiv = document.createElement('div')
-  safeDiv.textContent = text
-  return safeDiv.innerHTML
-}
-
-/**
  * Copy line answer.
  * @param {number} lineIndex The index of the line.
  * @param {boolean} withLines Whether to include the line in the copied text.
@@ -87,7 +77,7 @@ function copyAnswer(lineIndex, withLines) {
   const line = cm.getLine(lineIndex).trim()
   const answer = dom.el(`[data-index="${lineIndex}"]`)?.firstChild?.dataset.answer
   const copiedText = withLines ? `${line} = ${answer}` : `${answer}`
-  const safeText = safeCopyText(copiedText)
+  const safeText = escapeHTML(copiedText)
 
   copyToClipboard(
     copiedText,
@@ -103,6 +93,21 @@ function copyAllLines() {
 }
 
 /**
+ * Extracts the copyable answer text from an output line element, respecting copyThouSep.
+ * @param {Element} el The output element with data-index.
+ * @returns {string} The copyable answer string.
+ */
+function getLineAnswerText(el) {
+  const answerEl = el.querySelector('[data-answer]')
+  if (answerEl) return answerEl.dataset.answer ?? ''
+
+  const plotEl = el.querySelector('[data-plot]')
+  if (plotEl) return plotEl.dataset.plot ?? ''
+
+  return el.textContent?.trim() ?? ''
+}
+
+/**
  * Copy all answers.
  */
 function copyAllAnswers() {
@@ -112,7 +117,7 @@ function copyAllAnswers() {
   const answersMap = {}
 
   document.querySelectorAll('[data-index]').forEach((el) => {
-    answersMap[el.getAttribute('data-index')] = el.textContent ?? ''
+    answersMap[el.getAttribute('data-index')] = getLineAnswerText(el)
   })
 
   let lineIdx = 0
@@ -135,7 +140,7 @@ export function copyAll() {
   const answersMap = {}
 
   document.querySelectorAll('[data-index]').forEach((el) => {
-    answersMap[el.getAttribute('data-index')] = el.textContent ?? ''
+    answersMap[el.getAttribute('data-index')] = getLineAnswerText(el)
   })
 
   let lineIdx = 0
