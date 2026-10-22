@@ -50,7 +50,7 @@ export const customCases = [
       '1/1/2026 + 1 decade',
       '1/1/2026 + 1 century'
     ],
-    expected: ['2/1/2026', '30/12/2025', '8/1/2026', '1/12/2025', '1/1/2027', '1/1/2036', '2/1/2126']
+    expected: ['2/1/2026', '30/12/2025', '8/1/2026', '1/12/2025', '1/1/2027', '1/1/2036', '1/1/2126']
   },
   {
     name: 'Date/Time Arithmetic with Day of Week Prefix',
@@ -163,5 +163,35 @@ export const customCases = [
     pages: [{ id: 'page-dates', name: 'Dates', data: 'd = today + 2 days' }],
     expressions: ['p = page("Dates")', 'p.d'],
     expected: ['Dates', /\d{1,2}\/\d{1,2}\/\d{4}/]
+  },
+  {
+    name: 'Regression: Comma Locale With inputLocale Disabled',
+    settings: {
+      inputLocale: false,
+      thouSep: 'comma'
+    },
+    expressions: ['1.25 + 2.5', 'pow(2,3)', 'sum(1,2,3)'],
+    expected: ['3,75', '8', '6']
+  },
+  {
+    name: 'Regression: Single-Letter Unit/Constant Line Labels',
+    expressions: ['m: 100', 's: 20', 'e: 10% of 50', 'total'],
+    expected: ['100', '20', '5', '125']
+  },
+  {
+    name: 'Regression: Line Continuation Stops on Comments',
+    settings: {
+      contPrevLine: true
+    },
+    expressions: ['10', '// comment line', '+5'],
+    expected: ['10', '', '5']
+  },
+  {
+    name: 'Regression: Exact Calendar Month Date Arithmetic',
+    settings: {
+      dateFormat: 'd/M/yyyy'
+    },
+    expressions: ['1/3/2026 - 1 month', '1/1/2026 12:30 + 1 day'],
+    expected: ['1/2/2026', /2\/1\/2026/]
   }
 ]
