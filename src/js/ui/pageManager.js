@@ -68,7 +68,8 @@ function setupSideBarResizer() {
       document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseup', onMouseUp)
 
-      calculate()
+      cm.refresh()
+      syncOutputHeights()
     }
 
     document.addEventListener('mousemove', onMouseMove)
@@ -80,7 +81,8 @@ function setupSideBarResizer() {
 
     store.set('sideBarWidth', SIDEBAR_DEFAULT_WIDTH)
 
-    calculate()
+    cm.refresh()
+    syncOutputHeights()
   })
 }
 
@@ -321,7 +323,7 @@ export function duplicatePage(pageId) {
   let dupPageName = baseName
   let count = 1
 
-  while (pages.some((p) => p.name === dupPageName)) {
+  while (pages.some((p) => getSafeFilename(p.name) === getSafeFilename(dupPageName))) {
     dupPageName = `${baseName} (${count++})`
   }
 
@@ -354,9 +356,10 @@ export function deletePage(pageId) {
       defaultPage()
     } else if (pageId === app.activePage) {
       loadPage(pages[pages.length - 1].id)
+    } else {
+      populatePages()
     }
 
-    populatePages()
     syncPageDelete(pageName)
   })
 }
@@ -372,7 +375,6 @@ export function deleteAllPages() {
     store.set('pages', [])
 
     defaultPage()
-    populatePages()
   })
 }
 
@@ -519,8 +521,6 @@ export function initializePages() {
   } else {
     defaultPage()
   }
-
-  populatePages()
 }
 
 /**
@@ -540,14 +540,12 @@ export function populatePages() {
     const pageListItem = document.createElement('div')
 
     pageListItem.id = page.id
-    pageListItem.classList.add(
-      'pageListItem',
-      'uk-flex',
-      'uk-flex-middle',
-      app.activePage === page.id ? 'activePage' : 'inactivePage'
-    )
+    pageListItem.classList.add('pageListItem', 'uk-flex', 'uk-flex-middle')
+    if (app.activePage === page.id) {
+      pageListItem.classList.add('activePage')
+    }
     pageListItem.innerHTML = `
-      <div class="sortHandle uk-flex-1" data-action="load" data-page="${page.id}">
+      <div class="uk-flex-1" data-action="load" data-page="${page.id}">
         <div class="pageListItemTitle" title="${escapeHTML(page.name)}">${escapeHTML(page.name)}</div>
         <div class="dialog-open-date">${DateTime.fromFormat(page.id, 'yyyyMMddHHmmssSSS').toFormat('FF')}</div>
       </div>
@@ -695,7 +693,7 @@ if (isElectron) {
     const page = pages.find((p) => p.id === app.activePage)
 
     if (page) {
-      numara.exportPage(page.name, page.data)
+      numara.exportPage(getSafeFilename(page.name), page.data)
     }
   })
 
@@ -747,7 +745,7 @@ document.addEventListener('click', (event) => {
           const pages = store.get('pages')
           const page = pages.find((page) => page.id === pageId)
 
-          numara.exportPage(page.name, page.data)
+          numara.exportPage(getSafeFilename(page.name), page.data)
           UIkit.dropdown(event.target.parentNode).hide(0)
         }
     }
