@@ -1,6 +1,6 @@
 import { dom } from '../dom'
 import { refreshEditor, udfInput, uduInput } from '../editor'
-import { calculate, math } from './calcManager'
+import { calculate, clearEvaluationCache, math } from './calcManager'
 import { modal, showError } from '../ui/dialogs'
 import { app, store } from '../appState'
 import { applyUdfuToMath } from '../core/udfu'
@@ -41,6 +41,7 @@ function saveUserDefined(input, type) {
   try {
     applyUdfu(input.getValue().trim(), type)
 
+    clearEvaluationCache()
     refreshEditor()
     calculate()
 
