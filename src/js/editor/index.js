@@ -643,7 +643,7 @@ cm.on('inputRead', (cm) => {
 
 let previousActiveLine = -1
 
-const debouncedSaveCursor = debounce(() => {
+export const debouncedSaveCursor = debounce(() => {
   const pages = store.get('pages')
   const page = pages?.find((page) => page.id === app.activePage)
 
@@ -666,7 +666,9 @@ cm.on('cursorActivity', (cm) => {
 
   setTimeout(cmForceBottom, 20)
 
-  debouncedSaveCursor()
+  if (!app.loadingPage) {
+    debouncedSaveCursor()
+  }
 })
 
 cm.on('gutterClick', (cm, line, gutter) => {

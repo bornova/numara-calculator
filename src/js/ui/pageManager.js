@@ -1,5 +1,5 @@
 import { dom } from '../dom'
-import { cm } from '../editor'
+import { cm, debouncedSaveCursor } from '../editor'
 import { calculate, renderAnswersToHTML, syncOutputHeights } from '../calc/calcManager'
 import { confirm, modal, notify } from './dialogs'
 import { app, checkSize, isElectron, store } from '../appState'
@@ -429,6 +429,10 @@ export function renamePage(pageId) {
  * @param {string} pageId Id of the page to load.
  */
 export function loadPage(pageId) {
+  if (app.activePage && app.activePage !== pageId) {
+    debouncedSaveCursor.flush()
+  }
+
   const page = store.get('pages').find((p) => p.id === pageId)
 
   if (!page) {
@@ -463,6 +467,12 @@ export function loadPage(pageId) {
     }
   }
 
+  if (cursor) {
+    cm.setCursor(cursor)
+  } else {
+    cm.execCommand('goDocEnd')
+  }
+
   app.loadingPage = false
 
   if (answers && answers.length > 0 && app.settings.answerPosition !== 'bottom') {
@@ -470,22 +480,20 @@ export function loadPage(pageId) {
   }
 
   calculate()
-
-  cm.execCommand('goLineEnd')
-
-  if (cursor) {
-    cm.setCursor(cursor)
-
-    setTimeout(() => {
-      try {
-        cm.scrollIntoView({ ch: cursor.ch, line: cursor.line + 1 })
-      } catch {
-        cm.scrollIntoView(cursor)
-      }
-    }, 100)
-  }
-
   populatePages()
+  cm.focus()
+
+  const targetCursor = cm.getCursor()
+
+  setTimeout(() => {
+    try {
+      cm.scrollIntoView({ ch: targetCursor.ch, line: targetCursor.line + 1 })
+    } catch {
+      cm.scrollIntoView(targetCursor)
+    }
+
+    cm.focus()
+  }, 100)
 }
 
 /**
@@ -911,11 +919,11 @@ document.addEventListener('click', (event) => {
   if (loadButton) {
     const pageId = loadButton.dataset.page
 
-    loadPage(pageId)
-
     if (!app.sidebarDocked) {
       UIkit.offcanvas('#sideBar').hide()
     }
+
+    loadPage(pageId)
 
     return
   }

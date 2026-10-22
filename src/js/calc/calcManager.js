@@ -449,6 +449,7 @@ function applyCalculationResults(answers, errorLines) {
         page.history = cmHistory
         page.folds = folds
         page.answers = answers
+        page.cursor = cm.getCursor()
         store.set('pages', pages)
         syncPageSaveDebounced(page.name, cmValue)
       }
