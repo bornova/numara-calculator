@@ -25,6 +25,34 @@ export const app = {
   widgetMap: new WeakMap()
 }
 
+let cachedConsolidatedRaw = null
+let cachedConsolidatedObj = null
+
+function getConsolidatedStore() {
+  const raw = localStorage.getItem('numara')
+
+  if (!raw) {
+    cachedConsolidatedRaw = null
+    cachedConsolidatedObj = null
+    return null
+  }
+
+  if (raw !== cachedConsolidatedRaw || !cachedConsolidatedObj) {
+    cachedConsolidatedRaw = raw
+    cachedConsolidatedObj = JSON.parse(raw)
+  }
+
+  return cachedConsolidatedObj
+}
+
+function saveConsolidatedStore(obj) {
+  const raw = JSON.stringify(obj)
+
+  cachedConsolidatedRaw = raw
+  cachedConsolidatedObj = obj
+  localStorage.setItem('numara', raw)
+}
+
 /** Local storage utility. */
 export const store = {
   /**
@@ -34,14 +62,12 @@ export const store = {
    */
   get: (key) => {
     try {
-      const consolidated = localStorage.getItem('numara')
+      const obj = getConsolidatedStore()
 
-      if (consolidated) {
-        const obj = JSON.parse(consolidated)
+      if (obj && obj[key] !== undefined) {
+        const val = obj[key]
 
-        if (obj[key] !== undefined) {
-          return obj[key]
-        }
+        return val !== null && typeof val === 'object' ? structuredClone(val) : val
       }
 
       const rootItem = localStorage.getItem(key)
@@ -70,11 +96,10 @@ export const store = {
    */
   set: (key, value) => {
     try {
-      const consolidated = localStorage.getItem('numara')
-      const obj = consolidated ? JSON.parse(consolidated) : {}
+      const obj = getConsolidatedStore() || {}
 
-      obj[key] = value
-      localStorage.setItem('numara', JSON.stringify(obj))
+      obj[key] = value !== null && typeof value === 'object' ? structuredClone(value) : value
+      saveConsolidatedStore(obj)
     } catch (error) {
       console.error(`Error writing key "${key}" to local storage:`, error)
     }
@@ -88,13 +113,11 @@ export const store = {
     try {
       localStorage.removeItem(key)
 
-      const consolidated = localStorage.getItem('numara')
+      const obj = getConsolidatedStore()
 
-      if (consolidated) {
-        const obj = JSON.parse(consolidated)
-
+      if (obj) {
         delete obj[key]
-        localStorage.setItem('numara', JSON.stringify(obj))
+        saveConsolidatedStore(obj)
       }
     } catch (error) {
       console.error(`Error removing key "${key}" from local storage:`, error)
@@ -195,7 +218,7 @@ export function initAppUpdate() {
         updateStatusMessage(notice)
 
         dom.updateButton.style.display = 'inline-block'
-        dom.updateButton.addEventListener('click', () => numara.updateApp(), { once: true })
+        dom.updateButton.onclick = () => numara.updateApp()
         break
       }
       case 'error':
