@@ -2,7 +2,7 @@ import { dom } from '../dom'
 import { calculate, math, syncOutputHeights } from '../calc/calcManager'
 import { showError } from '../ui/dialogs'
 import { app, debounce, store, isMobile } from '../appState'
-import { escapeRegExp } from '../core/utils.js'
+import { escapeHTML, escapeRegExp } from '../core/utils.js'
 
 import CodeMirror from 'codemirror'
 
@@ -157,7 +157,12 @@ CodeMirror.defineMode('numara', () => ({
         if (currencyTokens.has(cmStream)) style = 'currency'
         else if (/\bline\d+\b/.test(cmStream)) style = 'lineNo'
         else if (keywordTokens.has(cmStream)) style = 'keyword'
-        else if (app.mathScope.has(cmStream) && typeof app.mathScope.get(cmStream) !== 'function') style = 'variable'
+        else if (
+          app.mathScope.has(cmStream) &&
+          typeof app.mathScope.get(cmStream) !== 'function' &&
+          app.scopeTypes?.[cmStream] !== 'function'
+        )
+          style = 'variable'
         else if (math.Unit.UNITS[cmStream]?.base.key === 'USD_STUFF') style = 'currency'
         else if (functionTokens.has(cmStream) || dateTimeMethodsSet.has(cmStream)) style = 'function'
         else if (constantTokens.has(cmStream)) style = 'constant'
@@ -323,7 +328,7 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
               className: CLASS_NAMES.VARIABLE,
               desc: `${baseVar}.${prop}`,
               render: (el) => {
-                el.innerHTML = `<span class="cm-variable">${baseVar}</span>.<span class="cm-variable">${prop}</span>`
+                el.innerHTML = `<span class="cm-variable">${escapeHTML(baseVar)}</span>.<span class="cm-variable">${escapeHTML(prop)}</span>`
               }
             }))
         } else if (
@@ -339,7 +344,7 @@ CodeMirror.registerHelper('hint', 'numaraHints', (editor) => {
               className: CLASS_NAMES.DATETIME,
               desc: `DateTime.${m} instance method`,
               render: (el) => {
-                el.innerHTML = `<span class="cm-variable">${baseVar}</span>.<span class="cm-function">${m}</span>`
+                el.innerHTML = `<span class="cm-variable">${escapeHTML(baseVar)}</span>.<span class="cm-function">${escapeHTML(m)}</span>`
               }
             }))
         } else {
@@ -640,6 +645,17 @@ cm.on('inputRead', (cm) => {
 
 let previousActiveLine = -1
 
+const debouncedSaveCursor = debounce(() => {
+  const pages = store.get('pages')
+  const page = pages?.find((page) => page.id === app.activePage)
+
+  if (!page) return
+
+  page.cursor = cm.getCursor()
+
+  store.set('pages', pages)
+}, 200)
+
 cm.on('cursorActivity', (cm) => {
   const activeLine = cm.getCursor().line
 
@@ -652,14 +668,7 @@ cm.on('cursorActivity', (cm) => {
 
   setTimeout(cmForceBottom, 20)
 
-  const pages = store.get('pages')
-  const page = pages.find((page) => page.id === app.activePage)
-
-  if (!page) return
-
-  page.cursor = cm.getCursor()
-
-  store.set('pages', pages)
+  debouncedSaveCursor()
 })
 
 cm.on('gutterClick', (cm, line, gutter) => {
