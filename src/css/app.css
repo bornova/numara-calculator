@@ -198,10 +198,6 @@ text {
   height: 8px;
 }
 
-.lineNo {
-  color: light-dark(#c8c8c8, #616161);
-}
-
 .activeLine > div {
   color: light-dark(#7a7a7a, #bebebe);
 }
@@ -352,18 +348,11 @@ text {
   height: 25px;
 }
 
-.action,
-.noAction,
-.noAction:hover {
+.action {
+  cursor: pointer;
   color: light-dark(#607d8b, #7b9dc5);
 }
 
-.action,
-.noAction {
-  cursor: pointer;
-}
-
-.noAction,
 .action[disabled='true'] {
   opacity: 0.4;
   cursor: default;
@@ -517,11 +506,6 @@ text {
   color: light-dark(#444444, #e6e6e6);
 }
 
-.pageListItemDrag {
-  border: 1px solid light-dark(#eaeaea, #181818);
-  background-color: light-dark(#ffffff, #222222);
-}
-
 .pageListItem:hover,
 .activePage {
   background-color: light-dark(#f4f6f8, #333333);
@@ -614,15 +598,7 @@ text {
   color: light-dark(#b10e0e, #d41111) !important;
 }
 
-.exportPageButton {
-  padding: 5px 10px;
-}
-
 /* Dialogs */
-
-.dialogs {
-  display: none;
-}
 
 .dialog-buttons {
   display: flex;
@@ -670,7 +646,8 @@ text {
   overflow-y: auto;
 }
 
-.dialog-settings-body > li > div {
+.dialog-settings-body > li > div,
+.dialog-plot-settings-body > div:not(.domainParent) {
   margin: 10px 0 0 0;
   line-height: 16px;
 }
@@ -706,10 +683,6 @@ text {
 
 #currencyInterval {
   width: 125px;
-}
-
-#dialogSettings .uk-overflow-auto {
-  padding-right: 10px;
 }
 
 #dialogSettings h3 {
@@ -914,15 +887,6 @@ div:has(> #logsLink) {
   margin: 15px 0;
 }
 
-/* Messages */
-
-.msg {
-  opacity: 0;
-  transition:
-    visibility 0.3s linear,
-    opacity 0.3s linear;
-}
-
 .pr-lh {
   line-height: 22px;
 }
@@ -952,7 +916,7 @@ div:has(> #logsLink) {
   display: grid;
   grid-template-rows: repeat(4, 1fr);
   grid-template-columns: repeat(4, 1fr);
-  margin: auto;
+  margin: 10px auto 0 auto;
   width: 250px;
 }
 
