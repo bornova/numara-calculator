@@ -262,7 +262,7 @@ export const settings = {
   },
 
   /** Apply settings. */
-  apply: async () => {
+  apply: async (shouldCalculate = true) => {
     clearEvaluationCache()
 
     const appTheme = await getTheme()
@@ -358,8 +358,11 @@ export const settings = {
       }
     }
 
-    setupSideBar()
-    calculate()
+    setupSideBar(true)
+
+    if (shouldCalculate) {
+      calculate()
+    }
   },
 
   /** Save settings to local storage. */
