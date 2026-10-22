@@ -14,17 +14,17 @@ self.onmessage = (event) => {
       applyUdfu(false, udu)
     }
   } else if (type === 'calculate') {
-    const { taskId, activePage, lines, pages, settings, currencies, udf, udu, sharedBuffer, timedOutLines } = payload
-
-    if (typeof udf === 'string') {
-      applyUdfu(true, udf)
-    }
-
-    if (typeof udu === 'string') {
-      applyUdfu(false, udu)
-    }
+    const { taskId, activePage, lines, pages, settings, currencies, udf, udu, sharedBuffer } = payload
 
     try {
+      if (typeof udf === 'string') {
+        applyUdfu(true, udf)
+      }
+
+      if (typeof udu === 'string') {
+        applyUdfu(false, udu)
+      }
+
       const result = runCalculation({
         activePage,
         lines,
@@ -32,7 +32,6 @@ self.onmessage = (event) => {
         settings,
         currencies,
         sharedBuffer,
-        timedOutLines,
         onLineStart: (lineIndex) => {
           self.postMessage({
             type: 'lineStart',
