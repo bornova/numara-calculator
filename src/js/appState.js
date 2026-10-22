@@ -1,9 +1,5 @@
 import { dom } from './dom'
-import {
-  getAppLocale as coreGetAppLocale,
-  getSystemLocale as coreGetSystemLocale,
-  localeUsesComma as coreLocaleUsesComma
-} from './core/utils.js'
+import { getAppLocale as coreGetAppLocale, getSystemLocale as coreGetSystemLocale } from './core/utils.js'
 
 /** App globals. */
 export const app = {
@@ -183,11 +179,6 @@ export function getSystemLocale(settings = app.settings) {
   return coreGetSystemLocale(settings)
 }
 
-/** Check user locale for decimal separator. */
-export function localeUsesComma(settings = app.settings) {
-  return coreLocaleUsesComma(settings)
-}
-
 /** Initialize app update listener */
 export function initAppUpdate() {
   if (!isElectron) return
@@ -243,18 +234,29 @@ export function checkAppUpdate() {
  * @returns {Function} The debounced function
  */
 export function debounce(func, wait) {
-  let timeout
+  let timeout = null
   const debounced = function (...args) {
     const context = this
 
     clearTimeout(timeout)
-    timeout = setTimeout(() => func.apply(context, args), wait)
+    timeout = setTimeout(() => {
+      timeout = null
+      func.apply(context, args)
+    }, wait)
   }
 
   debounced.flush = function () {
     if (timeout) {
       clearTimeout(timeout)
+      timeout = null
       func()
+    }
+  }
+
+  debounced.cancel = function () {
+    if (timeout) {
+      clearTimeout(timeout)
+      timeout = null
     }
   }
 
