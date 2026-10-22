@@ -68,10 +68,12 @@ export const keywords = [
   { text: 'total', desc: 'Total of previous line values' }
 ]
 
+const allUnits = units()
+
 // Mode tokens
 const functionTokens = new Set(mathFunctions.map(([f]) => f))
 const constantTokens = new Set(mathConstants.map(([c]) => c))
-const unitTokens = new Set(units().map((u) => u.token))
+const unitTokens = new Set(allUnits.map((u) => u.token))
 const keywordTokens = new Set(keywords.map((key) => key.text))
 const excelTokens = new Set(Object.keys(formulajs).map((f) => 'formulajs.' + f))
 
@@ -201,7 +203,7 @@ const constantHints = mathConstants.map(([c]) => ({
   desc: math.help(c).doc.description,
   className: CLASS_NAMES.CONSTANT
 }))
-const unitHints = units().map((u) => u.hint)
+const unitHints = allUnits.map((u) => u.hint)
 const keywordHints = keywords.map((key) => ({ ...key, className: CLASS_NAMES.KEYWORD }))
 const excelHints = [...excelTokens].map((f) => ({ text: f, className: CLASS_NAMES.EXCEL }))
 
@@ -529,12 +531,6 @@ export const cm = CodeMirror.fromTextArea(dom.inputArea, {
   viewportMargin: Infinity
 })
 
-cm.getInputField().setAttribute('id', 'inputAreaCodeMirror')
-cm.getInputField().setAttribute('name', 'inputAreaCodeMirror')
-cm.getInputField().setAttribute('autocorrect', 'off')
-cm.getInputField().setAttribute('autocapitalize', 'off')
-cm.getInputField().setAttribute('spellcheck', 'false')
-
 const udOptions = { autoCloseBrackets: true, autofocus: true, mode: 'javascript', smartIndent: false, tabSize: 2 }
 
 // Set the placeholder values of the user defined dialog CodeMirror instances
@@ -547,17 +543,18 @@ dom.uduInput.setAttribute('placeholder', uduPlaceholder)
 export const udfInput = CodeMirror.fromTextArea(dom.udfInput, udOptions)
 export const uduInput = CodeMirror.fromTextArea(dom.uduInput, udOptions)
 
-udfInput.getInputField().setAttribute('id', 'udfInputCodeMirror')
-udfInput.getInputField().setAttribute('name', 'udfInputCodeMirror')
-udfInput.getInputField().setAttribute('autocorrect', 'off')
-udfInput.getInputField().setAttribute('autocapitalize', 'off')
-udfInput.getInputField().setAttribute('spellcheck', 'false')
-
-uduInput.getInputField().setAttribute('id', 'uduInputCodeMirror')
-uduInput.getInputField().setAttribute('name', 'uduInputCodeMirror')
-uduInput.getInputField().setAttribute('autocorrect', 'off')
-uduInput.getInputField().setAttribute('autocapitalize', 'off')
-uduInput.getInputField().setAttribute('spellcheck', 'false')
+for (const [editor, id] of [
+  [cm, 'inputAreaCodeMirror'],
+  [udfInput, 'udfInputCodeMirror'],
+  [uduInput, 'uduInputCodeMirror']
+]) {
+  const field = editor.getInputField()
+  field.setAttribute('id', id)
+  field.setAttribute('name', id)
+  field.setAttribute('autocorrect', 'off')
+  field.setAttribute('autocapitalize', 'off')
+  field.setAttribute('spellcheck', 'false')
+}
 
 export const debouncedCalculate = debounce(calculate, 100)
 
@@ -575,7 +572,7 @@ cm.on('changes', (cm, changes) => {
   )
 
   if (hasNewLine) {
-    debouncedCalculate.flush()
+    debouncedCalculate.cancel()
     calculate()
   } else {
     debouncedCalculate()
@@ -590,6 +587,7 @@ cm.on('changes', (cm, changes) => {
  */
 function toggleFoldedOutputs(fromLine, toLine, isFolded) {
   const hasLineWidget = app.settings.answerPosition === 'bottom'
+  const outputChildren = dom.output.firstElementChild?.children
 
   for (let i = fromLine + 1; i <= toLine; i++) {
     if (hasLineWidget) {
@@ -608,7 +606,7 @@ function toggleFoldedOutputs(fromLine, toLine, isFolded) {
         }
       }
     } else {
-      const el = dom.el(`[data-index="${i}"]`)
+      const el = outputChildren?.[i] || dom.el(`[data-index="${i}"]`)
 
       if (el) {
         el.style.display = isFolded ? 'none' : ''
