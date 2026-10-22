@@ -158,7 +158,7 @@ function handleVariableTooltip(target) {
   const text = target.textContent
   const val = app.mathScope.get(text)
 
-  if (!val || typeof val === 'function') return
+  if (!val || typeof val === 'function' || app.scopeTypes?.[text] === 'function') return
 
   let varTooltip = formatAnswer(val ?? 'Undefined')
 
@@ -170,8 +170,10 @@ function handleVariableTooltip(target) {
  * @param {HTMLElement} target The DOM element representing the line number.
  */
 function handleLineNoTooltip(target) {
-  const val = app.mathScope.get(target.textContent)
-  let tooltip = typeof val === 'function' ? 'Function' : formatAnswer(val ?? 'Undefined')
+  const text = target.textContent
+  const val = app.mathScope.get(text)
+  let tooltip =
+    typeof val === 'function' || app.scopeTypes?.[text] === 'function' ? 'Function' : formatAnswer(val ?? 'Undefined')
 
   showTooltip(target, tooltip)
 }
