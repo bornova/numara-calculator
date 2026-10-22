@@ -186,17 +186,6 @@ function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
       // Since arguments inside functions also use comma or semicolon depending on separator setting,
       // mapping semicolon to comma lets the parser interpret arguments uniformly (e.g., sum(1;3) -> sum(1,3))
       line = line.replace(/;/g, ',')
-    } else if (usesComma) {
-      // inputLocale is false, but the locale uses comma as decimal separator.
-      // So commas must be parsed as decimals, and periods should not be treated as decimals (cause error).
-      line = line.replace(/\b\d+(?:[.,]\d+)+\b/g, (numToken) => {
-        const commas = (numToken.match(/,/g) || []).length
-        const periods = (numToken.match(/\./g) || []).length
-
-        if (commas === 1 && periods === 0) return numToken.replace(/,/g, '.')
-
-        return numToken.replace(/[.,]/g, ' ')
-      })
     }
 
     if (app.settings.currency && currencySymbolsRegex) {
@@ -209,7 +198,9 @@ function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
 
     // Handle line continuation
     if (lineIndex > 0 && REGEX_CONTINUATION.test(line.charAt(0)) && app.settings.contPrevLine) {
-      if (prevLineText && prevLineText.length > 0) {
+      const prevClean = prevLineText ? stripComments(prevLineText.trim()) : ''
+
+      if (prevClean.length > 0) {
         line = (app.mathScope.get('ans') ?? '') + line
       }
     }
@@ -315,17 +306,25 @@ function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
 function altEvaluate(line, stats) {
   let parsedLine = line
 
-  if (parsedLine.includes(':')) {
-    const left = parsedLine.split(':')[0].trim()
+  const colonIndex = parsedLine.search(/:(?!\d)/)
 
-    try {
-      const val = math.evaluate(left)
+  if (colonIndex !== -1 && !parsedLine.trim().startsWith('{')) {
+    const left = parsedLine.slice(0, colonIndex).trim()
 
-      if (typeof val === 'function') {
-        throw new Error('function')
+    if (!left.includes('?') && !left.includes('"') && !left.includes("'")) {
+      try {
+        if (!app.mathScope.has(left) && /^[a-zA-Z_\p{L}][\w\p{L}\p{M}\s]*$/u.test(left)) {
+          throw new Error('label')
+        }
+
+        const val = math.evaluate(left)
+
+        if (typeof val !== 'number') {
+          throw new Error('label')
+        }
+      } catch {
+        parsedLine = parsedLine.slice(colonIndex + 1)
       }
-    } catch {
-      parsedLine = parsedLine.substring(parsedLine.indexOf(':') + 1)
     }
   }
 
@@ -383,11 +382,15 @@ function altEvaluate(line, stats) {
 
     // Lazily evaluate date formats to avoid redundant parsing operations
     const dateFormats = getDateFormatSettings()
+    const flexToday = getFlexibleFormat(dateFormats.todayFormat)
+    const flexTodayDay = getFlexibleFormat(dateFormats.todayDayFormat)
     const formats = [
       { parse: getFlexibleFormat(dateFormats.nowDayFormat), display: dateFormats.nowDayFormat },
       { parse: getFlexibleFormat(dateFormats.nowFormat), display: dateFormats.nowFormat },
-      { parse: getFlexibleFormat(dateFormats.todayDayFormat), display: dateFormats.todayDayFormat },
-      { parse: getFlexibleFormat(dateFormats.todayFormat), display: dateFormats.todayFormat }
+      { parse: `${flexTodayDay} T`, display: `${dateFormats.todayDayFormat} T` },
+      { parse: `${flexToday} T`, display: `${dateFormats.todayFormat} T` },
+      { parse: flexTodayDay, display: dateFormats.todayDayFormat },
+      { parse: flexToday, display: dateFormats.todayFormat }
     ]
 
     if (app.settings.dateFormat && app.settings.dateFormat !== 'system') {
@@ -412,8 +415,41 @@ function altEvaluate(line, stats) {
 
     if (!found) return 'Invalid Date'
 
-    const rightOfDate = String(math.evaluate(lineDateRight + ' to hours', app.mathScope))
-    const durHrs = Number(rightOfDate.split(' ')[0])
+    const termRegex =
+      /([+-])\s*(.*?)\s*(millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia)s?\b/gi
+    const remaining = lineDateRight.replace(termRegex, '').trim()
+    let updatedDt = found.dt
+
+    if (!remaining) {
+      let match
+      termRegex.lastIndex = 0
+
+      while ((match = termRegex.exec(lineDateRight)) !== null) {
+        const sign = match[1] === '-' ? -1 : 1
+        const exprStr = match[2].trim() || '1'
+        const rawUnit = match[3].toLowerCase()
+        const amount = Number(math.evaluate(exprStr, app.mathScope)) * sign
+
+        if (!Number.isFinite(amount)) {
+          throw new Error('Invalid date duration')
+        }
+
+        if (rawUnit === 'decade') {
+          updatedDt = updatedDt.plus({ years: amount * 10 })
+        } else if (rawUnit === 'century' || rawUnit === 'centuries') {
+          updatedDt = updatedDt.plus({ years: amount * 100 })
+        } else if (rawUnit === 'millennium' || rawUnit === 'millennia') {
+          updatedDt = updatedDt.plus({ years: amount * 1000 })
+        } else {
+          updatedDt = updatedDt.plus({ [rawUnit + 's']: amount })
+        }
+      }
+    } else {
+      const rightOfDate = String(math.evaluate(lineDateRight + ' to hours', app.mathScope))
+      const durHrs = Number(rightOfDate.split(' ')[0])
+
+      updatedDt = updatedDt.plus({ hours: durHrs })
+    }
 
     let outputFmt = found.fmt
 
@@ -421,7 +457,7 @@ function altEvaluate(line, stats) {
       outputFmt = 'ccc, ' + outputFmt
     }
 
-    const dtLine = found.dt.plus({ hours: durHrs }).toFormat(outputFmt)
+    const dtLine = updatedDt.toFormat(outputFmt)
 
     parsedLine = `${assignPrefix}"${dtLine}"`
   }
@@ -554,6 +590,7 @@ function loadPageScope(pageName) {
 
       if (!line) {
         localStats.runningSubtotal.length = 0
+        prevText = ''
         continue
       }
 
@@ -651,6 +688,7 @@ export function runCalculation({
   currentPages = pages
   activePageId = activePage
   loadingStack.clear()
+  pageScopeCache.clear()
   app.settings = settings
   app.currencies = currencies
 
@@ -668,9 +706,9 @@ export function runCalculation({
     // Ignore config adjustment error
   }
 
-  refreshCurrencyState()
+  const currenciesChanged = refreshCurrencyState()
 
-  if (lastActivePage !== activePage) {
+  if (currenciesChanged || lastActivePage !== activePage) {
     evaluationCache = []
     lastActivePage = activePage
   }
