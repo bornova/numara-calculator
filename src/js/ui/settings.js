@@ -473,14 +473,16 @@ dom.bigNumWarn.addEventListener('click', () => {
     'Caution: BigNumber Limitations',
     `Using the BigNumber may break function plotting and is not compatible with some math functions. 
       It may also cause unexpected behavior and affect overall performance.<br><br>
-      <a target="_blank" rel="noopener noreferrer" href="https://mathjs.org/docs/datatypes/bignumbers.html">Read more on BigNumbers</a>`
+      <a target="_blank" rel="noopener noreferrer" href="https://mathjs.org/docs/datatypes/bignumbers.html">Read more on BigNumbers</a>`,
+    true
   )
 })
 
 dom.localeWarn.addEventListener('click', () => {
   showError(
     'Caution: Enable locale on user input',
-    `This will allow inputs to contain thousands and decimal separators, per user's selected locale, which will be sanitized for the calculations. Since comma (,) is the default argument seperator, with this setting enabled, you must use semicolon (;) as argument separator in all applicable functions. Ex. sum(1;3) // 4 <br><br>Unexpected results may occur so use with caution.`
+    `This will allow inputs to contain thousands and decimal separators, per user's selected locale, which will be sanitized for the calculations. Since comma (,) is the default argument seperator, with this setting enabled, you must use semicolon (;) as argument separator in all applicable functions. Ex. sum(1;3) // 4 <br><br>Unexpected results may occur so use with caution.`,
+    true
   )
 })
 
@@ -602,7 +604,7 @@ if (isElectron) {
     numara.resetSize(560, 480, sidebarWidth)
 
     setTimeout(() => {
-      modal.show('#dialogSettings')
+      checkSize()
       modal.center('#dialogSettings')
     }, 250)
   })
