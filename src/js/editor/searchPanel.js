@@ -89,7 +89,7 @@ function selectMatch(cm, index) {
   cm.scrollIntoView({ from: match.from, to: match.to }, 50)
 }
 
-export function updateSearch(cm) {
+export function updateSearch(cm, select = true) {
   if (!panelEl) return
 
   const findInput = panelEl.querySelector('.find-input')
@@ -134,7 +134,10 @@ export function updateSearch(cm) {
 
     activeIndex = foundIndex
     panelEl.querySelector('.search-count').textContent = `${activeIndex + 1} of ${matches.length}`
-    selectMatch(cm, activeIndex)
+
+    if (select) {
+      selectMatch(cm, activeIndex)
+    }
   } else {
     activeIndex = -1
     panelEl.querySelector('.search-count').textContent = '0 of 0'
@@ -203,7 +206,7 @@ export function replaceAll(cm) {
     }
   })
 
-  updateSearch(cm)
+  updateSearch(cm, false)
 }
 
 export function toggleReplaceMode(cm, focusReplace = true) {
@@ -372,7 +375,7 @@ function createPanel(cm) {
 
   cm.on('changes', () => {
     if (isSearchPanelOpen()) {
-      updateSearch(cm)
+      updateSearch(cm, false)
     }
   })
 }
