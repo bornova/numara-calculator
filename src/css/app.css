@@ -512,6 +512,7 @@ text {
 }
 
 .pageList {
+  position: relative;
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -545,6 +546,30 @@ text {
   display: flex;
   position: relative;
   cursor: pointer;
+  user-select: none;
+}
+
+body.is-sorting-pages,
+body.is-sorting-pages * {
+  cursor: grabbing !important;
+  user-select: none !important;
+}
+
+.pageListItemDrag {
+  position: fixed !important;
+  z-index: 1050 !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+  box-shadow: 0 4px 12px light-dark(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.45));
+  border-top: 1px solid light-dark(#eaeaea, #2a2a2a);
+  border-bottom: 1px solid light-dark(#eaeaea, #2a2a2a);
+  background-color: light-dark(#f4f6f8, #333333);
+  pointer-events: none;
+}
+
+.pageListItemPlaceholder {
+  opacity: 0.3;
+  background-color: light-dark(#eef2f6, #2a2a2a) !important;
 }
 
 .pageListItem > div:first-child {
