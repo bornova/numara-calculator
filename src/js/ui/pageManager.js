@@ -687,9 +687,17 @@ if (isElectron) {
     cm.setValue(data)
     notify(msg, 'success')
   })
-  numara.importDataError((event, error) => notify(error, 'danger'))
+  numara.importDataError((error) => notify(error, 'danger'))
   numara.pageExported((msg) => notify(msg, 'success'))
-  numara.exportDataError((event, error) => notify(error, 'danger'))
+  numara.exportDataError((error) => notify(error, 'danger'))
+  numara.requestExportPage(() => {
+    const pages = store.get('pages') || []
+    const page = pages.find((p) => p.id === app.activePage)
+
+    if (page) {
+      numara.exportPage(page.name, page.data)
+    }
+  })
 
   // Print window from main
   numara.print(() => {
@@ -697,7 +705,7 @@ if (isElectron) {
     window.print()
   })
 } else {
-  dom.els('#importPageButton, #spDivider').forEach((el) => el.remove())
+  dom.els('#importPageButton').forEach((el) => el.remove())
 }
 
 dom.pageName.addEventListener('dblclick', () => {
