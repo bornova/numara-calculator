@@ -211,6 +211,10 @@ function updateLineWidget(lineHandle, answer, lineIndex, isFolded) {
   if (widget) {
     let changed = false
 
+    if (widget.node.dataset.index !== String(lineIndex)) {
+      widget.node.dataset.index = lineIndex
+    }
+
     if (widget.node.innerHTML !== answer) {
       widget.node.innerHTML = answer
       changed = true
@@ -242,26 +246,12 @@ function updateLineWidget(lineHandle, answer, lineIndex, isFolded) {
 }
 
 /**
- * Synchronizes the heights of output display items with their corresponding CodeMirror inputs.
+ * Collects folded line indices and fold ranges from the active CodeMirror instance.
+ * @returns {{ foldedLines: Set<number>, folds: Array<{ from: number, to: number }> }}
  */
-export function syncOutputHeights() {
-  if (app.settings.answerPosition === 'bottom') {
-    const newHeight = dom.el('.CodeMirror-scroll').scrollHeight - 50
-    const currentEl = dom.output.firstElementChild
-
-    if (!currentEl || currentEl.style.height !== `${newHeight}px`) {
-      dom.output.innerHTML = `<div style="height: ${newHeight}px;"></div>`
-    }
-
-    if (Math.abs(dom.output.scrollTop - dom.el('.CodeMirror-scroll').scrollTop) > 1) {
-      dom.output.scrollTop = dom.el('.CodeMirror-scroll').scrollTop
-    }
-
-    return
-  }
-
-  const totalLines = cm.lineCount()
+function getFoldedState() {
   const foldedLines = new Set()
+  const folds = []
 
   if (typeof cm !== 'undefined' && typeof cm.getAllMarks === 'function') {
     for (const mark of cm.getAllMarks()) {
@@ -269,6 +259,8 @@ export function syncOutputHeights() {
         const range = mark.find()
 
         if (range) {
+          folds.push({ from: range.from.line, to: range.to.line })
+
           for (let i = range.from.line + 1; i <= range.to.line; i++) {
             foldedLines.add(i)
           }
@@ -276,6 +268,33 @@ export function syncOutputHeights() {
       }
     }
   }
+
+  return { foldedLines, folds }
+}
+
+/**
+ * Synchronizes the heights of output display items with their corresponding CodeMirror inputs.
+ */
+export function syncOutputHeights() {
+  const cmScroll = dom.el('.CodeMirror-scroll')
+
+  if (app.settings.answerPosition === 'bottom') {
+    const newHeight = cmScroll.scrollHeight - 50
+    const currentEl = dom.output.firstElementChild
+
+    if (!currentEl || currentEl.style.height !== `${newHeight}px`) {
+      dom.output.innerHTML = `<div style="height: ${newHeight}px;"></div>`
+    }
+
+    if (Math.abs(dom.output.scrollTop - cmScroll.scrollTop) > 1) {
+      dom.output.scrollTop = cmScroll.scrollTop
+    }
+
+    return
+  }
+
+  const totalLines = cm.lineCount()
+  const { foldedLines } = getFoldedState()
 
   const visibleChildren = Array.from(cm.display.lineDiv.children)
   const lineToElementMap = new Map()
@@ -290,11 +309,12 @@ export function syncOutputHeights() {
     }
   }
 
+  const outputChildren = dom.output.firstElementChild?.children
   let visibleIndex = 0
 
   for (let i = 0; i < totalLines; i++) {
     const lineHandle = cm.getLineHandle(i)
-    const el = dom.el(`[data-index="${i}"]`)
+    const el = outputChildren?.[i] || dom.el(`[data-index="${i}"]`)
 
     if (el) {
       if (lineHandle.hidden || foldedLines.has(i)) {
@@ -317,8 +337,8 @@ export function syncOutputHeights() {
     }
   }
 
-  if (Math.abs(dom.output.scrollTop - dom.el('.CodeMirror-scroll').scrollTop) > 1) {
-    dom.output.scrollTop = dom.el('.CodeMirror-scroll').scrollTop
+  if (Math.abs(dom.output.scrollTop - cmScroll.scrollTop) > 1) {
+    dom.output.scrollTop = cmScroll.scrollTop
   }
 }
 
@@ -340,7 +360,7 @@ export function renderAnswersToHTML(answers) {
     if (app.settings.truncateAnswers && result && result.includes('class="answer"') && !result.includes('uk-tooltip')) {
       const tooltipText = result.replace(/<[^>]*>/g, '').replace(/"/g, '&quot;')
 
-      displayResult = result.replace('class="answer"', `class="answer" uk-tooltip="title: ${tooltipText}"`)
+      displayResult = result.replace('class="answer"', `class="answer" title="${tooltipText}" uk-tooltip`)
     }
 
     outputAnswers.push(`<div class="${classRuler}" data-index="${lineIndex}">${displayResult}</div>`)
@@ -382,22 +402,7 @@ function applyCalculationResults(answers, errorLines) {
     lastErrorHandles = currentErrorHandles
   })
 
-  // Find all folded lines
-  const foldedLines = new Set()
-  if (typeof cm !== 'undefined' && typeof cm.getAllMarks === 'function') {
-    for (const mark of cm.getAllMarks()) {
-      if (mark.__isFold) {
-        const range = mark.find()
-
-        if (range) {
-          for (let i = range.from.line + 1; i <= range.to.line; i++) {
-            foldedLines.add(i)
-          }
-        }
-      }
-    }
-  }
-
+  const { foldedLines, folds } = getFoldedState()
   const hasLineWidget = app.settings.answerPosition === 'bottom'
 
   if (hasLineWidget) {
@@ -422,29 +427,23 @@ function applyCalculationResults(answers, errorLines) {
     const pages = store.get('pages')
     const page = pages.find((page) => page.id === app.activePage)
 
-    const folds = []
-
-    if (typeof cm !== 'undefined' && typeof cm.getAllMarks === 'function') {
-      for (const mark of cm.getAllMarks()) {
-        if (mark.__isFold) {
-          const range = mark.find()
-
-          if (range) {
-            folds.push({ from: range.from.line, to: range.to.line })
-          }
-        }
-      }
-    }
-
-    const cmValue = cm.getValue()
-    const cmHistory = cm.getHistory()
-
     if (page) {
+      const cmValue = cm.getValue()
+      const cmHistory = cm.getHistory()
+      const answersEqual =
+        Array.isArray(page.answers) &&
+        page.answers.length === answers.length &&
+        page.answers.every((a, i) => a === answers[i])
+      const foldsEqual =
+        Array.isArray(page.folds) &&
+        page.folds.length === folds.length &&
+        page.folds.every((f, i) => f.from === folds[i].from && f.to === folds[i].to)
+
       if (
         page.data !== cmValue ||
-        JSON.stringify(page.history) !== JSON.stringify(cmHistory) ||
-        JSON.stringify(page.folds) !== JSON.stringify(folds) ||
-        JSON.stringify(page.answers) !== JSON.stringify(answers)
+        !answersEqual ||
+        !foldsEqual ||
+        JSON.stringify(page.history) !== JSON.stringify(cmHistory)
       ) {
         page.data = cmValue
         page.history = cmHistory
@@ -572,22 +571,7 @@ export function calculate() {
     }
   }
 
-  const totalLines = cm.lineCount()
-  const lines = []
-
-  for (let i = 0; i < totalLines; i++) {
-    lines.push(cm.getLine(i))
-  }
-
-  if (!app.timedOutLines) {
-    app.timedOutLines = new Map()
-  }
-
-  for (const [idx, text] of app.timedOutLines.entries()) {
-    if (idx >= totalLines || lines[idx] !== text) {
-      app.timedOutLines.delete(idx)
-    }
-  }
+  const lines = cmValue.split('\n')
 
   let sharedBuffer = null
 
@@ -631,7 +615,11 @@ export function calculate() {
   }, timeoutDuration)
 
   const w = getWorker()
-  const allPages = (store.get('pages') ?? []).map((p) => (p.id === app.activePage ? { ...p, data: cm.getValue() } : p))
+  const allPages = (store.get('pages') ?? []).map((p) => ({
+    id: p.id,
+    name: p.name,
+    data: p.id === app.activePage ? cmValue : p.data
+  }))
 
   w.postMessage({
     type: 'calculate',
@@ -647,8 +635,7 @@ export function calculate() {
       currencies: app.currencies,
       udf: store.get('udf') ?? '',
       udu: store.get('udu') ?? '',
-      sharedBuffer,
-      timedOutLines: Array.from(app.timedOutLines.keys())
+      sharedBuffer
     }
   })
 }

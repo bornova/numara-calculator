@@ -24,7 +24,6 @@ contextBridge.exposeInMainWorld('numara', {
 
   // Window controls
   isMaximized: () => ipcRenderer.invoke('isMaximized'),
-  isResized: () => ipcRenderer.invoke('isResized'),
   resetSize: (appWrapperWidth, appWrapperHeight, sidebarWidth) =>
     ipcRenderer.send('resetSize', appWrapperWidth, appWrapperHeight, sidebarWidth),
   setOnTop: (callback) => ipcRenderer.send('setOnTop', callback),
@@ -41,6 +40,7 @@ contextBridge.exposeInMainWorld('numara', {
 
   //Export
   exportPage: (pageName, pageData) => ipcRenderer.send('exportPage', pageName, pageData),
+  requestExportPage: (callback) => addIpcListener('requestExportPage', () => callback()),
   pageExported: (callback) => addIpcListener('pageExported', (event, data) => callback(data)),
   exportDataError: (callback) => addIpcListener('exportDataError', (event, error) => callback(error)),
 

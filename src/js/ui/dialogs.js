@@ -39,10 +39,16 @@ export const modal = {
  * Show error dialog.
  * @param {string} title Title of dialog box.
  * @param {string} error Error message to show.
+ * @param {boolean} [allowHtml=false] Whether to render error message as HTML.
  */
-export function showError(title, error) {
+export function showError(title, error, allowHtml = false) {
   dom.errTitle.textContent = title
-  dom.errMsg.textContent = error
+
+  if (allowHtml) {
+    dom.errMsg.innerHTML = error
+  } else {
+    dom.errMsg.textContent = error
+  }
 
   modal.show('#dialogError')
 }
@@ -54,6 +60,11 @@ export function showError(title, error) {
  */
 export function confirm(msg, action) {
   dom.confirmMsg.textContent = msg
+
+  const syncContainer = dom.el('#confirmKeepSyncContainer')
+  if (syncContainer) {
+    syncContainer.style.display = 'none'
+  }
 
   modal.show('#dialogConfirm')
 

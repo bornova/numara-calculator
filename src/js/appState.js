@@ -1,9 +1,5 @@
 import { dom } from './dom'
-import {
-  getAppLocale as coreGetAppLocale,
-  getSystemLocale as coreGetSystemLocale,
-  localeUsesComma as coreLocaleUsesComma
-} from './core/utils.js'
+import { getAppLocale as coreGetAppLocale, getSystemLocale as coreGetSystemLocale } from './core/utils.js'
 
 /** App globals. */
 export const app = {
@@ -25,6 +21,34 @@ export const app = {
   widgetMap: new WeakMap()
 }
 
+let cachedConsolidatedRaw = null
+let cachedConsolidatedObj = null
+
+function getConsolidatedStore() {
+  const raw = localStorage.getItem('numara')
+
+  if (!raw) {
+    cachedConsolidatedRaw = null
+    cachedConsolidatedObj = null
+    return null
+  }
+
+  if (raw !== cachedConsolidatedRaw || !cachedConsolidatedObj) {
+    cachedConsolidatedRaw = raw
+    cachedConsolidatedObj = JSON.parse(raw)
+  }
+
+  return cachedConsolidatedObj
+}
+
+function saveConsolidatedStore(obj) {
+  const raw = JSON.stringify(obj)
+
+  cachedConsolidatedRaw = raw
+  cachedConsolidatedObj = obj
+  localStorage.setItem('numara', raw)
+}
+
 /** Local storage utility. */
 export const store = {
   /**
@@ -34,14 +58,12 @@ export const store = {
    */
   get: (key) => {
     try {
-      const consolidated = localStorage.getItem('numara')
+      const obj = getConsolidatedStore()
 
-      if (consolidated) {
-        const obj = JSON.parse(consolidated)
+      if (obj && obj[key] !== undefined) {
+        const val = obj[key]
 
-        if (obj[key] !== undefined) {
-          return obj[key]
-        }
+        return val !== null && typeof val === 'object' ? structuredClone(val) : val
       }
 
       const rootItem = localStorage.getItem(key)
@@ -70,11 +92,10 @@ export const store = {
    */
   set: (key, value) => {
     try {
-      const consolidated = localStorage.getItem('numara')
-      const obj = consolidated ? JSON.parse(consolidated) : {}
+      const obj = getConsolidatedStore() || {}
 
-      obj[key] = value
-      localStorage.setItem('numara', JSON.stringify(obj))
+      obj[key] = value !== null && typeof value === 'object' ? structuredClone(value) : value
+      saveConsolidatedStore(obj)
     } catch (error) {
       console.error(`Error writing key "${key}" to local storage:`, error)
     }
@@ -88,13 +109,11 @@ export const store = {
     try {
       localStorage.removeItem(key)
 
-      const consolidated = localStorage.getItem('numara')
+      const obj = getConsolidatedStore()
 
-      if (consolidated) {
-        const obj = JSON.parse(consolidated)
-
+      if (obj) {
         delete obj[key]
-        localStorage.setItem('numara', JSON.stringify(obj))
+        saveConsolidatedStore(obj)
       }
     } catch (error) {
       console.error(`Error removing key "${key}" from local storage:`, error)
@@ -160,11 +179,6 @@ export function getSystemLocale(settings = app.settings) {
   return coreGetSystemLocale(settings)
 }
 
-/** Check user locale for decimal separator. */
-export function localeUsesComma(settings = app.settings) {
-  return coreLocaleUsesComma(settings)
-}
-
 /** Initialize app update listener */
 export function initAppUpdate() {
   if (!isElectron) return
@@ -195,7 +209,7 @@ export function initAppUpdate() {
         updateStatusMessage(notice)
 
         dom.updateButton.style.display = 'inline-block'
-        dom.updateButton.addEventListener('click', () => numara.updateApp(), { once: true })
+        dom.updateButton.onclick = () => numara.updateApp()
         break
       }
       case 'error':
@@ -220,18 +234,29 @@ export function checkAppUpdate() {
  * @returns {Function} The debounced function
  */
 export function debounce(func, wait) {
-  let timeout
+  let timeout = null
   const debounced = function (...args) {
     const context = this
 
     clearTimeout(timeout)
-    timeout = setTimeout(() => func.apply(context, args), wait)
+    timeout = setTimeout(() => {
+      timeout = null
+      func.apply(context, args)
+    }, wait)
   }
 
   debounced.flush = function () {
     if (timeout) {
       clearTimeout(timeout)
+      timeout = null
       func()
+    }
+  }
+
+  debounced.cancel = function () {
+    if (timeout) {
+      clearTimeout(timeout)
+      timeout = null
     }
   }
 

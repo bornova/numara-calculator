@@ -433,14 +433,10 @@ ipcMain.on('setOpenAtLogin', (event, bool) => {
   })
 })
 ipcMain.handle('isMaximized', () => (win && !win.isDestroyed() ? win.isMaximized() : false))
-ipcMain.handle('isResized', () => {
-  if (!win || win.isDestroyed()) return false
-  const [width, height] = win.getSize()
 
-  return width !== schema.appWidth.default || height !== schema.appHeight.default
-})
+function promptImportPage() {
+  if (!win || win.isDestroyed()) return
 
-ipcMain.on('importPage', (event) => {
   const file = dialog.showOpenDialogSync(win, {
     filters: [{ name: 'Numara', extensions: ['num'] }],
     properties: ['openFile'],
@@ -449,14 +445,11 @@ ipcMain.on('importPage', (event) => {
 
   if (!file) return
 
-  fs.readFile(file[0], 'utf8', (error, data) => {
-    if (error) {
-      event.sender.send('importDataError', error)
-      return
-    }
+  openFileInRenderer(file[0])
+}
 
-    event.sender.send('pageImported', data, 'Imported from: ' + file[0], path.basename(file[0], '.num'))
-  })
+ipcMain.on('importPage', () => {
+  promptImportPage()
 })
 
 ipcMain.on('exportPage', (event, fileName, content) => {
@@ -521,6 +514,7 @@ ipcMain.on('openLogs', () => {
 })
 
 let syncWatcher = null
+let syncWatchTimeout = null
 
 ipcMain.handle('checkSyncDirectory', async (event, dirPath) => {
   try {
@@ -542,18 +536,17 @@ ipcMain.handle('selectSyncDirectory', async () => {
 ipcMain.handle('readSyncDirectory', async (event, dirPath) => {
   try {
     const files = await fs.promises.readdir(dirPath)
-    const numFiles = files.filter((f) => f.endsWith('.num'))
-    const fileContents = []
+    const numFiles = files.filter((f) => f.toLowerCase().endsWith('.num'))
 
-    for (const file of numFiles) {
-      const filePath = path.join(dirPath, file)
-      const content = await fs.promises.readFile(filePath, 'utf8')
-      const name = path.basename(file, '.num')
+    return await Promise.all(
+      numFiles.map(async (file) => {
+        const filePath = path.join(dirPath, file)
+        const content = await fs.promises.readFile(filePath, 'utf8')
+        const name = file.slice(0, -4)
 
-      fileContents.push({ name, content })
-    }
-
-    return fileContents
+        return { name, content }
+      })
+    )
   } catch (error) {
     log.error('Error reading sync directory:', error)
     throw error
@@ -562,7 +555,7 @@ ipcMain.handle('readSyncDirectory', async (event, dirPath) => {
 
 ipcMain.handle('writeSyncFile', async (event, dirPath, filename, content) => {
   try {
-    const filePath = path.join(dirPath, filename + '.num')
+    const filePath = path.join(dirPath, path.basename(filename) + '.num')
 
     await fs.promises.writeFile(filePath, content, 'utf8')
 
@@ -575,7 +568,7 @@ ipcMain.handle('writeSyncFile', async (event, dirPath, filename, content) => {
 
 ipcMain.handle('deleteSyncFile', async (event, dirPath, filename) => {
   try {
-    const filePath = path.join(dirPath, filename + '.num')
+    const filePath = path.join(dirPath, path.basename(filename) + '.num')
 
     if (fs.existsSync(filePath)) {
       await fs.promises.unlink(filePath)
@@ -590,8 +583,8 @@ ipcMain.handle('deleteSyncFile', async (event, dirPath, filename) => {
 
 ipcMain.handle('renameSyncFile', async (event, dirPath, oldFilename, newFilename) => {
   try {
-    const oldPath = path.join(dirPath, oldFilename + '.num')
-    const newPath = path.join(dirPath, newFilename + '.num')
+    const oldPath = path.join(dirPath, path.basename(oldFilename) + '.num')
+    const newPath = path.join(dirPath, path.basename(newFilename) + '.num')
 
     if (fs.existsSync(oldPath)) {
       await fs.promises.rename(oldPath, newPath)
@@ -605,6 +598,11 @@ ipcMain.handle('renameSyncFile', async (event, dirPath, oldFilename, newFilename
 })
 
 ipcMain.on('startWatchingSyncDir', (event, dirPath) => {
+  if (syncWatchTimeout) {
+    clearTimeout(syncWatchTimeout)
+    syncWatchTimeout = null
+  }
+
   if (syncWatcher) {
     syncWatcher.close()
     syncWatcher = null
@@ -613,7 +611,6 @@ ipcMain.on('startWatchingSyncDir', (event, dirPath) => {
   if (!dirPath || !fs.existsSync(dirPath)) return
 
   try {
-    let fsTimeout = null
     syncWatcher = fs.watch(dirPath, (eventType, filename) => {
       if (!fs.existsSync(dirPath)) {
         if (win && !win.isDestroyed()) {
@@ -622,16 +619,18 @@ ipcMain.on('startWatchingSyncDir', (event, dirPath) => {
         return
       }
 
-      if (filename && filename.endsWith('.num')) {
-        if (fsTimeout) return
-
-        fsTimeout = setTimeout(() => {
-          fsTimeout = null
-        }, 100)
-
-        if (win && !win.isDestroyed()) {
-          win.webContents.send('syncDirChanged')
+      if (filename && filename.toLowerCase().endsWith('.num')) {
+        if (syncWatchTimeout) {
+          clearTimeout(syncWatchTimeout)
         }
+
+        syncWatchTimeout = setTimeout(() => {
+          syncWatchTimeout = null
+
+          if (win && !win.isDestroyed()) {
+            win.webContents.send('syncDirChanged')
+          }
+        }, 100)
       }
     })
 
@@ -649,6 +648,11 @@ ipcMain.on('startWatchingSyncDir', (event, dirPath) => {
 })
 
 ipcMain.on('stopWatchingSyncDir', () => {
+  if (syncWatchTimeout) {
+    clearTimeout(syncWatchTimeout)
+    syncWatchTimeout = null
+  }
+
   if (syncWatcher) {
     syncWatcher.close()
     syncWatcher = null
@@ -849,20 +853,24 @@ const menuTemplate = [
       {
         label: 'Import Page',
         click: () => {
-          win.webContents.send('importPage')
+          promptImportPage()
         }
       },
       {
         label: 'Export Page',
         click: () => {
-          win.webContents.send('exportPage')
+          if (win && !win.isDestroyed() && win.webContents) {
+            win.webContents.send('requestExportPage')
+          }
         }
       },
       { type: 'separator' },
       {
         label: 'Print',
         click: () => {
-          win.webContents.send('print')
+          if (win && !win.isDestroyed() && win.webContents) {
+            win.webContents.send('print')
+          }
         }
       }
     ]

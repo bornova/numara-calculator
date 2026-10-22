@@ -17,9 +17,11 @@ const jsBanner = `/**
 
 const cssBanner = `/* ${pkg.description} ${pkg.version} */\n`
 
+const EXCLUDED_PRECACHE_FILES = new Set(['sw.js', 'background.png', 'numara.png', 'icon.ico'])
+
 /**
  * Recursively collect files in the build directory for service worker precaching.
- * Desktop-only files (.icns, tray templates) and source maps are excluded.
+ * Desktop-only files (.icns, .ico, DMG background, tray templates) and source maps are excluded.
  * @param {string} dir Directory to walk.
  * @param {string} root Base root directory.
  * @returns {Promise<string[]>} Sorted list of relative URLs.
@@ -36,7 +38,7 @@ async function collectPrecacheUrls(dir, root = dir) {
         entry.name.endsWith('.map') ||
         entry.name.endsWith('.icns') ||
         entry.name.includes('trayTemplate') ||
-        entry.name === 'sw.js'
+        EXCLUDED_PRECACHE_FILES.has(entry.name)
       ) {
         return []
       }

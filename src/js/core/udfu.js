@@ -2,7 +2,7 @@ const VALID_IDENTIFIER = /^[a-zA-Z_$][\w$]*$/
 const RESERVED_KEYS = new Set(['__proto__', 'constructor', 'prototype'])
 
 const defaultProxy = new Proxy(() => defaultProxy, {
-  get: () => defaultProxy
+  get: (target, prop) => (prop === Symbol.toPrimitive ? () => 0 : defaultProxy)
 })
 
 /**
@@ -79,7 +79,15 @@ export function applyUdfuToMath(math, input, isFunc, state, externalLibs = {}) {
 
     math.createUnit(udfObj, { override: true })
 
-    state.previouslyCreatedUnits = Object.keys(udfObj)
+    const createdUnitNames = [...Object.keys(udfObj)]
+
+    for (const val of Object.values(udfObj)) {
+      if (val && typeof val === 'object' && Array.isArray(val.aliases)) {
+        createdUnitNames.push(...val.aliases)
+      }
+    }
+
+    state.previouslyCreatedUnits = createdUnitNames
   }
 
   return Object.keys(udfObj)

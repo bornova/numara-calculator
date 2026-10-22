@@ -92,11 +92,11 @@ function isSameCurrencies(a, b) {
 }
 
 export function refreshCurrencyState() {
-  if (app.currencies === lastProcessedCurrencies) return
+  if (app.currencies === lastProcessedCurrencies) return false
 
   if (lastProcessedCurrencies && isSameCurrencies(app.currencies, lastProcessedCurrencies)) {
     lastProcessedCurrencies = app.currencies
-    return
+    return false
   }
 
   lastProcessedCurrencies = app.currencies
@@ -181,6 +181,8 @@ export function refreshCurrencyState() {
   currencyFormatRegex = codes.length
     ? new RegExp(`(-?\\d[\\d.,'\\u00A0\\u202F\\u2009 ]*(?:e[+-]?\\d+)?)\\s*\\b(${codes.join('|')})\\b`, 'gi')
     : null
+
+  return true
 }
 
 export function replaceCurrencySymbol(symbol) {
@@ -231,7 +233,7 @@ export function getLocaleSeparators(locale) {
 export function parseLocaleNumber(str, locale) {
   const { group, decimal } = getLocaleSeparators(locale)
   const cleaned = str
-    .replace(new RegExp(escapeRegExp(group), 'g'), '')
+    .replaceAll(group, '')
     .replace(/[\u00A0\u202F\u2009 ]/g, '')
     .replace(decimal, '.')
 

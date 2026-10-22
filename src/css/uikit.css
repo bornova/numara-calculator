@@ -23,11 +23,6 @@
   background-color: light-dark(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8));
 }
 
-.uk-modal-full {
-  padding-right: 20px;
-  padding-left: 20px;
-}
-
 .uk-modal-dialog {
   transition: 0s linear;
   border-radius: 8px;
@@ -66,18 +61,10 @@
   color: light-dark(#444444, #e6e6e6);
 }
 
-.uk-modal-footer {
-  padding: 15px;
-}
-
 /* Form controls */
 
 .uk-select {
   transition: 0s ease-in-out;
-}
-
-.uk-input {
-  height: 24px;
 }
 
 .uk-checkbox {
@@ -197,10 +184,6 @@
   width: 420px;
 }
 
-.uk-width-large {
-  width: 600px;
-}
-
 .uk-width-xlarge {
   width: 800px;
 }
@@ -209,12 +192,7 @@
   width: 1200px;
 }
 
-/* Overflow and range */
-
-.uk-overflow-auto {
-  min-height: 175px;
-  max-height: calc(100vh - 250px);
-}
+/* Range */
 
 .uk-range {
   padding-top: 2px;
@@ -295,19 +273,4 @@
 
 .uk-offcanvas-bar a:hover {
   color: light-dark(#0f6ecd, #0f6ecd);
-}
-
-.uk-offcanvas-close {
-  -webkit-app-region: no-drag;
-  top: 9px;
-  right: 8px;
-}
-
-.uk-offcanvas-close svg {
-  width: 11px;
-  height: 11px;
-}
-
-.uk-offcanvas-close svg line {
-  stroke-width: 1.5;
 }

@@ -198,10 +198,6 @@ text {
   height: 8px;
 }
 
-.lineNo {
-  color: light-dark(#c8c8c8, #616161);
-}
-
 .activeLine > div {
   color: light-dark(#7a7a7a, #bebebe);
 }
@@ -352,18 +348,11 @@ text {
   height: 25px;
 }
 
-.action,
-.noAction,
-.noAction:hover {
+.action {
+  cursor: pointer;
   color: light-dark(#607d8b, #7b9dc5);
 }
 
-.action,
-.noAction {
-  cursor: pointer;
-}
-
-.noAction,
 .action[disabled='true'] {
   opacity: 0.4;
   cursor: default;
@@ -517,17 +506,13 @@ text {
   color: light-dark(#444444, #e6e6e6);
 }
 
-.pageListItemDrag {
-  border: 1px solid light-dark(#eaeaea, #181818);
-  background-color: light-dark(#ffffff, #222222);
-}
-
 .pageListItem:hover,
 .activePage {
   background-color: light-dark(#f4f6f8, #333333);
 }
 
 .pageList {
+  position: relative;
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -561,6 +546,30 @@ text {
   display: flex;
   position: relative;
   cursor: pointer;
+  user-select: none;
+}
+
+body.is-sorting-pages,
+body.is-sorting-pages * {
+  cursor: grabbing !important;
+  user-select: none !important;
+}
+
+.pageListItemDrag {
+  position: fixed !important;
+  z-index: 1050 !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+  box-shadow: 0 4px 12px light-dark(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.45));
+  border-top: 1px solid light-dark(#eaeaea, #2a2a2a);
+  border-bottom: 1px solid light-dark(#eaeaea, #2a2a2a);
+  background-color: light-dark(#f4f6f8, #333333);
+  pointer-events: none;
+}
+
+.pageListItemPlaceholder {
+  opacity: 0.3;
+  background-color: light-dark(#eef2f6, #2a2a2a) !important;
 }
 
 .pageListItem > div:first-child {
@@ -614,15 +623,7 @@ text {
   color: light-dark(#b10e0e, #d41111) !important;
 }
 
-.exportPageButton {
-  padding: 5px 10px;
-}
-
 /* Dialogs */
-
-.dialogs {
-  display: none;
-}
 
 .dialog-buttons {
   display: flex;
@@ -670,7 +671,8 @@ text {
   overflow-y: auto;
 }
 
-.dialog-settings-body > li > div {
+.dialog-settings-body > li > div,
+.dialog-plot-settings-body > div:not(.domainParent) {
   margin: 10px 0 0 0;
   line-height: 16px;
 }
@@ -706,10 +708,6 @@ text {
 
 #currencyInterval {
   width: 125px;
-}
-
-#dialogSettings .uk-overflow-auto {
-  padding-right: 10px;
 }
 
 #dialogSettings h3 {
@@ -914,15 +912,6 @@ div:has(> #logsLink) {
   margin: 15px 0;
 }
 
-/* Messages */
-
-.msg {
-  opacity: 0;
-  transition:
-    visibility 0.3s linear,
-    opacity 0.3s linear;
-}
-
 .pr-lh {
   line-height: 22px;
 }
@@ -952,7 +941,7 @@ div:has(> #logsLink) {
   display: grid;
   grid-template-rows: repeat(4, 1fr);
   grid-template-columns: repeat(4, 1fr);
-  margin: auto;
+  margin: 10px auto 0 auto;
   width: 250px;
 }
 

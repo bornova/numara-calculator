@@ -35,16 +35,20 @@ const REGEX_DATE_TIME =
   /[+-] * .*? *(millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia)s?/gi
 const REGEX_PCNT_OF = /%[ ]*of[ ]*/g
 const REGEX_PLOT = /^\s*[a-zA-Z_]\w*\s*\(\s*[a-zA-Z_]\w*\s*\)\s*=/
+const REGEX_SPACE_GROUP_NUM = /\b\d{1,3}(?:[ \u00A0\u202F\u2009]\d{3})+(?:[.,]\d+)?\b/g
+const REGEX_SPACE_CHARS = /[ \u00A0\u202F\u2009]/g
+const REGEX_APOS_GROUP_NUM = /\b\d{1,3}(?:['\u2019]\d{3})+(?:[.,]\d+)?\b/g
+const REGEX_APOS_CHARS = /['\u2019]/g
 
 const CLASS_ANSWER = 'answer'
 const CLASS_PLOT_BUTTON = 'plotButton answer'
 const CLASS_LINE_ERROR_LINK = 'lineError'
 
 const keywords = [
-  { key: 'avg', fn: (stats) => math.mean(stats.runningTotal) },
-  { key: 'subavg', fn: (stats) => math.mean(stats.runningSubtotal) },
-  { key: 'total', fn: (stats) => math.sum(stats.runningTotal) },
-  { key: 'subtotal', fn: (stats) => math.sum(stats.runningSubtotal) }
+  { key: 'avg', regex: /\bavg\b/g, fn: (stats) => math.mean(stats.runningTotal) },
+  { key: 'subavg', regex: /\bsubavg\b/g, fn: (stats) => math.mean(stats.runningSubtotal) },
+  { key: 'total', regex: /\btotal\b/g, fn: (stats) => math.sum(stats.runningTotal) },
+  { key: 'subtotal', regex: /\bsubtotal\b/g, fn: (stats) => math.sum(stats.runningSubtotal) }
 ]
 const KEYWORDS_REGEX = new RegExp(`\\b(?:${keywords.map((kw) => kw.key).join('|')})\\b`)
 
@@ -55,6 +59,8 @@ const MAX_CACHE_SIZE = 1000
 // Cache for line-by-line evaluation results and scope state
 let evaluationCache = []
 let lastActivePage = null
+let lastSettingsSignature = ''
+let lastPagesSignature = ''
 
 /**
  * Clears the line-by-line calculation cache memory.
@@ -127,11 +133,11 @@ function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
       const isApostropheGroup = groupSeparator === "'" || groupSeparator === '\u2019'
 
       if (isSpaceGroup || isApostropheGroup) {
-        const sepChars = isSpaceGroup ? ' \u00A0\u202F\u2009' : "'\u2019"
-        const regex = new RegExp(`\\b\\d{1,3}(?:[${sepChars}]\\d{3})+(?:[.,]\\d+)?\\b`, 'g')
+        const groupRegex = isSpaceGroup ? REGEX_SPACE_GROUP_NUM : REGEX_APOS_GROUP_NUM
+        const charRegex = isSpaceGroup ? REGEX_SPACE_CHARS : REGEX_APOS_CHARS
 
-        line = line.replace(regex, (numToken) => {
-          const stripped = numToken.replace(new RegExp(`[${sepChars}]`, 'g'), '')
+        line = line.replace(groupRegex, (numToken) => {
+          const stripped = numToken.replace(charRegex, '')
 
           return usesComma ? stripped.replace(/,/g, '.') : stripped
         })
@@ -186,17 +192,6 @@ function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
       // Since arguments inside functions also use comma or semicolon depending on separator setting,
       // mapping semicolon to comma lets the parser interpret arguments uniformly (e.g., sum(1;3) -> sum(1,3))
       line = line.replace(/;/g, ',')
-    } else if (usesComma) {
-      // inputLocale is false, but the locale uses comma as decimal separator.
-      // So commas must be parsed as decimals, and periods should not be treated as decimals (cause error).
-      line = line.replace(/\b\d+(?:[.,]\d+)+\b/g, (numToken) => {
-        const commas = (numToken.match(/,/g) || []).length
-        const periods = (numToken.match(/\./g) || []).length
-
-        if (commas === 1 && periods === 0) return numToken.replace(/,/g, '.')
-
-        return numToken.replace(/[.,]/g, ' ')
-      })
     }
 
     if (app.settings.currency && currencySymbolsRegex) {
@@ -209,7 +204,9 @@ function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
 
     // Handle line continuation
     if (lineIndex > 0 && REGEX_CONTINUATION.test(line.charAt(0)) && app.settings.contPrevLine) {
-      if (prevLineText && prevLineText.length > 0) {
+      const prevClean = prevLineText ? stripComments(prevLineText.trim()) : ''
+
+      if (prevClean.length > 0) {
         line = (app.mathScope.get('ans') ?? '') + line
       }
     }
@@ -315,17 +312,25 @@ function evaluateLine(line, lineIndex, lineHandle, stats, prevLineText) {
 function altEvaluate(line, stats) {
   let parsedLine = line
 
-  if (parsedLine.includes(':')) {
-    const left = parsedLine.split(':')[0].trim()
+  const colonIndex = parsedLine.search(/:(?!\d)/)
 
-    try {
-      const val = math.evaluate(left)
+  if (colonIndex !== -1 && !parsedLine.trim().startsWith('{')) {
+    const left = parsedLine.slice(0, colonIndex).trim()
 
-      if (typeof val === 'function') {
-        throw new Error('function')
+    if (!left.includes('?') && !left.includes('"') && !left.includes("'")) {
+      try {
+        if (!app.mathScope.has(left) && /^[a-zA-Z_\p{L}][\w\p{L}\p{M}\s]*$/u.test(left)) {
+          throw new Error('label')
+        }
+
+        const val = math.evaluate(left)
+
+        if (typeof val !== 'number') {
+          throw new Error('label')
+        }
+      } catch {
+        parsedLine = parsedLine.slice(colonIndex + 1)
       }
-    } catch {
-      parsedLine = parsedLine.substring(parsedLine.indexOf(':') + 1)
     }
   }
 
@@ -354,13 +359,15 @@ function altEvaluate(line, stats) {
   }
 
   // Calculate and return avg, subavg, total and subtotal values.
-  for (const { key, fn } of keywords) {
-    const regex = new RegExp(`\\b${key}\\b`, 'g')
-
-    try {
-      parsedLine = parsedLine.replace(regex, fn(stats))
-    } catch {
-      parsedLine = parsedLine.replace(regex, '"n/a"')
+  if (KEYWORDS_REGEX.test(parsedLine)) {
+    for (const { regex, fn } of keywords) {
+      parsedLine = parsedLine.replace(regex, () => {
+        try {
+          return fn(stats)
+        } catch {
+          return '"n/a"'
+        }
+      })
     }
   }
 
@@ -383,11 +390,15 @@ function altEvaluate(line, stats) {
 
     // Lazily evaluate date formats to avoid redundant parsing operations
     const dateFormats = getDateFormatSettings()
+    const flexToday = getFlexibleFormat(dateFormats.todayFormat)
+    const flexTodayDay = getFlexibleFormat(dateFormats.todayDayFormat)
     const formats = [
       { parse: getFlexibleFormat(dateFormats.nowDayFormat), display: dateFormats.nowDayFormat },
       { parse: getFlexibleFormat(dateFormats.nowFormat), display: dateFormats.nowFormat },
-      { parse: getFlexibleFormat(dateFormats.todayDayFormat), display: dateFormats.todayDayFormat },
-      { parse: getFlexibleFormat(dateFormats.todayFormat), display: dateFormats.todayFormat }
+      { parse: `${flexTodayDay} T`, display: `${dateFormats.todayDayFormat} T` },
+      { parse: `${flexToday} T`, display: `${dateFormats.todayFormat} T` },
+      { parse: flexTodayDay, display: dateFormats.todayDayFormat },
+      { parse: flexToday, display: dateFormats.todayFormat }
     ]
 
     if (app.settings.dateFormat && app.settings.dateFormat !== 'system') {
@@ -412,8 +423,41 @@ function altEvaluate(line, stats) {
 
     if (!found) return 'Invalid Date'
 
-    const rightOfDate = String(math.evaluate(lineDateRight + ' to hours', app.mathScope))
-    const durHrs = Number(rightOfDate.split(' ')[0])
+    const termRegex =
+      /([+-])\s*(.*?)\s*(millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia)s?\b/gi
+    const remaining = lineDateRight.replace(termRegex, '').trim()
+    let updatedDt = found.dt
+
+    if (!remaining) {
+      let match
+      termRegex.lastIndex = 0
+
+      while ((match = termRegex.exec(lineDateRight)) !== null) {
+        const sign = match[1] === '-' ? -1 : 1
+        const exprStr = match[2].trim() || '1'
+        const rawUnit = match[3].toLowerCase()
+        const amount = Number(math.evaluate(exprStr, app.mathScope)) * sign
+
+        if (!Number.isFinite(amount)) {
+          throw new Error('Invalid date duration')
+        }
+
+        if (rawUnit === 'decade') {
+          updatedDt = updatedDt.plus({ years: amount * 10 })
+        } else if (rawUnit === 'century' || rawUnit === 'centuries') {
+          updatedDt = updatedDt.plus({ years: amount * 100 })
+        } else if (rawUnit === 'millennium' || rawUnit === 'millennia') {
+          updatedDt = updatedDt.plus({ years: amount * 1000 })
+        } else {
+          updatedDt = updatedDt.plus({ [rawUnit + 's']: amount })
+        }
+      }
+    } else {
+      const rightOfDate = String(math.evaluate(lineDateRight + ' to hours', app.mathScope))
+      const durHrs = Number(rightOfDate.split(' ')[0])
+
+      updatedDt = updatedDt.plus({ hours: durHrs })
+    }
 
     let outputFmt = found.fmt
 
@@ -421,7 +465,7 @@ function altEvaluate(line, stats) {
       outputFmt = 'ccc, ' + outputFmt
     }
 
-    const dtLine = found.dt.plus({ hours: durHrs }).toFormat(outputFmt)
+    const dtLine = updatedDt.toFormat(outputFmt)
 
     parsedLine = `${assignPrefix}"${dtLine}"`
   }
@@ -554,6 +598,7 @@ function loadPageScope(pageName) {
 
       if (!line) {
         localStats.runningSubtotal.length = 0
+        prevText = ''
         continue
       }
 
@@ -634,28 +679,18 @@ math.import(
  * @param {object} params.settings The application settings.
  * @param {object} params.currencies The application currencies config map.
  * @param {SharedArrayBuffer} [params.sharedBuffer] Shared buffer to communicate progress back to main thread.
- * @param {number[]} [params.timedOutLines=[]] Array of line indices that timed out previously.
  * @param {function} [params.onLineStart] Progress callback fired when starting to process a line.
  * @returns {object} The answers, errorLines, serializedScope, and user defined lists.
  */
-export function runCalculation({
-  activePage,
-  lines,
-  pages = [],
-  settings,
-  currencies,
-  sharedBuffer,
-  timedOutLines = [],
-  onLineStart
-}) {
+export function runCalculation({ activePage, lines, pages = [], settings, currencies, sharedBuffer, onLineStart }) {
   currentPages = pages
   activePageId = activePage
   loadingStack.clear()
+  pageScopeCache.clear()
   app.settings = settings
   app.currencies = currencies
 
   const sharedArray = sharedBuffer ? new Int32Array(sharedBuffer) : null
-  const timedOutSet = new Set(timedOutLines)
 
   // Configure background math instance according to settings
   try {
@@ -668,11 +703,28 @@ export function runCalculation({
     // Ignore config adjustment error
   }
 
-  refreshCurrencyState()
+  const currenciesChanged = refreshCurrencyState()
+  const settingsSignature = JSON.stringify(settings || {})
+  const pagesSignature = (pages || [])
+    .filter((p) => p && p.id !== activePage)
+    .map((p) => `${p.id}:${p.name || ''}:${p.data || ''}`)
+    .join('|')
 
-  if (lastActivePage !== activePage) {
+  if (
+    currenciesChanged ||
+    lastActivePage !== activePage ||
+    lastSettingsSignature !== settingsSignature ||
+    lastPagesSignature !== pagesSignature
+  ) {
     evaluationCache = []
+
+    if (lastSettingsSignature !== settingsSignature) {
+      compiledExpressions.clear()
+    }
+
     lastActivePage = activePage
+    lastSettingsSignature = settingsSignature
+    lastPagesSignature = pagesSignature
   }
 
   const dateTime = DateTime.now().setLocale(getSystemLocale())
@@ -710,39 +762,39 @@ export function runCalculation({
 
     let result = ''
 
-    if (timedOutSet.has(lineIndex)) {
-      const errorMessage = 'Timeout (Took too long)'
-      const errorLink = app.settings.lineErrors ? 'Timeout' : ''
+    const cached = evaluationCache[lineIndex]
 
-      result = `<a class="${CLASS_LINE_ERROR_LINK}" data-error="${errorMessage}">${errorLink}</a>`
-      stats.runningSubtotal.length = 0
-    } else {
-      const cached = evaluationCache[lineIndex]
-
-      if (
-        canUseCache &&
-        cached &&
-        cached.rawText === rawText &&
-        (lineIndex === 0 || evaluationCache[lineIndex - 1].rawText === prevLineText)
-      ) {
-        result = cached.result
-
-        app.mathScope = new Map(cached.mathScope)
-        stats.runningTotal = [...cached.stats.runningTotal]
-        stats.runningSubtotal = [...cached.stats.runningSubtotal]
-
-        if (cached.hasError) {
-          errorLines.push(lineIndex)
-        }
-      } else {
-        canUseCache = false
-
-        if (line) {
-          result = evaluateLine(line, lineIndex, null, stats, prevLineText)
-        } else {
-          stats.runningSubtotal.length = 0
-        }
+    if (
+      canUseCache &&
+      cached &&
+      cached.rawText === rawText &&
+      (lineIndex === 0 || evaluationCache[lineIndex - 1].rawText === prevLineText)
+    ) {
+      if (cached.hasError) {
+        errorLines.push(lineIndex)
       }
+
+      newCache.push(cached)
+      answers.push(cached.result)
+      prevLineText = rawText
+      continue
+    }
+
+    if (canUseCache) {
+      canUseCache = false
+
+      if (lineIndex > 0) {
+        const prevCached = evaluationCache[lineIndex - 1]
+        app.mathScope = new Map(prevCached.mathScope)
+        stats.runningTotal = [...prevCached.stats.runningTotal]
+        stats.runningSubtotal = [...prevCached.stats.runningSubtotal]
+      }
+    }
+
+    if (line) {
+      result = evaluateLine(line, lineIndex, null, stats, prevLineText)
+    } else {
+      stats.runningSubtotal.length = 0
     }
 
     const hasError = result.includes(CLASS_LINE_ERROR_LINK)
@@ -764,6 +816,10 @@ export function runCalculation({
 
     answers.push(result)
     prevLineText = rawText
+  }
+
+  if (canUseCache && totalLines > 0) {
+    app.mathScope = new Map(evaluationCache[totalLines - 1].mathScope)
   }
 
   evaluationCache = newCache

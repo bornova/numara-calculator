@@ -2,7 +2,7 @@ import { DateTime } from 'luxon'
 import { app, store, isElectron } from '../appState'
 import { cm } from '../editor'
 import { calculate } from './calcManager'
-import { populatePages } from '../ui/pageManager'
+import { defaultPage, loadPage, populatePages } from '../ui/pageManager'
 import { dom } from '../dom'
 import UIkit from 'uikit'
 import { escapeHTML } from '../core/utils.js'
@@ -131,7 +131,12 @@ function disableSyncState(message) {
  * @returns {string} The safe file name.
  */
 export function getSafeFilename(name) {
-  return name.replace(/[/\\:*?"<>|]/g, '-').trim()
+  return (
+    name
+      .replace(/[/\\:*?"<>|]/g, '-')
+      .replace(/[. ]+$/g, '')
+      .trim() || 'Untitled'
+  )
 }
 
 /**
@@ -144,6 +149,12 @@ export function getSafeFilename(name) {
  */
 function customConfirm(msg, yesLabel, noLabel, yesAction, noAction) {
   dom.confirmMsg.innerHTML = msg
+
+  const syncContainer = dom.el('#confirmKeepSyncContainer')
+
+  if (syncContainer) {
+    syncContainer.style.display = 'none'
+  }
 
   const yesBtn = dom.confirmYes
   const noBtn = document.querySelector('#dialogConfirm .uk-button-default')
@@ -213,6 +224,7 @@ export async function triggerFolderSync() {
   isSyncing = true
 
   const exists = await checkSyncDir()
+
   if (!exists) {
     isSyncing = false
     return
@@ -311,10 +323,27 @@ export async function triggerFolderSync() {
       }
     }
 
-    // 2. Sync local storage pages -> files (write local pages that don't exist in folder yet)
-    for (const page of pages) {
+    // 2. Sync local storage pages -> files (write local pages that don't exist in folder yet, or remove externally deleted pages)
+    let activePageDeleted = false
+
+    for (let i = pages.length - 1; i >= 0; i--) {
+      const page = pages[i]
+
       if (!processedPageIds.has(page.id)) {
         const safeName = getSafeFilename(page.name)
+
+        if (lastSyncContent.has(safeName)) {
+          lastSyncContent.delete(safeName)
+          pages.splice(i, 1)
+          modified = true
+
+          if (page.id === app.activePage) {
+            activePageDeleted = true
+          }
+
+          continue
+        }
+
         const content = page.data || ''
         const previousContent = lastSyncContent.get(safeName)
 
@@ -336,6 +365,13 @@ export async function triggerFolderSync() {
 
     if (modified) {
       store.set('pages', pages)
+
+      if (pages.length === 0) {
+        defaultPage()
+      } else if (activePageDeleted) {
+        loadPage(pages[pages.length - 1].id)
+      }
+
       populatePages()
       calculate()
     }

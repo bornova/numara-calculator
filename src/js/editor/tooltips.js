@@ -2,7 +2,10 @@ import UIkit from 'uikit'
 import { app } from '../appState'
 import { math, formatAnswer } from '../calc/calcManager'
 
-let cm, numaraHints, keywords, currencyTokens, CLASS_NAMES, dateTimeInstanceMethods
+let cm, currencyTokens, CLASS_NAMES
+let hintMap = new Map()
+let keywordMap = new Map()
+let dateTimeInstanceMethodsSet = new Set()
 let TOOLTIP_HANDLERS = {}
 
 /**
@@ -76,7 +79,7 @@ function handleFunctionTooltip(target) {
     return
   }
 
-  if (dateTimeInstanceMethods.includes(text)) {
+  if (dateTimeInstanceMethodsSet.has(text)) {
     showTooltip(
       target,
       `<div>Luxon DateTime method</div>
@@ -133,7 +136,7 @@ function handleCurrencyTooltip(target) {
  * @param {HTMLElement} target The DOM element representing the unit.
  */
 function handleUnitTooltip(target) {
-  const hint = numaraHints.find((hint) => hint.text === target.textContent)
+  const hint = hintMap.get(target.textContent)
 
   showTooltip(target, hint?.desc || 'Unit description not available')
 }
@@ -158,7 +161,7 @@ function handleVariableTooltip(target) {
   const text = target.textContent
   const val = app.mathScope.get(text)
 
-  if (!val || typeof val === 'function') return
+  if (!val || typeof val === 'function' || app.scopeTypes?.[text] === 'function') return
 
   let varTooltip = formatAnswer(val ?? 'Undefined')
 
@@ -170,8 +173,10 @@ function handleVariableTooltip(target) {
  * @param {HTMLElement} target The DOM element representing the line number.
  */
 function handleLineNoTooltip(target) {
-  const val = app.mathScope.get(target.textContent)
-  let tooltip = typeof val === 'function' ? 'Function' : formatAnswer(val ?? 'Undefined')
+  const text = target.textContent
+  const val = app.mathScope.get(text)
+  let tooltip =
+    typeof val === 'function' || app.scopeTypes?.[text] === 'function' ? 'Function' : formatAnswer(val ?? 'Undefined')
 
   showTooltip(target, tooltip)
 }
@@ -181,7 +186,7 @@ function handleLineNoTooltip(target) {
  * @param {HTMLElement} target The DOM element representing the keyword.
  */
 function handleKeywordTooltip(target) {
-  const keyword = keywords.find((key) => target.textContent === key.text)
+  const keyword = keywordMap.get(target.textContent)
 
   showTooltip(target, keyword?.desc || 'Keyword description not available')
 }
@@ -197,11 +202,11 @@ function handleKeywordTooltip(target) {
  */
 export function initTooltips(cmInstance, hints, kw, curTokens, clsNames, dtInstanceMethods) {
   cm = cmInstance
-  numaraHints = hints
-  keywords = kw
+  hintMap = new Map(hints.map((h) => [h.text, h]))
+  keywordMap = new Map(kw.map((k) => [k.text, k]))
   currencyTokens = curTokens
   CLASS_NAMES = clsNames
-  dateTimeInstanceMethods = dtInstanceMethods
+  dateTimeInstanceMethodsSet = new Set(dtInstanceMethods)
 
   TOOLTIP_HANDLERS = {
     [CLASS_NAMES.FUNCTION]: handleFunctionTooltip,

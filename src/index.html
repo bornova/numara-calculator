@@ -33,8 +33,6 @@
     <link rel="manifest" href="numara.webmanifest" />
     <link rel="stylesheet" href="assets/fonts/fonts.css" />
     <link rel="stylesheet" href="css/app.css" />
-    <link rel="stylesheet" href="" id="mobile" />
-    <link rel="stylesheet" href="" id="style" />
 
     <style id="colorSheet"></style>
   </head>
@@ -102,7 +100,7 @@
             <div id="sortZA" class="sortListItem uk-flex uk-flex-column" title="Sort Z to A">Z to A</div>
           </div>
         </div>
-        <div id="pageList" class="pageList uk-flex-1" uk-sortable="handle: .pageListItem"></div>
+        <div id="pageList" class="pageList uk-flex-1"></div>
         <div id="pageListFooter" class="pageListFooter uk-flex-bottom">
           <div id="sideBarActions" class="sideBarActions uk-flex uk-flex-between uk-flex-middle">
             <div class="leftActions uk-flex uk-flex-middle">
@@ -116,7 +114,7 @@
             <div class="rightActions uk-flex uk-flex-middle uk-flex-right uk-text-right">
               <a id="copyButton" class="action" title="Copy page" uk-tooltip><i data-lucide="copy"></i></a>
               <a id="printButton" class="action" title="Print page" uk-tooltip><i data-lucide="printer"></i></a>
-              <a id="importPageButton" class="action importPageButton" title="Import Page" uk-tooltip>
+              <a id="importPageButton" class="action" title="Import Page" uk-tooltip>
                 <i data-lucide="download"></i>
               </a>
               <span class="actionDivider"></span>
@@ -169,7 +167,7 @@
         <ul id="udfuSwitcher" class="uk-switcher uk-margin">
           <li id="udfTab">
             <div>
-              <textarea id="udfInput" class="udfInput"></textarea>
+              <textarea id="udfInput"></textarea>
             </div>
             <div class="uk-flex">
               <div class="dialog-buttons uk-width-1-2 uk-flex-left"></div>
@@ -181,7 +179,7 @@
           </li>
           <li id="uduTab">
             <div>
-              <textarea id="uduInput" class="uduInput"></textarea>
+              <textarea id="uduInput"></textarea>
             </div>
             <div class="uk-flex">
               <div class="dialog-buttons uk-width-1-2 uk-flex-left"></div>
@@ -480,7 +478,7 @@
                   <div class="uk-text-right uk-width-1-6">
                     <span id="precisionLabel" class="uk-label precision"></span>
                   </div>
-                  <div class="uk-text-right range uk-position-relative">
+                  <div class="uk-text-right uk-position-relative">
                     <input id="precision" class="uk-range settingItem" type="range" min="0" max="16" step="1" />
                   </div>
                 </div>
@@ -493,7 +491,7 @@
                   <div class="uk-text-right uk-width-1-6">
                     <span id="expUpperLabel" class="uk-label expUpper"></span>
                   </div>
-                  <div class="uk-text-right range uk-position-relative">
+                  <div class="uk-text-right uk-position-relative">
                     <input id="expUpper" class="uk-range settingItem" type="range" min="0" max="32" step="1" />
                   </div>
                 </div>
@@ -506,7 +504,7 @@
                   <div class="uk-text-right uk-width-1-6">
                     <span id="expLowerLabel" class="uk-label expLower"></span>
                   </div>
-                  <div class="uk-text-right range uk-position-relative">
+                  <div class="uk-text-right uk-position-relative">
                     <input id="expLower" class="uk-range settingItem" type="range" min="-32" max="0" step="1" />
                   </div>
                 </div>
@@ -519,7 +517,7 @@
                   <div class="uk-text-right uk-width-1-6">
                     <span id="calcTimeoutLabel" class="uk-label precision"></span>
                   </div>
-                  <div class="uk-text-right range uk-position-relative">
+                  <div class="uk-text-right uk-position-relative">
                     <input id="calcTimeout" class="uk-range settingItem" type="range" min="1" max="60" step="1" />
                   </div>
                 </div>
@@ -655,7 +653,7 @@
             <div id="syncDirSection" class="uk-flex uk-flex-middle uk-flex-between">
               <div class="uk-width-auto sync-label" data-help="syncDir">Sync folder</div>
               <div class="sync-path">
-                <a id="selectSyncDirButton" href="#" class="action-link sync-path-link">Choose Folder</a>
+                <a id="selectSyncDirButton" href="#" class="sync-path-link">Choose Folder</a>
               </div>
             </div>
             <div id="syncDirHiddenWrapper">
@@ -672,7 +670,7 @@
             <a id="defaultSettingsButton" class="defaultSettingsButton" title="Restore default settings" uk-tooltip>
               <i data-lucide="list-restart">Restore defaults</i>
             </a>
-            <a id="resetSizeButton" class="resetSizeButton" title="Reset window size" uk-tooltip>
+            <a id="resetSizeButton" title="Reset window size" uk-tooltip>
               <i data-lucide="scaling"></i>
             </a>
           </div>
@@ -683,7 +681,7 @@
       </div>
     </div>
 
-    <div id="dialogTheme" class="dialogTheme modal" uk-modal>
+    <div id="dialogTheme" class="modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
         <h2 class="uk-modal-title uk-text-center">Customize Theme</h2>
         <div class="uk-flex uk-flex-middle uk-child-width-expand">
@@ -769,7 +767,7 @@
         <div class="uk-flex">
           <div class="dialog-buttons uk-width-1-5 uk-flex-left"></div>
           <div class="dialog-buttons uk-width-4-5 uk-flex-right">
-            <a id="defaultColorsButton" class="defSettingsButton uk-margin-small-right">Restore defaults</a>
+            <a id="defaultColorsButton" class="uk-margin-small-right">Restore defaults</a>
             <button class="uk-button uk-button-default uk-modal-close uk-button-small">Close</button>
           </div>
         </div>
@@ -842,7 +840,7 @@
     <div id="dialogPlotAxisSettings" class="modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-medium">
         <h2 class="uk-modal-title">Plot Axis Settings</h2>
-        <div>
+        <div class="dialog-plot-settings-body">
           <div class="uk-flex uk-flex-middle uk-flex-between">
             <div class="uk-width-1-2 pr-lh">X-Axis Precision</div>
             <div class="uk-text-right uk-width-1-2">
@@ -850,7 +848,7 @@
                 <div class="uk-text-right uk-width-1-6">
                   <span id="plotAxisPrecisionLabel" class="uk-label precision"></span>
                 </div>
-                <div class="uk-text-right range uk-position-relative">
+                <div class="uk-text-right uk-position-relative">
                   <input id="plotAxisPrecision" class="uk-range" type="range" min="0" max="16" step="1" />
                 </div>
               </div>
@@ -886,7 +884,7 @@
         </div>
         <div uk-flex>
           <div class="dialog-buttons uk-flex-right">
-            <a id="defaultDomainsButton" class="defSettingsButton" title="Restore default domains" uk-tooltip>
+            <a id="defaultDomainsButton" class="uk-margin-small-right" title="Restore default domains" uk-tooltip>
               Defaults
             </a>
             <button id="dialogPlotAxisSettingsSave" class="uk-button uk-button-primary uk-button-small">Save</button>
