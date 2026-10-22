@@ -514,6 +514,7 @@ ipcMain.on('openLogs', () => {
 })
 
 let syncWatcher = null
+let syncWatchTimeout = null
 
 ipcMain.handle('checkSyncDirectory', async (event, dirPath) => {
   try {
@@ -535,18 +536,17 @@ ipcMain.handle('selectSyncDirectory', async () => {
 ipcMain.handle('readSyncDirectory', async (event, dirPath) => {
   try {
     const files = await fs.promises.readdir(dirPath)
-    const numFiles = files.filter((f) => f.endsWith('.num'))
-    const fileContents = []
+    const numFiles = files.filter((f) => f.toLowerCase().endsWith('.num'))
 
-    for (const file of numFiles) {
-      const filePath = path.join(dirPath, file)
-      const content = await fs.promises.readFile(filePath, 'utf8')
-      const name = path.basename(file, '.num')
+    return await Promise.all(
+      numFiles.map(async (file) => {
+        const filePath = path.join(dirPath, file)
+        const content = await fs.promises.readFile(filePath, 'utf8')
+        const name = file.slice(0, -4)
 
-      fileContents.push({ name, content })
-    }
-
-    return fileContents
+        return { name, content }
+      })
+    )
   } catch (error) {
     log.error('Error reading sync directory:', error)
     throw error
@@ -598,6 +598,11 @@ ipcMain.handle('renameSyncFile', async (event, dirPath, oldFilename, newFilename
 })
 
 ipcMain.on('startWatchingSyncDir', (event, dirPath) => {
+  if (syncWatchTimeout) {
+    clearTimeout(syncWatchTimeout)
+    syncWatchTimeout = null
+  }
+
   if (syncWatcher) {
     syncWatcher.close()
     syncWatcher = null
@@ -606,7 +611,6 @@ ipcMain.on('startWatchingSyncDir', (event, dirPath) => {
   if (!dirPath || !fs.existsSync(dirPath)) return
 
   try {
-    let fsTimeout = null
     syncWatcher = fs.watch(dirPath, (eventType, filename) => {
       if (!fs.existsSync(dirPath)) {
         if (win && !win.isDestroyed()) {
@@ -615,16 +619,18 @@ ipcMain.on('startWatchingSyncDir', (event, dirPath) => {
         return
       }
 
-      if (filename && filename.endsWith('.num')) {
-        if (fsTimeout) return
-
-        fsTimeout = setTimeout(() => {
-          fsTimeout = null
-        }, 100)
-
-        if (win && !win.isDestroyed()) {
-          win.webContents.send('syncDirChanged')
+      if (filename && filename.toLowerCase().endsWith('.num')) {
+        if (syncWatchTimeout) {
+          clearTimeout(syncWatchTimeout)
         }
+
+        syncWatchTimeout = setTimeout(() => {
+          syncWatchTimeout = null
+
+          if (win && !win.isDestroyed()) {
+            win.webContents.send('syncDirChanged')
+          }
+        }, 100)
       }
     })
 
@@ -642,6 +648,11 @@ ipcMain.on('startWatchingSyncDir', (event, dirPath) => {
 })
 
 ipcMain.on('stopWatchingSyncDir', () => {
+  if (syncWatchTimeout) {
+    clearTimeout(syncWatchTimeout)
+    syncWatchTimeout = null
+  }
+
   if (syncWatcher) {
     syncWatcher.close()
     syncWatcher = null
