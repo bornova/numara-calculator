@@ -8,7 +8,7 @@ import { initializeSettingsTooltips } from './ui/settingsTips'
 import { generateIcons } from './ui/icons'
 import { numaraKeys } from './editor/keybindings.js'
 import { modal, notify, showError } from './ui/dialogs'
-import { getPageName, initializePages, loadPage, pageOrder, populatePages, setupSideBar } from './ui/pageManager'
+import { getPageName, initializePages, loadPage, setupSideBar } from './ui/pageManager'
 import { plot } from './ui/functionPlot'
 import { applyAnswerPositionLayout, settings } from './ui/settings'
 import { applyUdfu } from './calc/userDefined'
@@ -533,11 +533,6 @@ const setupUIkitUtils = () => {
       input.value = [...x, ...y][i]
       input.disabled = auto
     })
-  })
-
-  UIkit.util.on('#pageList', 'moved', () => {
-    pageOrder()
-    populatePages()
   })
 
   UIkit.util.on('#dialogNewPage', 'shown', () => {
