@@ -1,5 +1,5 @@
 import { dom } from '../dom'
-import { cm, numaraHints, refreshCurrencyTokens } from '../editor'
+import { CLASS_NAMES, cm, numaraHints, refreshCurrencyTokens } from '../editor'
 import { calculate, clearEvaluationCache, math, refreshCurrencyState } from './calcManager'
 import { notify } from '../ui/dialogs'
 import { app, store } from '../appState'
@@ -19,6 +19,7 @@ const DEFAULTS = {
 
 const BUILTIN_UNIT_KEYS = new Set(Object.keys(math.Unit.UNITS))
 const BUILTIN_MATH_KEYS = new Set(Object.keys(math.expression.mathWithTransform))
+const registeredCurrencyHints = new Set()
 
 /**
  * Return true if the code or symbol conflicts with a built-in mathjs unit OR function/constant.
@@ -56,8 +57,9 @@ function registerCurrencyUnit(code, name, rate) {
     )
   }
 
-  if (!numaraHints.some((h) => h.text === code)) {
-    numaraHints.push({ text: code, desc: name, className: 'cm-currency' })
+  if (!registeredCurrencyHints.has(code)) {
+    registeredCurrencyHints.add(code)
+    numaraHints.push({ text: code, desc: name, className: CLASS_NAMES.CURRENCY })
   }
 }
 
