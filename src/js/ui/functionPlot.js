@@ -1,7 +1,8 @@
 import { dom } from '../dom'
-import { calculate, math } from '../calc/calcManager'
+import { math } from '../calc/calcManager'
 import { modal, showError } from './dialogs'
-import { app, checkSize, store } from '../appState'
+import { app, getAppLocale, store } from '../appState'
+import { parseLocaleNumber } from '../core/mathInstance'
 
 import { applyChange, observableDiff } from '@bornova/deep-diff'
 
@@ -40,9 +41,10 @@ const plotSettings = {
 
 /**
  * Gets the current active domain values for X and Y axes.
+ * @param {string} f The simplified function expression in terms of x.
  * @returns {{x: number[], y: number[]}} The X and Y axis domains.
  */
-function getDomains() {
+function getDomains(f) {
   if (app.plotSettings.domain.auto) {
     if (app.activePlot) {
       return {
@@ -51,11 +53,18 @@ function getDomains() {
       }
     }
 
-    const match = app.plotFunction.match(/^\s*\w+\s*\(\s*(\w+)\s*\)\s*=/)
-    const paramName = match ? match[1] : 'x'
-    let domain = math.abs(math.evaluate(app.plotFunction.split('=')[1], { [paramName]: 0 })) * 2
+    let domain = 10
 
-    if (!isFinite(domain) || domain === 0) domain = 10
+    try {
+      const evalVal = math.abs(math.evaluate(f, { x: 0 })) * 2
+      const numVal = typeof evalVal?.toNumber === 'function' ? evalVal.toNumber() : Number(evalVal)
+
+      if (Number.isFinite(numVal) && numVal > 0) {
+        domain = numVal
+      }
+    } catch {
+      domain = 10
+    }
 
     return {
       x: [-domain, domain],
@@ -75,12 +84,40 @@ export function plot() {
   const match = app.plotFunction.match(/^\s*\w+\s*\(\s*(\w+)\s*\)\s*=/)
   const paramName = match ? match[1] : 'x'
 
-  // Build a scope without the parameter name so it stays symbolic for function-plot.
+  // Build a numeric scope without the parameter name so it stays symbolic for function-plot.
   // Other user variables (e.g. `a = 2` in `f(x) = a * x`) are still substituted.
-  const plotScope = new Map(app.mathScope)
-  plotScope.delete(paramName)
+  const plotScope = new Map()
+  const appLocale = getAppLocale()
 
-  let f = math.simplify(app.plotFunction.split('=')[1], plotScope).toString()
+  for (const [key, val] of app.mathScope.entries()) {
+    if (key === paramName || key === 'ans' || key === '_' || key === 'now' || key === 'today') continue
+    if (['function', 'page', 'object', 'datetime'].includes(app.scopeTypes?.[key])) continue
+
+    if (typeof val === 'number') {
+      plotScope.set(key, val)
+    } else if (typeof val === 'string') {
+      const directNum = Number(val)
+
+      if (Number.isFinite(directNum)) {
+        plotScope.set(key, directNum)
+      } else {
+        const localeNum = parseLocaleNumber(val, appLocale)
+
+        if (Number.isFinite(localeNum)) {
+          plotScope.set(key, localeNum)
+        }
+      }
+    }
+  }
+
+  const rhs = app.plotFunction.split('=')[1]
+  let f = rhs
+
+  try {
+    f = math.simplify(rhs, plotScope).toString()
+  } catch {
+    f = rhs
+  }
 
   if (paramName !== 'x') {
     try {
@@ -98,13 +135,21 @@ export function plot() {
     }
   }
 
-  const { x: xDomain, y: yDomain } = getDomains()
-  const derivative = math.derivative(f, 'x').toString()
+  const { x: xDomain, y: yDomain } = getDomains(f)
+  let derivative = null
+
+  if (app.plotSettings.showDerivative) {
+    try {
+      derivative = math.derivative(f, 'x').toString()
+    } catch {
+      derivative = null
+    }
+  }
 
   app.activePlot = functionPlot.default({
     data: [
       {
-        derivative: app.plotSettings.showDerivative ? { fn: derivative, updateOnMouseMove: true } : false,
+        derivative: app.plotSettings.showDerivative && derivative ? { fn: derivative, updateOnMouseMove: true } : false,
         fn: f,
         graphType: 'polyline',
         sampler: 'builtIn'
@@ -126,7 +171,7 @@ export function plot() {
 
         let dStr = ''
 
-        if (app.plotSettings.showDerivative) {
+        if (app.plotSettings.showDerivative && derivative) {
           const derivVal = math.evaluate(derivative, { x })
           const derivNum = typeof derivVal?.toNumber === 'function' ? derivVal.toNumber() : Number(derivVal)
 
@@ -249,15 +294,10 @@ function setupEventListeners() {
     minMaxInputs.forEach((input, i) => (input.value = [...x, ...y][i]))
   })
 
-  let windowResizeDelay
-  window.addEventListener('resize', async () => {
+  window.addEventListener('resize', () => {
     if (app.activePlot && dom.dialogPlot.classList.contains('uk-open')) {
       plot()
     }
-
-    clearTimeout(windowResizeDelay)
-    windowResizeDelay = setTimeout(calculate, 10)
-    await checkSize()
   })
 }
 
