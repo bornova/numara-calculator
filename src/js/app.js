@@ -1,5 +1,5 @@
 import { checkColorChange, colors } from './ui/theme'
-import { copyAll, initializeContextMenus, safeCopyText } from './ui/contextMenu'
+import { copyAll, initializeContextMenus } from './ui/contextMenu'
 import { dom } from './dom'
 import { cm, refreshEditor, udfInput, uduInput } from './editor'
 import { calculate, syncOutputHeights } from './calc/calcManager'
@@ -119,7 +119,7 @@ const setupResultActions = () => {
 
     if (answerEl) {
       const textToCopy = answerEl.dataset.answer
-      const safeText = safeCopyText(textToCopy)
+      const safeText = escapeHTML(textToCopy)
 
       navigator.clipboard.writeText(textToCopy)
 
@@ -175,7 +175,7 @@ const setupPanelResizer = () => {
     store.set('inputWidth', defaultWidth)
     dividerTooltip()
     cm.refresh()
-    calculate()
+    syncOutputHeights()
   })
 
   dom.panelDivider.addEventListener('mousedown', (event) => {
@@ -186,7 +186,7 @@ const setupPanelResizer = () => {
     if (isResizing) {
       isResizing = false
       cm.refresh()
-      calculate()
+      syncOutputHeights()
     }
   })
 
@@ -207,7 +207,8 @@ const setupPanelResizer = () => {
       clearTimeout(calcTimeout)
       calcTimeout = setTimeout(() => {
         store.set('inputWidth', inputWidth)
-        calculate()
+        cm.refresh()
+        syncOutputHeights()
       }, 50)
     })
   })
@@ -393,34 +394,37 @@ const setupPrintArea = () => {
   window.addEventListener('beforeprint', () => {
     const printArea = document.createElement('div')
     const tableRows = []
+    const outputChildren = dom.output.firstElementChild?.children
+    const isBottom = app.settings.answerPosition === 'bottom'
+    const noBB = 'border-bottom: none !important;'
+    let lineIndex = 0
 
     printArea.setAttribute('id', 'printArea')
     printArea.className = 'printArea'
 
     cm.eachLine((line) => {
-      const lineIndex = cm.getLineNumber(line)
-      const input = escapeHTML(cm.getLine(lineIndex))
-      const answerEl = dom.el(`[data-index="${lineIndex}"]`)
+      const input = escapeHTML(line.text)
+      const answerEl = isBottom
+        ? app.widgetMap.get(line)?.node
+        : outputChildren?.[lineIndex] || dom.el(`[data-index="${lineIndex}"]`)
       const answer = escapeHTML(answerEl ? answerEl.textContent : '')
       const trHeader = `<tr style="
         height: ${app.settings.lineHeight};
         font-size: ${app.settings.fontSize};
         font-weight: ${app.settings.fontWeight};"
       >`
-      const noBB = app.settings.answerPosition ? 'border-bottom: none !important;' : ''
 
-      const rowHtml =
-        app.settings.answerPosition === 'bottom'
-          ? `
+      const rowHtml = isBottom
+        ? `
           ${trHeader}
             ${app.settings.lineNumbers ? `<td class="printLineNumCol" style="${noBB}">${lineIndex + 1}</td>` : ''}
-            <td style="width:100%; ${noBB};">${input}</td>
+            <td style="width:100%; ${noBB}">${input}</td>
           </tr>
           ${trHeader}
             ${app.settings.lineNumbers ? '<td class="printLineNumCol"></td>' : ''}
             <td>${answer}</td>
           </tr>`
-          : `
+        : `
           ${trHeader}
             ${app.settings.lineNumbers ? `<td class="printLineNumCol">${lineIndex + 1}</td>` : ''}
             <td style="width:${app.settings.inputWidth}%;">${input}</td>
@@ -428,6 +432,7 @@ const setupPrintArea = () => {
           </tr>`
 
       tableRows.push(rowHtml)
+      lineIndex++
     })
 
     printArea.innerHTML = `
@@ -492,8 +497,8 @@ const setupUIkitUtils = () => {
   let udTab = 1
 
   UIkit.util.on('#dialogUdfu', 'shown', () => {
-    const udf = store.get('udf').trim()
-    const udu = store.get('udu').trim()
+    const udf = (store.get('udf') ?? '').trim()
+    const udu = (store.get('udu') ?? '').trim()
 
     refreshEditor(udTab === 1 ? udfInput : uduInput)
 
@@ -522,7 +527,7 @@ const setupUIkitUtils = () => {
 
     dom.plotAutoDomain.checked = auto
     dom.plotAxisPrecision.value = axisPrecision
-    dom.plotAxisPrecisionLabel.innerHTML = axisPrecision
+    dom.plotAxisPrecisionLabel.textContent = axisPrecision
 
     minMaxInputs.forEach((input, i) => {
       input.value = [...x, ...y][i]
@@ -582,8 +587,6 @@ function initializeSideBar() {
       checkSize()
     }, 100)
   })
-
-  setupSideBar(true)
 }
 
 /**
@@ -593,9 +596,10 @@ function initializeSideBar() {
 const initializeApp = async () => {
   generateIcons()
   initCurrencies()
+  setupUserDefined()
 
   await settings.initialize()
-  await settings.apply()
+  await settings.apply(false)
 
   colors.initialize()
   colors.apply()
@@ -603,7 +607,6 @@ const initializeApp = async () => {
   setupHeaders()
   setupAppButtons()
   setupResultActions()
-  setupUserDefined()
   setupPanelResizer()
   setupSyncScroll()
   setupAppInfo()
