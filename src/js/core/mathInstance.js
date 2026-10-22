@@ -233,7 +233,7 @@ export function getLocaleSeparators(locale) {
 export function parseLocaleNumber(str, locale) {
   const { group, decimal } = getLocaleSeparators(locale)
   const cleaned = str
-    .replace(new RegExp(escapeRegExp(group), 'g'), '')
+    .replaceAll(group, '')
     .replace(/[\u00A0\u202F\u2009 ]/g, '')
     .replace(decimal, '.')
 
