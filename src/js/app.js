@@ -2,7 +2,7 @@ import { checkColorChange, colors } from './ui/theme'
 import { copyAll, initializeContextMenus, safeCopyText } from './ui/contextMenu'
 import { dom } from './dom'
 import { cm, refreshEditor, udfInput, uduInput } from './editor'
-import { calculate } from './calc/calcManager'
+import { calculate, syncOutputHeights } from './calc/calcManager'
 import { initCurrencies } from './calc/currencies'
 import { initializeSettingsTooltips } from './ui/settingsTips'
 import { generateIcons } from './ui/icons'
@@ -12,8 +12,9 @@ import { getPageName, initializePages, loadPage, pageOrder, populatePages, setup
 import { plot } from './ui/functionPlot'
 import { applyAnswerPositionLayout, settings } from './ui/settings'
 import { applyUdfu } from './calc/userDefined'
-import { app, initAppUpdate, checkAppUpdate, isMac, isElectron, store } from './appState'
+import { app, checkSize, initAppUpdate, checkAppUpdate, isMac, isElectron, store } from './appState'
 import { triggerFolderSync, checkSyncDir, handleSyncDirDeleted } from './calc/sync'
+import { escapeHTML } from './core/utils.js'
 
 import { author, description, homepage, name, version } from './../../package.json'
 
@@ -137,8 +138,17 @@ const setupResultActions = () => {
  * Loads and applies user defined functions and units from the local store.
  */
 const setupUserDefined = () => {
-  applyUdfu(store.get('udf') ?? '', 'func')
-  applyUdfu(store.get('udu') ?? '', 'unit')
+  try {
+    applyUdfu(store.get('udf') ?? '', 'func')
+  } catch (error) {
+    console.error('Error loading user-defined functions:', error)
+  }
+
+  try {
+    applyUdfu(store.get('udu') ?? '', 'unit')
+  } catch (error) {
+    console.error('Error loading user-defined units:', error)
+  }
 }
 
 /**
@@ -389,9 +399,9 @@ const setupPrintArea = () => {
 
     cm.eachLine((line) => {
       const lineIndex = cm.getLineNumber(line)
-      const input = cm.getLine(lineIndex)
+      const input = escapeHTML(cm.getLine(lineIndex))
       const answerEl = dom.el(`[data-index="${lineIndex}"]`)
-      const answer = answerEl ? answerEl.textContent : ''
+      const answer = escapeHTML(answerEl ? answerEl.textContent : '')
       const trHeader = `<tr style="
         height: ${app.settings.lineHeight};
         font-size: ${app.settings.fontSize};
@@ -568,7 +578,8 @@ function initializeSideBar() {
 
     resizeTimer = setTimeout(() => {
       setupSideBar(true)
-      calculate()
+      syncOutputHeights()
+      checkSize()
     }, 100)
   })
 
