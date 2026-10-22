@@ -1,5 +1,6 @@
 import { dom } from '../dom'
 import { math } from '../calc/calcManager'
+import { getSafeFilename } from '../calc/sync'
 import { modal, showError } from './dialogs'
 import { app, getAppLocale, store } from '../appState'
 import { parseLocaleNumber } from '../core/mathInstance'
@@ -116,7 +117,7 @@ export function plot() {
   try {
     f = math.simplify(rhs, plotScope).toString()
   } catch {
-    f = rhs
+    // Keep rhs if simplification fails
   }
 
   if (paramName !== 'x') {
@@ -136,13 +137,22 @@ export function plot() {
   }
 
   const { x: xDomain, y: yDomain } = getDomains(f)
+  let compiledF = null
   let derivative = null
+  let compiledDerivative = null
+
+  try {
+    compiledF = math.compile(f)
+  } catch {
+    // Ignore compilation error
+  }
 
   if (app.plotSettings.showDerivative) {
     try {
       derivative = math.derivative(f, 'x').toString()
+      compiledDerivative = math.compile(derivative)
     } catch {
-      derivative = null
+      // Ignore derivative error
     }
   }
 
@@ -162,23 +172,41 @@ export function plot() {
       xLine: app.plotSettings.showCross,
       yLine: app.plotSettings.showCross,
       renderer: (x, y) => {
-        x = x.toFixed(app.plotSettings.domain.axisPrecision)
+        const precision = app.plotSettings.domain.axisPrecision
+        const xFixed = x.toFixed(precision)
+        const xNum = Number(xFixed)
 
-        const evalVal = math.evaluate(f, { x })
-        const numVal = typeof evalVal?.toNumber === 'function' ? evalVal.toNumber() : Number(evalVal)
+        let yFixed = y.toFixed(precision)
 
-        y = numVal.toFixed(app.plotSettings.domain.axisPrecision)
+        if (compiledF) {
+          try {
+            const evalVal = compiledF.evaluate({ x: xNum })
+            const numVal = typeof evalVal?.toNumber === 'function' ? evalVal.toNumber() : Number(evalVal)
+
+            if (Number.isFinite(numVal)) {
+              yFixed = numVal.toFixed(precision)
+            }
+          } catch {
+            // Fall back to function-plot's y value
+          }
+        }
 
         let dStr = ''
 
-        if (app.plotSettings.showDerivative && derivative) {
-          const derivVal = math.evaluate(derivative, { x })
-          const derivNum = typeof derivVal?.toNumber === 'function' ? derivVal.toNumber() : Number(derivVal)
+        if (app.plotSettings.showDerivative && compiledDerivative) {
+          try {
+            const derivVal = compiledDerivative.evaluate({ x: xNum })
+            const derivNum = typeof derivVal?.toNumber === 'function' ? derivVal.toNumber() : Number(derivVal)
 
-          dStr = ', d: ' + derivNum.toFixed(app.plotSettings.domain.axisPrecision)
+            if (Number.isFinite(derivNum)) {
+              dStr = ', d: ' + derivNum.toFixed(precision)
+            }
+          } catch {
+            // Ignore non-finite derivative at x
+          }
         }
 
-        return ` x: ${x}, y: ${y}${dStr}`
+        return ` x: ${xFixed}, y: ${yFixed}${dStr}`
       }
     },
     width: dom.plot.clientWidth,
@@ -233,7 +261,7 @@ function setupEventListeners() {
   dom.exportPlot.addEventListener('click', () => {
     const svg = dom.el('.function-plot')
     svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
-    const fileName = `${productName} Plot ${app.plotFunction}.svg`
+    const fileName = `${getSafeFilename(`${productName} Plot ${app.plotFunction}`)}.svg`
     const preface = '<?xml version="1.0" standalone="no"?>\r\n'
     const svgBlob = new Blob([preface, svg.outerHTML], { type: 'image/svg+xml;charset=utf-8' })
     const downloadLink = document.createElement('a')
