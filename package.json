@@ -2,7 +2,7 @@
   "name": "numara",
   "productName": "Numara",
   "description": "Numara Calculator",
-  "version": "7.6.2",
+  "version": "7.6.3",
   "author": {
     "name": "Timur Atalay",
     "email": "mail@numara.io",
@@ -48,6 +48,6 @@
   "dependencies": {
     "electron-log": "^5.4.4",
     "electron-store": "^12.0.0",
-    "electron-updater": "^6.8.9"
+    "electron-updater": "^6.8.11"
   }
 }
