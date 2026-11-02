@@ -7,6 +7,8 @@ import {
   localeUsesComma as coreLocaleUsesComma
 } from './utils.js'
 
+import { createIntegerCastFunctions, registerIntegerCastDocs } from './bitcast.js'
+
 export { escapeHTML, escapeRegExp }
 
 export const app = {
@@ -26,9 +28,12 @@ const universalRegex = /[\p{L}\p{M}]/u
 
 math.parse.isAlpha = (c, cPrev, cNext) => isAlphaOriginal(c, cPrev, cNext) || universalRegex.test(c)
 
+registerIntegerCastDocs()
+
 math.import(
   {
-    page: () => ({})
+    page: () => ({}),
+    ...createIntegerCastFunctions(math)
   },
   { override: true }
 )
@@ -281,6 +286,22 @@ export function formatCurrency(str) {
   })
 }
 
+const NOTATION_BASES = { bin: 2, oct: 8, hex: 16 }
+const NOTATION_PREFIXES = { bin: '0b', oct: '0o', hex: '0x' }
+
+/**
+ * Format a BigInt answer, which math.js always renders in base 10.
+ * @param {bigint} value Value to format.
+ * @param {'bin'|'oct'|'hex'} notation Target notation.
+ * @returns {string} Formatted value, matching math.format notation output.
+ */
+function formatBigIntNotation(value, notation) {
+  const negative = value < 0n
+  const digits = (negative ? -value : value).toString(NOTATION_BASES[notation])
+
+  return (negative ? '-' : '') + NOTATION_PREFIXES[notation] + digits
+}
+
 export function formatAnswer(answer, useGrouping) {
   if (typeof answer === 'string') return stripAnswer(answer)
   if (answer && typeof answer === 'object' && answer._pageId && typeof answer.format === 'function') {
@@ -296,6 +317,8 @@ export function formatAnswer(answer, useGrouping) {
     : 4
 
   if (['bin', 'hex', 'oct'].includes(notation)) {
+    if (typeof answer === 'bigint') return formatBigIntNotation(answer, notation)
+
     answer = math.format(answer, { notation })
 
     return stripAnswer(answer)

@@ -1,7 +1,12 @@
 import fs from 'fs-extra'
 import { create, all } from 'mathjs'
 
+import { createIntegerCastFunctions, registerIntegerCastDocs } from '../js/core/bitcast.js'
+
 export const math = create(all)
+
+math.import(createIntegerCastFunctions(math), { override: true })
+registerIntegerCastDocs()
 
 const categorize = (obj) =>
   obj.reduce((catList, key) => {

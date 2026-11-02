@@ -193,5 +193,77 @@ export const customCases = [
     },
     expressions: ['1/3/2026 - 1 month', '1/1/2026 12:30 + 1 day'],
     expected: ['1/2/2026', /2\/1\/2026/]
+  },
+  {
+    name: 'Integer Type Casting (toUnsigned/toSigned)',
+    expressions: [
+      'toUnsigned(-1)',
+      'toUnsigned(-2.5, 8)',
+      'toSigned(4294967295, 32)',
+      'toUnsigned(-1, 7)',
+      'u8(-1)',
+      's8(255)',
+      'toUnsigned(-1, 64)',
+      'toSigned(toUnsigned(-1, 64), 64)',
+      'toSigned("18446744073709551615", 64)',
+      'toHex(-1, 16)',
+      'toHex(-1)',
+      'toBin(-1, 8)',
+      'toOct(-1, 16)'
+    ],
+    expected: [
+      '4294967295',
+      '254',
+      '-1',
+      '127',
+      '255',
+      '-1',
+      '18446744073709551615',
+      '-1',
+      '-1',
+      '0xFFFF',
+      '0xFFFFFFFF',
+      '0b11111111',
+      '0o177777'
+    ]
+  },
+  {
+    name: 'Integer Type Casting Output Formats (dec/hex/bin/oct)',
+    expressions: [
+      'toUnsigned(-1)',
+      'toUnsigned(-1, 32, "dec")',
+      'toUnsigned(-1, 32, "hex")',
+      'toUnsigned(-1, "hex")',
+      'toUnsigned(-1, 64, "hex")',
+      'toUnsigned(-1, 8, "bin")',
+      'toUnsigned(-1, 16, "oct")',
+      'toUnsigned(-2.5, 8, "hex")',
+      'toSigned(4294967295, 32, "hex")',
+      'toSigned(-1, 16, "hex")',
+      'toSigned(-2, 8, "bin")',
+      'toSigned(-1, 32)',
+      'toSigned(255, 32, "HEX")',
+      'u8(-1, "hex")',
+      's8(255, "bin")',
+      'u16(-1)'
+    ],
+    expected: [
+      '4294967295',
+      '4294967295',
+      '0xFFFFFFFF',
+      '0xFFFFFFFF',
+      '0xFFFFFFFFFFFFFFFF',
+      '0b11111111',
+      '0o177777',
+      '0xFE',
+      '0xFFFFFFFF',
+      '0xFFFF',
+      '0b11111110',
+      '-1',
+      '0x000000FF',
+      '0xFF',
+      '0b11111111',
+      '65535'
+    ]
   }
 ]
