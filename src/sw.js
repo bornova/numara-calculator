@@ -9,12 +9,12 @@ const CACHE_NAME = `numara-v${VERSION}`
 // Precache list dynamically injected at build time from the build directory
 const PRECACHE_URLS = ['__PRECACHE__']
 
-// Install: Pre-cache app shell. Tolerate individual failures with allSettled.
+// Install: Pre-cache app shell.
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => Promise.allSettled(PRECACHE_URLS.map((url) => cache.add(url))))
+      .then((cache) => cache.addAll(PRECACHE_URLS))
       .then(() => self.skipWaiting())
   )
 })
@@ -49,13 +49,19 @@ self.addEventListener('fetch', (event) => {
           if (response.ok) {
             const copy = response.clone()
 
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
+            caches
+              .open(CACHE_NAME)
+              .then((cache) => cache.put(request, copy))
+              .catch(() => {})
           }
 
           return response
         })
         .catch(() =>
-          caches.match(request).then((cached) => cached || caches.match('./index.html') || caches.match('./'))
+          caches
+            .match(request)
+            .then((cached) => cached || caches.match('./index.html'))
+            .then((cached) => cached || caches.match('./'))
         )
     )
 
@@ -69,7 +75,10 @@ self.addEventListener('fetch', (event) => {
         .then((response) => {
           if (response.status === 200 && response.type === 'basic') {
             const copy = response.clone()
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
+            caches
+              .open(CACHE_NAME)
+              .then((cache) => cache.put(request, copy))
+              .catch(() => {})
           }
           return response
         })
