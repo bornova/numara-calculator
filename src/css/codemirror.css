@@ -1,6 +1,6 @@
 /* Imports */
 @import url('./../../node_modules/codemirror/lib/codemirror.css');
-@import url('./../../node_modules/codemirror/addon/dialog/dialog.css');
+
 @import url('./../../node_modules/codemirror/addon/hint/show-hint.css');
 @import url('./../../node_modules/codemirror/theme/material-darker.css');
 
@@ -44,7 +44,7 @@ body.numara-search-panel-open .CodeMirror-selected {
 }
 
 .cm-s-numara .CodeMirror-matchingbracket {
-  color: light-dark(#999999, #999999) !important;
+  color: #999999 !important;
 }
 
 .CodeMirror-placeholder {
@@ -300,7 +300,7 @@ body.numara-search-panel-open.numara-search-replace-open .outputWrapper {
 }
 
 .CodeMirror.cm-s-material-darker {
-  border: 1px solid light-dark(#666666, #666666);
+  border: 1px solid #666666;
 }
 
 /* Hints */
