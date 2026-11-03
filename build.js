@@ -4,6 +4,7 @@ import path from 'path'
 
 const pkg = JSON.parse(readFileSync('./package.json'))
 const buildPath = 'build'
+const isProd = process.env.PROD === 'true' || process.env.PROD === '1' || process.env.NODE_ENV === 'production'
 
 const jsBanner = `/**
 * ${pkg.description}
@@ -79,7 +80,7 @@ async function buildNumara() {
     minify: true,
     entryPoints: ['src/js/app.js'],
     outfile: `${buildPath}/js/numara.js`,
-    sourcemap: !process.env.PROD
+    sourcemap: !isProd
   })
 
   await build({
@@ -87,7 +88,7 @@ async function buildNumara() {
     minify: true,
     entryPoints: ['src/js/calc/calc.worker.js'],
     outfile: `${buildPath}/js/calc.worker.js`,
-    sourcemap: !process.env.PROD
+    sourcemap: !isProd
   })
 
   const precacheUrls = await collectPrecacheUrls(buildPath)
@@ -98,4 +99,7 @@ async function buildNumara() {
   await fs.writeFile(`${buildPath}/sw.js`, swContent)
 }
 
-buildNumara()
+buildNumara().catch((err) => {
+  console.error(err)
+  process.exit(1)
+})
