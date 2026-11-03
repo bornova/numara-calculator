@@ -1,13 +1,7 @@
-import { create, all } from 'mathjs'
-import {
-  escapeHTML,
-  escapeRegExp,
-  getAppLocale as coreGetAppLocale,
-  getSystemLocale as coreGetSystemLocale,
-  localeUsesComma as coreLocaleUsesComma
-} from './utils.js'
+import { all, create } from 'mathjs'
 
-export { escapeHTML, escapeRegExp }
+import { USD_UNIT } from './constants.js'
+import { escapeRegExp, getSystemLocale as coreGetSystemLocale } from './utils.js'
 
 export const app = {
   settings: {},
@@ -33,47 +27,21 @@ math.import(
   { override: true }
 )
 
-export function getAppLocale() {
-  return coreGetAppLocale(app.settings)
-}
-
-export function getSystemLocale() {
-  return coreGetSystemLocale(app.settings)
-}
-
-export function localeUsesComma() {
-  return coreLocaleUsesComma(app.settings)
-}
-
-export function getDateFormatSettings() {
-  const fmt = app.settings.dateFormat || 'system'
-
-  return fmt === 'system'
-    ? {
-        todayFormat: 'D',
-        todayDayFormat: 'ccc, D',
-        nowFormat: 'D t',
-        nowDayFormat: 'ccc, D t'
-      }
-    : {
-        todayFormat: fmt,
-        todayDayFormat: 'ccc, ' + fmt,
-        nowFormat: fmt + ' t',
-        nowDayFormat: 'ccc, ' + fmt + ' t'
-      }
-}
-
-export function getFlexibleFormat(fmt) {
-  return !fmt ? fmt : fmt.replace(/dd/g, 'd').replace(/MM/g, 'M')
-}
+export const BUILTIN_UNIT_KEYS = new Set(Object.keys(math.Unit.UNITS))
+export const BUILTIN_MATH_KEYS = new Set(Object.keys(math.expression.mathWithTransform))
 
 export let currencySymbolsRegex = null
 export let currencyFormatRegex = null
-export let currencySymbolToCode = {}
+
+let currencySymbolToCode = {}
 let lastProcessedCurrencies = null
 
-const USD_UNIT = 'USD'
-
+/**
+ * Checks whether two currency maps have identical rates and symbols.
+ * @param {object} a First currency map.
+ * @param {object} b Second currency map.
+ * @returns {boolean}
+ */
 function isSameCurrencies(a, b) {
   if (!a || !b) return false
 
@@ -91,7 +59,48 @@ function isSameCurrencies(a, b) {
   return true
 }
 
-export function refreshCurrencyState() {
+/**
+ * Returns the active system locale for the calculation engine.
+ * @returns {string}
+ */
+export function getSystemLocale() {
+  return coreGetSystemLocale(app.settings)
+}
+
+/**
+ * Returns date and time format patterns derived from user settings.
+ * @returns {{ todayFormat: string, todayDayFormat: string, nowFormat: string, nowDayFormat: string }}
+ */
+export function getDateFormatSettings() {
+  const fmt = app.settings.dateFormat || 'MM/dd/yyyy'
+
+  return {
+    todayFormat: fmt,
+    todayDayFormat: 'ccc, ' + fmt,
+    nowFormat: fmt + ' t',
+    nowDayFormat: 'ccc, ' + fmt + ' t'
+  }
+}
+
+/**
+ * Converts padded date format tokens (`dd`, `MM`) into flexible single-digit tokens (`d`, `M`).
+ * @param {string} fmt Date format string.
+ * @returns {string}
+ */
+export function getFlexibleFormat(fmt) {
+  return !fmt ? fmt : fmt.replace(/dd/g, 'd').replace(/MM/g, 'M')
+}
+
+/**
+ * Registers currency units in Math.js and rebuilds symbol/code matching regexes.
+ * @param {object} [currencies] Optional currency configuration map to apply before refreshing.
+ * @returns {boolean} True if currency state changed.
+ */
+export function refreshCurrencyState(currencies) {
+  if (currencies !== undefined) {
+    app.currencies = currencies
+  }
+
   if (app.currencies === lastProcessedCurrencies) return false
 
   if (lastProcessedCurrencies && isSameCurrencies(app.currencies, lastProcessedCurrencies)) {
@@ -129,7 +138,7 @@ export function refreshCurrencyState() {
           code,
           {
             aliases:
-              code.toLowerCase() in math.Unit.UNITS || code.toLowerCase() in math.expression.mathWithTransform
+              BUILTIN_UNIT_KEYS.has(code.toLowerCase()) || BUILTIN_MATH_KEYS.has(code.toLowerCase())
                 ? []
                 : [code.toLowerCase()],
             definition: math.unit(`${info.rate} ${USD_UNIT}`)
@@ -185,194 +194,13 @@ export function refreshCurrencyState() {
   return true
 }
 
+/**
+ * Replaces a currency symbol glyph with its 3-letter ISO currency code.
+ * @param {string} symbol Currency symbol.
+ * @returns {string}
+ */
 export function replaceCurrencySymbol(symbol) {
   const code = currencySymbolToCode[symbol]
 
   return code ? code + ' ' : symbol
-}
-
-const numberFormatCache = new Map()
-const localeSeparatorCache = new Map()
-
-function getNumberFormatter(locale, options) {
-  const key = `${locale}_${options.useGrouping ?? ''}_${options.maximumFractionDigits ?? ''}_${options.style ?? ''}_${options.currency ?? ''}`
-  let formatter = numberFormatCache.get(key)
-
-  if (!formatter) {
-    formatter = new Intl.NumberFormat(locale, options)
-    numberFormatCache.set(key, formatter)
-  }
-
-  return formatter
-}
-
-export function stripAnswer(answer) {
-  return typeof answer === 'string' ? answer.replace(/^"|"$/g, '') : answer
-}
-
-export function getLocaleSeparators(locale) {
-  if (locale === 'en-US') return { group: ',', decimal: '.' }
-  if (locale === 'tr-TR') return { group: '.', decimal: ',' }
-
-  let sep = localeSeparatorCache.get(locale)
-
-  if (sep) return sep
-
-  const parts = new Intl.NumberFormat(locale).formatToParts(12345.6)
-
-  sep = {
-    group: parts.find((p) => p.type === 'group')?.value ?? ',',
-    decimal: parts.find((p) => p.type === 'decimal')?.value ?? '.'
-  }
-
-  localeSeparatorCache.set(locale, sep)
-
-  return sep
-}
-
-export function parseLocaleNumber(str, locale) {
-  const { group, decimal } = getLocaleSeparators(locale)
-  const cleaned = str
-    .replaceAll(group, '')
-    .replace(/[\u00A0\u202F\u2009 ]/g, '')
-    .replace(decimal, '.')
-
-  return parseFloat(cleaned)
-}
-
-export function formatCurrency(str) {
-  if (!currencyFormatRegex) return str
-
-  const appLocale = getAppLocale()
-  const useGrouping = app.settings?.thouSep !== 'disabled'
-  const maximumFractionDigits = Number.isFinite(+app.settings?.precision)
-    ? Math.max(0, Math.min(20, +app.settings.precision))
-    : 4
-
-  return str.replace(currencyFormatRegex, (match, amount, code) => {
-    const upperCode = code.toUpperCase()
-    const info = app.currencies[upperCode]
-
-    if (!info) return match
-
-    const trimmed = amount.trim()
-    const eIndex = trimmed.search(/e[+-]?\d+$/i)
-    const baseStr = eIndex >= 0 ? trimmed.slice(0, eIndex) : trimmed
-    const expStr = eIndex >= 0 ? trimmed.slice(eIndex) : ''
-    const value = parseLocaleNumber(baseStr, appLocale)
-
-    if (!Number.isFinite(value)) return `${info.symbol ?? ''}${trimmed}`
-
-    const locale = appLocale
-
-    try {
-      const formatter = getNumberFormatter(locale, {
-        style: 'currency',
-        currency: upperCode,
-        currencyDisplay: 'narrowSymbol',
-        useGrouping,
-        maximumFractionDigits
-      })
-
-      return formatter.format(value) + expStr
-    } catch {
-      return `${info.symbol ?? ''}${trimmed}${expStr}`
-    }
-  })
-}
-
-export function formatAnswer(answer, useGrouping) {
-  if (typeof answer === 'string') return stripAnswer(answer)
-  if (answer && typeof answer === 'object' && answer._pageId && typeof answer.format === 'function') {
-    return answer.format()
-  }
-
-  const notation = app.settings?.notation || 'auto'
-  const lowerExp = Number.isFinite(+app.settings?.expLower) ? +app.settings.expLower : -12
-  const upperExp = Number.isFinite(+app.settings?.expUpper) ? +app.settings.expUpper : 12
-  const locale = getAppLocale()
-  const maximumFractionDigits = Number.isFinite(+app.settings?.precision)
-    ? Math.max(0, Math.min(20, +app.settings.precision))
-    : 4
-
-  if (['bin', 'hex', 'oct'].includes(notation)) {
-    answer = math.format(answer, { notation })
-
-    return stripAnswer(answer)
-  }
-
-  const formatOptions = { notation, lowerExp, upperExp }
-  const localeOptions = { maximumFractionDigits, useGrouping }
-  const formatter = getNumberFormatter(locale, localeOptions)
-  const { decimal: decimalSeparator, group: groupSeparator } = getLocaleSeparators(locale)
-
-  function formatNumericString(numStr, decSep, grpSep, useGrp) {
-    const parts = numStr.split('.')
-    let integerPart = parts[0]
-    const decimalPart = parts[1] || ''
-
-    if (useGrp && grpSep) {
-      const isNegative = integerPart.startsWith('-')
-
-      if (isNegative) {
-        integerPart = integerPart.slice(1)
-      }
-
-      integerPart = integerPart.slice(0).replace(/\B(?=(\d{3})+(?!\d))/g, grpSep)
-
-      if (isNegative) {
-        integerPart = '-' + integerPart
-      }
-    }
-
-    if (decimalPart) return integerPart + decSep + decimalPart
-
-    return integerPart
-  }
-
-  let processedAnswer = answer
-
-  if (typeof maximumFractionDigits === 'number' && !isNaN(maximumFractionDigits)) {
-    try {
-      processedAnswer = math.round(answer, maximumFractionDigits)
-    } catch {
-      // ignore
-    }
-  }
-
-  let formattedAnswer = math.format(processedAnswer, (value) => {
-    let roundedValue = value
-
-    if (typeof maximumFractionDigits === 'number' && !isNaN(maximumFractionDigits)) {
-      try {
-        roundedValue = math.round(value, maximumFractionDigits)
-      } catch {
-        // ignore
-      }
-    }
-
-    const valueStr = math.format(roundedValue, formatOptions)
-
-    if (typeof roundedValue === 'number' && notation === 'auto' && !valueStr.includes('e')) {
-      const formatted = formatter.format(roundedValue)
-      const expectedDecimal = decimalSeparator
-      const hasDecimal = valueStr.includes('.')
-
-      if (!hasDecimal || formatted.includes(expectedDecimal)) return formatted
-    }
-
-    if (valueStr.includes('e')) {
-      const [base, exponent] = valueStr.split('e')
-
-      return formatNumericString(base, decimalSeparator, groupSeparator, useGrouping) + 'e' + exponent
-    }
-
-    return formatNumericString(valueStr, decimalSeparator, groupSeparator, useGrouping)
-  })
-
-  if (app.settings.currency) {
-    formattedAnswer = formatCurrency(formattedAnswer)
-  }
-
-  return stripAnswer(formattedAnswer)
 }
