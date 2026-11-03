@@ -77,10 +77,9 @@ export const customCases = [
     expected: ['1200', '300', '1500']
   },
   {
-    name: 'Semicolon Argument Separator (inputLocale enabled)',
+    name: 'Semicolon Argument Separator (1.234,56 number format)',
     settings: {
-      inputLocale: true,
-      thouSep: 'comma'
+      numberFormat: '1.234,56'
     },
     expressions: ['sum(1;2;3)', 'mean(10;20;30)'],
     expected: ['6', '20']
@@ -91,19 +90,17 @@ export const customCases = [
     expected: ['120', '15', '15']
   },
   {
-    name: 'Locale Separators (Turkish / Comma decimal)',
+    name: 'Locale Separators (1.234,56 format / Period thousands & Comma decimal)',
     settings: {
-      inputLocale: true,
-      thouSep: 'comma'
+      numberFormat: '1.234,56'
     },
-    expressions: ['1.234.567,89 + 0,11', '1234,5 * 2'],
-    expected: ['1234568', '2469']
+    expressions: ['1.234.567,89 + 0,11', '1234,5 * 2', '1,200 + 3.4525'],
+    expected: ['1234568', '2469', /Invalid number/]
   },
   {
-    name: 'Locale Separators (US / Period decimal)',
+    name: 'Locale Separators (1,234.56 format / Comma thousands & Period decimal)',
     settings: {
-      inputLocale: true,
-      thouSep: 'period'
+      numberFormat: '1,234.56'
     },
     expressions: ['1,234,567.89 + 0.11', '1234.5 * 2'],
     expected: ['1234568', '2469']
@@ -165,13 +162,13 @@ export const customCases = [
     expected: ['Dates', /\d{1,2}\/\d{1,2}\/\d{4}/]
   },
   {
-    name: 'Regression: Comma Locale With inputLocale Disabled',
+    name: 'Regression: 1.234,56 and 1,234.56 With Thousands Separator Off',
     settings: {
-      inputLocale: false,
-      thouSep: 'comma'
+      numberFormat: '1.234,56',
+      thouSep: false
     },
-    expressions: ['1.25 + 2.5', 'pow(2,3)', 'sum(1,2,3)'],
-    expected: ['3,75', '8', '6']
+    expressions: ['1,25 + 2,5', 'pow(2;3)', 'sum(1;2;3)', '1.000 + 2.500'],
+    expected: ['3,75', '8', '6', '3500']
   },
   {
     name: 'Regression: Single-Letter Unit/Constant Line Labels',
@@ -193,5 +190,266 @@ export const customCases = [
     },
     expressions: ['1/3/2026 - 1 month', '1/1/2026 12:30 + 1 day'],
     expected: ['1/2/2026', /2\/1\/2026/]
+  },
+  {
+    name: 'Date Format: MM/DD/YYYY (Default) Input and Output',
+    expressions: ['01/15/2026 + 1 day', '1/15/2026 + 2 days', '15/01/2026 + 1 day', '2026-01-15 + 1 day', 'today'],
+    expected: ['01/16/2026', '01/17/2026', 'Invalid Date', 'Invalid Date', /^\d{2}\/\d{2}\/\d{4}$/]
+  },
+  {
+    name: 'Date Format: DD/MM/YYYY Input and Output',
+    settings: {
+      dateFormat: 'dd/MM/yyyy'
+    },
+    expressions: ['15/01/2026 + 1 day', '15/1/2026 + 2 days', '01/15/2026 + 1 day', '2026-01-15 + 1 day', 'today'],
+    expected: ['16/01/2026', '17/01/2026', 'Invalid Date', 'Invalid Date', /^\d{2}\/\d{2}\/\d{4}$/]
+  },
+  {
+    name: 'Date Format: YYYY-MM-DD Input and Output',
+    settings: {
+      dateFormat: 'yyyy-MM-dd'
+    },
+    expressions: ['2026-01-15 + 1 day', '2026-1-15 - 2 days', '01/15/2026 + 1 day', '15/01/2026 + 1 day', 'today'],
+    expected: ['2026-01-16', '2026-01-13', 'Invalid Date', 'Invalid Date', /^\d{4}-\d{2}-\d{2}$/]
+  },
+  {
+    name: 'Natural Base and Percentage Conversions (in/to hex, bin, oct, %)',
+    expressions: [
+      '255 in hex',
+      '255 to hex',
+      '10 in bin',
+      '10 to bin',
+      '64 in oct',
+      '64 to oct',
+      '0.15 in %',
+      '0.15 to %',
+      '(1 / 4) in %'
+    ],
+    expected: ['0xff', '0xff', '0b1010', '0b1010', '0o100', '0o100', '15%', '15%', '25%']
+  },
+  {
+    name: 'Regression: Fallback Evaluator Precedence, Units, and Strings',
+    expressions: ['x = -2', 'label: x^2', 'd = 5 cm', 'len: d^2 to cm^2', 'note: concat("x", "y")'],
+    expected: ['-2', '4', '5 cm', '25 cm^2', 'xy']
+  },
+  {
+    name: 'Regression: Keyword Precedence and Non-Numeric Lines in Totals',
+    expressions: ['-5', 'total^2', '"hello"', 'total', 'avg'],
+    expected: ['-5', '25', 'hello', '-5', '-5']
+  },
+  {
+    name: 'Regression: Comma Decimal Date-Time Consecutive Lines (lastIndex)',
+    settings: {
+      numberFormat: '1.234,56',
+      dateFormat: 'd/M/yyyy',
+      dateDay: true
+    },
+    expressions: ['5 hours + 2 days', 'Fri, 2/1/2026 + 1 day'],
+    expected: ['53 hours', 'Sat, 3/1/2026']
+  },
+  {
+    name: 'Regression: Currency Formatting Preserves String Literals in Objects',
+    expressions: ['x = {s: "5 eur"}'],
+    expected: ['{"s": "5 eur"}']
+  },
+  {
+    name: 'Regression: Multi-Statement Keyword Lines Execute Side-Effects Once',
+    expressions: ['a = 10', 'a = a + 5; total', 'a'],
+    expected: ['10', '[10]', '15']
+  },
+  {
+    name: 'Answer and Line Reference Variables (ans, _, lineN) and Error Clearing',
+    expressions: ['10 + 5', 'ans * 2', '_ + 10', 'line1 + line2 + line3', 'invalid_var', 'ans', '_'],
+    expected: ['15', '30', '40', '85', /Undefined symbol invalid_var/, /Undefined symbol ans/, /Undefined symbol _/]
+  },
+  {
+    name: 'Error Line Resets Running Subtotal',
+    expressions: ['10', '20', 'subtotal', 'unknown_symbol', '5', 'subtotal', 'total'],
+    expected: ['10', '20', '30', /Undefined symbol unknown_symbol/, '5', '5', '35']
+  },
+  {
+    name: 'Notation Mode: Fixed',
+    settings: {
+      notation: 'fixed',
+      precision: '3',
+      thouSep: false
+    },
+    expressions: ['12.3', '1.23456'],
+    expected: ['12.300', '1.235']
+  },
+  {
+    name: 'Notation Mode: Exponential',
+    settings: {
+      notation: 'exponential',
+      precision: '2'
+    },
+    expressions: ['12345', '0.126'],
+    expected: ['1.2345e+4', '1.3e-1']
+  },
+  {
+    name: 'Notation Mode: Engineering',
+    settings: {
+      notation: 'engineering',
+      precision: '3'
+    },
+    expressions: ['12345'],
+    expected: ['12.345e+3']
+  },
+  {
+    name: 'Notation Modes: Hex, Bin, and Oct',
+    settings: {
+      notation: 'hex'
+    },
+    expressions: ['255', '16'],
+    expected: ['0xff', '0x10']
+  },
+  {
+    name: 'Auto Notation Exponent Bounds (expLower and expUpper)',
+    settings: {
+      notation: 'auto',
+      expLower: '-3',
+      expUpper: '3',
+      thouSep: false
+    },
+    expressions: ['100', '1000', '0.001', '0.0001'],
+    expected: ['100', '1e+3', '0.001', '1e-4']
+  },
+  {
+    name: 'Numeric Output: Fraction',
+    settings: {
+      numericOutput: 'Fraction'
+    },
+    expressions: ['1/3 + 1/6', '0.25 + 0.5'],
+    expected: ['1/2', '3/4']
+  },
+  {
+    name: 'Predictable Evaluation Mode',
+    settings: {
+      predictable: true
+    },
+    expressions: ['sqrt(-4)', 'sqrt(4)'],
+    expected: ['NaN', '2']
+  },
+  {
+    name: 'Matrix Type: Array',
+    settings: {
+      matrixType: 'Array'
+    },
+    expressions: ['[1, 2] + [3, 4]', 'size([10, 20, 30])'],
+    expected: ['[4, 6]', '[3]']
+  },
+  {
+    name: 'Function Plotting Detection and Line References',
+    expressions: ['f(x) = x^2 + 1', 'ans', 'line1', 'f(3)'],
+    expected: ['f(x) = x^2 + 1', 'f(x) = x^2 + 1', 'f(x) = x^2 + 1', '10']
+  },
+  {
+    name: 'Cross-Page Reference Edge Cases (Circular, Missing, .num Suffix, Scope Isolation)',
+    pages: [
+      { id: 'p-rates', name: 'Rates.num', data: 'tax = 0.2\n100' },
+      { id: 'p-cycle-a', name: 'CycleA', data: 'x = page("CycleB").y' },
+      { id: 'p-cycle-b', name: 'CycleB', data: 'y = page("CycleA").x' }
+    ],
+    expressions: [
+      'r = page("Rates.num")',
+      'r.tax',
+      'rById = page("p-rates")',
+      'rById.tax',
+      'r.ans',
+      'r.line1',
+      'page("MissingPage")',
+      'page(123)',
+      'page("CycleA").x'
+    ],
+    expected: [
+      'Rates.num',
+      '0.2',
+      'Rates.num',
+      '0.2',
+      '',
+      '',
+      /Page "MissingPage" not found/,
+      /Page name must be a string/,
+      ''
+    ]
+  },
+  {
+    name: 'Luxon DateTime in User Defined Functions',
+    udf: 'daysInJan2026: () => luxon.fromObject({ year: 2026, month: 1 }).daysInMonth',
+    expressions: ['daysInJan2026()'],
+    expected: ['31']
+  },
+  {
+    name: 'Comments Inside String Literals and Unicode Variable Identifiers',
+    expressions: [
+      'url = "https://example.com/path#frag" // trailing comment',
+      'hash = "item #1" # another comment',
+      'url',
+      'hash',
+      'ücret = 250',
+      'π_val = 10',
+      'ücret + π_val'
+    ],
+    expected: [
+      'https://example.com/path#frag',
+      'item #1',
+      'https://example.com/path#frag',
+      'item #1',
+      '250',
+      '10',
+      '260'
+    ]
+  },
+  {
+    name: 'Comma-Decimal Number Format Validation Errors (1.234,56)',
+    settings: {
+      numberFormat: '1.234,56'
+    },
+    expressions: ['a = 1', 'b = 2', '1.23,45', 'max(a; b)', 'max(a, b)'],
+    expected: ['1', '2', /Invalid number "1\.23,45"/, '2', /Use semicolon \(;\) as argument separator/]
+  },
+  {
+    name: 'Colon Labels Do Not Collide With Scope Variables or Ranges',
+    expressions: ['rent = 1', 'rent: 5', 'rent:5', '1:4'],
+    expected: ['1', '5', '[1, 2, 3, 4, 5]', '[1, 2, 3, 4]']
+  },
+  {
+    name: 'Date Difference Arithmetic (date1 - date2)',
+    expressions: [
+      '01/20/2026 - 01/15/2026',
+      '01/20/2026 - 01/15/2026 in hours',
+      '01/22/2026 - 01/15/2026 to weeks',
+      '01/20/2026 15:30 - 01/20/2026 12:00',
+      'd1 = 01/15/2026 + 5 days',
+      'd1 - 01/15/2026',
+      'diff = 01/25/2026 - 01/15/2026',
+      'diff in hours'
+    ],
+    expected: ['5 days', '120 hours', '1 weeks', '3.5 hours', '01/20/2026', '5 days', '10 days', '240 hours']
+  },
+  {
+    name: 'Date Difference Arithmetic in YYYY-MM-DD Format',
+    settings: {
+      dateFormat: 'yyyy-MM-dd'
+    },
+    expressions: ['2026-01-20 - 2026-01-15', '2026-01-20 - 2026-01-15 in hours'],
+    expected: ['5 days', '120 hours']
+  },
+  {
+    name: 'Natural Percentage Ratios and Variable/Unit Percentage Offsets',
+    expressions: [
+      '50 as % of 200',
+      '50 as a % of 200',
+      '30 is what % of 150',
+      'ratio = 25 as % of 100',
+      'ratio',
+      '20% OF 100',
+      'price = $200',
+      'price + 15%',
+      'price - 10%',
+      'len = 50 m',
+      'len + 20%'
+    ],
+    expected: ['25%', '25%', '20%', '25%', '0.25', '20', '$200.00', '$230.00', '$180.00', '50 m', '60 m']
   }
 ]
