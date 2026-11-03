@@ -1,0 +1,468 @@
+/* Dialog base & tabs */
+
+.dialog-buttons {
+  display: flex;
+  align-items: center;
+  margin-top: 15px;
+}
+
+.dialog-buttons svg {
+  width: 14px;
+  height: 14px;
+}
+
+.dialogConfirm {
+  z-index: 10010;
+}
+
+.uk-tab > * > a {
+  border-bottom-width: 2px;
+}
+
+#settingsTabs {
+  margin-bottom: 10px;
+}
+
+#settingsTabs::before {
+  right: 15px;
+  left: 15px;
+  border-bottom: 1px solid light-dark(#e5e5e5, #333333);
+}
+
+/* Settings dialog */
+
+.dialog-settings-body {
+  margin-right: -8px;
+  padding-right: 8px;
+  height: calc(100vh - 200px);
+  max-height: 420px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.dialog-settings-body > li > div,
+.dialog-plot-settings-body > div:not(.domainParent) {
+  margin: 10px 0 0 0;
+  line-height: 16px;
+}
+
+.theme-pill-button svg {
+  stroke-width: 2px;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
+.resetButtons a {
+  margin-right: 10px;
+  color: light-dark(#777777, #999999);
+}
+
+.resetButtons a:hover {
+  color: light-dark(#1d3f5c, #a0d3ff);
+}
+
+.resetAppButton:hover {
+  color: light-dark(#b10e0e, #d41111) !important;
+}
+
+.defaultSettingsButton > svg {
+  width: 16px;
+  height: 16px;
+}
+
+.settingItem {
+  width: 150px;
+}
+
+#currencyInterval {
+  width: 125px;
+}
+
+#dialogSettings h3 {
+  margin: 25px 0 12px 0;
+  color: light-dark(#1d3f5c, #a0d3ff);
+  font-weight: 500;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+#dialogSettings h3:first-child {
+  margin: 5px 0 12px 0;
+}
+
+#dialogSettings .settingMod,
+#dialogSettings .settingModToggle {
+  display: none;
+  position: absolute;
+  cursor: pointer;
+  margin-top: -3px;
+  margin-left: -20px;
+  color: #dd9359;
+}
+
+#dialogSettings .settingMod > svg,
+#dialogSettings .settingModToggle > svg {
+  width: 24px;
+}
+
+#dialogSettings #themeMod {
+  position: relative;
+}
+
+#dialogSettings div:has(> .settingMod),
+#dialogSettings div:has(> .settingModToggle) {
+  position: relative;
+}
+
+#dialogSettings div:has(> .uk-range) .settingMod {
+  margin-left: -62px;
+}
+
+#dialogSettings input:disabled + span.slider.round {
+  cursor: default;
+}
+
+.precision,
+.expLower,
+.expUpper {
+  border: 1px solid light-dark(#e5e5e5, #333333);
+  background-color: transparent;
+  padding: 1px 0 0 0;
+  width: 25px;
+  color: light-dark(#333333, #e6e6e6);
+  text-align: center;
+}
+
+.warn-icon {
+  display: none;
+  justify-content: center;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.warn-icon svg {
+  stroke: #faa05a;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
+#updateRatesLink[data-enabled='false'] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.customizeThemeButton > svg {
+  width: 18px;
+  height: 18px;
+}
+
+.updateRatesLink > svg {
+  width: 16px;
+  height: 16px;
+}
+
+.updateRatesLink.spin > svg {
+  animation: spin 1s linear infinite;
+}
+
+.updateRatesLink.spin {
+  pointer-events: none;
+}
+
+/* Theme pill buttons */
+
+.theme-pill-group {
+  display: flex;
+  flex: 1;
+  vertical-align: middle;
+  border: 1px solid light-dark(#eaeaea, #3b3b3b);
+  border-radius: 8px;
+  background-color: light-dark(#f5f5f5, #2b2b2b);
+  padding: 3px;
+  width: 115px;
+}
+
+.theme-pill-button {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  outline: none;
+  border: none;
+  border-radius: 6px;
+  background: transparent !important;
+  padding: 5px 10px;
+  color: light-dark(#777777, #999999);
+}
+
+.theme-pill-button:hover {
+  color: light-dark(#111111, #ffffff);
+}
+
+.theme-pill-button.active {
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+  background-color: light-dark(#ffffff, #1f1f1f) !important;
+  color: #1e87f0;
+}
+
+/* Sync folder tab */
+
+#syncDirSection {
+  display: none;
+}
+
+.sync-label {
+  width: 20%;
+}
+
+.sync-path {
+  width: 80%;
+}
+
+.sync-path-link {
+  display: block;
+  overflow: hidden;
+  direction: rtl;
+  text-align: right;
+  text-decoration: underline;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#syncDirHiddenWrapper {
+  display: none;
+}
+
+/* Color picker dialog */
+
+.colorPickerContainer {
+  height: calc(100vh - 200px);
+  max-height: 450px;
+  overflow: scroll;
+}
+
+.colorPickerContainer > div {
+  margin: 5px 0 0 0;
+}
+
+.colorPickerContainer > div > div:first-child {
+  margin-right: 10px;
+}
+
+.colorInput {
+  cursor: pointer;
+  box-sizing: border-box;
+  border: 1px solid light-dark(#eaeaea, #666666);
+  padding: 2px 5px;
+  width: 80px;
+  height: 20px;
+  color: light-dark(#333333, #e6e6e6);
+}
+
+.colorInputDefault {
+  border-left: 1px solid light-dark(#eaeaea, #666666);
+}
+
+.colorInputChanged {
+  border-left: 2px solid #dd9359;
+}
+
+.colorHR {
+  border-bottom: 1px solid light-dark(#eaeaea, #666666);
+}
+
+/* About dialog */
+
+.dialogAbout {
+  text-align: center;
+}
+
+.dialog-about-header {
+  display: inline-block;
+  margin: 0 auto;
+  font-weight: 600;
+}
+
+.dialog-about-header img {
+  width: 128px;
+}
+
+.dialog-about-links {
+  display: flex;
+  flex: auto;
+  border-top: 1px solid light-dark(#eaeaea, #333333);
+}
+
+.dialog-about-links > div {
+  width: 100%;
+  line-height: 30px;
+}
+
+div:has(> #logsLink) {
+  display: none;
+}
+
+.dialogAboutAppVersion {
+  display: block;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.versionCtnr > div {
+  margin: 8px 3px 3px 3px;
+  text-align: center;
+}
+
+.dialogAboutUpdateStatus {
+  display: block;
+  color: light-dark(#666666, #999999);
+  text-align: center;
+}
+
+.updateButton {
+  display: none;
+  margin-top: 10px;
+  text-transform: capitalize;
+}
+
+.dialogAboutCopyright {
+  display: block;
+  margin: 15px 0;
+}
+
+.pr-lh {
+  line-height: 22px;
+}
+
+/* Plot dialog */
+
+#plot,
+.function-plot {
+  height: calc(100vh - 180px) !important;
+  max-height: 800px;
+}
+
+.domain {
+  opacity: 1;
+  stroke: light-dark(#eaeaea, #444444);
+}
+
+.origin {
+  stroke: light-dark(#999999, #f9f9f9);
+}
+
+.tick line {
+  opacity: 1;
+  stroke: light-dark(#f0f0f0, #333333);
+}
+
+.domainParent {
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
+  grid-template-columns: repeat(4, 1fr);
+  margin: 10px auto 0 auto;
+  width: 250px;
+}
+
+.domainParent > .div1 {
+  grid-column: span 4 / span 4;
+  text-align: center;
+}
+
+.domainParent > .div2 {
+  grid-row-start: 4;
+  grid-column: span 4 / span 4;
+  grid-column-start: 1;
+  text-align: center;
+}
+
+.domainParent > .div3 {
+  grid-row-start: 2;
+  grid-column-start: 2;
+  border-right: 1px solid #cccccc;
+  border-bottom: 1px solid #cccccc;
+}
+
+.domainParent > .div4 {
+  grid-row-start: 2;
+  grid-column-start: 3;
+  border-bottom: 1px solid #cccccc;
+  padding-left: 5px;
+}
+
+.domainParent > .div5 {
+  grid-row-start: 3;
+  grid-column-start: 2;
+  border-right: 1px solid #cccccc;
+}
+
+.domainParent > .div6 {
+  grid-row-start: 3;
+  grid-column-start: 3;
+}
+
+.domainParent > .div7 {
+  grid-row: span 2 / span 2;
+  grid-row-start: 2;
+  grid-column-start: 1;
+  margin: auto 0;
+  text-align: right;
+}
+
+.domainParent > .div8 {
+  grid-row: span 2 / span 2;
+  grid-row-start: 2;
+  grid-column-start: 4;
+  margin: auto 0;
+}
+
+.domainTextBox {
+  margin: 10px;
+  width: 50px;
+}
+
+.domainTextBox:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.plotSeriesList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 0 0 5px 0;
+}
+
+.plotSeriesChip {
+  cursor: pointer;
+  border: 1px solid light-dark(#dcdcdc, #3b3b3b);
+  border-radius: 14px;
+  background-color: light-dark(#f5f5f5, #2a2a2a);
+  padding: 0 10px;
+  color: light-dark(#666666, #aaaaaa);
+  font-size: 0.88rem;
+  line-height: 16px;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.plotSeriesChip:hover {
+  border-color: #1e87f0;
+  color: light-dark(#222222, #ffffff);
+}
+
+.plotSeriesChip.active {
+  border-color: #1e87f0;
+  background-color: light-dark(#eef6ff, #1f3247);
+  color: light-dark(#1565c0, #7cc0ff);
+}
+
+.plotSwitches {
+  margin: 0;
+}
