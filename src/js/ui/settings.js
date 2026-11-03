@@ -1,14 +1,253 @@
-import { colors } from './theme'
-import { dom } from '../dom'
-import { cm, udfInput, uduInput } from '../editor'
-import { calculate, clearEvaluationCache, math } from '../calc/calcManager'
-import { getRates } from '../calc/currencies'
-import { confirm, modal, showError } from './dialogs'
-import { setupSideBar } from './pageManager'
-import { app, checkSize, getSystemLocale, getTheme, isElectron, isMac, store } from '../appState'
-import { triggerFolderSync, clearSyncCache } from '../calc/sync'
-
 import { applyChange, observableDiff } from '@bornova/deep-diff'
+
+import { calculate, clearEvaluationCache } from '../calc/calcManager.js'
+import { getRates } from '../calc/currencies.js'
+import { app as coreApp } from '../core/mathInstance.js'
+import { escapeHTML } from '../core/utils.js'
+import { dom } from '../dom.js'
+import { cm, udfInput, uduInput } from '../editor/index.js'
+import { clearSyncCache, triggerFolderSync } from '../pages/sync.js'
+import { app } from '../state/appState.js'
+import { checkSize, DEFAULT_APP_HEIGHT, DEFAULT_APP_WIDTH, getTheme, isElectron, isMac } from '../state/env.js'
+import { store } from '../state/store.js'
+import { confirm, modal, showError } from './dialogs.js'
+import { setupSideBar, SIDEBAR_DEFAULT_WIDTH } from './sidebar.js'
+import { colors } from './theme.js'
+
+let updateInterval
+let eventsInitialized = false
+
+/**
+ * Check if a setting is modified from its default value and toggle its indicator dot.
+ * @param {string} key The setting key.
+ */
+function checkMods(key) {
+  const el = dom.el('#' + key + 'Mod')
+
+  if (el) {
+    el.style.display = app.settings[key] !== settings.defaults[key] ? 'inline-block' : 'none'
+  }
+}
+
+/** Configures warnings by checking a condition mapped to a dom component. */
+function checkWarnings() {
+  dom.bigNumWarn.style.display = app.settings.numericOutput === 'BigNumber' ? 'inline-flex' : 'none'
+  dom.localeWarn.style.display = app.settings.numberFormat === '1.234,56' ? 'inline-flex' : 'none'
+}
+
+/**
+ * Updates the sync directory path display text and tooltip.
+ * @param {string} path The sync directory path.
+ */
+function updateSyncDirPathDisplay(path) {
+  if (dom.selectSyncDirButton) {
+    if (path) {
+      const safePath = escapeHTML(path).replaceAll(';', '&#59;')
+
+      dom.selectSyncDirButton.textContent = path
+      dom.selectSyncDirButton.setAttribute('uk-tooltip', `title: ${safePath}; pos: bottom`)
+    } else {
+      dom.selectSyncDirButton.textContent = 'Choose Folder'
+      dom.selectSyncDirButton.removeAttribute('uk-tooltip')
+    }
+  }
+}
+
+/**
+ * Populates a select HTML element with given options.
+ *
+ * @param {HTMLSelectElement} selectEl The select element to populate.
+ * @param {Array<Record<string, string>>} options Array of single-key `{ [value]: label }` option objects.
+ * @param {string|null} [disabledValue=null] An optional value to disable in the select options.
+ */
+function populateSelect(selectEl, options, disabledValue = null) {
+  const htmlOptions = options.map((option) => {
+    const [value, opt] = Object.entries(option)[0]
+
+    return value === disabledValue ? `<option disabled>${opt}</option>` : `<option value="${value}">${opt}</option>`
+  })
+
+  selectEl.innerHTML = htmlOptions.join('')
+}
+
+/**
+ * Binds UI event listeners for settings dialog controls.
+ */
+function setupSettingsEvents() {
+  if (eventsInitialized) return
+
+  eventsInitialized = true
+
+  if (isElectron) {
+    numara.themeUpdate(() => settings.setTheme())
+  }
+
+  dom.defaultSettingsButton.addEventListener('click', () => {
+    confirm('All settings will revert back to defaults.', async (keepSync = dom.confirmKeepSync?.checked) => {
+      const currentSyncDir = app.settings.syncDir
+      const currentSyncDirEnabled = app.settings.syncDirEnabled
+
+      app.settings = { ...settings.defaults }
+
+      if (keepSync) {
+        app.settings.syncDir = currentSyncDir
+        app.settings.syncDirEnabled = currentSyncDirEnabled
+      }
+
+      store.remove('inputWidth')
+      store.remove('sideBarWidth')
+
+      await settings.prep()
+      await settings.apply()
+      settings.save()
+
+      setTimeout(() => {
+        modal.center('#dialogSettings', true)
+      }, 250)
+    })
+
+    if (app.settings.syncDirEnabled) {
+      if (dom.confirmKeepSyncContainer) {
+        dom.confirmKeepSyncContainer.style.display = 'block'
+      }
+
+      if (dom.confirmKeepSync) {
+        dom.confirmKeepSync.checked = true
+      }
+    }
+  })
+
+  dom.dialogSettingsReset.addEventListener('click', () => {
+    confirm('All user settings and data will be lost.', () => {
+      if (isElectron) {
+        numara.resetApp()
+      } else {
+        localStorage.clear()
+        location.reload()
+      }
+    })
+  })
+
+  dom.bigNumWarn.addEventListener('click', () => {
+    showError(
+      'Caution: BigNumber Limitations',
+      `Using the BigNumber may break function plotting and is not compatible with some math functions. 
+      It may also cause unexpected behavior and affect overall performance.<br><br>
+      <a target="_blank" rel="noopener noreferrer" href="https://mathjs.org/docs/datatypes/bignumbers.html">Read more on BigNumbers</a>`,
+      true
+    )
+  })
+
+  dom.localeWarn.addEventListener('click', () => {
+    showError(
+      'Caution: Semicolon argument separator',
+      `When 1.234,56 format is selected, comma (,) is used as the decimal separator. Therefore, you must use semicolon (;) as the argument separator in all applicable functions. Ex. sum(1;3) // 4`,
+      true
+    )
+  })
+
+  dom.currencyWarn.addEventListener('click', () => {
+    showError('App restart needed', `Currencies used in existing calculations will be removed after app restart.`)
+  })
+
+  ;['precision', 'expUpper', 'expLower', 'calcTimeout'].forEach((key) => {
+    dom[key].addEventListener('input', () => {
+      dom[`${key}Label`].textContent = dom[key].value
+    })
+  })
+
+  dom.updateRatesLink.addEventListener('click', () => getRates(true))
+
+  dom.els('.theme-pill-button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const val = btn.getAttribute('data-theme-value')
+      const themeInput = dom.el('#theme')
+
+      if (themeInput && themeInput.value !== val) {
+        themeInput.value = val
+        themeInput.dispatchEvent(new Event('change'))
+
+        dom.els('.theme-pill-button').forEach((b) => {
+          b.classList.toggle('active', b.getAttribute('data-theme-value') === val)
+        })
+      }
+    })
+  })
+
+  if (isElectron) {
+    if (dom.selectSyncDirButton) {
+      dom.selectSyncDirButton.addEventListener('click', async (e) => {
+        e.preventDefault()
+        const path = await numara.selectSyncDirectory()
+
+        if (path) {
+          if (dom.syncDir) {
+            dom.syncDir.value = path
+            dom.syncDir.dispatchEvent(new Event('change'))
+          }
+
+          updateSyncDirPathDisplay(path)
+        }
+      })
+
+      dom.selectSyncDirButton.addEventListener('contextmenu', (e) => {
+        e.preventDefault()
+        if (app.settings.syncDir) {
+          numara.syncDirContextMenu(app.settings.syncDir)
+        }
+      })
+    }
+  }
+
+  dom.els('.settingItem').forEach((el) => {
+    el.addEventListener('change', async () => {
+      const id = el.getAttribute('id')
+
+      if (id === 'syncDirEnabled' && el.checked && !dom.syncDir.value) {
+        const path = await numara.selectSyncDirectory()
+
+        if (path) {
+          dom.syncDir.value = path
+          updateSyncDirPathDisplay(path)
+        } else {
+          el.checked = false
+          showError('Sync Folder Required', 'A folder must be chosen to enable directory sync.')
+        }
+      }
+
+      settings.save()
+      await settings.apply()
+
+      if (id === 'syncDirEnabled' || id === 'syncDir') {
+        if (app.settings.syncDirEnabled && app.settings.syncDir) {
+          triggerFolderSync().catch(console.error)
+        } else {
+          clearSyncCache()
+        }
+      }
+
+      if (id === 'pageListPosition') {
+        setTimeout(() => {
+          modal.center('#dialogSettings', true)
+        }, 250)
+      }
+    })
+  })
+
+  if (isElectron) {
+    dom.resetSizeButton.addEventListener('click', () => {
+      const sidebarWidth = app.sidebarDocked ? (store.get('sideBarWidth') ?? SIDEBAR_DEFAULT_WIDTH) : 0
+
+      numara.resetSize(DEFAULT_APP_WIDTH, DEFAULT_APP_HEIGHT, sidebarWidth)
+      modal.center('#dialogSettings', true, DEFAULT_APP_WIDTH + sidebarWidth, DEFAULT_APP_HEIGHT)
+
+      setTimeout(() => {
+        checkSize()
+        modal.center('#dialogSettings', true)
+      }, 250)
+    })
+  }
+}
 
 /**
  * Apply input/output panel widths and styles based on the current answerPosition setting.
@@ -37,47 +276,6 @@ export function applyAnswerPositionLayout() {
   dom.panelDivider.style.display = app.settings.answerPosition === 'left' ? 'block' : 'none'
 }
 
-/** Configures warnings by checking a condition mapped to a dom component. */
-function checkWarnings() {
-  dom.bigNumWarn.style.display = app.settings.numericOutput === 'BigNumber' ? 'inline-flex' : 'none'
-  dom.localeWarn.style.display =
-    app.settings.thouSep !== 'disabled' && app.settings.inputLocale ? 'inline-flex' : 'none'
-}
-
-/** Updates the sync directory path display text and styles. */
-function updateSyncDirPathDisplay(path) {
-  const selectSyncDirButton = dom.el('#selectSyncDirButton')
-
-  if (selectSyncDirButton) {
-    if (path) {
-      selectSyncDirButton.textContent = path
-      selectSyncDirButton.setAttribute('uk-tooltip', `title: ${path}; pos: bottom`)
-    } else {
-      selectSyncDirButton.textContent = 'Choose Folder'
-      selectSyncDirButton.removeAttribute('uk-tooltip')
-    }
-  }
-}
-
-/**
- * Populates a select HTML element with given options.
- *
- * @param {HTMLSelectElement} selectEl The select element to populate.
- * @param {Array<string|Array>} options The options to add. Each option can be a string or an array [label, value].
- * @param {string|null} [disabledValue=null] An optional value to disable in the select options.
- */
-function populateSelect(selectEl, options, disabledValue = null) {
-  const htmlOptions = options.map((option) => {
-    const [value, opt] = Object.entries(option)[0]
-
-    return value === disabledValue ? `<option disabled>${opt}</option>` : `<option value="${value}">${opt}</option>`
-  })
-
-  selectEl.innerHTML = htmlOptions.join('')
-}
-
-let updateInterval
-
 export const settings = {
   /** Default settings. */
   defaults: {
@@ -92,12 +290,11 @@ export const settings = {
     currency: true,
     currencyInterval: '0',
     dateDay: false,
-    dateFormat: 'system',
+    dateFormat: 'MM/dd/yyyy',
     expLower: '-12',
     expUpper: '12',
     fontSize: '1.1rem',
     fontWeight: '400',
-    inputLocale: false,
     inputWidth: 60,
     keywordTips: true,
     lineErrors: false,
@@ -111,6 +308,7 @@ export const settings = {
     notation: 'auto',
     notifyDuration: '5000',
     notifyLocation: 'bottom-center',
+    numberFormat: '1,234.56',
     numericOutput: 'number',
     pageListPosition: 'auto',
     precision: '4',
@@ -119,7 +317,7 @@ export const settings = {
     rulers: false,
     syntax: true,
     theme: 'system',
-    thouSep: 'system',
+    thouSep: true,
     showTray: false,
     openAtLogin: false,
     escToClose: false
@@ -127,16 +325,11 @@ export const settings = {
 
   /** Initialize settings. */
   initialize: async () => {
+    setupSettingsEvents()
+
     app.settings = store.get('settings')
 
     if (app.settings) {
-      if (app.settings.locale !== undefined) {
-        app.settings.thouSep = app.settings.locale
-        delete app.settings.locale
-      } else if (typeof app.settings.thouSep === 'boolean') {
-        app.settings.thouSep = app.settings.thouSep ? 'system' : 'disabled'
-      }
-
       observableDiff(app.settings, settings.defaults, (diff) => {
         if (diff.kind === 'E') return
 
@@ -148,24 +341,47 @@ export const settings = {
       store.set('settings', app.settings)
     }
 
+    coreApp.settings = app.settings
+
+    dom.els('.settingItem').forEach((item) => {
+      const id = item.getAttribute('id')
+
+      if (id === 'syncDir' || id === 'syncDirEnabled') return
+
+      const span = document.createElement('span')
+      const icon = dom.icons.Dot
+
+      span.setAttribute('id', id + 'Mod')
+      span.setAttribute('class', item.getAttribute('type') === 'checkbox' ? 'settingModToggle' : 'settingMod')
+      span.innerHTML = icon
+      span.addEventListener('click', async () => {
+        app.settings[id] = settings.defaults[id]
+
+        await settings.prep()
+        settings.save()
+        await settings.apply()
+
+        if (id === 'pageListPosition') {
+          setTimeout(() => {
+            modal.center('#dialogSettings', true)
+          }, 250)
+        }
+      })
+
+      if (item.getAttribute('type') === 'checkbox') {
+        item.parentElement.parentElement.prepend(span)
+      } else {
+        item.parentElement.prepend(span)
+      }
+    })
+
     if (app.settings.currency && (app.settings.currencyInterval !== 'manual' || !store.get('rateDate'))) getRates()
   },
 
   /** Prepare settings dialog items. */
   prep: async () => {
-    const sysLocale = getSystemLocale()
-    const locales = [
-      { system: `System (${sysLocale})` },
-      { period: 'Comma (1,234.56)' },
-      { comma: 'Period (1.234,56)' },
-      { disabled: 'Disabled' }
-    ]
-    const dateFormats = [
-      { system: 'System' },
-      { 'MM/dd/yyyy': 'MM/DD/YYYY' },
-      { 'dd/MM/yyyy': 'DD/MM/YYYY' },
-      { 'yyyy-MM-dd': 'YYYY-MM-DD' }
-    ]
+    const numberFormats = [{ '1,234.56': '1,234.56' }, { '1.234,56': '1.234,56' }]
+    const dateFormats = [{ 'MM/dd/yyyy': 'MM/DD/YYYY' }, { 'dd/MM/yyyy': 'DD/MM/YYYY' }, { 'yyyy-MM-dd': 'YYYY-MM-DD' }]
 
     const answerPositions = [
       { left: 'Left (with divider)' },
@@ -186,16 +402,15 @@ export const settings = {
     ]
 
     populateSelect(dom.answerPosition, answerPositions)
-    populateSelect(dom.thouSep, locales)
+    populateSelect(dom.numberFormat, numberFormats)
     populateSelect(dom.dateFormat, dateFormats)
     populateSelect(dom.numericOutput, numericOutputs)
     populateSelect(dom.notation, notations, 'spacer')
     populateSelect(dom.matrixType, matrixTypes)
 
-    dom.precisionLabel.textContent = app.settings.precision
-    dom.calcTimeoutLabel.textContent = app.settings.calcTimeout
-    dom.expLowerLabel.textContent = app.settings.expLower
-    dom.expUpperLabel.textContent = app.settings.expUpper
+    ;['precision', 'expUpper', 'expLower', 'calcTimeout'].forEach((key) => {
+      dom[`${key}Label`].textContent = app.settings[key]
+    })
 
     Object.keys(app.settings).forEach((key) => {
       const el = dom.el('#' + key)
@@ -203,6 +418,8 @@ export const settings = {
       if (!el) return
 
       el[el.getAttribute('type') === 'checkbox' ? 'checked' : 'value'] = app.settings[key]
+
+      checkMods(key)
     })
 
     const currentTheme = app.settings.theme
@@ -213,46 +430,19 @@ export const settings = {
 
     updateSyncDirPathDisplay(app.settings.syncDir)
 
-    const syncDirSection = dom.el('#syncDirSection')
-
-    if (syncDirSection) {
-      syncDirSection.style.display = app.settings.syncDirEnabled ? 'flex' : 'none'
+    if (dom.syncDirSection) {
+      dom.syncDirSection.style.display = app.settings.syncDirEnabled ? 'flex' : 'none'
     }
 
-    const syncTab = dom.el('#syncTab')
+    dom
+      .els('#alwaysOnTopContainer, #showTrayContainer, #openAtLoginContainer, #escToCloseContainer, #syncTab')
+      .forEach((el) => {
+        el.style.display = isElectron ? '' : 'none'
+      })
 
-    if (syncTab) {
-      syncTab.style.display = isElectron ? '' : 'none'
-    }
-
-    const alwaysOnTopContainer = dom.el('#alwaysOnTopContainer')
-
-    if (alwaysOnTopContainer) {
-      alwaysOnTopContainer.style.display = isElectron ? '' : 'none'
-    }
-
-    const showTrayContainer = dom.el('#showTrayContainer')
-
-    if (showTrayContainer) {
-      showTrayContainer.style.display = isElectron ? '' : 'none'
-
-      const showTrayLabel = showTrayContainer.querySelector('[data-help="showTray"]')
-
-      if (showTrayLabel) {
-        showTrayLabel.textContent = isMac ? 'Keep in menu bar' : 'Keep in system tray'
-      }
-    }
-
-    const openAtLoginContainer = dom.el('#openAtLoginContainer')
-
-    if (openAtLoginContainer) {
-      openAtLoginContainer.style.display = isElectron ? '' : 'none'
-    }
-
-    const escToCloseContainer = dom.el('#escToCloseContainer')
-
-    if (escToCloseContainer) {
-      escToCloseContainer.style.display = isElectron ? '' : 'none'
+    const showTrayLabel = dom.el('#showTrayContainer [data-help="showTray"]')
+    if (showTrayLabel) {
+      showTrayLabel.textContent = isMac ? 'Keep in menu bar' : 'Keep in system tray'
     }
 
     await checkSize()
@@ -261,10 +451,11 @@ export const settings = {
     settings.toggleSubs()
   },
 
-  /** Apply settings. */
-  apply: async (shouldCalculate = true) => {
-    clearEvaluationCache()
-
+  /**
+   * Apply active theme to the document, logo, and UDF/UDU editors.
+   * @returns {Promise<void>}
+   */
+  setTheme: async () => {
     const appTheme = await getTheme()
     const cssColorScheme =
       app.settings.theme === 'light' ? 'light' : app.settings.theme === 'dark' ? 'dark' : 'light dark'
@@ -279,6 +470,17 @@ export const settings = {
 
     udfInput.setOption('theme', udfuTheme)
     uduInput.setOption('theme', udfuTheme)
+  },
+
+  /**
+   * Apply settings.
+   * @param {boolean} [shouldCalculate=true] Whether to trigger a recalculation after applying settings.
+   */
+  apply: async (shouldCalculate = true) => {
+    coreApp.settings = app.settings
+    clearEvaluationCache()
+
+    await settings.setTheme()
 
     if (isElectron) {
       numara.setTheme(app.settings.theme)
@@ -315,41 +517,28 @@ export const settings = {
     cm.setOption('matchBrackets', app.settings.syntax && app.settings.matchBrackets ? { maxScanLines: 1 } : false)
     cm.setOption('autoCloseBrackets', app.settings.closeBrackets)
 
-    math.config({
-      matrix: app.settings.matrixType,
-      number: app.settings.numericOutput,
-      predictable: app.settings.predictable
-    })
-
     clearInterval(updateInterval)
 
     const interval = +app.settings.currencyInterval
 
     if (app.settings.currency && interval > 0) {
       updateInterval = setInterval(getRates, interval)
-
-      store.set('rateInterval', true)
-    } else {
-      store.set('rateInterval', false)
     }
 
     if (app.settings.syncDirEnabled && !app.settings.syncDir) {
       app.settings.syncDirEnabled = false
       store.set('settings', app.settings)
 
-      const syncDirEnabledCheckbox = dom.el('#syncDirEnabled')
-
-      if (syncDirEnabledCheckbox) {
-        syncDirEnabledCheckbox.checked = false
+      if (dom.syncDirEnabled) {
+        dom.syncDirEnabled.checked = false
       }
     }
 
-    const syncDirSection = dom.el('#syncDirSection')
-    if (syncDirSection) {
-      syncDirSection.style.display = app.settings.syncDirEnabled ? 'flex' : 'none'
+    if (dom.syncDirSection) {
+      dom.syncDirSection.style.display = app.settings.syncDirEnabled ? 'flex' : 'none'
     }
 
-    if (isElectron) {
+    if (isElectron && shouldCalculate) {
       if (app.settings.syncDirEnabled && app.settings.syncDir) {
         numara.startWatchingSyncDir(app.settings.syncDir)
       } else {
@@ -372,6 +561,7 @@ export const settings = {
 
       if (el) {
         app.settings[key] = el.getAttribute('type') === 'checkbox' ? el.checked : el.value
+        checkMods(key)
       }
     })
 
@@ -406,8 +596,6 @@ export const settings = {
       }
     }
 
-    const isThouSepEnabled = app.settings.thouSep !== 'disabled'
-
     toggle(dom.keywordTips, app.settings.syntax)
     toggle(dom.matchBrackets, app.settings.syntax)
 
@@ -415,200 +603,9 @@ export const settings = {
 
     toggle(dom.expUpper, isAutoNotation)
     toggle(dom.expLower, isAutoNotation)
-    toggle(dom.inputLocale, isThouSepEnabled)
-    toggle(dom.copyThouSep, isThouSepEnabled)
+    toggle(dom.copyThouSep, app.settings.thouSep)
 
     dom.currencyInterval.disabled = !app.settings.currency
     dom.updateRatesLink.dataset.enabled = app.settings.currency
   }
-}
-
-dom.defaultSettingsButton.addEventListener('click', () => {
-  confirm('All settings will revert back to defaults.', async () => {
-    const keepSync = dom.el('#confirmKeepSync')?.checked
-
-    const currentSyncDir = app.settings.syncDir
-    const currentSyncDirEnabled = app.settings.syncDirEnabled
-
-    app.settings = { ...settings.defaults }
-
-    if (keepSync) {
-      app.settings.syncDir = currentSyncDir
-      app.settings.syncDirEnabled = currentSyncDirEnabled
-    }
-
-    await settings.prep()
-    await settings.apply()
-    settings.save()
-
-    setTimeout(() => {
-      modal.center('#dialogSettings')
-    }, 250)
-  })
-
-  const syncContainer = dom.el('#confirmKeepSyncContainer')
-  const syncCheckbox = dom.el('#confirmKeepSync')
-
-  if (app.settings.syncDirEnabled) {
-    if (syncContainer) {
-      syncContainer.style.display = 'block'
-    }
-
-    if (syncCheckbox) {
-      syncCheckbox.checked = true
-    }
-  }
-})
-
-dom.dialogSettingsReset.addEventListener('click', () => {
-  confirm('All user settings and data will be lost.', () => {
-    if (isElectron) {
-      numara.resetApp()
-    } else {
-      localStorage.clear()
-      location.reload()
-    }
-  })
-})
-
-dom.bigNumWarn.addEventListener('click', () => {
-  showError(
-    'Caution: BigNumber Limitations',
-    `Using the BigNumber may break function plotting and is not compatible with some math functions. 
-      It may also cause unexpected behavior and affect overall performance.<br><br>
-      <a target="_blank" rel="noopener noreferrer" href="https://mathjs.org/docs/datatypes/bignumbers.html">Read more on BigNumbers</a>`,
-    true
-  )
-})
-
-dom.localeWarn.addEventListener('click', () => {
-  showError(
-    'Caution: Enable locale on user input',
-    `This will allow inputs to contain thousands and decimal separators, per user's selected locale, which will be sanitized for the calculations. Since comma (,) is the default argument seperator, with this setting enabled, you must use semicolon (;) as argument separator in all applicable functions. Ex. sum(1;3) // 4 <br><br>Unexpected results may occur so use with caution.`,
-    true
-  )
-})
-
-dom.currencyWarn.addEventListener('click', () => {
-  showError('App restart needed', `Currencies used in existing calculations will be removed after app restart.`)
-})
-
-dom.precision.addEventListener('input', () => {
-  dom.precisionLabel.textContent = dom.precision.value
-})
-
-dom.calcTimeout.addEventListener('input', () => {
-  dom.calcTimeoutLabel.textContent = dom.calcTimeout.value
-})
-
-dom.expLower.addEventListener('input', () => {
-  dom.expLowerLabel.textContent = dom.expLower.value
-})
-
-dom.expUpper.addEventListener('input', () => {
-  dom.expUpperLabel.textContent = dom.expUpper.value
-})
-
-dom.updateRatesLink.addEventListener('click', () => getRates(true))
-
-dom.els('.theme-pill-button').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    const val = btn.getAttribute('data-theme-value')
-    const themeInput = dom.el('#theme')
-
-    if (themeInput && themeInput.value !== val) {
-      themeInput.value = val
-      themeInput.dispatchEvent(new Event('change'))
-
-      dom.els('.theme-pill-button').forEach((b) => {
-        b.classList.toggle('active', b.getAttribute('data-theme-value') === val)
-      })
-    }
-  })
-})
-
-if (isElectron) {
-  const selectSyncDirButton = dom.el('#selectSyncDirButton')
-
-  if (selectSyncDirButton) {
-    selectSyncDirButton.addEventListener('click', async (e) => {
-      e.preventDefault()
-      const path = await numara.selectSyncDirectory()
-
-      if (path) {
-        const syncDirInput = dom.el('#syncDir')
-
-        if (syncDirInput) {
-          syncDirInput.value = path
-          syncDirInput.dispatchEvent(new Event('change'))
-        }
-
-        updateSyncDirPathDisplay(path)
-      }
-    })
-
-    selectSyncDirButton.addEventListener('contextmenu', (e) => {
-      e.preventDefault()
-      if (app.settings.syncDir) {
-        numara.syncDirContextMenu(app.settings.syncDir)
-      }
-    })
-  }
-}
-
-dom.els('.settingItem').forEach((el) => {
-  el.addEventListener('change', async () => {
-    const id = el.getAttribute('id')
-
-    if (id === 'openAtLogin' && el.checked) {
-      const showTrayEl = dom.el('#showTray')
-
-      if (showTrayEl && !showTrayEl.checked) {
-        showTrayEl.checked = true
-        app.settings.showTray = true
-      }
-    }
-
-    if (id === 'syncDirEnabled' && el.checked && !dom.el('#syncDir').value) {
-      const path = await numara.selectSyncDirectory()
-
-      if (path) {
-        dom.el('#syncDir').value = path
-        updateSyncDirPathDisplay(path)
-      } else {
-        el.checked = false
-        showError('Sync Folder Required', 'A folder must be chosen to enable directory sync.')
-      }
-    }
-
-    settings.save()
-    await settings.apply()
-
-    if (id === 'syncDirEnabled' || id === 'syncDir') {
-      if (app.settings.syncDirEnabled && app.settings.syncDir) {
-        triggerFolderSync().catch(console.error)
-      } else {
-        clearSyncCache()
-      }
-    }
-
-    if (id === 'pageListPosition') {
-      setTimeout(() => {
-        modal.center('#dialogSettings')
-      }, 250)
-    }
-  })
-})
-
-if (isElectron) {
-  dom.resetSizeButton.addEventListener('click', () => {
-    const sidebarWidth = app.sidebarDocked ? (store.get('sideBarWidth') ?? 240) : 0
-
-    numara.resetSize(560, 480, sidebarWidth)
-
-    setTimeout(() => {
-      checkSize()
-      modal.center('#dialogSettings')
-    }, 250)
-  })
 }
