@@ -1,8 +1,8 @@
-import { dom } from '../dom'
-import { cm, udfInput, uduInput } from '../editor'
-import { notify } from './dialogs'
-import { isElectron } from '../appState'
 import { escapeHTML } from '../core/utils.js'
+import { dom } from '../dom.js'
+import { cm, udfInput, uduInput } from '../editor/index.js'
+import { isElectron } from '../state/env.js'
+import { notify } from './dialogs.js'
 
 /**
  * Helper to safely copy text to clipboard and show notification.
@@ -19,36 +19,40 @@ function copyToClipboard(text, message) {
 }
 
 /**
+ * Extracts the copyable answer text from an output line element, respecting copyThouSep.
+ * @param {Element} outputEl The output element with data-index.
+ * @returns {string} The copyable answer string.
+ */
+function getLineCopyableAnswer(outputEl) {
+  if (!outputEl) return ''
+
+  const answerEl = outputEl.querySelector('[data-answer]')
+  if (answerEl) return answerEl.dataset.answer || ''
+
+  const plotEl = outputEl.querySelector('.plotButton, [data-plot]')
+  if (plotEl) return plotEl.dataset.plot || ''
+
+  return ''
+}
+
+/**
  * Main context menus for input.
  */
 function inputContext() {
   requestAnimationFrame(() => {
     const lineIndex = cm.getCursor().line
-    const line = cm.getLine(lineIndex)
-    const isLine = line.length > 0
     const isEmpty = cm.getValue() === ''
-    const isSelection = cm.somethingSelected()
-    const answer = dom.el(`[data-index="${lineIndex}"]`)?.textContent ?? ''
-    const hasAnswer = answer !== '' && answer !== 'Error' && answer !== 'Plot'
+    const outputEl = dom.el(`[data-index="${lineIndex}"]`)
+    const isPlot =
+      Boolean(outputEl?.querySelector('.plotButton, [data-plot]')) ||
+      Boolean(outputEl?.classList?.contains('plotButton'))
+    const answerValue = outputEl?.dataset?.answer || outputEl?.querySelector('[data-answer]')?.dataset?.answer
+    const hasAnswer = Boolean(answerValue) && !isPlot
     const selections = cm.listSelections()
     const isMultiLine = selections.length > 1 || selections[0].anchor.line !== selections[0].head.line
 
-    numara.inputContextMenu(lineIndex, isEmpty, isLine, isSelection, isMultiLine, hasAnswer)
+    numara.inputContextMenu(lineIndex, isEmpty, isMultiLine, hasAnswer)
   })
-}
-
-/**
- * Output panel context menu.
- * @param {Event} event The event object.
- */
-export function outputContext(event) {
-  const target = event.target.closest('[data-index]')
-  const lineIndex = target ? target.dataset.index : cm.lastLine()
-  const answer = target ? target.textContent : ''
-  const hasAnswer = lineIndex !== null && answer !== '' && answer !== 'Error' && answer !== 'Plot'
-  const isEmpty = cm.getValue() === ''
-
-  numara.outputContextMenu(lineIndex, isEmpty, hasAnswer)
 }
 
 /**
@@ -58,6 +62,10 @@ function textboxContext() {
   requestAnimationFrame(() => numara.textboxContextMenu())
 }
 
+/**
+ * Copy a single input line.
+ * @param {number|string} index The 0-based index of the line.
+ */
 function copyLine(index) {
   index = +index
 
@@ -68,14 +76,16 @@ function copyLine(index) {
 
 /**
  * Copy line answer.
- * @param {number} lineIndex The index of the line.
- * @param {boolean} withLines Whether to include the line in the copied text.
+ * @param {number|string} lineIndex The 0-based index of the line.
+ * @param {boolean} [withLines=false] Whether to include the line expression in the copied text.
  */
 function copyAnswer(lineIndex, withLines) {
   lineIndex = +lineIndex
 
   const line = cm.getLine(lineIndex).trim()
-  const answer = dom.el(`[data-index="${lineIndex}"]`)?.firstChild?.dataset.answer
+  const answer = getLineCopyableAnswer(dom.el(`[data-index="${lineIndex}"]`))
+  if (!answer) return copyToClipboard()
+
   const copiedText = withLines ? `${line} = ${answer}` : `${answer}`
   const safeText = escapeHTML(copiedText)
 
@@ -93,18 +103,17 @@ function copyAllLines() {
 }
 
 /**
- * Extracts the copyable answer text from an output line element, respecting copyThouSep.
- * @param {Element} el The output element with data-index.
- * @returns {string} The copyable answer string.
+ * Builds a map of line index to copyable answer text for all rendered output lines.
+ * @returns {Record<string, string>} Map of line index to answer text.
  */
-function getLineAnswerText(el) {
-  const answerEl = el.querySelector('[data-answer]')
-  if (answerEl) return answerEl.dataset.answer ?? ''
+function getAnswersMap() {
+  const answersMap = {}
 
-  const plotEl = el.querySelector('[data-plot]')
-  if (plotEl) return plotEl.dataset.plot ?? ''
+  document.querySelectorAll('[data-index]').forEach((el) => {
+    answersMap[el.getAttribute('data-index')] = getLineCopyableAnswer(el)
+  })
 
-  return el.textContent?.trim() ?? ''
+  return answersMap
 }
 
 /**
@@ -114,12 +123,7 @@ function copyAllAnswers() {
   if (cm.getValue() === '') return copyToClipboard()
 
   const copiedOutputs = []
-  const answersMap = {}
-
-  document.querySelectorAll('[data-index]').forEach((el) => {
-    answersMap[el.getAttribute('data-index')] = getLineAnswerText(el)
-  })
-
+  const answersMap = getAnswersMap()
   let lineIdx = 0
 
   cm.eachLine(() => {
@@ -131,18 +135,39 @@ function copyAllAnswers() {
 }
 
 /**
+ * Output panel context menu.
+ * @param {Event} event The event object.
+ */
+export function outputContext(event) {
+  event.stopPropagation()
+
+  if (!isElectron) return
+
+  const target = event.target.closest('[data-index]')
+  const lineIndex = target ? target.dataset.index : cm.lastLine()
+  const isPlot =
+    Boolean(target?.classList?.contains('plotButton')) ||
+    Boolean(target?.closest?.('.plotButton, [data-plot]')) ||
+    Boolean(target?.querySelector?.('.plotButton, [data-plot]'))
+  const answer =
+    target?.dataset?.answer ||
+    target?.querySelector?.('[data-answer]')?.dataset?.answer ||
+    target?.textContent?.trim() ||
+    ''
+  const hasAnswer = lineIndex !== null && Boolean(answer) && answer !== 'Error' && answer !== 'Plot' && !isPlot
+  const isEmpty = cm.getValue() === ''
+
+  numara.outputContextMenu(lineIndex, isEmpty, hasAnswer)
+}
+
+/**
  * Copy page.
  */
 export function copyAll() {
   if (cm.getValue() === '') return copyToClipboard()
 
   const copiedCalc = []
-  const answersMap = {}
-
-  document.querySelectorAll('[data-index]').forEach((el) => {
-    answersMap[el.getAttribute('data-index')] = getLineAnswerText(el)
-  })
-
+  const answersMap = getAnswersMap()
   let lineIdx = 0
 
   cm.eachLine((line) => {
@@ -172,7 +197,6 @@ export function initializeContextMenus() {
 
   numara.copyLine(copyLine)
   numara.copyAnswer(copyAnswer)
-  numara.copyLineWithAnswer(copyAnswer)
   numara.copyAllLines(copyAllLines)
   numara.copyAllAnswers(copyAllAnswers)
   numara.copyAll(copyAll)
