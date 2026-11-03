@@ -1,4 +1,4 @@
-export const HTML_ESCAPES = {
+const HTML_ESCAPES = {
   '&': '&amp;',
   '<': '&lt;',
   '>': '&gt;',
@@ -8,12 +8,13 @@ export const HTML_ESCAPES = {
 
 /**
  * Escape HTML special characters in a string.
- *
  * @param {string} str The string to escape.
  * @returns {string} The escaped string.
  */
 export function escapeHTML(str) {
-  return typeof str !== 'string' ? str : str.replace(/[&<>'"]/g, (tag) => HTML_ESCAPES[tag])
+  if (str === null || str === undefined) return ''
+
+  return String(str).replace(/[&<>'"]/g, (tag) => HTML_ESCAPES[tag])
 }
 
 /**
@@ -26,7 +27,21 @@ export function escapeRegExp(string) {
 }
 
 /**
- * Get standard BCP 47 standard locale tag based on system preference.
+ * Sanitizes a page name to ensure it is safe to use as a file name.
+ * @param {string} name The page name.
+ * @returns {string} The safe file name.
+ */
+export function getSafeFilename(name) {
+  return (
+    name
+      .replace(/[/\\:*?"<>|]/g, '-')
+      .replace(/[. ]+$/g, '')
+      .trim() || 'Untitled'
+  )
+}
+
+/**
+ * Get standard BCP 47 locale tag based on system preference.
  * @param {object} settings The application settings.
  * @returns {string} The system locale.
  */
@@ -40,29 +55,64 @@ export function getSystemLocale(settings) {
 }
 
 /**
- * Get standard BCP 47 standard locale tag based on selection.
+ * Check if settings use comma as the decimal separator (1.234,56 format).
  * @param {object} settings The application settings.
- * @returns {string} The standard locale.
+ * @returns {boolean} True if comma decimal format (1.234,56) is active.
  */
-export function getAppLocale(settings) {
-  const loc = settings?.thouSep || 'system'
-
-  if (loc === 'period') return 'en-US'
-  if (loc === 'comma') return 'tr-TR'
-
-  return getSystemLocale(settings)
+export function isCommaDecimal(settings) {
+  return settings?.numberFormat === '1.234,56'
 }
 
 /**
- * Check user locale for decimal separator.
+ * Get number formatting configuration based on settings.
  * @param {object} settings The application settings.
- * @returns {boolean} True if locale uses comma.
+ * @returns {{ locale: string, group: string, decimal: string, argSep: string, useGrouping: boolean }}
  */
-export function localeUsesComma(settings) {
-  const locale = getAppLocale(settings)
+export function getNumberFormat(settings) {
+  const commaDec = isCommaDecimal(settings)
 
-  if (locale === 'tr-TR') return true
-  if (locale === 'en-US') return false
+  return {
+    locale: commaDec ? 'tr-TR' : 'en-US',
+    group: commaDec ? '.' : ',',
+    decimal: commaDec ? ',' : '.',
+    argSep: commaDec ? ';' : ',',
+    useGrouping: Boolean(settings?.thouSep ?? true)
+  }
+}
 
-  return (1.11).toLocaleString(locale).includes(',')
+/**
+ * Creates a debounced function that delays invoking `func` until after `wait` milliseconds have elapsed.
+ * @param {Function} func The function to debounce.
+ * @param {number} wait The delay in milliseconds.
+ * @returns {Function} The debounced function with `.flush()` and `.cancel()` methods.
+ */
+export function debounce(func, wait) {
+  let timeout = null
+
+  const debounced = function (...args) {
+    const context = this
+
+    clearTimeout(timeout)
+    timeout = setTimeout(() => {
+      timeout = null
+      func.apply(context, args)
+    }, wait)
+  }
+
+  debounced.flush = function () {
+    if (timeout) {
+      clearTimeout(timeout)
+      timeout = null
+      func()
+    }
+  }
+
+  debounced.cancel = function () {
+    if (timeout) {
+      clearTimeout(timeout)
+      timeout = null
+    }
+  }
+
+  return debounced
 }
