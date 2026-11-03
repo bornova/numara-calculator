@@ -21,8 +21,8 @@ Numara is a sleek, minimal-but-powerful notepad calculator that evaluates expres
 
 ### Documentation
 
-* [Features](${WIKI_BASE_URL}/Features) — Shortcut keywords, percentages, date math, plotting, currencies, labels, code folding, cross-page variables, user-defined functions/units, and library integrations
-* [Settings](${WIKI_BASE_URL}/Settings) — Complete guide to General, Editor, Calculator, Locale, and Sync settings
+* [Features](${WIKI_BASE_URL}/Features) — Shortcut keywords, percentages, date math, plotting, currencies, labels, code folding, selection stats, cross-page variables, user-defined functions/units, and library integrations
+* [Settings](${WIKI_BASE_URL}/Settings) — Complete guide to General, Editor, Calculator, Format, and Sync settings
 * [Keyboard shortcuts](${WIKI_BASE_URL}/Keyboard-shortcuts) — Keyboard shortcuts and quick mouse/UI interactions
 * [Function references](${WIKI_BASE_URL}/Function-references) — Built-in Math.js functions and special constants
 * [Unit references](${WIKI_BASE_URL}/Unit-references) — Built-in Math.js units and prefixes
@@ -56,24 +56,28 @@ export function generateFeaturesWiki() {
 
 ### Percentage calculations
 
-Numara supports natural percentage expressions in addition to standard arithmetic:
+Numara supports natural percentage expressions, percentage offsets on numbers/variables/units, and percentage ratio queries:
 
     10% of 100                    | 10
     100 + 20%                     | 120
     100 - 20%                     | 80
     15% of (50 + 50)              | 15
+    20 as % of 80                 | 25%
+    30 is what % of 120           | 25%
+    0.25 in %                     | 25%
 
 ### Simple date calculations
 
-Numara allows you to do simple date additions and subtractions such as \`today + 3 weeks\` and \`now + 36 hours\`. You can also add or subtract durations from a specific date such as \`7/31/2023 + 4 days\`, where the date matches your configured **Date format** setting (\`System\`, \`MM/DD/YYYY\`, \`DD/MM/YYYY\`, or \`YYYY-MM-DD\`). Supported duration units include \`millisecond\`, \`second\`, \`minute\`, \`hour\`, \`day\`, \`week\`, \`month\`, \`quarter\`, \`year\`, \`decade\`, \`century\` (\`centuries\`), and \`millennium\` (\`millennia\`). If a date is entered without a duration operator, the expression is evaluated as division (e.g. \`7 / 31 / 2023\`).
+Numara allows you to do simple date additions and subtractions such as \`today + 3 weeks\` and \`now + 36 hours\`. You can also add or subtract durations from a specific date such as \`7/31/2023 + 4 days\`, or subtract two dates to find the duration between them (e.g. \`01/20/2026 - 01/15/2026\` outputs \`5 days\`, and \`01/20/2026 - 01/15/2026 in hours\` outputs \`120 hours\`), where the date matches your configured **Date format** setting (\`MM/DD/YYYY\`, \`DD/MM/YYYY\`, or \`YYYY-MM-DD\`). Supported duration units include \`millisecond\`, \`second\`, \`minute\`, \`hour\`, \`day\`, \`week\`, \`month\`, \`quarter\`, \`year\`, \`decade\`, \`century\` (\`centuries\`), and \`millennium\` (\`millennia\`). If a date is entered without a duration operator or second date, the expression is evaluated as division (e.g. \`7 / 31 / 2023\`).
 
 ### Function plotting
 
 When an expression is entered as a single-variable function such as \`f(x) = 2x^2 + 3x - 5\`, Numara outputs a plot button on the output panel. Clicking the button displays an interactive plot in a dialog where you can:
 
+- Toggle function chips in the header to overlay and compare multiple functions from the current page on the same graph.
 - Pan and zoom the viewport, or click **Reset View** to restore the initial view.
 - Toggle **Cross** (crosshair lines), **Derivative** (first derivative curve and slope tooltip), and **Grid**.
-- Open **Axis Settings** to configure **X-Axis Precision** (\`0 - 16\`), toggle **Auto Range**, or set custom \`x\` and \`y\` axis domain bounds.
+- Open **Axis Settings** to configure **X-Axis Precision** (\`0 - 16\`), toggle **Auto Range** (which automatically scales around roots, vertices, and intersections), or set custom \`x\` and \`y\` axis domain bounds.
 - Click **Export SVG** to download the plot as an \`.svg\` file.
 
 Plot functions can also reference numeric variables defined earlier on the page (e.g. \`a = 2\` followed by \`f(x) = a * x^2\`).
@@ -106,6 +110,10 @@ You can prefix any line with a descriptive label followed by a colon \`:\`. Numa
 
 Lines starting with Markdown-style headings (\`# Heading\`, \`## Subheading\`, up to \`######\`, or \`// # Heading\`) define collapsible sections in the editor. Clicking the fold arrow in the gutter (or pressing \`Ctrl+Q\`) collapses or expands all lines under the heading until the next heading of equal or higher level, or until an explicit end-of-section marker (\`#\`, \`#!\`, or \`// #!\`).
 
+### Selection statistics
+
+Selecting multiple lines in the editor automatically displays live summary statistics (**Sum**, **Avg**, **Min**, **Max**, and **Count**) in the bottom status bar for all numeric and compatible unit answers in the selection. Clicking the statistics summary copies it to the clipboard.
+
 ### Pages and cross-page references
 
 Numara supports multiple calculation pages accessible from the sidebar:
@@ -114,10 +122,11 @@ Numara supports multiple calculation pages accessible from the sidebar:
 - Sort pages by date (\`Older to newer\`, \`Newer to older\`), alphabetically (\`A to Z\`, \`Z to A\`), or reorder them via drag-and-drop.
 - Copy or print page calculations, and import/export \`.num\` files in the desktop app.
 
-You can import variables from another page using the \`page()\` function:
+You can import variables from another page using the \`page()\` function (with autocomplete support for both page names and exported page variables):
 
     r = page("Rates")             | Rates
     6 * r.hourly * (1 + r.gst)    | 535.5
+    page("Rates").hourly * 2      | 170
 
 Clicking the page name in the output panel opens that page directly, and hovering over it displays the count and names of its exported variables.
 
@@ -188,25 +197,35 @@ export function generateSettingsWiki() {
 
 \`Theme\` System (Default) | Light | Dark
 - Set the visual theme of the application.
-- Click the **Customize theme** palette button to customize syntax highlighting and UI colors for both Light and Dark themes (Answers, Comments, Constants, Currencies, Errors, Excel, Functions, Keywords, Numbers, Text, Operators, Units, Variables, and Plain).
+- Click the **Customize theme** palette button to customize individual syntax highlighting colors for both Light and Dark themes using live color pickers, with per-color reset buttons and a **Default Colors** reset option.
 
-\`Page list sidebar position\` Auto (Default) | Slide out | Docked
+\`Page list position\` Auto (Default) | Slide out | Docked
 - Set the position of the page list sidebar. When set to \`Auto\`, the sidebar automatically docks when the window is wide enough and slides out on narrower windows. When docked, drag the sidebar border to resize it (double-click to reset).
-
-\`Start with blank page\` On | Off (Default)
-- Start the app with a blank page instead of the last used page.
 
 \`Always on top\` On | Off (Default) *(Desktop only)*
 - Keep Numara on top of all other windows on the screen.
 
-\`Keep in menu bar\` / \`Keep in system tray\` On | Off (Default) *(Desktop only)*
-- Keep Numara running in the macOS menu bar or Windows/Linux system tray when the window is closed.
-
 \`Start at login\` On | Off (Default) *(Desktop only)*
 - Start Numara automatically when logging into the computer.
 
+\`Start with blank page\` On | Off (Default)
+- Start the app with a blank page instead of the last used page.
+
+\`Keep in menu bar\` / \`Keep in system tray\` On | Off (Default) *(Desktop only)*
+- Keep Numara running in the macOS menu bar or Windows/Linux system tray when the window is closed.
+
 \`Close app on Esc key\` On | Off (Default) *(Desktop only)*
 - Close or hide the Numara window when pressing the \`Esc\` key.
+
+#### Notifications
+
+\`Position\` Top Left | Top Center | Top Right | Bottom Left | Bottom Center (Default) | Bottom Right
+- Set the position on the screen where notifications appear.
+
+\`Duration\` 1 second | 3 seconds | 5 seconds (Default) | 10 seconds | 30 seconds | Close manually
+- Set how long notifications are displayed on the screen or set to close them manually.
+
+### Editor
 
 #### Typography
 
@@ -219,33 +238,10 @@ export function generateSettingsWiki() {
 \`Line height\` Tiny | Small | Normal (Default) | Large | X-Large
 - Set the height of each calculation line.
 
-#### Notifications
+#### Display & Behavior
 
-\`Position\` Top Left | Top Center | Top Right | Bottom Left | Bottom Center (Default) | Bottom Right
-- Set the position on the screen where notifications appear.
-
-\`Duration\` 1 second | 3 seconds | 5 seconds (Default) | 10 seconds | 30 seconds | Close manually
-- Set how long notifications are displayed on the screen or set to close them manually.
-
-### Editor
-
-\`Syntax highlighting\` On (Default) | Off
-- Enable syntax highlighting for typed expressions.
-
-\`Keyword tooltips\` On (Default) | Off
-- Display tooltips when hovering over keywords such as function names, units, constants, currencies, variables, and line references (requires \`Syntax highlighting\` to be On).
-
-\`Highlight matching brackets\` On (Default) | Off
-- When the cursor is next to a bracket, highlight the matching bracket (requires \`Syntax highlighting\` to be On).
-
-\`Autocomplete hints\` On (Default) | Off
-- Show autocompletion hints as a list while typing an expression.
-
-\`Close matching brackets\` On (Default) | Off
-- Automatically insert closing brackets and quotes when typed.
-
-\`Line numbers\` On (Default) | Off
-- Show line numbers for each line on the input panel.
+\`Answer position\` Left (with divider) (Default) | Right (no divider) | Below Expression
+- Set where the answer is shown in the app. When set to \`Left (with divider)\`, drag the divider to resize the panels (double-click to reset).
 
 \`Wrap input expressions\` On (Default) | Off
 - Allow overflowing input expressions to wrap to the next line on the input panel.
@@ -253,13 +249,33 @@ export function generateSettingsWiki() {
 \`Truncate answers\` On (Default) | Off
 - Truncate long answers on the output panel with ellipses instead of showing a horizontal scrollbar. Hovering over a truncated answer displays the full value in a tooltip.
 
+\`Line numbers\` On (Default) | Off
+- Show line numbers for each line on the input panel.
+
 \`Show rulers\` On | Off (Default)
 - Show horizontal rulers to visually separate each line.
 
+\`Line errors\` On | Off (Default)
+- Show \`Error\` in the output panel if a calculation error occurs. Clicking the \`Error\` link displays details about the error. This also highlights the line number red where the error is present.
+
+\`Syntax highlighting\` On (Default) | Off
+- Enable syntax highlighting for typed expressions.
+
+  - \`Keyword tooltips\` On (Default) | Off
+    Display tooltips when hovering over keywords such as function names, units, constants, currencies, variables, and line references (requires \`Syntax highlighting\` to be On).
+
+  - \`Highlight matching brackets\` On (Default) | Off
+    When the cursor is next to a bracket, highlight the matching bracket (requires \`Syntax highlighting\` to be On).
+
+\`Autocomplete hints\` On (Default) | Off
+- Show autocompletion hints as a list while typing an expression.
+
+\`Close matching brackets\` On (Default) | Off
+- Automatically insert closing brackets and quotes when typed.
+
 ### Calculator
 
-\`Answer position\` Left (with divider) (Default) | Right (no divider) | Below Expression
-- Set where the answer is shown in the app. When set to \`Left (with divider)\`, drag the divider to resize the panels (double-click to reset).
+#### Output
 
 \`Numeric output\` Number (Default) | BigNumber | Fraction
 - The type of numeric output for functions which cannot determine the numeric type from the inputs. For most functions, the type of output is determined from the input: a number as input will return a number as output, a BigNumber as input returns a BigNumber as output.
@@ -267,6 +283,12 @@ export function generateSettingsWiki() {
   For example, \`'2+3'\`, \`parse('2+3')\`, \`range('1:10')\`, and \`unit('5cm')\` use the numeric output setting, whereas \`sqrt(4)\` will always return the number \`2\` regardless of the setting because the input is a number.
 
   BigNumbers have higher precision than the default numbers of JavaScript, and Fractions store values in terms of a numerator and denominator.
+
+\`Matrix type\` Matrix (Default) | Array
+- The default type of matrix output for functions. Where possible, the type of matrix output from functions is determined from the function input: an Array as input returns an Array, a Matrix as input returns a Matrix. In case of no matrix as input, the type of output is determined by this option. In case of mixed matrix inputs, a Matrix is always returned.
+
+\`Precision\` (0 - 16) Default 4
+- Number of decimal places to display for the answer.
 
 \`Notation\` Auto (Default) | Engineering | Exponential | Fixed | Binary | Hexadecimal | Octal
 - Numeric notation format for answers:
@@ -277,24 +299,17 @@ export function generateSettingsWiki() {
 
   'Exponential' - Always use exponential notation. For example \`1.234e+2\` and \`1.4e+7\`.
 
-  'Fixed' - Always use regular number notation regardless of the exponent limits.
+  'Fixed' - Always use regular number notation with the configured decimal precision regardless of the exponent limits.
 
   'Binary', 'Hexadecimal', or 'Octal' - Format the number using binary, hexadecimal, or octal notation. For example \`0b1101\`, \`0x10fe\`, and \`0o23\`.
 
-\`Matrix type\` Matrix (Default) | Array
-- The default type of matrix output for functions. Where possible, the type of matrix output from functions is determined from the function input: an Array as input returns an Array, a Matrix as input returns a Matrix. In case of no matrix as input, the type of output is determined by this option. In case of mixed matrix inputs, a Matrix is always returned.
+  - \`Lower exponent limit\` (-32 - 0) Default -12
+    Number determining the lower boundary for formatting a value with an exponent when \`Notation\` is set to \`Auto\`.
 
-\`Precision\` (0 - 16) Default 4
-- Number of decimal places to display for the answer.
+  - \`Upper exponent limit\` (0 - 32) Default 12
+    Number determining the upper boundary for formatting a value with an exponent when \`Notation\` is set to \`Auto\`.
 
-\`Upper exponent limit\` (0 - 32) Default 12
-- Number determining the upper boundary for formatting a value with an exponent when \`Notation\` is set to \`Auto\`.
-
-\`Lower exponent limit\` (-32 - 0) Default -12
-- Number determining the lower boundary for formatting a value with an exponent when \`Notation\` is set to \`Auto\`.
-
-\`Calculation timeout (seconds)\` (1 - 60) Default 10
-- Set the timeout in seconds for long-running calculations before prompting to continue waiting or ignore the line.
+#### Evaluation
 
 \`Continue from previous line\` On (Default) | Off
 - Choose whether a calculation on a new line starting with \`+\`, \`-\`, \`*\`, or \`/\` should continue from the previous line's answer.
@@ -302,29 +317,31 @@ export function generateSettingsWiki() {
 \`Predictable output\` On | Off (Default)
 - When On, output type depends only on the input types. When Off (Default), output type can vary depending on input values. For example \`sqrt(-4)\` returns \`complex('2i')\` when predictable is Off, and returns \`NaN\` when On. Predictable output can be needed when programmatically handling the result of a calculation, but can be inconvenient for users when evaluating dynamic equations.
 
-\`Line errors\` On | Off (Default)
-- Show \`Error\` in the output panel if a calculation error occurs. Clicking the \`Error\` link displays details about the error. This also highlights the line number red where the error is present.
+\`Calculation timeout (seconds)\` (1 - 60) Default 10
+- Set the timeout in seconds for long-running calculations before prompting to continue waiting or ignore the line.
 
-### Locale
+### Format
 
-#### Format
+#### Numbers
 
-\`Thousands separator\` System (Default) | Comma (1,234.56) | Period (1.234,56) | Disabled
-- Set the thousands and decimal separator formatting. Choosing \`System\` uses the operating system's locale.
+\`Number format\` 1,234.56 (Default) | 1.234,56
+- Set the thousands and decimal separator format. When \`1.234,56\` is selected, use a semicolon (\`;\`) as the argument separator in functions (e.g. \`sum(1; 3)\`).
 
-  - \`Enable for input\` On | Off (Default)
-    Enable locale-specific thousands and decimal separators for input values. When enabled, use a semicolon (\`;\`) as the argument separator in functions (e.g. \`sum(1; 3)\`).
+\`Thousands separator\` On (Default) | Off
+- Show thousands separators in output answers.
 
   - \`Copy with answer\` On | Off (Default)
     Choose whether to include the thousands separator with the copied answer.
 
-\`Date format\` System (Default) | MM/DD/YYYY | DD/MM/YYYY | YYYY-MM-DD
+#### Dates
+
+\`Date format\` MM/DD/YYYY (Default) | DD/MM/YYYY | YYYY-MM-DD
 - Set the date format for date and time calculations and keywords (\`today\`, \`now\`).
 
 \`Show day with date\` On | Off (Default)
 - If On, the day of the week is prepended to the date output when performing date calculations and using keywords such as \`today\` and \`now\`.
 
-#### Currency Conversion
+#### Currency
 
 \`Enabled\` On (Default) | Off
 - Enable currency conversions. Exchange rates are provided by [frankfurter.dev](https://frankfurter.dev).
@@ -378,6 +395,7 @@ export function generateShortcutsWiki() {
 | Interaction | Action |
 | --- | --- |
 | **Click an answer** | Copy the answer to the clipboard |
+| **Select multiple lines** | View live **Sum**, **Avg**, **Min**, **Max**, and **Count** in the bottom bar (click to copy) |
 | **Click a page link answer** | Open the referenced page |
 | **Click a line number** (above active line) | Insert \`lineX\` into the active expression |
 | **Click a red line number / Error** | View error details for that line |
