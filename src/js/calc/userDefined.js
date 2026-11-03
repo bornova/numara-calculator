@@ -1,9 +1,12 @@
-import { dom } from '../dom'
-import { refreshEditor, udfInput, uduInput } from '../editor'
-import { calculate, clearEvaluationCache, math } from './calcManager'
-import { modal, showError } from '../ui/dialogs'
-import { app, store } from '../appState'
-import { applyUdfuToMath } from '../core/udfu'
+import { DateTime } from 'luxon'
+
+import { applyUdfuToMath } from '../core/udfu.js'
+import { dom } from '../dom.js'
+import { refreshEditor, udfInput, uduInput } from '../editor/index.js'
+import { app } from '../state/appState.js'
+import { store } from '../state/store.js'
+import { modal, showError } from '../ui/dialogs.js'
+import { calculate, clearEvaluationCache, math } from './calcManager.js'
 
 const udfuState = {
   previouslyImportedUDFs: [],
@@ -11,35 +14,12 @@ const udfuState = {
 }
 
 /**
- * Apply user defined functions or units.
- * @param {string} input User defined function or unit to apply.
- * @param {string} type 'func' | 'unit'
- * @returns {void}
+ * Save user defined functions and units from the dialog editors.
  */
-export function applyUdfu(input, type) {
+function saveUserDefined() {
   try {
-    const isFunc = type === 'func'
-    const keys = applyUdfuToMath(math, input, isFunc, udfuState)
-
-    app[isFunc ? 'udfList' : 'uduList'] = keys
-    store.set(isFunc ? 'udf' : 'udu', input)
-  } catch (error) {
-    if (app.settings.lineErrors) {
-      showError(error.name, error.message)
-    }
-
-    throw error
-  }
-}
-
-/**
- * Save user defined functions or units.
- * @param {object} input Input element containing user defined function or unit.
- * @param {string} type 'func' | 'unit'
- */
-function saveUserDefined(input, type) {
-  try {
-    applyUdfu(input.getValue().trim(), type)
+    applyUdfu(udfInput.getValue().trim(), 'func', false)
+    applyUdfu(uduInput.getValue().trim(), 'unit', false)
 
     clearEvaluationCache()
     refreshEditor()
@@ -51,6 +31,46 @@ function saveUserDefined(input, type) {
   }
 }
 
-// Event listeners for saving user defined functions and units
-dom.dialogUdfuSaveF.addEventListener('click', () => saveUserDefined(udfInput, 'func'))
-dom.dialogUdfuSaveU.addEventListener('click', () => saveUserDefined(uduInput, 'unit'))
+/**
+ * Apply user defined functions or units to the main-thread Math.js instance and persist to storage.
+ * @param {string} input User defined function or unit definition string.
+ * @param {string} type 'func' | 'unit'
+ * @param {boolean} [showErr=true] Whether to display an error modal if evaluation fails and lineErrors is enabled.
+ */
+function applyUdfu(input, type, showErr = true) {
+  try {
+    const isFunc = type === 'func'
+    const keys = applyUdfuToMath(math, input, isFunc, udfuState, {
+      luxon: DateTime
+    })
+
+    app[isFunc ? 'udfList' : 'uduList'] = keys
+    store.set(isFunc ? 'udf' : 'udu', input)
+  } catch (error) {
+    if (showErr && app.settings?.lineErrors) {
+      showError(error.name, error.message)
+    }
+
+    throw error
+  }
+}
+
+/**
+ * Loads user-defined functions and units from storage and binds dialog save buttons.
+ */
+export function setupUserDefined() {
+  try {
+    applyUdfu(store.get('udf') ?? '', 'func')
+  } catch (error) {
+    console.error('Error loading user-defined functions:', error)
+  }
+
+  try {
+    applyUdfu(store.get('udu') ?? '', 'unit')
+  } catch (error) {
+    console.error('Error loading user-defined units:', error)
+  }
+
+  dom.dialogUdfuSaveF.addEventListener('click', saveUserDefined)
+  dom.dialogUdfuSaveU.addEventListener('click', saveUserDefined)
+}
