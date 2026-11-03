@@ -2,6 +2,11 @@ import { describe, it, beforeEach } from 'node:test'
 import assert from 'node:assert'
 import { create, all } from 'mathjs'
 import { runCalculation, formatAnswer, applyUdfu } from '../src/js/core/evaluator.js'
+import { parseLocaleNumber } from '../src/js/core/formatter.js'
+import { stripComments } from '../src/js/core/preprocessor.js'
+import { applyUdfuToMath } from '../src/js/core/udfu.js'
+import { debounce, escapeHTML, escapeRegExp, getSafeFilename } from '../src/js/core/utils.js'
+import { detectExternalRenames } from '../src/js/pages/syncPlan.js'
 import { customCases } from './custom-cases.js'
 
 // Default settings from settings.js
@@ -17,12 +22,11 @@ const defaultSettings = {
   currency: true,
   currencyInterval: '0',
   dateDay: false,
-  dateFormat: 'system',
+  dateFormat: 'MM/dd/yyyy',
   expLower: '-12',
   expUpper: '12',
   fontSize: '1.1rem',
   fontWeight: '400',
-  inputLocale: false,
   inputWidth: 60,
   keywordTips: true,
   lineErrors: true,
@@ -36,6 +40,7 @@ const defaultSettings = {
   notation: 'auto',
   notifyDuration: '5000',
   notifyLocation: 'bottom-center',
+  numberFormat: '1,234.56',
   numericOutput: 'number',
   pageListPosition: 'auto',
   precision: '4',
@@ -44,7 +49,7 @@ const defaultSettings = {
   rulers: false,
   syntax: true,
   theme: 'system',
-  thouSep: 'system',
+  thouSep: true,
   showTray: false,
   openAtLogin: false
 }
@@ -365,9 +370,13 @@ describe('Numara Calculation Engine vs Math.js', function () {
 
         if (testCase.udf) {
           applyUdfu(true, testCase.udf)
+        } else {
+          applyUdfu(true, '')
         }
         if (testCase.udu) {
           applyUdfu(false, testCase.udu)
+        } else {
+          applyUdfu(false, '')
         }
 
         if (!testCase.expected) {
@@ -448,5 +457,315 @@ describe('Numara Calculation Engine vs Math.js', function () {
         }
       })
     }
+
+    it('should restore built-in functions and units when user-defined overrides are removed', () => {
+      applyUdfu(true, 'sqrt: (x) => 42')
+      let res = runCalculation({
+        activePage: 'test-udf-override',
+        lines: ['sqrt(4)'],
+        settings: defaultSettings,
+        currencies: mockCurrencies
+      })
+      assert.strictEqual(extractAnswer(res.answers[0]).answer, '42')
+
+      applyUdfu(true, '')
+      res = runCalculation({
+        activePage: 'test-udf-override',
+        lines: ['sqrt(4)'],
+        settings: defaultSettings,
+        currencies: mockCurrencies
+      })
+      assert.strictEqual(extractAnswer(res.answers[0]).answer, '2')
+    })
+
+    it('should escape HTML and prevent user objects with _pageId from spoofing page links', () => {
+      const res = runCalculation({
+        activePage: 'test-page-spoof',
+        lines: ['f() = ["<b>pwn</b>"]', 'o = {_pageId: 1, format: f}'],
+        settings: defaultSettings,
+        currencies: mockCurrencies
+      })
+      assert.ok(!res.answers[1].includes('<b>pwn</b>'), 'Raw HTML tag should not appear unescaped in output')
+      assert.ok(!res.answers[1].includes('pageLink'), 'User object must not render as a pageLink')
+    })
+
+    it('should not expose BigNumber internal properties in scopeProperties', () => {
+      const res = runCalculation({
+        activePage: 'test-bignum-props',
+        lines: ['x = 5'],
+        settings: { ...defaultSettings, numericOutput: 'BigNumber' },
+        currencies: mockCurrencies
+      })
+      assert.strictEqual(res.scopeProperties.x, undefined)
+    })
+
+    it('should accurately update incremental line cache when editing a middle line', () => {
+      const pageId = 'test-incremental-cache'
+      const firstRun = runCalculation({
+        activePage: pageId,
+        lines: ['a = 10', 'b = 20', 'a + b', 'total'],
+        settings: defaultSettings,
+        currencies: mockCurrencies
+      })
+      assert.deepStrictEqual(
+        firstRun.answers.map((h) => extractAnswer(h).answer),
+        ['10', '20', '30', '60']
+      )
+
+      const secondRun = runCalculation({
+        activePage: pageId,
+        lines: ['a = 10', 'b = 50', 'a + b', 'total'],
+        settings: defaultSettings,
+        currencies: mockCurrencies
+      })
+      assert.deepStrictEqual(
+        secondRun.answers.map((h) => extractAnswer(h).answer),
+        ['10', '50', '60', '120']
+      )
+    })
+
+    it('should isolate cached objects and matrices from in-place mutations across runs', () => {
+      const pageId = 'test-cache-mutation-isolation'
+      const run1 = runCalculation({
+        activePage: pageId,
+        lines: ['o = {x: 1}', 'o.x = 99', 'o.x', 'm = [10, 20]', 'm[1] = 77', 'm[1]'],
+        settings: defaultSettings,
+        currencies: mockCurrencies
+      })
+      assert.deepStrictEqual(
+        run1.answers.map((h) => extractAnswer(h).answer),
+        ['{"x": 1}', '99', '99', '[10, 20]', '77', '77']
+      )
+
+      // Hit cache on lines 0..5 and evaluate a new line 6
+      const run2 = runCalculation({
+        activePage: pageId,
+        lines: ['o = {x: 1}', 'o.x = 99', 'o.x + 1', 'm = [10, 20]', 'm[1] = 77', 'm[1] + 1'],
+        settings: defaultSettings,
+        currencies: mockCurrencies
+      })
+      assert.deepStrictEqual(
+        run2.answers.map((h) => extractAnswer(h).answer),
+        ['{"x": 1}', '99', '100', '[10, 20]', '77', '78']
+      )
+
+      // Replace the mutating lines; line 0 and line 3 come from cache and must NOT retain 99 or 77
+      const run3 = runCalculation({
+        activePage: pageId,
+        lines: ['o = {x: 1}', '1 + 1', 'o.x', 'm = [10, 20]', '2 + 2', 'm[1]'],
+        settings: defaultSettings,
+        currencies: mockCurrencies
+      })
+      assert.deepStrictEqual(
+        run3.answers.map((h) => extractAnswer(h).answer),
+        ['{"x": 1}', '2', '1', '[10, 20]', '4', '10']
+      )
+    })
+
+    it('should update lowercase currency unit aliases when exchange rates change', () => {
+      const pageId = 'test-lowercase-currency-update'
+      const ratesA = {
+        ...mockCurrencies,
+        EUR: { symbol: '€', name: 'Euro', rate: 1.2 }
+      }
+      const ratesB = {
+        ...mockCurrencies,
+        EUR: { symbol: '€', name: 'Euro', rate: 2.0 }
+      }
+
+      const resA = runCalculation({
+        activePage: pageId,
+        lines: ['10 eur in usd', '10 EUR in USD'],
+        settings: { ...defaultSettings, currency: false },
+        currencies: ratesA
+      })
+      assert.deepStrictEqual(
+        resA.answers.map((h) => extractAnswer(h).answer),
+        ['12 usd', '12 USD']
+      )
+
+      const resB = runCalculation({
+        activePage: pageId,
+        lines: ['10 eur in usd', '10 EUR in USD'],
+        settings: { ...defaultSettings, currency: false },
+        currencies: ratesB
+      })
+      assert.deepStrictEqual(
+        resB.answers.map((h) => extractAnswer(h).answer),
+        ['20 usd', '20 USD']
+      )
+    })
+
+    it('should not flatten plain UDF objects onto built-in math functions and should include UDU aliases', () => {
+      applyUdfu(true, 'ns: { sqrt: 999, base: 25 }')
+      applyUdfu(false, 'myunit: { definition: "2 m", aliases: ["myu"] }')
+
+      const res = runCalculation({
+        activePage: 'test-udf-plain-obj',
+        lines: ['sqrt(16)', 'ns.sqrt', 'ns.base', '3 myu in m'],
+        settings: defaultSettings,
+        currencies: mockCurrencies
+      })
+      assert.deepStrictEqual(
+        res.answers.map((h) => extractAnswer(h).answer),
+        ['4', '999', '25', '6 m']
+      )
+      assert.ok(res.uduList.includes('myunit') && res.uduList.includes('myu'))
+
+      applyUdfu(true, '')
+      applyUdfu(false, '')
+    })
+
+    it('should parse locale-formatted numbers with explicit settings and reject non-numeric strings', () => {
+      const euroSettings = { ...defaultSettings, numberFormat: '1.234,56', thouSep: true }
+      assert.strictEqual(parseLocaleNumber('1.500,25', euroSettings), 1500.25)
+      assert.strictEqual(parseLocaleNumber('1.500', euroSettings), 1500)
+      assert.ok(Number.isNaN(parseLocaleNumber('10 km', euroSettings)))
+      assert.ok(Number.isNaN(parseLocaleNumber('2026-11-03', euroSettings)))
+    })
+
+    it('should respect copyThouSep when formatting data-answer vs displayed text', () => {
+      const withoutCopySep = runCalculation({
+        activePage: 'test-copy-thou-sep-off',
+        lines: ['1234567.89', '0.12345 in %'],
+        settings: { ...defaultSettings, thouSep: true, copyThouSep: false },
+        currencies: mockCurrencies
+      })
+      assert.strictEqual(withoutCopySep.answers[0], '<span class="answer" data-answer="1234567.89">1,234,567.89</span>')
+
+      const withCopySep = runCalculation({
+        activePage: 'test-copy-thou-sep-on',
+        lines: ['1234567.89', '12.34567 in %'],
+        settings: { ...defaultSettings, thouSep: true, copyThouSep: true },
+        currencies: mockCurrencies
+      })
+      assert.strictEqual(withCopySep.answers[0], '<span class="answer" data-answer="1,234,567.89">1,234,567.89</span>')
+      assert.strictEqual(withCopySep.answers[1], '<span class="answer" data-answer="1,234.567%">1,234.567%</span>')
+    })
+
+    it('should control error link text via lineErrors setting while always recording errorLines', () => {
+      const shown = runCalculation({
+        activePage: 'test-line-errors-on',
+        lines: ['10', 'unknown_symbol'],
+        settings: { ...defaultSettings, lineErrors: true },
+        currencies: mockCurrencies
+      })
+      assert.deepStrictEqual(shown.errorLines, [1])
+      assert.ok(shown.answers[1].includes('>Error</a>'))
+
+      const hidden = runCalculation({
+        activePage: 'test-line-errors-off',
+        lines: ['10', 'unknown_symbol'],
+        settings: { ...defaultSettings, lineErrors: false },
+        currencies: mockCurrencies
+      })
+      assert.deepStrictEqual(hidden.errorLines, [1])
+      assert.ok(hidden.answers[1].includes('></a'))
+    })
+
+    it('should render plotButton markup for functions of x and detect self-referential page() calls', () => {
+      const plotRes = runCalculation({
+        activePage: 'test-plot-and-self-page',
+        lines: ['f(x) = sin(x)', 'page("SelfPage")'],
+        pages: [{ id: 'test-plot-and-self-page', name: 'SelfPage', data: 'a = 1' }],
+        settings: defaultSettings,
+        currencies: mockCurrencies
+      })
+      const parsedPlot = extractAnswer(plotRes.answers[0])
+      assert.strictEqual(parsedPlot.isPlot, true)
+      assert.strictEqual(parsedPlot.answer, 'f(x) = sin(x)')
+
+      const selfPageErr = extractAnswer(plotRes.answers[1])
+      assert.match(selfPageErr.error, /Circular reference detected: "SelfPage"/)
+    })
+
+    it('should reject reserved prototype pollution keys, invalid identifiers, and invalid unit aliases in UDF/UDU', () => {
+      const state = { previouslyImportedUDFs: [], previouslyCreatedUnits: [] }
+
+      assert.throws(
+        () => applyUdfuToMath(standardMath, 'constructor: () => 1', true, state),
+        /Reserved key not allowed/
+      )
+      assert.throws(() => applyUdfuToMath(standardMath, 'prototype: () => 1', true, state), /Reserved key not allowed/)
+      assert.throws(() => applyUdfuToMath(standardMath, '"bad-key": () => 1', true, state), /Invalid identifier/)
+      assert.throws(
+        () => applyUdfuToMath(standardMath, 'u1: { definition: "1 m", aliases: ["bad-alias"] }', false, state),
+        /Invalid unit alias/
+      )
+      assert.throws(
+        () => applyUdfuToMath(standardMath, 'u2: { definition: "1 m", aliases: ["constructor"] }', false, state),
+        /Invalid unit alias/
+      )
+    })
+
+    it('should sanitize filenames, escape HTML/RegExp, strip comments safely, and support debounce flush/cancel', async () => {
+      assert.strictEqual(getSafeFilename('My:Page*Name?.num... '), 'My-Page-Name-.num')
+      assert.strictEqual(getSafeFilename('   ...   '), 'Untitled')
+      assert.strictEqual(escapeHTML('<script>"\'&'), '&lt;script&gt;&quot;&#39;&amp;')
+      assert.strictEqual(escapeRegExp('$100.00 (USD)*'), '\\$100\\.00 \\(USD\\)\\*')
+      assert.strictEqual(stripComments('a = "http://x.com#1" // comment'), 'a = "http://x.com#1" ')
+
+      let count = 0
+      const fn = debounce(() => {
+        count++
+      }, 50)
+
+      fn()
+      fn.flush()
+      assert.strictEqual(count, 1)
+
+      fn()
+      fn.cancel()
+      await new Promise((r) => setTimeout(r, 70))
+      assert.strictEqual(count, 1)
+    })
+
+    it('should detect external file renames in sync directory and prioritize active page on content tie', () => {
+      const pages = [
+        { id: 'p1', name: 'Page 1', data: '' },
+        { id: 'p2', name: 'Page 2', data: '' },
+        { id: 'p3', name: 'Budget', data: 'rent = 1200' }
+      ]
+      const lastSyncContent = new Map([
+        ['page 1', ''],
+        ['page 2', ''],
+        ['budget', 'rent = 1200']
+      ])
+      const files = [
+        { name: 'Page 1', content: '' },
+        { name: 'Renamed Empty', content: '' },
+        { name: 'Household Budget', content: 'rent = 1200' }
+      ]
+
+      const renames = detectExternalRenames({
+        pages,
+        files,
+        lastSyncContent,
+        activePageId: 'p2'
+      })
+
+      assert.strictEqual(renames.length, 2)
+      assert.strictEqual(renames[0].page.id, 'p2')
+      assert.strictEqual(renames[0].sanitizedName, 'Renamed Empty')
+      assert.strictEqual(renames[1].page.id, 'p3')
+      assert.strictEqual(renames[1].sanitizedName, 'Household Budget')
+    })
+
+    it('should detect single external file rename even when content was simultaneously edited', () => {
+      const pages = [{ id: 'p1', name: 'Old Name', data: 'a = 1' }]
+      const lastSyncContent = new Map([['old name', 'a = 1']])
+      const files = [{ name: 'New Name', content: 'a = 2' }]
+
+      const renames = detectExternalRenames({
+        pages,
+        files,
+        lastSyncContent,
+        activePageId: 'p1'
+      })
+
+      assert.strictEqual(renames.length, 1)
+      assert.strictEqual(renames[0].page.id, 'p1')
+      assert.strictEqual(renames[0].sanitizedName, 'New Name')
+    })
   })
 })
