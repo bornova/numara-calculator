@@ -1,10 +1,12 @@
-import { dom } from '../dom'
-import { CLASS_NAMES, cm, numaraHints, refreshCurrencyTokens } from '../editor'
-import { calculate, clearEvaluationCache, math, refreshCurrencyState } from './calcManager'
-import { notify } from '../ui/dialogs'
-import { app, store } from '../appState'
+import { BUILTIN_MATH_KEYS, BUILTIN_UNIT_KEYS } from '../core/mathInstance.js'
+import { escapeHTML } from '../core/utils.js'
+import { dom } from '../dom.js'
+import { CLASS_NAMES, cm, numaraHints, refreshCurrencyTokens } from '../editor/index.js'
+import { app } from '../state/appState.js'
+import { store } from '../state/store.js'
+import { notify } from '../ui/dialogs.js'
+import { calculate, clearEvaluationCache, refreshCurrencyState } from './calcManager.js'
 
-const USD_UNIT = 'USD'
 const RATES_URL = 'https://api.frankfurter.dev/v2/rates?base=USD'
 const SYMBOLS_URL = 'https://api.frankfurter.dev/v2/currencies'
 
@@ -17,8 +19,6 @@ const DEFAULTS = {
   TRY: { symbol: '₺', name: 'Turkish Lira', locale: 'tr-TR' }
 }
 
-const BUILTIN_UNIT_KEYS = new Set(Object.keys(math.Unit.UNITS))
-const BUILTIN_MATH_KEYS = new Set(Object.keys(math.expression.mathWithTransform))
 const registeredCurrencyHints = new Set()
 
 /**
@@ -37,69 +37,34 @@ function isMathUnit(code, symbol) {
 }
 
 /**
- * Register a currency code as a math unit and an autocomplete hint.
+ * Register a currency code as an autocomplete hint.
  * @param {string} code Currency code.
  * @param {string} name Currency name.
- * @param {number} rate Currency rate.
  */
-function registerCurrencyUnit(code, name, rate) {
-  if (code !== USD_UNIT && rate) {
-    math.createUnit(
-      code,
-      {
-        aliases:
-          code.toLowerCase() in math.Unit.UNITS || BUILTIN_MATH_KEYS.has(code.toLowerCase())
-            ? []
-            : [code.toLowerCase()],
-        definition: math.unit(`${rate} ${USD_UNIT}`)
-      },
-      { override: true }
-    )
-  }
-
+function registerCurrencyHint(code, name) {
   if (!registeredCurrencyHints.has(code)) {
     registeredCurrencyHints.add(code)
     numaraHints.push({ text: code, desc: name, className: CLASS_NAMES.CURRENCY })
   }
 }
 
-/** Initialize USD as the base unit and refresh currencies. */
-export function initCurrencies() {
-  math.createUnit(USD_UNIT, { aliases: [USD_UNIT.toLowerCase()] })
-
-  const stored = store.get('currencies') || { USD: { ...DEFAULTS.USD } }
-
-  for (const [code, def] of Object.entries(DEFAULTS)) {
-    stored[code] = { ...(stored[code] || {}), ...def }
-  }
-
-  for (const code of Object.keys(stored)) {
-    const { symbol } = stored[code]
-    if (!DEFAULTS[code] && isMathUnit(code, symbol)) delete stored[code]
-  }
-
-  app.currencies = stored
-
-  for (const [code, { name, rate }] of Object.entries(app.currencies)) {
-    registerCurrencyUnit(code, name, rate)
-  }
-
-  refreshCurrencyState()
-  refreshCurrencyTokens()
-}
-
 /**
- * Fetch a URL and return parsed JSON, retrying on failure.
+ * Fetch a URL and return parsed JSON, retrying on transient failure.
  * @param {string} url URL to fetch.
- * @param {number} retries Number of retries.
- * @returns {Promise<object>} Parsed JSON response.
+ * @param {number} [retries=3] Number of retries.
+ * @returns {Promise<any>} Parsed JSON response.
  */
 async function fetchJSON(url, retries = 3) {
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      const response = await fetch(url)
+      const response = await fetch(url, { signal: AbortSignal.timeout(10000) })
 
-      if (!response.ok) throw new Error(`HTTP error ${response.status}`)
+      if (!response.ok) {
+        const httpError = new Error(`HTTP error ${response.status}`)
+
+        httpError.status = response.status
+        throw httpError
+      }
 
       const contentType = response.headers.get('content-type') || ''
 
@@ -109,7 +74,7 @@ async function fetchJSON(url, retries = 3) {
 
       return await response.json()
     } catch (error) {
-      if (attempt === retries - 1) throw error
+      if (attempt === retries - 1 || (error.status >= 400 && error.status < 500)) throw error
 
       await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** attempt))
     }
@@ -135,17 +100,25 @@ function buildCurrencies(symbolList, rateList) {
 
       currencies[code] = { symbol: symbol || code, name: name || code }
     }
+  } else if (app.currencies) {
+    for (const [code, info] of Object.entries(app.currencies)) {
+      if (!currencies[code] && info && !isMathUnit(code, info.symbol)) {
+        currencies[code] = { symbol: info.symbol || code, name: info.name || code }
+      }
+    }
   }
 
   let lastDate = null
 
   if (Array.isArray(rateList)) {
     for (const { quote: code, rate, date } of rateList) {
-      if (!code || !rate) continue
+      const numRate = Number(rate)
+
+      if (!code || !Number.isFinite(numRate) || numRate <= 0) continue
       if (!currencies[code] && isMathUnit(code, null)) continue
 
       currencies[code] = currencies[code] || { symbol: code, name: code }
-      currencies[code].rate = 1 / rate
+      currencies[code].rate = 1 / numRate
       lastDate = date
     }
   }
@@ -153,11 +126,39 @@ function buildCurrencies(symbolList, rateList) {
   return { currencies, lastDate }
 }
 
-/** Fetch latest rates and refresh the application's currency state. */
+/**
+ * Initialize USD as the base unit and refresh currencies from local storage.
+ */
+export function initCurrencies() {
+  const stored = store.get('currencies') || { USD: { ...DEFAULTS.USD } }
+
+  for (const [code, def] of Object.entries(DEFAULTS)) {
+    stored[code] = { ...(stored[code] || {}), ...def }
+  }
+
+  for (const code of Object.keys(stored)) {
+    const { symbol } = stored[code]
+
+    if (!DEFAULTS[code] && isMathUnit(code, symbol)) delete stored[code]
+  }
+
+  app.currencies = stored
+
+  for (const [code, { name }] of Object.entries(app.currencies)) {
+    registerCurrencyHint(code, name)
+  }
+
+  refreshCurrencyState()
+  refreshCurrencyTokens()
+}
+
+/**
+ * Fetch latest rates and refresh the application's currency state.
+ * @param {boolean} [isManual=false] Whether the update was triggered manually.
+ * @returns {Promise<void>}
+ */
 export async function getRates(isManual = false) {
   if (!navigator.onLine) {
-    if (dom.lastUpdated) dom.lastUpdated.textContent = 'Offline'
-
     if (isManual || !store.get('rateDate')) {
       notify('No internet connection. Could not update exchange rates.', 'warning')
     }
@@ -165,18 +166,16 @@ export async function getRates(isManual = false) {
     return
   }
 
-  if (dom.lastUpdated) dom.lastUpdated.innerHTML = '<div uk-spinner="ratio: 0.3"></div>'
-
   const startTime = Date.now()
 
   if (dom.updateRatesLink) dom.updateRatesLink.classList.add('spin')
 
   try {
-    const [symbols, rates] = await Promise.all([fetchJSON(SYMBOLS_URL), fetchJSON(RATES_URL)])
+    const [symbols, rates] = await Promise.all([fetchJSON(SYMBOLS_URL).catch(() => null), fetchJSON(RATES_URL)])
     const { currencies, lastDate } = buildCurrencies(symbols, rates)
 
-    for (const [code, { name, rate }] of Object.entries(currencies)) {
-      registerCurrencyUnit(code, name, rate)
+    for (const [code, { name }] of Object.entries(currencies)) {
+      registerCurrencyHint(code, name)
     }
 
     app.currencies = currencies
@@ -189,21 +188,13 @@ export async function getRates(isManual = false) {
     refreshCurrencyState()
     refreshCurrencyTokens()
 
-    if (dom.lastUpdated) {
-      dom.lastUpdated.textContent = store.get('rateDate')
-    }
-
-    cm.setOption('mode', app.settings.syntax ? 'numara' : 'plain')
+    cm.setOption('mode', app.settings?.syntax ? 'numara' : 'plain')
 
     clearEvaluationCache()
     calculate()
   } catch (error) {
-    if (dom.lastUpdated) {
-      dom.lastUpdated.textContent = 'n/a'
-    }
-
     if (isManual || !store.get('rateDate')) {
-      notify('Failed to get exchange rates (' + error + ')', 'warning')
+      notify('Failed to get exchange rates (' + escapeHTML(String(error)) + ')', 'warning')
     }
   } finally {
     const elapsed = Date.now() - startTime
