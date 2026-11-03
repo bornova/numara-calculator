@@ -41,12 +41,8 @@ input.clr-color {
 }
 
 .clr-field button {
-  width: 20px;
-}
-
-.clr-field button,
-.colorInput {
   border: 1px solid light-dark(#eaeaea, #666666);
+  width: 20px;
 }
 
 .clr-field button:after {
