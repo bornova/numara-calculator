@@ -43,8 +43,8 @@ export function setupPageIo() {
     numara.importDataError((error) => notify(escapeHTML(String(error)), 'danger'))
 
     numara.pageExported((msg) => {
-      if (!app.sidebarDocked) {
-        UIkit.offcanvas('#sideBar').hide()
+      if (!app.pageListDocked) {
+        UIkit.offcanvas('#pageListPanel').hide()
       }
 
       notify(escapeHTML(msg), 'success')
@@ -54,8 +54,8 @@ export function setupPageIo() {
     numara.requestExportPage(exportActivePage)
 
     numara.print(() => {
-      if (!app.sidebarDocked) {
-        UIkit.offcanvas('#sideBar').hide()
+      if (!app.pageListDocked) {
+        UIkit.offcanvas('#pageListPanel').hide()
       }
 
       window.print()
