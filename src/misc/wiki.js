@@ -116,7 +116,7 @@ Selecting multiple lines in the editor automatically displays live summary stati
 
 ### Pages and cross-page references
 
-Numara supports multiple calculation pages accessible from the sidebar:
+Numara supports multiple calculation pages accessible from the page list:
 
 - Create, rename (or double-click the page title in the bottom bar), duplicate, and delete pages.
 - Sort pages by date (\`Older to newer\`, \`Newer to older\`), alphabetically (\`A to Z\`, \`Z to A\`), or reorder them via drag-and-drop.
@@ -199,8 +199,8 @@ export function generateSettingsWiki() {
 - Set the visual theme of the application.
 - Click the **Customize theme** palette button to customize individual syntax highlighting colors for both Light and Dark themes using live color pickers, with per-color reset buttons and a **Default Colors** reset option.
 
-\`Page list position\` Auto (Default) | Slide out | Docked
-- Set the position of the page list sidebar. When set to \`Auto\`, the sidebar automatically docks when the window is wide enough and slides out on narrower windows. When docked, drag the sidebar border to resize it (double-click to reset).
+\`Page list position\` Auto (Default) | Floating | Docked
+- Set the position of the page list. When set to \`Auto\`, the page list automatically docks when the window is wide enough and floats above the page name on narrower windows. When docked, drag the page list border to resize it (double-click to reset).
 
 \`Always on top\` On | Off (Default) *(Desktop only)*
 - Keep Numara on top of all other windows on the screen.
@@ -376,7 +376,7 @@ export function generateShortcutsWiki() {
 | \`Cmd+N\` | \`Ctrl+N\` | Create a new page |
 | \`Cmd+D\` | \`Ctrl+D\` | Clear the current page |
 | \`Cmd+P\` | \`Ctrl+P\` | Print the current page |
-| \`Shift+Tab\` | \`Shift+Tab\` | Open or close the page list sidebar |
+| \`Shift+Tab\` | \`Shift+Tab\` | Open or close the page list |
 | \`Esc\` | \`Esc\` | Close open modal, search panel, or app window (when **Close app on Esc key** is enabled) |
 
 ### Editor & Search Shortcuts
@@ -401,8 +401,8 @@ export function generateShortcutsWiki() {
 | **Click a red line number / Error** | View error details for that line |
 | **Double-click page title** (bottom bar) | Rename the active page |
 | **Drag / double-click panel divider** | Resize input and output panels / reset to default width |
-| **Drag / double-click docked sidebar edge** | Resize docked sidebar / reset to default width |
-| **Drag and drop page in sidebar** | Reorder pages in the page list |
+| **Drag / double-click docked page list edge** | Resize docked page list / reset to default width |
+| **Drag and drop page in page list** | Reorder pages in the page list |
 | **Right-click input / output panel** *(Desktop)* | Copy line, answer, line with answer, or all lines/answers |
 `
 
