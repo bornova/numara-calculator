@@ -9,9 +9,10 @@ import { cm, udfInput, uduInput } from '../editor/index.js'
 import { clearSyncCache, triggerFolderSync } from '../pages/sync.js'
 import { app } from '../state/appState.js'
 import { checkSize, DEFAULT_APP_HEIGHT, DEFAULT_APP_WIDTH, getTheme, isElectron, isMac } from '../state/env.js'
+import { migrateFromV7 } from '../state/migration.js'
 import { store } from '../state/store.js'
 import { confirm, modal, showError } from './dialogs.js'
-import { setupSideBar, SIDEBAR_DEFAULT_WIDTH } from './sidebar.js'
+import { getDockedPageListWidth, setupPageList } from './pageList.js'
 import { colors } from './theme.js'
 
 let updateInterval
@@ -95,7 +96,7 @@ function setupSettingsEvents() {
       }
 
       store.remove('inputWidth')
-      store.remove('sideBarWidth')
+      store.remove('pageListWidth')
 
       await settings.prep()
       await settings.apply()
@@ -236,10 +237,10 @@ function setupSettingsEvents() {
 
   if (isElectron) {
     dom.resetSizeButton.addEventListener('click', () => {
-      const sidebarWidth = app.sidebarDocked ? (store.get('sideBarWidth') ?? SIDEBAR_DEFAULT_WIDTH) : 0
+      const pageListWidth = app.settings.pageListPosition === 'dock' ? getDockedPageListWidth() : 0
 
-      numara.resetSize(DEFAULT_APP_WIDTH, DEFAULT_APP_HEIGHT, sidebarWidth)
-      modal.center('#dialogSettings', true, DEFAULT_APP_WIDTH + sidebarWidth, DEFAULT_APP_HEIGHT)
+      numara.resetSize(DEFAULT_APP_WIDTH, DEFAULT_APP_HEIGHT, pageListWidth)
+      modal.center('#dialogSettings', true, DEFAULT_APP_WIDTH + pageListWidth, DEFAULT_APP_HEIGHT)
 
       setTimeout(() => {
         checkSize()
@@ -330,6 +331,8 @@ export const settings = {
     app.settings = store.get('settings')
 
     if (app.settings) {
+      migrateFromV7(app.settings)
+
       observableDiff(app.settings, settings.defaults, (diff) => {
         if (diff.kind === 'E') return
 
@@ -547,7 +550,7 @@ export const settings = {
       }
     }
 
-    setupSideBar(true)
+    setupPageList(true)
 
     if (shouldCalculate) {
       calculate()
