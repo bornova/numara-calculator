@@ -1,7 +1,10 @@
 import * as formulajs from '@formulajs/formulajs'
-import { DateTime } from 'luxon'
+import { DateTime, Settings } from 'luxon'
 import { factory } from 'mathjs'
 import nerdamer from 'nerdamer-prime'
+
+Settings.defaultNumberingSystem = 'latn'
+Settings.defaultOutputCalendar = 'iso8601'
 
 import {
   CLASS_LINE_ERROR_LINK,
@@ -240,7 +243,8 @@ function resolveDateOperand(rawCandidate) {
   const candidate = rawCandidate ? rawCandidate.trim() : ''
   if (!candidate) return null
 
-  const locale = { locale: getSystemLocale() }
+  const sysLocale = getSystemLocale()
+  const locales = sysLocale && sysLocale.toLowerCase() !== 'en-us' ? [sysLocale, 'en-US'] : ['en-US']
   const dateFormats = getDateFormatSettings()
   const flexToday = getFlexibleFormat(dateFormats.todayFormat)
   const flexTodayDay = getFlexibleFormat(dateFormats.todayDayFormat)
@@ -254,11 +258,13 @@ function resolveDateOperand(rawCandidate) {
   ]
 
   const matchDateFormats = (str) => {
-    for (const fmt of formats) {
-      const dt = DateTime.fromFormat(str, fmt.parse, locale)
+    for (const loc of locales) {
+      for (const fmt of formats) {
+        const dt = DateTime.fromFormat(str, fmt.parse, { locale: loc })
 
-      if (dt.isValid) {
-        return { fmt: fmt.display, dt, hasTime: fmt.hasTime }
+        if (dt.isValid) {
+          return { fmt: fmt.display, dt: dt.setLocale(sysLocale), hasTime: fmt.hasTime }
+        }
       }
     }
 
