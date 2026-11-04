@@ -7,9 +7,6 @@ artifactName: '${productName}-${version}-${arch}.${ext}'
 # Archive compression level
 compression: maximum
 
-# Post-pack cleanup hook
-afterPack: src/misc/afterPack.js
-
 # Publish configuration
 publish:
   - provider: github
