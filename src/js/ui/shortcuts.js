@@ -17,20 +17,20 @@ export function setupKeyboardShortcuts() {
     'Shift+TAB': 'pageName'
   }
 
-  const closeSidebarIfOpen = () =>
-    dom.sideBar.classList.contains('uk-open') &&
+  const closePageListIfOpen = () =>
+    dom.pageListPanel.classList.contains('uk-open') &&
     !dom.dialogNewPage.classList.contains('uk-open') &&
-    (dom.closeSideBarButton.click(), true)
+    (dom.closePageListButton.click(), true)
 
   const shortcuts = {}
 
   for (const [command, button] of Object.entries(keys)) {
     shortcuts[command] = (event) => {
       if (command === 'Shift+TAB') {
-        if (app.sidebarDocked) return
+        if (app.pageListDocked) return
 
         if (isModalOpen()) {
-          if (closeSidebarIfOpen()) {
+          if (closePageListIfOpen()) {
             event.preventDefault()
           }
 
@@ -51,7 +51,7 @@ export function setupKeyboardShortcuts() {
       if (!isModalOpen()) {
         dom[button].click()
       } else {
-        closeSidebarIfOpen()
+        closePageListIfOpen()
       }
     }
   }
