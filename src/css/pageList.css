@@ -1,6 +1,6 @@
-/* Sidebar container & resizer */
+/* Page list panel & resizer */
 
-.sideBarActions {
+.pageListActions {
   position: absolute;
   right: 0;
   bottom: 0;
@@ -8,20 +8,41 @@
   margin: 10px 10px 10px 10px;
 }
 
-.closeSideBarButton {
+.closePageListButton,
+.dockPageListButton {
   -webkit-app-region: no-drag !important;
+  display: inline-flex;
+  align-items: center;
   cursor: pointer;
   margin: 10px;
+  height: 20px;
   color: light-dark(#607d8b, #90b4dc);
 }
 
-.closeSideBarButton svg {
+.dockPageListButton {
+  float: left;
+  margin-right: 0;
+}
+
+.page-list-docked .dockPageListButton {
+  float: right;
+  margin-right: 10px;
+  margin-left: 0;
+}
+
+.closePageListButton svg {
   width: 16px;
   height: 16px;
   pointer-events: none;
 }
 
-.sideBarResizer {
+.dockPageListButton svg {
+  width: 15px;
+  height: 15px;
+  pointer-events: none;
+}
+
+.pageListResizer {
   display: none;
   position: fixed;
   top: 0;
@@ -33,7 +54,7 @@
   width: 5px;
 }
 
-.sideBarResizer::after {
+.pageListResizer::after {
   display: block;
   position: absolute;
   top: 0;
@@ -43,73 +64,94 @@
   content: '';
 }
 
-.sideBarResizer:hover::after,
-.sideBarResizer.resizing::after {
+.pageListResizer:hover::after,
+.pageListResizer.resizing::after {
   background: light-dark(#b7d5e6, #405062);
 }
 
-/* Undocked slide-out sidebar */
+/* Floating page list */
 
-#sideBar:not(.sidebar-docked) {
+#pageListPanel:not(.page-list-docked) {
   right: 0;
 }
 
-#sideBar:not(.sidebar-docked) .uk-offcanvas-bar {
+#pageListPanel:not(.page-list-docked) .uk-offcanvas-bar {
   display: flex;
   top: auto;
   right: 0;
-  bottom: 0;
+  bottom: calc(40px + env(safe-area-inset-bottom, 0px));
   left: 0;
-  transform: translateY(100%);
+  transform: translateY(calc(100% + 10px));
+  clip-path: inset(0 -20px 100% -20px);
   margin: 0 auto;
-  box-shadow: 0 -4px 16px light-dark(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.4));
+  box-shadow: 0 4px 16px light-dark(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.45));
   border: 1px solid light-dark(#eaeaea, #181818);
-  border-bottom: none;
-  border-radius: 8px 8px 0 0;
-  width: min(100%, 250px);
+  border-radius: 8px;
+  width: min(calc(100% - 20px), 250px);
   height: auto;
   min-height: 200px;
-  max-height: min(420px, calc(100vh - max(50px, calc(50px + env(safe-area-inset-top, 0px)))));
-  overflow: hidden;
+  max-height: min(420px, calc(100vh - 90px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
+  overflow: visible;
 }
 
-#sideBar:not(.sidebar-docked).uk-open > .uk-offcanvas-bar {
+#pageListPanel:not(.page-list-docked) .uk-offcanvas-bar::after {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  box-sizing: border-box;
+  border-right: 1px solid light-dark(#eaeaea, #181818);
+  border-bottom: 1px solid light-dark(#eaeaea, #181818);
+  border-bottom-right-radius: 2px;
+  background-color: light-dark(#ffffff, #222222);
+  width: 12px;
+  height: 12px;
+  content: '';
+  pointer-events: none;
+}
+
+#pageListPanel:not(.page-list-docked).uk-open > .uk-offcanvas-bar {
   left: 0;
   transform: translateY(0);
+  clip-path: inset(-20px -20px -10px -20px);
 }
 
-#sideBar:not(.sidebar-docked) .uk-offcanvas-bar-animation {
-  transition: transform 0.2s ease-out;
+#pageListPanel:not(.page-list-docked) .uk-offcanvas-bar-animation {
+  transition:
+    transform 0.2s ease-out,
+    clip-path 0.2s ease-out;
 }
 
-#sideBar:not(.sidebar-docked) .pageListHeader {
+#pageListPanel:not(.page-list-docked) .pageListHeader {
   -webkit-app-region: no-drag;
   flex-shrink: 0;
   border-radius: 8px 8px 0 0;
 }
 
-#sideBar:not(.sidebar-docked) .pageList {
+#pageListPanel:not(.page-list-docked) .pageList {
   flex: 1 1 auto;
   min-height: 0;
 }
 
-#sideBar:not(.sidebar-docked) .pageListFooter {
+#pageListPanel:not(.page-list-docked) .pageListFooter {
   flex-shrink: 0;
+  border-radius: 0 0 8px 8px;
 }
 
-/* Docked sidebar */
+/* Docked page list */
 
-.sidebar-docked {
+.page-list-docked {
   display: block !important;
   left: 0 !important;
 }
 
-.sidebar-docked .uk-offcanvas-bar {
+.page-list-docked .uk-offcanvas-bar {
   display: flex !important;
   transform: none !important;
+  clip-path: none !important;
 }
 
-.sidebar-docked .sideBarResizer {
+.page-list-docked .pageListResizer {
   display: block;
 }
 
@@ -143,14 +185,17 @@
 }
 
 .pageListSort {
+  display: inline-flex;
   float: left;
+  align-items: center;
   -webkit-app-region: no-drag;
   cursor: pointer;
   margin: 10px;
+  height: 20px;
   color: light-dark(#607d8b, #90b4dc);
 }
 
-.sidebar-docked .pageListSort {
+.page-list-docked .pageListSort {
   float: right;
 }
 
