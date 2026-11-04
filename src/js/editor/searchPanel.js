@@ -1,5 +1,7 @@
 import CodeMirror from 'codemirror'
 
+import { debounce, escapeRegExp } from '../core/utils.js'
+
 let panelEl = null
 let currentQuery = null
 let currentOverlay = null
@@ -15,7 +17,7 @@ function queryCaseInsensitive(query) {
 function parseQuery(queryStr) {
   if (!queryStr) return null
 
-  const isRE = queryStr.match(/^\/(.*)\/([a-z]*)$/)
+  const isRE = queryStr.match(/^\/(.+)\/([a-z]*)$/)
 
   if (isRE) {
     try {
@@ -32,7 +34,7 @@ function makeOverlay(query, caseInsensitive) {
   let regex
 
   if (typeof query === 'string') {
-    const escaped = query.replace(new RegExp('[-/\\\\^$*+?.()|[\\]{}]', 'g'), '\\$&')
+    const escaped = escapeRegExp(query)
 
     regex = new RegExp(escaped, caseInsensitive ? 'gi' : 'g')
   } else {
@@ -89,7 +91,34 @@ function selectMatch(cm, index) {
   cm.scrollIntoView({ from: match.from, to: match.to }, 50)
 }
 
-export function updateSearch(cm, select = true) {
+function refreshMatches(cm, fromPos, select = true) {
+  matches = getMatches(cm, currentQuery)
+
+  if (matches.length > 0) {
+    const foundIndex = matches.findIndex((m) => comparePos(m.from, fromPos) >= 0)
+
+    activeIndex = foundIndex === -1 ? 0 : foundIndex
+    panelEl.querySelector('.search-count').textContent = `${activeIndex + 1} of ${matches.length}`
+
+    if (select) {
+      selectMatch(cm, activeIndex)
+    }
+  } else {
+    activeIndex = -1
+    panelEl.querySelector('.search-count').textContent = '0 of 0'
+  }
+}
+
+function setReplaceModeVisible(visible) {
+  const replaceRow = panelEl.querySelector('.replace-row')
+  const toggleBtn = panelEl.querySelector('.search-toggle-replace')
+
+  replaceRow.classList.toggle('hidden', !visible)
+  toggleBtn.classList.toggle('expanded', visible)
+  document.body.classList.toggle('numara-search-replace-open', visible)
+}
+
+function updateSearch(cm, select = true) {
   if (!panelEl) return
 
   const findInput = panelEl.querySelector('.find-input')
@@ -118,33 +147,10 @@ export function updateSearch(cm, select = true) {
 
   cm.addOverlay(currentOverlay)
 
-  matches = getMatches(cm, currentQuery)
-
-  if (matches.length > 0) {
-    // Find the first match starting from or after the selection
-    const cursor = cm.getCursor('from')
-    let foundIndex = 0
-
-    for (let i = 0; i < matches.length; i++) {
-      if (comparePos(matches[i].from, cursor) >= 0) {
-        foundIndex = i
-        break
-      }
-    }
-
-    activeIndex = foundIndex
-    panelEl.querySelector('.search-count').textContent = `${activeIndex + 1} of ${matches.length}`
-
-    if (select) {
-      selectMatch(cm, activeIndex)
-    }
-  } else {
-    activeIndex = -1
-    panelEl.querySelector('.search-count').textContent = '0 of 0'
-  }
+  refreshMatches(cm, cm.getCursor('from'), select)
 }
 
-export function navigateSearch(cm, reverse = false) {
+function navigateSearch(cm, reverse = false) {
   if (matches.length === 0) return
 
   activeIndex = reverse ? (activeIndex - 1 + matches.length) % matches.length : (activeIndex + 1) % matches.length
@@ -153,14 +159,20 @@ export function navigateSearch(cm, reverse = false) {
   selectMatch(cm, activeIndex)
 }
 
-export function replaceCurrent(cm) {
+function replaceCurrent(cm) {
   if (activeIndex < 0 || activeIndex >= matches.length) return
 
   const replaceInput = panelEl.querySelector('.replace-input')
   const replaceVal = replaceInput.value
   const match = matches[activeIndex]
+  const replaceLines = replaceVal.split('\n')
+  const replacedTo = CodeMirror.Pos(
+    match.from.line + replaceLines.length - 1,
+    replaceLines.length === 1 ? match.from.ch + replaceLines[0].length : replaceLines[replaceLines.length - 1].length
+  )
 
   cm.replaceRange(replaceVal, match.from, match.to)
+  cm.setCursor(replacedTo)
 
   // Re-evaluate query and rebuild matches
   const findInput = panelEl.querySelector('.find-input')
@@ -169,22 +181,10 @@ export function replaceCurrent(cm) {
   if (!queryStr) return
 
   currentQuery = parseQuery(queryStr)
-  matches = getMatches(cm, currentQuery)
-
-  if (matches.length > 0) {
-    if (activeIndex >= matches.length) {
-      activeIndex = 0
-    }
-
-    panelEl.querySelector('.search-count').textContent = `${activeIndex + 1} of ${matches.length}`
-    selectMatch(cm, activeIndex)
-  } else {
-    activeIndex = -1
-    panelEl.querySelector('.search-count').textContent = '0 of 0'
-  }
+  refreshMatches(cm, replacedTo, true)
 }
 
-export function replaceAll(cm) {
+function replaceAll(cm) {
   const findInput = panelEl.querySelector('.find-input')
   const queryStr = findInput.value
 
@@ -209,26 +209,20 @@ export function replaceAll(cm) {
   updateSearch(cm, false)
 }
 
-export function toggleReplaceMode(cm, focusReplace = true) {
+function toggleReplaceMode(cm, focusReplace = true) {
   if (!panelEl) return
 
   const replaceRow = panelEl.querySelector('.replace-row')
-  const toggleBtn = panelEl.querySelector('.search-toggle-replace')
   const isHidden = replaceRow.classList.contains('hidden')
 
-  if (isHidden) {
-    replaceRow.classList.remove('hidden')
-    toggleBtn.classList.add('expanded')
-    document.body.classList.add('numara-search-replace-open')
+  setReplaceModeVisible(isHidden)
 
+  if (isHidden) {
     if (focusReplace) {
       panelEl.querySelector('.replace-input').focus()
       panelEl.querySelector('.replace-input').select()
     }
   } else {
-    replaceRow.classList.add('hidden')
-    toggleBtn.classList.remove('expanded')
-    document.body.classList.remove('numara-search-replace-open')
     panelEl.querySelector('.find-input').focus()
   }
 }
@@ -246,32 +240,15 @@ export function showSearchPanel(cm, replaceMode = false) {
     panelEl.querySelector('.find-input').value = selection
   }
 
-  const replaceRow = panelEl.querySelector('.replace-row')
-  const toggleBtn = panelEl.querySelector('.search-toggle-replace')
-
   document.body.classList.add('numara-search-panel-open')
+  setReplaceModeVisible(replaceMode)
+  updateSearch(cm)
 
-  if (replaceMode) {
-    replaceRow.classList.remove('hidden')
-    toggleBtn.classList.add('expanded')
-    document.body.classList.add('numara-search-replace-open')
-
-    updateSearch(cm)
-
-    setTimeout(() => {
-      panelEl.querySelector('.replace-input').focus()
-      panelEl.querySelector('.replace-input').select()
-    }, 50)
-  } else {
-    document.body.classList.remove('numara-search-replace-open')
-
-    updateSearch(cm)
-
-    setTimeout(() => {
-      panelEl.querySelector('.find-input').focus()
-      panelEl.querySelector('.find-input').select()
-    }, 50)
-  }
+  setTimeout(() => {
+    const input = panelEl.querySelector(replaceMode ? '.replace-input' : '.find-input')
+    input.focus()
+    input.select()
+  }, 50)
 }
 
 export function hideSearchPanel(cm) {
@@ -304,9 +281,9 @@ function createPanel(cm) {
   panelEl = document.createElement('div')
   panelEl.className = 'numara-search-panel hidden'
   panelEl.innerHTML = `
-    <div class="search-panel-row find-row">
+    <div class="search-panel-row">
       <button class="search-toggle-replace" title="Toggle Replace (Ctrl+H)">
-        <svg class="icon-chevron" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="9 18 15 12 9 6"></polyline></svg>
       </button>
       <div class="search-input-wrapper">
         <input type="text" class="search-input find-input" placeholder="Find" />
@@ -373,9 +350,15 @@ function createPanel(cm) {
   panelEl.querySelector('.btn-replace').addEventListener('click', () => replaceCurrent(cm))
   panelEl.querySelector('.btn-replace-all').addEventListener('click', () => replaceAll(cm))
 
-  cm.on('changes', () => {
+  const debouncedUpdateSearch = debounce(() => {
     if (isSearchPanelOpen()) {
       updateSearch(cm, false)
+    }
+  }, 120)
+
+  cm.on('changes', () => {
+    if (isSearchPanelOpen()) {
+      debouncedUpdateSearch()
     }
   })
 }

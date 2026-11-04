@@ -1,9 +1,10 @@
 import ColorPicker from '@bornova/colorpicker'
 import { applyChange, diff, observableDiff } from '@bornova/deep-diff'
 
-import { dom } from '../dom'
-import { confirm, modal } from './dialogs'
-import { app, store } from '../appState'
+import { dom } from '../dom.js'
+import { app } from '../state/appState.js'
+import { store } from '../state/store.js'
+import { confirm, modal } from './dialogs.js'
 
 const COLOR_INPUT_SELECTOR = '.colorInput'
 const colorInputs = dom.els(COLOR_INPUT_SELECTOR)
@@ -23,6 +24,9 @@ function resetActivePickerColor() {
   activePicker.dispatchEvent(new Event('input', { bubbles: true }))
 }
 
+/**
+ * Toggles default/changed indicator classes on each color picker input based on default colors.
+ */
 export function checkColorChange() {
   colorInputs.forEach((picker) => {
     const isSame = picker.value === colors.defaults[picker.dataset.class][picker.dataset.theme]
@@ -137,7 +141,7 @@ export const colors = {
    * Generates and applies custom styling sheets to document DOM based on configured theme.
    */
   apply: () => {
-    app.colors = store.get('colors')
+    app.colors ??= store.get('colors')
 
     const sheet = app.settings.syntax
       ? Object.values(app.colors)

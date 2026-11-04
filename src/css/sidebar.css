@@ -1,0 +1,273 @@
+/* Sidebar container & resizer */
+
+.sideBarActions {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: 10px 10px 10px 10px;
+}
+
+.closeSideBarButton {
+  -webkit-app-region: no-drag !important;
+  cursor: pointer;
+  margin: 10px;
+  color: light-dark(#607d8b, #90b4dc);
+}
+
+.closeSideBarButton svg {
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+}
+
+.sideBarResizer {
+  display: none;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  z-index: 1000;
+  cursor: ew-resize;
+  margin-left: -2px;
+  background: transparent;
+  width: 5px;
+}
+
+.sideBarResizer::after {
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 1px;
+  width: 1px;
+  content: '';
+}
+
+.sideBarResizer:hover::after,
+.sideBarResizer.resizing::after {
+  background: light-dark(#b7d5e6, #405062);
+}
+
+/* Undocked slide-out sidebar */
+
+#sideBar:not(.sidebar-docked) {
+  right: 0;
+}
+
+#sideBar:not(.sidebar-docked) .uk-offcanvas-bar {
+  display: flex;
+  top: auto;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateY(100%);
+  margin: 0 auto;
+  box-shadow: 0 -4px 16px light-dark(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.4));
+  border: 1px solid light-dark(#eaeaea, #181818);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  width: min(100%, 250px);
+  height: auto;
+  min-height: 200px;
+  max-height: min(420px, calc(100vh - max(50px, calc(50px + env(safe-area-inset-top, 0px)))));
+  overflow: hidden;
+}
+
+#sideBar:not(.sidebar-docked).uk-open > .uk-offcanvas-bar {
+  left: 0;
+  transform: translateY(0);
+}
+
+#sideBar:not(.sidebar-docked) .uk-offcanvas-bar-animation {
+  transition: transform 0.2s ease-out;
+}
+
+#sideBar:not(.sidebar-docked) .pageListHeader {
+  -webkit-app-region: no-drag;
+  flex-shrink: 0;
+  border-radius: 8px 8px 0 0;
+}
+
+#sideBar:not(.sidebar-docked) .pageList {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+#sideBar:not(.sidebar-docked) .pageListFooter {
+  flex-shrink: 0;
+}
+
+/* Docked sidebar */
+
+.sidebar-docked {
+  display: block !important;
+  left: 0 !important;
+}
+
+.sidebar-docked .uk-offcanvas-bar {
+  display: flex !important;
+  transform: none !important;
+}
+
+.sidebar-docked .sideBarResizer {
+  display: block;
+}
+
+/* Page list & items */
+
+.pageListHeader {
+  -webkit-app-region: drag;
+  height: 40px;
+}
+
+.pageListHeader,
+.pageListItem {
+  border-bottom: 1px solid light-dark(#eaeaea, #181818);
+  background-color: light-dark(#ffffff, #222222);
+  color: light-dark(#444444, #e6e6e6);
+}
+
+.pageListItem:hover,
+.activePage {
+  background-color: light-dark(#f4f6f8, #333333);
+}
+
+.pageList {
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.pageListFooter {
+  height: 47px;
+}
+
+.pageListSort {
+  float: left;
+  -webkit-app-region: no-drag;
+  cursor: pointer;
+  margin: 10px;
+  color: light-dark(#607d8b, #90b4dc);
+}
+
+.sidebar-docked .pageListSort {
+  float: right;
+}
+
+.pageListSort svg {
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
+.pageListSort:hover {
+  color: light-dark(#4682b4, #0f6ecd);
+}
+
+.sortListItem {
+  -webkit-app-region: no-drag;
+  cursor: pointer;
+  padding: 5px 10px;
+  color: light-dark(#444444, #e6e6e6);
+}
+
+.sortListItem:hover {
+  color: light-dark(#005cc5, #2196f3);
+}
+
+.sortListDivider {
+  margin: 5px 10px;
+  border-top-color: light-dark(#eaeaea, #444444) !important;
+}
+
+.pageListItem {
+  display: flex;
+  position: relative;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+
+.pageListItem > div:first-child {
+  padding: 6px 0 6px 10px;
+  min-width: 0;
+}
+
+.pageListItemTitle {
+  padding: 5px;
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Drag-and-drop page sorting */
+
+body.is-sorting-pages,
+body.is-sorting-pages * {
+  cursor: grabbing !important;
+  user-select: none !important;
+}
+
+.pageListItemDrag {
+  position: fixed !important;
+  z-index: 1050 !important;
+  box-sizing: border-box;
+  margin: 0 !important;
+  box-shadow: 0 4px 12px light-dark(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.45));
+  border-top: 1px solid light-dark(#eaeaea, #2a2a2a);
+  border-bottom: 1px solid light-dark(#eaeaea, #2a2a2a);
+  background-color: light-dark(#f4f6f8, #333333);
+  pointer-events: none;
+}
+
+.pageListItemPlaceholder {
+  opacity: 0.3;
+  background-color: light-dark(#eef2f6, #2a2a2a) !important;
+}
+
+/* Page item action buttons */
+
+.pageItemActions {
+  display: none;
+  align-items: center;
+  gap: 2px;
+}
+
+.pageListItem:hover .pageItemActions {
+  display: flex;
+}
+
+body.is-sorting-pages .pageItemActions,
+.pageListItemDrag .pageItemActions {
+  display: none !important;
+}
+
+.renamePageButton,
+.dupPageButton,
+.deletePageButton {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 4px;
+  color: light-dark(#607d8b, #90b4dc);
+}
+
+.renamePageButton svg,
+.dupPageButton svg,
+.deletePageButton svg {
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
+.renamePageButton:hover,
+.dupPageButton:hover {
+  color: light-dark(#005cc5, #2196f3);
+}
+
+.deletePageButton:hover {
+  color: light-dark(#b10e0e, #d41111);
+}

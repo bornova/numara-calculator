@@ -1,12 +1,15 @@
 import UIkit from 'uikit'
-import { app } from '../appState'
-import { math, formatAnswer } from '../calc/calcManager'
 
-let cm, currencyTokens, CLASS_NAMES
-let hintMap = new Map()
-let keywordMap = new Map()
-let dateTimeInstanceMethodsSet = new Set()
-let TOOLTIP_HANDLERS = {}
+import { formatAnswer, math } from '../calc/calcManager.js'
+import { escapeHTML } from '../core/utils.js'
+import { app } from '../state/appState.js'
+import { CLASS_NAMES, currencyTokens, dateTimeInstanceMethods, keywords } from './constants.js'
+import { numaraHints } from './hints.js'
+
+let cm
+const hintMap = new Map()
+const keywordMap = new Map(keywords.map((k) => [k.text, k]))
+const dateTimeInstanceMethodsSet = new Set(dateTimeInstanceMethods)
 
 /**
  * Determines the tooltip position based on the given element.
@@ -14,12 +17,12 @@ let TOOLTIP_HANDLERS = {}
  * @returns {string} Returns 'right' if the element is an <li>, otherwise 'top-left'.
  */
 function getTooltipPosition(el) {
-  return el.nodeName.toLowerCase() === 'li' ? 'right' : 'top-left'
+  return el?.closest?.('.CodeMirror-hints') ? 'right' : 'top-left'
 }
 
 /**
  * Displays a tooltip on the specified target element with the given title.
- * @param {HTMLElement|string} target The target element or selector to attach the tooltip to.
+ * @param {Element} target The target DOM element to attach the tooltip to.
  * @param {string} title The text to display inside the tooltip.
  */
 function showTooltip(target, title) {
@@ -30,13 +33,11 @@ function showTooltip(target, title) {
 }
 
 /**
- * Helper to check if a token element is preceded by a specific keyword/namespace.
- * Uses node-walking to skip any text nodes (like whitespace).
- * @param {HTMLElement} target The DOM element to check.
- * @param {string} name The keyword name (e.g. 'DateTime', 'formulajs', 'nerdamer').
- * @returns {boolean} True if preceded by the keyword and dot.
+ * Returns the identifier preceding a dot before the given token element, if any.
+ * @param {Element} target The DOM element to check.
+ * @returns {string|null} The preceding identifier name, or null.
  */
-function isPrecededBy(target, name) {
+function getPrecededByName(target) {
   let node = target.previousSibling
   const parts = []
 
@@ -50,7 +51,7 @@ function isPrecededBy(target, name) {
     node = node.previousSibling
   }
 
-  return parts[0] === '.' && parts[1] === name
+  return parts[0] === '.' ? parts[1] || null : null
 }
 
 /**
@@ -59,31 +60,32 @@ function isPrecededBy(target, name) {
  */
 function handleFunctionTooltip(target) {
   const text = target.textContent
+  const parentName = getPrecededByName(target)
 
-  if (isPrecededBy(target, 'formulajs')) {
+  if (parentName === 'formulajs') {
     showTooltip(target, 'Excel function')
     return
   }
 
-  if (isPrecededBy(target, 'nerdamer')) {
+  if (parentName === 'nerdamer') {
     showTooltip(target, 'Nerdamer')
     return
   }
 
-  if (isPrecededBy(target, 'DateTime')) {
+  if (parentName === 'DateTime') {
     showTooltip(
       target,
       `<div>Luxon DateTime method</div>
-      <div class="tooltipCode"><code>DateTime.${text}(...)</code></div>`
+      <div class="tooltipCode"><code>DateTime.${escapeHTML(text)}(...)</code></div>`
     )
     return
   }
 
-  if (dateTimeInstanceMethodsSet.has(text)) {
+  if (parentName && dateTimeInstanceMethodsSet.has(text)) {
     showTooltip(
       target,
       `<div>Luxon DateTime method</div>
-      <div class="tooltipCode"><code>.${text}(...)</code></div>`
+      <div class="tooltipCode"><code>.${escapeHTML(text)}(...)</code></div>`
     )
     return
   }
@@ -100,14 +102,12 @@ function handleFunctionTooltip(target) {
   // Fallback to standard Math.js help
   try {
     const tip = math.help(text).toJSON()
-    const syntax = tip.syntax.map((s) =>
-      s.replaceAll(/,/g, app.settings.thouSep !== 'disabled' && app.settings.inputLocale ? ';' : ',')
-    )
+    const syntax = tip.syntax.map((s) => s.replaceAll(/,/g, app.settings.numberFormat === '1.234,56' ? ';' : ','))
 
     showTooltip(
       target,
-      `<div>${tip.description}</div>
-      <div class="tooltipCode">${syntax.map((s) => `<code>${s}</code>`).join(' ')}</div>`
+      `<div>${escapeHTML(tip.description)}</div>
+      <div class="tooltipCode">${syntax.map((s) => `<code>${escapeHTML(s)}</code>`).join(' ')}</div>`
     )
   } catch {
     showTooltip(target, 'Description not available')
@@ -124,8 +124,9 @@ function handleCurrencyTooltip(target) {
     const code = currencyTokens.has(text)
       ? Object.keys(app.currencies).find((c) => app.currencies[c].symbol === text)
       : text?.toUpperCase()
+    const currencyName = app.currencies[code]?.name
 
-    showTooltip(target, app.currencies[code]?.name || 'Description not available')
+    showTooltip(target, currencyName ? escapeHTML(currencyName) : 'Description not available')
   } catch {
     showTooltip(target, 'Description not available')
   }
@@ -136,9 +137,15 @@ function handleCurrencyTooltip(target) {
  * @param {HTMLElement} target The DOM element representing the unit.
  */
 function handleUnitTooltip(target) {
-  const hint = hintMap.get(target.textContent)
+  const text = target.textContent
+  let hint = hintMap.get(text)
 
-  showTooltip(target, hint?.desc || 'Unit description not available')
+  if (!hint) {
+    hint = numaraHints.find((h) => h.text === text)
+    if (hint) hintMap.set(text, hint)
+  }
+
+  showTooltip(target, escapeHTML(hint?.desc || 'Unit description not available'))
 }
 
 /**
@@ -147,7 +154,7 @@ function handleUnitTooltip(target) {
  */
 function handleConstantTooltip(target) {
   try {
-    showTooltip(target, math.help(target.textContent).doc.description)
+    showTooltip(target, escapeHTML(math.help(target.textContent).doc.description))
   } catch {
     /* No tooltip */
   }
@@ -159,13 +166,15 @@ function handleConstantTooltip(target) {
  */
 function handleVariableTooltip(target) {
   const text = target.textContent
-  const val = app.mathScope.get(text)
+  const parentName = getPrecededByName(target)
+  const lookupKey = parentName ? `${parentName}.${text}` : text
+  const val = app.mathScope.get(lookupKey)
 
-  if (!val || typeof val === 'function' || app.scopeTypes?.[text] === 'function') return
+  if (!val || typeof val === 'function' || app.scopeTypes?.[lookupKey] === 'function') return
 
-  let varTooltip = formatAnswer(val ?? 'Undefined')
+  const varTooltip = formatAnswer(val ?? 'Undefined')
 
-  showTooltip(target, varTooltip)
+  showTooltip(target, escapeHTML(varTooltip))
 }
 
 /**
@@ -175,10 +184,10 @@ function handleVariableTooltip(target) {
 function handleLineNoTooltip(target) {
   const text = target.textContent
   const val = app.mathScope.get(text)
-  let tooltip =
+  const lineTooltip =
     typeof val === 'function' || app.scopeTypes?.[text] === 'function' ? 'Function' : formatAnswer(val ?? 'Undefined')
 
-  showTooltip(target, tooltip)
+  showTooltip(target, escapeHTML(lineTooltip))
 }
 
 /**
@@ -191,40 +200,32 @@ function handleKeywordTooltip(target) {
   showTooltip(target, keyword?.desc || 'Keyword description not available')
 }
 
+const TOOLTIP_HANDLERS = {
+  [CLASS_NAMES.FUNCTION]: handleFunctionTooltip,
+  [CLASS_NAMES.UDF]: (target) => showTooltip(target, 'User defined function'),
+  [CLASS_NAMES.UDU]: (target) => showTooltip(target, 'User defined unit'),
+  [CLASS_NAMES.CURRENCY]: handleCurrencyTooltip,
+  [CLASS_NAMES.UNIT]: handleUnitTooltip,
+  [CLASS_NAMES.CONSTANT]: handleConstantTooltip,
+  [CLASS_NAMES.VARIABLE]: handleVariableTooltip,
+  [CLASS_NAMES.LINE_NO]: handleLineNoTooltip,
+  [CLASS_NAMES.KEYWORD]: handleKeywordTooltip,
+  [CLASS_NAMES.FORMULAJS]: (target) => showTooltip(target, 'Formulajs'),
+  [CLASS_NAMES.NERDAMER]: (target) => showTooltip(target, 'Nerdamer'),
+  [CLASS_NAMES.EXCEL]: (target) => showTooltip(target, 'Excel function'),
+  [CLASS_NAMES.DATETIME]: (target) => showTooltip(target, 'Luxon DateTime')
+}
+
 /**
  * Initializes tooltip hover listeners for the editor.
  * @param {Object} cmInstance The CodeMirror instance.
- * @param {Array} hints The list of numara autocomplete hints.
- * @param {Array} kw The list of keywords.
- * @param {Set} curTokens The set of active currency symbol strings.
- * @param {Object} clsNames The css class names mapping object.
- * @param {Array} dtInstanceMethods The custom Luxon DateTime instance methods names.
  */
-export function initTooltips(cmInstance, hints, kw, curTokens, clsNames, dtInstanceMethods) {
+export function initTooltips(cmInstance) {
   cm = cmInstance
-  hintMap = new Map(hints.map((h) => [h.text, h]))
-  keywordMap = new Map(kw.map((k) => [k.text, k]))
-  currencyTokens = curTokens
-  CLASS_NAMES = clsNames
-  dateTimeInstanceMethodsSet = new Set(dtInstanceMethods)
-
-  TOOLTIP_HANDLERS = {
-    [CLASS_NAMES.FUNCTION]: handleFunctionTooltip,
-    [CLASS_NAMES.UDF]: (target) => showTooltip(target, 'User defined function'),
-    [CLASS_NAMES.UDU]: (target) => showTooltip(target, 'User defined unit'),
-    [CLASS_NAMES.CURRENCY]: handleCurrencyTooltip,
-    [CLASS_NAMES.UNIT]: handleUnitTooltip,
-    [CLASS_NAMES.CONSTANT]: handleConstantTooltip,
-    [CLASS_NAMES.VARIABLE]: handleVariableTooltip,
-    [CLASS_NAMES.LINE_NO]: handleLineNoTooltip,
-    [CLASS_NAMES.KEYWORD]: handleKeywordTooltip,
-    [CLASS_NAMES.FORMULAJS]: (target) => showTooltip(target, 'Formulajs'),
-    [CLASS_NAMES.NERDAMER]: (target) => showTooltip(target, 'Nerdamer'),
-    [CLASS_NAMES.EXCEL]: (target) => showTooltip(target, 'Excel function'),
-    [CLASS_NAMES.DATETIME]: (target) => showTooltip(target, 'Luxon DateTime')
-  }
 
   document.addEventListener('mouseover', (event) => {
+    if (!event.target?.closest?.('.cm-s-numara, .CodeMirror-hints')) return
+
     const className = event.target?.classList[0]
 
     if (app.settings.keywordTips && className?.startsWith('cm-')) {

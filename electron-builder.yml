@@ -4,6 +4,9 @@ appId: com.numara.app
 # Artifact name pattern
 artifactName: '${productName}-${version}-${arch}.${ext}'
 
+# Archive compression level
+compression: maximum
+
 # Publish configuration
 publish:
   - provider: github
@@ -17,8 +20,7 @@ directories:
 # Files to include in the build
 files:
   - build
-  - src/electron/main.js
-  - src/electron/preload.cjs
+  - src/electron/**/*
   - '!**/*.map'
 
 # Linux configuration
@@ -38,7 +40,6 @@ mac:
 
 # Windows configuration
 win:
-  verifyUpdateCodeSignature: false
   azureSignOptions:
     publisherName: 'Timur Atalay'
     endpoint: 'https://wus.codesigning.azure.net'

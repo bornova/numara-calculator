@@ -1,49 +1,29 @@
-import { outputContext } from '../ui/contextMenu'
-import { dom } from '../dom'
-import { cm, debouncedCalculate } from '../editor'
-import { app, store, getSystemLocale } from '../appState'
-import { syncPageSaveDebounced } from './sync'
-import { notify } from '../ui/dialogs'
-import {
-  app as coreApp,
-  math as coreMath,
-  formatAnswer as coreFormatAnswer,
-  refreshCurrencyState as coreRefreshCurrencyState
-} from '../core/mathInstance'
-
 import UIkit from 'uikit'
 
-export const math = coreMath
+import { formatAnswer as coreFormatAnswer, parseLocaleNumber } from '../core/formatter.js'
+import { math, refreshCurrencyState as coreRefreshCurrencyState } from '../core/mathInstance.js'
+import { debounce } from '../core/utils.js'
+import { dom } from '../dom.js'
+import { cm, debouncedCalculate, registerExcelFunctions, updateSelectionStats } from '../editor/index.js'
+import { syncPageSaveDebounced } from '../pages/sync.js'
+import { app } from '../state/appState.js'
+import { getSystemLocale } from '../state/env.js'
+import { store } from '../state/store.js'
+import { notify } from '../ui/dialogs.js'
+import {
+  getFoldedState,
+  renderAnswersToHTML,
+  syncOutputHeights,
+  updateLineWidget,
+  updateOutputDOM
+} from './outputRenderer.js'
 
-/**
- * Formats a calculation answer for display using application settings.
- * @param {*} answer The raw value to format.
- * @param {boolean} useGrouping Whether to use grouping/thousands separator.
- * @returns {string} The formatted answer string.
- */
-export function formatAnswer(answer, useGrouping) {
-  coreApp.settings = {
-    ...app.settings,
-    systemLocale: getSystemLocale()
-  }
-
-  return coreFormatAnswer(answer, useGrouping)
-}
-
-/**
- * Synchronizes currency state with background calculation helper state.
- */
-export function refreshCurrencyState() {
-  coreApp.currencies = app.currencies
-  coreApp.settings = {
-    ...app.settings,
-    systemLocale: getSystemLocale()
-  }
-  coreRefreshCurrencyState()
-}
+export { math, parseLocaleNumber, renderAnswersToHTML, syncOutputHeights }
 
 let worker = null
 let currentTaskId = 0
+let currentTaskPageId = null
+let currentTaskDocValue = null
 let lastErrorHandles = []
 let lastActivePage = null
 let slowCalcTimeout = null
@@ -55,7 +35,32 @@ let isDialogVisible = false
 let lastDialogShowTime = 0
 let autoCloseTimeout = null
 let lastScopeKeysSignature = ''
-let lastCalcStartTime = 0
+let pendingPageSave = null
+
+/**
+ * Clears active slow/hard calculation timeout timers.
+ */
+function clearCalcTimeouts() {
+  if (slowCalcTimeout) {
+    clearTimeout(slowCalcTimeout)
+    slowCalcTimeout = null
+  }
+
+  if (hardCalcTimeout) {
+    clearTimeout(hardCalcTimeout)
+    hardCalcTimeout = null
+  }
+}
+
+/**
+ * Clears any scheduled auto-close timer for the timeout dialog.
+ */
+function clearAutoCloseTimeout() {
+  if (autoCloseTimeout) {
+    clearTimeout(autoCloseTimeout)
+    autoCloseTimeout = null
+  }
+}
 
 /**
  * Compares current scope, UDF, and UDU list keys against the last state to check if keys changed.
@@ -65,11 +70,7 @@ let lastCalcStartTime = 0
  * @returns {boolean} True if keys changed, requiring a syntax mode reload.
  */
 function checkScopeKeysChanged(serializedScope, udfList, uduList) {
-  const currentKeys = [
-    ...Object.keys(serializedScope || {}).filter((k) => typeof (serializedScope || {})[k] !== 'function'),
-    ...(udfList || []),
-    ...(uduList || [])
-  ].sort()
+  const currentKeys = [...Object.keys(serializedScope || {}), ...(udfList || []), ...(uduList || [])].sort()
 
   const currentSignature = currentKeys.join(',')
 
@@ -81,7 +82,9 @@ function checkScopeKeysChanged(serializedScope, udfList, uduList) {
   return false
 }
 
-/** Hides the timeout dialog smoothly after a calculation completes or errors. */
+/**
+ * Hides the timeout dialog smoothly after a calculation completes or errors.
+ */
 function hideTimeoutDialogAfterCalc() {
   if (isDialogVisible) {
     isDialogVisible = false
@@ -96,8 +99,6 @@ function hideTimeoutDialogAfterCalc() {
     } else {
       UIkit.modal('#dialogCalcTimeout').hide()
     }
-  } else {
-    UIkit.modal('#dialogCalcTimeout').hide()
   }
 }
 
@@ -109,15 +110,6 @@ function getWorker() {
   if (!worker) {
     worker = new Worker('js/calc.worker.js')
 
-    // Initialize with current user-defined functions/units
-    worker.postMessage({
-      type: 'initUdfu',
-      payload: {
-        udf: store.get('udf') ?? '',
-        udu: store.get('udu') ?? ''
-      }
-    })
-
     worker.onmessage = (event) => {
       const { type, payload } = event.data
 
@@ -125,19 +117,10 @@ function getWorker() {
         const { taskId, answers, errorLines, serializedScope, scopeProperties, scopeTypes, udfList, uduList } = payload
 
         if (taskId !== currentTaskId) return
+        if (app.activePage !== currentTaskPageId || cm.getValue() !== currentTaskDocValue) return
 
         isCalculating = false
-
-        if (slowCalcTimeout) {
-          clearTimeout(slowCalcTimeout)
-          slowCalcTimeout = null
-        }
-
-        if (hardCalcTimeout) {
-          clearTimeout(hardCalcTimeout)
-          hardCalcTimeout = null
-        }
-
+        clearCalcTimeouts()
         lastActiveLineIndex = -1
 
         hideTimeoutDialogAfterCalc()
@@ -156,32 +139,34 @@ function getWorker() {
         if (keysChanged) {
           cm.setOption('mode', cm.getOption('mode'))
         }
+      } else if (type === 'initFormulajs') {
+        registerExcelFunctions(payload.keys)
       } else if (type === 'lineStart') {
-        const { lineIndex } = payload
+        const { taskId, lineIndex } = payload || {}
 
-        lastActiveLineIndex = lineIndex
+        if (taskId === currentTaskId) {
+          lastActiveLineIndex = lineIndex
+        }
       } else if (type === 'calcError') {
         const { taskId } = payload || {}
 
         if (taskId === currentTaskId) {
           isCalculating = false
-
-          if (slowCalcTimeout) {
-            clearTimeout(slowCalcTimeout)
-            slowCalcTimeout = null
-          }
-
-          if (hardCalcTimeout) {
-            clearTimeout(hardCalcTimeout)
-            hardCalcTimeout = null
-          }
-
+          clearCalcTimeouts()
           lastActiveLineIndex = -1
 
           hideTimeoutDialogAfterCalc()
         }
-        console.error('Calculation worker returned error:', payload.error)
+        console.error('Calculation worker returned error:', payload?.error)
       }
+    }
+
+    worker.onerror = (error) => {
+      isCalculating = false
+      clearCalcTimeouts()
+      lastActiveLineIndex = -1
+      hideTimeoutDialogAfterCalc()
+      console.error('Calculation worker error:', error)
     }
   }
 
@@ -189,188 +174,9 @@ function getWorker() {
 }
 
 /**
- * Tells the background calculation worker to clear its evaluation cache.
- */
-export function clearEvaluationCache() {
-  const w = getWorker()
-
-  w.postMessage({ type: 'clearCache' })
-}
-
-/**
- * Update the line widget with the answer.
- *
- * @param {number} lineHandle The line handle.
- * @param {string} answer The answer to display.
- * @param {number} lineIndex The absolute 0-based line index.
- * @param {boolean} isFolded Whether the line is currently folded.
- */
-function updateLineWidget(lineHandle, answer, lineIndex, isFolded) {
-  let widget = app.widgetMap.get(lineHandle)
-
-  if (widget) {
-    let changed = false
-
-    if (widget.node.dataset.index !== String(lineIndex)) {
-      widget.node.dataset.index = lineIndex
-    }
-
-    if (widget.node.innerHTML !== answer) {
-      widget.node.innerHTML = answer
-      changed = true
-    }
-
-    const newDisplay = isFolded ? 'none' : ''
-
-    if (widget.node.style.display !== newDisplay) {
-      widget.node.style.display = newDisplay
-      changed = true
-    }
-
-    if (changed) {
-      widget.changed()
-    }
-  } else {
-    const node = document.createElement('div')
-
-    node.dataset.index = lineIndex
-    node.innerHTML = answer
-    node.addEventListener('contextmenu', outputContext)
-    node.style.display = isFolded ? 'none' : ''
-
-    widget = cm.addLineWidget(lineHandle, node, { above: false, coverGutter: false, noHScroll: true })
-    widget.node = node
-
-    app.widgetMap.set(lineHandle, widget)
-  }
-}
-
-/**
- * Collects folded line indices and fold ranges from the active CodeMirror instance.
- * @returns {{ foldedLines: Set<number>, folds: Array<{ from: number, to: number }> }}
- */
-function getFoldedState() {
-  const foldedLines = new Set()
-  const folds = []
-
-  if (typeof cm !== 'undefined' && typeof cm.getAllMarks === 'function') {
-    for (const mark of cm.getAllMarks()) {
-      if (mark.__isFold) {
-        const range = mark.find()
-
-        if (range) {
-          folds.push({ from: range.from.line, to: range.to.line })
-
-          for (let i = range.from.line + 1; i <= range.to.line; i++) {
-            foldedLines.add(i)
-          }
-        }
-      }
-    }
-  }
-
-  return { foldedLines, folds }
-}
-
-/**
- * Synchronizes the heights of output display items with their corresponding CodeMirror inputs.
- */
-export function syncOutputHeights() {
-  const cmScroll = dom.el('.CodeMirror-scroll')
-
-  if (app.settings.answerPosition === 'bottom') {
-    const newHeight = cmScroll.scrollHeight - 50
-    const currentEl = dom.output.firstElementChild
-
-    if (!currentEl || currentEl.style.height !== `${newHeight}px`) {
-      dom.output.innerHTML = `<div style="height: ${newHeight}px;"></div>`
-    }
-
-    if (Math.abs(dom.output.scrollTop - cmScroll.scrollTop) > 1) {
-      dom.output.scrollTop = cmScroll.scrollTop
-    }
-
-    return
-  }
-
-  const totalLines = cm.lineCount()
-  const { foldedLines } = getFoldedState()
-
-  const visibleChildren = Array.from(cm.display.lineDiv.children)
-  const lineToElementMap = new Map()
-
-  for (const child of visibleChildren) {
-    if (child.firstElementChild) {
-      const lineAttr = child.firstElementChild.getAttribute('data-line')
-
-      if (lineAttr !== null) {
-        lineToElementMap.set(lineAttr, child)
-      }
-    }
-  }
-
-  const outputChildren = dom.output.firstElementChild?.children
-  let visibleIndex = 0
-
-  for (let i = 0; i < totalLines; i++) {
-    const lineHandle = cm.getLineHandle(i)
-    const el = outputChildren?.[i] || dom.el(`[data-index="${i}"]`)
-
-    if (el) {
-      if (lineHandle.hidden || foldedLines.has(i)) {
-        if (el.style.display !== 'none') {
-          el.style.display = 'none'
-        }
-      } else {
-        const child = lineToElementMap.get(String(i)) || visibleChildren[visibleIndex++]
-        const height = child ? (child.clientHeight ?? 27) : 27
-        const newHeightStr = `${height}px`
-
-        if (el.style.display !== '') {
-          el.style.display = ''
-        }
-
-        if (el.style.height !== newHeightStr) {
-          el.style.height = newHeightStr
-        }
-      }
-    }
-  }
-
-  if (Math.abs(dom.output.scrollTop - cmScroll.scrollTop) > 1) {
-    dom.output.scrollTop = cmScroll.scrollTop
-  }
-}
-
-/**
- * Generate output panel HTML for a list of answers.
- *
- * @param {Array<string>} answers The list of answer HTML strings.
- * @returns {string} The complete outputResults HTML string.
- */
-export function renderAnswersToHTML(answers) {
-  const useRulers = app.settings.rulers
-  const classRuler = useRulers ? 'ruler' : 'noRuler'
-  const outputAnswers = []
-
-  for (let lineIndex = 0; lineIndex < answers.length; lineIndex++) {
-    const result = answers[lineIndex] || ''
-    let displayResult = result
-
-    if (app.settings.truncateAnswers && result && result.includes('class="answer"') && !result.includes('uk-tooltip')) {
-      const tooltipText = result.replace(/<[^>]*>/g, '').replace(/"/g, '&quot;')
-
-      displayResult = result.replace('class="answer"', `class="answer" title="${tooltipText}" uk-tooltip`)
-    }
-
-    outputAnswers.push(`<div class="${classRuler}" data-index="${lineIndex}">${displayResult}</div>`)
-  }
-
-  return `<div class="outputWrapper">${outputAnswers.join('')}</div>`
-}
-
-/**
  * Apply results received asynchronously from the worker to CodeMirror and the DOM.
+ * @param {string[]} answers The list of evaluated answer HTML strings.
+ * @param {number[]} errorLines The 0-based line indices that produced errors.
  */
 function applyCalculationResults(answers, errorLines) {
   const totalLines = cm.lineCount()
@@ -381,26 +187,28 @@ function applyCalculationResults(answers, errorLines) {
     lastErrorHandles = []
   }
 
-  cm.operation(() => {
-    for (const lh of lastErrorHandles) {
-      cm.removeLineClass(lh, 'gutter', CLASS_LINE_ERROR)
-    }
+  if (lastErrorHandles.length > 0 || errorLines.length > 0) {
+    cm.operation(() => {
+      for (const lh of lastErrorHandles) {
+        cm.removeLineClass(lh, 'gutter', CLASS_LINE_ERROR)
+      }
 
-    const currentErrorHandles = []
+      const currentErrorHandles = []
 
-    for (const lineIdx of errorLines) {
-      if (lineIdx < totalLines) {
-        const lh = cm.getLineHandle(lineIdx)
+      for (const lineIdx of errorLines) {
+        if (lineIdx < totalLines) {
+          const lh = cm.getLineHandle(lineIdx)
 
-        if (lh) {
-          cm.addLineClass(lh, 'gutter', CLASS_LINE_ERROR)
-          currentErrorHandles.push(lh)
+          if (lh) {
+            cm.addLineClass(lh, 'gutter', CLASS_LINE_ERROR)
+            currentErrorHandles.push(lh)
+          }
         }
       }
-    }
 
-    lastErrorHandles = currentErrorHandles
-  })
+      lastErrorHandles = currentErrorHandles
+    })
+  }
 
   const { foldedLines, folds } = getFoldedState()
   const hasLineWidget = app.settings.answerPosition === 'bottom'
@@ -409,51 +217,27 @@ function applyCalculationResults(answers, errorLines) {
     for (let lineIndex = 0; lineIndex < totalLines; lineIndex++) {
       const lineHandle = cm.getLineHandle(lineIndex)
       const result = answers[lineIndex] || ''
+
       updateLineWidget(lineHandle, result, lineIndex, foldedLines.has(lineIndex))
     }
-    dom.output.innerHTML = `<div style="height: ${dom.el('.CodeMirror-scroll').scrollHeight - 50}px;"></div>`
   } else {
-    const outputResults = renderAnswersToHTML(answers)
-
-    if (dom.output.innerHTML !== outputResults) {
-      dom.output.innerHTML = outputResults
-    }
+    updateOutputDOM(answers)
   }
 
   syncOutputHeights()
+  updateSelectionStats()
 
-  // Update page lists / storage
+  // Update in-memory undo history, answers cache, and queue debounced page persistence
   if (app.activePage) {
-    const pages = store.get('pages')
-    const page = pages.find((page) => page.id === app.activePage)
-
-    if (page) {
-      const cmValue = cm.getValue()
-      const cmHistory = cm.getHistory()
-      const answersEqual =
-        Array.isArray(page.answers) &&
-        page.answers.length === answers.length &&
-        page.answers.every((a, i) => a === answers[i])
-      const foldsEqual =
-        Array.isArray(page.folds) &&
-        page.folds.length === folds.length &&
-        page.folds.every((f, i) => f.from === folds[i].from && f.to === folds[i].to)
-
-      if (
-        page.data !== cmValue ||
-        !answersEqual ||
-        !foldsEqual ||
-        JSON.stringify(page.history) !== JSON.stringify(cmHistory)
-      ) {
-        page.data = cmValue
-        page.history = cmHistory
-        page.folds = folds
-        page.answers = answers
-        page.cursor = cm.getCursor()
-        store.set('pages', pages)
-        syncPageSaveDebounced(page.name, cmValue)
-      }
+    app.pageHistory.set(app.activePage, cm.getHistory())
+    app.pageAnswers.set(app.activePage, answers)
+    pendingPageSave = {
+      pageId: app.activePage,
+      data: cm.getValue(),
+      folds,
+      cursor: cm.getCursor()
     }
+    debouncedSavePageState()
   }
 }
 
@@ -464,11 +248,7 @@ function applyCalculationResults(answers, errorLines) {
 function showTimeoutDialog(lines) {
   lastDialogShowTime = Date.now()
   isDialogVisible = true
-
-  if (autoCloseTimeout) {
-    clearTimeout(autoCloseTimeout)
-    autoCloseTimeout = null
-  }
+  clearAutoCloseTimeout()
 
   const stuckLineIndex = sharedArray && sharedArray[0] !== -1 ? sharedArray[0] : lastActiveLineIndex
   const lineNo = stuckLineIndex !== -1 ? stuckLineIndex + 1 : null
@@ -485,11 +265,7 @@ function showTimeoutDialog(lines) {
     UIkit.modal('#dialogCalcTimeout').hide()
 
     isDialogVisible = false
-
-    if (autoCloseTimeout) {
-      clearTimeout(autoCloseTimeout)
-      autoCloseTimeout = null
-    }
+    clearAutoCloseTimeout()
 
     if (isCalculating) {
       const timeoutDuration = (parseInt(app.settings.calcTimeout) || 10) * 1000
@@ -502,11 +278,8 @@ function showTimeoutDialog(lines) {
     UIkit.modal('#dialogCalcTimeout').hide()
 
     isDialogVisible = false
-
-    if (autoCloseTimeout) {
-      clearTimeout(autoCloseTimeout)
-      autoCloseTimeout = null
-    }
+    clearAutoCloseTimeout()
+    clearCalcTimeouts()
 
     if (worker) {
       worker.terminate()
@@ -534,42 +307,78 @@ function showTimeoutDialog(lines) {
 }
 
 /**
+ * Persists any pending page calculation state to local storage.
+ */
+function savePendingPageState() {
+  if (!pendingPageSave) return
+
+  const { pageId, data, folds, cursor } = pendingPageSave
+  pendingPageSave = null
+
+  const pages = store.get('pages')
+  const page = pages?.find((p) => p.id === pageId)
+
+  if (!page) return
+
+  const foldsEqual =
+    Array.isArray(page.folds) &&
+    page.folds.length === folds.length &&
+    page.folds.every((f, i) => f.from === folds[i].from && f.to === folds[i].to)
+
+  const hadLegacyFields = 'history' in page || 'answers' in page
+
+  if (page.data !== data || !foldsEqual || hadLegacyFields) {
+    page.data = data
+    delete page.history
+    delete page.answers
+    page.folds = folds
+    page.cursor = cursor
+    store.set('pages', pages)
+    syncPageSaveDebounced(page.name, data)
+  }
+}
+
+/**
+ * Formats a calculation answer for display using application settings.
+ * @param {*} answer The raw value to format.
+ * @param {boolean} useGrouping Whether to use grouping/thousands separator.
+ * @returns {string} The formatted answer string.
+ */
+export function formatAnswer(answer, useGrouping) {
+  return coreFormatAnswer(answer, useGrouping, app.settings, app.currencies)
+}
+
+/**
+ * Synchronizes currency state with background calculation helper state.
+ */
+export function refreshCurrencyState() {
+  coreRefreshCurrencyState(app.currencies)
+}
+
+/**
+ * Tells the background calculation worker to clear its evaluation cache.
+ */
+export function clearEvaluationCache() {
+  const w = getWorker()
+
+  w.postMessage({ type: 'clearCache' })
+}
+
+/**
  * Triggers asynchronous calculations in the background web worker.
  */
 export function calculate() {
   if (app.refreshCM) cm.refresh()
 
   const cmValue = cm.getValue()
+  const isEmpty = cmValue === ''
 
-  dom.clearButton.disabled = cmValue === ''
-  dom.copyButton.disabled = cmValue === ''
+  dom.clearButton.setAttribute('disabled', isEmpty)
+  dom.copyButton.setAttribute('disabled', isEmpty)
+  dom.printButton.setAttribute('disabled', isEmpty)
 
-  if (isCalculating) {
-    const elapsed = Date.now() - lastCalcStartTime
-
-    if (elapsed > 1000) {
-      if (worker) {
-        worker.terminate()
-        worker = null
-      }
-
-      isCalculating = false
-
-      if (slowCalcTimeout) {
-        clearTimeout(slowCalcTimeout)
-        slowCalcTimeout = null
-      }
-
-      if (hardCalcTimeout) {
-        clearTimeout(hardCalcTimeout)
-        hardCalcTimeout = null
-      }
-
-      if (isDialogVisible) {
-        isDialogVisible = false
-        UIkit.modal('#dialogCalcTimeout').hide()
-      }
-    }
+  if (dom.exportPageButton) {
+    dom.exportPageButton.setAttribute('disabled', isEmpty)
   }
 
   const lines = cmValue.split('\n')
@@ -585,24 +394,12 @@ export function calculate() {
   }
 
   isCalculating = true
-  lastCalcStartTime = Date.now()
-
-  if (autoCloseTimeout) {
-    clearTimeout(autoCloseTimeout)
-    autoCloseTimeout = null
-  }
+  clearAutoCloseTimeout()
 
   currentTaskId++
-
-  if (slowCalcTimeout) {
-    clearTimeout(slowCalcTimeout)
-    slowCalcTimeout = null
-  }
-
-  if (hardCalcTimeout) {
-    clearTimeout(hardCalcTimeout)
-    hardCalcTimeout = null
-  }
+  currentTaskPageId = app.activePage
+  currentTaskDocValue = cmValue
+  clearCalcTimeouts()
 
   const timeoutDuration = (parseInt(app.settings.calcTimeout) || 10) * 1000
   const slowDuration = Math.min(5000, timeoutDuration / 2)
@@ -616,11 +413,14 @@ export function calculate() {
   }, timeoutDuration)
 
   const w = getWorker()
-  const allPages = (store.get('pages') ?? []).map((p) => ({
-    id: p.id,
-    name: p.name,
-    data: p.id === app.activePage ? cmValue : p.data
-  }))
+  const needsPages = cmValue.includes('page')
+  const allPages = needsPages
+    ? (store.get('pages') ?? []).map((p) => ({
+        id: p.id,
+        name: p.name,
+        data: p.id === app.activePage ? cmValue : p.data
+      }))
+    : []
 
   w.postMessage({
     type: 'calculate',
@@ -640,3 +440,33 @@ export function calculate() {
     }
   })
 }
+
+export const debouncedSavePageState = debounce(savePendingPageState, 300)
+
+const baseCancelPageState = debouncedSavePageState.cancel
+
+debouncedSavePageState.cancel = function () {
+  pendingPageSave = null
+  baseCancelPageState.call(this)
+}
+
+debouncedSavePageState.flush = function () {
+  baseCancelPageState.call(this)
+
+  if (app.activePage && !app.loadingPage && typeof cm?.getValue === 'function') {
+    const { folds } = getFoldedState()
+
+    pendingPageSave = {
+      pageId: app.activePage,
+      data: cm.getValue(),
+      folds,
+      cursor: cm.getCursor()
+    }
+  }
+
+  savePendingPageState()
+}
+
+window.addEventListener('beforeunload', () => {
+  debouncedSavePageState.flush()
+})

@@ -4,3 +4,8 @@ build
 dist
 node_modules
 wiki
+
+# Files
+.DS_Store
+*.log
+.env*

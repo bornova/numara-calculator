@@ -7,8 +7,6 @@ const addIpcListener = (channel, wrapper) => {
 
 contextBridge.exposeInMainWorld('numara', {
   isMac: process.platform === 'darwin',
-  isWindows: process.platform === 'win32',
-  isLinux: process.platform === 'linux',
 
   versions: {
     chrome: () => process.versions.chrome,
@@ -48,8 +46,8 @@ contextBridge.exposeInMainWorld('numara', {
   print: (callback) => addIpcListener('print', () => callback()),
 
   // Context menus
-  inputContextMenu: (index, isEmpty, isLine, isSelection, isMultiLine, hasAnswer) =>
-    ipcRenderer.send('inputContextMenu', index, isEmpty, isLine, isSelection, isMultiLine, hasAnswer),
+  inputContextMenu: (index, isEmpty, isMultiLine, hasAnswer) =>
+    ipcRenderer.send('inputContextMenu', index, isEmpty, isMultiLine, hasAnswer),
   outputContextMenu: (index, isEmpty, hasAnswer) => ipcRenderer.send('outputContextMenu', index, isEmpty, hasAnswer),
   textboxContextMenu: () => ipcRenderer.send('textboxContextMenu'),
 
@@ -58,7 +56,6 @@ contextBridge.exposeInMainWorld('numara', {
   copyAllAnswers: (callback) => addIpcListener('copyAllAnswers', () => callback()),
   copyLine: (callback) => addIpcListener('copyLine', (event, index) => callback(index)),
   copyAnswer: (callback) => addIpcListener('copyAnswer', (event, index, withLines) => callback(index, withLines)),
-  copyLineWithAnswer: (callback) => addIpcListener('copyLineWithAnswer', (event, index) => callback(index, true)),
 
   // Update app
   updateApp: () => ipcRenderer.send('updateApp'),
@@ -80,9 +77,6 @@ contextBridge.exposeInMainWorld('numara', {
   onSyncDirChanged: (callback) => addIpcListener('syncDirChanged', () => callback()),
   onSyncDirDeleted: (callback) => addIpcListener('syncDirDeleted', () => callback()),
   syncDirContextMenu: (dirPath) => ipcRenderer.send('syncDirContextMenu', dirPath),
-
-  // Open path in file explorer
-  openPath: (path) => ipcRenderer.send('openPath', path),
 
   // Developer Tools
   openDevTools: () => ipcRenderer.send('openDevTools'),

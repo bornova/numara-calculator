@@ -1,19 +1,23 @@
-import { applyUdfu, clearEvaluationCache, runCalculation } from '../core/evaluator'
+import { applyUdfu, clearEvaluationCache, formulajsKeys, runCalculation } from '../core/evaluator.js'
+
+// Lock down network and external script APIs inside the calculation worker sandbox
+for (const api of ['fetch', 'XMLHttpRequest', 'WebSocket', 'EventSource', 'importScripts']) {
+  try {
+    Object.defineProperty(self, api, { value: undefined, configurable: false, writable: false })
+  } catch {
+    // Ignore if property is non-configurable in environment
+  }
+}
+
+self.postMessage({
+  type: 'initFormulajs',
+  payload: { keys: formulajsKeys }
+})
 
 self.onmessage = (event) => {
   const { type, payload } = event.data
 
-  if (type === 'initUdfu') {
-    const { udf, udu } = payload
-
-    if (typeof udf === 'string') {
-      applyUdfu(true, udf)
-    }
-
-    if (typeof udu === 'string') {
-      applyUdfu(false, udu)
-    }
-  } else if (type === 'calculate') {
+  if (type === 'calculate') {
     const { taskId, activePage, lines, pages, settings, currencies, udf, udu, sharedBuffer } = payload
 
     try {
@@ -32,15 +36,17 @@ self.onmessage = (event) => {
         settings,
         currencies,
         sharedBuffer,
-        onLineStart: (lineIndex) => {
-          self.postMessage({
-            type: 'lineStart',
-            payload: {
-              taskId,
-              lineIndex
+        onLineStart: sharedBuffer
+          ? undefined
+          : (lineIndex) => {
+              self.postMessage({
+                type: 'lineStart',
+                payload: {
+                  taskId,
+                  lineIndex
+                }
+              })
             }
-          })
-        }
       })
 
       self.postMessage({

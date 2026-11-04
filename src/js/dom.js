@@ -5,7 +5,7 @@ export const dom = {
   /**
    * Query DOM element that matches the selector.
    * @param {string} selector The selector to match.
-   * @returns {Element} The first matching element.
+   * @returns {Element|null} The first matching element.
    */
   el: (selector) => document.querySelector(selector),
 
@@ -34,45 +34,45 @@ export const dom = {
   headerMacTitle: document.getElementById('macHeaderTitle'),
 
   // Actions
-  sideBarButton: document.getElementById('sideBarButton'),
   newPageButton: document.getElementById('newPageButton'),
-  leftActionsDivider: document.getElementById('leftActionsDivider'),
   clearButton: document.getElementById('clearButton'),
-  copyButton: document.getElementById('copyButton'),
   pageName: document.getElementById('pageName'),
+  selectionStats: document.getElementById('selectionStats'),
   udfuButton: document.getElementById('udfuButton'),
   settingsButton: document.getElementById('settingsButton'),
   aboutButton: document.getElementById('aboutButton'),
+  updateMenuLink: document.getElementById('updateMenuLink'),
   notificationDot: document.getElementById('notificationDot'),
 
   // Side panel
   sideBar: document.getElementById('sideBar'),
+  sideBarBar: document.querySelector('#sideBar .uk-offcanvas-bar'),
+  sideBarResizer: document.getElementById('sideBarResizer'),
   sortOldNew: document.getElementById('sortOldNew'),
   sortNewOld: document.getElementById('sortNewOld'),
   sortAZ: document.getElementById('sortAZ'),
   sortZA: document.getElementById('sortZA'),
   pageList: document.getElementById('pageList'),
   closeSideBarButton: document.getElementById('closeSideBarButton'),
-  newPageButtonSP: document.getElementById('newPageButtonSP'),
+  newPageButtonSB: document.getElementById('newPageButtonSB'),
+
+  copyButton: document.getElementById('copyButton'),
   importPageButton: document.getElementById('importPageButton'),
+  exportPageButton: document.getElementById('exportPageButton'),
   printButton: document.getElementById('printButton'),
-  deleteAllPagesButton: document.getElementById('deleteAllPagesButton'),
 
   // Dialogs
   dialogNewPage: document.getElementById('dialogNewPage'),
   newPageTitleInput: document.getElementById('newPageTitleInput'),
   dialogNewPageSave: document.getElementById('dialogNewPageSave'),
-  dialogRenamePage: document.getElementById('dialogRenamePage'),
   renamePageTitleInput: document.getElementById('renamePageTitleInput'),
   dialogRenamePageSave: document.getElementById('dialogRenamePageSave'),
-  dialogUdfu: document.getElementById('dialogUdfu'),
   udfInput: document.getElementById('udfInput'),
   uduInput: document.getElementById('uduInput'),
   dialogUdfuSaveF: document.getElementById('dialogUdfuSaveF'),
   dialogUdfuSaveU: document.getElementById('dialogUdfuSaveU'),
 
   // Settings dialog
-  dialogSettings: document.getElementById('dialogSettings'),
   customizeThemeButton: document.getElementById('customizeThemeButton'),
   numericOutput: document.getElementById('numericOutput'),
   bigNumWarn: document.getElementById('bigNumWarn'),
@@ -89,25 +89,26 @@ export const dom = {
   answerPosition: document.getElementById('answerPosition'),
   keywordTips: document.getElementById('keywordTips'),
   matchBrackets: document.getElementById('matchBrackets'),
-  thouSep: document.getElementById('thouSep'),
+  numberFormat: document.getElementById('numberFormat'),
   dateFormat: document.getElementById('dateFormat'),
   localeWarn: document.getElementById('localeWarn'),
-  inputLocale: document.getElementById('inputLocale'),
   copyThouSep: document.getElementById('copyThouSep'),
   currency: document.getElementById('currency'),
   currencyWarn: document.getElementById('currencyWarn'),
   currencyInterval: document.getElementById('currencyInterval'),
   updateRatesLink: document.getElementById('updateRatesLink'),
+  syncDir: document.getElementById('syncDir'),
+  syncDirEnabled: document.getElementById('syncDirEnabled'),
+  syncDirSection: document.getElementById('syncDirSection'),
+  selectSyncDirButton: document.getElementById('selectSyncDirButton'),
   dialogSettingsReset: document.getElementById('dialogSettingsReset'),
   resetSizeButton: document.getElementById('resetSizeButton'),
   defaultSettingsButton: document.getElementById('defaultSettingsButton'),
-  escToClose: document.getElementById('escToClose'),
 
   // Theme dialog
   defaultColorsButton: document.getElementById('defaultColorsButton'),
 
   // About dialog
-  dialogAbout: document.getElementById('dialogAbout'),
   numaraLogo: document.getElementById('numaraLogo'),
   dialogAboutAppVersion: document.getElementById('dialogAboutAppVersion'),
   dialogAboutUpdateStatus: document.getElementById('dialogAboutUpdateStatus'),
@@ -124,7 +125,7 @@ export const dom = {
   dialogPlotAxisSettings: document.getElementById('dialogPlotAxisSettings'),
   dialogPlotAxisSettingsSave: document.getElementById('dialogPlotAxisSettingsSave'),
   defaultDomainsButton: document.getElementById('defaultDomainsButton'),
-  plotTitle: document.getElementById('plotTitle'),
+  plotSeriesList: document.getElementById('plotSeriesList'),
   plot: document.getElementById('plot'),
   axisSettingsButton: document.getElementById('axisSettingsButton'),
   plotAutoDomain: document.getElementById('plotAutoDomain'),
@@ -147,14 +148,17 @@ export const dom = {
   // Confirm dialog
   confirmMsg: document.getElementById('confirmMsg'),
   confirmYes: document.getElementById('confirmYes'),
+  confirmNo: document.querySelector('#dialogConfirm .uk-modal-close'),
+  confirmKeepSyncContainer: document.getElementById('confirmKeepSyncContainer'),
+  confirmKeepSync: document.getElementById('confirmKeepSync'),
 
   // Calc Timeout dialog
-  dialogCalcTimeout: document.getElementById('dialogCalcTimeout'),
   calcTimeoutMsg: document.getElementById('calcTimeoutMsg'),
   calcTimeoutContinue: document.getElementById('calcTimeoutContinue'),
   calcTimeoutIgnore: document.getElementById('calcTimeoutIgnore'),
 
   // Other elements
+  printArea: document.getElementById('printArea'),
   scrollTop: document.getElementById('scrollTop'),
   colorSheet: document.getElementById('colorSheet')
 }
