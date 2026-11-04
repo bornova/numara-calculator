@@ -154,8 +154,8 @@ export function newPage(isImport = false, importName = '', importData = '') {
 
   const hidePromises = [modal.hide('#dialogNewPage')]
 
-  if (!app.sidebarDocked) {
-    hidePromises.push(UIkit.offcanvas('#sideBar').hide())
+  if (!app.pageListDocked) {
+    hidePromises.push(UIkit.offcanvas('#pageListPanel').hide())
   }
 
   Promise.all(hidePromises).then(() => {
@@ -188,8 +188,8 @@ function duplicatePage(pageId) {
   loadPage(dupPageId)
   syncPageSave(dupPageName, dupPageData)
 
-  if (!app.sidebarDocked) {
-    UIkit.offcanvas('#sideBar')
+  if (!app.pageListDocked) {
+    UIkit.offcanvas('#pageListPanel')
       .hide()
       .then(() => {
         cm.focus()
@@ -380,7 +380,7 @@ export function loadPage(pageId) {
 }
 
 /**
- * Populate the page list in side bar.
+ * Populate the page list.
  */
 export function populatePages() {
   const pages = store.get('pages')
@@ -457,9 +457,9 @@ function sortPages(by) {
  * Binds UI event listeners for page creation, sorting, renaming, and list actions.
  */
 function setupPageEvents() {
-  dom.closeSideBarButton.addEventListener('click', () => UIkit.offcanvas('#sideBar').hide())
+  dom.closePageListButton.addEventListener('click', () => UIkit.offcanvas('#pageListPanel').hide())
   dom.newPageButton.addEventListener('click', newPageDialog)
-  dom.newPageButtonSB.addEventListener('click', newPageDialog)
+  dom.newPageButtonPL.addEventListener('click', newPageDialog)
   dom.dialogNewPageSave.addEventListener('click', () => newPage(false))
 
   dom.newPageTitleInput.addEventListener('keyup', (event) => {
@@ -506,14 +506,14 @@ function setupPageEvents() {
   })
 
   dom.pageName.addEventListener('click', () => {
-    if (!app.sidebarDocked) {
+    if (!app.pageListDocked) {
       UIkit.tooltip(dom.pageName)?.hide()
-      UIkit.offcanvas('#sideBar').toggle()
+      UIkit.offcanvas('#pageListPanel').toggle()
     }
   })
 
   dom.pageName.addEventListener('dblclick', () => {
-    if (app.sidebarDocked && app.activePage) {
+    if (app.pageListDocked && app.activePage) {
       renamePage(app.activePage)
     }
   })
@@ -528,8 +528,8 @@ function setupPageEvents() {
 
     switch (action) {
       case 'load':
-        if (!app.sidebarDocked) {
-          UIkit.offcanvas('#sideBar').hide()
+        if (!app.pageListDocked) {
+          UIkit.offcanvas('#pageListPanel').hide()
         }
 
         loadPage(pageId)

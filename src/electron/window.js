@@ -74,21 +74,21 @@ function setTitleBarOverlay(isTrans = isOverlayTrans) {
  * Reset window size to default.
  * @param {number} [appWrapperWidth=schema.appWidth.default] Target width of the app wrapper.
  * @param {number} [appWrapperHeight=schema.appHeight.default] Target height of the app wrapper.
- * @param {number} [sidebarWidth=0] Current width of the docked sidebar.
+ * @param {number} [pageListWidth=0] Current width of the docked page list.
  */
 export function resetSize(
   appWrapperWidth = schema.appWidth.default,
   appWrapperHeight = schema.appHeight.default,
-  sidebarWidth = 0
+  pageListWidth = 0
 ) {
   if (!win || win.isDestroyed()) return
 
   const [minWidth, minHeight] = win.getMinimumSize()
   const width = Math.round(Number(appWrapperWidth) || schema.appWidth.default)
   const height = Math.round(Number(appWrapperHeight) || schema.appHeight.default)
-  const sidebar = Math.max(0, Math.round(Number(sidebarWidth) || 0))
+  const pageList = Math.max(0, Math.round(Number(pageListWidth) || 0))
 
-  win.setSize(Math.max(minWidth, width + sidebar), Math.max(minHeight, height))
+  win.setSize(Math.max(minWidth, width + pageList), Math.max(minHeight, height))
 }
 
 /**
@@ -286,12 +286,14 @@ export function setupWindowHandlers({ onTrayChanged } = {}) {
   })
 
   ipcMain.on('setOpenAtLogin', (event, bool) => {
-    if (!app.isPackaged) {
-      app.setLoginItemSettings({ openAtLogin: false })
-      return
-    }
+    if (!app.isPackaged) return
+
+    const openAtLogin = Boolean(bool)
+
+    if (app.getLoginItemSettings().openAtLogin === openAtLogin) return
+
     app.setLoginItemSettings({
-      openAtLogin: bool,
+      openAtLogin,
       openAsHidden: true,
       args: ['--hidden']
     })
@@ -299,8 +301,8 @@ export function setupWindowHandlers({ onTrayChanged } = {}) {
 
   ipcMain.handle('isMaximized', () => (win && !win.isDestroyed() ? win.isMaximized() : false))
 
-  ipcMain.on('resetSize', (event, appWrapperWidth, appWrapperHeight, sidebarWidth) => {
-    resetSize(appWrapperWidth, appWrapperHeight, sidebarWidth)
+  ipcMain.on('resetSize', (event, appWrapperWidth, appWrapperHeight, pageListWidth) => {
+    resetSize(appWrapperWidth, appWrapperHeight, pageListWidth)
   })
 
   ipcMain.on('resetApp', () => {

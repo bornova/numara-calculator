@@ -100,6 +100,7 @@ function makeModalDraggable(modalElement) {
 
   header.addEventListener('mousedown', (e) => {
     if (e.target.closest('button, a, input')) return
+
     dialog.classList.remove('modal-centering')
     offsetX = e.clientX - dialog.offsetLeft
     offsetY = e.clientY - dialog.offsetTop
@@ -160,7 +161,7 @@ export const modal = {
 
 /**
  * Checks whether any modal dialog or offcanvas panel is currently open.
- * @returns {boolean} True if any modal or side panel is open.
+ * @returns {boolean} True if any modal or page list panel is open.
  */
 export const isModalOpen = () => modalOpenState
 
@@ -220,10 +221,8 @@ export function customConfirm(msg, yesLabel, noLabel, yesAction, noAction) {
   resetConfirmDialog()
 
   dom.confirmMsg.innerHTML = msg
-
   dom.confirmYes.textContent = yesLabel
   dom.confirmNo.textContent = noLabel
-
   dom.confirmNo.classList.remove('uk-modal-close')
 
   UIkit.modal('#dialogConfirm', { bgClose: false, escClose: false, stack: true }).show()
@@ -235,6 +234,7 @@ export function customConfirm(msg, yesLabel, noLabel, yesAction, noAction) {
 
   pendingCancelHandler = () => {
     cleanup()
+
     if (noAction) {
       setTimeout(noAction, 50)
     }
@@ -293,12 +293,13 @@ export function setupUIkitUtils() {
   cm.getWrapperElement().addEventListener('pointerdown', hideOpenDropdowns)
 
   UIkit.util.on(
-    '.modal, .dialogConfirm, #sideBar',
+    '.modal, .dialogConfirm, #pageListPanel',
     'beforeshow',
     (event) => {
-      if (event.target.id === 'sideBar' && app.sidebarDocked) return
+      if (event.target.id === 'pageListPanel' && app.pageListDocked) return
 
       modalOpenState = true
+
       if (isElectron) {
         numara.transControls(true)
       }
@@ -307,11 +308,11 @@ export function setupUIkitUtils() {
   )
 
   UIkit.util.on(
-    '.modal, .dialogConfirm, #sideBar',
+    '.modal, .dialogConfirm, #pageListPanel',
     'hidden',
     () => {
       modalOpenState =
-        dom.els('.modal.uk-open, .dialogConfirm.uk-open, #sideBar.uk-open:not(.sidebar-docked)').length > 0
+        dom.els('.modal.uk-open, .dialogConfirm.uk-open, #pageListPanel.uk-open:not(.page-list-docked)').length > 0
 
       if (isElectron) {
         numara.transControls(modalOpenState)
@@ -334,10 +335,10 @@ export function setupUIkitUtils() {
   )
 
   UIkit.util.on(
-    '#sideBar',
+    '#pageListPanel',
     'beforehide',
     (event) => {
-      if (app.sidebarDocked) {
+      if (app.pageListDocked) {
         event.preventDefault()
         return
       }

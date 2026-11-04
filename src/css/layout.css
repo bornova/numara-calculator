@@ -8,10 +8,10 @@
   left: 0;
 }
 
-.sidebar-width-animating .appWrapper,
-.sidebar-width-animating #sideBar.sidebar-docked .uk-offcanvas-bar,
-.sidebar-width-animating #sideBarResizer,
-.sidebar-width-animating .uk-modal-dialog,
+.page-list-width-animating .appWrapper,
+.page-list-width-animating #pageListPanel.page-list-docked .uk-offcanvas-bar,
+.page-list-width-animating #pageListResizer,
+.page-list-width-animating .uk-modal-dialog,
 .uk-modal-dialog.modal-centering,
 .input.panel-width-animating {
   transition:
@@ -269,11 +269,11 @@
 }
 
 .leftActions a:hover,
-.sideBarActions a:hover {
+.pageListActions a:hover {
   text-decoration: none;
 }
 
-.sideBarActions .newPageButton {
+.pageListActions .newPageButton {
   margin: 0 !important;
 }
 
@@ -309,7 +309,7 @@
   white-space: nowrap;
 }
 
-.pageName:not(.sidebar-docked):hover {
+.pageName:not(.page-list-docked):hover {
   background-color: light-dark(#f4f6f8, #333333);
 }
 
@@ -342,7 +342,7 @@
   color: inherit !important;
 }
 
-.sideBarActions a:not(.newPageButton) svg {
+.pageListActions a:not(.newPageButton) svg {
   width: 14px !important;
   height: 14px !important;
   pointer-events: none;

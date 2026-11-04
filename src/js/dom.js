@@ -44,17 +44,18 @@ export const dom = {
   updateMenuLink: document.getElementById('updateMenuLink'),
   notificationDot: document.getElementById('notificationDot'),
 
-  // Side panel
-  sideBar: document.getElementById('sideBar'),
-  sideBarBar: document.querySelector('#sideBar .uk-offcanvas-bar'),
-  sideBarResizer: document.getElementById('sideBarResizer'),
+  // Page list
+  pageListPanel: document.getElementById('pageListPanel'),
+  pageListBar: document.querySelector('#pageListPanel .uk-offcanvas-bar'),
+  pageListResizer: document.getElementById('pageListResizer'),
   sortOldNew: document.getElementById('sortOldNew'),
   sortNewOld: document.getElementById('sortNewOld'),
   sortAZ: document.getElementById('sortAZ'),
   sortZA: document.getElementById('sortZA'),
   pageList: document.getElementById('pageList'),
-  closeSideBarButton: document.getElementById('closeSideBarButton'),
-  newPageButtonSB: document.getElementById('newPageButtonSB'),
+  closePageListButton: document.getElementById('closePageListButton'),
+  dockPageListButton: document.getElementById('dockPageListButton'),
+  newPageButtonPL: document.getElementById('newPageButtonPL'),
 
   copyButton: document.getElementById('copyButton'),
   importPageButton: document.getElementById('importPageButton'),

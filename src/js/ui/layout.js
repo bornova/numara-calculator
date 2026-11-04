@@ -33,8 +33,8 @@ export function setupHeaders() {
 export function setupAppButtons() {
   const buttons = {
     printButton: () => {
-      if (!app.sidebarDocked) {
-        UIkit.offcanvas('#sideBar').hide()
+      if (!app.pageListDocked) {
+        UIkit.offcanvas('#pageListPanel').hide()
       }
       window.print()
     },
@@ -42,14 +42,14 @@ export function setupAppButtons() {
       cm.setValue('')
       cm.focus()
       calculate()
-      if (!app.sidebarDocked) {
-        UIkit.offcanvas('#sideBar').hide()
+      if (!app.pageListDocked) {
+        UIkit.offcanvas('#pageListPanel').hide()
       }
     },
     copyButton: () => {
       copyAll()
-      if (!app.sidebarDocked) {
-        UIkit.offcanvas('#sideBar').hide()
+      if (!app.pageListDocked) {
+        UIkit.offcanvas('#pageListPanel').hide()
       }
     },
     udfuButton: () => {

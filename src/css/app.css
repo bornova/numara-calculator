@@ -6,6 +6,6 @@
 /* Application stylesheets */
 @import url('./base.css');
 @import url('./layout.css');
-@import url('./sidebar.css');
+@import url('./pageList.css');
 @import url('./dialogs.css');
 @import url('./print.css');

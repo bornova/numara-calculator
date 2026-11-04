@@ -75,22 +75,23 @@
       </div>
     </div>
 
-    <div id="sideBar">
-      <div id="sideBarResizer" class="sideBarResizer"></div>
+    <div id="pageListPanel">
+      <div id="pageListResizer" class="pageListResizer"></div>
       <div class="uk-offcanvas-bar uk-flex uk-flex-column">
         <div class="pageListHeader">
+          <a id="dockPageListButton" class="action dockPageListButton"></a>
           <span id="pageListSort" class="pageListSort" title="Sort">
             <i data-lucide="arrow-up-down"></i>
           </span>
-          <a id="closeSideBarButton" class="action closeSideBarButton uk-float-right" title="Close">
+          <a id="closePageListButton" class="action closePageListButton uk-float-right" title="Close">
             <i data-lucide="x"></i>
           </a>
         </div>
         <div id="pageList" class="pageList uk-flex-1"></div>
         <div class="pageListFooter uk-flex-bottom">
-          <div class="sideBarActions uk-flex uk-flex-between uk-flex-middle">
+          <div class="pageListActions uk-flex uk-flex-between uk-flex-middle">
             <div class="leftActions uk-flex uk-flex-middle">
-              <a id="newPageButtonSB" class="action newPageButton" title="New page" uk-tooltip>
+              <a id="newPageButtonPL" class="action newPageButton" title="New page" uk-tooltip>
                 <i data-lucide="plus"></i>
               </a>
             </div>
@@ -252,7 +253,7 @@
               <div class="uk-position-relative">
                 <select id="pageListPosition" class="uk-select settingItem">
                   <option value="auto">Auto</option>
-                  <option value="slide">Slide out</option>
+                  <option value="float">Floating</option>
                   <option value="dock">Docked</option>
                 </select>
               </div>

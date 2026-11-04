@@ -5,7 +5,7 @@
 
 @media print {
   .appWrapper,
-  #sideBar,
+  #pageListPanel,
   .uk-open,
   .uk-tooltip,
   .scrollTop {

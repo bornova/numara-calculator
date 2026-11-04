@@ -10,12 +10,12 @@ import { initializeContextMenus } from './ui/contextMenu.js'
 import { isModalOpen, setupUIkitUtils } from './ui/dialogs.js'
 import { generateIcons } from './ui/icons.js'
 import { setupAppButtons, setupHeaders, setupPanelResizer, setupResultActions, setupSyncScroll } from './ui/layout.js'
+import { initializePageList } from './ui/pageList.js'
 import { setupPlot } from './ui/plot.js'
 import { setupPrintArea } from './ui/print.js'
 import { settings } from './ui/settings.js'
 import { initializeSettingsTooltips } from './ui/settingsTips.js'
 import { setupKeyboardShortcuts } from './ui/shortcuts.js'
-import { initializeSideBar } from './ui/sidebar.js'
 import { colors } from './ui/theme.js'
 import { checkAppUpdate, initAppUpdate, setupAppInfo } from './ui/updater.js'
 
@@ -47,7 +47,7 @@ async function initializeApp() {
   setupKeyboardShortcuts()
   setupPrintArea()
   setupUIkitUtils()
-  initializeSideBar()
+  initializePageList()
   initializePages()
   initializeContextMenus()
   initializeSettingsTooltips()

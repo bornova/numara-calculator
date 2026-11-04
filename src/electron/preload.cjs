@@ -22,8 +22,8 @@ contextBridge.exposeInMainWorld('numara', {
 
   // Window controls
   isMaximized: () => ipcRenderer.invoke('isMaximized'),
-  resetSize: (appWrapperWidth, appWrapperHeight, sidebarWidth) =>
-    ipcRenderer.send('resetSize', appWrapperWidth, appWrapperHeight, sidebarWidth),
+  resetSize: (appWrapperWidth, appWrapperHeight, pageListWidth) =>
+    ipcRenderer.send('resetSize', appWrapperWidth, appWrapperHeight, pageListWidth),
   setOnTop: (callback) => ipcRenderer.send('setOnTop', callback),
   setTray: (bool) => ipcRenderer.send('setTray', bool),
   setOpenAtLogin: (bool) => ipcRenderer.send('setOpenAtLogin', bool),
