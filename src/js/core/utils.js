@@ -46,12 +46,13 @@ export function getSafeFilename(name) {
  * @returns {string} The system locale.
  */
 export function getSystemLocale(settings) {
-  if (settings?.systemLocale) return settings.systemLocale
+  if (settings?.systemLocale) return settings.systemLocale.split('-u-')[0]
 
   const nav =
     typeof navigator !== 'undefined' ? navigator : typeof self !== 'undefined' && self.navigator ? self.navigator : null
+  const rawLocale = nav?.languages?.[0] ?? nav?.language ?? 'en-US'
 
-  return nav?.languages?.[0] ?? nav?.language ?? 'en-US'
+  return rawLocale.split('-u-')[0]
 }
 
 /**
