@@ -1,5 +1,8 @@
-import { DateTime } from 'luxon'
+import { DateTime, Settings } from 'luxon'
 import UIkit from 'uikit'
+
+Settings.defaultNumberingSystem = 'latn'
+Settings.defaultOutputCalendar = 'iso8601'
 
 import { calculate, debouncedSavePageState, renderAnswersToHTML, syncOutputHeights } from '../calc/calcManager.js'
 import { escapeHTML, getSafeFilename } from '../core/utils.js'
