@@ -451,5 +451,30 @@ export const customCases = [
       'len + 20%'
     ],
     expected: ['25%', '25%', '20%', '25%', '0.25', '20', '$200.00', '$230.00', '$180.00', '50 m', '60 m']
+  },
+  {
+    name: 'Non-English System Locale with English Date/Time Fallback',
+    settings: {
+      systemLocale: 'fr-FR',
+      dateFormat: 'dd/MM/yyyy',
+      dateDay: true
+    },
+    expressions: [
+      'ven., 02/01/2026 + 1 day',
+      'Fri, 02/01/2026 + 1 day',
+      'Fri, 02/01/2026 - Thu, 01/01/2026',
+      '02/01/2026 3:30 PM + 2 hours'
+    ],
+    expected: ['sam., 03/01/2026', 'sam., 03/01/2026', '1 days', 'ven., 02/01/2026 17:30']
+  },
+  {
+    name: 'Non-Latin Numeral and Non-Gregorian Subtag Locales (ar-EG, fa-IR, th-TH-u-ca-buddhist)',
+    settings: {
+      systemLocale: 'ar-EG',
+      dateFormat: 'dd/MM/yyyy',
+      dateDay: true
+    },
+    expressions: ['today + 1 day', 'now + 1 hour', 'Fri, 02/01/2026 + 1 day'],
+    expected: [/\d{2}\/\d{2}\/\d{4}/, /\d{2}\/\d{2}\/\d{4}/, /03\/01\/2026/]
   }
 ]
