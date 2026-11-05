@@ -30,6 +30,19 @@
   margin-left: 0;
 }
 
+.closePageListButton {
+  justify-content: center;
+  margin: 8px 6px;
+  border-radius: 4px;
+  padding: 4px;
+  height: auto;
+}
+
+.closePageListButton:hover {
+  background-color: light-dark(#f4f6f8, #333333);
+  color: light-dark(#005cc5, #2196f3);
+}
+
 .closePageListButton svg {
   width: 16px;
   height: 16px;

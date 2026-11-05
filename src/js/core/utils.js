@@ -56,12 +56,21 @@ export function getSystemLocale(settings) {
 }
 
 /**
- * Check if settings use comma as the decimal separator (1.234,56 format).
+ * Check if settings use comma as the decimal separator (1.234,56 or 1 234,56 format).
  * @param {object} settings The application settings.
- * @returns {boolean} True if comma decimal format (1.234,56) is active.
+ * @returns {boolean} True if comma decimal format (1.234,56 or 1 234,56) is active.
  */
 export function isCommaDecimal(settings) {
-  return settings?.numberFormat === '1.234,56'
+  return settings?.numberFormat === '1.234,56' || settings?.numberFormat === '1 234,56'
+}
+
+/**
+ * Check if settings use space as the thousands separator (1 234.56 or 1 234,56 format).
+ * @param {object} settings The application settings.
+ * @returns {boolean} True if space thousands format (1 234.56 or 1 234,56) is active.
+ */
+export function isSpaceGrouping(settings) {
+  return settings?.numberFormat === '1 234.56' || settings?.numberFormat === '1 234,56'
 }
 
 /**
@@ -71,10 +80,11 @@ export function isCommaDecimal(settings) {
  */
 export function getNumberFormat(settings) {
   const commaDec = isCommaDecimal(settings)
+  const spaceGrp = isSpaceGrouping(settings)
 
   return {
     locale: commaDec ? 'tr-TR' : 'en-US',
-    group: commaDec ? '.' : ',',
+    group: spaceGrp ? ' ' : commaDec ? '.' : ',',
     decimal: commaDec ? ',' : '.',
     argSep: commaDec ? ';' : ',',
     useGrouping: Boolean(settings?.thouSep ?? true)
