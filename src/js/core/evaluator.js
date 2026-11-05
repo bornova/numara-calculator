@@ -553,7 +553,10 @@ function evaluateLine(line, lineIndex, stats, prevLineText) {
       const prevClean = prevLineText ? stripComments(prevLineText.trim()) : ''
 
       if (prevClean.length > 0) {
-        line = (app.mathScope.get('ans') ?? '') + line
+        const prevAns = app.mathScope.get('ans')
+        const prevAnsStr = math.isFraction(prevAns) ? `(${prevAns.toFraction()})` : (prevAns ?? '')
+
+        line = prevAnsStr + line
       }
     }
 
@@ -612,7 +615,18 @@ function evaluateLine(line, lineIndex, stats, prevLineText) {
     }
 
     if (conversionTarget && conversionTarget !== '%') {
-      answer = math[conversionTarget](answer)
+      answer = math[conversionTarget](typeof answer === 'bigint' ? math.bignumber(answer.toString()) : answer)
+    }
+
+    // Format the answer for display and copying.
+    answerCopy = formatAnswer(answer, Boolean(app.settings.thouSep && app.settings.copyThouSep))
+    answerOut = formatAnswer(answer, Boolean(app.settings.thouSep))
+
+    if (conversionTarget === '%') {
+      const pctVal = math.multiply(answer, 100)
+
+      answerCopy = `${formatAnswer(pctVal, Boolean(app.settings.thouSep && app.settings.copyThouSep))}%`
+      answerOut = `${formatAnswer(pctVal, Boolean(app.settings.thouSep))}%`
     }
 
     // Update the scope with the new answer.
@@ -625,17 +639,6 @@ function evaluateLine(line, lineIndex, stats, prevLineText) {
       stats.runningTotal.push(answer)
       stats.runningSubtotal.push(answer)
       summableVal = answer
-    }
-
-    // Format the answer for display and copying.
-    answerCopy = formatAnswer(answer, Boolean(app.settings.thouSep && app.settings.copyThouSep))
-    answerOut = formatAnswer(answer, Boolean(app.settings.thouSep))
-
-    if (conversionTarget === '%') {
-      const pctVal = math.multiply(answer, 100)
-
-      answerCopy = `${formatAnswer(pctVal, Boolean(app.settings.thouSep && app.settings.copyThouSep))}%`
-      answerOut = `${formatAnswer(pctVal, Boolean(app.settings.thouSep))}%`
     }
 
     // Handle plotting lines.
@@ -1013,7 +1016,11 @@ export function runCalculation({ activePage, lines, pages = [], settings, curren
     try {
       return formatAnswer(val, useGrouping)
     } catch {
-      return String(val)
+      try {
+        return String(val)
+      } catch {
+        return ''
+      }
     }
   }
 
