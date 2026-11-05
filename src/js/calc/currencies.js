@@ -15,22 +15,76 @@ const DEFAULTS = {
   EUR: { symbol: '€', name: 'Euro', locale: 'de-DE' },
   GBP: { symbol: '£', name: 'British Pound', locale: 'en-GB' },
   CNY: { symbol: '¥', name: 'Chinese Yuan', locale: 'zh-CN' },
+  INR: { symbol: '₹', name: 'Indian Rupee', locale: 'en-IN' },
+  KRW: { symbol: '₩', name: 'South Korean Won', locale: 'ko-KR' },
   RUB: { symbol: '₽', name: 'Russian Ruble', locale: 'ru-RU' },
-  TRY: { symbol: '₺', name: 'Turkish Lira', locale: 'tr-TR' }
+  TRY: { symbol: '₺', name: 'Turkish Lira', locale: 'tr-TR' },
+  BRL: { symbol: 'R$', name: 'Brazilian Real', locale: 'pt-BR' },
+  ILS: { symbol: '₪', name: 'Israeli New Shekel', locale: 'he-IL' },
+  PHP: { symbol: '₱', name: 'Philippine Peso', locale: 'en-PH' },
+  THB: { symbol: '฿', name: 'Thai Baht', locale: 'th-TH' },
+  VND: { symbol: '₫', name: 'Vietnamese Dong', locale: 'vi-VN' },
+  UAH: { symbol: '₴', name: 'Ukrainian Hryvnia', locale: 'uk-UA' },
+  NGN: { symbol: '₦', name: 'Nigerian Naira', locale: 'en-NG' },
+  PLN: { symbol: 'zł', name: 'Polish Zloty', locale: 'pl-PL' },
+  CZK: { symbol: 'Kč', name: 'Czech Koruna', locale: 'cs-CZ' },
+  SEK: { symbol: 'kr', name: 'Swedish Krona', locale: 'sv-SE' },
+  DKK: { symbol: 'kr.', name: 'Danish Krone', locale: 'da-DK' },
+  IDR: { symbol: 'Rp', name: 'Indonesian Rupiah', locale: 'id-ID' },
+  MYR: { symbol: 'RM', name: 'Malaysian Ringgit', locale: 'ms-MY' },
+  KZT: { symbol: '₸', name: 'Kazakhstani Tenge', locale: 'kk-KZ' },
+  AZN: { symbol: '₼', name: 'Azerbaijani Manat', locale: 'az-AZ' },
+  GEL: { symbol: '₾', name: 'Georgian Lari', locale: 'ka-GE' },
+  BDT: { symbol: '৳', name: 'Bangladeshi Taka', locale: 'bn-BD' },
+  PKR: { symbol: '₨', name: 'Pakistani Rupee', locale: 'ur-PK' },
+  IRR: { symbol: '﷼', name: 'Iranian Rial', locale: 'fa-IR' },
+  SAR: { symbol: 'ر.س', name: 'Saudi Riyal', locale: 'ar-SA' },
+  AED: { symbol: 'د.إ', name: 'United Arab Emirates Dirham', locale: 'ar-AE' },
+  CRC: { symbol: '₡', name: 'Costa Rican Colón', locale: 'es-CR' },
+  PYG: { symbol: '₲', name: 'Paraguayan Guaraní', locale: 'es-PY' },
+  GHS: { symbol: '₵', name: 'Ghanaian Cedi', locale: 'en-GH' },
+  LAK: { symbol: '₭', name: 'Lao Kip', locale: 'lo-LA' },
+  MNT: { symbol: '₮', name: 'Mongolian Tögrög', locale: 'mn-MN' },
+  KHR: { symbol: '៛', name: 'Cambodian Riel', locale: 'km-KH' },
+  AMD: { symbol: '֏', name: 'Armenian Dram', locale: 'hy-AM' },
+  AFN: { symbol: '؋', name: 'Afghan Afghani', locale: 'ps-AF' },
+  ANG: { symbol: 'ƒ', name: 'Netherlands Antillean Guilder', locale: 'nl-CW' },
+  XPF: { symbol: '₣', name: 'CFP Franc', locale: 'fr-PF' },
+  PEN: { symbol: 'S/', name: 'Peruvian Sol', locale: 'es-PE' },
+  NIO: { symbol: 'C$', name: 'Nicaraguan Córdoba', locale: 'es-NI' },
+  TOP: { symbol: 'T$', name: 'Tongan Paʻanga', locale: 'to-TO' },
+  UYU: { symbol: '$U', name: 'Uruguayan Peso', locale: 'es-UY' },
+  BTC: { symbol: '₿', name: 'Bitcoin', locale: 'en-US' },
+  ETH: { symbol: 'Ξ', name: 'Ethereum', locale: 'en-US' },
+  LTC: { symbol: 'Ł', name: 'Litecoin', locale: 'en-US' },
+  ADA: { symbol: '₳', name: 'Cardano', locale: 'en-US' }
 }
 
 const registeredCurrencyHints = new Set()
 
 /**
- * Return true if the code or symbol conflicts with a built-in mathjs unit OR function/constant.
+ * Return true if the currency symbol conflicts with a built-in mathjs unit, function, or constant.
+ * @param {string} symbol Currency symbol.
+ * @returns {boolean}
+ */
+function isSymbolConflict(symbol) {
+  if (!symbol || /\s/.test(symbol)) return true
+  if (BUILTIN_UNIT_KEYS.has(symbol) || BUILTIN_UNIT_KEYS.has(symbol.toLowerCase())) return true
+  if (BUILTIN_MATH_KEYS.has(symbol.toLowerCase())) return true
+
+  return false
+}
+
+/**
+ * Return true if the code conflicts with a built-in mathjs unit OR function/constant.
  * This prevents currency codes like MAD (Moroccan Dirham) from shadowing functions like mad().
  * @param {string} code Currency code.
- * @param {string} symbol Currency symbol.
+ * @param {string} [symbol] Optional currency symbol.
  * @returns {boolean} True if the code or symbol conflicts with a built-in mathjs unit or function/constant.
  */
 function isMathUnit(code, symbol) {
   if (BUILTIN_UNIT_KEYS.has(code) || BUILTIN_UNIT_KEYS.has(code.toLowerCase())) return true
-  if (symbol && (BUILTIN_UNIT_KEYS.has(symbol) || BUILTIN_UNIT_KEYS.has(symbol.toLowerCase()))) return true
+  if (symbol && isSymbolConflict(symbol)) return true
   if (BUILTIN_MATH_KEYS.has(code.toLowerCase())) return true
 
   return false
@@ -96,9 +150,11 @@ function buildCurrencies(symbolList, rateList) {
 
   if (Array.isArray(symbolList)) {
     for (const { iso_code: code, symbol, name } of symbolList) {
-      if (!code || currencies[code] || isMathUnit(code, symbol)) continue
+      if (!code || currencies[code] || isMathUnit(code)) continue
 
-      currencies[code] = { symbol: symbol || code, name: name || code }
+      const safeSymbol = symbol && !isSymbolConflict(symbol) ? symbol : code
+
+      currencies[code] = { symbol: safeSymbol, name: name || code }
     }
   } else if (app.currencies) {
     for (const [code, info] of Object.entries(app.currencies)) {
