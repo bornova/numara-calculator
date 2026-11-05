@@ -59,8 +59,20 @@ const mockCurrencies = {
   EUR: { symbol: '€', name: 'Euro', locale: 'de-DE', rate: 1.13 },
   GBP: { symbol: '£', name: 'British Pound', locale: 'en-GB', rate: 1.28 },
   CNY: { symbol: '¥', name: 'Chinese Yuan', locale: 'zh-CN', rate: 0.14 },
+  INR: { symbol: '₹', name: 'Indian Rupee', locale: 'en-IN', rate: 0.012 },
+  KRW: { symbol: '₩', name: 'South Korean Won', locale: 'ko-KR', rate: 0.00075 },
   RUB: { symbol: '₽', name: 'Russian Ruble', locale: 'ru-RU', rate: 0.011 },
   TRY: { symbol: '₺', name: 'Turkish Lira', locale: 'tr-TR', rate: 0.03 },
+  BRL: { symbol: 'R$', name: 'Brazilian Real', locale: 'pt-BR', rate: 0.2 },
+  NIO: { symbol: 'C$', name: 'Nicaraguan Córdoba', locale: 'es-NI', rate: 0.027 },
+  PEN: { symbol: 'S/', name: 'Peruvian Sol', locale: 'es-PE', rate: 0.27 },
+  PLN: { symbol: 'zł', name: 'Polish Zloty', locale: 'pl-PL', rate: 0.25 },
+  ILS: { symbol: '₪', name: 'Israeli New Shekel', locale: 'he-IL', rate: 0.27 },
+  PHP: { symbol: '₱', name: 'Philippine Peso', locale: 'en-PH', rate: 0.018 },
+  THB: { symbol: '฿', name: 'Thai Baht', locale: 'th-TH', rate: 0.029 },
+  VND: { symbol: '₫', name: 'Vietnamese Dong', locale: 'vi-VN', rate: 0.00004 },
+  UAH: { symbol: '₴', name: 'Ukrainian Hryvnia', locale: 'uk-UA', rate: 0.024 },
+  NGN: { symbol: '₦', name: 'Nigerian Naira', locale: 'en-NG', rate: 0.0006 },
   SZL: { symbol: 'E', name: 'Swaziland Lilangeni', locale: 'en-SZ', rate: 0.055 }
 }
 
@@ -618,8 +630,12 @@ describe('Numara Calculation Engine vs Math.js', function () {
 
     it('should parse locale-formatted numbers with explicit settings and reject non-numeric strings', () => {
       const euroSettings = { ...defaultSettings, numberFormat: '1.234,56', thouSep: true }
+      const spaceDotSettings = { ...defaultSettings, numberFormat: '1 234.56', thouSep: true }
+      const spaceCommaSettings = { ...defaultSettings, numberFormat: '1 234,56', thouSep: true }
       assert.strictEqual(parseLocaleNumber('1.500,25', euroSettings), 1500.25)
       assert.strictEqual(parseLocaleNumber('1.500', euroSettings), 1500)
+      assert.strictEqual(parseLocaleNumber('1 500.25', spaceDotSettings), 1500.25)
+      assert.strictEqual(parseLocaleNumber('1 500,25', spaceCommaSettings), 1500.25)
       assert.ok(Number.isNaN(parseLocaleNumber('10 km', euroSettings)))
       assert.ok(Number.isNaN(parseLocaleNumber('2026-11-03', euroSettings)))
     })
@@ -641,6 +657,22 @@ describe('Numara Calculation Engine vs Math.js', function () {
       })
       assert.strictEqual(withCopySep.answers[0], '<span class="answer" data-answer="1,234,567.89">1,234,567.89</span>')
       assert.strictEqual(withCopySep.answers[1], '<span class="answer" data-answer="1,234.567%">1,234.567%</span>')
+
+      const spaceCommaOff = runCalculation({
+        activePage: 'test-space-comma-copy-off',
+        lines: ['1 234 567,89'],
+        settings: { ...defaultSettings, numberFormat: '1 234,56', thouSep: true, copyThouSep: false },
+        currencies: mockCurrencies
+      })
+      assert.strictEqual(spaceCommaOff.answers[0], '<span class="answer" data-answer="1234567,89">1 234 567,89</span>')
+
+      const spaceDotOn = runCalculation({
+        activePage: 'test-space-dot-copy-on',
+        lines: ['1 234 567.89'],
+        settings: { ...defaultSettings, numberFormat: '1 234.56', thouSep: true, copyThouSep: true },
+        currencies: mockCurrencies
+      })
+      assert.strictEqual(spaceDotOn.answers[0], '<span class="answer" data-answer="1 234 567.89">1 234 567.89</span>')
     })
 
     it('should control error link text via lineErrors setting while always recording errorLines', () => {
