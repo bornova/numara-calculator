@@ -93,14 +93,16 @@ export function parseLocaleNumber(str, settings = app.settings) {
 /**
  * Formats currency amounts within an output string using `Intl.NumberFormat`.
  * @param {string} str Output string potentially containing currency values.
+ * @param {boolean} [useGrouping] Whether to apply thousands grouping.
  * @param {object} [settings=app.settings] Settings object.
  * @param {object} [currencies=app.currencies] Currencies configuration map.
  * @returns {string}
  */
-function formatCurrency(str, settings = app.settings, currencies = app.currencies) {
+function formatCurrency(str, useGrouping, settings = app.settings, currencies = app.currencies) {
   if (!currencyFormatRegex) return str
 
-  const { locale, group, useGrouping } = getNumberFormat(settings)
+  const { locale, group, useGrouping: defaultGrouping } = getNumberFormat(settings)
+  const effectiveGrouping = useGrouping ?? defaultGrouping
   const maximumFractionDigits = clampPrecision(settings?.precision ?? 4)
 
   return transformOutsideStrings(str, (segment) =>
@@ -123,18 +125,18 @@ function formatCurrency(str, settings = app.settings, currencies = app.currencie
           style: 'currency',
           currency: upperCode,
           currencyDisplay: 'narrowSymbol',
-          useGrouping,
+          useGrouping: effectiveGrouping,
           maximumFractionDigits
         })
 
         const customDollarSymbol = info.symbol && info.symbol !== '$' && info.symbol !== upperCode ? info.symbol : null
-        const needsPartsTransform = (useGrouping && group === ' ') || Boolean(customDollarSymbol)
+        const needsPartsTransform = (effectiveGrouping && group === ' ') || Boolean(customDollarSymbol)
 
         const formattedCurrency = needsPartsTransform
           ? formatter
               .formatToParts(value)
               .map((part) => {
-                if (useGrouping && group === ' ' && part.type === 'group') return group
+                if (effectiveGrouping && group === ' ' && part.type === 'group') return group
                 if (customDollarSymbol && part.type === 'currency' && part.value === '$') return customDollarSymbol
 
                 return part.value
@@ -177,6 +179,12 @@ export function formatAnswer(answer, useGrouping, settings = app.settings, curre
   const maximumFractionDigits = clampPrecision(settings?.precision ?? 4)
 
   if (['bin', 'hex', 'oct'].includes(notation)) {
+    if (typeof answer === 'bigint') {
+      const [base, prefix] = { bin: [2, '0b'], oct: [8, '0o'], hex: [16, '0x'] }[notation]
+
+      return `${answer < 0n ? '-' : ''}${prefix}${(answer < 0n ? -answer : answer).toString(base)}`
+    }
+
     answer = math.format(answer, { notation })
 
     return stripAnswer(answer)
@@ -194,7 +202,7 @@ export function formatAnswer(answer, useGrouping, settings = app.settings, curre
   let processedAnswer = answer
   let wasRounded = false
 
-  if (!answer?.isUnit) {
+  if (!answer?.isUnit && !math.isFraction(answer)) {
     try {
       processedAnswer = math.round(answer, maximumFractionDigits)
       wasRounded = true
@@ -206,7 +214,7 @@ export function formatAnswer(answer, useGrouping, settings = app.settings, curre
   let formattedAnswer = math.format(processedAnswer, (value) => {
     let roundedValue = value
 
-    if (!wasRounded) {
+    if (!wasRounded && !math.isFraction(value)) {
       try {
         roundedValue = math.round(value, maximumFractionDigits)
       } catch {
@@ -234,7 +242,7 @@ export function formatAnswer(answer, useGrouping, settings = app.settings, curre
   })
 
   if (settings?.currency) {
-    formattedAnswer = formatCurrency(formattedAnswer, settings, currencies)
+    formattedAnswer = formatCurrency(formattedAnswer, effectiveGrouping, settings, currencies)
   }
 
   return stripAnswer(formattedAnswer)
