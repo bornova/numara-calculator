@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon'
 
 import { math } from '../core/mathInstance.js'
+import { escapeRegExp } from '../core/utils.js'
 import { app } from '../state/appState.js'
 
 export const CLASS_NAMES = {
@@ -67,6 +68,7 @@ export const constantTokens = new Set(mathConstants.map(([c]) => c))
 export const unitTokens = new Set(allUnits.map((u) => u.token))
 export const keywordTokens = new Set(keywords.map((key) => key.text))
 export const currencyTokens = new Set()
+export let currencySymbolRegex = null
 
 export const dateTimeStaticMethods = Object.getOwnPropertyNames(DateTime).filter(
   (prop) => typeof DateTime[prop] === 'function'
@@ -84,9 +86,25 @@ export const dateTimeMethodsSet = new Set([...dateTimeStaticMethods, ...dateTime
 export function refreshCurrencyTokens() {
   currencyTokens.clear()
 
+  const nonAsciiWordSymbols = []
+
   for (const c of Object.values(app.currencies || {})) {
     if (c?.symbol) {
       currencyTokens.add(c.symbol)
+
+      if (!/^[a-zA-Z]+$/.test(c.symbol)) {
+        nonAsciiWordSymbols.push(c.symbol)
+      }
     }
   }
+
+  const patterns = [...new Set(nonAsciiWordSymbols)]
+    .sort((a, b) => b.length - a.length)
+    .map((sym) => {
+      const endsWithLetter = /[\p{L}\p{M}]$/u.test(sym)
+
+      return `${escapeRegExp(sym)}${endsWithLetter ? '(?![\\p{L}\\p{M}_])' : ''}`
+    })
+
+  currencySymbolRegex = patterns.length ? new RegExp(`^(?:${patterns.join('|')})`, 'u') : null
 }
