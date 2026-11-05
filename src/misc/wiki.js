@@ -84,7 +84,7 @@ Plot functions can also reference numeric variables defined earlier on the page 
 
 ### Currency calculations
 
-When enabled, Numara fetches exchange rates from [frankfurter.dev](https://frankfurter.dev) and registers currencies as units. You can use three-letter ISO currency codes (case-insensitive) or currency symbols (\`$\`, \`€\`, \`£\`, \`¥\`, \`₽\`, \`₺\`, etc.) in calculations such as \`1 usd to eur\`, \`$10 to EUR\`, \`10 € to USD\`, and \`25 hours * $50/hr\`.
+When enabled, Numara fetches exchange rates from [frankfurter.dev](https://frankfurter.dev) and registers currencies as units. You can use three-letter ISO currency codes (case-insensitive) or currency symbols (\`$\`, \`€\`, \`£\`, \`¥\`, \`₹\`, \`₩\`, \`₽\`, \`₺\`, \`R$\`, \`₪\`, \`₱\`, \`฿\`, \`₫\`, \`₴\`, \`₦\`, \`zł\`, \`Kč\`, \`₿\`, etc.) in calculations such as \`1 usd to eur\`, \`$10 to EUR\`, \`10 € to USD\`, \`R$50 to USD\`, and \`25 hours * $50/hr\`.
 
 ### Commenting
 
@@ -324,8 +324,8 @@ export function generateSettingsWiki() {
 
 #### Numbers
 
-\`Number format\` 1,234.56 (Default) | 1.234,56
-- Set the thousands and decimal separator format. When \`1.234,56\` is selected, use a semicolon (\`;\`) as the argument separator in functions (e.g. \`sum(1; 3)\`).
+\`Number format\` 1,234.56 (Default) | 1.234,56 | 1 234.56 | 1 234,56
+- Set the thousands and decimal separator format. When \`1.234,56\` or \`1 234,56\` is selected, use a semicolon (\`;\`) as the argument separator in functions (e.g. \`sum(1; 3)\`).
 
 \`Thousands separator\` On (Default) | Off
 - Show thousands separators in output answers.
