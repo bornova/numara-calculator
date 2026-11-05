@@ -7,6 +7,7 @@ import { stripComments } from '../src/js/core/preprocessor.js'
 import { applyUdfuToMath } from '../src/js/core/udfu.js'
 import { debounce, escapeHTML, escapeRegExp, getSafeFilename } from '../src/js/core/utils.js'
 import { detectExternalRenames } from '../src/js/pages/syncPlan.js'
+import { migrateFromV7 } from '../src/js/state/migration.js'
 import { customCases } from './custom-cases.js'
 
 // Default settings from settings.js
@@ -373,6 +374,199 @@ describe('Numara Calculation Engine vs Math.js', function () {
     }
   })
 
+  describe('Math.js Functions, Constants, and Units Across Settings Profiles', () => {
+    const toCommaLocaleExpr = (expr) =>
+      expr
+        .replace(/\[([^[\]"']*;[^[\]"']*)\]/g, (_, inner) => {
+          return (
+            '[[' +
+            inner
+              .split(';')
+              .map((s) => s.trim())
+              .join('], [') +
+            ']]'
+          )
+        })
+        .split(/("(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*')/g)
+        .map((seg, idx) => {
+          if (idx % 2 === 1) return seg
+
+          return seg
+            .replace(/,/g, ';')
+            .replace(/(?<![\w.])(\d+)\.(\d+)(?![\d.])/g, '$1,$2')
+            .replace(/(?<![\w.\d])\.(\d+)(?![\d.])/g, '0,$1')
+        })
+        .join('')
+
+    const profiles = [
+      {
+        name: 'numberFormat: 1 234.56 with copyThouSep: true',
+        settings: { ...defaultSettings, numberFormat: '1 234.56', thouSep: true, copyThouSep: true }
+      },
+      {
+        name: 'numberFormat: 1.234,56 with copyThouSep: true',
+        settings: { ...defaultSettings, numberFormat: '1.234,56', thouSep: true, copyThouSep: true },
+        transform: toCommaLocaleExpr
+      },
+      {
+        name: 'numberFormat: 1 234,56 with copyThouSep: true',
+        settings: { ...defaultSettings, numberFormat: '1 234,56', thouSep: true, copyThouSep: true },
+        transform: toCommaLocaleExpr
+      },
+      {
+        name: 'numberFormat: 1 234,56 with thouSep: false',
+        settings: { ...defaultSettings, numberFormat: '1 234,56', thouSep: false, copyThouSep: false },
+        transform: toCommaLocaleExpr
+      },
+      {
+        name: 'matrixType: Array',
+        settings: { ...defaultSettings, matrixType: 'Array' }
+      },
+      {
+        name: 'numericOutput: BigNumber',
+        settings: { ...defaultSettings, numericOutput: 'BigNumber' }
+      },
+      {
+        name: 'numericOutput: Fraction',
+        settings: { ...defaultSettings, numericOutput: 'Fraction' }
+      },
+      {
+        name: 'predictable: true',
+        settings: { ...defaultSettings, predictable: true }
+      },
+      {
+        name: 'notation: fixed, precision: 2, copyThouSep: true',
+        settings: { ...defaultSettings, notation: 'fixed', precision: '2', thouSep: true, copyThouSep: true }
+      },
+      {
+        name: 'notation: exponential, precision: 3',
+        settings: { ...defaultSettings, notation: 'exponential', precision: '3' }
+      },
+      {
+        name: 'notation: engineering, precision: 3',
+        settings: { ...defaultSettings, notation: 'engineering', precision: '3' }
+      },
+      {
+        name: 'combined: BigNumber + Array + 1 234,56 + fixed + copyThouSep',
+        settings: {
+          ...defaultSettings,
+          numericOutput: 'BigNumber',
+          matrixType: 'Array',
+          numberFormat: '1 234,56',
+          notation: 'fixed',
+          precision: '3',
+          thouSep: true,
+          copyThouSep: true
+        },
+        transform: toCommaLocaleExpr
+      },
+      {
+        name: 'combined: Fraction + Array + predictable + 1.234,56 + thouSep: false',
+        settings: {
+          ...defaultSettings,
+          numericOutput: 'Fraction',
+          matrixType: 'Array',
+          predictable: true,
+          numberFormat: '1.234,56',
+          thouSep: false
+        },
+        transform: toCommaLocaleExpr
+      }
+    ]
+
+    const unitLines = []
+
+    for (const unit of units) {
+      let expr = `10 ${unit}`
+
+      try {
+        standardMath.evaluate(expr)
+        unitLines.push(expr)
+      } catch {
+        if (unit === 'celsius' || unit === 'kelvin' || unit === 'fahrenheit') {
+          unitLines.push('10 degC')
+        }
+      }
+    }
+
+    for (const profile of profiles) {
+      it(`should evaluate all Math.js functions, constants, and units under profile (${profile.name})`, () => {
+        const items = [
+          ...functions.filter((fn) => !SKIPPED_FUNCTIONS.has(fn.name)),
+          ...constants,
+          { name: 'all-units', examples: unitLines }
+        ]
+        const copyGrouping = Boolean(profile.settings.thouSep && profile.settings.copyThouSep)
+
+        standardMath.config({
+          matrix: profile.settings.matrixType,
+          number: profile.settings.numericOutput,
+          predictable: profile.settings.predictable
+        })
+
+        for (const item of items) {
+          const standardScope = {}
+
+          const standardAnswers = item.examples.map((expr) => {
+            try {
+              const val = standardMath.evaluate(expr, standardScope)
+              const formatted =
+                val !== undefined && val !== null
+                  ? formatAnswer(val, copyGrouping, profile.settings, mockCurrencies)
+                  : ''
+
+              return { answer: formatted }
+            } catch (e) {
+              return { error: e.message }
+            }
+          })
+
+          const lines = profile.transform ? item.examples.map(profile.transform) : item.examples
+          const pageId = `test-profile-${profile.name}-${item.name}`
+          const numaraResult = runCalculation({
+            activePage: pageId,
+            lines,
+            settings: profile.settings,
+            currencies: mockCurrencies
+          })
+
+          for (let i = 0; i < lines.length; i++) {
+            const expr = lines[i]
+            const std = standardAnswers[i]
+            const num = extractAnswer(numaraResult.answers[i])
+
+            if (std.error) {
+              if (num.error) continue
+
+              assert.fail(
+                `[${profile.name}] (${item.name}) Expected error "${std.error}" but got "${num.answer}" for "${expr}"`
+              )
+            } else if (!num.isPlot) {
+              if (num.error) {
+                if (expr.includes(':') && num.error.includes('Unexpected operator }')) continue
+
+                assert.fail(
+                  `[${profile.name}] (${item.name}) Expression "${expr}" failed with "${num.error}" (expected "${std.answer}")`
+                )
+              } else if (std.answer !== num.answer) {
+                const stdNum = parseLocaleNumber(std.answer, profile.settings)
+                const numNum = parseLocaleNumber(num.answer, profile.settings)
+
+                if (!isNaN(stdNum) && !isNaN(numNum) && Math.abs(stdNum - numNum) < 1e-4) continue
+
+                assert.strictEqual(
+                  num.answer,
+                  std.answer,
+                  `[${profile.name}] (${item.name}) Value mismatch for "${expr}"`
+                )
+              }
+            }
+          }
+        }
+      })
+    }
+  })
+
   describe('Custom Test Cases', () => {
     for (const testCase of customCases) {
       it(`should evaluate custom case: "${testCase.name}"`, () => {
@@ -660,19 +854,79 @@ describe('Numara Calculation Engine vs Math.js', function () {
 
       const spaceCommaOff = runCalculation({
         activePage: 'test-space-comma-copy-off',
-        lines: ['1 234 567,89'],
+        lines: ['1 234 567,89', '$1 234,56', '1 234,5 days'],
         settings: { ...defaultSettings, numberFormat: '1 234,56', thouSep: true, copyThouSep: false },
         currencies: mockCurrencies
       })
       assert.strictEqual(spaceCommaOff.answers[0], '<span class="answer" data-answer="1234567,89">1 234 567,89</span>')
+      assert.strictEqual(spaceCommaOff.answers[1], '<span class="answer" data-answer="$1234,56">$1 234,56</span>')
+      assert.strictEqual(spaceCommaOff.answers[2], '<span class="answer" data-answer="1234,5 days">1 234,5 days</span>')
 
       const spaceDotOn = runCalculation({
         activePage: 'test-space-dot-copy-on',
-        lines: ['1 234 567.89'],
+        lines: ['1 234 567.89', '$1 234.56', '1 234.5 days'],
         settings: { ...defaultSettings, numberFormat: '1 234.56', thouSep: true, copyThouSep: true },
         currencies: mockCurrencies
       })
       assert.strictEqual(spaceDotOn.answers[0], '<span class="answer" data-answer="1 234 567.89">1 234 567.89</span>')
+      assert.strictEqual(spaceDotOn.answers[1], '<span class="answer" data-answer="$1 234.56">$1 234.56</span>')
+      assert.strictEqual(spaceDotOn.answers[2], '<span class="answer" data-answer="1 234.5 days">1 234.5 days</span>')
+
+      const dotCommaOff = runCalculation({
+        activePage: 'test-dot-comma-copy-off',
+        lines: ['1.234.567,89', '$1.234,56', '1.234,5 days'],
+        settings: { ...defaultSettings, numberFormat: '1.234,56', thouSep: true, copyThouSep: false },
+        currencies: mockCurrencies
+      })
+      assert.strictEqual(dotCommaOff.answers[0], '<span class="answer" data-answer="1234567,89">1.234.567,89</span>')
+      assert.strictEqual(dotCommaOff.answers[1], '<span class="answer" data-answer="$1234,56">$1.234,56</span>')
+      assert.strictEqual(dotCommaOff.answers[2], '<span class="answer" data-answer="1234,5 days">1.234,5 days</span>')
+
+      const thouSepOffWithCopyOn = runCalculation({
+        activePage: 'test-thou-sep-off-copy-on',
+        lines: ['1 234 567.89', '$1 234.56'],
+        settings: { ...defaultSettings, numberFormat: '1 234.56', thouSep: false, copyThouSep: true },
+        currencies: mockCurrencies
+      })
+      assert.strictEqual(
+        thouSepOffWithCopyOn.answers[0],
+        '<span class="answer" data-answer="1234567.89">1234567.89</span>'
+      )
+      assert.strictEqual(thouSepOffWithCopyOn.answers[1], '<span class="answer" data-answer="$1234.56">$1234.56</span>')
+    })
+
+    it('should migrate legacy v7 settings and preserve valid v8 numberFormat and dateFormat values', () => {
+      const storage = new Map()
+      const prevLocalStorage = globalThis.localStorage
+      globalThis.localStorage = {
+        getItem: (k) => (storage.has(k) ? storage.get(k) : null),
+        setItem: (k, v) => storage.set(k, String(v)),
+        removeItem: (k) => storage.delete(k)
+      }
+
+      try {
+        const legacyComma = { thouSep: 'comma', inputLocale: true, dateFormat: 'de-DE', pageListPosition: 'slide' }
+        assert.strictEqual(migrateFromV7(legacyComma), true)
+        assert.strictEqual(legacyComma.numberFormat, '1.234,56')
+        assert.strictEqual(legacyComma.thouSep, true)
+        assert.strictEqual(legacyComma.inputLocale, undefined)
+        assert.strictEqual(legacyComma.dateFormat, 'dd/MM/yyyy')
+        assert.strictEqual(legacyComma.pageListPosition, 'float')
+
+        const legacyDisabled = { locale: 'disabled', dateFormat: 'sv-SE' }
+        assert.strictEqual(migrateFromV7(legacyDisabled), true)
+        assert.strictEqual(legacyDisabled.numberFormat, '1,234.56')
+        assert.strictEqual(legacyDisabled.thouSep, false)
+        assert.strictEqual(legacyDisabled.locale, undefined)
+        assert.strictEqual(legacyDisabled.dateFormat, 'yyyy-MM-dd')
+
+        const validSpaceFormat = { numberFormat: '1 234,56', thouSep: 'period', dateFormat: 'MM/dd/yyyy' }
+        assert.strictEqual(migrateFromV7(validSpaceFormat), true)
+        assert.strictEqual(validSpaceFormat.numberFormat, '1 234,56')
+        assert.strictEqual(validSpaceFormat.thouSep, true)
+      } finally {
+        globalThis.localStorage = prevLocalStorage
+      }
     })
 
     it('should control error link text via lineErrors setting while always recording errorLines', () => {
