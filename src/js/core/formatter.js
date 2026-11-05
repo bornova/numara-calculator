@@ -100,7 +100,7 @@ export function parseLocaleNumber(str, settings = app.settings) {
 function formatCurrency(str, settings = app.settings, currencies = app.currencies) {
   if (!currencyFormatRegex) return str
 
-  const { locale, useGrouping } = getNumberFormat(settings)
+  const { locale, group, useGrouping } = getNumberFormat(settings)
   const maximumFractionDigits = clampPrecision(settings?.precision ?? 4)
 
   return transformOutsideStrings(str, (segment) =>
@@ -127,7 +127,22 @@ function formatCurrency(str, settings = app.settings, currencies = app.currencie
           maximumFractionDigits
         })
 
-        return formatter.format(value) + expStr
+        const customDollarSymbol = info.symbol && info.symbol !== '$' && info.symbol !== upperCode ? info.symbol : null
+        const needsPartsTransform = (useGrouping && group === ' ') || Boolean(customDollarSymbol)
+
+        const formattedCurrency = needsPartsTransform
+          ? formatter
+              .formatToParts(value)
+              .map((part) => {
+                if (useGrouping && group === ' ' && part.type === 'group') return group
+                if (customDollarSymbol && part.type === 'currency' && part.value === '$') return customDollarSymbol
+
+                return part.value
+              })
+              .join('')
+          : formatter.format(value)
+
+        return formattedCurrency + expStr
       } catch {
         return `${info.symbol ?? ''}${trimmed}${expStr}`
       }
@@ -201,7 +216,7 @@ export function formatAnswer(answer, useGrouping, settings = app.settings, curre
 
     const valueStr = math.format(roundedValue, formatOptions)
 
-    if (typeof roundedValue === 'number' && notation === 'auto' && !valueStr.includes('e')) {
+    if (typeof roundedValue === 'number' && notation === 'auto' && !valueStr.includes('e') && groupSeparator !== ' ') {
       const formatted = formatter.format(roundedValue)
       const expectedDecimal = decimalSeparator
       const hasDecimal = valueStr.includes('.')
