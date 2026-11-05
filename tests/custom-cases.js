@@ -497,11 +497,12 @@ export const customCases = [
     expressions: [
       '1 234 567.89 + 0.11',
       '1 234.5 * 2',
+      '1 000/2',
       'sum(1 000, 2 500.5)',
       '$1 000 + $2 345.67',
       '01/15/2026 12:30 + 1 day'
     ],
-    expected: ['1 234 568', '2 469', '3 500.5', '$3 345.67', '01/16/2026 12:30']
+    expected: ['1 234 568', '2 469', '500', '3 500.5', '$3 345.67', '01/16/2026 12:30']
   },
   {
     name: 'Locale Separators (1 234,56 format / Space thousands & Comma decimal)',
@@ -512,6 +513,8 @@ export const customCases = [
     expressions: [
       '1 234 567,89 + 0,11',
       '1 234,5 * 2',
+      '1 000/2',
+      '0,5:0,5:1,5',
       'sum(1 000; 2 500,5)',
       '$1 000 + $2 345,67',
       '1.200 + 3,4525',
@@ -523,6 +526,8 @@ export const customCases = [
     expected: [
       '1 234 568',
       '2 469',
+      '500',
+      '[0,5, 1, 1,5]',
       '3 500,5',
       '$3 345,67',
       /Invalid number/,
@@ -531,5 +536,192 @@ export const customCases = [
       /Use semicolon \(;\) as argument separator/,
       '01/16/2026 12:30'
     ]
+  },
+  {
+    name: 'Thousands Separator Off Across All Number Formats',
+    settings: {
+      numberFormat: '1 234,56',
+      thouSep: false,
+      copyThouSep: true
+    },
+    expressions: ['1 000 + 2 500,5', 'sum(1 200; 800,25)', '$1 000 + $500,5', '12,345 in %'],
+    expected: ['3500,5', '2000,25', '$1500,50', '1234,5%']
+  },
+  {
+    name: 'Thousands Separator Off (1 234.56 format)',
+    settings: {
+      numberFormat: '1 234.56',
+      thouSep: false,
+      copyThouSep: true
+    },
+    expressions: ['1 000 + 2 500.5', 'sum(1 200, 800.25)', '$1 000 + $500.5', '12.345 in %'],
+    expected: ['3500.5', '2000.25', '$1500.50', '1234.5%']
+  },
+  {
+    name: 'Notation Modes: Binary and Octal',
+    settings: {
+      notation: 'bin'
+    },
+    expressions: ['10', '255', 'bigint(255)', 'bigint(-10)'],
+    expected: ['0b1010', '0b11111111', '0b11111111', '-0b1010']
+  },
+  {
+    name: 'Notation Mode: Octal',
+    settings: {
+      notation: 'oct'
+    },
+    expressions: ['8', '64', '511', 'bigint(255)'],
+    expected: ['0o10', '0o100', '0o777', '0o377']
+  },
+  {
+    name: 'Notation Mode: Hexadecimal With BigInt',
+    settings: {
+      notation: 'hex'
+    },
+    expressions: ['255', 'bigint(255)', 'bigint(-255)'],
+    expected: ['0xff', '0xff', '-0xff']
+  },
+  {
+    name: 'Notation Mode: Fixed Combined With Space and Comma Number Formats',
+    settings: {
+      notation: 'fixed',
+      precision: '2',
+      numberFormat: '1 234,56',
+      thouSep: true,
+      copyThouSep: true
+    },
+    expressions: ['1 234,5 + 0,05', '1000', '12,346'],
+    expected: ['1 234,55', '1 000,00', '12,35']
+  },
+  {
+    name: 'Notation Modes: Exponential and Engineering With Comma Decimal Format',
+    settings: {
+      notation: 'exponential',
+      precision: '2',
+      numberFormat: '1.234,56'
+    },
+    expressions: ['12.345', '0,126'],
+    expected: ['1,2345e+4', '1,3e-1']
+  },
+  {
+    name: 'Notation Mode: Engineering With Space-Comma Format',
+    settings: {
+      notation: 'engineering',
+      precision: '3',
+      numberFormat: '1 234,56'
+    },
+    expressions: ['12 345', '1 234 567'],
+    expected: ['12,345e+3', '1,234567e+6']
+  },
+  {
+    name: 'Precision Zero (Integer Rounding) With Units and Currencies',
+    settings: {
+      precision: '0',
+      numberFormat: '1,234.56',
+      thouSep: true,
+      copyThouSep: true
+    },
+    expressions: ['1234.56', '10.6 m + 2.1 m', '$999.60 + $0.50'],
+    expected: ['1,235', '13 m', '$1,000']
+  },
+  {
+    name: 'Auto Notation Exponent Bounds Combined With 1 234,56 and copyThouSep',
+    settings: {
+      notation: 'auto',
+      expLower: '-3',
+      expUpper: '4',
+      numberFormat: '1 234,56',
+      thouSep: true,
+      copyThouSep: true
+    },
+    expressions: ['1 234,5', '12 345', '0,001', '0,0001'],
+    expected: ['1 234,5', '1,2345e+4', '0,001', '1e-4']
+  },
+  {
+    name: 'Numeric Output: BigNumber Combined With Space-Comma Format, Line Continuation, and Keywords',
+    settings: {
+      numericOutput: 'BigNumber',
+      numberFormat: '1 234,56',
+      precision: '6',
+      thouSep: true,
+      copyThouSep: true,
+      contPrevLine: true
+    },
+    expressions: ['1 000,125', '+ 2 000,375', 'total', 'avg'],
+    expected: ['1 000,125', '3 000,5', '4 000,625', '2 000,3125']
+  },
+  {
+    name: 'Numeric Output: Fraction Combined With Comma-Decimal, Line Continuation, and Keywords',
+    settings: {
+      numericOutput: 'Fraction',
+      numberFormat: '1 234,56',
+      contPrevLine: true
+    },
+    expressions: ['1/3', '+ 1/6', '* (1/2)', '0,25 + 0,5', 'total', 'avg'],
+    expected: ['1/3', '1/2', '1/4', '3/4', '11/6', '11/24']
+  },
+  {
+    name: 'Matrix and Array Types Combined With Comma-Decimal and Space Grouping',
+    settings: {
+      matrixType: 'Array',
+      numberFormat: '1 234,56',
+      thouSep: true,
+      copyThouSep: true
+    },
+    expressions: ['[1 000,5; 2 000,25] + [500,5; 750,75]', 'det([[1; 2]; [3; 4]])', 'transpose([1 000; 2 000])'],
+    expected: ['[1 501, 2 751]', '-2', '[1 000, 2 000]']
+  },
+  {
+    name: 'Predictable Mode False vs True With Complex Roots',
+    settings: {
+      predictable: false
+    },
+    expressions: ['sqrt(-4)', 'sqrt(4)'],
+    expected: ['2i', '2']
+  },
+  {
+    name: 'Additional Frankfurter Currency Symbols (¥, ₽, ₺, ₱, ฿, ₫, ₴, ₦, E)',
+    expressions: [
+      '¥100 to USD',
+      '₽1000 to USD',
+      '₺100 to USD',
+      '₱100 to USD',
+      '฿100 to USD',
+      '₫100000 to USD',
+      '₴100 to USD',
+      '₦1000 to USD',
+      'E 100 to USD',
+      '100 E to USD'
+    ],
+    expected: ['$14.00', '$11.00', '$3.00', '$1.80', '$2.90', '$4.00', '$2.40', '$0.60', '$5.50', '$5.50']
+  },
+  {
+    name: 'Currency Disabled Setting (currency: false)',
+    settings: {
+      currency: false
+    },
+    expressions: ['100 USD + 50 USD', '$100 + $50'],
+    expected: ['150 USD', /Unexpected|Undefined/]
+  },
+  {
+    name: 'Date Formats With Day of Week Prefix (MM/dd/yyyy and yyyy-MM-dd)',
+    settings: {
+      dateFormat: 'yyyy-MM-dd',
+      dateDay: true,
+      contPrevLine: true
+    },
+    expressions: ['2026-01-01 + 1 day', '+ 2 days', 'Sun, 2026-01-04 - Fri, 2026-01-02'],
+    expected: ['Fri, 2026-01-02', 'Sun, 2026-01-04', '2 days']
+  },
+  {
+    name: 'Date Arithmetic and Subtraction Combined With Comma-Decimal Format and dateDay',
+    settings: {
+      dateFormat: 'dd/MM/yyyy',
+      dateDay: true,
+      numberFormat: '1 234,56',
+      contPrevLine: true
+    },
+    expressions: ['01/01/2026 + 1 day', '+ 2 days', 'Sun, 04/01/2026 - Fri, 02/01/2026', '01/01/2026 00:00 + 1,5 days'],
+    expected: ['Fri, 02/01/2026', 'Sun, 04/01/2026', '2 days', /02\/01\/2026 12:00/]
   }
 ]
