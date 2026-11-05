@@ -3,7 +3,7 @@ import { applyChange, observableDiff } from '@bornova/deep-diff'
 import { calculate, clearEvaluationCache } from '../calc/calcManager.js'
 import { getRates } from '../calc/currencies.js'
 import { app as coreApp } from '../core/mathInstance.js'
-import { escapeHTML } from '../core/utils.js'
+import { escapeHTML, isCommaDecimal } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { cm, udfInput, uduInput } from '../editor/index.js'
 import { clearSyncCache, triggerFolderSync } from '../pages/sync.js'
@@ -33,7 +33,7 @@ function checkMods(key) {
 /** Configures warnings by checking a condition mapped to a dom component. */
 function checkWarnings() {
   dom.bigNumWarn.style.display = app.settings.numericOutput === 'BigNumber' ? 'inline-flex' : 'none'
-  dom.localeWarn.style.display = app.settings.numberFormat === '1.234,56' ? 'inline-flex' : 'none'
+  dom.localeWarn.style.display = isCommaDecimal(app.settings) ? 'inline-flex' : 'none'
 }
 
 /**
@@ -142,7 +142,7 @@ function setupSettingsEvents() {
   dom.localeWarn.addEventListener('click', () => {
     showError(
       'Caution: Semicolon argument separator',
-      `When 1.234,56 format is selected, comma (,) is used as the decimal separator. Therefore, you must use semicolon (;) as the argument separator in all applicable functions. Ex. sum(1;3) // 4`,
+      `When ${app.settings.numberFormat} format is selected, comma (,) is used as the decimal separator. Therefore, you must use semicolon (;) as the argument separator in all applicable functions. Ex. sum(1;3) // 4`,
       true
     )
   })
@@ -383,7 +383,12 @@ export const settings = {
 
   /** Prepare settings dialog items. */
   prep: async () => {
-    const numberFormats = [{ '1,234.56': '1,234.56' }, { '1.234,56': '1.234,56' }]
+    const numberFormats = [
+      { '1,234.56': '1,234.56' },
+      { '1.234,56': '1.234,56' },
+      { '1 234.56': '1 234.56' },
+      { '1 234,56': '1 234,56' }
+    ]
     const dateFormats = [{ 'MM/dd/yyyy': 'MM/DD/YYYY' }, { 'dd/MM/yyyy': 'DD/MM/YYYY' }, { 'yyyy-MM-dd': 'YYYY-MM-DD' }]
 
     const answerPositions = [
