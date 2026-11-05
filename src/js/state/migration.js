@@ -1,7 +1,7 @@
 import { getSystemLocale } from '../core/utils.js'
 import { store } from './store.js'
 
-const VALID_NUMBER_FORMATS = new Set(['1,234.56', '1.234,56'])
+const VALID_NUMBER_FORMATS = new Set(['1,234.56', '1.234,56', '1 234.56', '1 234,56'])
 const VALID_DATE_FORMATS = new Set(['MM/dd/yyyy', 'dd/MM/yyyy', 'yyyy-MM-dd'])
 
 /**
