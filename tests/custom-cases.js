@@ -68,8 +68,19 @@ export const customCases = [
   },
   {
     name: 'Currency Symbols Conversion',
-    expressions: ['$10 to EUR', '10 € to USD', '£ 15 to TRY'],
-    expected: ['€8.8496', '$11.30', '₺640.00']
+    expressions: [
+      '$10 to EUR',
+      '10 € to USD',
+      '£ 15 to TRY',
+      '₹100 to USD',
+      '₩1000 to USD',
+      'R$50 to USD',
+      'C$100 to USD',
+      'S/100 to USD',
+      'zł40 to USD',
+      '100 ₪ to USD'
+    ],
+    expected: ['€8.8496', '$11.30', '₺640.00', '$1.20', '$0.75', '$10.00', '$2.70', '$27.00', '$10.00', '$27.00']
   },
   {
     name: 'Line Labels (Prefix with Colon)',
@@ -476,5 +487,49 @@ export const customCases = [
     },
     expressions: ['today + 1 day', 'now + 1 hour', 'Fri, 02/01/2026 + 1 day'],
     expected: [/\d{2}\/\d{2}\/\d{4}/, /\d{2}\/\d{2}\/\d{4}/, /03\/01\/2026/]
+  },
+  {
+    name: 'Locale Separators (1 234.56 format / Space thousands & Period decimal)',
+    settings: {
+      numberFormat: '1 234.56',
+      copyThouSep: true
+    },
+    expressions: [
+      '1 234 567.89 + 0.11',
+      '1 234.5 * 2',
+      'sum(1 000, 2 500.5)',
+      '$1 000 + $2 345.67',
+      '01/15/2026 12:30 + 1 day'
+    ],
+    expected: ['1 234 568', '2 469', '3 500.5', '$3 345.67', '01/16/2026 12:30']
+  },
+  {
+    name: 'Locale Separators (1 234,56 format / Space thousands & Comma decimal)',
+    settings: {
+      numberFormat: '1 234,56',
+      copyThouSep: true
+    },
+    expressions: [
+      '1 234 567,89 + 0,11',
+      '1 234,5 * 2',
+      'sum(1 000; 2 500,5)',
+      '$1 000 + $2 345,67',
+      '1.200 + 3,4525',
+      '1 234.56',
+      'max(1; 2)',
+      'max(1, 2)',
+      '01/15/2026 12:30 + 1 day'
+    ],
+    expected: [
+      '1 234 568',
+      '2 469',
+      '3 500,5',
+      '$3 345,67',
+      /Invalid number/,
+      /Invalid number/,
+      '2',
+      /Use semicolon \(;\) as argument separator/,
+      '01/16/2026 12:30'
+    ]
   }
 ]
