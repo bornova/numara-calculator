@@ -5,6 +5,7 @@ import { math } from '../core/mathInstance.js'
 import { app } from '../state/appState.js'
 import {
   constantTokens,
+  currencySymbolRegex,
   currencyTokens,
   dateTimeMethodsSet,
   functionTokens,
@@ -67,10 +68,13 @@ export function registerEditorModes() {
         return 'datetime'
       }
 
-      const startChar = stream.peek()
+      const prevChar = stream.pos > 0 ? stream.string.charAt(stream.pos - 1) : ''
 
-      if (currencyTokens.has(startChar) && !/[\p{L}]/u.test(startChar)) {
-        stream.next()
+      if (
+        currencySymbolRegex &&
+        (!prevChar || !/[\w\p{L}\p{M}]/u.test(prevChar)) &&
+        stream.match(currencySymbolRegex)
+      ) {
         state.lastToken = 'currency'
         return 'currency'
       }
