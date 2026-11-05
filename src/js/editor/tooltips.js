@@ -1,7 +1,7 @@
 import UIkit from 'uikit'
 
 import { formatAnswer, math } from '../calc/calcManager.js'
-import { escapeHTML } from '../core/utils.js'
+import { escapeHTML, isCommaDecimal } from '../core/utils.js'
 import { app } from '../state/appState.js'
 import { CLASS_NAMES, currencyTokens, dateTimeInstanceMethods, keywords } from './constants.js'
 import { numaraHints } from './hints.js'
@@ -102,7 +102,7 @@ function handleFunctionTooltip(target) {
   // Fallback to standard Math.js help
   try {
     const tip = math.help(text).toJSON()
-    const syntax = tip.syntax.map((s) => s.replaceAll(/,/g, app.settings.numberFormat === '1.234,56' ? ';' : ','))
+    const syntax = tip.syntax.map((s) => s.replaceAll(/,/g, isCommaDecimal(app.settings) ? ';' : ','))
 
     showTooltip(
       target,
