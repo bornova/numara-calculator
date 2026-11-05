@@ -1,4 +1,4 @@
-import { REGEX_DATE_TIME, REGEX_STRING_LITERAL } from './constants.js'
+import { REGEX_STRING_LITERAL } from './constants.js'
 import { app } from './mathInstance.js'
 import { isCommaDecimal, isSpaceGrouping } from './utils.js'
 
@@ -26,8 +26,10 @@ export function normalizeNumberInput(line) {
   if (isCommaDecimal(app.settings)) {
     // 1.234,56 or 1 234,56 format: period or space thousands separator, comma decimal separator, semicolon argument separator
     const tokenRegex = spaceGrp
-      ? /(?<![\w\p{L}.,/:])(?:\d+(?:[ \u00A0\u202F]\d{3})+(?:[.,][\d.,]*\d)?|\d+[.,][\d.,]*\d|\.\d+)(?![\d.,/:])/gu
+      ? /(?<![\w\p{L}.,])(?:\d+(?:[ \u00A0\u202F]\d{3})+(?:[.,][\d.,]*\d)?|\d+[.,][\d.,]*\d|\.\d+)(?![\d.,])/gu
       : /(?<![\w\p{L}.,])(?:\d+[.,][\d.,]*\d|\.\d+)(?![\d.,])/gu
+
+    let depth = 0
 
     return transformOutsideStrings(line, (segment) => {
       segment = segment.replace(tokenRegex, (numToken) => {
@@ -46,16 +48,29 @@ export function normalizeNumberInput(line) {
         throw new Error(`Invalid number "${numToken}"`)
       })
 
-      REGEX_DATE_TIME.lastIndex = 0
-      const checkSegment = REGEX_DATE_TIME.test(line)
-        ? segment.replace(/^\s*(?:[\p{L}\p{M}_][\p{L}\p{M}\w]*\s*=\s*)?[\p{L}\p{M}.]+,\s+/u, '')
-        : segment
+      const checkSegment = segment.replace(/[\p{L}\p{M}.]+,\s+(?=\d{1,4}[/-]\d{1,2}[/-]\d{1,4}\b)/gu, '')
 
       if (checkSegment.includes(',')) {
         throw new Error('Use semicolon (;) as argument separator')
       }
 
-      return segment.replaceAll(';', ',')
+      let out = ''
+
+      for (const ch of segment) {
+        if (ch === '(' || ch === '[' || ch === '{') {
+          depth++
+          out += ch
+        } else if (ch === ')' || ch === ']' || ch === '}') {
+          depth = Math.max(0, depth - 1)
+          out += ch
+        } else if (ch === ';' && depth > 0) {
+          out += ','
+        } else {
+          out += ch
+        }
+      }
+
+      return out
     })
   }
 
@@ -63,7 +78,7 @@ export function normalizeNumberInput(line) {
     // 1 234.56 format: space thousands separator, period decimal separator, comma argument separator
     return transformOutsideStrings(line, (segment) =>
       segment.replace(
-        /(?<![\w\p{L}./:])[1-9]\d{0,2}(?:[ \u00A0\u202F]\d{3})+(?:\.\d+)?(?![.\d/:]|[ \u00A0\u202F]\d)/gu,
+        /(?<![\w\p{L}.])[1-9]\d{0,2}(?:[ \u00A0\u202F]\d{3})+(?:\.\d+)?(?![.\d]|[ \u00A0\u202F]\d)/gu,
         (numToken) => numToken.replaceAll(/[ \u00A0\u202F]/g, '')
       )
     )
