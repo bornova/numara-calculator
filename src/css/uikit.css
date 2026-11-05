@@ -49,11 +49,13 @@
   justify-content: center;
   align-items: center;
   cursor: pointer;
+  border-radius: 4px;
   padding: 4px;
   color: light-dark(#607d8b, #90b4dc);
 }
 
 .uk-modal-close-default:hover {
+  background-color: light-dark(#f4f6f8, #333333);
   color: light-dark(#005cc5, #2196f3);
 }
 
@@ -249,9 +251,17 @@
 }
 
 .uk-notification-close {
-  display: block;
-  top: 9px;
-  right: 10px;
+  display: inline-flex;
+  top: 5px;
+  right: 6px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 4px;
+  padding: 4px;
+}
+
+.uk-notification-close:hover {
+  background-color: light-dark(#f4f6f8, #333333);
 }
 
 .uk-notification-close svg {
