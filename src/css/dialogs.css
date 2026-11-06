@@ -54,11 +54,17 @@
 }
 
 .resetButtons a {
-  margin-right: 10px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 6px;
+  border-radius: 4px;
+  padding: 4px;
   color: light-dark(#777777, #999999);
 }
 
 .resetButtons a:hover {
+  background-color: light-dark(#f4f6f8, #333333);
   color: light-dark(#1d3f5c, #a0d3ff);
 }
 
@@ -151,6 +157,20 @@
 #updateRatesLink[data-enabled='false'] {
   opacity: 0.5;
   pointer-events: none;
+}
+
+.customizeThemeButton,
+.updateRatesLink {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 4px;
+  padding: 4px;
+}
+
+.customizeThemeButton:hover,
+.updateRatesLink:hover {
+  background-color: light-dark(#f4f6f8, #333333);
 }
 
 .customizeThemeButton > svg {
