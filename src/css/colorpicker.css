@@ -50,9 +50,18 @@ input.clr-color {
 }
 
 .clr-custom-reset {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 4px;
+  padding: 4px;
   order: 2;
   cursor: pointer;
   margin: auto 10px auto 5px;
+}
+
+.clr-custom-reset:hover {
+  background-color: light-dark(#f4f6f8, #333333);
 }
 
 .clr-custom-reset > svg {
