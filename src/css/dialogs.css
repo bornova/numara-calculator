@@ -600,14 +600,9 @@ div:has(> #logsLink) {
   pointer-events: none;
 }
 
-.udfuSaveBtn > span {
-  display: inline-flex;
-  align-items: center;
-}
-
 #udfSaveLabel,
 #uduSaveLabel {
-  padding-top: 4px;
+  text-box: trim-both cap alphabetic;
 }
 
 .udfuList {
