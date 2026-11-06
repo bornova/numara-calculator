@@ -50,7 +50,7 @@ export function updatePageName(name, pageId) {
 
   dom.pageName.textContent = name
   dom.pageName.removeAttribute('title')
-  dom.pageName.setAttribute('uk-tooltip', `title: ${tooltipTitle}; pos: bottom-left; delay: 1000`)
+  dom.pageName.setAttribute('uk-tooltip', `title: ${tooltipTitle}; delay: 1000`)
 }
 
 /**
@@ -243,24 +243,60 @@ function renamePage(pageId) {
 
   if (!page) return
 
-  dom.renamePageTitleInput.value = page.name
-  dom.dialogRenamePageSave.disabled = !page.name.trim()
+  const itemEl = document.getElementById(pageId)
+  const titleEl = itemEl?.querySelector('.pageListItemTitle')
 
-  modal.show('#dialogRenamePage')
+  if (!itemEl || !titleEl || itemEl.classList.contains('is-renaming')) return
 
-  function newListener() {
-    const newName = dom.renamePageTitleInput.value.replace(/<|>/g, '').trim()
+  const itemHeight = itemEl.offsetHeight
+  const titleHeight = titleEl.offsetHeight
 
-    if (!newName) return
+  itemEl.scrollIntoView({ block: 'nearest' })
+  itemEl.style.boxSizing = 'border-box'
+  itemEl.style.height = `${itemHeight}px`
+  itemEl.classList.add('is-renaming')
+
+  const input = document.createElement('input')
+  input.type = 'text'
+  input.className = 'pageListRenameInput'
+  input.maxLength = 50
+  input.autocomplete = 'off'
+  input.value = page.name
+  input.style.height = `${titleHeight}px`
+
+  const saveBtn = document.createElement('span')
+  saveBtn.className = 'savePageButton uk-flex-right uk-margin-small-right'
+  saveBtn.title = 'Save page name'
+  saveBtn.innerHTML = dom.icons.Save
+
+  titleEl.replaceWith(input)
+  itemEl.appendChild(saveBtn)
+  input.focus()
+  input.select()
+
+  let finished = false
+
+  const finish = (save) => {
+    if (finished) return
+    finished = true
+
+    const newName = input.value.replace(/<|>/g, '').trim()
+
+    if (!save || !newName || newName === page.name) {
+      populatePages()
+      return
+    }
 
     const currentPages = store.get('pages') || []
     const targetPage = currentPages.find((p) => p.id === pageId)
 
-    if (!targetPage) return
+    if (!targetPage) {
+      populatePages()
+      return
+    }
 
     const sanitizedNew = getSafeFilename(newName)
 
-    // Prevent duplicate page names
     if (
       currentPages.some((p) => getSafeFilename(p.name).toLowerCase() === sanitizedNew.toLowerCase() && p.id !== pageId)
     ) {
@@ -268,7 +304,7 @@ function renamePage(pageId) {
         `"${escapeHTML(newName)}" (or a page with a conflicting file name) already exists. Please choose a different page name.`,
         'danger'
       )
-
+      populatePages()
       return
     }
 
@@ -284,11 +320,32 @@ function renamePage(pageId) {
     }
 
     syncPageRename(oldName, newName)
-
-    modal.hide('#dialogRenamePage')
   }
 
-  dom.dialogRenamePageSave.onclick = newListener
+  saveBtn.addEventListener('mousedown', (event) => {
+    event.preventDefault()
+  })
+
+  saveBtn.addEventListener('click', (event) => {
+    event.stopPropagation()
+    finish(true)
+  })
+
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      event.stopPropagation()
+      finish(true)
+    } else if (event.key === 'Escape') {
+      event.preventDefault()
+      event.stopPropagation()
+      finish(false)
+    }
+  })
+
+  input.addEventListener('blur', () => finish(true))
+  input.addEventListener('click', (event) => event.stopPropagation())
+  input.addEventListener('dblclick', (event) => event.stopPropagation())
 }
 
 /**
@@ -473,13 +530,11 @@ function setupPageEvents() {
   dom.sortAZ.addEventListener('click', () => sortPages('az'))
   dom.sortZA.addEventListener('click', () => sortPages('za'))
 
-  dom.renamePageTitleInput.addEventListener('input', () => {
-    dom.dialogRenamePageSave.disabled = !dom.renamePageTitleInput.value.replace(/<|>/g, '').trim()
-  })
+  dom.pageList.addEventListener('dblclick', (event) => {
+    const itemEl = event.target.closest('.pageListItem')
 
-  dom.renamePageTitleInput.addEventListener('keyup', (event) => {
-    if (event.key === 'Enter' && !dom.dialogRenamePageSave.disabled) {
-      dom.dialogRenamePageSave.click()
+    if (itemEl && !event.target.closest('.pageItemActions')) {
+      renamePage(itemEl.id)
     }
   })
 
