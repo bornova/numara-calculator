@@ -4,13 +4,13 @@ import { name } from '../../../package.json'
 import { calculate, syncOutputHeights } from '../calc/calcManager.js'
 import { escapeHTML } from '../core/utils.js'
 import { dom } from '../dom.js'
-import { cm } from '../editor/index.js'
+import { cm, udfInput, uduInput } from '../editor/index.js'
 import { loadPage } from '../pages/pageManager.js'
 import { app } from '../state/appState.js'
 import { isElectron, isMac } from '../state/env.js'
 import { store } from '../state/store.js'
 import { copyAll } from './contextMenu.js'
-import { modal, notify, showError } from './dialogs.js'
+import { isModalOpen, modal, notify, showError } from './dialogs.js'
 import { resetPlotSelection } from './plot.js'
 import { applyAnswerPositionLayout, settings } from './settings.js'
 
@@ -39,7 +39,14 @@ export function setupAppButtons() {
       window.print()
     },
     clearButton: () => {
-      cm.setValue('')
+      if (!cm.getValue()) return
+
+      UIkit.tooltip(dom.clearButton)?.hide()
+      cm.replaceRange(
+        '',
+        { line: cm.firstLine(), ch: 0 },
+        { line: cm.lastLine(), ch: cm.getLine(cm.lastLine()).length }
+      )
       cm.focus()
       calculate()
       if (!app.pageListDocked) {
@@ -67,6 +74,52 @@ export function setupAppButtons() {
   }
 
   Object.entries(buttons).forEach(([btn, action]) => dom[btn].addEventListener('click', action))
+
+  if (isElectron) {
+    numara.menuAction((action) => {
+      switch (action) {
+        case 'newPage':
+          if (!isModalOpen()) dom.newPageButton.click()
+          break
+        case 'clearPage':
+          if (!isModalOpen()) dom.clearButton.click()
+          break
+        case 'togglePageList':
+          if (!app.pageListDocked && !isModalOpen()) {
+            dom.pageName.click()
+          } else if (
+            dom.pageListPanel.classList.contains('uk-open') &&
+            !dom.dialogNewPage.classList.contains('uk-open')
+          ) {
+            dom.closePageListButton.click()
+          }
+          break
+        case 'openSettings':
+          buttons.settingsButton()
+          break
+        case 'openUdfu':
+          buttons.udfuButton()
+          break
+        case 'checkUpdates':
+          modal.show('#dialogAbout')
+          numara.checkUpdate()
+          break
+        case 'resetSize':
+          dom.resetSizeButton.click()
+          break
+        case 'undo':
+        case 'redo':
+          if (udfInput?.hasFocus()) {
+            udfInput[action]()
+          } else if (uduInput?.hasFocus()) {
+            uduInput[action]()
+          } else if (cm?.hasFocus() || !isModalOpen()) {
+            cm?.[action]()
+          }
+          break
+      }
+    })
+  }
 
   dom.updateMenuLink.addEventListener('click', (event) => {
     event.stopPropagation()
@@ -135,6 +188,12 @@ export function setupResultActions() {
 
       navigator.clipboard.writeText(textToCopy)
 
+      answerEl.classList.remove('copied')
+      void answerEl.offsetWidth
+      answerEl.classList.add('copied')
+      clearTimeout(answerEl._copiedTimer)
+      answerEl._copiedTimer = setTimeout(() => answerEl.classList.remove('copied'), 350)
+
       notify(`Copied '${safeText}' to clipboard.`)
 
       return
@@ -146,6 +205,13 @@ export function setupResultActions() {
 
     if (textToCopy) {
       navigator.clipboard.writeText(textToCopy)
+
+      dom.selectionStats.classList.remove('copied')
+      void dom.selectionStats.offsetWidth
+      dom.selectionStats.classList.add('copied')
+      clearTimeout(dom.selectionStats._copiedTimer)
+      dom.selectionStats._copiedTimer = setTimeout(() => dom.selectionStats.classList.remove('copied'), 350)
+
       notify(`Copied '${escapeHTML(textToCopy)}' to clipboard.`)
     }
   })
