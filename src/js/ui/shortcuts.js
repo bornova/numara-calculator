@@ -68,6 +68,7 @@ export function setupKeyboardShortcuts() {
           app.settings.escToClose &&
           !isModalOpen() &&
           !isSearchPanelOpen() &&
+          !event.target.closest?.('.pageListRenameInput') &&
           (!cm || !cm.state.completionActive)
         ) {
           event.preventDefault()
