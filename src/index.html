@@ -64,6 +64,15 @@
         </div>
         <div class="centerActions uk-flex uk-flex-center uk-flex-middle uk-flex-1 uk-text-center">
           <span id="pageName" class="pageName" uk-tooltip="delay: 1000"></span>
+          <div id="pageTabsContainer" class="pageTabsContainer">
+            <a id="pageTabsLeft" class="action pageTabsArrow" title="Scroll left">
+              <i data-lucide="chevron-left"></i>
+            </a>
+            <div id="pageTabs" class="pageTabs"></div>
+            <a id="pageTabsRight" class="action pageTabsArrow" title="Scroll right">
+              <i data-lucide="chevron-right"></i>
+            </a>
+          </div>
           <span id="selectionStats" class="selectionStats" uk-tooltip="title: Click to copy sum; delay: 500"></span>
         </div>
         <div class="rightActions uk-flex uk-flex-right uk-flex-middle">
@@ -95,17 +104,6 @@
                 <i data-lucide="plus"></i>
               </a>
             </div>
-            <div class="rightActions uk-flex uk-flex-middle uk-flex-right uk-text-right">
-              <a id="copyButton" class="action" title="Copy page" uk-tooltip><i data-lucide="copy"></i></a>
-              <a id="printButton" class="action" title="Print page" uk-tooltip><i data-lucide="printer"></i></a>
-              <span id="importExportDivider" class="actionDivider"></span>
-              <a id="importPageButton" class="action" title="Import page" uk-tooltip>
-                <i data-lucide="download"></i>
-              </a>
-              <a id="exportPageButton" class="action" title="Export page" uk-tooltip>
-                <i data-lucide="upload"></i>
-              </a>
-            </div>
           </div>
         </div>
       </div>
@@ -116,6 +114,23 @@
       class="uk-drop uk-dropdown"
       uk-dropdown="mode: click; pos: top-right; bg-scroll: false; close-on-scroll: true; toggle: #moreButton"
     >
+      <div id="copyButton" class="moreMenuItem">
+        <i data-lucide="copy"></i>
+        <span>Copy Page</span>
+      </div>
+      <div id="printButton" class="moreMenuItem">
+        <i data-lucide="printer"></i>
+        <span>Print Page</span>
+      </div>
+      <div id="importPageButton" class="moreMenuItem">
+        <i data-lucide="download"></i>
+        <span>Import Page</span>
+      </div>
+      <div id="exportPageButton" class="moreMenuItem">
+        <i data-lucide="upload"></i>
+        <span>Export Page</span>
+      </div>
+      <hr class="sortListDivider" />
       <div id="udfuButton" class="moreMenuItem">
         <i data-lucide="braces"></i>
         <span>User Definitions</span>
@@ -144,19 +159,29 @@
       <div id="sortZA" class="sortListItem uk-flex uk-flex-column" title="Sort Z to A">Z to A</div>
     </div>
 
-    <div id="dialogNewPage" class="modal" uk-modal>
-      <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
-        <button class="uk-modal-close-default" type="button"><i data-lucide="x"></i></button>
-        <h2 class="uk-modal-title">New page name</h2>
-        <div>
-          <input id="newPageTitleInput" class="textBox" maxlength="50" autocomplete="off" />
-        </div>
-        <div uk-flex>
-          <div class="dialog-buttons uk-flex-right">
-            <button id="dialogNewPageSave" class="uk-button uk-button-primary uk-button-small">Save</button>
-          </div>
-        </div>
+    <div id="tabContextMenu" class="uk-dropdown tabContextMenu">
+      <div id="tabContextRename" class="moreMenuItem">
+        <i data-lucide="pencil"></i>
+        <span>Rename</span>
       </div>
+      <div id="tabContextDuplicate" class="moreMenuItem">
+        <i data-lucide="copy-plus"></i>
+        <span>Duplicate</span>
+      </div>
+      <div id="tabContextDelete" class="moreMenuItem tabContextDelete">
+        <i data-lucide="trash-2"></i>
+        <span>Delete</span>
+      </div>
+    </div>
+
+    <div id="dialogNewPage" class="uk-dropdown newPageDropdown">
+      <input id="newPageTitleInput" class="newPageInput" type="text" maxlength="50" autocomplete="off" />
+      <a id="dialogNewPageSave" class="newPageAction" title="Save">
+        <i data-lucide="save"></i>
+      </a>
+      <a id="dialogNewPageCancel" class="newPageAction" title="Cancel">
+        <i data-lucide="x"></i>
+      </a>
     </div>
 
     <div id="dialogUdfu" class="modal" uk-modal>
@@ -167,28 +192,114 @@
           <li><a>Functions</a></li>
           <li><a>Units</a></li>
         </ul>
-        <ul id="udfuSwitcher" class="uk-switcher uk-margin">
+        <ul id="udfuSwitcher" class="uk-switcher uk-margin-small-top">
           <li id="udfTab">
-            <div>
-              <textarea id="udfInput"></textarea>
-            </div>
-            <div class="uk-flex">
-              <div class="dialog-buttons uk-width-1-2 uk-flex-left"></div>
-              <div class="dialog-buttons uk-width-1-2 uk-flex-right">
-                <button id="dialogUdfuSaveF" class="uk-button uk-button-primary uk-button-small">Save</button>
+            <div class="udfuForm">
+              <div class="udfuFormRow">
+                <input
+                  id="udfNameInput"
+                  class="udfuInput"
+                  type="text"
+                  maxlength="50"
+                  autocomplete="off"
+                  placeholder="Name (e.g. area)"
+                />
+                <input
+                  id="udfParamsInput"
+                  class="udfuInput"
+                  type="text"
+                  maxlength="100"
+                  autocomplete="off"
+                  placeholder="Parameters (optional, e.g. w, h)"
+                />
+                <div class="udfuFormActions">
+                  <button
+                    id="udfSaveButton"
+                    type="button"
+                    class="uk-button uk-button-primary uk-button-small udfuSaveBtn"
+                  >
+                    <span id="udfSaveIcon"><i data-lucide="plus"></i></span>
+                    <span id="udfSaveLabel">Add</span>
+                  </button>
+                  <button
+                    id="udfCancelButton"
+                    type="button"
+                    class="uk-button uk-button-default uk-button-small udfuCancelBtn"
+                    title="Cancel edit"
+                    style="display: none"
+                  >
+                    <i data-lucide="x"></i>
+                  </button>
+                </div>
               </div>
+              <textarea
+                id="udfBodyInput"
+                class="udfuTextarea"
+                rows="2"
+                spellcheck="false"
+                placeholder="Expression or multi-line JS body (e.g. w * h or return w * h)"
+              ></textarea>
             </div>
+            <div id="udfList" class="udfuList"></div>
           </li>
           <li id="uduTab">
-            <div>
-              <textarea id="uduInput"></textarea>
-            </div>
-            <div class="uk-flex">
-              <div class="dialog-buttons uk-width-1-2 uk-flex-left"></div>
-              <div class="dialog-buttons uk-width-1-2 uk-flex-right">
-                <button id="dialogUdfuSaveU" class="uk-button uk-button-primary uk-button-small">Save</button>
+            <div class="udfuForm">
+              <div class="udfuFormRow">
+                <input
+                  id="uduNameInput"
+                  class="udfuInput"
+                  type="text"
+                  maxlength="50"
+                  autocomplete="off"
+                  placeholder="Unit name (e.g. foo)"
+                />
+                <input
+                  id="uduDefInput"
+                  class="udfuInput"
+                  type="text"
+                  maxlength="100"
+                  autocomplete="off"
+                  placeholder="Definition (e.g. 18 foot)"
+                />
+                <div class="udfuFormActions">
+                  <button
+                    id="uduSaveButton"
+                    type="button"
+                    class="uk-button uk-button-primary uk-button-small udfuSaveBtn"
+                  >
+                    <span id="uduSaveIcon"><i data-lucide="plus"></i></span>
+                    <span id="uduSaveLabel">Add</span>
+                  </button>
+                  <button
+                    id="uduCancelButton"
+                    type="button"
+                    class="uk-button uk-button-default uk-button-small udfuCancelBtn"
+                    title="Cancel edit"
+                    style="display: none"
+                  >
+                    <i data-lucide="x"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="udfuFormRow udfuUnitOptionsRow">
+                <input
+                  id="uduAliasesInput"
+                  class="udfuInput"
+                  type="text"
+                  maxlength="100"
+                  autocomplete="off"
+                  placeholder="Aliases (optional, e.g. foos, f)"
+                />
+                <select id="uduPrefixesSelect" class="uk-select udfuSelect">
+                  <option value="none">Prefixes: None</option>
+                  <option value="short">Prefixes: Short (k, M, G...)</option>
+                  <option value="long">Prefixes: Long (kilo, mega...)</option>
+                  <option value="binary_short">Prefixes: Binary short (Ki, Mi...)</option>
+                  <option value="binary_long">Prefixes: Binary long (kibi, mebi...)</option>
+                </select>
               </div>
             </div>
+            <div id="uduList" class="udfuList"></div>
           </li>
         </ul>
       </div>
@@ -242,6 +353,7 @@
                   <option value="auto">Auto</option>
                   <option value="float">Floating</option>
                   <option value="dock">Docked</option>
+                  <option value="tabs">Tabs</option>
                 </select>
               </div>
             </div>
@@ -934,7 +1046,7 @@
       </div>
     </div>
 
-    <div id="scrollTop" class="scrollTop" uk-totop></div>
+    <div id="scrollTop" class="scrollTop"><i data-lucide="chevron-up"></i></div>
 
     <script src="js/numara.js"></script>
   </body>
