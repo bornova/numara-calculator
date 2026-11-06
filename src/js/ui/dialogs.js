@@ -445,18 +445,6 @@ export function setupUIkitUtils() {
   )
 
   UIkit.util.on(
-    '#dialogRenamePage',
-    'shown',
-    () => {
-      setTimeout(() => {
-        dom.renamePageTitleInput.focus()
-        dom.renamePageTitleInput.select()
-      }, 20)
-    },
-    { self: true }
-  )
-
-  UIkit.util.on(
     '#dialogAbout',
     'shown',
     () => {
