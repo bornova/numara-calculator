@@ -68,14 +68,14 @@
         </div>
         <div class="rightActions uk-flex uk-flex-right uk-flex-middle">
           <a id="moreButton" class="action" title="Menu">
-            <i data-lucide="menu"></i>
+            <i data-lucide="ellipsis-vertical"></i>
           </a>
           <span id="notificationDot" class="notificationDot" uk-tooltip><i data-lucide="circle"></i></span>
         </div>
       </div>
     </div>
 
-    <div id="pageListPanel">
+    <div id="pageListPanel" class="uk-offcanvas">
       <div id="pageListResizer" class="pageListResizer"></div>
       <div class="uk-offcanvas-bar uk-flex uk-flex-column">
         <div class="pageListHeader">
@@ -113,6 +113,7 @@
 
     <div
       id="moreDropdown"
+      class="uk-drop uk-dropdown"
       uk-dropdown="mode: click; pos: top-right; bg-scroll: false; close-on-scroll: true; toggle: #moreButton"
     >
       <div id="udfuButton" class="moreMenuItem">
@@ -127,12 +128,13 @@
       <div id="aboutButton" class="moreMenuItem">
         <i data-lucide="info"></i>
         <span>About</span>
-        <a id="updateMenuLink" class="updateMenuLink">Update now</a>
+        <a id="updateMenuLink" class="updateMenuLink">Update</a>
       </div>
     </div>
 
     <div
       id="sortDropdown"
+      class="uk-drop uk-dropdown"
       uk-dropdown="mode: click; pos: right-top; bg-scroll: false; close-on-scroll: true; toggle: #pageListSort"
     >
       <div id="sortOldNew" class="sortListItem uk-flex uk-flex-column" title="Sort older to newer">Older to newer</div>
@@ -152,21 +154,6 @@
         <div uk-flex>
           <div class="dialog-buttons uk-flex-right">
             <button id="dialogNewPageSave" class="uk-button uk-button-primary uk-button-small">Save</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="dialogRenamePage" class="modal" uk-modal>
-      <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
-        <button class="uk-modal-close-default" type="button"><i data-lucide="x"></i></button>
-        <h2 class="uk-modal-title">Rename page</h2>
-        <div>
-          <input id="renamePageTitleInput" class="textBox" maxlength="50" autocomplete="off" />
-        </div>
-        <div uk-flex>
-          <div class="dialog-buttons uk-flex-right">
-            <button id="dialogRenamePageSave" class="uk-button uk-button-primary uk-button-small">Save</button>
           </div>
         </div>
       </div>
@@ -695,9 +682,7 @@
             <a id="defaultSettingsButton" class="defaultSettingsButton" title="Restore default settings" uk-tooltip>
               <i data-lucide="list-restart">Restore defaults</i>
             </a>
-            <a id="resetSizeButton" title="Reset window size" uk-tooltip>
-              <i data-lucide="scaling"></i>
-            </a>
+            <a id="resetSizeButton" title="Reset window size" uk-tooltip><i data-lucide="square-dimensions"></i> </a>
           </div>
         </div>
       </div>
