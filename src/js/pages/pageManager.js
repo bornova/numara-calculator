@@ -5,18 +5,35 @@ Settings.defaultNumberingSystem = 'latn'
 Settings.defaultOutputCalendar = 'iso8601'
 
 import { calculate, debouncedSavePageState, renderAnswersToHTML, syncOutputHeights } from '../calc/calcManager.js'
-import { escapeHTML, getSafeFilename } from '../core/utils.js'
+import { escapeHTML, getSafeFilename, sanitizePageName } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { cm, debouncedSaveCursor } from '../editor/index.js'
 import { app } from '../state/appState.js'
 import { store } from '../state/store.js'
-import { confirm, modal, notify } from '../ui/dialogs.js'
+import { confirm, hideOpenDropdowns, notify } from '../ui/dialogs.js'
+import { updatePageListScroll } from '../ui/pageList.js'
 import { setupPageIo } from './pageIo.js'
-import { isPageDragging, setupPageListSort } from './pageSort.js'
+import { isPageDragging, setupPageListSort, setupPageTabsSort } from './pageSort.js'
+import {
+  attachInlineRenameInput,
+  hideTabContextMenu,
+  populatePageTabs,
+  renameTab,
+  setupPageTabsEvents
+} from './pageTabs.js'
 import { syncPageDelete, syncPageRename, syncPageSave } from './sync.js'
 
 let isScrolling = false
 let lastGeneratedPageId = ''
+
+/**
+ * Formats a 17-digit page timestamp ID into a localized date/time string.
+ * @param {string} pageId The page ID timestamp string.
+ * @returns {string} Formatted date string.
+ */
+function formatPageDate(pageId) {
+  return DateTime.fromFormat(pageId, 'yyyyMMddHHmmssSSS').toFormat('FF')
+}
 
 /**
  * Generates a unique 17-digit timestamp page ID (`yyyyMMddHHmmssSSS`),
@@ -45,7 +62,7 @@ export function generatePageId() {
  * @param {string} pageId The page ID timestamp string.
  */
 export function updatePageName(name, pageId) {
-  const pageDate = DateTime.fromFormat(pageId, 'yyyyMMddHHmmssSSS').toFormat('FF')
+  const pageDate = formatPageDate(pageId)
   const tooltipTitle = escapeHTML(`${name} - ${pageDate}`).replace(/;/g, '&#59;')
 
   dom.pageName.textContent = name
@@ -54,20 +71,51 @@ export function updatePageName(name, pageId) {
 }
 
 /**
- * Show new page dialog.
+ * Hides the new page dropdown if open.
  */
-function newPageDialog() {
-  dom.newPageTitleInput.value = ''
-  dom.newPageTitleInput.focus()
+function hideNewPageDropdown() {
+  dom.dialogNewPage?.classList.remove('uk-open')
+}
 
-  modal.show('#dialogNewPage')
+/**
+ * Toggles the new page dropdown next to the active add page button.
+ * @param {Event} [event] Triggering click event.
+ */
+function newPageDialog(event) {
+  event?.stopPropagation()
+
+  if (dom.dialogNewPage.classList.contains('uk-open')) {
+    hideNewPageDropdown()
+    cm.focus()
+    return
+  }
+
+  hideTabContextMenu()
+  hideOpenDropdowns(dom.dialogNewPage)
+
+  const anchorBtn = app.pageListDocked ? dom.newPageButtonPL : dom.newPageButton
+  UIkit.tooltip(anchorBtn)?.hide()
+
+  dom.newPageTitleInput.value = ''
+  dom.newPageTitleInput.setAttribute('placeholder', getPageName())
+  dom.dialogNewPage.classList.add('uk-open')
+
+  const btnRect = anchorBtn.getBoundingClientRect()
+  const menuRect = dom.dialogNewPage.getBoundingClientRect()
+  const left = Math.max(8, Math.min(btnRect.left, window.innerWidth - menuRect.width - 8))
+  const top = Math.max(8, btnRect.top - menuRect.height - 6)
+
+  dom.dialogNewPage.style.left = `${left}px`
+  dom.dialogNewPage.style.top = `${top}px`
+
+  dom.newPageTitleInput.focus()
 }
 
 /**
  * Get page name/number to use.
  * @returns {string} The page name.
  */
-export function getPageName() {
+function getPageName() {
   const pages = store.get('pages') || []
   const usedNumbers = new Set(
     pages
@@ -124,7 +172,7 @@ export function newPage(isImport = false, importName = '', importData = '') {
   const pageId = generatePageId()
   const pages = store.get('pages') || []
   const rawTitle = isImport ? importName || dom.newPageTitleInput.value : dom.newPageTitleInput.value
-  let pageName = rawTitle.replace(/<|>/g, '').trim() || (isImport ? `Import #${pageId}` : getPageName())
+  let pageName = sanitizePageName(rawTitle, isImport ? `Import #${pageId}` : getPageName())
   const pageData = isImport ? importData : ''
 
   const sanitizedNew = getSafeFilename(pageName)
@@ -152,15 +200,17 @@ export function newPage(isImport = false, importName = '', importData = '') {
   loadPage(pageId)
   syncPageSave(pageName, pageData)
 
-  const hidePromises = [modal.hide('#dialogNewPage')]
+  hideNewPageDropdown()
 
-  if (!app.pageListDocked) {
-    hidePromises.push(UIkit.offcanvas('#pageListPanel').hide())
-  }
-
-  Promise.all(hidePromises).then(() => {
+  if (!app.pageListDocked && dom.pageListPanel.classList.contains('uk-open')) {
+    UIkit.offcanvas('#pageListPanel')
+      .hide()
+      .then(() => {
+        cm.focus()
+      })
+  } else {
     cm.focus()
-  })
+  }
 }
 
 /**
@@ -169,6 +219,7 @@ export function newPage(isImport = false, importName = '', importData = '') {
  */
 function duplicatePage(pageId) {
   debouncedSavePageState.flush()
+
   const dupPageId = generatePageId()
   const pages = store.get('pages')
   const dupPage = pages.find((page) => page.id === pageId)
@@ -203,6 +254,7 @@ function duplicatePage(pageId) {
  */
 function deletePage(pageId) {
   debouncedSavePageState.flush()
+
   let pages = store.get('pages')
   const found = pages.find((page) => page.id === pageId)
 
@@ -233,11 +285,62 @@ function deletePage(pageId) {
 }
 
 /**
- * Rename page.
+ * Validates and commits a renamed page title to storage and sync.
+ * @param {string} pageId Id of the page being renamed.
+ * @param {string} originalName Original page name.
+ * @param {string} rawInput Raw user input string.
+ * @param {boolean} save Whether to commit or cancel.
+ */
+function commitPageRename(pageId, originalName, rawInput, save) {
+  const newName = sanitizePageName(rawInput)
+
+  if (!save || !newName || newName === originalName) {
+    populatePages()
+    return
+  }
+
+  const currentPages = store.get('pages') || []
+  const targetPage = currentPages.find((p) => p.id === pageId)
+
+  if (!targetPage) {
+    populatePages()
+    return
+  }
+
+  const sanitizedNew = getSafeFilename(newName)
+
+  if (
+    currentPages.some((p) => getSafeFilename(p.name).toLowerCase() === sanitizedNew.toLowerCase() && p.id !== pageId)
+  ) {
+    notify(
+      `"${escapeHTML(newName)}" (or a page with a conflicting file name) already exists. Please choose a different page name.`,
+      'danger'
+    )
+    populatePages()
+    return
+  }
+
+  const oldName = targetPage.name
+
+  targetPage.name = newName
+  store.set('pages', currentPages)
+
+  populatePages()
+
+  if (pageId === app.activePage) {
+    updatePageName(targetPage.name, pageId)
+  }
+
+  syncPageRename(oldName, newName)
+}
+
+/**
+ * Rename page inline within the page list.
  * @param {string} pageId Id of the page to rename.
  */
 function renamePage(pageId) {
   debouncedSavePageState.flush()
+
   const pages = store.get('pages') || []
   const page = pages.find((p) => p.id === pageId)
 
@@ -256,12 +359,9 @@ function renamePage(pageId) {
   itemEl.style.height = `${itemHeight}px`
   itemEl.classList.add('is-renaming')
 
-  const input = document.createElement('input')
-  input.type = 'text'
-  input.className = 'pageListRenameInput'
-  input.maxLength = 50
-  input.autocomplete = 'off'
-  input.value = page.name
+  const { input, finish } = attachInlineRenameInput(titleEl, page.name, 'pageListRenameInput', (rawValue, save) =>
+    commitPageRename(pageId, page.name, rawValue, save)
+  )
   input.style.height = `${titleHeight}px`
 
   const saveBtn = document.createElement('span')
@@ -269,58 +369,9 @@ function renamePage(pageId) {
   saveBtn.title = 'Save page name'
   saveBtn.innerHTML = dom.icons.Save
 
-  titleEl.replaceWith(input)
   itemEl.appendChild(saveBtn)
   input.focus()
   input.select()
-
-  let finished = false
-
-  const finish = (save) => {
-    if (finished) return
-    finished = true
-
-    const newName = input.value.replace(/<|>/g, '').trim()
-
-    if (!save || !newName || newName === page.name) {
-      populatePages()
-      return
-    }
-
-    const currentPages = store.get('pages') || []
-    const targetPage = currentPages.find((p) => p.id === pageId)
-
-    if (!targetPage) {
-      populatePages()
-      return
-    }
-
-    const sanitizedNew = getSafeFilename(newName)
-
-    if (
-      currentPages.some((p) => getSafeFilename(p.name).toLowerCase() === sanitizedNew.toLowerCase() && p.id !== pageId)
-    ) {
-      notify(
-        `"${escapeHTML(newName)}" (or a page with a conflicting file name) already exists. Please choose a different page name.`,
-        'danger'
-      )
-      populatePages()
-      return
-    }
-
-    const oldName = targetPage.name
-
-    targetPage.name = newName
-    store.set('pages', currentPages)
-
-    populatePages()
-
-    if (pageId === app.activePage) {
-      updatePageName(targetPage.name, pageId)
-    }
-
-    syncPageRename(oldName, newName)
-  }
 
   saveBtn.addEventListener('mousedown', (event) => {
     event.preventDefault()
@@ -330,22 +381,6 @@ function renamePage(pageId) {
     event.stopPropagation()
     finish(true)
   })
-
-  input.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-      event.preventDefault()
-      event.stopPropagation()
-      finish(true)
-    } else if (event.key === 'Escape') {
-      event.preventDefault()
-      event.stopPropagation()
-      finish(false)
-    }
-  })
-
-  input.addEventListener('blur', () => finish(true))
-  input.addEventListener('click', (event) => event.stopPropagation())
-  input.addEventListener('dblclick', (event) => event.stopPropagation())
 }
 
 /**
@@ -437,7 +472,7 @@ export function loadPage(pageId) {
 }
 
 /**
- * Populate the page list.
+ * Populate the page list and bottom-bar page tabs.
  */
 export function populatePages() {
   const pages = store.get('pages')
@@ -459,7 +494,7 @@ export function populatePages() {
       pageListItem.classList.add('activePage')
     }
 
-    const pageDate = DateTime.fromFormat(page.id, 'yyyyMMddHHmmssSSS').toFormat('FF')
+    const pageDate = formatPageDate(page.id)
 
     pageListItem.innerHTML = `
       <div class="uk-flex-1" data-action="load" data-page="${page.id}">
@@ -486,6 +521,9 @@ export function populatePages() {
 
     dom.pageList.appendChild(pageListItem)
   })
+
+  updatePageListScroll()
+  populatePageTabs(pages, formatPageDate)
 }
 
 /**
@@ -518,10 +556,30 @@ function setupPageEvents() {
   dom.newPageButton.addEventListener('click', newPageDialog)
   dom.newPageButtonPL.addEventListener('click', newPageDialog)
   dom.dialogNewPageSave.addEventListener('click', () => newPage(false))
+  dom.dialogNewPageCancel.addEventListener('click', () => {
+    hideNewPageDropdown()
+    cm.focus()
+  })
 
-  dom.newPageTitleInput.addEventListener('keyup', (event) => {
+  dom.newPageTitleInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
+      event.preventDefault()
+      event.stopPropagation()
       dom.dialogNewPageSave.click()
+    } else if (event.key === 'Escape') {
+      event.preventDefault()
+      event.stopPropagation()
+      hideNewPageDropdown()
+      cm.focus()
+    }
+  })
+
+  document.addEventListener('pointerdown', (event) => {
+    if (
+      dom.dialogNewPage?.classList.contains('uk-open') &&
+      !event.target.closest('#dialogNewPage, #newPageButton, #newPageButtonPL')
+    ) {
+      hideNewPageDropdown()
     }
   })
 
@@ -544,18 +602,7 @@ function setupPageEvents() {
     isScrolling = true
 
     requestAnimationFrame(() => {
-      const openDropdowns = dom.els('.uk-dropdown.uk-open')
-
-      if (openDropdowns.length > 0) {
-        openDropdowns.forEach((el) => {
-          const dropdown = UIkit.dropdown(el)
-
-          if (dropdown) {
-            dropdown.hide(0)
-          }
-        })
-      }
-
+      hideOpenDropdowns(dom.dialogNewPage)
       isScrolling = false
     })
   })
@@ -567,10 +614,10 @@ function setupPageEvents() {
     }
   })
 
-  dom.pageName.addEventListener('dblclick', () => {
-    if (app.pageListDocked && app.activePage) {
-      renamePage(app.activePage)
-    }
+  setupPageTabsEvents({
+    onRename: (pageId) => renameTab(pageId, commitPageRename),
+    onDuplicate: duplicatePage,
+    onDelete: deletePage
   })
 
   document.addEventListener('click', (event) => {
@@ -587,7 +634,14 @@ function setupPageEvents() {
           UIkit.offcanvas('#pageListPanel').hide()
         }
 
-        loadPage(pageId)
+        if (pageId !== app.activePage) {
+          loadPage(pageId)
+        }
+        break
+      case 'loadTab':
+        if (pageId !== app.activePage) {
+          loadPage(pageId)
+        }
         break
       case 'rename':
         renamePage(pageId)
@@ -607,6 +661,7 @@ function setupPageEvents() {
  */
 export function initializePages() {
   setupPageListSort()
+  setupPageTabsSort()
   setupPageEvents()
   setupPageIo()
 
