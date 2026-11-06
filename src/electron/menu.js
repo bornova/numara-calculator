@@ -211,80 +211,173 @@ export function setupContextMenus() {
  */
 export function setupApplicationMenu({ promptImportPage, resetSize }) {
   const menuTemplate = [
-    {
-      label: app.name,
-      submenu: [
-        { role: 'about' },
-        { type: 'separator' },
-        { role: 'hide' },
-        { role: 'hideothers' },
-        { role: 'unhide' },
-        { type: 'separator' },
-        { role: 'quit' }
-      ]
-    },
+    ...(isMac
+      ? [
+          {
+            label: app.name,
+            submenu: [
+              {
+                label: `About ${app.name}`,
+                click: () => sendToWindow('showAbout')
+              },
+              {
+                label: 'Check for Updates...',
+                click: () => sendToWindow('menuAction', 'checkUpdates')
+              },
+              { type: 'separator' },
+              {
+                label: 'Settings...',
+                accelerator: 'CmdOrCtrl+,',
+                click: () => sendToWindow('menuAction', 'openSettings')
+              },
+              {
+                label: 'User Definitions...',
+                click: () => sendToWindow('menuAction', 'openUdfu')
+              },
+              { type: 'separator' },
+              { role: 'services' },
+              { type: 'separator' },
+              { role: 'hide' },
+              { role: 'hideOthers' },
+              { role: 'unhide' },
+              { type: 'separator' },
+              { role: 'quit' }
+            ]
+          }
+        ]
+      : []),
     {
       label: 'File',
       submenu: [
         {
-          label: 'Import Page',
+          label: 'New Page',
+          accelerator: 'CmdOrCtrl+N',
+          registerAccelerator: false,
+          click: () => sendToWindow('menuAction', 'newPage')
+        },
+        {
+          label: 'Clear Page',
+          accelerator: 'CmdOrCtrl+D',
+          registerAccelerator: false,
+          click: () => sendToWindow('menuAction', 'clearPage')
+        },
+        { type: 'separator' },
+        {
+          label: 'Import Page...',
           click: () => {
             promptImportPage()
           }
         },
         {
-          label: 'Export Page',
+          label: 'Export Page...',
           click: () => sendToWindow('requestExportPage')
         },
         { type: 'separator' },
         {
-          label: 'Print',
+          label: 'Print...',
+          accelerator: 'CmdOrCtrl+P',
+          registerAccelerator: false,
           click: () => sendToWindow('print')
-        }
+        },
+        { type: 'separator' },
+        isMac ? { role: 'close' } : { role: 'quit' }
       ]
     },
     {
       label: 'Edit',
-      submenu: [{ role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'selectAll' }]
+      submenu: [
+        {
+          label: 'Undo',
+          accelerator: 'CmdOrCtrl+Z',
+          registerAccelerator: false,
+          click: () => sendToWindow('menuAction', 'undo')
+        },
+        {
+          label: 'Redo',
+          accelerator: 'Shift+CmdOrCtrl+Z',
+          registerAccelerator: false,
+          click: () => sendToWindow('menuAction', 'redo')
+        },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'selectAll' },
+        { type: 'separator' },
+        {
+          label: 'Copy All Lines',
+          click: () => sendToWindow('copyAllLines')
+        },
+        {
+          label: 'Copy All Answers',
+          click: () => sendToWindow('copyAllAnswers')
+        },
+        {
+          label: 'Copy All Lines with Answers',
+          click: () => sendToWindow('copyAll')
+        }
+      ]
     },
     {
       label: 'View',
       submenu: [
-        { role: 'reload' },
+        {
+          label: 'Toggle Page List',
+          accelerator: 'Shift+Tab',
+          registerAccelerator: false,
+          click: () => sendToWindow('menuAction', 'togglePageList')
+        },
         { type: 'separator' },
-        { role: 'resetzoom' },
-        { role: 'zoomin' },
-        { role: 'zoomout' },
-        { type: 'separator' }
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' },
+        { type: 'separator' },
+        { role: 'toggleDevTools' }
       ]
     },
     {
       label: 'Window',
+      role: 'windowMenu',
       submenu: [
         { role: 'minimize' },
         { role: 'zoom' },
-        { role: 'togglefullscreen' },
         {
-          label: 'Reset Size',
+          label: 'Reset Window Size',
           click: () => {
-            resetSize()
+            const win = getWindow()
+
+            if (win && !win.isDestroyed() && win.webContents) {
+              sendToWindow('menuAction', 'resetSize')
+            } else {
+              resetSize()
+            }
           }
         },
-        { type: 'separator' },
-        { role: 'front' },
-        { type: 'separator' },
-        { role: 'window' }
+        ...(isMac ? [{ type: 'separator' }, { role: 'front' }] : [])
       ]
     },
     {
       role: 'help',
       submenu: [
         {
+          label: 'Documentation',
+          click: () => shell.openExternal('https://github.com/bornova/numara-calculator/wiki')
+        },
+        {
+          label: 'Report an Issue',
+          click: () => shell.openExternal('https://github.com/bornova/numara-calculator/issues')
+        },
+        {
           label: 'Learn More',
           click: () => shell.openExternal('https://github.com/bornova/numara-calculator')
         },
         { type: 'separator' },
-        { role: 'toggleDevTools' }
+        {
+          label: 'Open Logs',
+          click: () => shell.openPath(path.join(app.getPath('logs'), 'main.log'))
+        }
       ]
     }
   ]
