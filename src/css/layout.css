@@ -166,7 +166,8 @@
 
 .answer {
   -webkit-user-select: text;
-  cursor: default;
+  transition: background-color 0.15s ease;
+  cursor: pointer;
   margin: 0 8px 0 0;
   border-radius: 5px;
   padding: 2px 5px;
@@ -176,6 +177,11 @@
 
 .answer:hover {
   background: light-dark(#f5f5f5, #0a0a0a);
+}
+
+.answer.copied,
+.selectionStats.copied {
+  background-color: light-dark(#dceefb, #1a3a54) !important;
 }
 
 .plotButton {
@@ -245,8 +251,18 @@
 }
 
 .action {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 4px;
+  padding: 4px;
   cursor: pointer;
   color: light-dark(#607d8b, #90b4dc);
+}
+
+.action:hover {
+  background-color: light-dark(#f4f6f8, #333333);
+  color: light-dark(#005cc5, #2196f3);
 }
 
 .action[disabled='true'] {
@@ -256,7 +272,7 @@
 }
 
 .actionDivider {
-  margin: 0 5px;
+  margin: 0 4px;
   margin-top: 2px;
   border-right: 1px solid light-dark(#eaeaea, #3b3b3b);
   height: 20px;
@@ -265,7 +281,7 @@
 .leftActions a,
 .centerActions a,
 .rightActions a {
-  margin: 0 5px;
+  margin: 0 1px;
 }
 
 .leftActions a:hover,
@@ -366,10 +382,11 @@
 /* More menu dropdown */
 
 #moreDropdown {
-  padding: 5px 0;
+  padding: 4px;
 }
 
 .moreMenuItem {
+  border-radius: 4px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -386,6 +403,10 @@
   color: light-dark(#607d8b, #90b4dc);
 }
 
+.moreMenuItem:hover {
+  background-color: light-dark(#f4f6f8, #333333);
+}
+
 .moreMenuItem:hover,
 .moreMenuItem:hover svg {
   color: light-dark(#005cc5, #2196f3);
@@ -394,7 +415,7 @@
 .updateMenuLink {
   display: none;
   margin-left: auto;
-  padding-left: 8px;
+
   color: light-dark(#005cc5, #2196f3);
   line-height: inherit;
 }
