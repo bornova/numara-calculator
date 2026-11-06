@@ -83,12 +83,20 @@ export function resetSize(
 ) {
   if (!win || win.isDestroyed()) return
 
+  if (win.isFullScreen()) {
+    win.setFullScreen(false)
+  }
+
+  if (win.isMaximized()) {
+    win.unmaximize()
+  }
+
   const [minWidth, minHeight] = win.getMinimumSize()
   const width = Math.round(Number(appWrapperWidth) || schema.appWidth.default)
   const height = Math.round(Number(appWrapperHeight) || schema.appHeight.default)
   const pageList = Math.max(0, Math.round(Number(pageListWidth) || 0))
 
-  win.setSize(Math.max(minWidth, width + pageList), Math.max(minHeight, height))
+  win.setContentSize(Math.max(minWidth, width + pageList), Math.max(minHeight, height))
 }
 
 /**
@@ -301,7 +309,7 @@ export function setupWindowHandlers({ onTrayChanged } = {}) {
 
   ipcMain.handle('isMaximized', () => (win && !win.isDestroyed() ? win.isMaximized() : false))
 
-  ipcMain.on('resetSize', (event, appWrapperWidth, appWrapperHeight, pageListWidth) => {
+  ipcMain.handle('resetSize', (event, appWrapperWidth, appWrapperHeight, pageListWidth) => {
     resetSize(appWrapperWidth, appWrapperHeight, pageListWidth)
   })
 
