@@ -280,7 +280,7 @@ export function formatPageLinkHtml(answer, answerCopy, answerOut) {
         class="pageLink ${CLASS_ANSWER}"
         data-page-id="${escapeHTML(pageId)}"
         data-answer="${escapeHTML(answerCopy)}"
-        title="${escapeHTML(escapeHTML(tooltipText))}"
+        title="${escapeHTML(tooltipText)}"
         uk-tooltip>
           ${escapeHTML(answerOut)}
         </a>`
