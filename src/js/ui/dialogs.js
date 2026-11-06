@@ -1,11 +1,10 @@
 import UIkit from 'uikit'
 
 import { dom } from '../dom.js'
-import { cm, refreshEditor, udfInput, uduInput } from '../editor/index.js'
-import { getPageName } from '../pages/pageManager.js'
+import { prepareUdfuDialog } from '../calc/userDefined.js'
+import { cm } from '../editor/index.js'
 import { app } from '../state/appState.js'
 import { isElectron } from '../state/env.js'
-import { store } from '../state/store.js'
 import { plot } from './plot.js'
 import { settings } from './settings.js'
 import { checkColorChange, colors } from './theme.js'
@@ -277,6 +276,22 @@ function setupDraggableModals() {
 }
 
 /**
+ * Hides all open UIkit dropdowns, optionally excluding a specific dropdown element.
+ * @param {Element|null} [excludeEl=null] Optional dropdown element to leave untouched.
+ */
+export function hideOpenDropdowns(excludeEl = null) {
+  dom.els('.uk-dropdown.uk-open').forEach((el) => {
+    if (el !== excludeEl) {
+      if (el.hasAttribute('uk-dropdown')) {
+        UIkit.dropdown(el)?.hide(false)
+      }
+
+      el.classList.remove('uk-open')
+    }
+  })
+}
+
+/**
  * Configures UIkit helper events, modals, and tab initialization callbacks.
  */
 export function setupUIkitUtils() {
@@ -284,13 +299,7 @@ export function setupUIkitUtils() {
 
   UIkit.mixin({ data: { offset: 5, delay: 300 } }, 'tooltip')
 
-  const hideOpenDropdowns = () => {
-    dom.els('.uk-dropdown.uk-open').forEach((el) => {
-      UIkit.dropdown(el)?.hide(false)
-    })
-  }
-
-  cm.getWrapperElement().addEventListener('pointerdown', hideOpenDropdowns)
+  cm.getWrapperElement().addEventListener('pointerdown', () => hideOpenDropdowns())
 
   UIkit.util.on(
     '.modal, .dialogConfirm, #pageListPanel',
@@ -364,15 +373,18 @@ export function setupUIkitUtils() {
 
   UIkit.util.on(
     '#dialogUdfu',
+    'beforeshow',
+    () => {
+      prepareUdfuDialog(udTab)
+    },
+    { self: true }
+  )
+
+  UIkit.util.on(
+    '#dialogUdfu',
     'shown',
     () => {
-      const udf = (store.get('udf') ?? '').trim()
-      const udu = (store.get('udu') ?? '').trim()
-
-      refreshEditor(udTab === 1 ? udfInput : uduInput)
-
-      udfInput.setValue(udf)
-      uduInput.setValue(udu)
+      ;(udTab === 1 ? dom.udfNameInput : dom.uduNameInput)?.focus()
     },
     { self: true }
   )
@@ -382,7 +394,7 @@ export function setupUIkitUtils() {
     'shown',
     () => {
       udTab = 1
-      refreshEditor(udfInput)
+      dom.udfNameInput?.focus()
     },
     { self: true }
   )
@@ -392,7 +404,7 @@ export function setupUIkitUtils() {
     'shown',
     () => {
       udTab = 2
-      refreshEditor(uduInput)
+      dom.uduNameInput?.focus()
     },
     { self: true }
   )
@@ -430,16 +442,6 @@ export function setupUIkitUtils() {
         input.value = [...x, ...y][i]
         input.disabled = auto
       })
-    },
-    { self: true }
-  )
-
-  UIkit.util.on(
-    '#dialogNewPage',
-    'shown',
-    () => {
-      dom.newPageTitleInput.setAttribute('placeholder', getPageName())
-      dom.newPageTitleInput.focus()
     },
     { self: true }
   )
