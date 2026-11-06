@@ -5,7 +5,7 @@
   right: 0;
   bottom: 0;
   left: 0;
-  margin: 10px 10px 10px 10px;
+  margin: 6px 8px;
 }
 
 .closePageListButton,
@@ -14,8 +14,6 @@
   display: inline-flex;
   align-items: center;
   cursor: pointer;
-  margin: 10px;
-  height: 20px;
   color: light-dark(#607d8b, #90b4dc);
 }
 
@@ -26,11 +24,12 @@
 
 .page-list-docked .dockPageListButton {
   float: right;
-  margin-right: 10px;
+  margin-right: 6px;
   margin-left: 0;
 }
 
-.closePageListButton {
+.closePageListButton,
+.dockPageListButton {
   justify-content: center;
   margin: 8px 6px;
   border-radius: 4px;
@@ -38,7 +37,8 @@
   height: auto;
 }
 
-.closePageListButton:hover {
+.closePageListButton:hover,
+.dockPageListButton:hover {
   background-color: light-dark(#f4f6f8, #333333);
   color: light-dark(#005cc5, #2196f3);
 }
@@ -182,9 +182,17 @@
   color: light-dark(#444444, #e6e6e6);
 }
 
-.pageListItem:hover,
-.activePage {
+.pageListItem:hover:not(.activePage) {
   background-color: light-dark(#f4f6f8, #333333);
+}
+
+.activePage {
+  background-color: light-dark(#eef4fa, #2c3540);
+}
+
+.activePage .pageListItemTitle {
+  color: light-dark(#005cc5, #64b5f6);
+  font-weight: 600;
 }
 
 .pageList {
@@ -198,13 +206,16 @@
 }
 
 .pageListSort {
+  justify-content: center;
+  margin: 8px 6px;
+  border-radius: 4px;
+  padding: 4px;
+  height: auto;
   display: inline-flex;
   float: left;
   align-items: center;
   -webkit-app-region: no-drag;
   cursor: pointer;
-  margin: 10px;
-  height: 20px;
   color: light-dark(#607d8b, #90b4dc);
 }
 
@@ -219,10 +230,12 @@
 }
 
 .pageListSort:hover {
+  background-color: light-dark(#f4f6f8, #333333);
   color: light-dark(#4682b4, #0f6ecd);
 }
 
 .sortListItem {
+  border-radius: 4px;
   -webkit-app-region: no-drag;
   cursor: pointer;
   padding: 5px 10px;
@@ -230,11 +243,12 @@
 }
 
 .sortListItem:hover {
+  background-color: light-dark(#f4f6f8, #333333);
   color: light-dark(#005cc5, #2196f3);
 }
 
 .sortListDivider {
-  margin: 5px 10px;
+  margin: 4px 6px;
   border-top-color: light-dark(#eaeaea, #444444) !important;
 }
 
@@ -257,6 +271,32 @@
   font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.pageListItem.is-renaming > div:first-child {
+  padding: 6px 4px 6px 10px;
+}
+
+.pageListItem.is-renaming .pageItemActions {
+  display: none !important;
+}
+
+.pageListRenameInput {
+  -webkit-user-select: text;
+  box-sizing: border-box;
+  outline: none;
+  border: 1px solid #1e87f0;
+  border-radius: 4px;
+  background-color: light-dark(#ffffff, #1f1f1f);
+  padding: 4px 6px;
+  width: 100%;
+  height: 28px;
+  color: light-dark(#333333, #ffffff);
+  font-weight: 500;
+  font-size: inherit;
+  font-family: inherit;
+  line-height: 1.5;
+  user-select: text;
 }
 
 /* Drag-and-drop page sorting */
@@ -301,6 +341,7 @@ body.is-sorting-pages .pageItemActions,
   display: none !important;
 }
 
+.savePageButton,
 .renamePageButton,
 .dupPageButton,
 .deletePageButton {
@@ -313,6 +354,7 @@ body.is-sorting-pages .pageItemActions,
   color: light-dark(#607d8b, #90b4dc);
 }
 
+.savePageButton svg,
 .renamePageButton svg,
 .dupPageButton svg,
 .deletePageButton svg {
@@ -321,11 +363,14 @@ body.is-sorting-pages .pageItemActions,
   pointer-events: none;
 }
 
+.savePageButton:hover,
 .renamePageButton:hover,
 .dupPageButton:hover {
+  background-color: light-dark(#e6eaee, #404040);
   color: light-dark(#005cc5, #2196f3);
 }
 
 .deletePageButton:hover {
+  background-color: light-dark(#e6eaee, #404040);
   color: light-dark(#b10e0e, #d41111);
 }
