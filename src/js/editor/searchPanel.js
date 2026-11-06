@@ -1,6 +1,7 @@
 import CodeMirror from 'codemirror'
 
 import { debounce, escapeRegExp } from '../core/utils.js'
+import { dom } from '../dom.js'
 
 let panelEl = null
 let currentQuery = null
@@ -283,7 +284,7 @@ function createPanel(cm) {
   panelEl.innerHTML = `
     <div class="search-panel-row">
       <button class="search-toggle-replace" title="Toggle Replace (Ctrl+H)">
-        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        ${dom.icons.ChevronRight}
       </button>
       <div class="search-input-wrapper">
         <input type="text" class="search-input find-input" placeholder="Find" />
@@ -291,14 +292,14 @@ function createPanel(cm) {
       </div>
       <div class="search-actions">
         <button class="search-btn btn-prev" title="Previous Match (Shift+Enter)">
-          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="18 15 12 9 6 15"></polyline></svg>
+          ${dom.icons.ChevronUp}
         </button>
         <button class="search-btn btn-next" title="Next Match (Enter)">
-          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          ${dom.icons.ChevronDown}
         </button>
       </div>
       <button class="search-close-btn" title="Close (Esc)">
-        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        ${dom.icons.X}
       </button>
     </div>
     <div class="search-panel-row replace-row hidden">
