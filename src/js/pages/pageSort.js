@@ -46,7 +46,14 @@ function pageOrder() {
 export function setupPageListSort() {
   dom.pageList.addEventListener('pointerdown', (event) => {
     if (event.button !== 0) return
-    if (event.target.closest('.pageItemActions') || event.target.closest('.uk-dropdown')) return
+    if (
+      event.target.closest('.pageItemActions') ||
+      event.target.closest('.uk-dropdown') ||
+      event.target.closest('.pageListRenameInput') ||
+      event.target.closest('.savePageButton') ||
+      event.target.closest('.is-renaming')
+    )
+      return
 
     const item = event.target.closest('.pageListItem')
 
