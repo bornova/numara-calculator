@@ -109,10 +109,10 @@ body.numara-search-panel-open .CodeMirror-selected {
   gap: 8px !important;
   z-index: 100 !important;
   animation: slideDown 0.15s ease-out !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
-  border-bottom: 1px solid light-dark(#e2e8f0, #2d3748) !important;
-  background-color: light-dark(#ffffff, #1e1e24) !important;
-  padding: 8px 0px !important;
+  box-shadow: 0 4px 12px light-dark(rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.3)) !important;
+  border-bottom: 1px solid light-dark(#eaeaea, #333333) !important;
+  background-color: light-dark(#ffffff, #1f1f1f) !important;
+  padding: 8px 12px !important;
 }
 
 .numara-search-panel.hidden {
@@ -156,12 +156,12 @@ body.numara-search-panel-open .CodeMirror-selected {
   border-radius: 4px !important;
   background: transparent !important;
   padding: 4px !important;
-  color: light-dark(#718096, #a0aec0) !important;
+  color: light-dark(#607d8b, #90b4dc) !important;
 }
 
 .search-toggle-replace:hover {
-  background-color: light-dark(#edf2f7, #2d3748) !important;
-  color: light-dark(#2d3748, #edf2f7) !important;
+  background-color: light-dark(#f4f6f8, #333333) !important;
+  color: light-dark(#005cc5, #2196f3) !important;
 }
 
 .search-toggle-replace.expanded {
@@ -180,9 +180,9 @@ body.numara-search-panel-open .CodeMirror-selected {
   transition: all 0.2s ease-in-out !important;
   box-sizing: border-box !important;
   outline: none !important;
-  border: 1px solid light-dark(#cbd5e0, #4a5568) !important;
-  border-radius: 6px !important;
-  background-color: light-dark(#f7fafc, #121214) !important;
+  border: 1px solid light-dark(#dadada, #3b3b3b) !important;
+  border-radius: 5px !important;
+  background-color: light-dark(#f9fafb, #262626) !important;
   padding: 6px 80px 6px 10px !important;
   width: 100% !important;
   color: inherit !important;
@@ -195,9 +195,9 @@ body.numara-search-panel-open .CodeMirror-selected {
 }
 
 .search-input:focus {
-  box-shadow: 0 0 0 3px rgba(30, 135, 240, 0.25) !important;
+  box-shadow: 0 0 0 2px rgba(30, 135, 240, 0.2) !important;
   border-color: #1e87f0 !important;
-  background-color: light-dark(#ffffff, #1a1a1e) !important;
+  background-color: light-dark(#ffffff, #1f1f1f) !important;
 }
 
 .search-count {
@@ -206,7 +206,7 @@ body.numara-search-panel-open .CodeMirror-selected {
   right: 10px !important;
   transform: translateY(-50%) !important;
   pointer-events: none !important;
-  color: light-dark(#718096, #a0aec0) !important;
+  color: light-dark(#777777, #999999) !important;
   font-size: 0.75rem !important;
 }
 
@@ -222,17 +222,20 @@ body.numara-search-panel-open .CodeMirror-selected {
   flex-shrink: 0 !important;
   justify-content: center !important;
   align-items: center !important;
-  transition: background-color 0.2s !important;
+  transition:
+    background-color 0.2s,
+    color 0.2s !important;
   cursor: pointer !important;
   border: none !important;
   border-radius: 4px !important;
   background: transparent !important;
-  padding: 6px !important;
-  color: light-dark(#4a5568, #edf2f7) !important;
+  padding: 4px !important;
+  color: light-dark(#607d8b, #90b4dc) !important;
 }
 
 .search-btn:hover {
-  background-color: light-dark(#edf2f7, #2d3748) !important;
+  background-color: light-dark(#f4f6f8, #333333) !important;
+  color: light-dark(#005cc5, #2196f3) !important;
 }
 
 .search-close-btn {
@@ -247,24 +250,24 @@ body.numara-search-panel-open .CodeMirror-selected {
   border: none !important;
   border-radius: 4px !important;
   background: transparent !important;
-  padding: 6px !important;
-  color: light-dark(#718096, #a0aec0) !important;
+  padding: 4px !important;
+  color: light-dark(#607d8b, #90b4dc) !important;
 }
 
 .search-close-btn:hover {
-  background-color: light-dark(#edf2f7, #2d3748) !important;
-  color: light-dark(#e53e3e, #fc8181) !important;
+  background-color: light-dark(#f4f6f8, #333333) !important;
+  color: light-dark(#b10e0e, #d41111) !important;
 }
 
 .search-action-btn {
   flex-shrink: 0 !important;
   transition: all 0.2s !important;
   cursor: pointer !important;
-  border: 1px solid light-dark(#cbd5e0, #4a5568) !important;
-  border-radius: 6px !important;
-  background-color: light-dark(#edf2f7, #2d3748) !important;
-  padding: 5px !important;
-  color: light-dark(#4a5568, #edf2f7) !important;
+  border: 1px solid light-dark(#c9dcef, #3b3b3b) !important;
+  border-radius: 4px !important;
+  background-color: light-dark(transparent, #2b2b2b) !important;
+  padding: 4px 8px !important;
+  color: light-dark(#444444, #e6e6e6) !important;
   font-weight: 500 !important;
   font-size: 0.85rem !important;
 }
@@ -274,8 +277,9 @@ body.numara-search-panel-open .CodeMirror-selected {
 }
 
 .search-action-btn:hover {
-  background-color: light-dark(#cbd5e0, #4a5568) !important;
-  color: light-dark(#1a202c, #ffffff) !important;
+  border-color: light-dark(#8eb3d8, #4d5560) !important;
+  background-color: light-dark(#f4f6f8, #333333) !important;
+  color: light-dark(#005cc5, #2196f3) !important;
 }
 
 /* Dynamic padding adjustment to prevent search panel from covering text and keep input/output aligned */
