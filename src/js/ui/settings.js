@@ -1,4 +1,5 @@
 import { applyChange, observableDiff } from '@bornova/deep-diff'
+import UIkit from 'uikit'
 
 import { calculate, clearEvaluationCache } from '../calc/calcManager.js'
 import { getRates } from '../calc/currencies.js'
@@ -236,11 +237,15 @@ function setupSettingsEvents() {
   })
 
   if (isElectron) {
-    dom.resetSizeButton.addEventListener('click', () => {
+    dom.resetSizeButton.addEventListener('click', async () => {
+      UIkit.tooltip(dom.resetSizeButton)?.hide()
       const pageListWidth = app.settings.pageListPosition === 'dock' ? getDockedPageListWidth() : 0
 
-      numara.resetSize(DEFAULT_APP_WIDTH, DEFAULT_APP_HEIGHT, pageListWidth)
-      modal.center('#dialogSettings', true, DEFAULT_APP_WIDTH + pageListWidth, DEFAULT_APP_HEIGHT)
+      await numara.resetSize(DEFAULT_APP_WIDTH, DEFAULT_APP_HEIGHT, pageListWidth)
+      setupPageList(true, true)
+      dom.els('.modal.uk-open .uk-modal-dialog').forEach((dialog) => {
+        modal.center(dialog, true, DEFAULT_APP_WIDTH + pageListWidth, DEFAULT_APP_HEIGHT)
+      })
 
       setTimeout(() => {
         checkSize()
@@ -556,6 +561,7 @@ export const settings = {
     }
 
     setupPageList(true)
+    await checkSize()
 
     if (shouldCalculate) {
       calculate()
