@@ -4,10 +4,18 @@ import { create, all } from 'mathjs'
 import { runCalculation, formatAnswer, applyUdfu } from '../src/js/core/evaluator.js'
 import { parseLocaleNumber } from '../src/js/core/formatter.js'
 import { stripComments } from '../src/js/core/preprocessor.js'
-import { applyUdfuToMath } from '../src/js/core/udfu.js'
+import {
+  applyUdfuToMath,
+  compileUdfItems,
+  compileUduItems,
+  parseLegacyUdf,
+  parseLegacyUdu
+} from '../src/js/core/udfu.js'
 import { debounce, escapeHTML, escapeRegExp, getSafeFilename } from '../src/js/core/utils.js'
 import { detectExternalRenames } from '../src/js/pages/syncPlan.js'
-import { migrateFromV7 } from '../src/js/state/migration.js'
+import { app as appState } from '../src/js/state/appState.js'
+import { migrateColors, migrateFromV7, migrateStorageAndPages } from '../src/js/state/migration.js'
+import { store } from '../src/js/state/store.js'
 import { customCases } from './custom-cases.js'
 
 // Default settings from settings.js
@@ -920,10 +928,162 @@ describe('Numara Calculation Engine vs Math.js', function () {
         assert.strictEqual(legacyDisabled.locale, undefined)
         assert.strictEqual(legacyDisabled.dateFormat, 'yyyy-MM-dd')
 
-        const validSpaceFormat = { numberFormat: '1 234,56', thouSep: 'period', dateFormat: 'MM/dd/yyyy' }
+        const validSpaceFormat = {
+          numberFormat: '1 234,56',
+          thouSep: 'period',
+          dateFormat: 'MM/dd/yyyy',
+          lineHeight: '2em'
+        }
         assert.strictEqual(migrateFromV7(validSpaceFormat), true)
         assert.strictEqual(validSpaceFormat.numberFormat, '1 234,56')
         assert.strictEqual(validSpaceFormat.thouSep, true)
+        assert.strictEqual(validSpaceFormat.lineHeight, '24px')
+      } finally {
+        globalThis.localStorage = prevLocalStorage
+      }
+    })
+
+    it('should seamlessly migrate v7 UDF/UDU definitions, theme customizations, pages, and clean up obsolete storage', () => {
+      const storage = new Map()
+      const prevLocalStorage = globalThis.localStorage
+      globalThis.localStorage = {
+        getItem: (k) => (storage.has(k) ? storage.get(k) : null),
+        setItem: (k, v) => storage.set(k, String(v)),
+        removeItem: (k) => storage.delete(k)
+      }
+
+      try {
+        // 1. Seed root localStorage keys and consolidated v7 keys with obsolete data
+        storage.set('sideBarWidth', '280')
+        storage.set('rateInterval', 'true')
+        storage.set('lastPage', JSON.stringify('p2'))
+        storage.set(
+          'numara',
+          JSON.stringify({
+            rateInterval: false,
+            pages: [
+              {
+                id: 'p1',
+                name: 'Page 1',
+                data: 'a = 10\na * 2',
+                cursor: { line: 1, ch: 5 },
+                folds: [{ from: 0, to: 1 }],
+                history: { done: ['op1'], undone: [] },
+                answers: ['10', '20']
+              }
+            ],
+            saved: {
+              p2: ['Migrated Saved Page', 'x = 50']
+            }
+          })
+        )
+
+        appState.pageHistory.clear()
+        migrateStorageAndPages()
+
+        // Root keys and obsolete consolidated keys must be cleaned up
+        assert.strictEqual(storage.has('sideBarWidth'), false)
+        assert.strictEqual(storage.has('rateInterval'), false)
+        assert.strictEqual(storage.has('lastPage'), false)
+        assert.strictEqual(store.get('sideBarWidth'), null)
+        assert.strictEqual(store.get('rateInterval'), null)
+        assert.strictEqual(store.get('saved'), null)
+        assert.strictEqual(store.get('pageListWidth'), 280)
+        assert.strictEqual(store.get('lastPage'), 'p2')
+
+        // Pages should preserve data/cursor/folds, seed session pageHistory, and strip persisted history/answers
+        const migratedPages = store.get('pages')
+        assert.strictEqual(migratedPages.length, 2)
+        assert.strictEqual(migratedPages[0].id, 'p1')
+        assert.strictEqual(migratedPages[0].data, 'a = 10\na * 2')
+        assert.deepStrictEqual(migratedPages[0].cursor, { line: 1, ch: 5 })
+        assert.deepStrictEqual(migratedPages[0].folds, [{ from: 0, to: 1 }])
+        assert.strictEqual('history' in migratedPages[0], false)
+        assert.strictEqual('answers' in migratedPages[0], false)
+        assert.deepStrictEqual(appState.pageHistory.get('p1'), { done: ['op1'], undone: [] })
+        assert.strictEqual(migratedPages[1].id, 'p2')
+        assert.strictEqual(migratedPages[1].name, 'Migrated Saved Page')
+        assert.strictEqual(migratedPages[1].data, 'x = 50')
+
+        // 2. Migrate theme customizations: preserve custom light/dark hex values while syncing class/title metadata
+        const storedColors = {
+          answer: { title: 'Old Title', class: '.output', dark: '#112233', light: '#445566' },
+          function: { title: 'Functions', class: '.cm-udf', dark: '#abcdef', light: '#fedcba' }
+        }
+        const defaultColors = {
+          answer: { title: 'Answers', class: '.answer', dark: '#1eb5f0', light: '#17586b' },
+          function: {
+            title: 'Functions',
+            class: '.cm-formulajs, .cm-function, .cm-nerdamer, .cm-udf, .cm-datetime',
+            dark: '#cb82f5',
+            light: '#6f42c1'
+          }
+        }
+        assert.strictEqual(migrateColors(storedColors, defaultColors), true)
+        assert.strictEqual(storedColors.answer.title, 'Answers')
+        assert.strictEqual(storedColors.answer.class, '.answer')
+        assert.strictEqual(storedColors.answer.dark, '#112233')
+        assert.strictEqual(storedColors.answer.light, '#445566')
+        assert.strictEqual(
+          storedColors.function.class,
+          '.cm-formulajs, .cm-function, .cm-nerdamer, .cm-udf, .cm-datetime'
+        )
+        assert.strictEqual(storedColors.function.dark, '#abcdef')
+
+        // 3. Migrate legacy v7 UDF and UDU strings into structured items, compile, and evaluate
+        const legacyUdfStr = `
+          double: x => x * 2,
+          mulGroups: (a, b) => (a + 1) * (b + 1),
+          zeroArg: () => luxon.fromObject({ year: 2026, month: 1 }).daysInMonth,
+          mySum: (a, b) => formulajs.SUM(a, b),
+          mySolve: (expr) => nerdamer(expr).solveFor("x").toString(),
+          methodStyle(a, b) { return a + b },
+          sk: { BaseCarry: 300, SteedStone: 100, Necromage: 1.25 },
+          myConst: 42
+        `
+        const legacyUduStr = `
+          foo: "18 foot",
+          bar: { definition: "40 rod", prefixes: "long", aliases: ["bars", "br"] }
+        `
+        const udfItems = parseLegacyUdf(legacyUdfStr, standardMath)
+        const uduItems = parseLegacyUdu(legacyUduStr, standardMath)
+
+        assert.strictEqual(udfItems.length, 8)
+        assert.strictEqual(uduItems.length, 2)
+        assert.strictEqual(udfItems.find((i) => i.name === 'zeroArg').params, '()')
+        assert.strictEqual(udfItems.find((i) => i.name === 'mulGroups').body, '(a + 1) * (b + 1)')
+
+        const compiledUdf = compileUdfItems(udfItems)
+        const compiledUdu = compileUduItems(uduItems)
+
+        applyUdfu(true, compiledUdf)
+        applyUdfu(false, compiledUdu)
+
+        const calcRes = runCalculation({
+          activePage: 'test-migrated-udfu',
+          lines: [
+            'double(5)',
+            'mulGroups(2, 3)',
+            'zeroArg()',
+            'mySum(10, 15)',
+            'mySolve("x^2 = 16")',
+            'methodStyle(7, 8)',
+            'sk.BaseCarry + sk.SteedStone * sk.Necromage',
+            'myConst',
+            '1 foo in foot',
+            '1 br in rod'
+          ],
+          settings: defaultSettings,
+          currencies: mockCurrencies
+        })
+
+        assert.deepStrictEqual(
+          calcRes.answers.map((h) => extractAnswer(h).answer),
+          ['10', '12', '31', '25', '4,-4', '15', '425', '42', '18 foot', '40 rod']
+        )
+
+        applyUdfu(true, '')
+        applyUdfu(false, '')
       } finally {
         globalThis.localStorage = prevLocalStorage
       }

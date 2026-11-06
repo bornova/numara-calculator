@@ -1,6 +1,7 @@
 import UIkit from 'uikit'
 
 import { syncOutputHeights } from '../calc/calcManager.js'
+import { updatePageTabsScroll } from '../pages/pageTabs.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
 import { app } from '../state/appState.js'
@@ -10,7 +11,7 @@ import { modal } from './dialogs.js'
 
 const PAGELIST_MIN_WIDTH = 200
 const PAGELIST_MAX_WIDTH = 480
-export const PAGELIST_DEFAULT_WIDTH = 250
+const PAGELIST_DEFAULT_WIDTH = 250
 const PAGELIST_TRANSITION_MS = 180
 
 let pageListResizerSetup = false
@@ -150,13 +151,13 @@ function resetWindowToAppWrapper(pageListWidth = 0, appWrapperSize = getAppWrapp
 
   numara
     .isMaximized()
-    .then((maximized) => {
+    .then(async (maximized) => {
       if (maximized) return
 
       const targetWidth = Math.max(420, appWrapperSize.width + pageListWidth)
       const targetHeight = Math.max(360, appWrapperSize.height)
 
-      numara.resetSize(appWrapperSize.width, appWrapperSize.height, pageListWidth)
+      await numara.resetSize(appWrapperSize.width, appWrapperSize.height, pageListWidth)
 
       dom.els('.modal.uk-open .uk-modal-dialog').forEach((dialog) => {
         modal.center(dialog, true, targetWidth, targetHeight)
@@ -171,6 +172,22 @@ function resetWindowToAppWrapper(pageListWidth = 0, appWrapperSize = getAppWrapp
 }
 
 /**
+ * Updates `.is-scrollable` on `#pageList` when items reach or overflow the bottom of the list.
+ */
+export function updatePageListScroll() {
+  if (!dom.pageList) return
+
+  requestAnimationFrame(() => {
+    const lastItem = dom.pageList.lastElementChild
+    const isScrollable =
+      dom.pageList.scrollHeight > dom.pageList.clientHeight ||
+      (lastItem ? lastItem.offsetTop + lastItem.offsetHeight >= dom.pageList.clientHeight - 1 : false)
+
+    dom.pageList.classList.toggle('is-scrollable', isScrollable)
+  })
+}
+
+/**
  * Setup page list panel based on settings and window size.
  * @param {boolean} [show=false] When true, ensure the docked panel is visible.
  * @param {boolean} [fromResize=false] When true, skip resizing the OS window on dock state changes.
@@ -180,6 +197,7 @@ export function setupPageList(show = false, fromResize = false) {
   const { pageListPosition } = app.settings
   const viewportWidth = window.visualViewport?.width ?? window.innerWidth
   const isWide = viewportWidth > 900
+  const isTabs = pageListPosition === 'tabs'
   const dock = pageListPosition === 'dock' || (pageListPosition === 'auto' && isWide)
   const dockChanged = dock !== lastDockState
   const shouldAnimateDockChange = lastDockState !== null && dockChanged
@@ -193,6 +211,14 @@ export function setupPageList(show = false, fromResize = false) {
 
   dom.pageListPanel.classList.toggle('page-list-docked', dock)
   dom.pageName.classList.toggle('page-list-docked', dock)
+  dom.actions?.classList.toggle('page-tabs-mode', isTabs)
+
+  if (isTabs) {
+    updatePageTabsScroll()
+  } else {
+    updatePageListScroll()
+  }
+
   dom.closePageListButton.style.display = dock ? 'none' : ''
   dom.newPageButton.style.display = dock ? 'none' : ''
 
@@ -255,7 +281,12 @@ export function setupPageList(show = false, fromResize = false) {
 
     dom.appWrapper.style.left = '0'
 
-    if (!dockChanged) return
+    if (!dockChanged) {
+      if (isTabs && dom.pageListPanel.classList.contains('uk-open')) {
+        UIkit.offcanvas('#pageListPanel').hide()
+      }
+      return
+    }
 
     UIkit.offcanvas('#pageListPanel', { overlay: true, mode: 'slide', escClose: true, bgClose: true })
 
@@ -276,6 +307,15 @@ export function setupPageList(show = false, fromResize = false) {
  */
 export function initializePageList() {
   let resizeTimer
+
+  if (dom.pageList && typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver(() => updatePageListScroll())
+    ro.observe(dom.pageList)
+  }
+
+  if (dom.pageListPanel) {
+    UIkit.util.on(dom.pageListPanel, 'beforeshow shown', updatePageListScroll)
+  }
 
   dom.dockPageListButton?.addEventListener('click', () => {
     app.settings.pageListPosition = app.pageListDocked ? 'auto' : 'dock'

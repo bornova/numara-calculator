@@ -1,16 +1,16 @@
-import { applyChange, observableDiff } from '@bornova/deep-diff'
+import UIkit from 'uikit'
 
 import { calculate, clearEvaluationCache } from '../calc/calcManager.js'
 import { getRates } from '../calc/currencies.js'
 import { app as coreApp } from '../core/mathInstance.js'
 import { escapeHTML, isCommaDecimal } from '../core/utils.js'
 import { dom } from '../dom.js'
-import { cm, udfInput, uduInput } from '../editor/index.js'
+import { cm } from '../editor/index.js'
 import { clearSyncCache, triggerFolderSync } from '../pages/sync.js'
 import { app } from '../state/appState.js'
 import { checkSize, DEFAULT_APP_HEIGHT, DEFAULT_APP_WIDTH, getTheme, isElectron, isMac } from '../state/env.js'
 import { migrateFromV7 } from '../state/migration.js'
-import { store } from '../state/store.js'
+import { initStoreObject, store } from '../state/store.js'
 import { confirm, modal, showError } from './dialogs.js'
 import { getDockedPageListWidth, setupPageList } from './pageList.js'
 import { colors } from './theme.js'
@@ -236,11 +236,15 @@ function setupSettingsEvents() {
   })
 
   if (isElectron) {
-    dom.resetSizeButton.addEventListener('click', () => {
+    dom.resetSizeButton.addEventListener('click', async () => {
+      UIkit.tooltip(dom.resetSizeButton)?.hide()
       const pageListWidth = app.settings.pageListPosition === 'dock' ? getDockedPageListWidth() : 0
 
-      numara.resetSize(DEFAULT_APP_WIDTH, DEFAULT_APP_HEIGHT, pageListWidth)
-      modal.center('#dialogSettings', true, DEFAULT_APP_WIDTH + pageListWidth, DEFAULT_APP_HEIGHT)
+      await numara.resetSize(DEFAULT_APP_WIDTH, DEFAULT_APP_HEIGHT, pageListWidth)
+      setupPageList(true, true)
+      dom.els('.modal.uk-open .uk-modal-dialog').forEach((dialog) => {
+        modal.center(dialog, true, DEFAULT_APP_WIDTH + pageListWidth, DEFAULT_APP_HEIGHT)
+      })
 
       setTimeout(() => {
         checkSize()
@@ -328,22 +332,7 @@ export const settings = {
   initialize: async () => {
     setupSettingsEvents()
 
-    app.settings = store.get('settings')
-
-    if (app.settings) {
-      migrateFromV7(app.settings)
-
-      observableDiff(app.settings, settings.defaults, (diff) => {
-        if (diff.kind === 'E') return
-
-        applyChange(app.settings, settings.defaults, diff)
-        store.set('settings', app.settings)
-      })
-    } else {
-      app.settings = { ...settings.defaults }
-      store.set('settings', app.settings)
-    }
-
+    app.settings = initStoreObject('settings', settings.defaults, migrateFromV7)
     coreApp.settings = app.settings
 
     dom.els('.settingItem').forEach((item) => {
@@ -378,11 +367,6 @@ export const settings = {
       }
     })
 
-    if (app.settings.currency && (app.settings.currencyInterval !== 'manual' || !store.get('rateDate'))) getRates()
-  },
-
-  /** Prepare settings dialog items. */
-  prep: async () => {
     const numberFormats = [
       { '1,234.56': '1,234.56' },
       { '1.234,56': '1.234,56' },
@@ -390,7 +374,6 @@ export const settings = {
       { '1 234,56': '1 234,56' }
     ]
     const dateFormats = [{ 'MM/dd/yyyy': 'MM/DD/YYYY' }, { 'dd/MM/yyyy': 'DD/MM/YYYY' }, { 'yyyy-MM-dd': 'YYYY-MM-DD' }]
-
     const answerPositions = [
       { left: 'Left (with divider)' },
       { right: 'Right (no divider)' },
@@ -416,6 +399,24 @@ export const settings = {
     populateSelect(dom.notation, notations, 'spacer')
     populateSelect(dom.matrixType, matrixTypes)
 
+    dom
+      .els('#alwaysOnTopContainer, #showTrayContainer, #openAtLoginContainer, #escToCloseContainer, #syncTab')
+      .forEach((el) => {
+        el.style.display = isElectron ? '' : 'none'
+      })
+
+    const showTrayLabel = dom.el('#showTrayContainer [data-help="showTray"]')
+    if (showTrayLabel) {
+      showTrayLabel.textContent = isMac ? 'Keep in menu bar' : 'Keep in system tray'
+    }
+
+    await settings.prep()
+
+    if (app.settings.currency && (app.settings.currencyInterval !== 'manual' || !store.get('rateDate'))) getRates()
+  },
+
+  /** Prepare settings dialog items. */
+  prep: async () => {
     ;['precision', 'expUpper', 'expLower', 'calcTimeout'].forEach((key) => {
       dom[`${key}Label`].textContent = app.settings[key]
     })
@@ -442,17 +443,6 @@ export const settings = {
       dom.syncDirSection.style.display = app.settings.syncDirEnabled ? 'flex' : 'none'
     }
 
-    dom
-      .els('#alwaysOnTopContainer, #showTrayContainer, #openAtLoginContainer, #escToCloseContainer, #syncTab')
-      .forEach((el) => {
-        el.style.display = isElectron ? '' : 'none'
-      })
-
-    const showTrayLabel = dom.el('#showTrayContainer [data-help="showTray"]')
-    if (showTrayLabel) {
-      showTrayLabel.textContent = isMac ? 'Keep in menu bar' : 'Keep in system tray'
-    }
-
     await checkSize()
     checkWarnings()
 
@@ -473,11 +463,6 @@ export const settings = {
     dom.numaraLogo.setAttribute('src', 'assets/logo-' + appTheme + '.png')
 
     setTimeout(colors.apply, 50)
-
-    const udfuTheme = appTheme === 'dark' ? 'material-darker' : 'default'
-
-    udfInput.setOption('theme', udfuTheme)
-    uduInput.setOption('theme', udfuTheme)
   },
 
   /**
@@ -556,6 +541,7 @@ export const settings = {
     }
 
     setupPageList(true)
+    await checkSize()
 
     if (shouldCalculate) {
       calculate()

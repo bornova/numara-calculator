@@ -34,8 +34,9 @@ import {
   refreshCurrencyState,
   replaceCurrencySymbol
 } from './mathInstance.js'
-import { normalizeNumberInput, stripComments, transformOutsideStrings } from './preprocessor.js'
+import { normalizeNumberInput, stripComments, stripLeadingColonLabel, transformOutsideStrings } from './preprocessor.js'
 import { applyUdfuToMath } from './udfu.js'
+import { findPageByRef } from './utils.js'
 
 export { formatAnswer }
 export const formulajsKeys = Object.keys(formulajs)
@@ -217,22 +218,6 @@ function isSummableValue(value) {
 
 const DATE_DIFF_CANDIDATE_REGEX =
   /\b\d{1,4}[/-]\d{1,2}[/-]\d{1,4}\b.*-.*(?:\b\d{1,4}[/-]\d{1,2}[/-]\d{1,4}\b|\b(?:today|now)\b)|\b(?:today|now)\b.*-.*\b\d{1,4}[/-]\d{1,2}[/-]\d{1,4}\b/i
-
-/**
- * Strips a leading text label (`label: expr`) when the colon is followed by whitespace
- * so variable names in scope do not collide with Math.js range syntax (`a: 10`).
- * @param {string} line Input line.
- * @returns {string}
- */
-function stripLeadingColonLabel(line) {
-  const trimmed = line.trim()
-  if (trimmed.startsWith('{')) return line
-
-  const match = line.match(/^\s*([a-zA-Z_\p{L}][\w\p{L}\p{M}\s]*):\s+(.+)$/u)
-  if (!match) return line
-
-  return match[2]
-}
 
 /**
  * Resolves a date/time string or scope variable into a Luxon `DateTime` according to active date format settings.
@@ -680,21 +665,7 @@ function loadPageScope(pageName) {
     throw new TypeError('Page name must be a string')
   }
 
-  const query = pageName
-    .trim()
-    .toLowerCase()
-    .replace(/\.num$/, '')
-
-  const targetPage = currentPages.find((p) => {
-    if (!p) return false
-
-    const name = (p.name || '')
-      .trim()
-      .toLowerCase()
-      .replace(/\.num$/, '')
-
-    return name === query || p.id === pageName
-  })
+  const targetPage = findPageByRef(currentPages, pageName)
 
   if (!targetPage) {
     throw new Error(`Page "${pageName}" not found`)

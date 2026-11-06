@@ -12,7 +12,7 @@ export function updateSelectionStats() {
 
   if (!cm.somethingSelected()) {
     dom.selectionStats.style.display = 'none'
-    dom.pageName.style.display = ''
+    dom.actions?.classList.remove('showing-stats')
     return
   }
 
@@ -40,7 +40,7 @@ export function updateSelectionStats() {
 
   if (selectedLines.size < 2) {
     dom.selectionStats.style.display = 'none'
-    dom.pageName.style.display = ''
+    dom.actions?.classList.remove('showing-stats')
     return
   }
 
@@ -60,7 +60,7 @@ export function updateSelectionStats() {
 
   if (values.length < 2) {
     dom.selectionStats.style.display = 'none'
-    dom.pageName.style.display = ''
+    dom.actions?.classList.remove('showing-stats')
     return
   }
 
@@ -73,6 +73,6 @@ export function updateSelectionStats() {
 
   dom.selectionStats.textContent = `Sum: ${sumOut}  •  Avg: ${avgOut}  •  Count: ${values.length}`
   dom.selectionStats.dataset.copy = sumCopy
-  dom.pageName.style.display = 'none'
+  dom.actions?.classList.add('showing-stats')
   dom.selectionStats.style.display = 'inline-block'
 }

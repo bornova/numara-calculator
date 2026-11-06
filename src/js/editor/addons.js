@@ -1,6 +1,3 @@
-import 'codemirror/mode/javascript/javascript'
-
-import 'codemirror/addon/display/placeholder'
 import 'codemirror/addon/edit/closebrackets'
 import 'codemirror/addon/edit/matchbrackets'
 import 'codemirror/addon/hint/show-hint'

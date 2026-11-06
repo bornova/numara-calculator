@@ -92,16 +92,31 @@ export function normalizeNumberInput(line) {
   )
 }
 
+const COMMENT_OR_STRING_REGEX = new RegExp(`${REGEX_STRING_LITERAL.source}|(\\/\\/.*|#.*)`, 'g')
+
 /**
  * Strip comments from a line while preserving comment tokens inside string literals.
  * @param {string} line The line to strip comments from.
  * @returns {string} The line without comments.
  */
 export function stripComments(line) {
-  return line.replace(
-    /("(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'|`(?:\\[\s\S]|[^`\\])*`)|(\/\/.*|#.*)/g,
-    (match, stringVal, commentVal) => {
-      return commentVal ? '' : match
-    }
-  )
+  return line.replace(COMMENT_OR_STRING_REGEX, (match, stringVal, commentVal) => {
+    return commentVal ? '' : match
+  })
+}
+
+/**
+ * Strips a leading text label (`label: expr`) when the colon is followed by whitespace
+ * so variable names in scope do not collide with Math.js range syntax (`a: 10`).
+ * @param {string} line Input line.
+ * @returns {string}
+ */
+export function stripLeadingColonLabel(line) {
+  const trimmed = line.trim()
+  if (trimmed.startsWith('{')) return line
+
+  const match = line.match(/^\s*([a-zA-Z_\p{L}][\w\p{L}\p{M}\s]*):\s+(.+)$/u)
+  if (!match) return line
+
+  return match[2]
 }

@@ -1,5 +1,5 @@
 import { calculate, debouncedSavePageState } from '../calc/calcManager.js'
-import { escapeHTML, getSafeFilename } from '../core/utils.js'
+import { escapeHTML, getSafeFilename, sanitizePageName } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
 import { app } from '../state/appState.js'
@@ -187,6 +187,7 @@ export async function handleSyncDirDeleted() {
  */
 export async function triggerFolderSync() {
   if (!isElectron) return
+
   if (isSyncing) {
     pendingResync = true
     return
@@ -247,7 +248,7 @@ export async function triggerFolderSync() {
     for (const file of files) {
       const pageName = file.name
       const fileContent = file.content
-      const sanitizedName = pageName.replace(/<|>/g, '').trim() || 'Untitled'
+      const sanitizedName = sanitizePageName(pageName, 'Untitled')
       const syncKey = getSyncKey(pageName)
 
       const localPage = pages.find((p) => getSyncKey(p.name) === syncKey)

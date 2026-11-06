@@ -51,7 +51,7 @@ export async function checkSize() {
   const isAppWrapperResized = widthDiff > 1 || heightDiff > 1
 
   dom.resetSizeButton.style.display =
-    isElectron && isAppWrapperResized && !(await numara.isMaximized()) ? 'block' : 'none'
+    isElectron && isAppWrapperResized && !(await numara.isMaximized()) ? 'inline-flex' : 'none'
 }
 
 /**

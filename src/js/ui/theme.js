@@ -1,9 +1,10 @@
 import ColorPicker from '@bornova/colorpicker'
-import { applyChange, diff, observableDiff } from '@bornova/deep-diff'
+import { diff } from '@bornova/deep-diff'
 
 import { dom } from '../dom.js'
 import { app } from '../state/appState.js'
-import { store } from '../state/store.js'
+import { migrateColors } from '../state/migration.js'
+import { initStoreObject, store } from '../state/store.js'
 import { confirm, modal } from './dialogs.js'
 
 const COLOR_INPUT_SELECTOR = '.colorInput'
@@ -68,19 +69,7 @@ export const colors = {
    * Initializes theme styling, deep-diff defaults checks, picker events, and confirm actions.
    */
   initialize: () => {
-    app.colors = store.get('colors')
-
-    if (app.colors) {
-      observableDiff(app.colors, colors.defaults, (diff) => {
-        if (diff.kind === 'E') return
-
-        applyChange(app.colors, colors.defaults, diff)
-        store.set('colors', app.colors)
-      })
-    } else {
-      app.colors = { ...colors.defaults }
-      store.set('colors', app.colors)
-    }
+    app.colors = initStoreObject('colors', colors.defaults, (stored) => migrateColors(stored, colors.defaults))
 
     colorInputs.forEach((picker) => {
       picker.value = app.colors[picker.dataset.class][picker.dataset.theme]

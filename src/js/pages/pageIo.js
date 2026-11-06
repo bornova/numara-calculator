@@ -29,10 +29,14 @@ function exportActivePage() {
 export function setupPageIo() {
   if (isElectron) {
     dom.importPageButton.addEventListener('click', () => {
+      UIkit.dropdown('#moreDropdown')?.hide(0)
       numara.importPage()
     })
 
-    dom.exportPageButton.addEventListener('click', exportActivePage)
+    dom.exportPageButton.addEventListener('click', () => {
+      UIkit.dropdown('#moreDropdown')?.hide(0)
+      exportActivePage()
+    })
 
     numara.pageImported((data, msg, name) => {
       newPage(true, name, data)
@@ -61,6 +65,6 @@ export function setupPageIo() {
       window.print()
     })
   } else {
-    dom.els('#importExportDivider, #importPageButton, #exportPageButton').forEach((el) => el.remove())
+    dom.els('#importPageButton, #exportPageButton').forEach((el) => el.remove())
   }
 }

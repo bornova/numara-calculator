@@ -23,7 +23,7 @@ contextBridge.exposeInMainWorld('numara', {
   // Window controls
   isMaximized: () => ipcRenderer.invoke('isMaximized'),
   resetSize: (appWrapperWidth, appWrapperHeight, pageListWidth) =>
-    ipcRenderer.send('resetSize', appWrapperWidth, appWrapperHeight, pageListWidth),
+    ipcRenderer.invoke('resetSize', appWrapperWidth, appWrapperHeight, pageListWidth),
   setOnTop: (callback) => ipcRenderer.send('setOnTop', callback),
   setTray: (bool) => ipcRenderer.send('setTray', bool),
   setOpenAtLogin: (bool) => ipcRenderer.send('setOpenAtLogin', bool),
@@ -44,6 +44,7 @@ contextBridge.exposeInMainWorld('numara', {
 
   // Print
   print: (callback) => addIpcListener('print', () => callback()),
+  menuAction: (callback) => addIpcListener('menuAction', (event, action) => callback(action)),
 
   // Context menus
   inputContextMenu: (index, isEmpty, isMultiLine, hasAnswer) =>

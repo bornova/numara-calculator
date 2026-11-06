@@ -1,4 +1,3 @@
-import { applyChange, observableDiff } from '@bornova/deep-diff'
 import functionPlot from 'function-plot'
 
 import { productName } from '../../../package.json'
@@ -8,7 +7,7 @@ import { parseLocaleNumber } from '../core/formatter.js'
 import { getSafeFilename } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { app } from '../state/appState.js'
-import { store } from '../state/store.js'
+import { initStoreObject, store } from '../state/store.js'
 import { modal, showError } from './dialogs.js'
 
 let activePlotFunctions = new Set()
@@ -27,19 +26,7 @@ const plotSettings = {
     showGrid: false
   },
   initialize: () => {
-    app.plotSettings = store.get('plotSettings')
-
-    if (app.plotSettings) {
-      observableDiff(app.plotSettings, plotSettings.defaults, (diff) => {
-        if (diff.kind === 'E') return
-
-        applyChange(app.plotSettings, plotSettings.defaults, diff)
-        store.set('plotSettings', app.plotSettings)
-      })
-    } else {
-      app.plotSettings = structuredClone(plotSettings.defaults)
-      store.set('plotSettings', app.plotSettings)
-    }
+    app.plotSettings = initStoreObject('plotSettings', plotSettings.defaults)
   }
 }
 

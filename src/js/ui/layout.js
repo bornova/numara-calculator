@@ -10,7 +10,7 @@ import { app } from '../state/appState.js'
 import { isElectron, isMac } from '../state/env.js'
 import { store } from '../state/store.js'
 import { copyAll } from './contextMenu.js'
-import { modal, notify, showError } from './dialogs.js'
+import { isModalOpen, modal, notify, showError } from './dialogs.js'
 import { resetPlotSelection } from './plot.js'
 import { applyAnswerPositionLayout, settings } from './settings.js'
 
@@ -33,13 +33,21 @@ export function setupHeaders() {
 export function setupAppButtons() {
   const buttons = {
     printButton: () => {
+      UIkit.dropdown('#moreDropdown')?.hide(0)
       if (!app.pageListDocked) {
         UIkit.offcanvas('#pageListPanel').hide()
       }
       window.print()
     },
     clearButton: () => {
-      cm.setValue('')
+      if (!cm.getValue()) return
+
+      UIkit.tooltip(dom.clearButton)?.hide()
+      cm.replaceRange(
+        '',
+        { line: cm.firstLine(), ch: 0 },
+        { line: cm.lastLine(), ch: cm.getLine(cm.lastLine()).length }
+      )
       cm.focus()
       calculate()
       if (!app.pageListDocked) {
@@ -47,6 +55,7 @@ export function setupAppButtons() {
       }
     },
     copyButton: () => {
+      UIkit.dropdown('#moreDropdown')?.hide(0)
       copyAll()
       if (!app.pageListDocked) {
         UIkit.offcanvas('#pageListPanel').hide()
@@ -68,6 +77,49 @@ export function setupAppButtons() {
 
   Object.entries(buttons).forEach(([btn, action]) => dom[btn].addEventListener('click', action))
 
+  if (isElectron) {
+    numara.menuAction((action) => {
+      switch (action) {
+        case 'newPage':
+          if (!isModalOpen()) dom.newPageButton.click()
+          break
+        case 'clearPage':
+          if (!isModalOpen()) dom.clearButton.click()
+          break
+        case 'togglePageList':
+          if (app.settings.pageListPosition === 'tabs') break
+          if (!app.pageListDocked && !isModalOpen()) {
+            dom.pageName.click()
+          } else if (
+            dom.pageListPanel.classList.contains('uk-open') &&
+            !dom.dialogNewPage.classList.contains('uk-open')
+          ) {
+            dom.closePageListButton.click()
+          }
+          break
+        case 'openSettings':
+          buttons.settingsButton()
+          break
+        case 'openUdfu':
+          buttons.udfuButton()
+          break
+        case 'checkUpdates':
+          modal.show('#dialogAbout')
+          numara.checkUpdate()
+          break
+        case 'resetSize':
+          dom.resetSizeButton.click()
+          break
+        case 'undo':
+        case 'redo':
+          if (cm?.hasFocus() || !isModalOpen()) {
+            cm?.[action]()
+          }
+          break
+      }
+    })
+  }
+
   dom.updateMenuLink.addEventListener('click', (event) => {
     event.stopPropagation()
     UIkit.dropdown('#moreDropdown')?.hide(0)
@@ -78,6 +130,25 @@ export function setupAppButtons() {
       modal.show('#dialogAbout')
     }
   })
+}
+
+/**
+ * Copies text to the clipboard, triggers a brief `.copied` highlight on `el`, and shows a notification.
+ * @param {HTMLElement} el Element to flash with `.copied`.
+ * @param {string} textToCopy Text to write to the clipboard.
+ */
+function copyWithFlash(el, textToCopy) {
+  if (!textToCopy) return
+
+  navigator.clipboard.writeText(textToCopy)
+
+  el.classList.remove('copied')
+  void el.offsetWidth
+  el.classList.add('copied')
+  clearTimeout(el._copiedTimer)
+  el._copiedTimer = setTimeout(() => el.classList.remove('copied'), 350)
+
+  notify(`Copied '${escapeHTML(textToCopy)}' to clipboard.`)
 }
 
 /**
@@ -130,24 +201,12 @@ export function setupResultActions() {
     }
 
     if (answerEl) {
-      const textToCopy = answerEl.dataset.answer
-      const safeText = escapeHTML(textToCopy)
-
-      navigator.clipboard.writeText(textToCopy)
-
-      notify(`Copied '${safeText}' to clipboard.`)
-
-      return
+      copyWithFlash(answerEl, answerEl.dataset.answer)
     }
   })
 
   dom.selectionStats?.addEventListener('click', () => {
-    const textToCopy = dom.selectionStats.dataset.copy
-
-    if (textToCopy) {
-      navigator.clipboard.writeText(textToCopy)
-      notify(`Copied '${escapeHTML(textToCopy)}' to clipboard.`)
-    }
+    copyWithFlash(dom.selectionStats, dom.selectionStats.dataset.copy)
   })
 
   dom.output.addEventListener('mousedown', () => {
@@ -380,9 +439,12 @@ export function setupSyncScroll() {
   )
 
   dom.scrollTop.addEventListener('click', () => {
+    if (inputPanel.scrollTop <= 0) return
+
     stopWheelAnimation()
-    activePanel = null
-    inputPanel.scroll({ top: 0, behavior: 'smooth' })
-    outputPanel.scroll({ top: 0, behavior: 'smooth' })
+    currentScrollTop = inputPanel.scrollTop
+    targetScrollTop = 0
+    lastFrameTime = performance.now()
+    stepWheelScroll(lastFrameTime + 16.667)
   })
 }

@@ -1,4 +1,4 @@
-import { getSafeFilename } from '../core/utils.js'
+import { getSafeFilename, sanitizePageName } from '../core/utils.js'
 
 /**
  * Computes a normalized case-insensitive sync key for a page or file name.
@@ -35,7 +35,7 @@ export function detectExternalRenames({ pages, files, lastSyncContent, activePag
 
   const recordRename = (page, file) => {
     const oldSyncKey = getSyncKey(page.name)
-    const sanitizedName = file.name.replace(/<|>/g, '').trim() || 'Untitled'
+    const sanitizedName = sanitizePageName(file.name, 'Untitled')
     const newSyncKey = getSyncKey(sanitizedName)
 
     matchedMissingIds.add(page.id)

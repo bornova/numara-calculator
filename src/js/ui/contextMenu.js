@@ -1,6 +1,6 @@
 import { escapeHTML } from '../core/utils.js'
 import { dom } from '../dom.js'
-import { cm, udfInput, uduInput } from '../editor/index.js'
+import { cm } from '../editor/index.js'
 import { isElectron } from '../state/env.js'
 import { notify } from './dialogs.js'
 
@@ -188,12 +188,11 @@ export function initializeContextMenus() {
   if (!isElectron) return
 
   cm.on('contextmenu', inputContext)
-  udfInput.on('contextmenu', textboxContext)
-  uduInput.on('contextmenu', textboxContext)
-
   dom.output.addEventListener('contextmenu', outputContext)
 
-  dom.els('.textBox').forEach((el) => el.addEventListener('contextmenu', textboxContext))
+  dom
+    .els('.textBox, .udfuInput, .udfuTextarea, .newPageInput')
+    .forEach((el) => el.addEventListener('contextmenu', textboxContext))
 
   numara.copyLine(copyLine)
   numara.copyAnswer(copyAnswer)

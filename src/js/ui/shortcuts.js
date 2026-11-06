@@ -27,7 +27,7 @@ export function setupKeyboardShortcuts() {
   for (const [command, button] of Object.entries(keys)) {
     shortcuts[command] = (event) => {
       if (command === 'Shift+TAB') {
-        if (app.pageListDocked) return
+        if (app.pageListDocked || app.settings.pageListPosition === 'tabs') return
 
         if (isModalOpen()) {
           if (closePageListIfOpen()) {
@@ -68,6 +68,9 @@ export function setupKeyboardShortcuts() {
           app.settings.escToClose &&
           !isModalOpen() &&
           !isSearchPanelOpen() &&
+          !event.target.closest?.('.pageListRenameInput, .pageTabRenameInput') &&
+          !dom.tabContextMenu?.classList.contains('uk-open') &&
+          !dom.dialogNewPage?.classList.contains('uk-open') &&
           (!cm || !cm.state.completionActive)
         ) {
           event.preventDefault()

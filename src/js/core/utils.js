@@ -27,6 +27,43 @@ export function escapeRegExp(string) {
 }
 
 /**
+ * Sanitizes a page name by stripping angle brackets and trimming whitespace.
+ * @param {string} name The raw page name.
+ * @param {string} [fallback=''] Fallback value if the sanitized name is empty.
+ * @returns {string} The sanitized page name.
+ */
+export function sanitizePageName(name, fallback = '') {
+  return (name || '').replace(/<|>/g, '').trim() || fallback
+}
+
+/**
+ * Finds a page in a pages array by case-insensitive name (ignoring optional `.num` suffix) or exact ID.
+ * @param {Array<{id: string, name?: string}>} pages List of pages.
+ * @param {string} rawPageName Page name or ID reference.
+ * @param {string|null} [excludePageId=null] Optional page ID to exclude from matching.
+ * @returns {object|null} Matching page object or null.
+ */
+export function findPageByRef(pages, rawPageName, excludePageId = null) {
+  if (!Array.isArray(pages) || !rawPageName) return null
+
+  const trimmedRef = String(rawPageName).trim()
+  const query = trimmedRef.toLowerCase().replace(/\.num$/, '')
+
+  return (
+    pages.find((p) => {
+      if (!p || p.id === excludePageId) return false
+
+      const name = (p.name || '')
+        .trim()
+        .toLowerCase()
+        .replace(/\.num$/, '')
+
+      return name === query || p.id === rawPageName || p.id === trimmedRef
+    }) || null
+  )
+}
+
+/**
  * Sanitizes a page name to ensure it is safe to use as a file name.
  * @param {string} name The page name.
  * @returns {string} The safe file name.
