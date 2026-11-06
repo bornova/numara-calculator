@@ -31,9 +31,7 @@
 
   .printPage tr td {
     vertical-align: top;
-    padding-top: 3px;
-    padding-right: 10px;
-    padding-bottom: 3px;
+    padding: 3px 10px 3px 0;
   }
 
   .printLineNumCol {
@@ -47,10 +45,6 @@
 
   .printAnswerRight {
     text-align: right;
-  }
-
-  .printPage tr td:nth-child(1) {
-    padding-right: 10px;
   }
 
   .printPage tr td:last-child {
