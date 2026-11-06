@@ -78,9 +78,15 @@
   color: light-dark(#444444, #e6e6e6);
 }
 
+[uk-dropdown]:not(.uk-open),
+[uk-modal]:not(.uk-open) {
+  display: none;
+}
+
 .uk-dropdown {
+  border-radius: 6px;
   background: light-dark(#ffffff, #222222);
-  padding: 0px;
+  padding: 4px;
   min-width: auto;
   color: light-dark(#444444, #e6e6e6);
 }
