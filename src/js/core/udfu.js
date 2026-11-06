@@ -1,9 +1,285 @@
-const VALID_IDENTIFIER = /^[a-zA-Z_$][\w$]*$/
-const RESERVED_KEYS = new Set(['__proto__', 'constructor', 'prototype'])
+export const VALID_IDENTIFIER = /^[a-zA-Z_$][\w$]*$/
+export const RESERVED_KEYS = new Set(['__proto__', 'constructor', 'prototype'])
 
 const defaultProxy = new Proxy(() => defaultProxy, {
   get: (target, prop) => (prop === Symbol.toPrimitive ? () => 0 : defaultProxy)
 })
+
+/**
+ * Finds the index of the closing parenthesis matching the opening parenthesis at `openIndex`.
+ * @param {string} str Source string.
+ * @param {number} openIndex Index of `(`.
+ * @returns {number} Matching `)` index, or `-1` if unbalanced.
+ */
+function findMatchingParen(str, openIndex) {
+  let depth = 0
+  let inString = null
+
+  for (let i = openIndex; i < str.length; i++) {
+    const ch = str[i]
+
+    if (inString) {
+      if (ch === '\\') {
+        i++
+      } else if (ch === inString) {
+        inString = null
+      }
+
+      continue
+    }
+
+    if (ch === '"' || ch === "'" || ch === '`') {
+      inString = ch
+    } else if (ch === '(') {
+      depth++
+    } else if (ch === ')') {
+      depth--
+      if (depth === 0) return i
+    }
+  }
+
+  return -1
+}
+
+/**
+ * Strips a single balanced pair of outer parentheses from an expression string,
+ * preserving parentheses when they wrap an object literal (`({ ... })`) or multiple groups (`(a) * (b)`).
+ * @param {string} str Expression string.
+ * @returns {string} Unwrapped expression string.
+ */
+function unwrapBalancedParens(str) {
+  if (!str.startsWith('(') || !str.endsWith(')')) return str
+
+  const closeIdx = findMatchingParen(str, 0)
+  if (closeIdx !== str.length - 1) return str
+
+  const inner = str.slice(1, -1).trim()
+  return inner.startsWith('{') ? str : inner
+}
+
+/**
+ * Extracts parameter list and body source from a runtime function value.
+ * @param {Function} fn Function to inspect.
+ * @returns {{ params: string, body: string }}
+ */
+function extractFunctionParts(fn) {
+  const src = fn.toString().trim()
+
+  if (src.startsWith('(')) {
+    const closeIdx = findMatchingParen(src, 0)
+
+    if (closeIdx !== -1) {
+      const arrowMatch = src.slice(closeIdx + 1).match(/^\s*=>\s*([\s\S]*)$/)
+
+      if (arrowMatch) {
+        const rawParams = src.slice(1, closeIdx).trim()
+        const params = rawParams.length > 0 ? rawParams : '()'
+        const rawBody = arrowMatch[1].trim()
+        const body =
+          rawBody.startsWith('{') && rawBody.endsWith('}') ? rawBody.slice(1, -1).trim() : unwrapBalancedParens(rawBody)
+
+        return { params, body }
+      }
+    }
+  }
+
+  const singleArrow = src.match(/^([a-zA-Z_$][\w$]*)\s*=>\s*([\s\S]*)$/)
+
+  if (singleArrow) {
+    const params = singleArrow[1].trim()
+    const rawBody = singleArrow[2].trim()
+    const body =
+      rawBody.startsWith('{') && rawBody.endsWith('}') ? rawBody.slice(1, -1).trim() : unwrapBalancedParens(rawBody)
+
+    return { params, body }
+  }
+
+  const headerMatch = src.match(
+    /^(?:(?:async\s+)?function\s*(?:\*\s*)?[a-zA-Z_$]*[\w$]*|(?:async\s+)?[a-zA-Z_$][\w$]*)\s*\(/
+  )
+
+  if (headerMatch) {
+    const openIdx = headerMatch[0].length - 1
+    const closeIdx = findMatchingParen(src, openIdx)
+
+    if (closeIdx !== -1) {
+      const afterParams = src.slice(closeIdx + 1).trim()
+
+      if (afterParams.startsWith('{') && afterParams.endsWith('}')) {
+        const rawParams = src.slice(openIdx + 1, closeIdx).trim()
+        const params = rawParams.length > 0 ? rawParams : '()'
+        const body = afterParams.slice(1, -1).trim()
+
+        return { params, body }
+      }
+    }
+  }
+
+  return { params: '', body: src }
+}
+
+/**
+ * Compiles structured user-defined function/constant items into a JS object body string.
+ * @param {Array<{name: string, params: string, body: string}>} items
+ * @returns {string}
+ */
+export function compileUdfItems(items) {
+  return items
+    .map(({ name, params, body }) => {
+      const cleanName = name.trim()
+      const rawParams = (params ?? '').trim()
+      const isZeroArgFunc = rawParams === '()'
+      const cleanParams = rawParams.replace(/^\(|\)$/g, '').trim()
+      const cleanBody = (body ?? '').trim()
+      const isBlock = cleanBody.startsWith('{') && cleanBody.endsWith('}')
+      const hasReturn = /\breturn\b/.test(cleanBody)
+      const isMultiStmt = cleanBody.includes('\n') || cleanBody.includes(';') || hasReturn
+
+      if (cleanParams.length > 0 || isZeroArgFunc) {
+        if (isBlock && (hasReturn || cleanBody.includes(';'))) {
+          return `${JSON.stringify(cleanName)}: (${cleanParams}) => ${cleanBody}`
+        }
+
+        if (!isBlock && isMultiStmt) {
+          return `${JSON.stringify(cleanName)}: (${cleanParams}) => {\n${cleanBody}\n}`
+        }
+
+        return `${JSON.stringify(cleanName)}: (${cleanParams}) => (${cleanBody})`
+      }
+
+      if (hasReturn) {
+        if (isBlock) return `${JSON.stringify(cleanName)}: () => ${cleanBody}`
+
+        return `${JSON.stringify(cleanName)}: () => {\n${cleanBody}\n}`
+      }
+
+      return `${JSON.stringify(cleanName)}: (${cleanBody})`
+    })
+    .join(',\n')
+}
+
+/**
+ * Compiles structured user-defined unit items into a JS object body string.
+ * @param {Array<{name: string, definition: string, prefixes?: string, aliases?: string}>} items
+ * @returns {string}
+ */
+export function compileUduItems(items) {
+  return items
+    .map(({ name, definition, prefixes, aliases }) => {
+      const cleanName = name.trim()
+      const cleanDef = (definition ?? '').trim().replace(/^["']|["']$/g, '')
+      const cleanPrefixes = (prefixes ?? 'none').trim()
+      const aliasList = (aliases ?? '')
+        .split(',')
+        .map((a) => a.trim())
+        .filter(Boolean)
+
+      if ((!cleanPrefixes || cleanPrefixes === 'none') && aliasList.length === 0) {
+        return `${JSON.stringify(cleanName)}: ${JSON.stringify(cleanDef)}`
+      }
+
+      const unitObj = { definition: cleanDef }
+
+      if (cleanPrefixes && cleanPrefixes !== 'none') {
+        unitObj.prefixes = cleanPrefixes
+      }
+
+      if (aliasList.length > 0) {
+        unitObj.aliases = aliasList
+      }
+
+      return `${JSON.stringify(cleanName)}: ${JSON.stringify(unitObj)}`
+    })
+    .join(',\n')
+}
+
+/**
+ * Parses a legacy v7 `udf` object-body string into structured `udfItems`.
+ * @param {string} rawUdf Legacy `udf` string.
+ * @param {object} [math] Optional Math.js instance.
+ * @param {object} [externalLibs] Optional libraries `{ luxon, nerdamer, formulajs }`.
+ * @returns {Array<{name: string, params: string, body: string}>}
+ */
+export function parseLegacyUdf(rawUdf, math = defaultProxy, externalLibs = {}) {
+  const trimmed = (rawUdf ?? '').trim()
+  if (!trimmed) return []
+
+  const udfItems = []
+
+  try {
+    const luxon = externalLibs.luxon ?? defaultProxy
+    const nerdamer = externalLibs.nerdamer ?? defaultProxy
+    const formulajs = externalLibs.formulajs ?? defaultProxy
+    const fn = new Function('math', 'luxon', 'nerdamer', 'formulajs', `'use strict'; return {${trimmed}}`)
+    const obj = fn(math, luxon, nerdamer, formulajs)
+
+    for (const [key, val] of Object.entries(obj || {})) {
+      if (RESERVED_KEYS.has(key) || !VALID_IDENTIFIER.test(key)) continue
+
+      if (typeof val === 'function') {
+        const { params, body } = extractFunctionParts(val)
+        udfItems.push({ name: key, params, body })
+      } else if (val !== null && typeof val === 'object') {
+        udfItems.push({ name: key, params: '', body: JSON.stringify(val) })
+      } else {
+        udfItems.push({
+          name: key,
+          params: '',
+          body: typeof val === 'string' ? JSON.stringify(val) : String(val)
+        })
+      }
+    }
+  } catch {
+    // Return empty array if legacy string cannot be evaluated
+  }
+
+  return udfItems
+}
+
+/**
+ * Parses a legacy v7 `udu` object-body string into structured `uduItems`.
+ * @param {string} rawUdu Legacy `udu` string.
+ * @param {object} [math] Optional Math.js instance.
+ * @param {object} [externalLibs] Optional libraries `{ luxon, nerdamer, formulajs }`.
+ * @returns {Array<{name: string, definition: string, prefixes: string, aliases: string}>}
+ */
+export function parseLegacyUdu(rawUdu, math = defaultProxy, externalLibs = {}) {
+  const trimmed = (rawUdu ?? '').trim()
+  if (!trimmed) return []
+
+  const uduItems = []
+
+  try {
+    const luxon = externalLibs.luxon ?? defaultProxy
+    const nerdamer = externalLibs.nerdamer ?? defaultProxy
+    const formulajs = externalLibs.formulajs ?? defaultProxy
+    const fn = new Function('math', 'luxon', 'nerdamer', 'formulajs', `'use strict'; return {${trimmed}}`)
+    const obj = fn(math, luxon, nerdamer, formulajs)
+
+    for (const [key, val] of Object.entries(obj || {})) {
+      if (RESERVED_KEYS.has(key) || !VALID_IDENTIFIER.test(key)) continue
+
+      if (typeof val === 'string') {
+        uduItems.push({ name: key, definition: val, prefixes: 'none', aliases: '' })
+      } else if (val && typeof val === 'object') {
+        if (val.isUnit && typeof val.toString === 'function') {
+          uduItems.push({ name: key, definition: val.toString(), prefixes: 'none', aliases: '' })
+        } else {
+          uduItems.push({
+            name: key,
+            definition: String(val.definition ?? ''),
+            prefixes: val.prefixes || 'none',
+            aliases: Array.isArray(val.aliases) ? val.aliases.join(', ') : ''
+          })
+        }
+      }
+    }
+  } catch {
+    // Return empty array if legacy string cannot be evaluated
+  }
+
+  return uduItems
+}
 
 /**
  * Validate user defined function/unit object keys and guard against prototype pollution.
