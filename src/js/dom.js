@@ -66,8 +66,6 @@ export const dom = {
   dialogNewPage: document.getElementById('dialogNewPage'),
   newPageTitleInput: document.getElementById('newPageTitleInput'),
   dialogNewPageSave: document.getElementById('dialogNewPageSave'),
-  renamePageTitleInput: document.getElementById('renamePageTitleInput'),
-  dialogRenamePageSave: document.getElementById('dialogRenamePageSave'),
   udfInput: document.getElementById('udfInput'),
   uduInput: document.getElementById('uduInput'),
   dialogUdfuSaveF: document.getElementById('dialogUdfuSaveF'),
