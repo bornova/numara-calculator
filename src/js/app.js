@@ -6,6 +6,7 @@ import { initializePages } from './pages/pageManager.js'
 import { checkSyncDir, handleSyncDirDeleted, triggerFolderSync } from './pages/sync.js'
 import { app } from './state/appState.js'
 import { isElectron } from './state/env.js'
+import { migrateStorageAndPages } from './state/migration.js'
 import { initializeContextMenus } from './ui/contextMenu.js'
 import { isModalOpen, setupUIkitUtils } from './ui/dialogs.js'
 import { generateIcons } from './ui/icons.js'
@@ -26,6 +27,16 @@ document.title = description
  * @returns {Promise<void>}
  */
 async function initializeApp() {
+  if (document.fonts?.load) {
+    Promise.all([
+      document.fonts.load('400 1rem "Google Sans"'),
+      document.fonts.load('500 1rem "Google Sans"'),
+      document.fonts.load('600 1rem "Google Sans"'),
+      document.fonts.load('700 1rem "Google Sans"')
+    ]).catch(() => {})
+  }
+
+  migrateStorageAndPages()
   generateIcons()
   setupEditor()
   initCurrencies()
