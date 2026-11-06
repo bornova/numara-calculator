@@ -3,6 +3,11 @@ import {
   ArrowUpDown,
   Braces,
   BrushCleaning,
+  ChartSpline,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
   Circle,
   Copy,
   CopyPlus,
@@ -11,10 +16,10 @@ import {
   createIcons,
   Dot,
   Download,
+  EllipsisVertical,
   Eraser,
   Info,
   ListRestart,
-  EllipsisVertical,
   Monitor,
   Moon,
   Palette,
@@ -26,13 +31,14 @@ import {
   RefreshCcw,
   RotateCcw,
   Save,
-  SquareDimensions,
   Settings,
+  SquareDimensions,
   Sun,
   Trash2,
   Upload,
   X
 } from 'lucide'
+import UIkit from 'uikit'
 
 import { dom } from '../dom.js'
 
@@ -41,16 +47,21 @@ const icons = {
   ArrowUpDown,
   Braces,
   BrushCleaning,
+  ChartSpline,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
   Circle,
   Copy,
   CopyPlus,
   CornerDownRight,
   Dot,
   Download,
+  EllipsisVertical,
   Eraser,
   Info,
   ListRestart,
-  EllipsisVertical,
   Monitor,
   Moon,
   Palette,
@@ -62,8 +73,8 @@ const icons = {
   RefreshCcw,
   RotateCcw,
   Save,
-  SquareDimensions,
   Settings,
+  SquareDimensions,
   Sun,
   Trash2,
   Upload,
@@ -85,4 +96,5 @@ function cacheIcons() {
 export const generateIcons = () => {
   createIcons({ icons })
   cacheIcons()
+  UIkit.icon.add('close-icon', dom.icons.X)
 }
