@@ -2,7 +2,6 @@
 
 * {
   -webkit-tap-highlight-color: transparent;
-  -webkit-user-select: none;
   margin: 0;
   outline: none;
   border: none;
@@ -74,10 +73,6 @@ input[type='range']::-webkit-slider-thumb {
   height: 14px;
 }
 
-input[type='range']:focus::-webkit-slider-runnable-track {
-  background-color: #999999;
-}
-
 pre {
   font: inherit !important;
 }
@@ -139,7 +134,6 @@ text {
 }
 
 .slider {
-  -webkit-transition: 0.2s;
   position: absolute;
   top: 0;
   right: 0;
@@ -151,7 +145,6 @@ text {
 }
 
 .slider:before {
-  -webkit-transition: 0.2s;
   position: absolute;
   bottom: 2px;
   left: 2px;
@@ -175,7 +168,6 @@ input:checked + .slider {
 }
 
 input:checked + .slider:before {
-  -webkit-transform: translateX(12px);
   transform: translateX(12px);
 }
 
@@ -184,10 +176,23 @@ input:checked + .slider:before {
 .scrollTop {
   display: none;
   position: fixed;
-  right: 2px;
+  right: max(5px, calc(env(safe-area-inset-right, 8px) - 3px));
   bottom: 32px;
   cursor: pointer;
-  width: 10px;
+  width: 14px;
+  height: 14px;
+  color: light-dark(#607d8b, #90b4dc);
+}
+
+.scrollTop:hover {
+  color: light-dark(#005cc5, #2196f3);
+}
+
+.scrollTop svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
 }
 
 .tooltipCode {
