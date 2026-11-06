@@ -22,10 +22,6 @@ registerEditorModes()
 registerEditorHints()
 registerEditorFolding()
 
-const UDF_PLACEHOLDER = 'xyz: (x, y, z) => {\n\treturn x+y+z\n},\n\nmyConstant: 123'
-const UDU_PLACEHOLDER = 'foo: "18 foot",\nbar: "40 foo"'
-const UD_OPTIONS = { autoCloseBrackets: true, autofocus: true, mode: 'javascript', smartIndent: false, tabSize: 2 }
-
 let previousActiveLine = -1
 
 /**
@@ -151,24 +147,12 @@ export const cm = CodeMirror.fromTextArea(dom.inputArea, {
   viewportMargin: Infinity
 })
 
-dom.udfInput.setAttribute('placeholder', UDF_PLACEHOLDER)
-dom.uduInput.setAttribute('placeholder', UDU_PLACEHOLDER)
-
-export const udfInput = CodeMirror.fromTextArea(dom.udfInput, UD_OPTIONS)
-export const uduInput = CodeMirror.fromTextArea(dom.uduInput, UD_OPTIONS)
-
-for (const [editor, id] of [
-  [cm, 'inputAreaCodeMirror'],
-  [udfInput, 'udfInputCodeMirror'],
-  [uduInput, 'uduInputCodeMirror']
-]) {
-  const field = editor.getInputField()
-  field.setAttribute('id', id)
-  field.setAttribute('name', id)
-  field.setAttribute('autocorrect', 'off')
-  field.setAttribute('autocapitalize', 'off')
-  field.setAttribute('spellcheck', 'false')
-}
+const field = cm.getInputField()
+field.setAttribute('id', 'inputAreaCodeMirror')
+field.setAttribute('name', 'inputAreaCodeMirror')
+field.setAttribute('autocorrect', 'off')
+field.setAttribute('autocapitalize', 'off')
+field.setAttribute('spellcheck', 'false')
 
 export const debouncedCalculate = debounce(calculate, 100)
 
@@ -187,16 +171,18 @@ export const debouncedSaveCursor = debounce(() => {
 }, 600)
 
 /**
- * Refreshes the given CodeMirror editor and focuses it after a short delay.
- * @param {CodeMirror} [editor=cm] CodeMirror instance to refresh and focus.
+ * Refreshes the CodeMirror editor and optionally focuses it after a short delay.
+ * @param {boolean} [focus=true] Whether to focus the editor after refreshing.
  */
-export function refreshEditor(editor = cm) {
-  editor.operation(() => {
-    editor.refresh()
-    editor.setOption('mode', editor.getOption('mode'))
+export function refreshEditor(focus = true) {
+  cm.operation(() => {
+    cm.refresh()
+    cm.setOption('mode', cm.getOption('mode'))
   })
 
-  setTimeout(() => editor.focus(), 100)
+  if (focus) {
+    setTimeout(() => cm.focus(), 100)
+  }
 }
 
 /**
