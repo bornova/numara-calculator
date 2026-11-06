@@ -150,13 +150,13 @@ function resetWindowToAppWrapper(pageListWidth = 0, appWrapperSize = getAppWrapp
 
   numara
     .isMaximized()
-    .then((maximized) => {
+    .then(async (maximized) => {
       if (maximized) return
 
       const targetWidth = Math.max(420, appWrapperSize.width + pageListWidth)
       const targetHeight = Math.max(360, appWrapperSize.height)
 
-      numara.resetSize(appWrapperSize.width, appWrapperSize.height, pageListWidth)
+      await numara.resetSize(appWrapperSize.width, appWrapperSize.height, pageListWidth)
 
       dom.els('.modal.uk-open .uk-modal-dialog').forEach((dialog) => {
         modal.center(dialog, true, targetWidth, targetHeight)
