@@ -1,3 +1,5 @@
+import { applyChange, observableDiff } from '@bornova/deep-diff'
+
 let cachedConsolidatedRaw = null
 let cachedConsolidatedObj = null
 
@@ -127,4 +129,32 @@ export const store = {
       console.error(`Error removing key "${key}" from local storage:`, error)
     }
   }
+}
+
+/**
+ * Loads an object from `store` and merges any missing default keys via `observableDiff`,
+ * or initializes it with a deep clone of `defaults` if not yet stored.
+ * @param {string} key Store key.
+ * @param {object} defaults Default object template.
+ * @param {(val: object) => void} [onExisting] Optional hook called before diffing when stored data exists.
+ * @returns {object} The initialized store object.
+ */
+export function initStoreObject(key, defaults, onExisting) {
+  let value = store.get(key)
+
+  if (value) {
+    onExisting?.(value)
+
+    observableDiff(value, defaults, (diff) => {
+      if (diff.kind === 'E') return
+
+      applyChange(value, defaults, diff)
+      store.set(key, value)
+    })
+  } else {
+    value = structuredClone(defaults)
+    store.set(key, value)
+  }
+
+  return value
 }
