@@ -1,8 +1,8 @@
 import CodeMirror from 'codemirror'
 
 import { math } from '../core/mathInstance.js'
-import { stripComments } from '../core/preprocessor.js'
-import { escapeHTML, escapeRegExp } from '../core/utils.js'
+import { stripComments, stripLeadingColonLabel } from '../core/preprocessor.js'
+import { escapeHTML, escapeRegExp, findPageByRef } from '../core/utils.js'
 import { app } from '../state/appState.js'
 import { store } from '../state/store.js'
 import {
@@ -71,34 +71,15 @@ export function registerExcelFunctions(keys) {
  * @param {Array<{ id: string, name?: string, data?: string }>} [pages] Workbook pages list.
  * @returns {string[] | null}
  */
-export function getPageExportedVars(rawPageName, pages = store.get('pages') || []) {
-  if (!rawPageName) return null
-
-  const query = rawPageName
-    .trim()
-    .toLowerCase()
-    .replace(/\.num$/, '')
-  const foundPage = (pages || []).find((p) => {
-    if (!p) return false
-    const name = (p.name || '')
-      .trim()
-      .toLowerCase()
-      .replace(/\.num$/, '')
-
-    return name === query || p.id === rawPageName.trim()
-  })
+function getPageExportedVars(rawPageName, pages = store.get('pages') || []) {
+  const foundPage = findPageByRef(pages, rawPageName)
 
   if (!foundPage || !foundPage.data) return null
 
   const varNames = new Set()
 
   for (const rawLine of foundPage.data.split('\n')) {
-    let cleaned = stripComments(rawLine.trim())
-    const labelMatch = cleaned.match(/^\s*([a-zA-Z_\p{L}][\w\p{L}\p{M}\s]*):\s+(.+)$/u)
-    if (labelMatch && !cleaned.startsWith('{')) {
-      cleaned = labelMatch[2].trim()
-    }
-
+    const cleaned = stripLeadingColonLabel(stripComments(rawLine.trim())).trim()
     const assignMatch = cleaned.match(/^([\p{L}\p{M}_$][\p{L}\p{M}\w$]*)\s*=[^=]/u)
     const varName = assignMatch?.[1]
 
