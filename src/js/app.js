@@ -2,6 +2,7 @@ import { description } from '../../package.json'
 import { initCurrencies } from './calc/currencies.js'
 import { setupUserDefined } from './calc/userDefined.js'
 import { cm, setupEditor } from './editor/index.js'
+import { isSearchPanelOpen } from './editor/searchPanel.js'
 import { initializePages } from './pages/pageManager.js'
 import { checkSyncDir, handleSyncDirDeleted, triggerFolderSync } from './pages/sync.js'
 import { app } from './state/appState.js'
@@ -99,7 +100,7 @@ async function initializeApp() {
   }
 
   window.addEventListener('focus', () => {
-    if (!isModalOpen()) {
+    if (!isModalOpen() && !isSearchPanelOpen()) {
       cm.focus()
     }
   })
