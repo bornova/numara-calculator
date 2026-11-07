@@ -54,20 +54,20 @@
 }
 
 .closePageListButton svg {
-  width: 16px;
-  height: 16px;
+  width: var(--icon-lg);
+  height: var(--icon-lg);
   pointer-events: none;
 }
 
 .dockPageListButton svg {
-  width: 15px;
-  height: 15px;
+  width: var(--icon-md);
+  height: var(--icon-md);
   pointer-events: none;
 }
 
 .pageListSort svg {
-  width: 14px;
-  height: 14px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
   pointer-events: none;
 }
 
@@ -108,7 +108,7 @@
   display: flex;
   top: auto;
   right: 0;
-  bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(var(--pagelist-float-bottom) + env(safe-area-inset-bottom, 0px));
   left: 0;
   transform: translateY(calc(100% + 10px));
   clip-path: inset(0 -20px 100% -20px);
@@ -116,10 +116,13 @@
   box-shadow: 0 4px 16px light-dark(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.45));
   border: 1px solid light-dark(#eaeaea, #181818);
   border-radius: 8px;
-  width: min(calc(100% - 20px), 250px);
+  width: min(calc(100% - 20px), var(--pagelist-width));
   height: auto;
-  min-height: 200px;
-  max-height: min(420px, calc(100vh - 90px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
+  min-height: var(--pagelist-float-min-height);
+  max-height: min(
+    var(--pagelist-float-max-height),
+    calc(100vh - var(--pagelist-float-vh-offset) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
+  );
   overflow: visible;
 }
 
@@ -193,7 +196,7 @@
 
 .pageListHeader {
   -webkit-app-region: drag;
-  height: 40px;
+  height: var(--pagelist-header-height);
 }
 
 .pageListHeader,
@@ -222,14 +225,14 @@
 }
 
 .pageListFooter {
-  height: 47px;
+  height: var(--pagelist-footer-height);
 }
 
 .sortListItem {
   -webkit-app-region: no-drag;
   cursor: pointer;
   border-radius: 4px;
-  padding: 5px 10px;
+  padding: var(--menu-item-padding);
   color: light-dark(#444444, #e6e6e6);
 }
 
@@ -252,19 +255,19 @@
 }
 
 .pageListItem > div:first-child {
-  padding: 6px 0 6px 10px;
+  padding: var(--pagelist-item-pad) 0 var(--pagelist-item-pad) 9px;
   min-width: 0;
 }
 
 .pageListItemTitle {
-  padding: 5px;
+  padding: var(--pagelist-item-pad);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .pageListItem.is-renaming > div:first-child {
-  padding: 6px 4px 6px 10px;
+  padding: var(--pagelist-item-pad) 4px var(--pagelist-item-pad) 9px;
 }
 
 .pageListItem.is-renaming .pageItemActions {
@@ -272,8 +275,7 @@
 }
 
 .pageListRenameInput,
-.pageTabRenameInput,
-.newPageInput {
+.pageTabRenameInput {
   box-sizing: border-box;
   outline: none;
   border: 1px solid #1e87f0;
@@ -288,7 +290,7 @@
 .pageListRenameInput {
   padding: 4px 6px;
   width: 100%;
-  height: 28px;
+  height: var(--pagelist-rename-height);
   line-height: 1.5;
 }
 
@@ -338,31 +340,28 @@ body.is-sorting-pages .pageItemActions,
 .savePageButton,
 .renamePageButton,
 .dupPageButton,
-.deletePageButton,
-.newPageAction {
+.deletePageButton {
   display: inline-flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   border-radius: 4px;
-  padding: 4px;
+  padding: var(--action-padding);
   color: light-dark(#607d8b, #90b4dc);
 }
 
 .savePageButton svg,
 .renamePageButton svg,
 .dupPageButton svg,
-.deletePageButton svg,
-.newPageAction svg {
-  width: 14px;
-  height: 14px;
+.deletePageButton svg {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
   pointer-events: none;
 }
 
 .savePageButton:hover,
 .renamePageButton:hover,
-.dupPageButton:hover,
-.newPageAction:hover {
+.dupPageButton:hover {
   background-color: light-dark(#e6eaee, #404040);
   color: light-dark(#005cc5, #2196f3);
 }
@@ -421,8 +420,8 @@ body.is-sorting-pages .pageItemActions,
   align-items: center;
   cursor: pointer;
   border-radius: 5px;
-  padding: 2px 8px;
-  max-width: 140px;
+  padding: var(--pagetab-padding);
+  max-width: var(--pagetab-max-width);
   touch-action: none;
   color: light-dark(#607d8b, #90b4dc);
   user-select: none;
@@ -451,8 +450,8 @@ body.is-sorting-pages .pageItemActions,
 }
 
 .pageTabRenameInput {
-  padding: 1px 5px;
-  width: 110px;
+  padding: 1px 6px;
+  width: var(--pagetab-rename-width);
   line-height: inherit;
 }
 
@@ -481,36 +480,4 @@ body.is-sorting-pages .pageItemActions,
 .tabContextDelete:hover,
 .tabContextDelete:hover svg {
   color: light-dark(#b10e0e, #d41111) !important;
-}
-
-/* New page dropdown */
-
-.newPageDropdown {
-  display: none;
-  position: fixed;
-  align-items: center;
-  gap: 3px;
-  z-index: 1060;
-  box-shadow: 0 4px 16px light-dark(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.45));
-  border: 1px solid light-dark(#eaeaea, #333333);
-  padding: 5px;
-}
-
-.newPageDropdown.uk-open {
-  display: flex;
-}
-
-.newPageInput {
-  padding: 4px 6px;
-  width: 160px;
-  height: 26px;
-  line-height: 1.5;
-}
-
-.newPageInput::placeholder {
-  color: rgba(148, 156, 160, 0.6);
-}
-
-.newPageAction {
-  padding: 5px;
 }
