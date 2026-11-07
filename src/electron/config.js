@@ -9,8 +9,8 @@ export const LIGHT_COLOR = '#ffffff'
 export const TRANS_COLOR = '#00000000'
 
 export const schema = {
-  appHeight: { type: 'number', default: 480 },
-  appWidth: { type: 'number', default: 560 },
+  appHeight: { type: 'number', default: 515 },
+  appWidth: { type: 'number', default: 600 },
   fullSize: { type: 'boolean', default: false },
   position: { type: 'array', items: { type: 'integer' } },
   theme: { type: 'string', default: 'system' },
