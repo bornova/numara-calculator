@@ -95,10 +95,7 @@ export function setupAppButtons() {
           if (app.settings.pageListPosition === 'tabs') break
           if (!app.pageListDocked && !isModalOpen()) {
             dom.pageName.click()
-          } else if (
-            dom.pageListPanel.classList.contains('uk-open') &&
-            !dom.dialogNewPage.classList.contains('uk-open')
-          ) {
+          } else if (dom.pageListPanel.classList.contains('uk-open')) {
             dom.closePageListButton.click()
           }
           break
@@ -378,7 +375,7 @@ export function setupSyncScroll() {
 
       const deltaY =
         event.deltaMode === 1
-          ? event.deltaY * (parseInt(app.settings?.lineHeight, 10) || 24)
+          ? event.deltaY * (parseInt(app.settings?.lineHeight, 10) || 26)
           : event.deltaMode === 2
             ? event.deltaY * inputPanel.clientHeight
             : event.deltaY
