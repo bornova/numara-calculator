@@ -21,7 +21,7 @@ Numara is a sleek, minimal-but-powerful notepad calculator that evaluates expres
 
 ### Documentation
 
-* [Features](${WIKI_BASE_URL}/Features) — Shortcut keywords, percentages, number base conversions, date math, plotting, currencies, labels, code folding, selection stats, cross-page variables, user-defined functions/units, and library integrations
+* [Features](${WIKI_BASE_URL}/Features) — Variables, shortcut keywords, percentages, number base conversions, date math, plotting, currencies, labels, code folding, selection stats, cross-page variables, user-defined functions/units, library integrations, and offline/update support
 * [Settings](${WIKI_BASE_URL}/Settings) — Complete guide to General, Editor, Calculator, Format, and Sync settings
 * [Keyboard shortcuts](${WIKI_BASE_URL}/Keyboard-shortcuts) — Keyboard shortcuts and quick mouse/UI interactions
 * [Function references](${WIKI_BASE_URL}/Function-references) — Built-in Math.js functions and special constants
@@ -35,6 +35,17 @@ Numara is a sleek, minimal-but-powerful notepad calculator that evaluates expres
 /** Generate Features wiki page */
 export function generateFeaturesWiki() {
   const featuresWiki = `In addition to all [constants](https://mathjs.org/docs/reference/constants.html), [functions](https://mathjs.org/docs/reference/functions.html), and [units](https://mathjs.org/docs/datatypes/units.html) provided by Math.js, the following functionalities are provided:
+
+### Variables and data structures
+
+You can assign numbers, units, currencies, strings, dates, objects, arrays, and matrices to variables and reference them on subsequent lines. Variable names also support Unicode letters (including accented and non-Latin characters such as \`ücret\` or \`π_val\`):
+
+    price = $25                   | $25.00
+    qty = 4                       | 4
+    price * qty                   | $100.00
+    item = { w: 10 cm, h: 5 cm }  | {"w": 10 cm, "h": 5 cm}
+    item.w * item.h               | 50 cm^2
+    π_val = 10                    | 10
 
 ### Shortcut keywords
 
@@ -170,6 +181,11 @@ More information on creating units can be found here: [Math.js User-Defined Unit
 ### Find and replace
 
 Press \`Cmd/Ctrl+F\` to open the search panel, or \`Cmd+Alt+F\` (macOS) / \`Ctrl+H\` (Windows/Linux) to open Find and Replace. The search panel supports both plain text and regular expression queries (e.g. \`/\\d+/i\`).
+
+### Offline web app (PWA) and desktop updates
+
+- **Progressive Web App (PWA)**: The web app at [numara.io](https://numara.io) can be installed to your desktop or home screen and works offline via a service worker.
+- **Automatic desktop updates**: The desktop app automatically checks for updates in the background and displays a notification indicator dot in the bottom bar when a new version is available, with a one-click **Update** / **Install Now** option in the menu and **About** dialog.
 
 ## 3rd Party Library Integration
 
@@ -430,6 +446,7 @@ export function generateShortcutsWiki() {
 | **Drag / double-click panel divider** | Resize input and output panels / reset to default width |
 | **Drag / double-click docked page list edge** | Resize docked page list / reset to default width |
 | **Drag and drop page in page list / page tabs** | Reorder pages |
+| **Click floating scroll-to-top button** (bottom right) | Smoothly scroll the input and output panels back to the top |
 | **Right-click input / output panel** *(Desktop)* | Copy line, answer, line with answer, or all lines/answers |
 `
 
