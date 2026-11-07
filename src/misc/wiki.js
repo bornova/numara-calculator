@@ -116,10 +116,10 @@ Selecting multiple lines in the editor automatically displays live summary stati
 
 ### Pages and cross-page references
 
-Numara supports multiple calculation pages accessible from the page list:
+Numara supports multiple calculation pages accessible from the page list or as horizontal tabs in the bottom bar (when **Page list position** is set to \`Tabs\`):
 
-- Create, rename (or double-click the page title in the bottom bar), duplicate, and delete pages.
-- Sort pages by date (\`Older to newer\`, \`Newer to older\`), alphabetically (\`A to Z\`, \`Z to A\`), or reorder them via drag-and-drop.
+- Create new pages using the **New Page** dropdown, rename pages inline (via the rename button, by double-clicking the page title in the bottom bar, or by double-clicking/right-clicking a page tab), and duplicate or delete pages.
+- Sort pages by date (\`Older to newer\`, \`Newer to older\`) or alphabetically (\`A to Z\`, \`Z to A\`) in the page list, or reorder them via drag-and-drop in both the page list and page tabs.
 - Copy or print page calculations, and import/export \`.num\` files in the desktop app.
 
 You can import variables from another page using the \`page()\` function (with autocomplete support for both page names and exported page variables):
@@ -134,26 +134,24 @@ Clicking the page name in the output panel opens that page directly, and hoverin
 
 #### Functions
 
-Custom functions, constants, and objects can be defined to be used in the calculator. Each entry must be typed as an object property (\`name: function | value | object\`) and separated by a comma \`,\`:
+Custom functions, constants, and objects can be added and managed in the **User Defined Functions & Units** dialog under the **Functions** tab:
 
-    xyz: (x, y, z) => {
-      return x + y + z
-    },
-    myConstant: 123,
-    rates: {
-      base: 300,
-      bonus: 1.25
-    }
+- **Name**: Identifier for the function, constant, or object (e.g. \`xyz\`, \`myConstant\`, or \`rates\`).
+- **Parameters** *(optional)*: Comma-separated parameter names for functions (e.g. \`x, y, z\`). Leave blank for constants or objects (or enter \`()\` for zero-argument functions).
+- **Expression or multi-line JS body**: A single expression (e.g. \`x + y + z\`, \`123\`, or \`{ base: 300, bonus: 1.25 }\`) or a multi-line JavaScript function body (e.g. \`return x + y + z\`).
 
-The above examples can then be used in Numara where \`xyz(1, 2, 3)\` outputs \`6\`, \`myConstant\` outputs \`123\`, and \`rates.base * rates.bonus\` outputs \`375\`. User-defined functions also have access to \`math\`, \`luxon\`, \`nerdamer\`, and \`formulajs\` in their scope.
+For example, with \`xyz(x, y, z) = x + y + z\`, \`myConstant = 123\`, and \`rates = { base: 300, bonus: 1.25 }\`, \`xyz(1, 2, 3)\` outputs \`6\`, \`myConstant\` outputs \`123\`, and \`rates.base * rates.bonus\` outputs \`375\`. User-defined functions also have access to \`math\`, \`luxon\`, \`nerdamer\`, and \`formulajs\` in their scope. Saved items can be edited or deleted directly from the list.
 
 #### Units
 
-Custom units can be defined to be used in the calculator. Each custom unit must be typed as an object property (\`name: unit | unit object\`) and separated by a comma \`,\`:
+Custom units can be added and managed under the **Units** tab:
 
-    xunit: '12 foot',
+- **Unit name**: Identifier for the unit (e.g. \`xunit\`).
+- **Definition**: Base unit definition (e.g. \`12 foot\`).
+- **Aliases** *(optional)*: Comma-separated alternative names for the unit (e.g. \`xunits, xu\`).
+- **Prefixes**: Unit prefix support (\`None\`, \`Short (k, M, G...)\`, \`Long (kilo, mega...)\`, \`Binary short (Ki, Mi...)\`, or \`Binary long (kibi, mebi...)\`).
 
-The above example can then be used in Numara where \`5 xunit to ft\` outputs \`60 ft\`.
+For example, defining \`xunit\` as \`12 foot\` allows you to write \`5 xunit to ft\`, which outputs \`60 ft\`.
 
 More information on creating units can be found here: [Math.js User-Defined Units](https://mathjs.org/docs/datatypes/units.html#userdefined-units)
 
@@ -199,8 +197,8 @@ export function generateSettingsWiki() {
 - Set the visual theme of the application.
 - Click the **Customize theme** palette button to customize individual syntax highlighting colors for both Light and Dark themes using live color pickers, with per-color reset buttons and a **Default Colors** reset option.
 
-\`Page list position\` Auto (Default) | Floating | Docked
-- Set the position of the page list. When set to \`Auto\`, the page list automatically docks when the window is wide enough and floats above the page name on narrower windows. When docked, drag the page list border to resize it (double-click to reset).
+\`Page list position\` Auto (Default) | Floating | Docked | Tabs
+- Set the position and display mode of the page list. When set to \`Auto\`, the page list automatically docks when the window is wide enough and floats above the page name on narrower windows. When docked, drag the page list border to resize it (double-click to reset). When set to \`Tabs\`, pages are displayed as horizontal scrollable tabs in the bottom bar instead of a side panel.
 
 \`Always on top\` On | Off (Default) *(Desktop only)*
 - Keep Numara on top of all other windows on the screen.
@@ -399,10 +397,11 @@ export function generateShortcutsWiki() {
 | **Click a page link answer** | Open the referenced page |
 | **Click a line number** (above active line) | Insert \`lineX\` into the active expression |
 | **Click a red line number / Error** | View error details for that line |
-| **Double-click page title** (bottom bar) | Rename the active page |
+| **Double-click page title / page tab** (bottom bar) | Rename the page inline |
+| **Right-click a page tab** (bottom bar) | Open tab context menu (Rename, Duplicate, Delete) |
 | **Drag / double-click panel divider** | Resize input and output panels / reset to default width |
 | **Drag / double-click docked page list edge** | Resize docked page list / reset to default width |
-| **Drag and drop page in page list** | Reorder pages in the page list |
+| **Drag and drop page in page list / page tabs** | Reorder pages |
 | **Right-click input / output panel** *(Desktop)* | Copy line, answer, line with answer, or all lines/answers |
 `
 
