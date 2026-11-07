@@ -9,9 +9,9 @@ import { checkSize, isElectron } from '../state/env.js'
 import { store } from '../state/store.js'
 import { modal } from './dialogs.js'
 
-const PAGELIST_MIN_WIDTH = 200
-const PAGELIST_MAX_WIDTH = 480
-const PAGELIST_DEFAULT_WIDTH = 250
+const PAGELIST_MIN_WIDTH = 210
+const PAGELIST_MAX_WIDTH = 510
+const PAGELIST_DEFAULT_WIDTH = 265
 const PAGELIST_TRANSITION_MS = 180
 
 let pageListResizerSetup = false
@@ -154,8 +154,8 @@ function resetWindowToAppWrapper(pageListWidth = 0, appWrapperSize = getAppWrapp
     .then(async (maximized) => {
       if (maximized) return
 
-      const targetWidth = Math.max(420, appWrapperSize.width + pageListWidth)
-      const targetHeight = Math.max(360, appWrapperSize.height)
+      const targetWidth = Math.max(480, appWrapperSize.width + pageListWidth)
+      const targetHeight = Math.max(420, appWrapperSize.height)
 
       await numara.resetSize(appWrapperSize.width, appWrapperSize.height, pageListWidth)
 
