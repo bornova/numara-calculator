@@ -937,7 +937,7 @@ describe('Numara Calculation Engine vs Math.js', function () {
         assert.strictEqual(migrateFromV7(validSpaceFormat), true)
         assert.strictEqual(validSpaceFormat.numberFormat, '1 234,56')
         assert.strictEqual(validSpaceFormat.thouSep, true)
-        assert.strictEqual(validSpaceFormat.lineHeight, '24px')
+        assert.strictEqual(validSpaceFormat.lineHeight, '26px')
       } finally {
         globalThis.localStorage = prevLocalStorage
       }

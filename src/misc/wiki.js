@@ -140,7 +140,7 @@ Selecting multiple lines in the editor automatically displays live summary stati
 
 Numara supports multiple calculation pages accessible from the page list or as horizontal tabs in the bottom bar (when **Page list position** is set to \`Tabs\`):
 
-- Create new pages using the **New Page** dropdown, rename pages inline (via the rename button, by double-clicking a page in the page list, by double-clicking the page title in the bottom bar, or by double-clicking/right-clicking a page tab), and duplicate or delete pages.
+- Create new pages using the **New page** button, rename pages inline (via the rename button, by double-clicking a page in the page list, by double-clicking the page title in the bottom bar, or by double-clicking/right-clicking a page tab), and duplicate or delete pages.
 - Sort pages by date (\`Older to newer\`, \`Newer to older\`) or alphabetically (\`A to Z\`, \`Z to A\`) in the page list, or reorder them via drag-and-drop in both the page list and page tabs.
 - Each page preserves its own undo/redo history, cursor position, and folded sections when switching pages.
 - Copy or print page calculations, and import/export \`.num\` files in the desktop app.
@@ -227,11 +227,14 @@ export function generateSettingsWiki() {
 - Set the visual theme of the application (\`System\` follows your OS appearance).
 - Click the **Customize theme** palette button to customize individual syntax highlighting colors (\`Answers\`, \`Comments\`, \`Constants\`, \`Currencies\`, \`Errors\`, \`Excel\`, \`Functions\`, \`Keywords\`, \`Numbers\`, \`Text\`, \`Operators\`, \`Units\`, \`Variables\`, and \`Plain\` when syntax highlighting is off) for both Light and Dark themes using live color pickers, with per-color reset buttons and a **Restore defaults** option.
 
+\`Zoom level\` Smaller | Normal (Default) | Larger
+- Set the overall UI zoom level across typography, icons, controls, and panels.
+
 \`Page list position\` Auto (Default) | Floating | Docked | Tabs
 - Set the position and display mode of the page list:
   - \`Auto\` (Default): Automatically docks the page list side panel when the window is wider than \`900px\` and switches to a floating slide-out drawer on narrower windows.
   - \`Floating\`: Always displays the page list as a slide-out overlay drawer when clicking the page name in the bottom bar (or pressing \`Shift+Tab\`).
-  - \`Docked\`: Keeps the page list permanently docked on the left side of the window. Drag the page list border to resize its width (\`200px\` – \`480px\`), or double-click the border to reset it to the default width (\`250px\`). On narrower windows, a toggle button in the page list header switches between \`Docked\` and \`Auto\`.
+  - \`Docked\`: Keeps the page list permanently docked on the left side of the window. Drag the page list border to resize its width (\`210px\` – \`510px\`), or double-click the border to reset it to the default width (\`265px\`). On narrower windows, a toggle button in the page list header switches between \`Docked\` and \`Auto\`.
   - \`Tabs\`: Displays pages as horizontal scrollable tabs directly in the bottom bar instead of a side panel, with left/right scroll arrows when tabs overflow.
 
 \`Always on top\` On | Off (Default) *(Desktop only)*
@@ -268,7 +271,7 @@ export function generateSettingsWiki() {
 - Set the font weight of calculation text in the input and output panels (\`200\` to \`700\`).
 
 \`Line height\` Tiny | Small | Normal (Default) | Large | X-Large
-- Set the vertical height of each calculation line in the input and output panels (\`16px\` to \`32px\`).
+- Set the vertical height of each calculation line in the input and output panels (\`17px\` to \`34px\`).
 
 #### Display & Behavior
 

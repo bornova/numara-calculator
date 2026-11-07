@@ -179,16 +179,6 @@
       </div>
     </div>
 
-    <div id="dialogNewPage" class="uk-dropdown newPageDropdown">
-      <input id="newPageTitleInput" class="newPageInput" type="text" maxlength="50" autocomplete="off" />
-      <a id="dialogNewPageSave" class="newPageAction" title="Save">
-        <i data-lucide="save"></i>
-      </a>
-      <a id="dialogNewPageCancel" class="newPageAction" title="Cancel">
-        <i data-lucide="x"></i>
-      </a>
-    </div>
-
     <div id="dialogUdfu" class="modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-xlarge">
         <button class="uk-modal-close-default" type="button"><i data-lucide="x"></i></button>
@@ -352,6 +342,16 @@
               </div>
             </div>
             <div class="uk-flex uk-flex-middle uk-flex-between">
+              <div data-help="zoomLevel">Zoom level</div>
+              <div class="uk-position-relative">
+                <select id="zoomLevel" class="uk-select settingItem">
+                  <option value="smaller">Smaller</option>
+                  <option value="normal">Normal</option>
+                  <option value="larger">Larger</option>
+                </select>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-middle uk-flex-between">
               <div data-help="pageListPosition">Page list position</div>
               <div class="uk-position-relative">
                 <select id="pageListPosition" class="uk-select settingItem">
@@ -469,11 +469,11 @@
               <div data-help="lineHeight">Line height</div>
               <div>
                 <select id="lineHeight" class="uk-select settingItem">
-                  <option value="16px">Tiny</option>
-                  <option value="20px">Small</option>
-                  <option value="24px">Normal</option>
-                  <option value="28px">Large</option>
-                  <option value="32px">X-Large</option>
+                  <option value="17px">Tiny</option>
+                  <option value="21px">Small</option>
+                  <option value="26px">Normal</option>
+                  <option value="30px">Large</option>
+                  <option value="34px">X-Large</option>
                 </select>
               </div>
             </div>

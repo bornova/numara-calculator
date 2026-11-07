@@ -1,6 +1,6 @@
 import UIkit from 'uikit'
 
-import { calculate, clearEvaluationCache } from '../calc/calcManager.js'
+import { calculate, clearEvaluationCache, syncOutputHeights } from '../calc/calcManager.js'
 import { getRates } from '../calc/currencies.js'
 import { app as coreApp } from '../core/mathInstance.js'
 import { escapeHTML, isCommaDecimal } from '../core/utils.js'
@@ -17,6 +17,12 @@ import { colors } from './theme.js'
 
 let updateInterval
 let eventsInitialized = false
+
+const LINE_HEIGHT_ZOOM_MAP = {
+  smaller: { '17px': '16px', '21px': '20px', '26px': '24px', '30px': '28px', '34px': '32px' },
+  normal: { '17px': '17px', '21px': '21px', '26px': '26px', '30px': '30px', '34px': '34px' },
+  larger: { '17px': '18px', '21px': '22px', '26px': '28px', '30px': '32px', '34px': '36px' }
+}
 
 /**
  * Check if a setting is modified from its default value and toggle its indicator dot.
@@ -227,7 +233,7 @@ function setupSettingsEvents() {
         }
       }
 
-      if (id === 'pageListPosition') {
+      if (id === 'pageListPosition' || id === 'zoomLevel') {
         setTimeout(() => {
           modal.center('#dialogSettings', true)
         }, 250)
@@ -303,7 +309,7 @@ export const settings = {
     inputWidth: 60,
     keywordTips: true,
     lineErrors: false,
-    lineHeight: '24px',
+    lineHeight: '26px',
     lineNumbers: true,
     lineWrap: true,
     truncateAnswers: true,
@@ -322,6 +328,7 @@ export const settings = {
     rulers: false,
     syntax: true,
     theme: 'system',
+    zoomLevel: 'normal',
     thouSep: true,
     showTray: false,
     openAtLogin: false,
@@ -353,7 +360,7 @@ export const settings = {
         settings.save()
         await settings.apply()
 
-        if (id === 'pageListPosition') {
+        if (id === 'pageListPosition' || id === 'zoomLevel') {
           setTimeout(() => {
             modal.center('#dialogSettings', true)
           }, 250)
@@ -482,10 +489,15 @@ export const settings = {
       numara.setOpenAtLogin(app.settings.openAtLogin)
     }
 
+    const zoomLevel = app.settings.zoomLevel || 'normal'
+    document.documentElement.dataset.zoom = zoomLevel
+
+    const effectiveLineHeight = LINE_HEIGHT_ZOOM_MAP[zoomLevel]?.[app.settings.lineHeight] || app.settings.lineHeight
+
     dom.els('.panelFont, .input .CodeMirror').forEach((el) => {
       el.style.fontSize = app.settings.fontSize
       el.style.fontWeight = app.settings.fontWeight
-      el.style.setProperty('line-height', app.settings.lineHeight, 'important')
+      el.style.setProperty('line-height', effectiveLineHeight, 'important')
     })
 
     dom.mainPanel.classList.toggle('showRulers', app.settings.rulers)
@@ -541,6 +553,8 @@ export const settings = {
     }
 
     setupPageList(true)
+    cm.refresh()
+    syncOutputHeights()
     await checkSize()
 
     if (shouldCalculate) {

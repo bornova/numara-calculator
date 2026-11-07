@@ -89,6 +89,7 @@ body.numara-search-panel-open .CodeMirror-selected {
 
 /* Custom Search & Replace Panel */
 .numara-search-panel {
+  -webkit-app-region: no-drag;
   display: flex;
   position: absolute;
   top: 0;
@@ -101,8 +102,8 @@ body.numara-search-panel-open .CodeMirror-selected {
   box-shadow: 0 4px 12px light-dark(rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.3));
   border-bottom: 1px solid light-dark(#eaeaea, #333333);
   background-color: light-dark(#ffffff, #1f1f1f);
-  padding: 8px 12px;
-  width: 400px;
+  padding: 10px 14px;
+  width: var(--search-panel-width);
   max-width: 100%;
 }
 
@@ -128,7 +129,7 @@ body.numara-search-panel-open .CodeMirror-selected {
 
 .replace-spacer {
   flex-shrink: 0;
-  width: 22px;
+  width: calc(var(--icon-sm) + 10px);
 }
 
 .search-toggle-replace,
@@ -146,7 +147,7 @@ body.numara-search-panel-open .CodeMirror-selected {
   border: none;
   border-radius: 4px;
   background: transparent;
-  padding: 4px;
+  padding: 5px;
   color: light-dark(#607d8b, #90b4dc);
 }
 
@@ -179,9 +180,9 @@ body.numara-search-panel-open .CodeMirror-selected {
   border: 1px solid light-dark(#dadada, #3b3b3b);
   border-radius: 5px;
   background-color: light-dark(#f9fafb, #262626);
-  padding: 4px 80px 4px 10px;
+  padding: 4px 86px 4px 10px;
   width: 100%;
-  height: 28px;
+  height: var(--search-control-height);
   color: inherit;
   font-size: inherit;
   font-family: inherit;
@@ -226,8 +227,8 @@ body.numara-search-panel-open .CodeMirror-selected {
   border: 1px solid light-dark(#c9dcef, #3b3b3b);
   border-radius: 5px;
   background-color: light-dark(transparent, #2b2b2b);
-  padding: 0 10px;
-  height: 28px;
+  padding: 0 12px;
+  height: var(--search-control-height);
   color: light-dark(#444444, #e6e6e6);
   font-weight: 500;
   font-size: inherit;
@@ -243,18 +244,18 @@ body.numara-search-panel-open .CodeMirror-selected {
 
 .numara-search-panel svg {
   flex-shrink: 0;
-  width: 14px;
-  height: 14px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
   pointer-events: none;
 }
 
 /* Dynamic padding adjustment to prevent search panel from covering text and keep input/output aligned */
 body.numara-search-panel-open .mainPanel {
-  padding-top: 48px;
+  padding-top: var(--search-open-pad);
 }
 
 body.numara-search-panel-open.numara-search-replace-open .mainPanel {
-  padding-top: 86px;
+  padding-top: var(--search-replace-open-pad);
 }
 
 /* Hints */
@@ -288,7 +289,7 @@ li.CodeMirror-hint-active {
 .CodeMirror-foldgutter {
   cursor: pointer;
   background-color: light-dark(#ffffff, #1f1f1f);
-  width: 12px;
+  width: var(--foldgutter-width);
 }
 
 .CodeMirror-foldgutter-open,

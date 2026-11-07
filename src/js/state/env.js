@@ -4,8 +4,8 @@ import { app } from './appState.js'
 
 const userAgent = navigator.userAgent.toLowerCase()
 
-export const DEFAULT_APP_WIDTH = 560
-export const DEFAULT_APP_HEIGHT = 480
+export const DEFAULT_APP_WIDTH = 600
+export const DEFAULT_APP_HEIGHT = 515
 
 /** Check if app is running in Electron. */
 export const isElectron = typeof window !== 'undefined' && window.numara !== undefined

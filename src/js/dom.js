@@ -72,10 +72,6 @@ export const dom = {
   printButton: document.getElementById('printButton'),
 
   // Dialogs
-  dialogNewPage: document.getElementById('dialogNewPage'),
-  newPageTitleInput: document.getElementById('newPageTitleInput'),
-  dialogNewPageSave: document.getElementById('dialogNewPageSave'),
-  dialogNewPageCancel: document.getElementById('dialogNewPageCancel'),
   udfNameInput: document.getElementById('udfNameInput'),
   udfParamsInput: document.getElementById('udfParamsInput'),
   udfBodyInput: document.getElementById('udfBodyInput'),

@@ -18,9 +18,7 @@ export function setupKeyboardShortcuts() {
   }
 
   const closePageListIfOpen = () =>
-    dom.pageListPanel.classList.contains('uk-open') &&
-    !dom.dialogNewPage.classList.contains('uk-open') &&
-    (dom.closePageListButton.click(), true)
+    dom.pageListPanel.classList.contains('uk-open') && (dom.closePageListButton.click(), true)
 
   const shortcuts = {}
 
@@ -70,7 +68,6 @@ export function setupKeyboardShortcuts() {
           !isSearchPanelOpen() &&
           !event.target.closest?.('.pageListRenameInput, .pageTabRenameInput') &&
           !dom.tabContextMenu?.classList.contains('uk-open') &&
-          !dom.dialogNewPage?.classList.contains('uk-open') &&
           (!cm || !cm.state.completionActive)
         ) {
           event.preventDefault()

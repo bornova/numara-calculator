@@ -71,47 +71,6 @@ export function updatePageName(name, pageId) {
 }
 
 /**
- * Hides the new page dropdown if open.
- */
-function hideNewPageDropdown() {
-  dom.dialogNewPage?.classList.remove('uk-open')
-}
-
-/**
- * Toggles the new page dropdown next to the active add page button.
- * @param {Event} [event] Triggering click event.
- */
-function newPageDialog(event) {
-  event?.stopPropagation()
-
-  if (dom.dialogNewPage.classList.contains('uk-open')) {
-    hideNewPageDropdown()
-    cm.focus()
-    return
-  }
-
-  hideTabContextMenu()
-  hideOpenDropdowns(dom.dialogNewPage)
-
-  const anchorBtn = app.pageListDocked ? dom.newPageButtonPL : dom.newPageButton
-  UIkit.tooltip(anchorBtn)?.hide()
-
-  dom.newPageTitleInput.value = ''
-  dom.newPageTitleInput.setAttribute('placeholder', getPageName())
-  dom.dialogNewPage.classList.add('uk-open')
-
-  const btnRect = anchorBtn.getBoundingClientRect()
-  const menuRect = dom.dialogNewPage.getBoundingClientRect()
-  const left = Math.max(8, Math.min(btnRect.left, window.innerWidth - menuRect.width - 8))
-  const top = Math.max(8, btnRect.top - menuRect.height - 6)
-
-  dom.dialogNewPage.style.left = `${left}px`
-  dom.dialogNewPage.style.top = `${top}px`
-
-  dom.newPageTitleInput.focus()
-}
-
-/**
  * Get page name/number to use.
  * @returns {string} The page name.
  */
@@ -169,26 +128,22 @@ function getUniquePageName(pages, baseName) {
  * @param {string} [importData=''] Imported page content when `isImport` is true.
  */
 export function newPage(isImport = false, importName = '', importData = '') {
+  debouncedSavePageState.flush()
+  debouncedSaveCursor.flush()
+
+  if (app.activePage) {
+    app.pageHistory.set(app.activePage, cm.getHistory())
+  }
+
+  hideTabContextMenu()
+  hideOpenDropdowns()
+  UIkit.tooltip(app.pageListDocked ? dom.newPageButtonPL : dom.newPageButton)?.hide()
+
   const pageId = generatePageId()
   const pages = store.get('pages') || []
-  const rawTitle = isImport ? importName || dom.newPageTitleInput.value : dom.newPageTitleInput.value
-  let pageName = sanitizePageName(rawTitle, isImport ? `Import #${pageId}` : getPageName())
+  const baseName = sanitizePageName(isImport ? importName : '', isImport ? `Import #${pageId}` : getPageName())
+  const pageName = getUniquePageName(pages, baseName)
   const pageData = isImport ? importData : ''
-
-  const sanitizedNew = getSafeFilename(pageName)
-
-  if (pages.some((p) => getSafeFilename(p.name).toLowerCase() === sanitizedNew.toLowerCase())) {
-    if (isImport) {
-      pageName = getUniquePageName(pages, pageName)
-    } else {
-      notify(
-        `"${escapeHTML(pageName)}" (or a page with a conflicting file name) already exists. Please choose a different page name.`,
-        'danger'
-      )
-
-      return
-    }
-  }
 
   app.activePage = pageId
 
@@ -199,8 +154,6 @@ export function newPage(isImport = false, importName = '', importData = '') {
 
   loadPage(pageId)
   syncPageSave(pageName, pageData)
-
-  hideNewPageDropdown()
 
   if (!app.pageListDocked && dom.pageListPanel.classList.contains('uk-open')) {
     UIkit.offcanvas('#pageListPanel')
@@ -553,35 +506,8 @@ function sortPages(by) {
  */
 function setupPageEvents() {
   dom.closePageListButton.addEventListener('click', () => UIkit.offcanvas('#pageListPanel').hide())
-  dom.newPageButton.addEventListener('click', newPageDialog)
-  dom.newPageButtonPL.addEventListener('click', newPageDialog)
-  dom.dialogNewPageSave.addEventListener('click', () => newPage(false))
-  dom.dialogNewPageCancel.addEventListener('click', () => {
-    hideNewPageDropdown()
-    cm.focus()
-  })
-
-  dom.newPageTitleInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-      event.preventDefault()
-      event.stopPropagation()
-      dom.dialogNewPageSave.click()
-    } else if (event.key === 'Escape') {
-      event.preventDefault()
-      event.stopPropagation()
-      hideNewPageDropdown()
-      cm.focus()
-    }
-  })
-
-  document.addEventListener('pointerdown', (event) => {
-    if (
-      dom.dialogNewPage?.classList.contains('uk-open') &&
-      !event.target.closest('#dialogNewPage, #newPageButton, #newPageButtonPL')
-    ) {
-      hideNewPageDropdown()
-    }
-  })
+  dom.newPageButton.addEventListener('click', () => newPage(false))
+  dom.newPageButtonPL.addEventListener('click', () => newPage(false))
 
   dom.sortOldNew.addEventListener('click', () => sortPages('oldnew'))
   dom.sortNewOld.addEventListener('click', () => sortPages('newold'))
@@ -602,7 +528,7 @@ function setupPageEvents() {
     isScrolling = true
 
     requestAnimationFrame(() => {
-      hideOpenDropdowns(dom.dialogNewPage)
+      hideOpenDropdowns()
       isScrolling = false
     })
   })

@@ -24,11 +24,19 @@ const ACTIVE_STORE_KEYS = [
 const OBSOLETE_STORE_KEYS = ['sideBarWidth', 'rateInterval', 'input', 'saved']
 
 const LEGACY_LINE_HEIGHT_MAP = {
-  '1.5em': '16px',
-  '1.75em': '20px',
-  '2em': '24px',
-  '2.5em': '28px',
-  '3em': '32px'
+  '1.5em': '17px',
+  '1.75em': '21px',
+  '2em': '26px',
+  '2.5em': '30px',
+  '3em': '34px',
+  '16px': '17px',
+  '18px': '17px',
+  '20px': '21px',
+  '22px': '21px',
+  '24px': '26px',
+  '28px': '26px',
+  '32px': '30px',
+  '36px': '34px'
 }
 
 /**
