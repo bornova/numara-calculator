@@ -9,12 +9,12 @@ input.clr-color {
 
 .clr-picker {
   border-radius: 3px;
-  width: 160px;
+  width: var(--clr-picker-width);
 }
 
 .clr-gradient {
   margin-bottom: 10px;
-  height: 80px;
+  height: 90px;
 }
 
 .clr-hue,
@@ -25,14 +25,14 @@ input.clr-color {
 
 .clr-preview {
   margin: 10px auto 10px 10px;
-  width: 25px;
-  height: 25px;
+  width: var(--clr-control-height);
+  height: var(--clr-control-height);
 }
 
 input.clr-color {
   margin: 10px auto 10px auto;
-  height: 25px;
-  font-size: 13px;
+  height: var(--clr-control-height);
+  font-size: var(--base-font-size);
   font-family: inherit;
 }
 
@@ -42,7 +42,7 @@ input.clr-color {
 
 .clr-field button {
   border: 1px solid light-dark(#eaeaea, #666666);
-  width: 20px;
+  width: var(--select-height);
 }
 
 .clr-field button:after {
@@ -54,7 +54,7 @@ input.clr-color {
   justify-content: center;
   align-items: center;
   border-radius: 4px;
-  padding: 4px;
+  padding: 5px;
   order: 2;
   cursor: pointer;
   margin: auto 10px auto 5px;
@@ -65,6 +65,6 @@ input.clr-color {
 }
 
 .clr-custom-reset > svg {
-  width: 16px;
-  height: 16px;
+  width: var(--icon-lg);
+  height: var(--icon-lg);
 }
