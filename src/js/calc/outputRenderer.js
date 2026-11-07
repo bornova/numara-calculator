@@ -163,13 +163,13 @@ export function syncOutputHeights(force = true) {
   let measuredHeights = null
 
   if (!lineWrap && !hasFolds) {
-    const h = visibleCount > 0 ? visibleChildren[0].clientHeight || 27 : 27
+    const h = visibleCount > 0 ? visibleChildren[0].clientHeight || 28 : 28
     uniformHeightStr = `${h}px`
   } else {
     measuredHeights = new Array(visibleCount)
 
     for (let v = 0; v < visibleCount; v++) {
-      measuredHeights[v] = `${visibleChildren[v].clientHeight || 27}px`
+      measuredHeights[v] = `${visibleChildren[v].clientHeight || 28}px`
     }
   }
 
@@ -211,7 +211,7 @@ export function syncOutputHeights(force = true) {
           el.style.display = 'none'
         }
       } else {
-        const newHeightStr = visibleIndex < visibleCount ? measuredHeights[visibleIndex++] : '27px'
+        const newHeightStr = visibleIndex < visibleCount ? measuredHeights[visibleIndex++] : '28px'
 
         if (el.style.display !== '') {
           el.style.display = ''
