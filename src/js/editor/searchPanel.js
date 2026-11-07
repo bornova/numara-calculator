@@ -245,8 +245,11 @@ export function showSearchPanel(cm, replaceMode = false) {
   setReplaceModeVisible(replaceMode)
   updateSearch(cm)
 
+  const input = panelEl.querySelector(replaceMode ? '.replace-input' : '.find-input')
+  input.focus()
+  input.select()
+
   setTimeout(() => {
-    const input = panelEl.querySelector(replaceMode ? '.replace-input' : '.find-input')
     input.focus()
     input.select()
   }, 50)
