@@ -65,6 +65,6 @@ export function setupPageIo() {
       window.print()
     })
   } else {
-    dom.els('#importPageButton, #exportPageButton').forEach((el) => el.remove())
+    dom.els('#importExportDivider, #importPageButton, #exportPageButton').forEach((el) => el.remove())
   }
 }
