@@ -7,8 +7,8 @@
 }
 
 .dialog-buttons svg {
-  width: 14px;
-  height: 14px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
 .dialogConfirm {
@@ -18,7 +18,7 @@
 /* Settings dialog */
 
 #dialogSettings > .uk-width-medium {
-  width: 420px;
+  width: var(--modal-settings);
 }
 
 #settingsTabs {
@@ -34,7 +34,7 @@
 .dialog-settings-body {
   margin-right: -8px;
   padding-right: 8px;
-  height: calc(100vh - 200px);
+  height: calc(100vh - 230px);
   max-height: 420px;
   overflow-x: hidden;
   overflow-y: auto;
@@ -42,15 +42,19 @@
 
 .dialog-settings-body > li > div,
 .dialog-plot-settings-body > div:not(.domainParent) {
-  margin: 10px 0 0 0;
-  line-height: 16px;
+  margin: 12px 0 0 0;
+  line-height: 19px;
 }
 
 .theme-pill-button svg {
   stroke-width: 2px;
-  width: 14px;
-  height: 14px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
   pointer-events: none;
+}
+
+.resetButtons {
+  margin: 10px 0 -5px -5px;
 }
 
 .resetButtons a {
@@ -59,7 +63,7 @@
   align-items: center;
   margin-right: 6px;
   border-radius: 4px;
-  padding: 4px;
+  padding: 5px;
   color: light-dark(#777777, #999999);
 }
 
@@ -73,16 +77,16 @@
 }
 
 .defaultSettingsButton > svg {
-  width: 16px;
-  height: 16px;
+  width: var(--icon-lg);
+  height: var(--icon-lg);
 }
 
 .settingItem {
-  width: 150px;
+  width: var(--setting-item-width);
 }
 
 #currencyInterval {
-  width: 125px;
+  width: var(--currency-interval-width);
 }
 
 #dialogSettings h3 {
@@ -90,7 +94,7 @@
   color: light-dark(#1d3f5c, #a0d3ff);
   font-weight: 500;
   font-size: 1rem;
-  line-height: 20px;
+  line-height: 22px;
   font-family: inherit;
 }
 
@@ -123,7 +127,7 @@
 }
 
 #dialogSettings div:has(> .uk-range) .settingMod {
-  margin-left: -62px;
+  margin-left: -68px;
 }
 
 #dialogSettings input:disabled + span.slider.round {
@@ -136,7 +140,7 @@
   border: 1px solid light-dark(#e5e5e5, #333333);
   background-color: transparent;
   padding: 1px 0 0 0;
-  width: 25px;
+  width: 30px;
   color: light-dark(#333333, #e6e6e6);
   text-align: center;
 }
@@ -151,13 +155,13 @@
   justify-content: center;
   align-items: center;
   vertical-align: top;
-  height: 20px;
+  height: var(--select-height);
 }
 
 .warn-icon svg {
   stroke: #faa05a;
-  width: 14px;
-  height: 14px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
   pointer-events: none;
 }
 
@@ -172,7 +176,7 @@
   justify-content: center;
   align-items: center;
   border-radius: 4px;
-  padding: 4px;
+  padding: 5px;
 }
 
 .customizeThemeButton:hover,
@@ -181,13 +185,13 @@
 }
 
 .customizeThemeButton > svg {
-  width: 18px;
-  height: 18px;
+  width: var(--icon-xl);
+  height: var(--icon-xl);
 }
 
 .updateRatesLink > svg {
-  width: 16px;
-  height: 16px;
+  width: var(--icon-lg);
+  height: var(--icon-lg);
 }
 
 .updateRatesLink.spin > svg {
@@ -208,7 +212,7 @@
   border-radius: 8px;
   background-color: light-dark(#f5f5f5, #2b2b2b);
   padding: 3px;
-  width: 115px;
+  width: var(--theme-pill-width);
 }
 
 .theme-pill-button {
@@ -266,13 +270,13 @@
 /* Color picker dialog */
 
 .colorPickerContainer {
-  height: calc(100vh - 200px);
-  max-height: 450px;
+  height: calc(100vh - 230px);
+  max-height: 420px;
   overflow: scroll;
 }
 
 .colorPickerContainer > div {
-  margin: 5px 0 0 0;
+  margin: 6px 0 0 0;
 }
 
 .colorPickerContainer > div > div:first-child {
@@ -283,9 +287,9 @@
   cursor: pointer;
   box-sizing: border-box;
   border: 1px solid light-dark(#eaeaea, #666666);
-  padding: 2px 5px;
-  width: 80px;
-  height: 20px;
+  padding: 2px 6px;
+  width: var(--color-input-width);
+  height: var(--select-height);
   color: light-dark(#333333, #e6e6e6);
 }
 
@@ -325,7 +329,7 @@
 
 .dialog-about-links > div {
   width: 100%;
-  line-height: 30px;
+  line-height: 34px;
 }
 
 div:has(> #logsLink) {
@@ -361,7 +365,7 @@ div:has(> #logsLink) {
 }
 
 .pr-lh {
-  line-height: 22px;
+  line-height: 26px;
 }
 
 /* Plot dialog */
@@ -391,7 +395,7 @@ div:has(> #logsLink) {
   grid-template-rows: repeat(4, 1fr);
   grid-template-columns: repeat(4, 1fr);
   margin: 10px auto 0;
-  width: 250px;
+  width: var(--domain-parent-width);
 }
 
 .domainParent > .div1,
@@ -448,7 +452,7 @@ div:has(> #logsLink) {
 
 .domainTextBox {
   margin: 10px;
-  width: 50px;
+  width: var(--domain-textbox-width);
 }
 
 .domainTextBox:disabled {
@@ -469,10 +473,10 @@ div:has(> #logsLink) {
   border: 1px solid light-dark(#dcdcdc, #3b3b3b);
   border-radius: 14px;
   background-color: light-dark(#f5f5f5, #2a2a2a);
-  padding: 0 10px;
+  padding: 0 12px;
   color: light-dark(#666666, #aaaaaa);
   font-size: 0.88rem;
-  line-height: 16px;
+  line-height: 19px;
   font-family: 'Roboto Mono', monospace;
 }
 
@@ -494,12 +498,12 @@ div:has(> #logsLink) {
 /* User Defined Functions & Units dialog */
 
 #dialogUdfu > .uk-modal-dialog {
-  width: 540px;
+  width: var(--modal-udfu);
 }
 
 #udfuSwitcher {
-  height: calc(100vh - 161px);
-  max-height: 459px;
+  height: calc(100vh - 198px);
+  max-height: 452px;
 }
 
 #udfuSwitcher > li.uk-active {
@@ -541,7 +545,7 @@ div:has(> #logsLink) {
 .udfuInput {
   flex: 1;
   min-width: 0;
-  height: 26px;
+  height: var(--udfu-control-height);
 }
 
 .udfuInput:focus,
@@ -556,8 +560,8 @@ div:has(> #logsLink) {
 
 .udfuTextarea {
   width: 100%;
-  min-height: 44px;
-  max-height: 110px;
+  min-height: 50px;
+  max-height: 130px;
   resize: vertical;
   line-height: 1.4;
   font-family: 'Roboto Mono', monospace;
@@ -566,7 +570,7 @@ div:has(> #logsLink) {
 .udfuSelect {
   flex: 1;
   min-width: 0;
-  height: 26px !important;
+  height: var(--udfu-control-height) !important;
 }
 
 .udfuFormActions {
@@ -583,20 +587,20 @@ div:has(> #logsLink) {
   align-items: center;
   gap: 4px;
   margin: 0 !important;
-  padding: 0 10px !important;
-  height: 26px;
+  padding: 0 12px !important;
+  height: var(--udfu-control-height);
   line-height: 1;
 }
 
 .udfuCancelBtn {
-  padding: 0 7px !important;
+  padding: 0 8px !important;
 }
 
 .udfuSaveBtn svg,
 .udfuCancelBtn svg {
   display: block;
-  width: 14px;
-  height: 14px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
   pointer-events: none;
 }
 
@@ -631,8 +635,8 @@ div:has(> #logsLink) {
   border: 1px solid light-dark(#eeeeee, #2d2d2d);
   border-radius: 4px;
   background-color: light-dark(#fafafa, #252525);
-  padding: 3px 8px;
-  min-height: 24px;
+  padding: 4px 10px;
+  min-height: var(--udfu-item-min-height);
 }
 
 .udfuItem:hover {
@@ -696,8 +700,8 @@ div:has(> #logsLink) {
 
 .editUdfuButton svg,
 .deleteUdfuButton svg {
-  width: 13px;
-  height: 13px;
+  width: var(--icon-xs);
+  height: var(--icon-xs);
   pointer-events: none;
 }
 
