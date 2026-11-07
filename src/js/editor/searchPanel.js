@@ -110,13 +110,14 @@ function refreshMatches(cm, fromPos, select = true) {
   }
 }
 
-function setReplaceModeVisible(visible) {
+function setReplaceModeVisible(cm, visible) {
   const replaceRow = panelEl.querySelector('.replace-row')
   const toggleBtn = panelEl.querySelector('.search-toggle-replace')
 
   replaceRow.classList.toggle('hidden', !visible)
   toggleBtn.classList.toggle('expanded', visible)
   document.body.classList.toggle('numara-search-replace-open', visible)
+  cm.refresh()
 }
 
 function updateSearch(cm, select = true) {
@@ -216,7 +217,7 @@ function toggleReplaceMode(cm, focusReplace = true) {
   const replaceRow = panelEl.querySelector('.replace-row')
   const isHidden = replaceRow.classList.contains('hidden')
 
-  setReplaceModeVisible(isHidden)
+  setReplaceModeVisible(cm, isHidden)
 
   if (isHidden) {
     if (focusReplace) {
@@ -242,7 +243,7 @@ export function showSearchPanel(cm, replaceMode = false) {
   }
 
   document.body.classList.add('numara-search-panel-open')
-  setReplaceModeVisible(replaceMode)
+  setReplaceModeVisible(cm, replaceMode)
   updateSearch(cm)
 
   const input = panelEl.querySelector(replaceMode ? '.replace-input' : '.find-input')
@@ -272,6 +273,7 @@ export function hideSearchPanel(cm) {
   matches = []
   activeIndex = -1
 
+  cm.refresh()
   cm.focus()
 }
 
@@ -280,8 +282,6 @@ export function isSearchPanelOpen() {
 }
 
 function createPanel(cm) {
-  const wrapper = cm.getWrapperElement()
-
   panelEl = document.createElement('div')
   panelEl.className = 'numara-search-panel hidden'
   panelEl.innerHTML = `
@@ -317,7 +317,7 @@ function createPanel(cm) {
     </div>
   `
 
-  wrapper.insertBefore(panelEl, wrapper.firstChild)
+  dom.mainPanel.insertBefore(panelEl, dom.mainPanel.firstChild)
 
   const findInput = panelEl.querySelector('.find-input')
   const replaceInput = panelEl.querySelector('.replace-input')
