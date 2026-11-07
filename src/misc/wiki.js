@@ -21,7 +21,7 @@ Numara is a sleek, minimal-but-powerful notepad calculator that evaluates expres
 
 ### Documentation
 
-* [Features](${WIKI_BASE_URL}/Features) — Shortcut keywords, percentages, date math, plotting, currencies, labels, code folding, selection stats, cross-page variables, user-defined functions/units, and library integrations
+* [Features](${WIKI_BASE_URL}/Features) — Shortcut keywords, percentages, number base conversions, date math, plotting, currencies, labels, code folding, selection stats, cross-page variables, user-defined functions/units, and library integrations
 * [Settings](${WIKI_BASE_URL}/Settings) — Complete guide to General, Editor, Calculator, Format, and Sync settings
 * [Keyboard shortcuts](${WIKI_BASE_URL}/Keyboard-shortcuts) — Keyboard shortcuts and quick mouse/UI interactions
 * [Function references](${WIKI_BASE_URL}/Function-references) — Built-in Math.js functions and special constants
@@ -40,19 +40,21 @@ export function generateFeaturesWiki() {
 
 \`ans\` or \`_\` Returns the answer from the previous calculated line.
 
-\`total\` Totals all numeric values up to this keyword.
+\`total\` Totals all numeric (or compatible unit) values up to this keyword.
 
-\`subtotal\` Totals numeric values within a calculation block after a blank line.
+\`subtotal\` Totals numeric (or compatible unit) values within a calculation block after a blank line.
 
-\`avg\` Averages all numeric values up to this keyword.
+\`avg\` Averages all numeric (or compatible unit) values up to this keyword.
 
-\`subavg\` Averages numeric values within a calculation block after a blank line.
+\`subavg\` Averages numeric (or compatible unit) values within a calculation block after a blank line.
 
 \`lineX\` Returns the answer from a specific line, where \`X\` is the line number. Ex. \`line4\` returns the answer from line 4. Clicking a line number in the gutter (above the active line) inserts \`lineX\` at the cursor.
 
 \`today\` Returns today's date.
 
 \`now\` Returns today's date and time.
+
+> \`total\`, \`subtotal\`, \`avg\`, and \`subavg\` can also be used inside larger expressions (e.g. \`total * 1.15\` or \`subtotal + 10%\`).
 
 ### Percentage calculations
 
@@ -66,9 +68,18 @@ Numara supports natural percentage expressions, percentage offsets on numbers/va
     30 is what % of 120           | 25%
     0.25 in %                     | 25%
 
+### Number base conversions
+
+You can enter binary (\`0b\`), octal (\`0o\`), and hexadecimal (\`0x\`) literals and convert expressions to another base using \`in\` or \`to\` followed by \`bin\`, \`oct\`, or \`hex\`:
+
+    255 in hex                    | 0xff
+    10 in bin                     | 0b1010
+    64 to oct                     | 0o100
+    0xff + 0b1010                 | 265
+
 ### Simple date calculations
 
-Numara allows you to do simple date additions and subtractions such as \`today + 3 weeks\` and \`now + 36 hours\`. You can also add or subtract durations from a specific date such as \`7/31/2023 + 4 days\`, or subtract two dates to find the duration between them (e.g. \`01/20/2026 - 01/15/2026\` outputs \`5 days\`, and \`01/20/2026 - 01/15/2026 in hours\` outputs \`120 hours\`), where the date matches your configured **Date format** setting (\`MM/DD/YYYY\`, \`DD/MM/YYYY\`, or \`YYYY-MM-DD\`). Supported duration units include \`millisecond\`, \`second\`, \`minute\`, \`hour\`, \`day\`, \`week\`, \`month\`, \`quarter\`, \`year\`, \`decade\`, \`century\` (\`centuries\`), and \`millennium\` (\`millennia\`). If a date is entered without a duration operator or second date, the expression is evaluated as division (e.g. \`7 / 31 / 2023\`).
+Numara allows you to do simple date additions and subtractions such as \`today + 3 weeks\`, \`now + 36 hours\`, or chained durations like \`today + 1 year + 2 months - 3 days\`. You can also add or subtract durations from a specific date (or date variable) such as \`7/31/2023 + 4 days\`, or subtract two dates to find the duration between them (e.g. \`01/20/2026 - 01/15/2026\` outputs \`5 days\`, and \`01/20/2026 - 01/15/2026 in hours\` outputs \`120 hours\`), where the date matches your configured **Date format** setting (\`MM/DD/YYYY\`, \`DD/MM/YYYY\`, or \`YYYY-MM-DD\`). Supported duration units include \`millisecond\`, \`second\`, \`minute\`, \`hour\`, \`day\`, \`week\`, \`month\`, \`quarter\`, \`year\`, \`decade\`, \`century\` (\`centuries\`), and \`millennium\` (\`millennia\`). If a date is entered without a duration operator or second date, the expression is evaluated as division (e.g. \`7 / 31 / 2023\`).
 
 ### Function plotting
 
@@ -112,14 +123,15 @@ Lines starting with Markdown-style headings (\`# Heading\`, \`## Subheading\`, u
 
 ### Selection statistics
 
-Selecting multiple lines in the editor automatically displays live summary statistics (**Sum**, **Avg**, **Min**, **Max**, and **Count**) in the bottom status bar for all numeric and compatible unit answers in the selection. Clicking the statistics summary copies it to the clipboard.
+Selecting multiple lines in the editor automatically displays live summary statistics (**Sum**, **Avg**, and **Count**) in the bottom status bar for numeric answers in the selection. Clicking the statistics summary copies the sum to the clipboard.
 
 ### Pages and cross-page references
 
-Numara supports multiple calculation pages accessible from the page list:
+Numara supports multiple calculation pages accessible from the page list or as horizontal tabs in the bottom bar (when **Page list position** is set to \`Tabs\`):
 
-- Create, rename (or double-click the page title in the bottom bar), duplicate, and delete pages.
-- Sort pages by date (\`Older to newer\`, \`Newer to older\`), alphabetically (\`A to Z\`, \`Z to A\`), or reorder them via drag-and-drop.
+- Create new pages using the **New Page** dropdown, rename pages inline (via the rename button, by double-clicking a page in the page list, by double-clicking the page title in the bottom bar, or by double-clicking/right-clicking a page tab), and duplicate or delete pages.
+- Sort pages by date (\`Older to newer\`, \`Newer to older\`) or alphabetically (\`A to Z\`, \`Z to A\`) in the page list, or reorder them via drag-and-drop in both the page list and page tabs.
+- Each page preserves its own undo/redo history, cursor position, and folded sections when switching pages.
 - Copy or print page calculations, and import/export \`.num\` files in the desktop app.
 
 You can import variables from another page using the \`page()\` function (with autocomplete support for both page names and exported page variables):
@@ -134,26 +146,24 @@ Clicking the page name in the output panel opens that page directly, and hoverin
 
 #### Functions
 
-Custom functions, constants, and objects can be defined to be used in the calculator. Each entry must be typed as an object property (\`name: function | value | object\`) and separated by a comma \`,\`:
+Custom functions, constants, and objects can be added and managed in the **User Defined Functions & Units** dialog under the **Functions** tab:
 
-    xyz: (x, y, z) => {
-      return x + y + z
-    },
-    myConstant: 123,
-    rates: {
-      base: 300,
-      bonus: 1.25
-    }
+- **Name**: Identifier for the function, constant, or object (e.g. \`xyz\`, \`myConstant\`, or \`rates\`).
+- **Parameters** *(optional)*: Comma-separated parameter names for functions (e.g. \`x, y, z\`). Leave blank for constants or objects (or enter \`()\` for zero-argument functions).
+- **Expression or multi-line JS body**: A single expression (e.g. \`x + y + z\`, \`123\`, or \`{ base: 300, bonus: 1.25 }\`) or a multi-line JavaScript function body (e.g. \`return x + y + z\`).
 
-The above examples can then be used in Numara where \`xyz(1, 2, 3)\` outputs \`6\`, \`myConstant\` outputs \`123\`, and \`rates.base * rates.bonus\` outputs \`375\`. User-defined functions also have access to \`math\`, \`luxon\`, \`nerdamer\`, and \`formulajs\` in their scope.
+For example, with \`xyz(x, y, z) = x + y + z\`, \`myConstant = 123\`, and \`rates = { base: 300, bonus: 1.25 }\`, \`xyz(1, 2, 3)\` outputs \`6\`, \`myConstant\` outputs \`123\`, and \`rates.base * rates.bonus\` outputs \`375\`. User-defined functions also have access to \`math\`, \`luxon\` (\`DateTime\`), \`nerdamer\`, and \`formulajs\` in their scope. Saved items can be edited (by clicking the edit icon or double-clicking the item) or deleted directly from the list.
 
 #### Units
 
-Custom units can be defined to be used in the calculator. Each custom unit must be typed as an object property (\`name: unit | unit object\`) and separated by a comma \`,\`:
+Custom units can be added and managed under the **Units** tab:
 
-    xunit: '12 foot',
+- **Unit name**: Identifier for the unit (e.g. \`xunit\`).
+- **Definition**: Base unit definition (e.g. \`12 foot\`).
+- **Aliases** *(optional)*: Comma-separated alternative names for the unit (e.g. \`xunits, xu\`).
+- **Prefixes**: Unit prefix support (\`None\`, \`Short (k, M, G...)\`, \`Long (kilo, mega...)\`, \`Binary short (Ki, Mi...)\`, or \`Binary long (kibi, mebi...)\`).
 
-The above example can then be used in Numara where \`5 xunit to ft\` outputs \`60 ft\`.
+For example, defining \`xunit\` as \`12 foot\` allows you to write \`5 xunit to ft\`, which outputs \`60 ft\`.
 
 More information on creating units can be found here: [Math.js User-Defined Units](https://mathjs.org/docs/datatypes/units.html#userdefined-units)
 
@@ -193,85 +203,94 @@ Press \`Cmd/Ctrl+F\` to open the search panel, or \`Cmd+Alt+F\` (macOS) / \`Ctrl
 
 /** Generate Settings wiki page */
 export function generateSettingsWiki() {
-  const settingsWiki = `### General
+  const settingsWiki = `> Any setting modified from its default value displays a blue indicator dot next to its control. Clicking the indicator dot resets that individual setting back to its default.
+
+### General
 
 \`Theme\` System (Default) | Light | Dark
-- Set the visual theme of the application.
-- Click the **Customize theme** palette button to customize individual syntax highlighting colors for both Light and Dark themes using live color pickers, with per-color reset buttons and a **Default Colors** reset option.
+- Set the visual theme of the application (\`System\` follows your OS appearance).
+- Click the **Customize theme** palette button to customize individual syntax highlighting colors (\`Answers\`, \`Comments\`, \`Constants\`, \`Currencies\`, \`Errors\`, \`Excel\`, \`Functions\`, \`Keywords\`, \`Numbers\`, \`Text\`, \`Operators\`, \`Units\`, \`Variables\`, and \`Plain\` when syntax highlighting is off) for both Light and Dark themes using live color pickers, with per-color reset buttons and a **Restore defaults** option.
 
-\`Page list position\` Auto (Default) | Floating | Docked
-- Set the position of the page list. When set to \`Auto\`, the page list automatically docks when the window is wide enough and floats above the page name on narrower windows. When docked, drag the page list border to resize it (double-click to reset).
+\`Page list position\` Auto (Default) | Floating | Docked | Tabs
+- Set the position and display mode of the page list:
+  - \`Auto\` (Default): Automatically docks the page list side panel when the window is wider than \`900px\` and switches to a floating slide-out drawer on narrower windows.
+  - \`Floating\`: Always displays the page list as a slide-out overlay drawer when clicking the page name in the bottom bar (or pressing \`Shift+Tab\`).
+  - \`Docked\`: Keeps the page list permanently docked on the left side of the window. Drag the page list border to resize its width (\`200px\` – \`480px\`), or double-click the border to reset it to the default width (\`250px\`). On narrower windows, a toggle button in the page list header switches between \`Docked\` and \`Auto\`.
+  - \`Tabs\`: Displays pages as horizontal scrollable tabs directly in the bottom bar instead of a side panel, with left/right scroll arrows when tabs overflow.
 
 \`Always on top\` On | Off (Default) *(Desktop only)*
-- Keep Numara on top of all other windows on the screen.
+- Keep the Numara window floating on top of all other application windows on the screen.
 
 \`Start at login\` On | Off (Default) *(Desktop only)*
-- Start Numara automatically when logging into the computer.
+- Start Numara automatically when logging into your computer.
 
 \`Start with blank page\` On | Off (Default)
-- Start the app with a blank page instead of the last used page.
+- Open an existing blank page (or create a new blank page if none exists) when the app starts instead of reopening the last used page.
 
 \`Keep in menu bar\` / \`Keep in system tray\` On | Off (Default) *(Desktop only)*
-- Keep Numara running in the macOS menu bar or Windows/Linux system tray when the window is closed.
+- Keep Numara running in the macOS menu bar or Windows/Linux system tray. When enabled, closing the window hides Numara instead of quitting; click the tray/menu bar icon to show Numara, or right-click it to **Show Numara**, **Hide Numara**, or **Quit**.
 
 \`Close app on Esc key\` On | Off (Default) *(Desktop only)*
-- Close or hide the Numara window when pressing the \`Esc\` key.
+- Close or hide the Numara window when pressing the \`Esc\` key (when no modal, dropdown, search panel, inline rename input, or autocomplete menu is open).
 
 #### Notifications
 
 \`Position\` Top Left | Top Center | Top Right | Bottom Left | Bottom Center (Default) | Bottom Right
-- Set the position on the screen where notifications appear.
+- Set the position on the screen where toast notifications (e.g. clipboard copy confirmations, import/export messages, and warnings) appear.
 
 \`Duration\` 1 second | 3 seconds | 5 seconds (Default) | 10 seconds | 30 seconds | Close manually
-- Set how long notifications are displayed on the screen or set to close them manually.
+- Set how long toast notifications remain visible before automatically dismissing, or set to \`Close manually\` to keep them visible until clicked.
 
 ### Editor
 
 #### Typography
 
 \`Font size\` Tiny | Small | Normal (Default) | Large | X-Large
-- Set the font size of the calculation text.
+- Set the font size of calculation text in the input and output panels (\`0.9rem\` to \`1.3rem\`).
 
 \`Font weight\` Light | Thin | Normal (Default) | Semi Bold | Bold
-- Set the font weight of the calculation text.
+- Set the font weight of calculation text in the input and output panels (\`200\` to \`700\`).
 
 \`Line height\` Tiny | Small | Normal (Default) | Large | X-Large
-- Set the height of each calculation line.
+- Set the vertical height of each calculation line in the input and output panels (\`16px\` to \`32px\`).
 
 #### Display & Behavior
 
 \`Answer position\` Left (with divider) (Default) | Right (no divider) | Below Expression
-- Set where the answer is shown in the app. When set to \`Left (with divider)\`, drag the divider to resize the panels (double-click to reset).
+- Set where answers are displayed:
+  - \`Left (with divider)\` (Default): Left-aligns answers in the output panel with a draggable vertical divider between the input and output panels. Drag the divider to resize the panel width ratio, or double-click it to reset to the default (\`60%\` / \`40%\`).
+  - \`Right (no divider)\`: Right-aligns answers on the far right of the output panel without a vertical divider.
+  - \`Below Expression\`: Displays each answer directly below its corresponding input line inside the editor instead of in a side-by-side output column.
 
 \`Wrap input expressions\` On (Default) | Off
-- Allow overflowing input expressions to wrap to the next line on the input panel.
+- Wrap long input expressions onto multiple visual lines while keeping each corresponding output row vertically aligned. When Off, overflowing lines scroll horizontally.
 
 \`Truncate answers\` On (Default) | Off
-- Truncate long answers on the output panel with ellipses instead of showing a horizontal scrollbar. Hovering over a truncated answer displays the full value in a tooltip.
+- Truncate long answers on the output panel with ellipses (\`...\`) instead of showing a horizontal scrollbar. Hovering over a truncated answer displays the full value in a tooltip.
 
 \`Line numbers\` On (Default) | Off
-- Show line numbers for each line on the input panel.
+- Show line numbers in the left gutter of the input panel. Clicking a line number above the active line inserts \`lineX\` at the cursor; clicking a red line number displays the error details for that line.
 
 \`Show rulers\` On | Off (Default)
-- Show horizontal rulers to visually separate each line.
+- Show horizontal ruler lines across the input and output panels to visually separate each calculation row.
 
 \`Line errors\` On | Off (Default)
-- Show \`Error\` in the output panel if a calculation error occurs. Clicking the \`Error\` link displays details about the error. This also highlights the line number red where the error is present.
+- Show an \`Error\` link in the output panel whenever a calculation error occurs on a line (in addition to highlighting the line number in red). Clicking \`Error\` or the red line number opens a dialog with details about the error.
 
 \`Syntax highlighting\` On (Default) | Off
-- Enable syntax highlighting for typed expressions.
+- Enable syntax highlighting for functions, units, constants, currencies, keywords, line references, variables, numbers, operators, and comments. When Off, all text uses the \`Plain\` theme color and both \`Keyword tooltips\` and \`Highlight matching brackets\` are disabled.
 
   - \`Keyword tooltips\` On (Default) | Off
-    Display tooltips when hovering over keywords such as function names, units, constants, currencies, variables, and line references (requires \`Syntax highlighting\` to be On).
+    Display hover tooltips with descriptions, syntax, or live evaluated values when hovering over functions, units, constants, currencies, keywords, variables, and \`lineX\` references (requires \`Syntax highlighting\` to be On).
 
   - \`Highlight matching brackets\` On (Default) | Off
-    When the cursor is next to a bracket, highlight the matching bracket (requires \`Syntax highlighting\` to be On).
+    When the cursor is next to a parenthesis \`()\`, square bracket \`[]\`, or curly brace \`{}\`, highlight the matching bracket (requires \`Syntax highlighting\` to be On).
 
 \`Autocomplete hints\` On (Default) | Off
-- Show autocompletion hints as a list while typing an expression.
+- Automatically show autocomplete suggestions while typing for built-in functions, units, constants, currencies, keywords, user-defined functions/units, variables, \`page("...")\` names and exported variables, \`formulajs.*\` functions, and \`DateTime\` methods (can also be triggered manually with \`Ctrl+Space\`).
 
 \`Close matching brackets\` On (Default) | Off
-- Automatically insert closing brackets and quotes when typed.
+- Automatically insert matching closing brackets and quotes (\`()\`, \`[]\`, \`{}\`, \`""\`, \`''\`) when typed.
 
 ### Calculator
 
@@ -282,85 +301,86 @@ export function generateSettingsWiki() {
 
   For example, \`'2+3'\`, \`parse('2+3')\`, \`range('1:10')\`, and \`unit('5cm')\` use the numeric output setting, whereas \`sqrt(4)\` will always return the number \`2\` regardless of the setting because the input is a number.
 
-  BigNumbers have higher precision than the default numbers of JavaScript, and Fractions store values in terms of a numerator and denominator.
+  - \`Number\` (Default): Standard JavaScript double-precision (\`64-bit\` floating-point) numbers.
+  - \`BigNumber\`: Arbitrary-precision decimal numbers with higher precision than standard JavaScript numbers. *(Caution: Using \`BigNumber\` is not compatible with function plotting or some Math.js functions and may affect performance.)*
+  - \`Fraction\`: Exact rational numbers stored in terms of a numerator and denominator (e.g. \`1/3 + 1/6\` outputs \`1/2\`).
 
 \`Matrix type\` Matrix (Default) | Array
 - The default type of matrix output for functions. Where possible, the type of matrix output from functions is determined from the function input: an Array as input returns an Array, a Matrix as input returns a Matrix. In case of no matrix as input, the type of output is determined by this option. In case of mixed matrix inputs, a Matrix is always returned.
 
 \`Precision\` (0 - 16) Default 4
-- Number of decimal places to display for the answer.
+- Maximum number of decimal places to display for formatted answers (and the fixed decimal precision when \`Notation\` is set to \`Fixed\`).
 
 \`Notation\` Auto (Default) | Engineering | Exponential | Fixed | Binary | Hexadecimal | Octal
 - Numeric notation format for answers:
 
-  'Auto' (Default) - Regular number notation for numbers having an absolute value between the lower and upper bounds, and exponential notation elsewhere. Lower bound is included, upper bound is excluded. For example \`123.4\` and \`1.4e7\`.
-
-  'Engineering' - Always use engineering notation: exponential notation with the exponent selected to be a multiple of 3. For example \`123.4e+0\` and \`14.0e+6\`.
-
-  'Exponential' - Always use exponential notation. For example \`1.234e+2\` and \`1.4e+7\`.
-
-  'Fixed' - Always use regular number notation with the configured decimal precision regardless of the exponent limits.
-
-  'Binary', 'Hexadecimal', or 'Octal' - Format the number using binary, hexadecimal, or octal notation. For example \`0b1101\`, \`0x10fe\`, and \`0o23\`.
+  - \`Auto\` (Default): Regular number notation for numbers having an absolute value between the lower and upper exponent bounds, and exponential notation elsewhere. Lower bound is included, upper bound is excluded. For example \`123.4\` and \`1.4e7\`.
+  - \`Engineering\`: Always use engineering notation (exponential notation with the exponent selected to be a multiple of 3). For example \`123.4e+0\` and \`14.0e+6\`.
+  - \`Exponential\`: Always use exponential notation. For example \`1.234e+2\` and \`1.4e+7\`.
+  - \`Fixed\`: Always use regular number notation with the configured \`Precision\` regardless of the exponent limits.
+  - \`Binary\`, \`Hexadecimal\`, or \`Octal\`: Format numbers using binary, hexadecimal, or octal notation. For example \`0b1101\`, \`0x10fe\`, and \`0o23\`.
 
   - \`Lower exponent limit\` (-32 - 0) Default -12
-    Number determining the lower boundary for formatting a value with an exponent when \`Notation\` is set to \`Auto\`.
+    Lower exponent threshold for formatting a value in scientific notation when \`Notation\` is set to \`Auto\`.
 
   - \`Upper exponent limit\` (0 - 32) Default 12
-    Number determining the upper boundary for formatting a value with an exponent when \`Notation\` is set to \`Auto\`.
+    Upper exponent threshold for formatting a value in scientific notation when \`Notation\` is set to \`Auto\`.
 
 #### Evaluation
 
 \`Continue from previous line\` On (Default) | Off
-- Choose whether a calculation on a new line starting with \`+\`, \`-\`, \`*\`, or \`/\` should continue from the previous line's answer.
+- Choose whether a calculation on a new line starting with \`+\`, \`-\`, \`*\`, or \`/\` (immediately following a non-empty line) should automatically continue from the previous line's answer (\`ans\`).
 
 \`Predictable output\` On | Off (Default)
 - When On, output type depends only on the input types. When Off (Default), output type can vary depending on input values. For example \`sqrt(-4)\` returns \`complex('2i')\` when predictable is Off, and returns \`NaN\` when On. Predictable output can be needed when programmatically handling the result of a calculation, but can be inconvenient for users when evaluating dynamic equations.
 
 \`Calculation timeout (seconds)\` (1 - 60) Default 10
-- Set the timeout in seconds for long-running calculations before prompting to continue waiting or ignore the line.
+- Set the timeout in seconds for long-running calculations before displaying a **Calculation Timeout** dialog for the slow line, where you can choose **Wait** (continue waiting) or **Ignore Line** (cancel the calculation, comment out that line with \`// \`, and recalculate).
 
 ### Format
 
 #### Numbers
 
 \`Number format\` 1,234.56 (Default) | 1.234,56 | 1 234.56 | 1 234,56
-- Set the thousands and decimal separator format. When \`1.234,56\` or \`1 234,56\` is selected, use a semicolon (\`;\`) as the argument separator in functions (e.g. \`sum(1; 3)\`).
+- Set the thousands grouping and decimal separator format used for both input expressions and formatted output answers. When a comma-decimal format (\`1.234,56\` or \`1 234,56\`) is selected, comma (\`,\`) is used as the decimal separator, so you must use a semicolon (\`;\`) as the argument separator in functions (e.g. \`sum(1,5; 2,5)\`).
 
 \`Thousands separator\` On (Default) | Off
-- Show thousands separators in output answers.
+- Show thousands grouping separators in output answers and formatted currency amounts.
 
   - \`Copy with answer\` On | Off (Default)
-    Choose whether to include the thousands separator with the copied answer.
+    Choose whether to include the thousands separator when copying answers to the clipboard (requires \`Thousands separator\` to be On).
 
 #### Dates
 
 \`Date format\` MM/DD/YYYY (Default) | DD/MM/YYYY | YYYY-MM-DD
-- Set the date format for date and time calculations and keywords (\`today\`, \`now\`).
+- Set the date format used for parsing date literals in date calculations and formatting date outputs (\`today\`, \`now\`, and date arithmetic).
 
 \`Show day with date\` On | Off (Default)
-- If On, the day of the week is prepended to the date output when performing date calculations and using keywords such as \`today\` and \`now\`.
+- If On, the abbreviated day of the week is prepended to formatted date outputs when performing date calculations and using keywords such as \`today\` and \`now\` (e.g. \`Fri, 05/01/2026\`).
 
 #### Currency
 
 \`Enabled\` On (Default) | Off
-- Enable currency conversions. Exchange rates are provided by [frankfurter.dev](https://frankfurter.dev).
+- Enable currency conversions and currency code/symbol recognition. Exchange rates are provided by [frankfurter.dev](https://frankfurter.dev). *(Note: When turned Off, currencies already registered in the current session are removed after restarting the app.)*
 
 \`Rate update interval\` On start (Default) | 1 hour | 3 hours | 6 hours | 12 hours | Manual
-- Set how often the currency exchange rates are updated, or click the refresh button next to the selector to update rates immediately.
+- Set how often currency exchange rates are updated in the background, or select \`Manual\` to update only when clicking the **Update now** refresh button next to the selector (requires \`Currency\` to be Enabled).
 
 ### Sync *(Desktop only)*
 
 \`Enable sync\` On | Off (Default)
-- Enable two-way synchronization between calculation pages and \`.num\` files in a local folder.
+- Enable real-time two-way synchronization between calculation pages and \`.num\` files in a local folder:
+  - Local page edits, creations, renames, and deletions are automatically saved to \`.num\` files in the sync folder, and external file additions, edits, renames, or deletions in the folder automatically update your pages in Numara.
+  - If a \`.num\` file in the sync folder has different content than an existing local page of the same name when initializing sync, Numara prompts you to **Overwrite Local** or **Sync Local**.
+  - If the sync folder is deleted or becomes inaccessible, Numara prompts you to **Disable Sync** or **Select New Folder**.
 
 \`Sync folder\`
-- Choose the local folder to synchronize \`.num\` page files with.
+- Click **Choose Folder** (or the current folder path) to select or change the local folder used to synchronize \`.num\` page files. Right-click the folder path to open it in your system file manager.
 
 ### Reset Actions
 
-- **Reset all data**: Clear all user settings, saved pages, and local storage data.
-- **Restore defaults**: Revert all settings back to their default values (with an option to keep folder sync enabled).
+- **Reset all data**: Clear all user settings, custom theme colors, user-defined functions/units, saved pages, and local storage data.
+- **Restore defaults**: Revert all settings and panel widths back to their default values (with a **Keep sync enabled** option when folder sync is active).
 - **Reset window size** *(Desktop only)*: Restore the application window to its default dimensions when resized.
 `
 
@@ -376,33 +396,40 @@ export function generateShortcutsWiki() {
 | \`Cmd+N\` | \`Ctrl+N\` | Create a new page |
 | \`Cmd+D\` | \`Ctrl+D\` | Clear the current page |
 | \`Cmd+P\` | \`Ctrl+P\` | Print the current page |
-| \`Shift+Tab\` | \`Shift+Tab\` | Open or close the page list |
-| \`Esc\` | \`Esc\` | Close open modal, search panel, or app window (when **Close app on Esc key** is enabled) |
+| \`Cmd+,\` | \`Ctrl+,\` *(Linux)* | Open Settings *(Desktop)* |
+| \`Shift+Tab\` | \`Shift+Tab\` | Open or close the page list (when not docked or in Tabs mode) |
+| \`Esc\` | \`Esc\` | Close open modal, dropdown, search panel, or app window (when **Close app on Esc key** is enabled) |
 
 ### Editor & Search Shortcuts
 
 | Shortcut (macOS) | Shortcut (Windows / Linux) | Action |
 | --- | --- | --- |
+| \`Cmd+Z\` / \`Cmd+Shift+Z\` | \`Ctrl+Z\` / \`Ctrl+Y\` (\`Ctrl+Shift+Z\`) | Undo / Redo |
 | \`Cmd+/\` | \`Ctrl+/\` | Toggle line comments (\`//\`) on selected lines |
 | \`Ctrl+Space\` | \`Ctrl+Space\` | Open autocomplete suggestions |
 | \`Ctrl+Q\` | \`Ctrl+Q\` | Fold or unfold collapsible section at cursor |
 | \`Cmd+F\` | \`Ctrl+F\` | Open the Find panel |
 | \`Cmd+Opt+F\` | \`Ctrl+H\` | Open the Find and Replace panel |
-| \`Enter\` / \`Shift+Enter\` | \`Enter\` / \`Shift+Enter\` | Navigate to next / previous search match |
+| \`Enter\` / \`Shift+Enter\` | \`Enter\` / \`Shift+Enter\` | Navigate to next / previous search match (or replace current match when focused in Replace input) |
 
 ### Mouse & UI Interactions
 
 | Interaction | Action |
 | --- | --- |
 | **Click an answer** | Copy the answer to the clipboard |
-| **Select multiple lines** | View live **Sum**, **Avg**, **Min**, **Max**, and **Count** in the bottom bar (click to copy) |
+| **Select multiple lines** | View live **Sum**, **Avg**, and **Count** in the bottom bar (click to copy the sum) |
 | **Click a page link answer** | Open the referenced page |
 | **Click a line number** (above active line) | Insert \`lineX\` into the active expression |
 | **Click a red line number / Error** | View error details for that line |
-| **Double-click page title** (bottom bar) | Rename the active page |
+| **Double-click page in page list / page title / page tab** | Rename the page inline |
+| **Right-click a page tab** (bottom bar) | Open tab context menu (Rename, Duplicate, Delete) |
+| **Scroll wheel on page tabs** (bottom bar) | Scroll horizontally through page tabs |
+| **Double-click item in User Definitions** | Load the function or unit into the form for editing |
+| **Click indicator dot next to a modified setting** | Reset that setting to its default value |
+| **Right-click Sync folder path** *(Desktop)* | Open the sync folder in the system file manager |
 | **Drag / double-click panel divider** | Resize input and output panels / reset to default width |
 | **Drag / double-click docked page list edge** | Resize docked page list / reset to default width |
-| **Drag and drop page in page list** | Reorder pages in the page list |
+| **Drag and drop page in page list / page tabs** | Reorder pages |
 | **Right-click input / output panel** *(Desktop)* | Copy line, answer, line with answer, or all lines/answers |
 `
 
