@@ -180,7 +180,7 @@ More information on creating units can be found here: [Math.js User-Defined Unit
 
 ### Find and replace
 
-Press \`Cmd/Ctrl+F\` to open the search panel, or \`Cmd+Alt+F\` (macOS) / \`Ctrl+H\` (Windows/Linux) to open Find and Replace. The search panel supports both plain text and regular expression queries (e.g. \`/\\d+/i\`).
+Click **Search** in the menu or press \`Cmd/Ctrl+F\` to open the search panel, or \`Cmd+Alt+F\` (macOS) / \`Ctrl+H\` (Windows/Linux) to open Find and Replace. The search panel supports both plain text and regular expression queries (e.g. \`/\\d+/i\`).
 
 ### Offline web app (PWA) and desktop updates
 
