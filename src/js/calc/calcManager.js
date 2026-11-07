@@ -374,6 +374,7 @@ export function calculate() {
   const isEmpty = cmValue === ''
 
   dom.clearButton.setAttribute('disabled', isEmpty)
+  dom.searchButton.setAttribute('disabled', isEmpty)
   dom.copyButton.setAttribute('disabled', isEmpty)
   dom.printButton.setAttribute('disabled', isEmpty)
 
