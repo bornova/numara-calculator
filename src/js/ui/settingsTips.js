@@ -43,6 +43,7 @@ const settingsTooltips = {
   rulers: 'Show rulers in the calculator display for better alignment. (Default: Disabled)',
   syntax: 'Enable syntax highlighting mode for expression input and evaluation. (Default: Enabled)',
   theme: 'Set the visual theme of the application. (Default: System)',
+  zoomLevel: 'Set the overall UI zoom level. (Default: Normal)',
   thouSep: 'Show thousands separator in answers. (Default: Enabled)',
   truncateAnswers: 'Truncate long answers with ellipses instead of showing a horizontal scrollbar. (Default: Enabled)',
   syncDirEnabled: 'Enable folder synchronization. (Default: Disabled)',
