@@ -65,6 +65,7 @@ export const dom = {
   dockPageListButton: document.getElementById('dockPageListButton'),
   newPageButtonPL: document.getElementById('newPageButtonPL'),
 
+  searchButton: document.getElementById('searchButton'),
   copyButton: document.getElementById('copyButton'),
   importPageButton: document.getElementById('importPageButton'),
   exportPageButton: document.getElementById('exportPageButton'),

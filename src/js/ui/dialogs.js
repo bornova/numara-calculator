@@ -3,6 +3,7 @@ import UIkit from 'uikit'
 import { dom } from '../dom.js'
 import { prepareUdfuDialog } from '../calc/userDefined.js'
 import { cm } from '../editor/index.js'
+import { isSearchPanelOpen } from '../editor/searchPanel.js'
 import { app } from '../state/appState.js'
 import { isElectron } from '../state/env.js'
 import { plot } from './plot.js'
@@ -327,7 +328,7 @@ export function setupUIkitUtils() {
         numara.transControls(modalOpenState)
       }
 
-      if (!modalOpenState) {
+      if (!modalOpenState && !isSearchPanelOpen()) {
         setTimeout(() => cm.focus(), 100)
       }
     },

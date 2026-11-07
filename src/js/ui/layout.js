@@ -5,6 +5,7 @@ import { calculate, syncOutputHeights } from '../calc/calcManager.js'
 import { escapeHTML } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
+import { showSearchPanel } from '../editor/searchPanel.js'
 import { loadPage } from '../pages/pageManager.js'
 import { app } from '../state/appState.js'
 import { isElectron, isMac } from '../state/env.js'
@@ -32,6 +33,10 @@ export function setupHeaders() {
  */
 export function setupAppButtons() {
   const buttons = {
+    searchButton: () => {
+      UIkit.dropdown('#moreDropdown')?.hide(0)
+      showSearchPanel(cm, false)
+    },
     printButton: () => {
       UIkit.dropdown('#moreDropdown')?.hide(0)
       if (!app.pageListDocked) {
