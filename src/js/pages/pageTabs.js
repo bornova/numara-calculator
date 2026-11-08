@@ -6,13 +6,50 @@ import { store } from '../state/store.js'
 import { hideOpenDropdowns } from '../ui/dialogs.js'
 
 let contextTabPageId = null
+let contextMenuSource = null
 
 /**
- * Hides the tab right-click context menu if open.
+ * Hides the tab/page context menu if open.
  */
 export function hideTabContextMenu() {
   dom.tabContextMenu?.classList.remove('uk-open')
+  dom.els('.pageMenuButton.is-active').forEach((btn) => btn.classList.remove('is-active'))
   contextTabPageId = null
+  contextMenuSource = null
+}
+
+/**
+ * Toggles the shared page actions context menu anchored to a page list item's menu button.
+ * @param {string} pageId Id of the target page.
+ * @param {HTMLElement} anchorEl The clicked menu trigger button element.
+ */
+export function togglePageListContextMenu(pageId, anchorEl) {
+  if (!dom.tabContextMenu || !anchorEl) return
+
+  if (dom.tabContextMenu.classList.contains('uk-open') && contextMenuSource === 'list' && contextTabPageId === pageId) {
+    hideTabContextMenu()
+    return
+  }
+
+  hideOpenDropdowns(dom.tabContextMenu)
+  dom.els('.pageMenuButton.is-active').forEach((btn) => btn.classList.remove('is-active'))
+
+  contextTabPageId = pageId
+  contextMenuSource = 'list'
+  anchorEl.classList.add('is-active')
+  dom.tabContextMenu.classList.add('uk-open')
+
+  const menuRect = dom.tabContextMenu.getBoundingClientRect()
+  const btnRect = anchorEl.getBoundingClientRect()
+  const left = Math.max(8, Math.min(btnRect.right - menuRect.width, window.innerWidth - menuRect.width - 8))
+  const spaceBelow = window.innerHeight - btnRect.bottom - 8
+  const top =
+    spaceBelow >= menuRect.height || btnRect.top < menuRect.height
+      ? Math.min(btnRect.bottom + 4, window.innerHeight - menuRect.height - 8)
+      : Math.max(8, btnRect.top - menuRect.height - 4)
+
+  dom.tabContextMenu.style.left = `${left}px`
+  dom.tabContextMenu.style.top = `${top}px`
 }
 
 /**
@@ -152,10 +189,11 @@ export function renameTab(pageId, commitRename) {
  * Binds scroll, wheel, resize, double-click, and right-click context menu events for page tabs.
  * @param {object} handlers
  * @param {(pageId: string) => void} handlers.onRename Callback to rename a tab inline.
+ * @param {(pageId: string) => void} [handlers.onRenamePage] Callback to rename a page list item inline.
  * @param {(pageId: string) => void} handlers.onDuplicate Callback to duplicate a tab's page.
  * @param {(pageId: string) => void} handlers.onDelete Callback to delete a tab's page.
  */
-export function setupPageTabsEvents({ onRename, onDuplicate, onDelete }) {
+export function setupPageTabsEvents({ onRename, onRenamePage, onDuplicate, onDelete }) {
   if (!dom.pageTabs) return
 
   dom.pageTabs.addEventListener(
@@ -205,8 +243,10 @@ export function setupPageTabsEvents({ onRename, onDuplicate, onDelete }) {
     event.stopPropagation()
 
     hideOpenDropdowns(dom.tabContextMenu)
+    dom.els('.pageMenuButton.is-active').forEach((btn) => btn.classList.remove('is-active'))
 
     contextTabPageId = tabEl.dataset.page
+    contextMenuSource = 'tab'
     dom.tabContextMenu.classList.add('uk-open')
 
     const menuRect = dom.tabContextMenu.getBoundingClientRect()
@@ -221,8 +261,15 @@ export function setupPageTabsEvents({ onRename, onDuplicate, onDelete }) {
   dom.tabContextRename?.addEventListener('click', (event) => {
     event.stopPropagation()
     const pageId = contextTabPageId
+    const source = contextMenuSource
     hideTabContextMenu()
-    if (pageId) onRename(pageId)
+    if (pageId) {
+      if (source === 'list' && onRenamePage) {
+        onRenamePage(pageId)
+      } else {
+        onRename(pageId)
+      }
+    }
   })
 
   dom.tabContextDuplicate?.addEventListener('click', (event) => {
@@ -240,7 +287,10 @@ export function setupPageTabsEvents({ onRename, onDuplicate, onDelete }) {
   })
 
   document.addEventListener('pointerdown', (event) => {
-    if (dom.tabContextMenu?.classList.contains('uk-open') && !event.target.closest('#tabContextMenu')) {
+    if (
+      dom.tabContextMenu?.classList.contains('uk-open') &&
+      !event.target.closest('#tabContextMenu, [data-action="pageMenu"]')
+    ) {
       hideTabContextMenu()
     }
   })
@@ -250,4 +300,6 @@ export function setupPageTabsEvents({ onRename, onDuplicate, onDelete }) {
       hideTabContextMenu()
     }
   })
+
+  window.addEventListener('resize', hideTabContextMenu)
 }
