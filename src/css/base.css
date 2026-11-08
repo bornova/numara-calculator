@@ -390,3 +390,10 @@ input:checked + .slider:before {
     transform: rotate(360deg);
   }
 }
+
+@keyframes pageCreatedFlash {
+  25% {
+    background-color: light-dark(#dceefb, #1f3a54);
+    color: light-dark(#005cc5, #64b5f6);
+  }
+}
