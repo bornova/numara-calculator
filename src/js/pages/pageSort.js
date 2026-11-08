@@ -4,6 +4,7 @@ import { store } from '../state/store.js'
 import { hideOpenDropdowns } from '../ui/dialogs.js'
 import { hideTabContextMenu } from './pageTabs.js'
 
+const DRAG_HOLD_DELAY = 250
 const DRAG_THRESHOLD = 4
 const HYSTERESIS = 4
 const SCROLL_ZONE = 36
@@ -95,15 +96,18 @@ function setupAxisDragSort({ container, axis, itemSelector, ignoreSelector, drag
 
     if (!item || container.children.length < 2) return
 
-    const startCoord = isVertical ? event.clientY : event.clientX
-    const itemRect = item.getBoundingClientRect()
-    const offset = startCoord - (isVertical ? itemRect.top : itemRect.left)
-    const itemSize = isVertical ? itemRect.height : itemRect.width
+    const startX = event.clientX
+    const startY = event.clientY
+    const startCoord = isVertical ? startY : startX
     const startIndex = Array.from(container.children).indexOf(item)
 
+    let itemRect = item.getBoundingClientRect()
+    let offset = startCoord - (isVertical ? itemRect.top : itemRect.left)
+    let itemSize = isVertical ? itemRect.height : itemRect.width
     let isDragging = false
     let dragClone = null
     let autoScrollRaf = null
+    let holdTimer = null
     let lastCoord = startCoord
 
     const updateDragPosition = (coord) => {
@@ -195,32 +199,67 @@ function setupAxisDragSort({ container, axis, itemSelector, ignoreSelector, drag
       }
     }
 
+    const startDrag = () => {
+      holdTimer = null
+
+      if (isDragging || !item.isConnected || item.classList.contains('is-renaming')) return
+
+      itemRect = item.getBoundingClientRect()
+      offset = lastCoord - (isVertical ? itemRect.top : itemRect.left)
+      itemSize = isVertical ? itemRect.height : itemRect.width
+
+      isDragging = true
+      justDraggedPage = true
+
+      hideTabContextMenu()
+      hideOpenDropdowns()
+
+      const rect = container.getBoundingClientRect()
+
+      dragClone = item.cloneNode(true)
+      dragClone.removeAttribute('id')
+      dragClone.querySelectorAll('[uk-dropdown]').forEach((el) => el.remove())
+      dragClone.classList.add(dragClass)
+      dragClone.style.width = `${itemRect.width}px`
+      dragClone.style.height = `${itemRect.height}px`
+      dragClone.style.left = `${isVertical ? rect.left : itemRect.left}px`
+      dragClone.style.top = `${itemRect.top}px`
+
+      item.classList.add(placeholderClass)
+      document.body.classList.add('is-sorting-pages')
+      document.body.appendChild(dragClone)
+    }
+
+    const onTouchMove = (touchEvent) => {
+      if (isDragging && touchEvent.cancelable) {
+        touchEvent.preventDefault()
+      }
+    }
+
+    const onContextMenu = (contextEvent) => {
+      if (isDragging || justDraggedPage) {
+        contextEvent.preventDefault()
+        contextEvent.stopPropagation()
+      }
+    }
+
+    const onContainerScroll = () => {
+      if (!isDragging) {
+        onPointerUp()
+      }
+    }
+
     const onPointerMove = (moveEvent) => {
       lastCoord = isVertical ? moveEvent.clientY : moveEvent.clientX
 
       if (!isDragging) {
-        if (Math.abs(lastCoord - startCoord) < DRAG_THRESHOLD) return
-
-        isDragging = true
-        justDraggedPage = true
-
-        hideTabContextMenu()
-        hideOpenDropdowns()
-
-        const rect = container.getBoundingClientRect()
-
-        dragClone = item.cloneNode(true)
-        dragClone.removeAttribute('id')
-        dragClone.querySelectorAll('[uk-dropdown]').forEach((el) => el.remove())
-        dragClone.classList.add(dragClass)
-        dragClone.style.width = `${itemRect.width}px`
-        dragClone.style.height = `${itemRect.height}px`
-        dragClone.style.left = `${isVertical ? rect.left : itemRect.left}px`
-        dragClone.style.top = `${itemRect.top}px`
-
-        item.classList.add(placeholderClass)
-        document.body.classList.add('is-sorting-pages')
-        document.body.appendChild(dragClone)
+        if (
+          Math.abs(moveEvent.clientX - startX) >= DRAG_THRESHOLD ||
+          Math.abs(moveEvent.clientY - startY) >= DRAG_THRESHOLD
+        ) {
+          onPointerUp()
+        }
+        return
       }
 
       moveEvent.preventDefault()
@@ -232,9 +271,15 @@ function setupAxisDragSort({ container, axis, itemSelector, ignoreSelector, drag
     }
 
     const onPointerUp = () => {
+      clearTimeout(holdTimer)
+      holdTimer = null
+
+      container.removeEventListener('scroll', onContainerScroll)
       document.removeEventListener('pointermove', onPointerMove)
       document.removeEventListener('pointerup', onPointerUp)
       document.removeEventListener('pointercancel', onPointerUp)
+      document.removeEventListener('touchmove', onTouchMove)
+      document.removeEventListener('contextmenu', onContextMenu, true)
 
       if (autoScrollRaf) {
         cancelAnimationFrame(autoScrollRaf)
@@ -269,9 +314,14 @@ function setupAxisDragSort({ container, axis, itemSelector, ignoreSelector, drag
       }, 0)
     }
 
+    holdTimer = setTimeout(startDrag, DRAG_HOLD_DELAY)
+
+    container.addEventListener('scroll', onContainerScroll, { passive: true })
     document.addEventListener('pointermove', onPointerMove)
     document.addEventListener('pointerup', onPointerUp)
     document.addEventListener('pointercancel', onPointerUp)
+    document.addEventListener('touchmove', onTouchMove, { passive: false })
+    document.addEventListener('contextmenu', onContextMenu, true)
   })
 }
 
