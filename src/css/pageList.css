@@ -333,8 +333,8 @@ body.is-sorting-pages * {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  body.is-sorting-pages .pageItemActions,
-  .pageListItemDrag .pageItemActions {
+  :root:not(.is-mobile) body.is-sorting-pages .pageItemActions,
+  :root:not(.is-mobile) .pageListItemDrag .pageItemActions {
     display: none !important;
   }
 }
@@ -379,6 +379,25 @@ body.is-sorting-pages * {
 .deletePageButton:hover {
   background-color: light-dark(#e6eaee, #404040);
   color: light-dark(#b10e0e, #d41111);
+}
+
+:root.is-mobile .pageItemActions {
+  display: flex;
+}
+
+:root.is-mobile .renamePageButton,
+:root.is-mobile .dupPageButton,
+:root.is-mobile .deletePageButton {
+  display: none;
+}
+
+:root.is-mobile .pageMenuButton,
+:root.is-mobile .savePageButton {
+  display: inline-flex;
+  box-sizing: border-box;
+  padding: 6px;
+  min-inline-size: 28px;
+  min-block-size: 28px;
 }
 
 @media (hover: none), (pointer: coarse) {
