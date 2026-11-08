@@ -6,7 +6,7 @@ import { isSearchPanelOpen } from './editor/searchPanel.js'
 import { initializePages } from './pages/pageManager.js'
 import { checkSyncDir, handleSyncDirDeleted, triggerFolderSync } from './pages/sync.js'
 import { app } from './state/appState.js'
-import { isElectron } from './state/env.js'
+import { isElectron, isMobile } from './state/env.js'
 import { migrateStorageAndPages } from './state/migration.js'
 import { initializeContextMenus } from './ui/contextMenu.js'
 import { isModalOpen, setupUIkitUtils } from './ui/dialogs.js'
@@ -28,6 +28,8 @@ document.title = description
  * @returns {Promise<void>}
  */
 async function initializeApp() {
+  document.documentElement.classList.toggle('is-mobile', isMobile)
+
   if (document.fonts?.load) {
     Promise.all([
       document.fonts.load('400 1rem "Google Sans"'),
@@ -86,6 +88,16 @@ async function initializeApp() {
 
     numara.rendererReady()
   } else if ('serviceWorker' in navigator) {
+    let refreshing = false
+
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) return
+        refreshing = true
+        window.location.reload()
+      })
+    }
+
     const registerSW = () => {
       navigator.serviceWorker
         .register('sw.js')
