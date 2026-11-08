@@ -332,15 +332,18 @@ body.is-sorting-pages * {
   display: flex;
 }
 
-body.is-sorting-pages .pageItemActions,
-.pageListItemDrag .pageItemActions {
-  display: none !important;
+@media (hover: hover) and (pointer: fine) {
+  body.is-sorting-pages .pageItemActions,
+  .pageListItemDrag .pageItemActions {
+    display: none !important;
+  }
 }
 
 .savePageButton,
 .renamePageButton,
 .dupPageButton,
-.deletePageButton {
+.deletePageButton,
+.pageMenuButton {
   display: inline-flex;
   justify-content: center;
   align-items: center;
@@ -350,10 +353,15 @@ body.is-sorting-pages .pageItemActions,
   color: light-dark(#607d8b, #90b4dc);
 }
 
+.pageMenuButton {
+  display: none;
+}
+
 .savePageButton svg,
 .renamePageButton svg,
 .dupPageButton svg,
-.deletePageButton svg {
+.deletePageButton svg,
+.pageMenuButton svg {
   width: var(--icon-sm);
   height: var(--icon-sm);
   pointer-events: none;
@@ -361,7 +369,9 @@ body.is-sorting-pages .pageItemActions,
 
 .savePageButton:hover,
 .renamePageButton:hover,
-.dupPageButton:hover {
+.dupPageButton:hover,
+.pageMenuButton:hover,
+.pageMenuButton.is-active {
   background-color: light-dark(#e6eaee, #404040);
   color: light-dark(#005cc5, #2196f3);
 }
@@ -369,6 +379,27 @@ body.is-sorting-pages .pageItemActions,
 .deletePageButton:hover {
   background-color: light-dark(#e6eaee, #404040);
   color: light-dark(#b10e0e, #d41111);
+}
+
+@media (hover: none), (pointer: coarse) {
+  .pageItemActions {
+    display: flex;
+  }
+
+  .renamePageButton,
+  .dupPageButton,
+  .deletePageButton {
+    display: none;
+  }
+
+  .pageMenuButton,
+  .savePageButton {
+    display: inline-flex;
+    box-sizing: border-box;
+    padding: 6px;
+    min-inline-size: 28px;
+    min-block-size: 28px;
+  }
 }
 
 /* Bottom-bar page tabs */
@@ -442,6 +473,14 @@ body.is-sorting-pages .pageItemActions,
 .pageTab.activeTab {
   background-color: light-dark(#eef4fa, #2c3540);
   color: light-dark(#005cc5, #64b5f6);
+}
+
+.pageTab.activeTab.page-created {
+  animation: pageCreatedFlash 650ms ease-out;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 }
 
 .pageTab.is-renaming {
