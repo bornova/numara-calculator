@@ -281,6 +281,10 @@ function setupDraggableModals() {
  * @param {Element|null} [excludeEl=null] Optional dropdown element to leave untouched.
  */
 export function hideOpenDropdowns(excludeEl = null) {
+  if (excludeEl !== dom.tabContextMenu) {
+    dom.els('.pageMenuButton.is-active').forEach((btn) => btn.classList.remove('is-active'))
+  }
+
   dom.els('.uk-dropdown.uk-open').forEach((el) => {
     if (el !== excludeEl) {
       if (el.hasAttribute('uk-dropdown')) {
