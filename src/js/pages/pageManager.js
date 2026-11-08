@@ -19,12 +19,33 @@ import {
   hideTabContextMenu,
   populatePageTabs,
   renameTab,
-  setupPageTabsEvents
+  setupPageTabsEvents,
+  togglePageListContextMenu
 } from './pageTabs.js'
 import { syncPageDelete, syncPageRename, syncPageSave } from './sync.js'
 
 let isScrolling = false
 let lastGeneratedPageId = ''
+let pageNameFlashTimer = null
+
+/**
+ * Triggers a subtle highlight flash on the active page name or tab when a page is created.
+ */
+function flashPageName() {
+  const target =
+    app.settings.pageListPosition === 'tabs' ? dom.pageTabs?.querySelector('.pageTab.activeTab') : dom.pageName
+
+  if (!target) return
+
+  clearTimeout(pageNameFlashTimer)
+  target.classList.remove('page-created')
+  void target.offsetWidth
+  target.classList.add('page-created')
+
+  pageNameFlashTimer = setTimeout(() => {
+    target.classList.remove('page-created')
+  }, 650)
+}
 
 /**
  * Formats a 17-digit page timestamp ID into a localized date/time string.
@@ -159,9 +180,11 @@ export function newPage(isImport = false, importName = '', importData = '') {
     UIkit.offcanvas('#pageListPanel')
       .hide()
       .then(() => {
+        flashPageName()
         cm.focus()
       })
   } else {
+    flashPageName()
     cm.focus()
   }
 }
@@ -192,12 +215,15 @@ function duplicatePage(pageId) {
   loadPage(dupPageId)
   syncPageSave(dupPageName, dupPageData)
 
-  if (!app.pageListDocked) {
+  if (!app.pageListDocked && dom.pageListPanel.classList.contains('uk-open')) {
     UIkit.offcanvas('#pageListPanel')
       .hide()
       .then(() => {
+        flashPageName()
         cm.focus()
       })
+  } else {
+    flashPageName()
   }
 }
 
@@ -469,6 +495,11 @@ export function populatePages() {
           data-page="${page.id}"
           data-action="delete"
           title="Delete page">${dom.icons.Trash2}</span>
+        <span
+          class="pageMenuButton"
+          data-page="${page.id}"
+          data-action="pageMenu"
+          title="Page actions">${dom.icons.EllipsisVertical}</span>
       </div>
     `
 
@@ -528,6 +559,7 @@ function setupPageEvents() {
     isScrolling = true
 
     requestAnimationFrame(() => {
+      hideTabContextMenu()
       hideOpenDropdowns()
       isScrolling = false
     })
@@ -542,6 +574,7 @@ function setupPageEvents() {
 
   setupPageTabsEvents({
     onRename: (pageId) => renameTab(pageId, commitPageRename),
+    onRenamePage: renamePage,
     onDuplicate: duplicatePage,
     onDelete: deletePage
   })
@@ -577,6 +610,9 @@ function setupPageEvents() {
         break
       case 'duplicate':
         duplicatePage(pageId)
+        break
+      case 'pageMenu':
+        togglePageListContextMenu(pageId, actionTarget)
         break
     }
   })
