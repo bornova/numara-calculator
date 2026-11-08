@@ -250,7 +250,8 @@
   display: flex;
   position: relative;
   cursor: pointer;
-  touch-action: none;
+  touch-action: pan-y;
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -299,6 +300,8 @@
 body.is-sorting-pages,
 body.is-sorting-pages * {
   cursor: grabbing !important;
+  touch-action: none !important;
+  -webkit-user-select: none !important;
   user-select: none !important;
 }
 
@@ -383,6 +386,7 @@ body.is-sorting-pages * {
 
 :root.is-mobile .pageItemActions {
   display: flex;
+  margin-right: calc(var(--icon-lg) / 2 - 4px) !important;
 }
 
 :root.is-mobile .renamePageButton,
@@ -400,9 +404,14 @@ body.is-sorting-pages * {
   min-block-size: 28px;
 }
 
+:root.is-mobile .savePageButton {
+  margin-right: calc(var(--icon-lg) / 2 - 4px) !important;
+}
+
 @media (hover: none), (pointer: coarse) {
   .pageItemActions {
     display: flex;
+    margin-right: calc(var(--icon-lg) / 2 - 4px) !important;
   }
 
   .renamePageButton,
@@ -418,6 +427,10 @@ body.is-sorting-pages * {
     padding: 6px;
     min-inline-size: 28px;
     min-block-size: 28px;
+  }
+
+  .savePageButton {
+    margin-right: calc(var(--icon-lg) / 2 - 4px) !important;
   }
 }
 
@@ -472,8 +485,9 @@ body.is-sorting-pages * {
   border-radius: 5px;
   padding: var(--pagetab-padding);
   max-width: var(--pagetab-max-width);
-  touch-action: none;
+  touch-action: pan-x;
   color: light-dark(#607d8b, #90b4dc);
+  -webkit-user-select: none;
   user-select: none;
   white-space: nowrap;
 }
