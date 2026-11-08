@@ -70,21 +70,19 @@ self.addEventListener('fetch', (event) => {
 
   // Stale-while-revalidate for static assets: serve from cache for speed and refresh in the background.
   event.respondWith(
-    caches.match(request).then((cached) => {
-      const network = fetch(request)
-        .then((response) => {
-          if (response.status === 200 && response.type === 'basic') {
-            const copy = response.clone()
-            caches
-              .open(CACHE_NAME)
-              .then((cache) => cache.put(request, copy))
-              .catch(() => {})
-          }
-          return response
-        })
-        .catch(() => cached)
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.match(request).then((cached) => {
+        const network = fetch(request)
+          .then((response) => {
+            if (response.status === 200 && response.type === 'basic') {
+              cache.put(request, response.clone()).catch(() => {})
+            }
+            return response
+          })
+          .catch(() => cached)
 
-      return cached || network
-    })
+        return cached || network
+      })
+    )
   )
 })
