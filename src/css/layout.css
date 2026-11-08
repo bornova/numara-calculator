@@ -321,6 +321,16 @@
   background-color: light-dark(#f4f6f8, #333333);
 }
 
+.pageName.page-created {
+  animation: pageCreatedFlash 650ms ease-out;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    background-color: light-dark(#eef4fa, #2c3540);
+    color: light-dark(#005cc5, #64b5f6);
+  }
+}
+
 .selectionStats {
   display: none;
   opacity: 0.95;
