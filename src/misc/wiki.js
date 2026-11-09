@@ -163,7 +163,7 @@ Custom functions, constants, and objects can be added and managed in the **User 
 - **Parameters** *(optional)*: Comma-separated parameter names for functions (e.g. \`x, y, z\`). Leave blank for constants or objects (or enter \`()\` for zero-argument functions).
 - **Expression or multi-line JS body**: A single expression (e.g. \`x + y + z\`, \`123\`, or \`{ base: 300, bonus: 1.25 }\`) or a multi-line JavaScript function body (e.g. \`return x + y + z\`).
 
-For example, with \`xyz(x, y, z) = x + y + z\`, \`myConstant = 123\`, and \`rates = { base: 300, bonus: 1.25 }\`, \`xyz(1, 2, 3)\` outputs \`6\`, \`myConstant\` outputs \`123\`, and \`rates.base * rates.bonus\` outputs \`375\`. User-defined functions also have access to \`math\`, \`luxon\` (\`DateTime\`), \`nerdamer\`, and \`formulajs\` in their scope. Saved items can be edited (by clicking the edit icon or double-clicking the item) or deleted directly from the list.
+For example, with \`xyz(x, y, z) = x + y + z\`, \`myConstant = 123\`, and \`rates = { base: 300, bonus: 1.25 }\`, \`xyz(1, 2, 3)\` outputs \`6\`, \`myConstant\` outputs \`123\`, and \`rates.base * rates.bonus\` outputs \`375\`. User-defined functions also have access to all Math.js functions and constants directly (e.g. \`sum(x, y)\`) or via \`math\`, as well as \`luxon\` (\`DateTime\`), \`nerdamer\`, and \`formulajs\` in their scope. Saved items can be edited (by clicking the edit icon or double-clicking the item) or deleted directly from the list.
 
 #### Units
 
