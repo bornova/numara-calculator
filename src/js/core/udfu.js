@@ -210,7 +210,7 @@ export function parseLegacyUdf(rawUdf, math = defaultProxy, externalLibs = {}) {
     const luxon = externalLibs.luxon ?? defaultProxy
     const nerdamer = externalLibs.nerdamer ?? defaultProxy
     const formulajs = externalLibs.formulajs ?? defaultProxy
-    const fn = new Function('math', 'luxon', 'nerdamer', 'formulajs', `'use strict'; return {${trimmed}}`)
+    const fn = new Function('math', 'luxon', 'nerdamer', 'formulajs', `with (math) { return {${trimmed}} }`)
     const obj = fn(math, luxon, nerdamer, formulajs)
 
     for (const [key, val] of Object.entries(obj || {})) {
@@ -253,7 +253,7 @@ export function parseLegacyUdu(rawUdu, math = defaultProxy, externalLibs = {}) {
     const luxon = externalLibs.luxon ?? defaultProxy
     const nerdamer = externalLibs.nerdamer ?? defaultProxy
     const formulajs = externalLibs.formulajs ?? defaultProxy
-    const fn = new Function('math', 'luxon', 'nerdamer', 'formulajs', `'use strict'; return {${trimmed}}`)
+    const fn = new Function('math', 'luxon', 'nerdamer', 'formulajs', `with (math) { return {${trimmed}} }`)
     const obj = fn(math, luxon, nerdamer, formulajs)
 
     for (const [key, val] of Object.entries(obj || {})) {
@@ -371,16 +371,19 @@ export function applyUdfuToMath(math, input, isFunc, state, externalLibs = {}) {
   const nerdamer = externalLibs.nerdamer ?? defaultProxy
   const formulajs = externalLibs.formulajs ?? defaultProxy
 
-  const UDFunc = new Function('math', 'luxon', 'nerdamer', 'formulajs', `'use strict'; return {${input}}`)
+  if (isFunc) {
+    state.savedBuiltinUDFs ??= new Map()
+
+    state.previouslyImportedUDFs.forEach((key) => restoreBuiltinKey(math, key, state.savedBuiltinUDFs, false))
+    state.previouslyImportedUDFs = []
+  }
+
+  const UDFunc = new Function('math', 'luxon', 'nerdamer', 'formulajs', `with (math) { return {${input}} }`)
   const udfObj = UDFunc(math, luxon, nerdamer, formulajs)
 
   validateUdfObj(udfObj, isFunc)
 
   if (isFunc) {
-    state.savedBuiltinUDFs ??= new Map()
-
-    state.previouslyImportedUDFs.forEach((key) => restoreBuiltinKey(math, key, state.savedBuiltinUDFs, false))
-
     for (const key of Object.keys(udfObj)) {
       if (!state.savedBuiltinUDFs.has(key)) {
         const hasMath = key in math
