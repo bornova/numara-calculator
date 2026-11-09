@@ -14,7 +14,17 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_URLS))
+      .then((cache) =>
+        Promise.all(
+          PRECACHE_URLS.map((url) =>
+            fetch(new Request(url, { cache: 'reload' })).then((response) => {
+              if (!response.ok) throw new Error(`Failed to precache ${url}: ${response.status}`)
+
+              return cache.put(url, response)
+            })
+          )
+        )
+      )
       .then(() => self.skipWaiting())
   )
 })
@@ -22,14 +32,19 @@ self.addEventListener('install', (event) => {
 // Activate: Drop caches from previous versions and take control of clients.
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(
-          keys.filter((key) => key.startsWith('numara-') && key !== CACHE_NAME).map((key) => caches.delete(key))
-        )
-      )
-      .then(() => self.clients.claim())
+    caches.keys().then(async (keys) => {
+      const oldKeys = keys.filter((key) => key.startsWith('numara-') && key !== CACHE_NAME)
+      await Promise.all(oldKeys.map((key) => caches.delete(key)))
+      await self.clients.claim()
+
+      if (oldKeys.length > 0) {
+        const clients = await self.clients.matchAll({ type: 'window' })
+
+        for (const client of clients) {
+          client.navigate(client.url).catch(() => {})
+        }
+      }
+    })
   )
 })
 
@@ -44,7 +59,7 @@ self.addEventListener('fetch', (event) => {
   // Network-first for navigations so new releases are picked up, falling back to cached shell when offline.
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: 'no-cache' })
         .then((response) => {
           if (response.ok) {
             const copy = response.clone()
@@ -72,7 +87,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.open(CACHE_NAME).then((cache) =>
       cache.match(request).then((cached) => {
-        const network = fetch(request)
+        const network = fetch(request, { cache: 'no-cache' })
           .then((response) => {
             if (response.status === 200 && response.type === 'basic') {
               cache.put(request, response.clone()).catch(() => {})
