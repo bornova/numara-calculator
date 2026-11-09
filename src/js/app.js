@@ -30,6 +30,31 @@ document.title = description
 async function initializeApp() {
   document.documentElement.classList.toggle('is-mobile', isMobile)
 
+  if (!isElectron && 'serviceWorker' in navigator) {
+    let refreshing = false
+
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) return
+        refreshing = true
+        window.location.reload()
+      })
+    }
+
+    const registerSW = () => {
+      navigator.serviceWorker
+        .register('sw.js', { updateViaCache: 'none' })
+        .then((reg) => reg.update().catch(() => {}))
+        .catch((error) => console.error('Service worker registration failed:', error))
+    }
+
+    if (document.readyState === 'complete') {
+      registerSW()
+    } else {
+      window.addEventListener('load', registerSW)
+    }
+  }
+
   if (document.fonts?.load) {
     Promise.all([
       document.fonts.load('400 1rem "Google Sans"'),
@@ -87,28 +112,6 @@ async function initializeApp() {
     })
 
     numara.rendererReady()
-  } else if ('serviceWorker' in navigator) {
-    let refreshing = false
-
-    if (navigator.serviceWorker.controller) {
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (refreshing) return
-        refreshing = true
-        window.location.reload()
-      })
-    }
-
-    const registerSW = () => {
-      navigator.serviceWorker
-        .register('sw.js')
-        .catch((error) => console.error('Service worker registration failed:', error))
-    }
-
-    if (document.readyState === 'complete') {
-      registerSW()
-    } else {
-      window.addEventListener('load', registerSW)
-    }
   }
 
   window.addEventListener('focus', () => {
