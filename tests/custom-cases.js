@@ -117,6 +117,12 @@ export const customCases = [
     expected: ['1234568', '2469']
   },
   {
+    name: 'Direct Math.js Functions and Constants in UDFs',
+    udf: 'add_both: (x, y) => sum(x, y), hyp: (a, b) => sqrt(sum(square(a), square(b))), root16: sqrt(16)',
+    expressions: ['add_both(10, 25)', 'hyp(3, 4)', 'root16'],
+    expected: ['35', '5', '4']
+  },
+  {
     name: 'Formula.js and Nerdamer UDF Integration',
     udf: 'my_sum: (a, b) => formulajs.SUM(a, b), my_solve: (expr) => nerdamer(expr).solveFor("x").toString()',
     expressions: ['my_sum(10, 20)', 'my_solve("x^2 = 9")', 'nerdamer("x^2 + 2x + 1")'],
