@@ -1,5 +1,7 @@
 import UIkit from 'uikit'
 
+import { version } from '../../../package.json'
+
 import { formatAnswer as coreFormatAnswer, parseLocaleNumber } from '../core/formatter.js'
 import { math, refreshCurrencyState as coreRefreshCurrencyState } from '../core/mathInstance.js'
 import { debounce } from '../core/utils.js'
@@ -108,7 +110,7 @@ function hideTimeoutDialogAfterCalc() {
  */
 function getWorker() {
   if (!worker) {
-    worker = new Worker('js/calc.worker.js')
+    worker = new Worker(`js/calc.worker.js?v=${version}`)
 
     worker.onmessage = (event) => {
       const { type, payload } = event.data
