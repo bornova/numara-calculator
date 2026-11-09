@@ -190,7 +190,15 @@ export function initializeContextMenus() {
   cm.on('contextmenu', inputContext)
   dom.output.addEventListener('contextmenu', outputContext)
 
-  dom.els('.textBox, .udfuInput, .udfuTextarea').forEach((el) => el.addEventListener('contextmenu', textboxContext))
+  document.addEventListener('contextmenu', (event) => {
+    if (
+      event.target.closest?.(
+        '.textBox, .udfuInput, .udfuTextarea, .search-input, .pageListRenameInput, .pageTabRenameInput, .clr-color'
+      )
+    ) {
+      textboxContext()
+    }
+  })
 
   numara.copyLine(copyLine)
   numara.copyAnswer(copyAnswer)
