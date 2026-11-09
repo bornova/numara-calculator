@@ -245,6 +245,16 @@
   width: 100% !important;
 }
 
+.uk-notification {
+  -webkit-app-region: no-drag;
+}
+
+.uk-notification-top-left,
+.uk-notification-top-center,
+.uk-notification-top-right {
+  top: max(var(--mac-header-height), calc(var(--mac-header-height) + env(safe-area-inset-top, 0px)));
+}
+
 .uk-notification-message {
   border: 1px solid light-dark(#efefef, #333333);
   background-color: light-dark(#fdfdfd, #252525);
@@ -258,8 +268,8 @@
 
 .uk-notification-close {
   display: inline-flex;
-  top: 5px;
-  right: 6px;
+  top: 3px;
+  right: 5px;
   justify-content: center;
   align-items: center;
   border-radius: 4px;
@@ -271,8 +281,8 @@
 }
 
 .uk-notification-close svg {
-  width: 12px;
-  height: 12px;
+  width: var(--icon-md);
+  height: var(--icon-md);
 }
 
 .uk-offcanvas-overlay:before {
