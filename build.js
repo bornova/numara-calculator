@@ -19,6 +19,7 @@ const jsBanner = `/**
 const cssBanner = `/* ${pkg.description} ${pkg.version} */\n`
 
 const EXCLUDED_PRECACHE_FILES = new Set(['sw.js', 'background.png', 'numara.png', 'icon.ico'])
+const VERSIONED_PRECACHE_FILES = new Set(['./css/app.css', './js/numara.js', './js/calc.worker.js'])
 
 /**
  * Recursively collect files in the build directory for service worker precaching.
@@ -44,7 +45,9 @@ async function collectPrecacheUrls(dir, root = dir) {
         return []
       }
 
-      return [`./${path.relative(root, entryPath).split(path.sep).join('/')}`]
+      const relUrl = `./${path.relative(root, entryPath).split(path.sep).join('/')}`
+
+      return [VERSIONED_PRECACHE_FILES.has(relUrl) ? `${relUrl}?v=${pkg.version}` : relUrl]
     })
   )
 
@@ -62,7 +65,16 @@ async function buildNumara() {
 
   await Promise.all([
     fs.cp('src/assets', `${buildPath}/assets`, { recursive: true }),
-    fs.cp('src/index.html', `${buildPath}/index.html`),
+    fs
+      .readFile('src/index.html', 'utf-8')
+      .then((html) =>
+        fs.writeFile(
+          `${buildPath}/index.html`,
+          html
+            .replace('href="css/app.css"', `href="css/app.css?v=${pkg.version}"`)
+            .replace('src="js/numara.js"', `src="js/numara.js?v=${pkg.version}"`)
+        )
+      ),
     fs.cp('src/misc/numara.webmanifest', `${buildPath}/numara.webmanifest`)
   ])
 
