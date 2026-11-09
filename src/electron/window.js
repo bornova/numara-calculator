@@ -110,8 +110,8 @@ export function createAppWindow({ onWindowCreated } = {}) {
     frame: false,
     height: parseInt(config.get('appHeight')) || schema.appHeight.default,
     width: parseInt(config.get('appWidth')) || schema.appWidth.default,
-    minHeight: 390,
-    minWidth: 450,
+    minHeight: 420,
+    minWidth: 480,
     show: false,
     titleBarStyle: isMac ? 'hiddenInset' : 'hidden',
     titleBarOverlay: true,
@@ -216,7 +216,7 @@ export function createAppWindow({ onWindowCreated } = {}) {
         config.set('position', [normalBounds.x, normalBounds.y])
       }
 
-      if (normalBounds.width >= 450 && normalBounds.height >= 390) {
+      if (normalBounds.width >= 480 && normalBounds.height >= 420) {
         config.set('appWidth', normalBounds.width)
         config.set('appHeight', normalBounds.height)
       }

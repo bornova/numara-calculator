@@ -140,7 +140,7 @@ Selecting multiple lines in the editor automatically displays live summary stati
 
 Numara supports multiple calculation pages accessible from the page list or as horizontal tabs in the bottom bar (when **Page list position** is set to \`Tabs\`):
 
-- Create new pages using the **New page** button, rename pages inline (via the rename button, by double-clicking a page in the page list, by double-clicking the page title in the bottom bar, or by double-clicking/right-clicking a page tab), and duplicate or delete pages.
+- Create new pages using the **New page** button, rename pages inline (via the rename button, by double-clicking a page in the page list, or by double-clicking/right-clicking a page tab), and duplicate or delete pages.
 - Sort pages by date (\`Older to newer\`, \`Newer to older\`) or alphabetically (\`A to Z\`, \`Z to A\`) in the page list, or reorder them via drag-and-drop in both the page list and page tabs.
 - Each page preserves its own undo/redo history, cursor position, and folded sections when switching pages.
 - Copy or print page calculations, and import/export \`.num\` files in the desktop app.
@@ -440,7 +440,7 @@ export function generateShortcutsWiki() {
 | **Click a page link answer** | Open the referenced page |
 | **Click a line number** (above active line) | Insert \`lineX\` into the active expression |
 | **Click a red line number / Error** | View error details for that line |
-| **Double-click page in page list / page title / page tab** | Rename the page inline |
+| **Double-click page in page list / page tab** | Rename the page inline |
 | **Right-click a page tab** (bottom bar) | Open tab context menu (Rename, Duplicate, Delete) |
 | **Scroll wheel on page tabs** (bottom bar) | Scroll horizontally through page tabs |
 | **Double-click item in User Definitions** | Load the function or unit into the form for editing |
