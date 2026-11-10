@@ -38,12 +38,12 @@
     "fs-extra": "^11.4.1",
     "function-plot": "^1.26.0",
     "globals": "^17.14.0",
-    "lucide": "^1.70.0",
+    "lucide": "^1.71.0",
     "luxon": "^3.7.2",
     "mathjs": "^15.2.0",
     "nerdamer-prime": "^1.5.0",
     "prettier": "^3.9.10",
-    "uikit": "^3.25.30"
+    "uikit": "^3.25.31"
   },
   "dependencies": {
     "electron-log": "^5.4.4",

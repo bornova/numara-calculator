@@ -27,7 +27,7 @@
   --menu-item-padding: 5px 11px;
   --pagelist-width: 265px;
   --pagelist-float-bottom: 40px;
-  --pagelist-float-min-height: 210px;
+  --pagelist-float-min-height: 206px;
   --pagelist-float-max-height: 450px;
   --pagelist-float-vh-offset: 91px;
   --pagelist-header-height: 42px;
@@ -88,7 +88,7 @@ html[data-zoom='smaller'] {
   --menu-item-padding: 5px 10px;
   --pagelist-width: 250px;
   --pagelist-float-bottom: 36px;
-  --pagelist-float-min-height: 200px;
+  --pagelist-float-min-height: 198px;
   --pagelist-float-max-height: 420px;
   --pagelist-float-vh-offset: 86px;
   --pagelist-header-height: 40px;
@@ -149,7 +149,7 @@ html[data-zoom='larger'] {
   --menu-item-padding: 6px 12px;
   --pagelist-width: 280px;
   --pagelist-float-bottom: 44px;
-  --pagelist-float-min-height: 220px;
+  --pagelist-float-min-height: 230px;
   --pagelist-float-max-height: 480px;
   --pagelist-float-vh-offset: 96px;
   --pagelist-header-height: 44px;
