@@ -23,6 +23,15 @@ const ACTIVE_STORE_KEYS = [
 
 const OBSOLETE_STORE_KEYS = ['sideBarWidth', 'rateInterval', 'input', 'saved']
 
+const LEGACY_FONT_SIZE_MAP = {
+  '0.9rem': '12px',
+  '1.0rem': '13px',
+  '1rem': '13px',
+  '1.1rem': '14px',
+  '1.2rem': '15px',
+  '1.3rem': '16px'
+}
+
 const LEGACY_LINE_HEIGHT_MAP = {
   '1.5em': '17px',
   '1.75em': '21px',
@@ -277,6 +286,12 @@ export function migrateFromV7(targetSettings) {
   // v7 `pageListPosition: 'slide'` -> v8 `'float'`
   if (targetSettings.pageListPosition === 'slide') {
     targetSettings.pageListPosition = 'float'
+    migrated = true
+  }
+
+  // Legacy `fontSize` in `rem` -> `px`
+  if (typeof targetSettings.fontSize === 'string' && targetSettings.fontSize in LEGACY_FONT_SIZE_MAP) {
+    targetSettings.fontSize = LEGACY_FONT_SIZE_MAP[targetSettings.fontSize]
     migrated = true
   }
 
