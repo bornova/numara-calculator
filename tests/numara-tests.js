@@ -34,7 +34,7 @@ const defaultSettings = {
   dateFormat: 'MM/dd/yyyy',
   expLower: '-12',
   expUpper: '12',
-  fontSize: '1.1rem',
+  fontSize: '14px',
   fontWeight: '400',
   inputWidth: 60,
   keywordTips: true,
@@ -932,11 +932,13 @@ describe('Numara Calculation Engine vs Math.js', function () {
           numberFormat: '1 234,56',
           thouSep: 'period',
           dateFormat: 'MM/dd/yyyy',
+          fontSize: '1.1rem',
           lineHeight: '2em'
         }
         assert.strictEqual(migrateFromV7(validSpaceFormat), true)
         assert.strictEqual(validSpaceFormat.numberFormat, '1 234,56')
         assert.strictEqual(validSpaceFormat.thouSep, true)
+        assert.strictEqual(validSpaceFormat.fontSize, '14px')
         assert.strictEqual(validSpaceFormat.lineHeight, '26px')
       } finally {
         globalThis.localStorage = prevLocalStorage

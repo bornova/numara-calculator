@@ -18,6 +18,12 @@ import { colors } from './theme.js'
 let updateInterval
 let eventsInitialized = false
 
+const FONT_SIZE_ZOOM_MAP = {
+  smaller: { '12px': '11px', '13px': '12px', '14px': '13px', '15px': '14px', '16px': '15px' },
+  normal: { '12px': '12px', '13px': '13px', '14px': '14px', '15px': '15px', '16px': '16px' },
+  larger: { '12px': '13px', '13px': '14px', '14px': '15px', '15px': '16px', '16px': '17px' }
+}
+
 const LINE_HEIGHT_ZOOM_MAP = {
   smaller: { '17px': '16px', '21px': '20px', '26px': '24px', '30px': '28px', '34px': '32px' },
   normal: { '17px': '17px', '21px': '21px', '26px': '26px', '30px': '30px', '34px': '34px' },
@@ -304,7 +310,7 @@ export const settings = {
     dateFormat: 'MM/dd/yyyy',
     expLower: '-12',
     expUpper: '12',
-    fontSize: '1.1rem',
+    fontSize: '14px',
     fontWeight: '400',
     inputWidth: 60,
     keywordTips: true,
@@ -492,10 +498,11 @@ export const settings = {
     const zoomLevel = app.settings.zoomLevel || 'normal'
     document.documentElement.dataset.zoom = zoomLevel
 
+    const effectiveFontSize = FONT_SIZE_ZOOM_MAP[zoomLevel]?.[app.settings.fontSize] || app.settings.fontSize
     const effectiveLineHeight = LINE_HEIGHT_ZOOM_MAP[zoomLevel]?.[app.settings.lineHeight] || app.settings.lineHeight
 
     dom.els('.panelFont, .input .CodeMirror').forEach((el) => {
-      el.style.fontSize = app.settings.fontSize
+      el.style.fontSize = effectiveFontSize
       el.style.fontWeight = app.settings.fontWeight
       el.style.setProperty('line-height', effectiveLineHeight, 'important')
     })

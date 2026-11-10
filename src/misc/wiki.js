@@ -265,7 +265,7 @@ export function generateSettingsWiki() {
 #### Typography
 
 \`Font size\` Tiny | Small | Normal (Default) | Large | X-Large
-- Set the font size of calculation text in the input and output panels (\`0.9rem\` to \`1.3rem\`).
+- Set the font size of calculation text in the input and output panels (\`12px\` to \`16px\`).
 
 \`Font weight\` Light | Thin | Normal (Default) | Semi Bold | Bold
 - Set the font weight of calculation text in the input and output panels (\`200\` to \`700\`).
