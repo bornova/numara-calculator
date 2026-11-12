@@ -20,7 +20,8 @@ import {
   getSafeFilename,
   resolveEditorFontSize,
   resolveEditorFontWeight,
-  resolveUiFontGrade
+  resolveUiFontGrade,
+  resolveUiFontOffset
 } from '../src/js/core/utils.js'
 import { detectExternalRenames } from '../src/js/pages/syncPlan.js'
 import { app as appState } from '../src/js/state/appState.js'
@@ -1331,6 +1332,9 @@ describe('Numara Calculation Engine vs Math.js', function () {
 
       assert.strictEqual(resolveUiFontGrade(true), '0')
       assert.strictEqual(resolveUiFontGrade(false), '50')
+
+      assert.strictEqual(resolveUiFontOffset(false), '0px')
+      assert.strictEqual(resolveUiFontOffset(true), '-1px')
     })
 
     it('should parse strict localized numbers and classify internal scope keys accurately', () => {
