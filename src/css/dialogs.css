@@ -102,8 +102,7 @@
   margin: 5px 0 12px 0;
 }
 
-#dialogSettings .settingMod,
-#dialogSettings .settingModToggle {
+#dialogSettings .settingMod {
   display: none;
   position: absolute;
   cursor: pointer;
@@ -112,8 +111,7 @@
   color: #dd9359;
 }
 
-#dialogSettings .settingMod > svg,
-#dialogSettings .settingModToggle > svg {
+#dialogSettings .settingMod > svg {
   width: 24px;
 }
 
@@ -121,8 +119,7 @@
   position: relative;
 }
 
-#dialogSettings div:has(> .settingMod),
-#dialogSettings div:has(> .settingModToggle) {
+#dialogSettings div:has(> .settingMod) {
   position: relative;
 }
 
@@ -134,9 +131,7 @@
   cursor: default;
 }
 
-.precision,
-.expLower,
-.expUpper {
+.precision {
   border: 1px solid light-dark(#e5e5e5, #333333);
   background-color: transparent;
   padding: 1px 0 0 0;
@@ -244,8 +239,7 @@
 
 /* Sync folder tab */
 
-#syncDirSection,
-#syncDirHiddenWrapper {
+#syncDirSection {
   display: none;
 }
 
@@ -291,10 +285,6 @@
   width: var(--color-input-width);
   height: var(--select-height);
   color: light-dark(#333333, #e6e6e6);
-}
-
-.colorInputDefault {
-  border-left: 1px solid light-dark(#eaeaea, #666666);
 }
 
 .colorInputChanged {
@@ -451,8 +441,13 @@ div:has(> #logsLink) {
 }
 
 .domainTextBox {
+  box-sizing: border-box;
   margin: 10px;
+  border: 1px solid light-dark(#cccccc, #666666);
+  padding: 5px;
   width: var(--domain-textbox-width);
+  color: light-dark(#666666, #eaeaea);
+  user-select: text;
 }
 
 .domainTextBox:disabled {
