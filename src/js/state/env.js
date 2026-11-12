@@ -17,6 +17,11 @@ export const isMobile =
   /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent) ||
   (typeof navigator !== 'undefined' && !!navigator.userAgentData?.mobile)
 
+/** Check if app is running on Windows. */
+export const isWin = isElectron
+  ? Boolean(window.numara.isWin)
+  : !isMobile && (navigator.userAgentData?.platform === 'Windows' || /windows|win32|win64/.test(userAgent))
+
 /**
  * Get the active application theme ('dark' or 'light').
  * @returns {Promise<string>} Resolves to 'dark' or 'light'.
