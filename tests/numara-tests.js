@@ -13,7 +13,14 @@ import {
   parseLegacyUdf,
   parseLegacyUdu
 } from '../src/js/core/udfu.js'
-import { debounce, escapeHTML, escapeRegExp, getSafeFilename, resolveEditorFontSize } from '../src/js/core/utils.js'
+import {
+  debounce,
+  escapeHTML,
+  escapeRegExp,
+  getSafeFilename,
+  resolveEditorFontSize,
+  resolveEditorFontWeight
+} from '../src/js/core/utils.js'
 import { detectExternalRenames } from '../src/js/pages/syncPlan.js'
 import { app as appState } from '../src/js/state/appState.js'
 import { migrateColors, migrateFromV7, migrateStorageAndPages } from '../src/js/state/migration.js'
@@ -1313,6 +1320,13 @@ describe('Numara Calculation Engine vs Math.js', function () {
       assert.strictEqual(resolveEditorFontSize('14px', 'smaller', false), '12px')
       assert.strictEqual(resolveEditorFontSize('14px', 'larger', false), '14px')
       assert.strictEqual(resolveEditorFontSize('12px', 'smaller', false), '11px')
+
+      assert.strictEqual(resolveEditorFontWeight('400', true), '400')
+      assert.strictEqual(resolveEditorFontWeight('700', true), '700')
+      assert.strictEqual(resolveEditorFontWeight('200', false), '250')
+      assert.strictEqual(resolveEditorFontWeight('400', false), '450')
+      assert.strictEqual(resolveEditorFontWeight('500', false), '550')
+      assert.strictEqual(resolveEditorFontWeight('700', false), '700')
     })
 
     it('should parse strict localized numbers and classify internal scope keys accurately', () => {
