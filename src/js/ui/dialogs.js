@@ -4,9 +4,10 @@ import { dom } from '../dom.js'
 import { prepareUdfuDialog } from '../calc/userDefined.js'
 import { cm } from '../editor/index.js'
 import { isSearchPanelOpen } from '../editor/searchPanel.js'
+import { hideTabContextMenu } from '../pages/pageTabs.js'
 import { app } from '../state/appState.js'
 import { isElectron } from '../state/env.js'
-import { plot } from './plot.js'
+import { plot, populatePlotDomainInputs } from './plot.js'
 import { settings } from './settings.js'
 import { checkColorChange, colors } from './theme.js'
 import { checkAppUpdate } from './updater.js'
@@ -156,6 +157,18 @@ export const modal = {
         visibility: ''
       })
     })
+  },
+
+  /**
+   * Centers all currently open modal dialogs.
+   * @param {boolean} [animate=true] Whether to smoothly animate the dialogs to center.
+   * @param {number} [targetWidth] Optional target viewport width.
+   * @param {number} [targetHeight] Optional target viewport height.
+   */
+  centerOpen: (animate = true, targetWidth, targetHeight) => {
+    dom.els('.modal.uk-open .uk-modal-dialog').forEach((dialog) => {
+      modal.center(dialog, animate, targetWidth, targetHeight)
+    })
   }
 }
 
@@ -282,7 +295,7 @@ function setupDraggableModals() {
  */
 export function hideOpenDropdowns(excludeEl = null) {
   if (excludeEl !== dom.tabContextMenu) {
-    dom.els('.pageMenuButton.is-active').forEach((btn) => btn.classList.remove('is-active'))
+    hideTabContextMenu()
   }
 
   dom.els('.uk-dropdown.uk-open').forEach((el) => {
@@ -312,6 +325,7 @@ export function setupUIkitUtils() {
     (event) => {
       if (event.target.id === 'pageListPanel' && app.pageListDocked) return
 
+      hideOpenDropdowns()
       modalOpenState = true
 
       if (isElectron) {
@@ -376,14 +390,7 @@ export function setupUIkitUtils() {
 
   let udTab = 1
 
-  UIkit.util.on(
-    '#dialogUdfu',
-    'beforeshow',
-    () => {
-      prepareUdfuDialog(udTab)
-    },
-    { self: true }
-  )
+  UIkit.util.on('#dialogUdfu', 'beforeshow', prepareUdfuDialog, { self: true })
 
   UIkit.util.on(
     '#dialogUdfu',
@@ -395,21 +402,11 @@ export function setupUIkitUtils() {
   )
 
   UIkit.util.on(
-    '#udfTab',
+    '#udfTab, #uduTab',
     'shown',
-    () => {
-      udTab = 1
-      dom.udfNameInput?.focus()
-    },
-    { self: true }
-  )
-
-  UIkit.util.on(
-    '#uduTab',
-    'shown',
-    () => {
-      udTab = 2
-      dom.uduNameInput?.focus()
+    (event) => {
+      udTab = event.target.id === 'udfTab' ? 1 : 2
+      ;(udTab === 1 ? dom.udfNameInput : dom.uduNameInput)?.focus()
     },
     { self: true }
   )
@@ -432,24 +429,9 @@ export function setupUIkitUtils() {
     { self: true }
   )
 
-  UIkit.util.on(
-    '#dialogPlotAxisSettings',
-    'shown',
-    () => {
-      const { auto, x, y, axisPrecision } = app.plotSettings.domain
-      const minMaxInputs = [dom.plotXMin, dom.plotXMax, dom.plotYMin, dom.plotYMax]
-
-      dom.plotAutoDomain.checked = auto
-      dom.plotAxisPrecision.value = axisPrecision
-      dom.plotAxisPrecisionLabel.textContent = axisPrecision
-
-      minMaxInputs.forEach((input, i) => {
-        input.value = [...x, ...y][i]
-        input.disabled = auto
-      })
-    },
-    { self: true }
-  )
+  UIkit.util.on('#dialogPlotAxisSettings', 'shown', () => populatePlotDomainInputs(app.plotSettings.domain), {
+    self: true
+  })
 
   UIkit.util.on(
     '#dialogAbout',
