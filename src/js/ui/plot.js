@@ -2,8 +2,8 @@ import functionPlot from 'function-plot'
 
 import { productName } from '../../../package.json'
 import { math } from '../calc/calcManager.js'
-import { REGEX_PLOT } from '../core/constants.js'
-import { parseLocaleNumber } from '../core/formatter.js'
+import { INTERNAL_SCOPE_KEYS, REGEX_PLOT } from '../core/constants.js'
+import { parseStrictLocaleNumber } from '../core/formatter.js'
 import { getSafeFilename } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { app } from '../state/appState.js'
@@ -227,7 +227,7 @@ function preparePlotExpression(funcDef) {
   const plotScope = new Map()
 
   for (const [key, val] of app.mathScope.entries()) {
-    if (key === paramName || key === 'ans' || key === '_' || key === 'now' || key === 'today') continue
+    if (key === paramName || INTERNAL_SCOPE_KEYS.has(key)) continue
     if (['function', 'page', 'object', 'datetime'].includes(app.scopeTypes?.[key])) continue
 
     if (typeof val === 'number') {
@@ -291,13 +291,27 @@ function resolveAxisLimit(val) {
 
   if (!trimmed) return NaN
 
-  if (/^-?\d[\d.,\s\u00A0\u202F\u2009]*(?:e[+-]?\d+)?$/i.test(trimmed)) {
-    const localeNum = parseLocaleNumber(trimmed, app.settings)
+  const localeNum = parseStrictLocaleNumber(trimmed, app.settings)
 
-    if (Number.isFinite(localeNum)) return localeNum
-  }
+  return Number.isFinite(localeNum) ? localeNum : parseFloat(trimmed)
+}
 
-  return parseFloat(trimmed)
+/**
+ * Populates the plot axis settings dialog inputs from a domain configuration object.
+ * @param {{ auto: boolean, axisPrecision: number, x: number[], y: number[] }} domain
+ */
+export function populatePlotDomainInputs({ auto, x, y, axisPrecision }) {
+  const minMaxInputs = [dom.plotXMin, dom.plotXMax, dom.plotYMin, dom.plotYMax]
+  const limits = [...x, ...y]
+
+  dom.plotAutoDomain.checked = auto
+  dom.plotAxisPrecision.value = axisPrecision
+  dom.plotAxisPrecisionLabel.textContent = axisPrecision
+
+  minMaxInputs.forEach((input, i) => {
+    input.value = limits[i]
+    input.disabled = auto
+  })
 }
 
 /**
@@ -388,14 +402,7 @@ function setupEventListeners() {
   })
 
   dom.defaultDomainsButton.addEventListener('click', () => {
-    const { auto, x, y, axisPrecision } = plotSettings.defaults.domain
-
-    dom.plotAxisPrecision.value = axisPrecision
-    dom.plotAxisPrecisionLabel.textContent = axisPrecision
-    dom.plotAutoDomain.checked = auto
-    dom.plotAutoDomain.dispatchEvent(new Event('change'))
-
-    minMaxInputs.forEach((input, i) => (input.value = [...x, ...y][i]))
+    populatePlotDomainInputs(plotSettings.defaults.domain)
   })
 
   window.addEventListener('resize', () => {
