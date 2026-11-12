@@ -121,7 +121,7 @@ export const store = {
 
       const obj = getConsolidatedStore()
 
-      if (obj) {
+      if (obj && key in obj) {
         delete obj[key]
         saveConsolidatedStore(obj)
       }
@@ -143,14 +143,18 @@ export function initStoreObject(key, defaults, onExisting) {
   let value = store.get(key)
 
   if (value) {
-    onExisting?.(value)
+    let changed = Boolean(onExisting?.(value))
 
     observableDiff(value, defaults, (diff) => {
       if (diff.kind === 'E') return
 
       applyChange(value, defaults, diff)
-      store.set(key, value)
+      changed = true
     })
+
+    if (changed) {
+      store.set(key, value)
+    }
   } else {
     value = structuredClone(defaults)
     store.set(key, value)
