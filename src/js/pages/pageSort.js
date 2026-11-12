@@ -22,34 +22,43 @@ export function isPageDragging() {
 
 /**
  * Persists the current DOM order of page elements into local storage.
- * @param {Element[]} elements Ordered DOM elements with page IDs.
+ * @param {Iterable<Element>} elements Ordered DOM elements with page IDs.
  * @param {(el: Element) => string} getId Extractor for page ID.
+ * @returns {Array<object>} The persisted ordered pages array.
  */
 function saveOrderedPages(elements, getId) {
   debouncedSavePageState.flush()
 
   const pages = store.get('pages') || []
-  const orderedPages = elements.map((el) => pages.find((page) => page.id === getId(el))).filter(Boolean)
-  const seenIds = new Set(orderedPages.map((p) => p.id))
+  const pageById = new Map(pages.map((page) => [page.id, page]))
+  const orderedPages = []
 
-  for (const p of pages) {
-    if (!seenIds.has(p.id)) {
-      orderedPages.push(p)
+  for (const el of elements) {
+    const page = pageById.get(getId(el))
+
+    if (page) {
+      orderedPages.push(page)
+      pageById.delete(page.id)
     }
   }
 
+  for (const page of pageById.values()) {
+    orderedPages.push(page)
+  }
+
   store.set('pages', orderedPages)
+
+  return orderedPages
 }
 
 /**
  * Persists the current DOM order of `#pageList` items into local storage and syncs `#pageTabs`.
  */
 function pageOrder() {
-  saveOrderedPages([...dom.els('#pageList > div')], (el) => el.getAttribute('id'))
+  const orderedPages = saveOrderedPages(dom.els('#pageList > div'), (el) => el.id)
 
   if (dom.pageTabs) {
-    const pages = store.get('pages') || []
-    for (const p of pages) {
+    for (const p of orderedPages) {
       const tabEl = dom.pageTabs.querySelector(`.pageTab[data-page="${p.id}"]`)
       if (tabEl) dom.pageTabs.appendChild(tabEl)
     }
@@ -60,12 +69,10 @@ function pageOrder() {
  * Persists the current DOM order of `#pageTabs` items into local storage and syncs `#pageList`.
  */
 function tabOrder() {
-  saveOrderedPages([...dom.els('#pageTabs > .pageTab')], (el) => el.dataset.page)
+  const orderedPages = saveOrderedPages(dom.els('#pageTabs > .pageTab'), (el) => el.dataset.page)
 
   if (dom.pageList) {
-    const pages = store.get('pages') || []
-
-    for (const p of pages) {
+    for (const p of orderedPages) {
       const itemEl = document.getElementById(p.id)
       if (itemEl) dom.pageList.appendChild(itemEl)
     }
