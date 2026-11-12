@@ -1,8 +1,10 @@
 import { describe, it, beforeEach } from 'node:test'
 import assert from 'node:assert'
 import { create, all } from 'mathjs'
+import { areBoundsEqual, isBoundsOnScreen, resolveWindowBounds } from '../src/electron/bounds.js'
+import { INTERNAL_SCOPE_KEYS, isInternalScopeKey } from '../src/js/core/constants.js'
 import { runCalculation, formatAnswer, applyUdfu } from '../src/js/core/evaluator.js'
-import { parseLocaleNumber } from '../src/js/core/formatter.js'
+import { parseLocaleNumber, parseStrictLocaleNumber } from '../src/js/core/formatter.js'
 import { stripComments } from '../src/js/core/preprocessor.js'
 import {
   applyUdfuToMath,
@@ -11,11 +13,11 @@ import {
   parseLegacyUdf,
   parseLegacyUdu
 } from '../src/js/core/udfu.js'
-import { debounce, escapeHTML, escapeRegExp, getSafeFilename } from '../src/js/core/utils.js'
+import { debounce, escapeHTML, escapeRegExp, getSafeFilename, resolveEditorFontSize } from '../src/js/core/utils.js'
 import { detectExternalRenames } from '../src/js/pages/syncPlan.js'
 import { app as appState } from '../src/js/state/appState.js'
 import { migrateColors, migrateFromV7, migrateStorageAndPages } from '../src/js/state/migration.js'
-import { store } from '../src/js/state/store.js'
+import { initStoreObject, store } from '../src/js/state/store.js'
 import { customCases } from './custom-cases.js'
 
 // Default settings from settings.js
@@ -1214,6 +1216,192 @@ describe('Numara Calculation Engine vs Math.js', function () {
       assert.strictEqual(renames.length, 1)
       assert.strictEqual(renames[0].page.id, 'p1')
       assert.strictEqual(renames[0].sanitizedName, 'New Name')
+    })
+
+    it('should center window on primary workArea when saved position is missing, minimized, or on a disconnected monitor', () => {
+      const laptop = { workArea: { x: 0, y: 25, width: 1440, height: 875 } }
+      const displays = [laptop]
+
+      // Fresh launch with no saved position
+      assert.deepStrictEqual(resolveWindowBounds({ width: 600, height: 515 }, displays, laptop), {
+        x: 420,
+        y: 205,
+        width: 600,
+        height: 515
+      })
+
+      // Disconnected right-hand monitor (issue #327)
+      assert.deepStrictEqual(
+        resolveWindowBounds({ position: [2200, 180], width: 600, height: 515 }, displays, laptop),
+        {
+          x: 420,
+          y: 205,
+          width: 600,
+          height: 515
+        }
+      )
+
+      // Barely touching right/bottom edge (5x5 px sliver, undraggable frameless window)
+      assert.strictEqual(isBoundsOnScreen({ x: 1435, y: 895, width: 600, height: 515 }, displays), false)
+      assert.deepStrictEqual(
+        resolveWindowBounds({ position: [1435, 895], width: 600, height: 515 }, displays, laptop),
+        {
+          x: 420,
+          y: 205,
+          width: 600,
+          height: 515
+        }
+      )
+
+      // Windows minimized sentinel (-32000, -32000) and malformed position array
+      assert.deepStrictEqual(
+        resolveWindowBounds({ position: [-32000, -32000], width: 600, height: 515 }, displays, laptop),
+        { x: 420, y: 205, width: 600, height: 515 }
+      )
+      assert.deepStrictEqual(resolveWindowBounds({ position: [100], width: 600, height: 515 }, displays, laptop), {
+        x: 420,
+        y: 205,
+        width: 600,
+        height: 515
+      })
+    })
+
+    it('should preserve valid secondary monitor positions and clamp overhanging or oversized bounds into workArea', () => {
+      const primary = { workArea: { x: 0, y: 25, width: 1440, height: 875 } }
+      const leftExternal = { workArea: { x: -1920, y: 0, width: 1920, height: 1040 } }
+      const displays = [primary, leftExternal]
+
+      // Valid position on connected left external monitor
+      const onLeft = resolveWindowBounds({ position: [-1500, 120], width: 600, height: 515 }, displays, primary)
+      assert.deepStrictEqual(onLeft, { x: -1500, y: 120, width: 600, height: 515 })
+      assert.strictEqual(isBoundsOnScreen(onLeft, displays), true)
+      assert.strictEqual(areBoundsEqual(onLeft, { x: -1500, y: 120, width: 600, height: 515 }), true)
+
+      // Partially overhanging right edge and tucked above menu bar on primary display -> clamped inside workArea
+      assert.deepStrictEqual(resolveWindowBounds({ position: [1050, 0], width: 600, height: 515 }, displays, primary), {
+        x: 840,
+        y: 25,
+        width: 600,
+        height: 515
+      })
+
+      // Straddling two connected displays -> snaps into the display with larger overlap
+      assert.deepStrictEqual(
+        resolveWindowBounds({ position: [-450, 100], width: 600, height: 515 }, displays, primary),
+        {
+          x: -600,
+          y: 100,
+          width: 600,
+          height: 515
+        }
+      )
+
+      // Oversized dimensions from a 4K monitor reopened on a smaller laptop screen with fractional coordinates
+      const smallLaptop = { workArea: { x: 0, y: 0, width: 1366, height: 728 } }
+      assert.deepStrictEqual(
+        resolveWindowBounds({ position: [2500.4, 300.7], width: 1800.6, height: 1100.2 }, [smallLaptop], smallLaptop),
+        { x: 0, y: 0, width: 1366, height: 728 }
+      )
+    })
+
+    it('should resolve optical editor font sizes across zoom levels for macOS/mobile vs Windows/Linux desktop', () => {
+      assert.strictEqual(resolveEditorFontSize('14px', 'normal', true), '14px')
+      assert.strictEqual(resolveEditorFontSize('14px', 'smaller', true), '13px')
+      assert.strictEqual(resolveEditorFontSize('14px', 'larger', true), '15px')
+
+      assert.strictEqual(resolveEditorFontSize('14px', 'normal', false), '13px')
+      assert.strictEqual(resolveEditorFontSize('14px', 'smaller', false), '12px')
+      assert.strictEqual(resolveEditorFontSize('14px', 'larger', false), '14px')
+      assert.strictEqual(resolveEditorFontSize('12px', 'smaller', false), '11px')
+    })
+
+    it('should parse strict localized numbers and classify internal scope keys accurately', () => {
+      assert.strictEqual(parseStrictLocaleNumber('1.234,56', { numberFormat: '1.234,56' }), 1234.56)
+      assert.strictEqual(parseStrictLocaleNumber('-1 234,5e2', { numberFormat: '1 234,56' }), -123450)
+      assert.ok(Number.isNaN(parseStrictLocaleNumber('123 km', { numberFormat: '1,234.56' })))
+      assert.ok(Number.isNaN(parseStrictLocaleNumber('', { numberFormat: '1,234.56' })))
+
+      assert.strictEqual(INTERNAL_SCOPE_KEYS.has('ans'), true)
+      assert.strictEqual(INTERNAL_SCOPE_KEYS.has('line1'), false)
+      assert.strictEqual(isInternalScopeKey('ans'), true)
+      assert.strictEqual(isInternalScopeKey('today'), true)
+      assert.strictEqual(isInternalScopeKey('line12'), true)
+      assert.strictEqual(isInternalScopeKey('lineWidth'), false)
+    })
+
+    it('should avoid no-op store writes and invalidate cross-page scope cache when referenced pages change', () => {
+      const storage = new Map()
+      let setCount = 0
+      const prevDesc = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+      Object.defineProperty(globalThis, 'localStorage', {
+        configurable: true,
+        writable: true,
+        value: {
+          getItem: (k) => (storage.has(k) ? storage.get(k) : null),
+          setItem: (k, v) => {
+            setCount++
+            storage.set(k, String(v))
+          },
+          removeItem: (k) => storage.delete(k)
+        }
+      })
+
+      try {
+        store.set('settings', { a: 1 })
+        const writesAfterSeed = setCount
+
+        // Removing a missing key must not rewrite localStorage
+        store.remove('nonExistentObsoleteKey')
+        assert.strictEqual(setCount, writesAfterSeed)
+
+        // initStoreObject with multiple missing defaults should batch into a single store.set
+        const merged = initStoreObject('settings', { a: 0, b: 2, c: 3 })
+        assert.deepStrictEqual(merged, { a: 1, b: 2, c: 3 })
+        assert.strictEqual(setCount, writesAfterSeed + 1)
+
+        // Subsequent launch with all keys present must perform zero writes
+        initStoreObject('settings', { a: 0, b: 2, c: 3 })
+        assert.strictEqual(setCount, writesAfterSeed + 1)
+      } finally {
+        if (prevDesc) Object.defineProperty(globalThis, 'localStorage', prevDesc)
+      }
+
+      const pagesV1 = [
+        { id: 'src', name: 'Rates', data: 'tax = 0.08' },
+        { id: 'dest', name: 'Invoice', data: 'p = page("Rates")\n100 * p.tax' }
+      ]
+      const res1 = runCalculation({
+        activePage: 'dest',
+        lines: ['p = page("Rates")', '100 * p.tax'],
+        pages: pagesV1,
+        settings: defaultSettings,
+        currencies: mockCurrencies
+      })
+      assert.strictEqual(extractAnswer(res1.answers[1]).answer, '8')
+
+      // Editing active page lines while referenced page is unchanged reuses cached page scope accurately
+      const res2 = runCalculation({
+        activePage: 'dest',
+        lines: ['p = page("Rates")', '200 * p.tax'],
+        pages: pagesV1,
+        settings: defaultSettings,
+        currencies: mockCurrencies
+      })
+      assert.strictEqual(extractAnswer(res2.answers[1]).answer, '16')
+
+      // Updating referenced page data invalidates cached page scope
+      const pagesV2 = [
+        { id: 'src', name: 'Rates', data: 'tax = 0.1' },
+        { id: 'dest', name: 'Invoice', data: 'p = page("Rates")\n200 * p.tax' }
+      ]
+      const res3 = runCalculation({
+        activePage: 'dest',
+        lines: ['p = page("Rates")', '200 * p.tax'],
+        pages: pagesV2,
+        settings: defaultSettings,
+        currencies: mockCurrencies
+      })
+      assert.strictEqual(extractAnswer(res3.answers[1]).answer, '20')
     })
   })
 })
