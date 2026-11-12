@@ -4,6 +4,12 @@ import { debounce, escapeRegExp } from '../core/utils.js'
 import { dom } from '../dom.js'
 
 let panelEl = null
+let findInputEl = null
+let replaceInputEl = null
+let countEl = null
+let replaceRowEl = null
+let toggleReplaceBtn = null
+let debouncedUpdateSearch = null
 let currentQuery = null
 let currentOverlay = null
 let matches = []
@@ -79,10 +85,6 @@ function getMatches(cm, query) {
   return list
 }
 
-function comparePos(a, b) {
-  return a.line - b.line || a.ch - b.ch
-}
-
 function selectMatch(cm, index) {
   if (index < 0 || index >= matches.length) return
 
@@ -96,26 +98,23 @@ function refreshMatches(cm, fromPos, select = true) {
   matches = getMatches(cm, currentQuery)
 
   if (matches.length > 0) {
-    const foundIndex = matches.findIndex((m) => comparePos(m.from, fromPos) >= 0)
+    const foundIndex = matches.findIndex((m) => CodeMirror.cmpPos(m.from, fromPos) >= 0)
 
     activeIndex = foundIndex === -1 ? 0 : foundIndex
-    panelEl.querySelector('.search-count').textContent = `${activeIndex + 1} of ${matches.length}`
+    countEl.textContent = `${activeIndex + 1} of ${matches.length}`
 
     if (select) {
       selectMatch(cm, activeIndex)
     }
   } else {
     activeIndex = -1
-    panelEl.querySelector('.search-count').textContent = '0 of 0'
+    countEl.textContent = '0 of 0'
   }
 }
 
 function setReplaceModeVisible(cm, visible) {
-  const replaceRow = panelEl.querySelector('.replace-row')
-  const toggleBtn = panelEl.querySelector('.search-toggle-replace')
-
-  replaceRow.classList.toggle('hidden', !visible)
-  toggleBtn.classList.toggle('expanded', visible)
+  replaceRowEl.classList.toggle('hidden', !visible)
+  toggleReplaceBtn.classList.toggle('expanded', visible)
   document.body.classList.toggle('numara-search-replace-open', visible)
   cm.refresh()
 }
@@ -123,8 +122,7 @@ function setReplaceModeVisible(cm, visible) {
 function updateSearch(cm, select = true) {
   if (!panelEl) return
 
-  const findInput = panelEl.querySelector('.find-input')
-  const queryStr = findInput.value
+  const queryStr = findInputEl.value
 
   // Remove previous overlay
   if (currentOverlay) {
@@ -136,7 +134,7 @@ function updateSearch(cm, select = true) {
     currentQuery = null
     matches = []
     activeIndex = -1
-    panelEl.querySelector('.search-count').textContent = 'No results'
+    countEl.textContent = 'No results'
 
     return
   }
@@ -157,15 +155,14 @@ function navigateSearch(cm, reverse = false) {
 
   activeIndex = reverse ? (activeIndex - 1 + matches.length) % matches.length : (activeIndex + 1) % matches.length
 
-  panelEl.querySelector('.search-count').textContent = `${activeIndex + 1} of ${matches.length}`
+  countEl.textContent = `${activeIndex + 1} of ${matches.length}`
   selectMatch(cm, activeIndex)
 }
 
 function replaceCurrent(cm) {
   if (activeIndex < 0 || activeIndex >= matches.length) return
 
-  const replaceInput = panelEl.querySelector('.replace-input')
-  const replaceVal = replaceInput.value
+  const replaceVal = replaceInputEl.value
   const match = matches[activeIndex]
   const replaceLines = replaceVal.split('\n')
   const replacedTo = CodeMirror.Pos(
@@ -174,11 +171,11 @@ function replaceCurrent(cm) {
   )
 
   cm.replaceRange(replaceVal, match.from, match.to)
+  debouncedUpdateSearch?.cancel()
   cm.setCursor(replacedTo)
 
   // Re-evaluate query and rebuild matches
-  const findInput = panelEl.querySelector('.find-input')
-  const queryStr = findInput.value
+  const queryStr = findInputEl.value
 
   if (!queryStr) return
 
@@ -187,14 +184,11 @@ function replaceCurrent(cm) {
 }
 
 function replaceAll(cm) {
-  const findInput = panelEl.querySelector('.find-input')
-  const queryStr = findInput.value
+  const queryStr = findInputEl.value
 
   if (!queryStr) return
 
-  const replaceInput = panelEl.querySelector('.replace-input')
-  const replaceVal = replaceInput.value
-
+  const replaceVal = replaceInputEl.value
   const query = parseQuery(queryStr)
   const caseInsensitive = queryCaseInsensitive(query)
 
@@ -208,24 +202,22 @@ function replaceAll(cm) {
     }
   })
 
+  debouncedUpdateSearch?.cancel()
   updateSearch(cm, false)
 }
 
-function toggleReplaceMode(cm, focusReplace = true) {
+function toggleReplaceMode(cm) {
   if (!panelEl) return
 
-  const replaceRow = panelEl.querySelector('.replace-row')
-  const isHidden = replaceRow.classList.contains('hidden')
+  const isHidden = replaceRowEl.classList.contains('hidden')
 
   setReplaceModeVisible(cm, isHidden)
 
   if (isHidden) {
-    if (focusReplace) {
-      panelEl.querySelector('.replace-input').focus()
-      panelEl.querySelector('.replace-input').select()
-    }
+    replaceInputEl.focus()
+    replaceInputEl.select()
   } else {
-    panelEl.querySelector('.find-input').focus()
+    findInputEl.focus()
   }
 }
 
@@ -239,14 +231,14 @@ export function showSearchPanel(cm, replaceMode = false) {
   const selection = cm.getSelection()
 
   if (selection && selection.indexOf('\n') === -1) {
-    panelEl.querySelector('.find-input').value = selection
+    findInputEl.value = selection
   }
 
   document.body.classList.add('numara-search-panel-open')
   setReplaceModeVisible(cm, replaceMode)
   updateSearch(cm)
 
-  const input = panelEl.querySelector(replaceMode ? '.replace-input' : '.find-input')
+  const input = replaceMode ? replaceInputEl : findInputEl
   input.focus()
   input.select()
 
@@ -319,12 +311,15 @@ function createPanel(cm) {
 
   dom.mainPanel.insertBefore(panelEl, dom.mainPanel.firstChild)
 
-  const findInput = panelEl.querySelector('.find-input')
-  const replaceInput = panelEl.querySelector('.replace-input')
+  findInputEl = panelEl.querySelector('.find-input')
+  replaceInputEl = panelEl.querySelector('.replace-input')
+  countEl = panelEl.querySelector('.search-count')
+  replaceRowEl = panelEl.querySelector('.replace-row')
+  toggleReplaceBtn = panelEl.querySelector('.search-toggle-replace')
 
-  findInput.addEventListener('input', () => updateSearch(cm))
+  findInputEl.addEventListener('input', () => updateSearch(cm))
 
-  findInput.addEventListener('keydown', (e) => {
+  findInputEl.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault()
       navigateSearch(cm, e.shiftKey)
@@ -334,7 +329,7 @@ function createPanel(cm) {
     }
   })
 
-  replaceInput.addEventListener('keydown', (e) => {
+  replaceInputEl.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault()
       replaceCurrent(cm)
@@ -344,8 +339,8 @@ function createPanel(cm) {
     }
   })
 
-  panelEl.querySelector('.search-toggle-replace').addEventListener('click', () => {
-    toggleReplaceMode(cm, true)
+  toggleReplaceBtn.addEventListener('click', () => {
+    toggleReplaceMode(cm)
   })
 
   panelEl.querySelector('.btn-next').addEventListener('click', () => navigateSearch(cm, false))
@@ -354,7 +349,7 @@ function createPanel(cm) {
   panelEl.querySelector('.btn-replace').addEventListener('click', () => replaceCurrent(cm))
   panelEl.querySelector('.btn-replace-all').addEventListener('click', () => replaceAll(cm))
 
-  const debouncedUpdateSearch = debounce(() => {
+  debouncedUpdateSearch = debounce(() => {
     if (isSearchPanelOpen()) {
       updateSearch(cm, false)
     }
