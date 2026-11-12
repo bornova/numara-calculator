@@ -164,3 +164,30 @@ export function debounce(func, wait) {
 
   return debounced
 }
+
+const MAC_FONT_SIZE_ZOOM_MAP = {
+  smaller: { '12px': '11px', '13px': '12px', '14px': '13px', '15px': '14px', '16px': '15px' },
+  normal: { '12px': '12px', '13px': '13px', '14px': '14px', '15px': '15px', '16px': '16px' },
+  larger: { '12px': '13px', '13px': '14px', '14px': '15px', '15px': '16px', '16px': '17px' }
+}
+
+const NON_MAC_FONT_SIZE_ZOOM_MAP = {
+  smaller: { '12px': '11px', '13px': '11px', '14px': '12px', '15px': '13px', '16px': '14px' },
+  normal: { '12px': '11px', '13px': '12px', '14px': '13px', '15px': '14px', '16px': '15px' },
+  larger: { '12px': '12px', '13px': '13px', '14px': '14px', '15px': '15px', '16px': '16px' }
+}
+
+/**
+ * Resolves the optically matched editor font size for a semantic size tier, zoom level, and platform.
+ * Non-macOS desktop displays (~96 logical PPI + DirectWrite/FreeType hinting) step down 1px so tiers
+ * (`Tiny`..`X-Large`) match macOS Retina optical size while keeping `'14px'` (`Normal`) as the universal default.
+ * @param {string} fontSize Stored font size tier (`'12px'`..`'16px'`).
+ * @param {string} [zoomLevel='normal'] Active UI zoom level (`'smaller'`, `'normal'`, `'larger'`).
+ * @param {boolean} [useMacScale=true] True on macOS or mobile devices; false on Windows/Linux desktop.
+ * @returns {string} Effective CSS font-size string.
+ */
+export function resolveEditorFontSize(fontSize, zoomLevel = 'normal', useMacScale = true) {
+  const map = useMacScale ? MAC_FONT_SIZE_ZOOM_MAP : NON_MAC_FONT_SIZE_ZOOM_MAP
+
+  return map[zoomLevel]?.[fontSize] || fontSize
+}
