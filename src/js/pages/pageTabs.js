@@ -7,15 +7,41 @@ import { hideOpenDropdowns } from '../ui/dialogs.js'
 
 let contextTabPageId = null
 let contextMenuSource = null
+let activeMenuBtn = null
 
 /**
  * Hides the tab/page context menu if open.
  */
 export function hideTabContextMenu() {
   dom.tabContextMenu?.classList.remove('uk-open')
-  dom.els('.pageMenuButton.is-active').forEach((btn) => btn.classList.remove('is-active'))
+  activeMenuBtn?.classList.remove('is-active')
+  activeMenuBtn = null
   contextTabPageId = null
   contextMenuSource = null
+}
+
+/**
+ * Opens and viewport-clamps `#tabContextMenu` for a page list button or bottom tab.
+ * @param {string} pageId Id of the target page.
+ * @param {'list'|'tab'} source Trigger origin.
+ * @param {(menuRect: DOMRect) => { left: number, top: number }} getPosition Computes desired coordinates.
+ * @param {HTMLElement|null} [anchorEl=null] Optional trigger button to mark `.is-active`.
+ */
+function openPageContextMenu(pageId, source, getPosition, anchorEl = null) {
+  hideOpenDropdowns(dom.tabContextMenu)
+  activeMenuBtn?.classList.remove('is-active')
+  activeMenuBtn = anchorEl
+  activeMenuBtn?.classList.add('is-active')
+
+  contextTabPageId = pageId
+  contextMenuSource = source
+  dom.tabContextMenu.classList.add('uk-open')
+
+  const menuRect = dom.tabContextMenu.getBoundingClientRect()
+  const { left, top } = getPosition(menuRect)
+
+  dom.tabContextMenu.style.left = `${Math.max(8, Math.min(left, window.innerWidth - menuRect.width - 8))}px`
+  dom.tabContextMenu.style.top = `${Math.max(8, Math.min(top, window.innerHeight - menuRect.height - 8))}px`
 }
 
 /**
@@ -31,25 +57,23 @@ export function togglePageListContextMenu(pageId, anchorEl) {
     return
   }
 
-  hideOpenDropdowns(dom.tabContextMenu)
-  dom.els('.pageMenuButton.is-active').forEach((btn) => btn.classList.remove('is-active'))
+  openPageContextMenu(
+    pageId,
+    'list',
+    (menuRect) => {
+      const btnRect = anchorEl.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - btnRect.bottom - 8
 
-  contextTabPageId = pageId
-  contextMenuSource = 'list'
-  anchorEl.classList.add('is-active')
-  dom.tabContextMenu.classList.add('uk-open')
-
-  const menuRect = dom.tabContextMenu.getBoundingClientRect()
-  const btnRect = anchorEl.getBoundingClientRect()
-  const left = Math.max(8, Math.min(btnRect.right - menuRect.width, window.innerWidth - menuRect.width - 8))
-  const spaceBelow = window.innerHeight - btnRect.bottom - 8
-  const top =
-    spaceBelow >= menuRect.height || btnRect.top < menuRect.height
-      ? Math.min(btnRect.bottom + 4, window.innerHeight - menuRect.height - 8)
-      : Math.max(8, btnRect.top - menuRect.height - 4)
-
-  dom.tabContextMenu.style.left = `${left}px`
-  dom.tabContextMenu.style.top = `${top}px`
+      return {
+        left: btnRect.right - menuRect.width,
+        top:
+          spaceBelow >= menuRect.height || btnRect.top < menuRect.height
+            ? btnRect.bottom + 4
+            : btnRect.top - menuRect.height - 4
+      }
+    },
+    anchorEl
+  )
 }
 
 /**
@@ -80,26 +104,29 @@ export function updatePageTabsScroll() {
 export function populatePageTabs(pages, formatPageDate) {
   if (!dom.pageTabs) return
 
-  dom.pageTabs.innerHTML = ''
+  const fragment = document.createDocumentFragment()
+  let activeTabEl = null
 
-  pages.forEach((page) => {
+  for (const page of pages) {
     const pageDate = formatPageDate(page.id)
+    const isActive = app.activePage === page.id
     const pageTab = document.createElement('div')
 
-    pageTab.className = `pageTab${app.activePage === page.id ? ' activeTab' : ''}`
+    pageTab.className = `pageTab${isActive ? ' activeTab' : ''}`
     pageTab.dataset.page = page.id
     pageTab.dataset.action = 'loadTab'
     pageTab.title = `${page.name} - ${pageDate}`
     pageTab.innerHTML = `<span class="pageTabTitle">${escapeHTML(page.name)}</span>`
 
-    dom.pageTabs.appendChild(pageTab)
-  })
+    if (isActive) {
+      activeTabEl = pageTab
+    }
 
-  const activeTabEl = dom.pageTabs.querySelector('.activeTab')
-
-  if (activeTabEl) {
-    activeTabEl.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    fragment.appendChild(pageTab)
   }
+
+  dom.pageTabs.replaceChildren(fragment)
+  activeTabEl?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
 
   updatePageTabsScroll()
 }
@@ -112,7 +139,7 @@ export function populatePageTabs(pages, formatPageDate) {
  * @param {(rawValue: string, save: boolean) => void} onFinish Callback invoked once on completion.
  * @returns {{ input: HTMLInputElement, finish: (save: boolean) => void }}
  */
-export function attachInlineRenameInput(titleEl, initialValue, className, onFinish) {
+function attachInlineRenameInput(titleEl, initialValue, className, onFinish) {
   const input = document.createElement('input')
   input.type = 'text'
   input.className = className
@@ -152,37 +179,58 @@ export function attachInlineRenameInput(titleEl, initialValue, className, onFini
 }
 
 /**
+ * Prepares a page list item or tab container for inline renaming and mounts the rename `<input>`.
+ * @param {object} params
+ * @param {string} params.pageId Id of the page being renamed.
+ * @param {HTMLElement|null|undefined} params.containerEl Item or tab element.
+ * @param {string} params.titleSelector Selector for the inner title element to replace.
+ * @param {string} params.inputClass CSS class for the rename `<input>`.
+ * @param {(pageId: string, originalName: string, rawInput: string, save: boolean) => void} params.commitRename Commit callback.
+ * @returns {{ input: HTMLInputElement, finish: (save: boolean) => void, titleHeight: number }|null}
+ */
+export function startInlinePageRename({ pageId, containerEl, titleSelector, inputClass, commitRename }) {
+  debouncedSavePageState.flush()
+
+  const page = (store.get('pages') || []).find((p) => p.id === pageId)
+  const titleEl = containerEl?.querySelector(titleSelector)
+
+  if (!page || !containerEl || !titleEl || containerEl.classList.contains('is-renaming')) return null
+
+  const containerHeight = containerEl.offsetHeight
+  const titleHeight = titleEl.offsetHeight
+
+  containerEl.style.boxSizing = 'border-box'
+  containerEl.style.height = `${containerHeight}px`
+  containerEl.classList.add('is-renaming')
+
+  const { input, finish } = attachInlineRenameInput(titleEl, page.name, inputClass, (rawValue, save) =>
+    commitRename(pageId, page.name, rawValue, save)
+  )
+
+  return { input, finish, titleHeight }
+}
+
+/**
  * Rename page inline within a bottom-bar page tab.
  * @param {string} pageId Id of the page to rename.
  * @param {(pageId: string, originalName: string, rawInput: string, save: boolean) => void} commitRename Callback to validate and persist the new name.
  */
 export function renameTab(pageId, commitRename) {
-  debouncedSavePageState.flush()
+  const tabEl = dom.pageTabs?.querySelector(`.pageTab[data-page="${pageId}"]`)
+  const session = startInlinePageRename({
+    pageId,
+    containerEl: tabEl,
+    titleSelector: '.pageTabTitle',
+    inputClass: 'pageTabRenameInput',
+    commitRename
+  })
 
-  const pages = store.get('pages') || []
-  const page = pages.find((p) => p.id === pageId)
-
-  if (!page || !dom.pageTabs) return
-
-  const tabEl = dom.pageTabs.querySelector(`.pageTab[data-page="${pageId}"]`)
-  const titleEl = tabEl?.querySelector('.pageTabTitle')
-
-  if (!tabEl || !titleEl || tabEl.classList.contains('is-renaming')) return
-
-  const tabHeight = tabEl.offsetHeight
-
-  tabEl.style.boxSizing = 'border-box'
-  tabEl.style.height = `${tabHeight}px`
-  tabEl.classList.add('is-renaming')
-
-  const { input } = attachInlineRenameInput(titleEl, page.name, 'pageTabRenameInput', (rawValue, save) =>
-    commitRename(pageId, page.name, rawValue, save)
-  )
+  if (!session) return
 
   tabEl.scrollIntoView({ block: 'nearest', inline: 'nearest' })
   updatePageTabsScroll()
-  input.focus()
-  input.select()
+  session.input.focus()
+  session.input.select()
 }
 
 /**
@@ -242,49 +290,31 @@ export function setupPageTabsEvents({ onRename, onRenamePage, onDuplicate, onDel
     event.preventDefault()
     event.stopPropagation()
 
-    hideOpenDropdowns(dom.tabContextMenu)
-    dom.els('.pageMenuButton.is-active').forEach((btn) => btn.classList.remove('is-active'))
-
-    contextTabPageId = tabEl.dataset.page
-    contextMenuSource = 'tab'
-    dom.tabContextMenu.classList.add('uk-open')
-
-    const menuRect = dom.tabContextMenu.getBoundingClientRect()
-    const tabRect = tabEl.getBoundingClientRect()
-    const left = Math.max(8, Math.min(event.clientX, window.innerWidth - menuRect.width - 8))
-    const top = Math.max(8, tabRect.top - menuRect.height - 6)
-
-    dom.tabContextMenu.style.left = `${left}px`
-    dom.tabContextMenu.style.top = `${top}px`
+    openPageContextMenu(tabEl.dataset.page, 'tab', (menuRect) => ({
+      left: event.clientX,
+      top: tabEl.getBoundingClientRect().top - menuRect.height - 6
+    }))
   })
 
-  dom.tabContextRename?.addEventListener('click', (event) => {
-    event.stopPropagation()
-    const pageId = contextTabPageId
-    const source = contextMenuSource
-    hideTabContextMenu()
-    if (pageId) {
-      if (source === 'list' && onRenamePage) {
-        onRenamePage(pageId)
-      } else {
-        onRename(pageId)
-      }
+  const bindContextAction = (el, handler) => {
+    el?.addEventListener('click', (event) => {
+      event.stopPropagation()
+      const pageId = contextTabPageId
+      const source = contextMenuSource
+      hideTabContextMenu()
+      if (pageId) handler(pageId, source)
+    })
+  }
+
+  bindContextAction(dom.tabContextRename, (pageId, source) => {
+    if (source === 'list' && onRenamePage) {
+      onRenamePage(pageId)
+    } else {
+      onRename(pageId)
     }
   })
-
-  dom.tabContextDuplicate?.addEventListener('click', (event) => {
-    event.stopPropagation()
-    const pageId = contextTabPageId
-    hideTabContextMenu()
-    if (pageId) onDuplicate(pageId)
-  })
-
-  dom.tabContextDelete?.addEventListener('click', (event) => {
-    event.stopPropagation()
-    const pageId = contextTabPageId
-    hideTabContextMenu()
-    if (pageId) onDelete(pageId)
-  })
+  bindContextAction(dom.tabContextDuplicate, (pageId) => onDuplicate(pageId))
+  bindContextAction(dom.tabContextDelete, (pageId) => onDelete(pageId))
 
   document.addEventListener('pointerdown', (event) => {
     if (
