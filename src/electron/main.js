@@ -7,7 +7,16 @@ import { getNumFilePath, promptImportPage, queueOrOpenFile, setupFileHandlers } 
 import { setupApplicationMenu, setupContextMenus, updateTrayState } from './menu.js'
 import { setupSyncHandlers } from './syncWatcher.js'
 import { setupAutoUpdater } from './updater.js'
-import { createAppWindow, getWindow, isAppQuitting, resetSize, setAppQuitting, setupWindowHandlers } from './window.js'
+import {
+  createAppWindow,
+  getWindow,
+  hideOrMinimizeWindow,
+  isAppQuitting,
+  resetSize,
+  setAppQuitting,
+  setupWindowHandlers,
+  showAndFocusWindow
+} from './window.js'
 
 if (!app.isPackaged) {
   app.setPath('userData', path.join(app.getPath('appData'), 'Numara-Dev'))
@@ -46,15 +55,9 @@ app.on('before-quit', (event) => {
   if (app.isReady() && config.get('showTray') && !isAppQuitting()) {
     event.preventDefault()
 
-    const win = getWindow()
-    const winValid = win && !win.isDestroyed()
+    const win = showAndFocusWindow()
 
-    if (winValid) {
-      if (!win.isVisible()) win.show()
-      win.focus()
-    }
-
-    const choice = dialog.showMessageBoxSync(winValid ? win : null, {
+    const choice = dialog.showMessageBoxSync(win, {
       type: 'question',
       buttons: ['Cancel', 'Quit'],
       defaultId: 0,
@@ -74,11 +77,8 @@ app.on('before-quit', (event) => {
 })
 
 app.on('activate', () => {
-  const win = getWindow()
-
-  if (win) {
-    if (win.isMinimized()) win.restore()
-    win.show()
+  if (getWindow()) {
+    showAndFocusWindow()
   } else if (app.isReady()) {
     createAppWindow({ onWindowCreated: updateTrayState })
   }
@@ -92,27 +92,17 @@ app.on('second-instance', (event, commandLine) => {
     const fileArg = getNumFilePath(commandLine)
 
     if (!app.isPackaged && !fileArg) {
-      if (win.isMinimized()) win.restore()
-      if (!win.isVisible()) win.show()
+      showAndFocusWindow()
       win.reload()
-      win.focus()
       return
     }
 
     if (win.isFocused() && !fileArg) {
-      if (config.get('showTray')) {
-        win.hide()
-      } else {
-        win.minimize()
-      }
-
+      hideOrMinimizeWindow()
       return
     }
 
-    if (win.isMinimized()) win.restore()
-    if (!win.isVisible()) win.show()
-
-    win.focus()
+    showAndFocusWindow()
 
     if (fileArg) {
       queueOrOpenFile(fileArg)
