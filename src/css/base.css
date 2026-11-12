@@ -1,186 +1,90 @@
 /* Base reset & elements */
 
 :root {
-  --base-font-size: 13px;
-  --range-thumb-size: 15px;
-  --range-thumb-offset: -7.5px;
-  --switch-width: 30px;
-  --switch-height: 17px;
-  --switch-knob: 13px;
-  --switch-line-height: 18px;
+  --zoom-step: 0px;
+  --base-font-size: calc(13px + var(--zoom-step));
+  --range-thumb-size: calc(15px + var(--zoom-step));
+  --range-thumb-offset: calc(var(--range-thumb-size) / -2);
+  --switch-width: calc(30px + 2 * var(--zoom-step));
+  --switch-height: calc(17px + var(--zoom-step));
+  --switch-knob: calc(var(--switch-height) - 4px);
+  --switch-line-height: calc(var(--switch-height) + 1px);
   --scroll-top-bottom: 34px;
-  --icon-xs: 14px;
-  --icon-sm: 15px;
-  --icon-md: 16px;
-  --icon-lg: 17px;
-  --icon-xl: 19px;
+  --icon-xs: calc(var(--base-font-size) + 1px);
+  --icon-sm: calc(var(--base-font-size) + 2px);
+  --icon-md: calc(var(--base-font-size) + 3px);
+  --icon-lg: calc(var(--base-font-size) + 4px);
+  --icon-xl: calc(var(--base-font-size) + 6px);
   --dot-size: 5px;
   --dot-bottom: 13px;
-  --win-header-height: 32px;
-  --mac-header-height: 42px;
-  --main-panel-top: 53px;
-  --main-panel-bottom: 44px;
+  --win-header-height: 38px;
+  --mac-header-height: calc(42px + 2 * var(--zoom-step));
+  --main-panel-top: calc(53px + 3 * var(--zoom-step));
+  --main-panel-bottom: calc(44px + 4 * var(--zoom-step));
   --answer-height: 28px;
-  --actions-height: 26px;
+  --actions-height: calc(var(--answer-height) - 2px);
   --action-padding: 4px;
   --actions-side-min-width: 52px;
-  --menu-item-padding: 5px 11px;
-  --pagelist-width: 265px;
-  --pagelist-float-bottom: 40px;
+  --menu-item-padding: calc(var(--action-padding) + 1px) calc(11px + var(--zoom-step));
+  --pagelist-width: calc(265px + 15 * var(--zoom-step));
+  --pagelist-float-bottom: calc(40px + 4 * var(--zoom-step));
   --pagelist-float-min-height: 206px;
-  --pagelist-float-max-height: 450px;
-  --pagelist-float-vh-offset: 91px;
-  --pagelist-header-height: 42px;
+  --pagelist-float-max-height: calc(450px + 30 * var(--zoom-step));
+  --pagelist-float-vh-offset: calc(91px + 5 * var(--zoom-step));
+  --pagelist-header-height: calc(42px + 2 * var(--zoom-step));
   --pagelist-footer-height: 49px;
-  --pagelist-item-pad: 5px;
-  --pagelist-rename-height: 30px;
-  --pagetab-padding: 2px 9px;
-  --pagetab-max-width: 150px;
-  --pagetab-rename-width: 120px;
-  --select-height: 22px;
-  --select-line-height: 21px;
-  --modal-small: 300px;
-  --modal-medium: 375px;
-  --modal-xlarge: 850px;
-  --modal-settings: 450px;
-  --modal-udfu: 580px;
+  --pagelist-item-pad: calc(var(--action-padding) + 1px);
+  --pagelist-rename-height: calc(30px + 2 * var(--zoom-step));
+  --pagetab-padding: calc(var(--action-padding) - 2px) calc(9px + var(--zoom-step));
+  --pagetab-max-width: calc(150px + 10 * var(--zoom-step));
+  --pagetab-rename-width: calc(120px + 10 * var(--zoom-step));
+  --select-height: calc(22px + 2 * var(--zoom-step));
+  --select-line-height: calc(var(--select-height) - 1px);
+  --modal-small: calc(300px + 20 * var(--zoom-step));
+  --modal-medium: calc(375px + 25 * var(--zoom-step));
+  --modal-xlarge: calc(850px + 50 * var(--zoom-step));
+  --modal-settings: calc(450px + 30 * var(--zoom-step));
+  --modal-udfu: calc(580px + 40 * var(--zoom-step));
   --setting-item-width: 162px;
-  --currency-interval-width: 135px;
-  --theme-pill-width: 125px;
-  --color-input-width: 85px;
-  --domain-parent-width: 270px;
-  --domain-textbox-width: 55px;
-  --udfu-control-height: 28px;
-  --udfu-item-min-height: 26px;
-  --search-panel-width: 430px;
-  --search-control-height: 30px;
-  --search-open-pad: 50px;
-  --search-replace-open-pad: 89px;
-  --foldgutter-width: 13px;
+  --currency-interval-width: calc(135px + 10 * var(--zoom-step));
+  --theme-pill-width: calc(125px + 10 * var(--zoom-step));
+  --color-input-width: calc(85px + 5 * var(--zoom-step));
+  --domain-parent-width: calc(270px + 20 * var(--zoom-step));
+  --domain-textbox-width: calc(55px + 5 * var(--zoom-step));
+  --udfu-control-height: calc(28px + 2 * var(--zoom-step));
+  --udfu-item-min-height: calc(26px + 2 * var(--zoom-step));
+  --search-panel-width: calc(430px + 30 * var(--zoom-step));
+  --search-control-height: calc(30px + 2 * var(--zoom-step));
+  --search-open-pad: calc(50px + 4 * var(--zoom-step));
+  --search-replace-open-pad: calc(89px + 7 * var(--zoom-step));
+  --foldgutter-width: calc(13px + var(--zoom-step));
   --clr-picker-width: 172px;
-  --clr-control-height: 26px;
+  --clr-control-height: calc(var(--answer-height) - 2px);
 }
 
 html[data-zoom='smaller'] {
-  --base-font-size: 12px;
-  --range-thumb-size: 14px;
-  --range-thumb-offset: -7px;
-  --switch-width: 28px;
-  --switch-height: 16px;
-  --switch-knob: 12px;
-  --switch-line-height: 17px;
+  --zoom-step: -1px;
   --scroll-top-bottom: 33px;
-  --icon-xs: 13px;
-  --icon-sm: 14px;
-  --icon-md: 15px;
-  --icon-lg: 16px;
-  --icon-xl: 18px;
-  --dot-size: 5px;
-  --dot-bottom: 13px;
-  --win-header-height: 30px;
-  --mac-header-height: 40px;
-  --main-panel-top: 50px;
-  --main-panel-bottom: 40px;
   --answer-height: 27px;
-  --actions-height: 25px;
-  --action-padding: 4px;
   --actions-side-min-width: 50px;
-  --menu-item-padding: 5px 10px;
-  --pagelist-width: 250px;
-  --pagelist-float-bottom: 36px;
   --pagelist-float-min-height: 198px;
-  --pagelist-float-max-height: 420px;
-  --pagelist-float-vh-offset: 86px;
-  --pagelist-header-height: 40px;
   --pagelist-footer-height: 47px;
-  --pagelist-item-pad: 5px;
-  --pagelist-rename-height: 28px;
-  --pagetab-padding: 2px 8px;
-  --pagetab-max-width: 140px;
-  --pagetab-rename-width: 110px;
-  --select-height: 20px;
-  --select-line-height: 19px;
-  --modal-small: 280px;
-  --modal-medium: 350px;
-  --modal-xlarge: 800px;
-  --modal-settings: 420px;
-  --modal-udfu: 540px;
   --setting-item-width: 150px;
-  --currency-interval-width: 125px;
-  --theme-pill-width: 115px;
-  --color-input-width: 80px;
-  --domain-parent-width: 250px;
-  --domain-textbox-width: 50px;
-  --udfu-control-height: 26px;
-  --udfu-item-min-height: 24px;
-  --search-panel-width: 400px;
-  --search-control-height: 28px;
-  --search-open-pad: 46px;
-  --search-replace-open-pad: 82px;
-  --foldgutter-width: 12px;
   --clr-picker-width: 160px;
-  --clr-control-height: 25px;
 }
 
 html[data-zoom='larger'] {
-  --base-font-size: 14px;
-  --range-thumb-size: 16px;
-  --range-thumb-offset: -8px;
-  --switch-width: 32px;
-  --switch-height: 18px;
-  --switch-knob: 14px;
-  --switch-line-height: 19px;
+  --zoom-step: 1px;
   --scroll-top-bottom: 36px;
-  --icon-xs: 15px;
-  --icon-sm: 16px;
-  --icon-md: 17px;
-  --icon-lg: 18px;
-  --icon-xl: 20px;
   --dot-size: 6px;
   --dot-bottom: 14px;
-  --win-header-height: 34px;
-  --mac-header-height: 44px;
-  --main-panel-top: 56px;
-  --main-panel-bottom: 48px;
   --answer-height: 30px;
-  --actions-height: 28px;
   --action-padding: 5px;
   --actions-side-min-width: 56px;
-  --menu-item-padding: 6px 12px;
-  --pagelist-width: 280px;
-  --pagelist-float-bottom: 44px;
   --pagelist-float-min-height: 230px;
-  --pagelist-float-max-height: 480px;
-  --pagelist-float-vh-offset: 96px;
-  --pagelist-header-height: 44px;
   --pagelist-footer-height: 52px;
-  --pagelist-item-pad: 6px;
-  --pagelist-rename-height: 32px;
-  --pagetab-padding: 3px 10px;
-  --pagetab-max-width: 160px;
-  --pagetab-rename-width: 130px;
-  --select-height: 24px;
-  --select-line-height: 23px;
-  --modal-small: 320px;
-  --modal-medium: 400px;
-  --modal-xlarge: 900px;
-  --modal-settings: 480px;
-  --modal-udfu: 620px;
   --setting-item-width: 175px;
-  --currency-interval-width: 145px;
-  --theme-pill-width: 135px;
-  --color-input-width: 90px;
-  --domain-parent-width: 290px;
-  --domain-textbox-width: 60px;
-  --udfu-control-height: 30px;
-  --udfu-item-min-height: 28px;
-  --search-panel-width: 460px;
-  --search-control-height: 32px;
-  --search-open-pad: 54px;
-  --search-replace-open-pad: 96px;
-  --foldgutter-width: 14px;
   --clr-picker-width: 185px;
-  --clr-control-height: 28px;
 }
 
 * {
@@ -196,11 +100,16 @@ html[data-zoom='larger'] {
 
 html,
 body {
+  accent-color: #1e87f0;
   background-color: light-dark(#ffffff, #1f1f1f);
   height: 100%;
   color: light-dark(#444444, #ffffff);
   font-size: var(--base-font-size);
   font-family: 'Google Sans', sans-serif;
+}
+
+::selection {
+  background-color: light-dark(#c9e0f7, #193552);
 }
 
 /* Scrollbars */
@@ -232,7 +141,11 @@ h2 {
   font-family: inherit;
 }
 
-input {
+button,
+input,
+optgroup,
+select,
+textarea {
   font-size: inherit;
   font-family: inherit;
 }
@@ -273,18 +186,6 @@ text {
 
 :not(pre) > code {
   background: light-dark(#ffffff, #222222);
-}
-
-.textBox {
-  box-sizing: border-box;
-  border: 1px solid light-dark(#cccccc, #666666);
-  padding: 5px;
-  width: 100%;
-  color: light-dark(#666666, #eaeaea);
-}
-
-.textBox::placeholder {
-  color: rgba(148, 156, 160, 0.6);
 }
 
 /* Toggle controls */
