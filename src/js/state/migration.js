@@ -112,10 +112,9 @@ function consumeRootKey(key) {
 export function migrateStorageAndPages() {
   // 1. Consolidate any orphaned root localStorage keys into the `numara` store object
   for (const key of ACTIVE_STORE_KEYS) {
-    const existing = store.get(key)
     const rootVal = consumeRootKey(key)
 
-    if (existing === null && rootVal !== null) {
+    if (rootVal !== null && store.get(key) === null) {
       store.set(key, rootVal)
     }
   }
@@ -207,23 +206,16 @@ export function migrateColors(targetColors, defaultColors) {
     }
   }
 
-  if (migrated) {
-    store.set('colors', targetColors)
-  }
-
   return migrated
 }
 
 /**
- * Migrates v7 (and earlier) settings in-place to the v8 settings schema
- * and cleans up legacy storage keys.
+ * Migrates v7 (and earlier) settings in-place to the v8 settings schema.
  * Safe to remove once v7 -> v8 migration is no longer needed.
  * @param {object} targetSettings The loaded settings object to migrate in-place.
  * @returns {boolean} True if any v7 fields were migrated.
  */
 export function migrateFromV7(targetSettings) {
-  migrateStorageAndPages()
-
   if (!targetSettings || typeof targetSettings !== 'object') return false
 
   let migrated = false
