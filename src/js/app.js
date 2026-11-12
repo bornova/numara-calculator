@@ -28,7 +28,8 @@ document.title = description
  * @returns {Promise<void>}
  */
 async function initializeApp() {
-  document.documentElement.classList.toggle('is-mobile', isMobile)
+  const isCoarsePointer = Boolean(window.matchMedia?.('(hover: none), (pointer: coarse)')?.matches)
+  document.documentElement.classList.toggle('is-mobile', isMobile || isCoarsePointer)
 
   if (!isElectron && 'serviceWorker' in navigator) {
     let refreshing = false
@@ -71,11 +72,9 @@ async function initializeApp() {
   setupUserDefined()
   setupPlot()
 
+  colors.initialize()
   await settings.initialize()
   await settings.apply(false)
-
-  colors.initialize()
-  colors.apply()
 
   setupHeaders()
   setupAppButtons()
@@ -120,7 +119,11 @@ async function initializeApp() {
     }
   })
 
-  setTimeout(() => cm.focus(), 500)
+  setTimeout(() => {
+    if (!isModalOpen() && !isSearchPanelOpen()) {
+      cm.focus()
+    }
+  }, 500)
 }
 
 initializeApp().catch((error) => console.error('Failed to initialize app:', error))
