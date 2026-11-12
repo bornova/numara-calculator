@@ -2,10 +2,10 @@
 
 .pageListActions {
   position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  margin: 6px 8px;
+  right: 8px;
+  bottom: max(8px, env(safe-area-inset-bottom, 8px));
+  left: max(8px, env(safe-area-inset-left, 8px));
+  height: var(--actions-height);
 }
 
 .closePageListButton,
@@ -207,7 +207,7 @@
 }
 
 .pageListFooter {
-  height: var(--pagelist-footer-height);
+  height: calc(var(--pagelist-footer-height) + env(safe-area-inset-bottom, 0px));
 }
 
 .sortListDivider {
