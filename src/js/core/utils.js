@@ -208,3 +208,14 @@ export function resolveEditorFontWeight(fontWeight, useMacScale = true) {
 
   return String(Math.min(700, numeric + 50))
 }
+
+/**
+ * Resolves the Google Sans variable `GRAD` axis value for a platform.
+ * Non-macOS desktop displays apply `+50` grade so UI text matches macOS CoreText stem dilation
+ * across all weights (400..700) without changing character advance widths.
+ * @param {boolean} [useMacScale=true] True on macOS or mobile devices; false on Windows/Linux desktop.
+ * @returns {string} CSS `GRAD` axis value (`'0'` or `'50'`).
+ */
+export function resolveUiFontGrade(useMacScale = true) {
+  return useMacScale ? '0' : '50'
+}
