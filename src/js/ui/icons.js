@@ -3,7 +3,6 @@ import {
   ArrowUpDown,
   Braces,
   BrushCleaning,
-  ChartSpline,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -16,6 +15,7 @@ import {
   createIcons,
   Dot,
   Download,
+  Ellipsis,
   EllipsisVertical,
   Eraser,
   Info,
@@ -48,7 +48,6 @@ const icons = {
   ArrowUpDown,
   Braces,
   BrushCleaning,
-  ChartSpline,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -59,6 +58,7 @@ const icons = {
   CornerDownRight,
   Dot,
   Download,
+  Ellipsis,
   EllipsisVertical,
   Eraser,
   Info,
@@ -83,20 +83,22 @@ const icons = {
   X
 }
 
-/**
- * Cache app icons in dom object.
- */
-function cacheIcons() {
-  Object.entries(icons).forEach(([name, icon]) => {
-    dom.icons[name] = createElement(icon).outerHTML
-  })
-}
+const iconCache = {}
+
+dom.icons = new Proxy(iconCache, {
+  get(target, prop) {
+    if (typeof prop === 'string' && !(prop in target) && prop in icons) {
+      target[prop] = createElement(icons[prop]).outerHTML
+    }
+
+    return target[prop]
+  }
+})
 
 /**
  * Generate app icons.
  */
 export const generateIcons = () => {
   createIcons({ icons })
-  cacheIcons()
   UIkit.icon.add('close-icon', dom.icons.X)
 }
