@@ -138,6 +138,7 @@
       color: light-dark(#444444, #e6e6e6);
       font-size: var(--base-font-size);
       font-family: 'Google Sans', sans-serif;
+      font-variation-settings: 'GRAD' var(--ui-font-grad);
     }
 
     .uk-select:not([multiple]):not([size]) option {
