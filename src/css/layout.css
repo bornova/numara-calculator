@@ -26,7 +26,7 @@
   -webkit-app-region: drag !important;
   display: none;
   position: absolute;
-  top: 5px;
+  top: 0;
   right: 0;
   left: 0;
   height: var(--win-header-height);
@@ -34,9 +34,10 @@
 
 .winHeaderTitle {
   float: left;
-  margin: 5px 0 0 15px;
-  font-weight: 700;
+  margin: 0 0 0 15px;
+  font-weight: 600;
   font-size: 1.1em;
+  line-height: var(--win-header-height);
   font-family: 'Numara';
 }
 
@@ -52,6 +53,7 @@
 
 .macHeaderTitle {
   padding-top: max(12px, env(safe-area-inset-top, 12px));
+  font-weight: 600;
   font-size: 1.1em;
   font-family: 'Numara';
   text-align: center;
@@ -78,15 +80,6 @@
   width: 60%;
   min-width: 120px;
   color: light-dark(#444444, #e6e6e6);
-}
-
-.inputArea {
-  user-select: text;
-}
-
-.inputArea::-webkit-scrollbar {
-  width: 0;
-  height: 8px;
 }
 
 .activeLine > div {
@@ -116,18 +109,14 @@
 }
 
 .output {
+  display: block;
   flex: 1;
   padding: 0;
   min-width: 120px;
-  font-weight: 400;
-  white-space: nowrap;
-}
-
-.inputArea,
-.output {
-  display: block;
   height: 100%;
   overflow: scroll;
+  font-weight: 400;
+  white-space: nowrap;
 }
 
 .outputWrapper {
@@ -343,6 +332,7 @@
   overflow: hidden;
   color: light-dark(#455a64, #90b4dc);
   font-size: 0.92em;
+  font-variant-numeric: tabular-nums;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -381,6 +371,7 @@
 }
 
 .moreMenuItem {
+  -webkit-app-region: no-drag;
   display: flex;
   align-items: center;
   gap: 8px;
