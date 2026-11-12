@@ -13,10 +13,6 @@
   outline: none;
 }
 
-.uk-offcanvas-bar-animation {
-  transition: left 0.2s ease-out;
-}
-
 /* Modal and dialog */
 
 .uk-modal {
@@ -99,6 +95,90 @@
 
 .uk-select:not([multiple]):not([size]) option {
   color: light-dark(#444444, #e6e6e6);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  @supports (appearance: base-select) {
+    .uk-select:not([multiple]):not([size]),
+    .uk-select:not([multiple]):not([size])::picker(select) {
+      appearance: base-select;
+    }
+
+    .uk-select:not([multiple]):not([size]) {
+      align-items: center;
+      cursor: pointer;
+      background-image: none;
+      padding: 0 4px 0 8px;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .uk-select:not([multiple]):not([size]):disabled {
+      opacity: 0.5;
+      cursor: default;
+      background-image: none;
+    }
+
+    .uk-select:not([multiple]):not([size])::picker-icon {
+      transition: transform 0.15s ease;
+      color: light-dark(#666666, #aaaaaa);
+    }
+
+    .uk-select:not([multiple]):not([size]):open::picker-icon {
+      transform: rotate(180deg);
+    }
+
+    .uk-select:not([multiple]):not([size])::picker(select) {
+      margin: 3px 0;
+      box-shadow: 0 6px 18px light-dark(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.45));
+      border: 1px solid light-dark(#dcdcdc, #383838);
+      border-radius: 6px;
+      background-color: light-dark(#ffffff, #252525);
+      padding: 4px;
+      color: light-dark(#444444, #e6e6e6);
+      font-size: var(--base-font-size);
+      font-family: 'Google Sans', sans-serif;
+    }
+
+    .uk-select:not([multiple]):not([size]) option {
+      gap: 6px;
+      cursor: pointer;
+      border-radius: 4px;
+      padding: 4px 8px;
+      color: light-dark(#444444, #e6e6e6);
+    }
+
+    .uk-select:not([multiple]):not([size]) option:hover,
+    .uk-select:not([multiple]):not([size]) option:focus-visible {
+      outline: none;
+      background-color: light-dark(#f4f6f8, #333333);
+      color: light-dark(#005cc5, #2196f3);
+    }
+
+    .uk-select:not([multiple]):not([size]) option:checked {
+      color: light-dark(#005cc5, #64b5f6);
+      font-weight: 500;
+    }
+
+    .uk-select:not([multiple]):not([size]) option::checkmark {
+      color: #1e87f0;
+    }
+
+    .uk-select:not([multiple]):not([size]) option:disabled {
+      margin: 3px 4px;
+      border-radius: 0;
+      background-color: light-dark(#eaeaea, #383838);
+      padding: 0;
+      height: 1px;
+      min-height: 1px;
+      font-size: 0;
+      pointer-events: none;
+    }
+
+    .uk-select:not([multiple]):not([size]) option:disabled::checkmark {
+      display: none;
+    }
+  }
 }
 
 .uk-checkbox {
@@ -321,5 +401,6 @@
 }
 
 .uk-offcanvas-bar a:hover {
-  color: #0f6ecd;
+  color: light-dark(#005cc5, #2196f3);
+  text-decoration: none;
 }
