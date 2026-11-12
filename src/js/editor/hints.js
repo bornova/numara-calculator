@@ -1,5 +1,6 @@
 import CodeMirror from 'codemirror'
 
+import { isInternalScopeKey } from '../core/constants.js'
 import { math } from '../core/mathInstance.js'
 import { stripComments, stripLeadingColonLabel } from '../core/preprocessor.js'
 import { escapeHTML, escapeRegExp, findPageByRef } from '../core/utils.js'
@@ -83,7 +84,7 @@ function getPageExportedVars(rawPageName, pages = store.get('pages') || []) {
     const assignMatch = cleaned.match(/^([\p{L}\p{M}_$][\p{L}\p{M}\w$]*)\s*=[^=]/u)
     const varName = assignMatch?.[1]
 
-    if (varName && !['ans', '_', 'now', 'today'].includes(varName) && !/^line\d+$/.test(varName)) {
+    if (varName && !isInternalScopeKey(varName)) {
       varNames.add(varName)
     }
   }
@@ -181,28 +182,6 @@ export function registerEditorHints() {
               objectProps = getPageExportedVars(inlinePageMatch[1])
               displayBase = `page("${inlinePageMatch[1]}")`
             }
-          }
-
-          if (!objectProps && baseVar) {
-            const scopeVal = app.mathScope?.get ? app.mathScope.get(baseVar) : app.mathScope?.[baseVar]
-
-            if (scopeVal && typeof scopeVal === 'object' && !scopeVal.isLuxonDateTime) {
-              const keys = Object.keys(scopeVal)
-              if (keys.length) objectProps = keys
-            }
-          }
-
-          if (!objectProps && baseVar && app.mathScope?.keys) {
-            const dottedProps = []
-
-            for (const key of app.mathScope.keys()) {
-              if (key.startsWith(`${baseVar}.`)) {
-                const prop = key.slice(baseVar.length + 1)
-                if (prop && !prop.includes('.')) dottedProps.push(prop)
-              }
-            }
-
-            if (dottedProps.length) objectProps = dottedProps
           }
 
           if (!objectProps && baseVar) {
