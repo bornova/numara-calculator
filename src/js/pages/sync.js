@@ -18,17 +18,33 @@ let pendingResync = false
 let activeDeletionDialog = false
 
 /**
- * Updates the sync directory UI elements in the settings dialog.
+ * Returns whether Electron folder synchronization is currently enabled and configured.
+ * @returns {boolean}
+ */
+function isSyncActive() {
+  return isElectron && Boolean(app.settings.syncDirEnabled && app.settings.syncDir)
+}
+
+/**
+ * Updates the sync directory UI elements and tooltip in the settings dialog.
  * @param {boolean} enabled Whether folder sync is enabled.
  * @param {string} [dirPath=''] The sync directory path.
  */
-function updateSyncUiState(enabled, dirPath = '') {
+export function updateSyncUiState(enabled, dirPath = '') {
   if (dom.syncDir) {
     dom.syncDir.value = dirPath
   }
 
   if (dom.selectSyncDirButton) {
-    dom.selectSyncDirButton.textContent = dirPath || 'Choose Folder'
+    if (dirPath) {
+      const safePath = escapeHTML(dirPath).replaceAll(';', '&#59;')
+
+      dom.selectSyncDirButton.textContent = dirPath
+      dom.selectSyncDirButton.setAttribute('uk-tooltip', `title: ${safePath}; pos: bottom`)
+    } else {
+      dom.selectSyncDirButton.textContent = 'Choose Folder'
+      dom.selectSyncDirButton.removeAttribute('uk-tooltip')
+    }
   }
 
   if (dom.syncDirEnabled) {
@@ -118,8 +134,7 @@ export function clearSyncCache() {
  * @returns {Promise<boolean>} Resolves to true if the directory exists, otherwise false.
  */
 export async function checkSyncDir() {
-  if (!isElectron) return false
-  if (!app.settings.syncDirEnabled || !app.settings.syncDir) return false
+  if (!isSyncActive()) return false
 
   try {
     const exists = await numara.checkSyncDirectory(app.settings.syncDir)
@@ -141,15 +156,14 @@ export async function checkSyncDir() {
  * Handles the event when the sync directory is deleted or no longer accessible, presenting options to select a new folder or disable sync.
  */
 export async function handleSyncDirDeleted() {
-  if (!isElectron) return
-  if (!app.settings.syncDirEnabled || !app.settings.syncDir) return
-  if (activeDeletionDialog) return
+  if (!isSyncActive() || activeDeletionDialog) return
 
   activeDeletionDialog = true
   numara.stopWatchingSyncDir()
 
   if (dom.selectSyncDirButton) {
     dom.selectSyncDirButton.textContent = 'Choose Folder'
+    dom.selectSyncDirButton.removeAttribute('uk-tooltip')
   }
 
   customConfirm(
@@ -310,7 +324,6 @@ export async function triggerFolderSync() {
           name: sanitizedName,
           data: fileContent,
           folds: [],
-          history: null,
           cursor: { line: 0, ch: 0 }
         }
         pages.push(newPageObj)
@@ -430,33 +443,44 @@ export async function triggerFolderSync() {
 }
 
 /**
- * Saves/writes a page's calculations content to the sync folder.
- * @param {string} pageName The name of the page to save.
- * @param {string} content The content string to write.
- * @returns {Promise<void>}
+ * Executes a sync file operation with debounce cleanup, optimistic cache rollback on error, and directory verification.
+ * @param {string} syncKey Primary normalized sync key to debounce and snapshot.
+ * @param {string} errorLabel Context description logged on failure.
+ * @param {(dirPath: string, previousContent: string|undefined) => Promise<void>} operation Async IPC operation.
+ * @param {() => void} [extraRollback] Optional additional cache rollback step on failure.
  */
-export async function syncPageSave(pageName, content) {
-  if (!isElectron) return
-  if (!app.settings.syncDirEnabled || !app.settings.syncDir) return
-
-  const dirPath = app.settings.syncDir
-  const safeName = getSafeFilename(pageName)
-  const syncKey = getSyncKey(pageName)
+async function runSyncFileOp(syncKey, errorLabel, operation, extraRollback) {
+  if (!isSyncActive()) return
 
   clearSyncDebounce(syncKey)
 
   const previousContent = lastSyncContent.get(syncKey)
 
   try {
-    lastSyncContent.set(syncKey, content || '')
-
-    await numara.writeSyncFile(dirPath, safeName, content || '')
+    await operation(app.settings.syncDir, previousContent)
   } catch (error) {
+    extraRollback?.()
     restoreSyncContent(syncKey, previousContent)
 
-    console.error(`Error saving page ${pageName} to sync dir:`, error)
+    console.error(`Error ${errorLabel}:`, error)
     await checkSyncDir()
   }
+}
+
+/**
+ * Saves/writes a page's calculations content to the sync folder.
+ * @param {string} pageName The name of the page to save.
+ * @param {string} content The content string to write.
+ * @returns {Promise<void>}
+ */
+export async function syncPageSave(pageName, content) {
+  const syncKey = getSyncKey(pageName)
+  const nextContent = content || ''
+
+  await runSyncFileOp(syncKey, `saving page ${pageName} to sync dir`, async (dirPath) => {
+    lastSyncContent.set(syncKey, nextContent)
+    await numara.writeSyncFile(dirPath, getSafeFilename(pageName), nextContent)
+  })
 }
 
 /**
@@ -466,39 +490,28 @@ export async function syncPageSave(pageName, content) {
  * @returns {Promise<void>}
  */
 export async function syncPageRename(oldName, newName) {
-  if (!isElectron) return
-  if (!app.settings.syncDirEnabled || !app.settings.syncDir) return
-
-  const dirPath = app.settings.syncDir
-  const safeOldName = getSafeFilename(oldName)
-  const safeNewName = getSafeFilename(newName)
   const oldSyncKey = getSyncKey(oldName)
   const newSyncKey = getSyncKey(newName)
 
-  clearSyncDebounce(oldSyncKey)
+  await runSyncFileOp(
+    oldSyncKey,
+    `renaming page ${oldName} to ${newName} in sync dir`,
+    async (dirPath, previousContent) => {
+      const content = previousContent ?? ''
 
-  const previousContent = lastSyncContent.get(oldSyncKey)
-  const content = previousContent ?? ''
+      lastSyncContent.delete(oldSyncKey)
+      lastSyncContent.set(newSyncKey, content)
 
-  try {
-    lastSyncContent.delete(oldSyncKey)
-    lastSyncContent.set(newSyncKey, content)
+      await numara.renameSyncFile(dirPath, getSafeFilename(oldName), getSafeFilename(newName))
 
-    await numara.renameSyncFile(dirPath, safeOldName, safeNewName)
+      const page = (store.get('pages') || []).find((p) => getSyncKey(p.name) === newSyncKey)
 
-    const pages = store.get('pages') || []
-    const page = pages.find((p) => getSyncKey(p.name) === newSyncKey)
-
-    if (page && (page.data || '') !== content) {
-      await syncPageSave(newName, page.data)
-    }
-  } catch (error) {
-    lastSyncContent.delete(newSyncKey)
-    restoreSyncContent(oldSyncKey, previousContent)
-
-    console.error(`Error renaming page ${oldName} to ${newName} in sync dir:`, error)
-    await checkSyncDir()
-  }
+      if (page && (page.data || '') !== content) {
+        await syncPageSave(newName, page.data)
+      }
+    },
+    () => lastSyncContent.delete(newSyncKey)
+  )
 }
 
 /**
@@ -507,26 +520,12 @@ export async function syncPageRename(oldName, newName) {
  * @returns {Promise<void>}
  */
 export async function syncPageDelete(pageName) {
-  if (!isElectron) return
-  if (!app.settings.syncDirEnabled || !app.settings.syncDir) return
-
-  const dirPath = app.settings.syncDir
-  const safeName = getSafeFilename(pageName)
   const syncKey = getSyncKey(pageName)
 
-  clearSyncDebounce(syncKey)
-
-  const previousContent = lastSyncContent.get(syncKey)
-
-  try {
+  await runSyncFileOp(syncKey, `deleting page ${pageName} from sync dir`, async (dirPath) => {
     lastSyncContent.delete(syncKey)
-    await numara.deleteSyncFile(dirPath, safeName)
-  } catch (error) {
-    restoreSyncContent(syncKey, previousContent)
-
-    console.error(`Error deleting page ${pageName} from sync dir:`, error)
-    await checkSyncDir()
-  }
+    await numara.deleteSyncFile(dirPath, getSafeFilename(pageName))
+  })
 }
 
 /**
@@ -535,8 +534,7 @@ export async function syncPageDelete(pageName) {
  * @param {string} content The content string to write.
  */
 export function syncPageSaveDebounced(pageName, content) {
-  if (!isElectron) return
-  if (!app.settings.syncDirEnabled || !app.settings.syncDir) return
+  if (!isSyncActive()) return
 
   const syncKey = getSyncKey(pageName)
 
