@@ -1,22 +1,19 @@
 import CodeMirror from 'codemirror'
 import './addons.js'
 
-import { calculate, syncOutputHeights } from '../calc/calcManager.js'
+import { calculate, queueFoldStateSave, syncOutputHeights } from '../calc/calcManager.js'
 import { debounce } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { app } from '../state/appState.js'
 import { isMobile } from '../state/env.js'
 import { store } from '../state/store.js'
 import { showError } from '../ui/dialogs.js'
-import { CLASS_NAMES, refreshCurrencyTokens } from './constants.js'
-import { registerEditorFolding, toggleFoldedOutputs } from './folding.js'
-import { numaraHints, registerEditorHints, registerExcelFunctions } from './hints.js'
+import { createFoldMarkerWidget, registerEditorFolding, toggleFoldedOutputs } from './folding.js'
+import { registerEditorHints } from './hints.js'
 import { registerEditorModes } from './mode.js'
 import { hideSearchPanel, isSearchPanelOpen, showSearchPanel } from './searchPanel.js'
-import { updateSelectionStats } from './stats.js'
+import { getSelectionLineRange, updateSelectionStats } from './stats.js'
 import { initTooltips } from './tooltips.js'
-
-export { CLASS_NAMES, numaraHints, refreshCurrencyTokens, registerExcelFunctions, updateSelectionStats }
 
 registerEditorModes()
 registerEditorHints()
@@ -32,7 +29,7 @@ function cmForceBottom() {
   const totalLines = cm.lineCount()
 
   if (line === totalLines - 1) {
-    const inputScroll = dom.el('.CodeMirror-scroll')
+    const inputScroll = cm.getScrollerElement()
 
     inputScroll.scrollTop = inputScroll.scrollHeight
     dom.output.scrollTop = dom.output.scrollHeight
@@ -41,7 +38,7 @@ function cmForceBottom() {
   }
 
   const lineRect = cm.charCoords({ line, ch: 0 }, 'window')
-  const barTop = dom.el('.CodeMirror-hscrollbar')?.getBoundingClientRect()?.top
+  const barTop = cm.display.scrollbars?.horiz?.getBoundingClientRect()?.top
 
   if (barTop === undefined) return
 
@@ -59,17 +56,7 @@ function cmForceBottom() {
 function toggleComment(cmInstance) {
   cmInstance.operation(() => {
     for (const selection of cmInstance.listSelections()) {
-      const isAnchorFirst =
-        selection.anchor.line < selection.head.line ||
-        (selection.anchor.line === selection.head.line && selection.anchor.ch <= selection.head.ch)
-      const startPos = selection.from ? selection.from() : isAnchorFirst ? selection.anchor : selection.head
-      const endPos = selection.to ? selection.to() : isAnchorFirst ? selection.head : selection.anchor
-      const startLine = startPos.line
-      let endLine = endPos.line
-
-      if (selection.anchor.line !== selection.head.line && endPos.ch === 0) {
-        endLine = Math.max(startLine, endLine - 1)
-      }
+      const { startLine, endLine } = getSelectionLineRange(selection)
 
       const lines = []
 
@@ -137,7 +124,8 @@ export const cm = CodeMirror.fromTextArea(dom.inputArea, {
     updateViewportTimeSpan: 1
   },
   foldOptions: {
-    rangeFinder: CodeMirror.fold.numara
+    rangeFinder: CodeMirror.fold.numara,
+    widget: createFoldMarkerWidget
   },
   gutters: ['CodeMirror-foldgutter', 'CodeMirror-linenumbers'],
   mode: 'numara',
@@ -171,18 +159,13 @@ export const debouncedSaveCursor = debounce(() => {
 }, 600)
 
 /**
- * Refreshes the CodeMirror editor and optionally focuses it after a short delay.
- * @param {boolean} [focus=true] Whether to focus the editor after refreshing.
+ * Refreshes the CodeMirror editor layout and syntax mode.
  */
-export function refreshEditor(focus = true) {
+export function refreshEditor() {
   cm.operation(() => {
     cm.refresh()
     cm.setOption('mode', cm.getOption('mode'))
   })
-
-  if (focus) {
-    setTimeout(() => cm.focus(), 100)
-  }
 }
 
 /**
@@ -197,10 +180,7 @@ export function setupEditor() {
       return
     }
 
-    const hasNewLine = changes.some(
-      (change) =>
-        change.text.length > 1 || change.removed?.length > 1 || (change.origin === '+input' && change.text.includes(''))
-    )
+    const hasNewLine = changes.some((change) => change.text.length > 1 || change.removed?.length > 1)
 
     if (hasNewLine) {
       debouncedCalculate.cancel()
@@ -210,19 +190,15 @@ export function setupEditor() {
     }
   })
 
-  cm.on('fold', (editor, from, to) => {
+  const handleFoldChange = (isFolded) => (editor, from, to) => {
     if (app.loadingPage) return
 
-    toggleFoldedOutputs(editor, from.line, to.line, true)
-    calculate()
-  })
+    toggleFoldedOutputs(editor, from.line, to.line, isFolded)
+    queueFoldStateSave()
+  }
 
-  cm.on('unfold', (editor, from, to) => {
-    if (app.loadingPage) return
-
-    toggleFoldedOutputs(editor, from.line, to.line, false)
-    calculate()
-  })
+  cm.on('fold', handleFoldChange(true))
+  cm.on('unfold', handleFoldChange(false))
 
   cm.on('update', () => {
     if (app.loadingPage) return
