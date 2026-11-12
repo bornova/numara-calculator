@@ -105,22 +105,32 @@
 #dialogSettings .settingMod {
   display: none;
   position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
   cursor: pointer;
-  margin-top: -3px;
   margin-left: -20px;
   color: #dd9359;
 }
 
 #dialogSettings .settingMod > svg {
+  display: block;
   width: 24px;
+  height: 24px;
 }
 
 #dialogSettings #themeMod {
   position: relative;
+  top: auto;
+  transform: none;
 }
 
 #dialogSettings div:has(> .settingMod) {
   position: relative;
+}
+
+#dialogSettings div:has(> .switch),
+#dialogSettings div:has(> .uk-range) {
+  line-height: 0;
 }
 
 #dialogSettings div:has(> .uk-range) .settingMod {
@@ -142,14 +152,14 @@
 
 .dialog-settings-body .switch,
 .dialog-plot-settings-body .switch {
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .warn-icon {
   display: none;
   justify-content: center;
   align-items: center;
-  vertical-align: top;
+  vertical-align: middle;
   height: var(--select-height);
 }
 
