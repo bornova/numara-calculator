@@ -219,3 +219,13 @@ export function resolveEditorFontWeight(fontWeight, useMacScale = true) {
 export function resolveUiFontGrade(useMacScale = true) {
   return useMacScale ? '0' : '50'
 }
+
+/**
+ * Resolves the UI base font size offset for a platform.
+ * Windows desktop steps UI text down by 1px (`'-1px'`), while macOS, Linux, and mobile keep `'0px'`.
+ * @param {boolean} [isWindows=false] True on Windows desktop.
+ * @returns {string} CSS pixel offset (`'-1px'` or `'0px'`).
+ */
+export function resolveUiFontOffset(isWindows = false) {
+  return isWindows ? '-1px' : '0px'
+}
