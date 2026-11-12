@@ -61,6 +61,15 @@ export function setupKeyboardShortcuts() {
     'keydown',
     (event) => {
       if (event.key === 'Escape') {
+        try {
+          if (document.querySelector('select:open')) {
+            event.stopPropagation()
+            return
+          }
+        } catch {
+          // Ignore if `:open` pseudo-class is unsupported
+        }
+
         if (
           isElectron &&
           app.settings.escToClose &&
