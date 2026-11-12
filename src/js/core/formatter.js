@@ -90,6 +90,26 @@ export function parseLocaleNumber(str, settings = app.settings) {
   return cleaned === '' ? NaN : Number(cleaned)
 }
 
+const STRICT_LOCALE_NUMBER_REGEX = /^-?\d[\d.,\s\u00A0\u202F\u2009]*(?:e[+-]?\d+)?$/i
+
+/**
+ * Parses a localized numeric string only when the entire trimmed input is a numeric literal.
+ * @param {string} str Raw string to validate and parse.
+ * @param {object} [settings=app.settings] Settings object containing number format configuration.
+ * @returns {number} Finite number or `NaN`.
+ */
+export function parseStrictLocaleNumber(str, settings = app.settings) {
+  if (typeof str !== 'string') return NaN
+
+  const trimmed = str.trim()
+
+  if (!STRICT_LOCALE_NUMBER_REGEX.test(trimmed)) return NaN
+
+  const num = parseLocaleNumber(trimmed, settings)
+
+  return Number.isFinite(num) ? num : NaN
+}
+
 /**
  * Formats currency amounts within an output string using `Intl.NumberFormat`.
  * @param {string} str Output string potentially containing currency values.
