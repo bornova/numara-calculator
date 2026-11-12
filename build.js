@@ -52,7 +52,11 @@ async function collectPrecacheUrls(dir, root = dir) {
   )
 
   const flattened = urls.flat()
-  if (dir === root && !flattened.includes('./')) {
+  if (dir !== root) {
+    return flattened
+  }
+
+  if (!flattened.includes('./')) {
     flattened.push('./')
   }
 
