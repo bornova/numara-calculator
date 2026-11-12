@@ -19,6 +19,16 @@ let lastDockState = null
 let pageListTransitionTimer = null
 
 /**
+ * Hides the floating `#pageListPanel` offcanvas drawer when undocked and currently open.
+ * @returns {Promise<void>|undefined}
+ */
+export function hideFloatingPageList() {
+  if (!app.pageListDocked && dom.pageListPanel?.classList.contains('uk-open')) {
+    return UIkit.offcanvas('#pageListPanel')?.hide()
+  }
+}
+
+/**
  * Returns the clamped width for the docked page list.
  * @returns {number}
  */
@@ -122,7 +132,7 @@ function setupPageListResizer() {
     resizerTooltip()
   })
 
-  resizer.addEventListener('mousemove', resizerTooltip)
+  resizer.addEventListener('mouseenter', resizerTooltip)
 }
 
 function triggerPageListTransition() {
@@ -159,9 +169,7 @@ function resetWindowToAppWrapper(pageListWidth = 0, appWrapperSize = getAppWrapp
 
       await numara.resetSize(appWrapperSize.width, appWrapperSize.height, pageListWidth)
 
-      dom.els('.modal.uk-open .uk-modal-dialog').forEach((dialog) => {
-        modal.center(dialog, true, targetWidth, targetHeight)
-      })
+      modal.centerOpen(true, targetWidth, targetHeight)
       setTimeout(() => {
         checkSize()
       }, PAGELIST_TRANSITION_MS + 40)
@@ -282,8 +290,8 @@ export function setupPageList(show = false, fromResize = false) {
     dom.appWrapper.style.left = '0'
 
     if (!dockChanged) {
-      if (isTabs && dom.pageListPanel.classList.contains('uk-open')) {
-        UIkit.offcanvas('#pageListPanel').hide()
+      if (isTabs) {
+        hideFloatingPageList()
       }
       return
     }
@@ -328,9 +336,7 @@ export function initializePageList() {
 
     resizeTimer = setTimeout(() => {
       setupPageList(true, true)
-      dom.els('.modal.uk-open .uk-modal-dialog').forEach((dialog) => {
-        modal.center(dialog, true)
-      })
+      modal.centerOpen(true)
       syncOutputHeights()
       checkSize()
     }, 100)
