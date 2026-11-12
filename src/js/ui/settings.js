@@ -3,7 +3,7 @@ import UIkit from 'uikit'
 import { calculate, clearEvaluationCache, syncOutputHeights } from '../calc/calcManager.js'
 import { getRates } from '../calc/currencies.js'
 import { app as coreApp } from '../core/mathInstance.js'
-import { isCommaDecimal, resolveEditorFontSize, resolveEditorFontWeight } from '../core/utils.js'
+import { isCommaDecimal, resolveEditorFontSize, resolveEditorFontWeight, resolveUiFontGrade } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
 import { clearSyncCache, triggerFolderSync, updateSyncUiState } from '../pages/sync.js'
@@ -452,6 +452,7 @@ export const settings = {
     const zoomLevel = app.settings.zoomLevel || 'normal'
     const useMacScale = isMac || isMobile
     document.documentElement.dataset.zoom = zoomLevel
+    document.documentElement.style.setProperty('--ui-font-grad', resolveUiFontGrade(useMacScale))
     document.documentElement.style.setProperty('--mono-weight', resolveEditorFontWeight('400', useMacScale))
 
     const effectiveFontSize = resolveEditorFontSize(app.settings.fontSize, zoomLevel, useMacScale)
