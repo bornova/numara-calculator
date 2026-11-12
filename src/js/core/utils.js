@@ -191,3 +191,20 @@ export function resolveEditorFontSize(fontSize, zoomLevel = 'normal', useMacScal
 
   return map[zoomLevel]?.[fontSize] || fontSize
 }
+
+/**
+ * Resolves the optically matched editor font weight for a platform.
+ * Non-macOS desktop displays lack CoreText stem dilation, so variable font weights below 700
+ * step up by +50 (e.g. `'400'` -> `'450'`) to match macOS stroke weight without altering glyph advance width.
+ * @param {string} fontWeight Stored font weight (`'200'`, `'300'`, `'400'`, `'500'`, `'700'`).
+ * @param {boolean} [useMacScale=true] True on macOS or mobile devices; false on Windows/Linux desktop.
+ * @returns {string} Effective CSS font-weight string.
+ */
+export function resolveEditorFontWeight(fontWeight, useMacScale = true) {
+  if (useMacScale) return fontWeight
+
+  const numeric = Number.parseInt(fontWeight, 10)
+  if (!Number.isFinite(numeric)) return fontWeight
+
+  return String(Math.min(700, numeric + 50))
+}
