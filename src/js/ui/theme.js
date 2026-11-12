@@ -8,9 +8,24 @@ import { initStoreObject, store } from '../state/store.js'
 import { confirm, modal } from './dialogs.js'
 
 const COLOR_INPUT_SELECTOR = '.colorInput'
-const colorInputs = dom.els(COLOR_INPUT_SELECTOR)
 
+let colorInputs = []
 let activePicker = null
+
+/**
+ * Renders a single light/dark color-picker row for a syntax token category.
+ * @param {string} key Token key in `colors.defaults`.
+ * @param {string} title Human-readable row label.
+ * @returns {string}
+ */
+function renderColorRow(key, title) {
+  return `
+    <div class="uk-flex uk-flex-middle uk-child-width-expand">
+      <div class="uk-text-right">${title}</div>
+      <div><input name="color" data-class="${key}" data-theme="light" class="colorInput" readonly /></div>
+      <div><input name="color" data-class="${key}" data-theme="dark" class="colorInput" readonly /></div>
+    </div>`
+}
 
 /**
  * Resets the currently active color picker back to its default color value.
@@ -26,13 +41,12 @@ function resetActivePickerColor() {
 }
 
 /**
- * Toggles default/changed indicator classes on each color picker input based on default colors.
+ * Toggles changed indicator classes on each color picker input based on default colors.
  */
 export function checkColorChange() {
   colorInputs.forEach((picker) => {
     const isSame = picker.value === colors.defaults[picker.dataset.class][picker.dataset.theme]
 
-    picker.classList.toggle('colorInputDefault', isSame)
     picker.classList.toggle('colorInputChanged', !isSame)
   })
 }
@@ -58,11 +72,11 @@ export const colors = {
     },
     keyword: { title: 'Keywords', class: '.cm-keyword, .cm-lineNo', dark: '#e78c3f', light: '#be6317' },
     number: { title: 'Numbers', class: '.cm-number', dark: '#e6e6e6', light: '#333333' },
-    operator: { title: 'Operators', class: '.cm-operator', dark: '#bbbbbb', light: '#888888' },
-    plain: { title: 'Plain', class: '.cm-plain, .answer, .lineError', dark: '#e6e6e6', light: '#333333' },
     text: { title: 'Text', class: '.cm-text', dark: '#e6e6e6', light: '#333333' },
+    operator: { title: 'Operators', class: '.cm-operator', dark: '#bbbbbb', light: '#888888' },
     unit: { title: 'Units', class: '.cm-unit, .cm-udu', dark: '#6b9cd3', light: '#005cc5' },
-    variable: { title: 'Variables', class: '.cm-variable', dark: '#96b4c4', light: '#57707c' }
+    variable: { title: 'Variables', class: '.cm-variable', dark: '#96b4c4', light: '#57707c' },
+    plain: { title: 'Plain', class: '.cm-plain, .answer, .lineError', dark: '#e6e6e6', light: '#333333' }
   },
 
   /**
@@ -70,6 +84,19 @@ export const colors = {
    */
   initialize: () => {
     app.colors = initStoreObject('colors', colors.defaults, (stored) => migrateColors(stored, colors.defaults))
+
+    const container = dom.el('.colorPickerContainer')
+
+    if (container) {
+      const syntaxRows = Object.entries(colors.defaults)
+        .filter(([key]) => key !== 'plain')
+        .map(([key, { title }]) => renderColorRow(key, title))
+        .join('')
+
+      container.innerHTML = `${syntaxRows}<div class="colorHR uk-text-secondary uk-margin-small">No syntax</div>${renderColorRow('plain', colors.defaults.plain.title)}`
+    }
+
+    colorInputs = dom.els(COLOR_INPUT_SELECTOR)
 
     colorInputs.forEach((picker) => {
       picker.value = app.colors[picker.dataset.class][picker.dataset.theme]
@@ -130,7 +157,7 @@ export const colors = {
    * Generates and applies custom styling sheets to document DOM based on configured theme.
    */
   apply: () => {
-    app.colors ??= store.get('colors')
+    if (!app.colors) return
 
     const sheet = app.settings.syntax
       ? Object.values(app.colors)
