@@ -49,10 +49,10 @@
 
       <div id="mainPanel" class="mainPanel">
         <div id="input" class="input">
-          <textarea id="inputArea" class="inputArea panelFont" name="sync" spellcheck="false" tabindex="-1"></textarea>
+          <textarea id="inputArea" class="panelFont" spellcheck="false" tabindex="-1"></textarea>
         </div>
         <div id="panelDivider" class="divider"></div>
-        <div id="output" class="output panelFont" name="sync"></div>
+        <div id="output" class="output panelFont"></div>
       </div>
 
       <div id="actions" class="actions uk-flex uk-flex-middle">
@@ -64,7 +64,7 @@
         </div>
         <div class="centerActions uk-flex uk-flex-center uk-flex-middle uk-flex-1 uk-text-center">
           <span id="pageName" class="pageName" uk-tooltip="delay: 1000"></span>
-          <div id="pageTabsContainer" class="pageTabsContainer">
+          <div class="pageTabsContainer">
             <a id="pageTabsLeft" class="action pageTabsArrow" title="Scroll left">
               <i data-lucide="chevron-left"></i>
             </a>
@@ -89,7 +89,7 @@
       <div class="uk-offcanvas-bar uk-flex uk-flex-column">
         <div class="pageListHeader">
           <a id="dockPageListButton" class="action dockPageListButton"></a>
-          <span id="pageListSort" class="pageListSort" title="Sort">
+          <span id="pageListSort" class="action pageListSort" title="Sort">
             <i data-lucide="arrow-up-down"></i>
           </span>
           <a id="closePageListButton" class="action closePageListButton uk-float-right" title="Close">
@@ -157,11 +157,11 @@
       class="uk-drop uk-dropdown"
       uk-dropdown="mode: click; pos: right-top; bg-scroll: false; close-on-scroll: true; toggle: #pageListSort"
     >
-      <div id="sortOldNew" class="sortListItem uk-flex uk-flex-column" title="Sort older to newer">Older to newer</div>
-      <div id="sortNewOld" class="sortListItem uk-flex uk-flex-column" title="Sort newer to older">Newer to older</div>
+      <div id="sortOldNew" class="moreMenuItem" title="Sort older to newer">Older to newer</div>
+      <div id="sortNewOld" class="moreMenuItem" title="Sort newer to older">Newer to older</div>
       <hr class="sortListDivider" />
-      <div id="sortAZ" class="sortListItem uk-flex uk-flex-column" title="Sort A to Z">A to Z</div>
-      <div id="sortZA" class="sortListItem uk-flex uk-flex-column" title="Sort Z to A">Z to A</div>
+      <div id="sortAZ" class="moreMenuItem" title="Sort A to Z">A to Z</div>
+      <div id="sortZA" class="moreMenuItem" title="Sort Z to A">Z to A</div>
     </div>
 
     <div id="tabContextMenu" class="uk-dropdown tabContextMenu">
@@ -276,7 +276,7 @@
                   </button>
                 </div>
               </div>
-              <div class="udfuFormRow udfuUnitOptionsRow">
+              <div class="udfuFormRow">
                 <input
                   id="uduAliasesInput"
                   class="udfuInput"
@@ -285,7 +285,12 @@
                   autocomplete="off"
                   placeholder="Aliases (optional, e.g. foos, f)"
                 />
-                <select id="uduPrefixesSelect" class="uk-select udfuSelect">
+                <select
+                  id="uduPrefixesSelect"
+                  name="uduPrefixesSelect"
+                  aria-label="Unit prefixes"
+                  class="uk-select udfuSelect"
+                >
                   <option value="none">Prefixes: None</option>
                   <option value="short">Prefixes: Short (k, M, G...)</option>
                   <option value="long">Prefixes: Long (kilo, mega...)</option>
@@ -344,7 +349,7 @@
             <div class="uk-flex uk-flex-middle uk-flex-between">
               <div data-help="zoomLevel">Zoom level</div>
               <div class="uk-position-relative">
-                <select id="zoomLevel" class="uk-select settingItem">
+                <select id="zoomLevel" name="zoomLevel" aria-label="Zoom level" class="uk-select settingItem">
                   <option value="smaller">Smaller</option>
                   <option value="normal">Normal</option>
                   <option value="larger">Larger</option>
@@ -354,7 +359,12 @@
             <div class="uk-flex uk-flex-middle uk-flex-between">
               <div data-help="pageListPosition">Page list position</div>
               <div class="uk-position-relative">
-                <select id="pageListPosition" class="uk-select settingItem">
+                <select
+                  id="pageListPosition"
+                  name="pageListPosition"
+                  aria-label="Page list position"
+                  class="uk-select settingItem"
+                >
                   <option value="auto">Auto</option>
                   <option value="float">Floating</option>
                   <option value="dock">Docked</option>
@@ -412,7 +422,12 @@
             <div class="uk-flex uk-flex-middle uk-flex-between">
               <div data-help="notifyLocation">Position</div>
               <div>
-                <select id="notifyLocation" class="uk-select settingItem">
+                <select
+                  id="notifyLocation"
+                  name="notifyLocation"
+                  aria-label="Notification position"
+                  class="uk-select settingItem"
+                >
                   <option value="top-left">Top Left</option>
                   <option value="top-center">Top Center</option>
                   <option value="top-right">Top Right</option>
@@ -426,7 +441,12 @@
             <div class="uk-flex uk-flex-middle uk-flex-between">
               <div data-help="notifyDuration">Duration</div>
               <div>
-                <select id="notifyDuration" class="uk-select settingItem">
+                <select
+                  id="notifyDuration"
+                  name="notifyDuration"
+                  aria-label="Notification duration"
+                  class="uk-select settingItem"
+                >
                   <option value="1000">1 second</option>
                   <option value="3000">3 seconds</option>
                   <option value="5000">5 seconds</option>
@@ -444,7 +464,7 @@
             <div class="uk-flex uk-flex-middle uk-flex-between">
               <div data-help="fontSize">Font size</div>
               <div>
-                <select id="fontSize" class="uk-select settingItem">
+                <select id="fontSize" name="fontSize" aria-label="Font size" class="uk-select settingItem">
                   <option value="12px">Tiny</option>
                   <option value="13px">Small</option>
                   <option value="14px">Normal</option>
@@ -456,7 +476,7 @@
             <div class="uk-flex uk-flex-middle uk-flex-between">
               <div data-help="fontWeight">Font weight</div>
               <div>
-                <select id="fontWeight" class="uk-select settingItem">
+                <select id="fontWeight" name="fontWeight" aria-label="Font weight" class="uk-select settingItem">
                   <option value="200">Light</option>
                   <option value="300">Thin</option>
                   <option value="400">Normal</option>
@@ -468,7 +488,7 @@
             <div class="uk-flex uk-flex-middle uk-flex-between">
               <div data-help="lineHeight">Line height</div>
               <div>
-                <select id="lineHeight" class="uk-select settingItem">
+                <select id="lineHeight" name="lineHeight" aria-label="Line height" class="uk-select settingItem">
                   <option value="17px">Tiny</option>
                   <option value="21px">Small</option>
                   <option value="26px">Normal</option>
@@ -482,7 +502,12 @@
             <div class="uk-flex uk-flex-middle uk-flex-between">
               <div data-help="answerPosition">Answer position</div>
               <div>
-                <select id="answerPosition" class="uk-select settingItem"></select>
+                <select
+                  id="answerPosition"
+                  name="answerPosition"
+                  aria-label="Answer position"
+                  class="uk-select settingItem"
+                ></select>
               </div>
             </div>
             <div class="uk-flex uk-flex-middle uk-flex-between">
@@ -588,13 +613,23 @@
               <div data-help="numericOutput">Numeric output</div>
               <div>
                 <a id="bigNumWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
-                <select id="numericOutput" class="uk-select settingItem"></select>
+                <select
+                  id="numericOutput"
+                  name="numericOutput"
+                  aria-label="Numeric output"
+                  class="uk-select settingItem"
+                ></select>
               </div>
             </div>
             <div class="uk-flex uk-flex-middle uk-flex-between">
               <div data-help="matrixType">Matrix type</div>
               <div>
-                <select id="matrixType" class="uk-select settingItem"></select>
+                <select
+                  id="matrixType"
+                  name="matrixType"
+                  aria-label="Matrix type"
+                  class="uk-select settingItem"
+                ></select>
               </div>
             </div>
             <div class="uk-flex uk-flex-middle uk-flex-between">
@@ -613,7 +648,7 @@
             <div class="uk-flex uk-flex-middle uk-flex-between">
               <div data-help="notation">Notation</div>
               <div>
-                <select id="notation" class="uk-select settingItem"></select>
+                <select id="notation" name="notation" aria-label="Notation" class="uk-select settingItem"></select>
               </div>
             </div>
             <div class="uk-flex uk-flex-middle uk-flex-between">
@@ -623,7 +658,7 @@
               <div class="uk-text-right uk-width-1-2">
                 <div class="uk-flex uk-flex-middle uk-flex-between">
                   <div class="uk-text-right uk-width-1-6">
-                    <span id="expLowerLabel" class="uk-label expLower"></span>
+                    <span id="expLowerLabel" class="uk-label precision"></span>
                   </div>
                   <div class="uk-text-right uk-position-relative">
                     <input id="expLower" class="uk-range settingItem" type="range" min="-32" max="0" step="1" />
@@ -638,7 +673,7 @@
               <div class="uk-text-right uk-width-1-2">
                 <div class="uk-flex uk-flex-middle uk-flex-between">
                   <div class="uk-text-right uk-width-1-6">
-                    <span id="expUpperLabel" class="uk-label expUpper"></span>
+                    <span id="expUpperLabel" class="uk-label precision"></span>
                   </div>
                   <div class="uk-text-right uk-position-relative">
                     <input id="expUpper" class="uk-range settingItem" type="range" min="0" max="32" step="1" />
@@ -688,7 +723,12 @@
               <div data-help="numberFormat">Number format</div>
               <div>
                 <a id="localeWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
-                <select id="numberFormat" class="uk-select settingItem"></select>
+                <select
+                  id="numberFormat"
+                  name="numberFormat"
+                  aria-label="Number format"
+                  class="uk-select settingItem"
+                ></select>
               </div>
             </div>
             <div class="uk-flex uk-flex-middle uk-flex-between">
@@ -716,7 +756,12 @@
             <div class="uk-flex uk-flex-middle uk-flex-between">
               <div data-help="dateFormat">Date format</div>
               <div>
-                <select id="dateFormat" class="uk-select settingItem"></select>
+                <select
+                  id="dateFormat"
+                  name="dateFormat"
+                  aria-label="Date format"
+                  class="uk-select settingItem"
+                ></select>
               </div>
             </div>
             <div class="uk-flex uk-flex-middle uk-flex-between">
@@ -745,7 +790,12 @@
               <div data-help="currencyInterval">Rate update interval</div>
               <div class="uk-position-relative uk-text-right">
                 <div class="uk-flex">
-                  <select id="currencyInterval" class="uk-select settingItem uk-flex-left">
+                  <select
+                    id="currencyInterval"
+                    name="currencyInterval"
+                    aria-label="Rate update interval"
+                    class="uk-select settingItem uk-flex-left"
+                  >
                     <option value="0">On start</option>
                     <option value="3600000">1 hour</option>
                     <option value="10800000">3 hours</option>
@@ -785,21 +835,19 @@
                 <a id="selectSyncDirButton" href="#" class="sync-path-link">Choose Folder</a>
               </div>
             </div>
-            <div id="syncDirHiddenWrapper">
-              <input type="hidden" id="syncDir" class="settingItem" />
-            </div>
+            <input type="hidden" id="syncDir" class="settingItem" />
           </li>
         </ul>
 
         <div class="uk-flex">
           <div class="dialog-buttons resetButtons uk-width-1-1 uk-flex-left">
             <a id="dialogSettingsReset" class="resetAppButton" title="Reset all app settings and data" uk-tooltip>
-              <i data-lucide="brush-cleaning">Reset all data</i>
+              <i data-lucide="brush-cleaning"></i>
             </a>
             <a id="defaultSettingsButton" class="defaultSettingsButton" title="Restore default settings" uk-tooltip>
-              <i data-lucide="list-restart">Restore defaults</i>
+              <i data-lucide="list-restart"></i>
             </a>
-            <a id="resetSizeButton" title="Reset window size" uk-tooltip><i data-lucide="square-dimensions"></i> </a>
+            <a id="resetSizeButton" title="Reset window size" uk-tooltip><i data-lucide="square-dimensions"></i></a>
           </div>
         </div>
       </div>
@@ -815,85 +863,10 @@
           <div class="uk-text-secondary">Dark</div>
         </div>
 
-        <div class="colorPickerContainer">
-          <div class="uk-flex uk-flex-middle uk-child-width-expand">
-            <div class="uk-text-right">Answers</div>
-            <div><input name="color" data-class="answer" data-theme="light" class="colorInput" readonly /></div>
-            <div><input name="color" data-class="answer" data-theme="dark" class="colorInput" readonly /></div>
-          </div>
-          <div class="uk-flex uk-flex-middle uk-child-width-expand">
-            <div class="uk-text-right">Comments</div>
-            <div><input name="color" data-class="comment" data-theme="light" class="colorInput" readonly /></div>
-            <div><input name="color" data-class="comment" data-theme="dark" class="colorInput" readonly /></div>
-          </div>
-          <div class="uk-flex uk-flex-middle uk-child-width-expand">
-            <div class="uk-text-right">Constants</div>
-            <div><input name="color" data-class="constant" data-theme="light" class="colorInput" readonly /></div>
-            <div><input name="color" data-class="constant" data-theme="dark" class="colorInput" readonly /></div>
-          </div>
-          <div class="uk-flex uk-flex-middle uk-child-width-expand">
-            <div class="uk-text-right">Currencies</div>
-            <div><input name="color" data-class="currency" data-theme="light" class="colorInput" readonly /></div>
-            <div><input name="color" data-class="currency" data-theme="dark" class="colorInput" readonly /></div>
-          </div>
-          <div class="uk-flex uk-flex-middle uk-child-width-expand">
-            <div class="uk-text-right">Errors</div>
-            <div><input name="color" data-class="error" data-theme="light" class="colorInput" readonly /></div>
-            <div><input name="color" data-class="error" data-theme="dark" class="colorInput" readonly /></div>
-          </div>
-          <div class="uk-flex uk-flex-middle uk-child-width-expand">
-            <div class="uk-text-right">Excel</div>
-            <div><input name="color" data-class="excel" data-theme="light" class="colorInput" readonly /></div>
-            <div><input name="color" data-class="excel" data-theme="dark" class="colorInput" readonly /></div>
-          </div>
-          <div class="uk-flex uk-flex-middle uk-child-width-expand">
-            <div class="uk-text-right">Functions</div>
-            <div><input name="color" data-class="function" data-theme="light" class="colorInput" readonly /></div>
-            <div><input name="color" data-class="function" data-theme="dark" class="colorInput" readonly /></div>
-          </div>
-          <div class="uk-flex uk-flex-middle uk-child-width-expand">
-            <div class="uk-text-right">Keywords</div>
-            <div><input name="color" data-class="keyword" data-theme="light" class="colorInput" readonly /></div>
-            <div><input name="color" data-class="keyword" data-theme="dark" class="colorInput" readonly /></div>
-          </div>
-          <div class="uk-flex uk-flex-middle uk-child-width-expand">
-            <div class="uk-text-right">Numbers</div>
-            <div><input name="color" data-class="number" data-theme="light" class="colorInput" readonly /></div>
-            <div><input name="color" data-class="number" data-theme="dark" class="colorInput" readonly /></div>
-          </div>
-          <div class="uk-flex uk-flex-middle uk-child-width-expand">
-            <div class="uk-text-right">Text</div>
-            <div><input name="color" data-class="text" data-theme="light" class="colorInput" readonly /></div>
-            <div><input name="color" data-class="text" data-theme="dark" class="colorInput" readonly /></div>
-          </div>
-          <div class="uk-flex uk-flex-middle uk-child-width-expand">
-            <div class="uk-text-right">Operators</div>
-            <div><input name="color" data-class="operator" data-theme="light" class="colorInput" readonly /></div>
-            <div><input name="color" data-class="operator" data-theme="dark" class="colorInput" readonly /></div>
-          </div>
-          <div class="uk-flex uk-flex-middle uk-child-width-expand">
-            <div class="uk-text-right">Units</div>
-            <div><input name="color" data-class="unit" data-theme="light" class="colorInput" readonly /></div>
-            <div><input name="color" data-class="unit" data-theme="dark" class="colorInput" readonly /></div>
-          </div>
-          <div class="uk-flex uk-flex-middle uk-child-width-expand">
-            <div class="uk-text-right">Variables</div>
-            <div><input name="color" data-class="variable" data-theme="light" class="colorInput" readonly /></div>
-            <div><input name="color" data-class="variable" data-theme="dark" class="colorInput" readonly /></div>
-          </div>
-          <div class="colorHR uk-text-secondary uk-margin-small">No syntax</div>
-          <div class="uk-flex uk-flex-middle uk-child-width-expand">
-            <div class="uk-text-right">Plain</div>
-            <div><input name="color" data-class="plain" data-theme="light" class="colorInput" readonly /></div>
-            <div><input name="color" data-class="plain" data-theme="dark" class="colorInput" readonly /></div>
-          </div>
-        </div>
+        <div class="colorPickerContainer"></div>
 
-        <div class="uk-flex">
-          <div class="dialog-buttons uk-width-1-5 uk-flex-left"></div>
-          <div class="dialog-buttons uk-width-4-5 uk-flex-right">
-            <a id="defaultColorsButton">Restore defaults</a>
-          </div>
+        <div class="dialog-buttons uk-flex-right">
+          <a id="defaultColorsButton">Restore defaults</a>
         </div>
       </div>
     </div>
@@ -992,28 +965,26 @@
 
           <div class="domainParent">
             <div class="div1">
-              <input id="yMax" class="domainTextBox textBox" />
+              <input id="yMax" class="domainTextBox" />
             </div>
-            <div class="div2"><input id="yMin" class="domainTextBox textBox" /></div>
+            <div class="div2"><input id="yMin" class="domainTextBox" /></div>
             <div class="div3"></div>
             <div class="div4">y</div>
             <div class="div5">x</div>
             <div class="div6"></div>
             <div class="div7">
-              <input id="xMin" class="domainTextBox textBox" />
+              <input id="xMin" class="domainTextBox" />
             </div>
             <div class="div8">
-              <input id="xMax" class="domainTextBox textBox" />
+              <input id="xMax" class="domainTextBox" />
             </div>
           </div>
         </div>
-        <div uk-flex>
-          <div class="dialog-buttons uk-flex-right">
-            <a id="defaultDomainsButton" class="uk-margin-small-right" title="Restore default domains" uk-tooltip>
-              Defaults
-            </a>
-            <button id="dialogPlotAxisSettingsSave" class="uk-button uk-button-primary uk-button-small">Save</button>
-          </div>
+        <div class="dialog-buttons uk-flex-right">
+          <a id="defaultDomainsButton" class="uk-margin-small-right" title="Restore default domains" uk-tooltip>
+            Defaults
+          </a>
+          <button id="dialogPlotAxisSettingsSave" class="uk-button uk-button-primary uk-button-small">Save</button>
         </div>
       </div>
     </div>
