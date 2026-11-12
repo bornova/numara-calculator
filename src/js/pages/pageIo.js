@@ -1,5 +1,3 @@
-import UIkit from 'uikit'
-
 import { debouncedSavePageState } from '../calc/calcManager.js'
 import { escapeHTML, getSafeFilename } from '../core/utils.js'
 import { dom } from '../dom.js'
@@ -8,6 +6,7 @@ import { app } from '../state/appState.js'
 import { isElectron } from '../state/env.js'
 import { store } from '../state/store.js'
 import { notify } from '../ui/dialogs.js'
+import { hideFloatingPageList } from '../ui/pageList.js'
 import { newPage } from './pageManager.js'
 
 /**
@@ -28,15 +27,8 @@ function exportActivePage() {
  */
 export function setupPageIo() {
   if (isElectron) {
-    dom.importPageButton.addEventListener('click', () => {
-      UIkit.dropdown('#moreDropdown')?.hide(0)
-      numara.importPage()
-    })
-
-    dom.exportPageButton.addEventListener('click', () => {
-      UIkit.dropdown('#moreDropdown')?.hide(0)
-      exportActivePage()
-    })
+    dom.importPageButton.addEventListener('click', () => numara.importPage())
+    dom.exportPageButton.addEventListener('click', exportActivePage)
 
     numara.pageImported((data, msg, name) => {
       newPage(true, name, data)
@@ -47,10 +39,7 @@ export function setupPageIo() {
     numara.importDataError((error) => notify(escapeHTML(String(error)), 'danger'))
 
     numara.pageExported((msg) => {
-      if (!app.pageListDocked) {
-        UIkit.offcanvas('#pageListPanel').hide()
-      }
-
+      hideFloatingPageList()
       notify(escapeHTML(msg), 'success')
     })
 
@@ -58,10 +47,7 @@ export function setupPageIo() {
     numara.requestExportPage(exportActivePage)
 
     numara.print(() => {
-      if (!app.pageListDocked) {
-        UIkit.offcanvas('#pageListPanel').hide()
-      }
-
+      hideFloatingPageList()
       window.print()
     })
   } else {
