@@ -1,14 +1,12 @@
 import { all, create } from 'mathjs'
 
 import { USD_UNIT } from './constants.js'
-import { escapeRegExp, getSystemLocale as coreGetSystemLocale } from './utils.js'
+import { escapeRegExp } from './utils.js'
 
 export const app = {
   settings: {},
   currencies: {},
   mathScope: new Map(),
-  scopeProperties: {},
-  scopeTypes: {},
   udfList: [],
   uduList: []
 }
@@ -57,14 +55,6 @@ function isSameCurrencies(a, b) {
   }
 
   return true
-}
-
-/**
- * Returns the active system locale for the calculation engine.
- * @returns {string}
- */
-export function getSystemLocale() {
-  return coreGetSystemLocale(app.settings)
 }
 
 /**
