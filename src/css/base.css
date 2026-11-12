@@ -2,6 +2,7 @@
 
 :root {
   --zoom-step: 0px;
+  --ui-font-grad: 0;
   --mono-weight: 400;
   --base-font-size: calc(13px + var(--zoom-step));
   --range-thumb-size: calc(15px + var(--zoom-step));
@@ -107,6 +108,7 @@ body {
   color: light-dark(#444444, #ffffff);
   font-size: var(--base-font-size);
   font-family: 'Google Sans', sans-serif;
+  font-variation-settings: 'GRAD' var(--ui-font-grad);
 }
 
 ::selection {
