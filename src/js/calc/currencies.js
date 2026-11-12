@@ -1,66 +1,76 @@
-import { BUILTIN_MATH_KEYS, BUILTIN_UNIT_KEYS } from '../core/mathInstance.js'
+import { BUILTIN_MATH_KEYS, BUILTIN_UNIT_KEYS, refreshCurrencyState } from '../core/mathInstance.js'
 import { escapeHTML } from '../core/utils.js'
 import { dom } from '../dom.js'
-import { CLASS_NAMES, cm, numaraHints, refreshCurrencyTokens } from '../editor/index.js'
+import { CLASS_NAMES, refreshCurrencyTokens } from '../editor/constants.js'
+import { numaraHints } from '../editor/hints.js'
+import { cm } from '../editor/index.js'
 import { app } from '../state/appState.js'
 import { store } from '../state/store.js'
 import { notify } from '../ui/dialogs.js'
-import { calculate, clearEvaluationCache, refreshCurrencyState } from './calcManager.js'
+import { calculate, clearEvaluationCache } from './calcManager.js'
 
 const RATES_URL = 'https://api.frankfurter.dev/v2/rates?base=USD'
 const SYMBOLS_URL = 'https://api.frankfurter.dev/v2/currencies'
 
 const DEFAULTS = {
-  USD: { symbol: '$', name: 'U.S. Dollar', locale: 'en-US' },
-  EUR: { symbol: '€', name: 'Euro', locale: 'de-DE' },
-  GBP: { symbol: '£', name: 'British Pound', locale: 'en-GB' },
-  CNY: { symbol: '¥', name: 'Chinese Yuan', locale: 'zh-CN' },
-  INR: { symbol: '₹', name: 'Indian Rupee', locale: 'en-IN' },
-  KRW: { symbol: '₩', name: 'South Korean Won', locale: 'ko-KR' },
-  RUB: { symbol: '₽', name: 'Russian Ruble', locale: 'ru-RU' },
-  TRY: { symbol: '₺', name: 'Turkish Lira', locale: 'tr-TR' },
-  BRL: { symbol: 'R$', name: 'Brazilian Real', locale: 'pt-BR' },
-  ILS: { symbol: '₪', name: 'Israeli New Shekel', locale: 'he-IL' },
-  PHP: { symbol: '₱', name: 'Philippine Peso', locale: 'en-PH' },
-  THB: { symbol: '฿', name: 'Thai Baht', locale: 'th-TH' },
-  VND: { symbol: '₫', name: 'Vietnamese Dong', locale: 'vi-VN' },
-  UAH: { symbol: '₴', name: 'Ukrainian Hryvnia', locale: 'uk-UA' },
-  NGN: { symbol: '₦', name: 'Nigerian Naira', locale: 'en-NG' },
-  PLN: { symbol: 'zł', name: 'Polish Zloty', locale: 'pl-PL' },
-  CZK: { symbol: 'Kč', name: 'Czech Koruna', locale: 'cs-CZ' },
-  SEK: { symbol: 'kr', name: 'Swedish Krona', locale: 'sv-SE' },
-  DKK: { symbol: 'kr.', name: 'Danish Krone', locale: 'da-DK' },
-  IDR: { symbol: 'Rp', name: 'Indonesian Rupiah', locale: 'id-ID' },
-  MYR: { symbol: 'RM', name: 'Malaysian Ringgit', locale: 'ms-MY' },
-  KZT: { symbol: '₸', name: 'Kazakhstani Tenge', locale: 'kk-KZ' },
-  AZN: { symbol: '₼', name: 'Azerbaijani Manat', locale: 'az-AZ' },
-  GEL: { symbol: '₾', name: 'Georgian Lari', locale: 'ka-GE' },
-  BDT: { symbol: '৳', name: 'Bangladeshi Taka', locale: 'bn-BD' },
-  PKR: { symbol: '₨', name: 'Pakistani Rupee', locale: 'ur-PK' },
-  IRR: { symbol: '﷼', name: 'Iranian Rial', locale: 'fa-IR' },
-  SAR: { symbol: 'ر.س', name: 'Saudi Riyal', locale: 'ar-SA' },
-  AED: { symbol: 'د.إ', name: 'United Arab Emirates Dirham', locale: 'ar-AE' },
-  CRC: { symbol: '₡', name: 'Costa Rican Colón', locale: 'es-CR' },
-  PYG: { symbol: '₲', name: 'Paraguayan Guaraní', locale: 'es-PY' },
-  GHS: { symbol: '₵', name: 'Ghanaian Cedi', locale: 'en-GH' },
-  LAK: { symbol: '₭', name: 'Lao Kip', locale: 'lo-LA' },
-  MNT: { symbol: '₮', name: 'Mongolian Tögrög', locale: 'mn-MN' },
-  KHR: { symbol: '៛', name: 'Cambodian Riel', locale: 'km-KH' },
-  AMD: { symbol: '֏', name: 'Armenian Dram', locale: 'hy-AM' },
-  AFN: { symbol: '؋', name: 'Afghan Afghani', locale: 'ps-AF' },
-  ANG: { symbol: 'ƒ', name: 'Netherlands Antillean Guilder', locale: 'nl-CW' },
-  XPF: { symbol: '₣', name: 'CFP Franc', locale: 'fr-PF' },
-  PEN: { symbol: 'S/', name: 'Peruvian Sol', locale: 'es-PE' },
-  NIO: { symbol: 'C$', name: 'Nicaraguan Córdoba', locale: 'es-NI' },
-  TOP: { symbol: 'T$', name: 'Tongan Paʻanga', locale: 'to-TO' },
-  UYU: { symbol: '$U', name: 'Uruguayan Peso', locale: 'es-UY' },
-  BTC: { symbol: '₿', name: 'Bitcoin', locale: 'en-US' },
-  ETH: { symbol: 'Ξ', name: 'Ethereum', locale: 'en-US' },
-  LTC: { symbol: 'Ł', name: 'Litecoin', locale: 'en-US' },
-  ADA: { symbol: '₳', name: 'Cardano', locale: 'en-US' }
+  USD: { symbol: '$', name: 'U.S. Dollar' },
+  EUR: { symbol: '€', name: 'Euro' },
+  GBP: { symbol: '£', name: 'British Pound' },
+  CNY: { symbol: '¥', name: 'Chinese Yuan' },
+  INR: { symbol: '₹', name: 'Indian Rupee' },
+  KRW: { symbol: '₩', name: 'South Korean Won' },
+  RUB: { symbol: '₽', name: 'Russian Ruble' },
+  TRY: { symbol: '₺', name: 'Turkish Lira' },
+  BRL: { symbol: 'R$', name: 'Brazilian Real' },
+  ILS: { symbol: '₪', name: 'Israeli New Shekel' },
+  PHP: { symbol: '₱', name: 'Philippine Peso' },
+  THB: { symbol: '฿', name: 'Thai Baht' },
+  VND: { symbol: '₫', name: 'Vietnamese Dong' },
+  UAH: { symbol: '₴', name: 'Ukrainian Hryvnia' },
+  NGN: { symbol: '₦', name: 'Nigerian Naira' },
+  PLN: { symbol: 'zł', name: 'Polish Zloty' },
+  CZK: { symbol: 'Kč', name: 'Czech Koruna' },
+  SEK: { symbol: 'kr', name: 'Swedish Krona' },
+  DKK: { symbol: 'kr.', name: 'Danish Krone' },
+  IDR: { symbol: 'Rp', name: 'Indonesian Rupiah' },
+  MYR: { symbol: 'RM', name: 'Malaysian Ringgit' },
+  KZT: { symbol: '₸', name: 'Kazakhstani Tenge' },
+  AZN: { symbol: '₼', name: 'Azerbaijani Manat' },
+  GEL: { symbol: '₾', name: 'Georgian Lari' },
+  BDT: { symbol: '৳', name: 'Bangladeshi Taka' },
+  PKR: { symbol: '₨', name: 'Pakistani Rupee' },
+  IRR: { symbol: '﷼', name: 'Iranian Rial' },
+  SAR: { symbol: 'ر.س', name: 'Saudi Riyal' },
+  AED: { symbol: 'د.إ', name: 'United Arab Emirates Dirham' },
+  CRC: { symbol: '₡', name: 'Costa Rican Colón' },
+  PYG: { symbol: '₲', name: 'Paraguayan Guaraní' },
+  GHS: { symbol: '₵', name: 'Ghanaian Cedi' },
+  LAK: { symbol: '₭', name: 'Lao Kip' },
+  MNT: { symbol: '₮', name: 'Mongolian Tögrög' },
+  KHR: { symbol: '៛', name: 'Cambodian Riel' },
+  AMD: { symbol: '֏', name: 'Armenian Dram' },
+  AFN: { symbol: '؋', name: 'Afghan Afghani' },
+  ANG: { symbol: 'ƒ', name: 'Netherlands Antillean Guilder' },
+  XPF: { symbol: '₣', name: 'CFP Franc' },
+  PEN: { symbol: 'S/', name: 'Peruvian Sol' },
+  NIO: { symbol: 'C$', name: 'Nicaraguan Córdoba' },
+  TOP: { symbol: 'T$', name: 'Tongan Paʻanga' },
+  UYU: { symbol: '$U', name: 'Uruguayan Peso' },
+  BTC: { symbol: '₿', name: 'Bitcoin' },
+  ETH: { symbol: 'Ξ', name: 'Ethereum' },
+  LTC: { symbol: 'Ł', name: 'Litecoin' },
+  ADA: { symbol: '₳', name: 'Cardano' }
 }
 
 const registeredCurrencyHints = new Set()
+
+function hasBuiltinConflict(token) {
+  return (
+    BUILTIN_UNIT_KEYS.has(token) ||
+    BUILTIN_UNIT_KEYS.has(token.toLowerCase()) ||
+    BUILTIN_MATH_KEYS.has(token.toLowerCase())
+  )
+}
 
 /**
  * Return true if the currency symbol conflicts with a built-in mathjs unit, function, or constant.
@@ -68,11 +78,7 @@ const registeredCurrencyHints = new Set()
  * @returns {boolean}
  */
 function isSymbolConflict(symbol) {
-  if (!symbol || /\s/.test(symbol)) return true
-  if (BUILTIN_UNIT_KEYS.has(symbol) || BUILTIN_UNIT_KEYS.has(symbol.toLowerCase())) return true
-  if (BUILTIN_MATH_KEYS.has(symbol.toLowerCase())) return true
-
-  return false
+  return !symbol || /\s/.test(symbol) || hasBuiltinConflict(symbol)
 }
 
 /**
@@ -83,23 +89,25 @@ function isSymbolConflict(symbol) {
  * @returns {boolean} True if the code or symbol conflicts with a built-in mathjs unit or function/constant.
  */
 function isMathUnit(code, symbol) {
-  if (BUILTIN_UNIT_KEYS.has(code) || BUILTIN_UNIT_KEYS.has(code.toLowerCase())) return true
-  if (symbol && isSymbolConflict(symbol)) return true
-  if (BUILTIN_MATH_KEYS.has(code.toLowerCase())) return true
-
-  return false
+  return hasBuiltinConflict(code) || Boolean(symbol && isSymbolConflict(symbol))
 }
 
 /**
- * Register a currency code as an autocomplete hint.
- * @param {string} code Currency code.
- * @param {string} name Currency name.
+ * Applies updated currencies to app state, autocomplete hints, Math.js units, and syntax tokens.
+ * @param {object} currencies Currencies map.
  */
-function registerCurrencyHint(code, name) {
-  if (!registeredCurrencyHints.has(code)) {
-    registeredCurrencyHints.add(code)
-    numaraHints.push({ text: code, desc: name, className: CLASS_NAMES.CURRENCY })
+function applyCurrenciesState(currencies) {
+  app.currencies = currencies
+
+  for (const [code, { name }] of Object.entries(currencies)) {
+    if (!registeredCurrencyHints.has(code)) {
+      registeredCurrencyHints.add(code)
+      numaraHints.push({ text: code, desc: name, className: CLASS_NAMES.CURRENCY })
+    }
   }
+
+  refreshCurrencyState(currencies)
+  refreshCurrencyTokens()
 }
 
 /**
@@ -198,14 +206,7 @@ export function initCurrencies() {
     if (!DEFAULTS[code] && isMathUnit(code, symbol)) delete stored[code]
   }
 
-  app.currencies = stored
-
-  for (const [code, { name }] of Object.entries(app.currencies)) {
-    registerCurrencyHint(code, name)
-  }
-
-  refreshCurrencyState()
-  refreshCurrencyTokens()
+  applyCurrenciesState(stored)
 }
 
 /**
@@ -230,19 +231,12 @@ export async function getRates(isManual = false) {
     const [symbols, rates] = await Promise.all([fetchJSON(SYMBOLS_URL).catch(() => null), fetchJSON(RATES_URL)])
     const { currencies, lastDate } = buildCurrencies(symbols, rates)
 
-    for (const [code, { name }] of Object.entries(currencies)) {
-      registerCurrencyHint(code, name)
-    }
-
-    app.currencies = currencies
+    applyCurrenciesState(currencies)
     store.set('currencies', currencies)
 
     if (lastDate) {
       store.set('rateDate', lastDate)
     }
-
-    refreshCurrencyState()
-    refreshCurrencyTokens()
 
     cm.setOption('mode', app.settings?.syntax ? 'numara' : 'plain')
 
