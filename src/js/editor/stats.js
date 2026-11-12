@@ -1,8 +1,24 @@
 import { formatAnswer } from '../calc/calcManager.js'
-import { parseLocaleNumber } from '../core/formatter.js'
+import { parseStrictLocaleNumber } from '../core/formatter.js'
 import { dom } from '../dom.js'
 import { app } from '../state/appState.js'
 import { cm } from './index.js'
+
+/**
+ * Resolves the inclusive `[startLine, endLine]` range for a CodeMirror selection,
+ * excluding a trailing line when a multi-line selection ends at column 0.
+ * @param {object} sel CodeMirror selection range.
+ * @returns {{ startLine: number, endLine: number }}
+ */
+export function getSelectionLineRange(sel) {
+  const startPos = sel.from()
+  const endPos = sel.to()
+  const startLine = startPos.line
+  const endLine =
+    sel.anchor.line !== sel.head.line && endPos.ch === 0 ? Math.max(startLine, endPos.line - 1) : endPos.line
+
+  return { startLine, endLine }
+}
 
 /**
  * Computes and displays live sum, average, and count for multi-line selections.
@@ -19,19 +35,7 @@ export function updateSelectionStats() {
   const selectedLines = new Set()
 
   for (const sel of cm.listSelections()) {
-    const startLine = Math.min(sel.anchor.line, sel.head.line)
-    let endLine = Math.max(sel.anchor.line, sel.head.line)
-
-    if (sel.anchor.line !== sel.head.line) {
-      const endPos =
-        sel.anchor.line > sel.head.line || (sel.anchor.line === sel.head.line && sel.anchor.ch > sel.head.ch)
-          ? sel.anchor
-          : sel.head
-
-      if (endPos.ch === 0) {
-        endLine = Math.max(startLine, endLine - 1)
-      }
-    }
+    const { startLine, endLine } = getSelectionLineRange(sel)
 
     for (let i = startLine; i <= endLine; i++) {
       selectedLines.add(i)
@@ -47,14 +51,10 @@ export function updateSelectionStats() {
   const values = []
 
   for (const lineIdx of selectedLines) {
-    const rawAns = app.mathScope.get(`line${lineIdx + 1}`)
+    const num = parseStrictLocaleNumber(app.mathScope.get(`line${lineIdx + 1}`), app.settings)
 
-    if (typeof rawAns === 'string' && /^-?\d[\d.,\s\u00A0\u202F\u2009]*(?:e[+-]?\d+)?$/i.test(rawAns.trim())) {
-      const num = parseLocaleNumber(rawAns.trim(), app.settings)
-
-      if (Number.isFinite(num)) {
-        values.push(num)
-      }
+    if (Number.isFinite(num)) {
+      values.push(num)
     }
   }
 
@@ -67,8 +67,9 @@ export function updateSelectionStats() {
   const sum = values.reduce((acc, v) => acc + v, 0)
   const avg = sum / values.length
   const useThouSep = Boolean(app.settings?.thouSep)
+  const copyGrouping = Boolean(useThouSep && app.settings?.copyThouSep)
   const sumOut = formatAnswer(sum, useThouSep)
-  const sumCopy = formatAnswer(sum, Boolean(useThouSep && app.settings?.copyThouSep))
+  const sumCopy = copyGrouping === useThouSep ? sumOut : formatAnswer(sum, copyGrouping)
   const avgOut = formatAnswer(avg, useThouSep)
 
   dom.selectionStats.textContent = `Sum: ${sumOut}  •  Avg: ${avgOut}  •  Count: ${values.length}`
