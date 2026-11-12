@@ -7,14 +7,27 @@ export const CLASS_ANSWER = 'answer'
 export const CLASS_PLOT_BUTTON = 'plotButton answer'
 export const CLASS_LINE_ERROR_LINK = 'lineError'
 
-const DATE_UNITS =
-  '(?:millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia)s?\\b'
+export const INTERNAL_SCOPE_KEYS = new Set(['_', 'ans', 'now', 'today'])
+
+/**
+ * Checks whether a scope key is an internal calculator key (`_`, `ans`, `now`, `today`, or `lineN`).
+ * @param {string} key Scope variable name.
+ * @returns {boolean}
+ */
+export function isInternalScopeKey(key) {
+  return INTERNAL_SCOPE_KEYS.has(key) || /^line\d+$/.test(key)
+}
+
+const DATE_UNIT_NAMES =
+  'millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia'
+const DATE_UNITS = `(?:${DATE_UNIT_NAMES})s?\\b`
 
 export const REGEX_CONTINUATION = /[+\-*/]/
 export const REGEX_DATE_TIME = new RegExp(
   `(?:\\+|(?<!\\b\\d{4}(?=-\\d{1,2}-\\d{1,2}\\b)|\\b\\d{4}-\\d{1,2}(?=-\\d{1,2}\\b(?!\\s*${DATE_UNITS})))-)\\s*.*?\\s*${DATE_UNITS}`,
-  'gi'
+  'i'
 )
+export const REGEX_DATE_TERM = new RegExp(`([+-])\\s*(.*?)\\s*(${DATE_UNIT_NAMES})s?\\b`, 'gi')
 export const REGEX_PCNT_OF = /%[ ]*of[ ]*/gi
 export const REGEX_PCNT_RATIO =
   /^(?:([\p{L}\p{M}_][\p{L}\p{M}\w]*)\s*=\s*)?(.+?)\s+\b(?:as\s+(?:a\s+)?%|is\s+what\s+%)\s+of\s+(.+)$/iu
