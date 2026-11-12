@@ -2,14 +2,15 @@ import UIkit from 'uikit'
 
 import { version } from '../../../package.json'
 
-import { formatAnswer as coreFormatAnswer, parseLocaleNumber } from '../core/formatter.js'
-import { math, refreshCurrencyState as coreRefreshCurrencyState } from '../core/mathInstance.js'
-import { debounce } from '../core/utils.js'
+import { formatAnswer as coreFormatAnswer } from '../core/formatter.js'
+import { math } from '../core/mathInstance.js'
+import { debounce, getSystemLocale } from '../core/utils.js'
 import { dom } from '../dom.js'
-import { cm, debouncedCalculate, registerExcelFunctions, updateSelectionStats } from '../editor/index.js'
+import { registerExcelFunctions } from '../editor/hints.js'
+import { cm, debouncedCalculate } from '../editor/index.js'
+import { updateSelectionStats } from '../editor/stats.js'
 import { syncPageSaveDebounced } from '../pages/sync.js'
 import { app } from '../state/appState.js'
-import { getSystemLocale } from '../state/env.js'
 import { store } from '../state/store.js'
 import { notify } from '../ui/dialogs.js'
 import {
@@ -20,7 +21,10 @@ import {
   updateOutputDOM
 } from './outputRenderer.js'
 
-export { math, parseLocaleNumber, renderAnswersToHTML, syncOutputHeights }
+export { math, renderAnswersToHTML, syncOutputHeights }
+
+const sharedBuffer = typeof SharedArrayBuffer !== 'undefined' ? new SharedArrayBuffer(4) : null
+const sharedArray = sharedBuffer ? new Int32Array(sharedBuffer) : null
 
 let worker = null
 let currentTaskId = 0
@@ -31,7 +35,6 @@ let lastActivePage = null
 let slowCalcTimeout = null
 let hardCalcTimeout = null
 let lastActiveLineIndex = -1
-let sharedArray = null
 let isCalculating = false
 let isDialogVisible = false
 let lastDialogShowTime = 0
@@ -105,6 +108,16 @@ function hideTimeoutDialogAfterCalc() {
 }
 
 /**
+ * Resets in-flight calculation flags, timers, and timeout dialog state.
+ */
+function finishCalcState() {
+  isCalculating = false
+  clearCalcTimeouts()
+  lastActiveLineIndex = -1
+  hideTimeoutDialogAfterCalc()
+}
+
+/**
  * Lazily spawns or retrieves the background Web Worker for calculation execution.
  * @returns {Worker} The spawned web worker instance.
  */
@@ -121,11 +134,7 @@ function getWorker() {
         if (taskId !== currentTaskId) return
         if (app.activePage !== currentTaskPageId || cm.getValue() !== currentTaskDocValue) return
 
-        isCalculating = false
-        clearCalcTimeouts()
-        lastActiveLineIndex = -1
-
-        hideTimeoutDialogAfterCalc()
+        finishCalcState()
 
         // Update the main thread's math scope mapping keys to serialized strings
         const keysChanged = checkScopeKeysChanged(serializedScope, udfList, uduList)
@@ -153,21 +162,14 @@ function getWorker() {
         const { taskId } = payload || {}
 
         if (taskId === currentTaskId) {
-          isCalculating = false
-          clearCalcTimeouts()
-          lastActiveLineIndex = -1
-
-          hideTimeoutDialogAfterCalc()
+          finishCalcState()
         }
         console.error('Calculation worker returned error:', payload?.error)
       }
     }
 
     worker.onerror = (error) => {
-      isCalculating = false
-      clearCalcTimeouts()
-      lastActiveLineIndex = -1
-      hideTimeoutDialogAfterCalc()
+      finishCalcState()
       console.error('Calculation worker error:', error)
     }
   }
@@ -216,17 +218,19 @@ function applyCalculationResults(answers, errorLines) {
   const hasLineWidget = app.settings.answerPosition === 'bottom'
 
   if (hasLineWidget) {
-    for (let lineIndex = 0; lineIndex < totalLines; lineIndex++) {
-      const lineHandle = cm.getLineHandle(lineIndex)
-      const result = answers[lineIndex] || ''
+    cm.operation(() => {
+      let lineIndex = 0
 
-      updateLineWidget(lineHandle, result, lineIndex, foldedLines.has(lineIndex))
-    }
+      cm.eachLine((lineHandle) => {
+        updateLineWidget(lineHandle, answers[lineIndex] || '', lineIndex, foldedLines.has(lineIndex))
+        lineIndex++
+      })
+    })
   } else {
     updateOutputDOM(answers)
   }
 
-  syncOutputHeights()
+  syncOutputHeights(true, foldedLines)
   updateSelectionStats()
 
   // Update in-memory undo history, answers cache, and queue debounced page persistence
@@ -244,10 +248,27 @@ function applyCalculationResults(answers, errorLines) {
 }
 
 /**
- * Displays a dialog warning the user that calculation is taking longer than expected.
- * @param {string[]} lines The array of lines being calculated.
+ * Queues a debounced persistence update for the active page's folded sections and cursor without recalculating.
  */
-function showTimeoutDialog(lines) {
+export function queueFoldStateSave() {
+  if (!app.activePage || app.loadingPage) return
+
+  const { foldedLines, folds } = getFoldedState()
+
+  syncOutputHeights(true, foldedLines)
+  pendingPageSave = {
+    pageId: app.activePage,
+    data: cm.getValue(),
+    folds,
+    cursor: cm.getCursor()
+  }
+  debouncedSavePageState()
+}
+
+/**
+ * Displays a dialog warning the user that calculation is taking longer than expected.
+ */
+function showTimeoutDialog() {
   lastDialogShowTime = Date.now()
   isDialogVisible = true
   clearAutoCloseTimeout()
@@ -272,7 +293,7 @@ function showTimeoutDialog(lines) {
     if (isCalculating) {
       const timeoutDuration = (parseInt(app.settings.calcTimeout) || 10) * 1000
 
-      hardCalcTimeout = setTimeout(() => showTimeoutDialog(lines), timeoutDuration)
+      hardCalcTimeout = setTimeout(showTimeoutDialog, timeoutDuration)
     }
   }
 
@@ -327,16 +348,17 @@ function savePendingPageState() {
     page.folds.length === folds.length &&
     page.folds.every((f, i) => f.from === folds[i].from && f.to === folds[i].to)
 
-  const hadLegacyFields = 'history' in page || 'answers' in page
+  const dataChanged = page.data !== data
 
-  if (page.data !== data || !foldsEqual || hadLegacyFields) {
+  if (dataChanged || !foldsEqual) {
     page.data = data
-    delete page.history
-    delete page.answers
     page.folds = folds
     page.cursor = cursor
     store.set('pages', pages)
-    syncPageSaveDebounced(page.name, data)
+
+    if (dataChanged) {
+      syncPageSaveDebounced(page.name, data)
+    }
   }
 }
 
@@ -351,19 +373,12 @@ export function formatAnswer(answer, useGrouping) {
 }
 
 /**
- * Synchronizes currency state with background calculation helper state.
- */
-export function refreshCurrencyState() {
-  coreRefreshCurrencyState(app.currencies)
-}
-
-/**
- * Tells the background calculation worker to clear its evaluation cache.
+ * Tells the background calculation worker to clear its evaluation cache if already spawned.
  */
 export function clearEvaluationCache() {
-  const w = getWorker()
-
-  w.postMessage({ type: 'clearCache' })
+  if (worker) {
+    worker.postMessage({ type: 'clearCache' })
+  }
 }
 
 /**
@@ -386,14 +401,8 @@ export function calculate() {
 
   const lines = cmValue.split('\n')
 
-  let sharedBuffer = null
-
-  if (typeof SharedArrayBuffer !== 'undefined') {
-    sharedBuffer = new SharedArrayBuffer(4)
-    sharedArray = new Int32Array(sharedBuffer)
+  if (sharedArray) {
     sharedArray[0] = -1
-  } else {
-    sharedArray = null
   }
 
   isCalculating = true
@@ -412,7 +421,7 @@ export function calculate() {
   }, slowDuration)
 
   hardCalcTimeout = setTimeout(() => {
-    showTimeoutDialog(lines)
+    showTimeoutDialog()
   }, timeoutDuration)
 
   const w = getWorker()
@@ -434,7 +443,7 @@ export function calculate() {
       pages: allPages,
       settings: {
         ...app.settings,
-        systemLocale: getSystemLocale()
+        systemLocale: getSystemLocale(app.settings)
       },
       currencies: app.currencies,
       udf: store.get('udf') ?? '',
