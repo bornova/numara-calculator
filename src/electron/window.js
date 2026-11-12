@@ -2,11 +2,21 @@ import { app, BrowserWindow, ipcMain, nativeTheme, screen, session, shell } from
 import log from 'electron-log'
 import * as path from 'node:path'
 
+import { areBoundsEqual, isBoundsOnScreen, MIN_WINDOW_HEIGHT, MIN_WINDOW_WIDTH, resolveWindowBounds } from './bounds.js'
 import { config, DARK_COLOR, getThemeColor, isMac, isWin, LIGHT_COLOR, schema, TRANS_COLOR } from './config.js'
 
 let win = null
+let normalBounds = null
 let isQuitting = false
 let isOverlayTrans = false
+let displayListenersBound = false
+
+const defaultSizeOptions = {
+  defaultWidth: schema.appWidth.default,
+  defaultHeight: schema.appHeight.default,
+  minWidth: MIN_WINDOW_WIDTH,
+  minHeight: MIN_WINDOW_HEIGHT
+}
 
 /**
  * Returns the active BrowserWindow instance if available.
@@ -14,6 +24,37 @@ let isOverlayTrans = false
  */
 export function getWindow() {
   return win
+}
+
+/**
+ * Sends an IPC message to the active renderer window if it exists and is not destroyed.
+ * @param {string} channel IPC channel name.
+ * @param {...any} args Payload arguments.
+ */
+export function sendToWindow(channel, ...args) {
+  if (win && !win.isDestroyed() && win.webContents) {
+    win.webContents.send(channel, ...args)
+  }
+}
+
+/**
+ * Hides the window when tray mode is enabled, or minimizes it otherwise.
+ */
+export function hideOrMinimizeWindow() {
+  if (!win || win.isDestroyed()) return
+
+  if (config.get('showTray')) {
+    win.hide()
+  } else {
+    win.minimize()
+  }
+}
+
+/**
+ * Opens the Electron main process log file in the system viewer.
+ */
+export function openMainLog() {
+  shell.openPath(path.join(app.getPath('logs'), 'main.log'))
 }
 
 /**
@@ -33,24 +74,115 @@ export function setAppQuitting(value) {
 }
 
 /**
- * Checks whether a saved window position is visible on at least one connected display.
- * @param {number[]} pos Saved `[x, y]` coordinates.
- * @returns {boolean}
+ * Records the current unmaximized, unminimized, non-fullscreen window bounds.
  */
-function isPositionOnScreen(pos) {
-  if (!Array.isArray(pos) || pos.length !== 2) return false
+function updateNormalBounds() {
+  if (!win || win.isDestroyed() || win.isMaximized() || win.isMinimized() || win.isFullScreen()) return
 
-  const [x, y] = pos
+  try {
+    normalBounds = win.getBounds()
+  } catch {
+    // Ignore
+  }
+}
 
-  if (!Number.isFinite(x) || !Number.isFinite(y) || x <= -10000 || y <= -10000) return false
+/**
+ * Registers display change listeners once the Electron app is ready so monitor changes relocate off-screen windows.
+ */
+function bindDisplayListeners() {
+  if (displayListenersBound) return
+
+  displayListenersBound = true
+
+  let displayTimer = null
+  const scheduleEnsureOnScreen = () => {
+    clearTimeout(displayTimer)
+    displayTimer = setTimeout(() => {
+      ensureWindowOnScreen()
+    }, 150)
+  }
+
+  screen.on('display-added', scheduleEnsureOnScreen)
+  screen.on('display-removed', scheduleEnsureOnScreen)
+  screen.on('display-metrics-changed', scheduleEnsureOnScreen)
+}
+
+/**
+ * Ensures the active window (and tracked normalBounds) remains visible on a connected display.
+ */
+function ensureWindowOnScreen() {
+  if (!win || win.isDestroyed() || win.isFullScreen() || win.isMinimized()) return
 
   const displays = screen.getAllDisplays()
+  const primaryDisplay = screen.getPrimaryDisplay()
 
-  return displays.some(({ workArea }) => {
-    return (
-      x >= workArea.x - 100 && x < workArea.x + workArea.width && y >= workArea.y && y < workArea.y + workArea.height
-    )
-  })
+  if (win.isMaximized()) {
+    if (normalBounds) {
+      normalBounds = resolveWindowBounds(normalBounds, displays, primaryDisplay, defaultSizeOptions)
+    }
+
+    if (!isBoundsOnScreen(win.getBounds(), displays)) {
+      win.unmaximize()
+
+      const targetBounds = resolveWindowBounds(
+        normalBounds || win.getBounds(),
+        displays,
+        primaryDisplay,
+        defaultSizeOptions
+      )
+
+      if (Number.isFinite(targetBounds.x) && Number.isFinite(targetBounds.y)) {
+        win.setBounds(targetBounds)
+        normalBounds = targetBounds
+      }
+
+      win.maximize()
+    }
+
+    return
+  }
+
+  const currentBounds = win.getBounds()
+  const nextBounds = resolveWindowBounds(currentBounds, displays, primaryDisplay, defaultSizeOptions)
+
+  if (Number.isFinite(nextBounds.x) && Number.isFinite(nextBounds.y) && !areBoundsEqual(currentBounds, nextBounds)) {
+    win.setBounds(nextBounds)
+  }
+
+  updateNormalBounds()
+}
+
+/**
+ * Restores (if minimized), ensures on-screen bounds, shows, and focuses the main window.
+ * @returns {BrowserWindow|null}
+ */
+export function showAndFocusWindow() {
+  if (!win || win.isDestroyed()) return null
+
+  if (win.isMinimized()) {
+    win.restore()
+  }
+
+  ensureWindowOnScreen()
+  win.show()
+  win.focus()
+
+  return win
+}
+
+const TITLEBAR_OVERLAY_HEIGHT = 38
+
+/**
+ * Builds the native window controls overlay configuration.
+ * @param {boolean} [isTrans=isOverlayTrans] Whether the title bar background is transparent.
+ * @returns {{color: string, symbolColor: string, height: number}}
+ */
+function getTitleBarOverlayConfig(isTrans = isOverlayTrans) {
+  return {
+    color: isTrans ? TRANS_COLOR : getThemeColor(),
+    symbolColor: getThemeColor() === DARK_COLOR ? LIGHT_COLOR : DARK_COLOR,
+    height: TITLEBAR_OVERLAY_HEIGHT
+  }
 }
 
 /**
@@ -60,14 +192,13 @@ function isPositionOnScreen(pos) {
 function setTitleBarOverlay(isTrans = isOverlayTrans) {
   isOverlayTrans = Boolean(isTrans)
 
-  if (!isWin || !win || win.isDestroyed()) return
+  if (isMac || !win || win.isDestroyed()) return
 
-  const titleBarConfig = {
-    color: isTrans ? TRANS_COLOR : getThemeColor(),
-    symbolColor: getThemeColor() === DARK_COLOR ? LIGHT_COLOR : DARK_COLOR
+  try {
+    win.setTitleBarOverlay(getTitleBarOverlayConfig(isTrans))
+  } catch {
+    // Ignore on platforms/WMs without titleBarOverlay support
   }
-
-  win.setTitleBarOverlay(titleBarConfig)
 }
 
 /**
@@ -97,6 +228,7 @@ export function resetSize(
   const pageList = Math.max(0, Math.round(Number(pageListWidth) || 0))
 
   win.setContentSize(Math.max(minWidth, width + pageList), Math.max(minHeight, height))
+  ensureWindowOnScreen()
 }
 
 /**
@@ -105,16 +237,31 @@ export function resetSize(
  * @param {function} [options.onWindowCreated] Callback invoked after window creation (e.g. to update tray state).
  */
 export function createAppWindow({ onWindowCreated } = {}) {
+  bindDisplayListeners()
+
+  const initialBounds = resolveWindowBounds(
+    {
+      position: config.get('position'),
+      width: parseInt(config.get('appWidth')),
+      height: parseInt(config.get('appHeight'))
+    },
+    screen.getAllDisplays(),
+    screen.getPrimaryDisplay(),
+    defaultSizeOptions
+  )
+  const hasInitialPos = Number.isFinite(initialBounds.x) && Number.isFinite(initialBounds.y)
+
   win = new BrowserWindow({
+    ...(hasInitialPos ? { x: initialBounds.x, y: initialBounds.y } : {}),
     backgroundColor: getThemeColor(),
     frame: false,
-    height: parseInt(config.get('appHeight')) || schema.appHeight.default,
-    width: parseInt(config.get('appWidth')) || schema.appWidth.default,
-    minHeight: 420,
-    minWidth: 480,
+    height: initialBounds.height,
+    width: initialBounds.width,
+    minHeight: MIN_WINDOW_HEIGHT,
+    minWidth: MIN_WINDOW_WIDTH,
     show: false,
     titleBarStyle: isMac ? 'hiddenInset' : 'hidden',
-    titleBarOverlay: true,
+    titleBarOverlay: isMac ? false : getTitleBarOverlayConfig(),
     webPreferences: {
       preload: path.join(import.meta.dirname, 'preload.cjs'),
       spellcheck: false,
@@ -123,23 +270,19 @@ export function createAppWindow({ onWindowCreated } = {}) {
     }
   })
 
+  if (hasInitialPos && !areBoundsEqual(win.getBounds(), initialBounds)) {
+    win.setBounds(initialBounds)
+  }
+
   win.loadFile('build/index.html')
 
   let initialLoadComplete = false
-  let normalBounds = win.getBounds()
-
-  const updateNormalBounds = () => {
-    if (!win || win.isDestroyed() || win.isMaximized() || win.isMinimized()) return
-
-    try {
-      normalBounds = win.getBounds()
-    } catch {
-      // Ignore
-    }
-  }
+  normalBounds = win.getBounds()
 
   win.on('resize', updateNormalBounds)
   win.on('move', updateNormalBounds)
+  win.on('restore', ensureWindowOnScreen)
+  win.on('unmaximize', ensureWindowOnScreen)
 
   win.webContents.on('did-finish-load', () => {
     setTitleBarOverlay(isOverlayTrans)
@@ -148,12 +291,7 @@ export function createAppWindow({ onWindowCreated } = {}) {
 
     initialLoadComplete = true
 
-    const pos = config.get('position')
-
-    if (isPositionOnScreen(pos)) {
-      win.setPosition(pos[0], pos[1])
-      updateNormalBounds()
-    }
+    ensureWindowOnScreen()
 
     if (config.get('fullSize') && isWin) win.maximize()
     if (!app.isPackaged) win.webContents.openDevTools()
@@ -202,23 +340,24 @@ export function createAppWindow({ onWindowCreated } = {}) {
   win.on('close', (e) => {
     const isMax = win.isMaximized()
     const isMin = win.isMinimized()
+    const isFull = win.isFullScreen()
 
     if (!isMin) {
       config.set('fullSize', isMax)
     }
 
-    if (!isMax && !isMin) {
+    if (!isMax && !isMin && !isFull) {
       updateNormalBounds()
     }
 
     if (normalBounds) {
-      if (isPositionOnScreen([normalBounds.x, normalBounds.y])) {
-        config.set('position', [normalBounds.x, normalBounds.y])
+      if (isBoundsOnScreen(normalBounds, screen.getAllDisplays())) {
+        config.set('position', [Math.round(normalBounds.x) || 0, Math.round(normalBounds.y) || 0])
       }
 
-      if (normalBounds.width >= 480 && normalBounds.height >= 420) {
-        config.set('appWidth', normalBounds.width)
-        config.set('appHeight', normalBounds.height)
+      if (normalBounds.width >= MIN_WINDOW_WIDTH && normalBounds.height >= MIN_WINDOW_HEIGHT) {
+        config.set('appWidth', Math.round(normalBounds.width))
+        config.set('appHeight', Math.round(normalBounds.height))
       }
     }
 
@@ -240,6 +379,7 @@ export function createAppWindow({ onWindowCreated } = {}) {
 
   win.on('closed', () => {
     win = null
+    normalBounds = null
   })
 
   if (typeof onWindowCreated === 'function') {
@@ -255,7 +395,7 @@ export function createAppWindow({ onWindowCreated } = {}) {
 export function setupWindowHandlers({ onTrayChanged } = {}) {
   nativeTheme.on('updated', () => {
     if (win && !win.isDestroyed() && win.webContents) {
-      win.webContents.send('themeUpdate', nativeTheme.shouldUseDarkColors)
+      sendToWindow('themeUpdate', nativeTheme.shouldUseDarkColors)
       setTitleBarOverlay(isOverlayTrans)
     }
   })
@@ -275,15 +415,7 @@ export function setupWindowHandlers({ onTrayChanged } = {}) {
     }
   })
 
-  ipcMain.on('close-window', () => {
-    if (win && !win.isDestroyed()) {
-      if (config.get('showTray')) {
-        win.hide()
-      } else {
-        win.minimize()
-      }
-    }
-  })
+  ipcMain.on('close-window', hideOrMinimizeWindow)
 
   ipcMain.on('setTray', (event, bool) => {
     config.set('showTray', bool)
@@ -330,7 +462,5 @@ export function setupWindowHandlers({ onTrayChanged } = {}) {
     }
   })
 
-  ipcMain.on('openLogs', () => {
-    shell.openPath(path.join(app.getPath('logs'), 'main.log'))
-  })
+  ipcMain.on('openLogs', openMainLog)
 }
