@@ -121,9 +121,7 @@ function handleFunctionTooltip(target) {
 function handleCurrencyTooltip(target) {
   try {
     const text = target.textContent
-    const code = currencyTokens.has(text)
-      ? Object.keys(app.currencies).find((c) => app.currencies[c].symbol === text)
-      : text?.toUpperCase()
+    const code = currencyTokens.get(text) || text?.toUpperCase()
     const currencyName = app.currencies[code]?.name
 
     showTooltip(target, currencyName ? escapeHTML(currencyName) : 'Description not available')
@@ -170,11 +168,9 @@ function handleVariableTooltip(target) {
   const lookupKey = parentName ? `${parentName}.${text}` : text
   const val = app.mathScope.get(lookupKey)
 
-  if (!val || typeof val === 'function' || app.scopeTypes?.[lookupKey] === 'function') return
+  if (!val || app.scopeTypes?.[lookupKey] === 'function') return
 
-  const varTooltip = formatAnswer(val ?? 'Undefined')
-
-  showTooltip(target, escapeHTML(varTooltip))
+  showTooltip(target, escapeHTML(formatAnswer(val)))
 }
 
 /**
@@ -184,8 +180,7 @@ function handleVariableTooltip(target) {
 function handleLineNoTooltip(target) {
   const text = target.textContent
   const val = app.mathScope.get(text)
-  const lineTooltip =
-    typeof val === 'function' || app.scopeTypes?.[text] === 'function' ? 'Function' : formatAnswer(val ?? 'Undefined')
+  const lineTooltip = app.scopeTypes?.[text] === 'function' ? 'Function' : formatAnswer(val ?? 'Undefined')
 
   showTooltip(target, escapeHTML(lineTooltip))
 }
