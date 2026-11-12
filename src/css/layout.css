@@ -111,11 +111,12 @@
 .output {
   display: block;
   flex: 1;
+  background-color: light-dark(#ffffff, #1f1f1f);
   padding: 0;
   min-width: 120px;
   height: 100%;
   overflow: scroll;
-  font-weight: 400;
+  font-weight: var(--mono-weight);
   white-space: nowrap;
 }
 
