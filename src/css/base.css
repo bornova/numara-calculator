@@ -2,9 +2,10 @@
 
 :root {
   --zoom-step: 0px;
+  --ui-font-offset: 0px;
   --ui-font-grad: 0;
   --mono-weight: 400;
-  --base-font-size: calc(13px + var(--zoom-step));
+  --base-font-size: calc(13px + var(--zoom-step) + var(--ui-font-offset));
   --range-thumb-size: calc(15px + var(--zoom-step));
   --range-thumb-offset: calc(var(--range-thumb-size) / -2);
   --switch-width: calc(30px + 2 * var(--zoom-step));
@@ -12,11 +13,11 @@
   --switch-knob: calc(var(--switch-height) - 4px);
   --switch-line-height: calc(var(--switch-height) + 1px);
   --scroll-top-bottom: 34px;
-  --icon-xs: calc(var(--base-font-size) + 1px);
-  --icon-sm: calc(var(--base-font-size) + 2px);
-  --icon-md: calc(var(--base-font-size) + 3px);
-  --icon-lg: calc(var(--base-font-size) + 4px);
-  --icon-xl: calc(var(--base-font-size) + 6px);
+  --icon-xs: calc(14px + var(--zoom-step));
+  --icon-sm: calc(15px + var(--zoom-step));
+  --icon-md: calc(16px + var(--zoom-step));
+  --icon-lg: calc(17px + var(--zoom-step));
+  --icon-xl: calc(19px + var(--zoom-step));
   --dot-size: 5px;
   --dot-bottom: 13px;
   --win-header-height: 38px;
@@ -30,7 +31,9 @@
   --menu-item-padding: calc(var(--action-padding) + 1px) calc(11px + var(--zoom-step));
   --pagelist-width: calc(265px + 15 * var(--zoom-step));
   --pagelist-float-bottom: calc(40px + 4 * var(--zoom-step));
-  --pagelist-float-min-height: 206px;
+  --pagelist-float-min-height: calc(
+    2px + var(--pagelist-header-height) + 4 * (1.5 * var(--base-font-size) + 4 * var(--pagelist-item-pad) + 1px)
+  );
   --pagelist-float-max-height: calc(450px + 30 * var(--zoom-step));
   --pagelist-float-vh-offset: calc(91px + 5 * var(--zoom-step));
   --pagelist-header-height: calc(42px + 2 * var(--zoom-step));
@@ -69,7 +72,6 @@ html[data-zoom='smaller'] {
   --scroll-top-bottom: 33px;
   --answer-height: 27px;
   --actions-side-min-width: 50px;
-  --pagelist-float-min-height: 198px;
   --pagelist-footer-height: 47px;
   --setting-item-width: 150px;
   --clr-picker-width: 160px;
@@ -83,7 +85,6 @@ html[data-zoom='larger'] {
   --answer-height: 30px;
   --action-padding: 5px;
   --actions-side-min-width: 56px;
-  --pagelist-float-min-height: 230px;
   --pagelist-footer-height: 52px;
   --setting-item-width: 175px;
   --clr-picker-width: 185px;
@@ -113,6 +114,7 @@ body {
 
 ::selection {
   background-color: light-dark(#c9e0f7, #193552);
+  color: currentColor;
 }
 
 /* Scrollbars */
