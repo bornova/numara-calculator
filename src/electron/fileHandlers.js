@@ -2,7 +2,7 @@ import { dialog, ipcMain } from 'electron'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 
-import { getWindow } from './window.js'
+import { getWindow, sendToWindow } from './window.js'
 
 let fileToOpen = null
 let isRendererReady = false
@@ -23,22 +23,13 @@ export function getNumFilePath(args) {
  * @param {string} filePath Absolute path to the `.num` file.
  */
 function openFileInRenderer(filePath) {
-  const win = getWindow()
-
   fs.readFile(filePath, 'utf8', (error, data) => {
-    if (!win || win.isDestroyed() || !win.webContents) return
-
     if (error) {
-      win.webContents.send('importDataError', error)
+      sendToWindow('importDataError', error)
       return
     }
 
-    win.webContents.send(
-      'pageImported',
-      data,
-      'Imported from: ' + filePath,
-      path.basename(filePath).replace(/\.num$/i, '')
-    )
+    sendToWindow('pageImported', data, 'Imported from: ' + filePath, path.basename(filePath).replace(/\.num$/i, ''))
   })
 }
 
@@ -61,6 +52,7 @@ export function queueOrOpenFile(filePath) {
  */
 export function promptImportPage() {
   const win = getWindow()
+
   if (!win || win.isDestroyed()) return
 
   const file = dialog.showOpenDialogSync(win, {
@@ -93,6 +85,7 @@ export function setupFileHandlers() {
 
   ipcMain.on('exportPage', (event, fileName, content) => {
     const win = getWindow()
+
     if (!win || win.isDestroyed()) return
 
     const file = dialog.showSaveDialogSync(win, {
