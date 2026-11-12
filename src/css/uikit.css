@@ -338,6 +338,7 @@
 
 .uk-notification-message {
   border: 1px solid light-dark(#efefef, #333333);
+  border-radius: 6px;
   background-color: light-dark(#fdfdfd, #252525);
   padding: 5px 35px 5px 10px;
   font-size: 1rem;
@@ -347,10 +348,12 @@
   color: #2196f3;
 }
 
-.uk-notification-close {
+.uk-notification-close,
+.uk-notification-message:hover .uk-notification-close {
   display: inline-flex;
-  top: 3px;
+  top: 50%;
   right: 5px;
+  transform: translateY(-50%);
   justify-content: center;
   align-items: center;
   border-radius: 4px;
@@ -362,6 +365,7 @@
 }
 
 .uk-notification-close svg {
+  display: block;
   width: var(--icon-md);
   height: var(--icon-md);
 }
