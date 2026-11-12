@@ -176,7 +176,6 @@ export const dom = {
   calcTimeoutIgnore: document.getElementById('calcTimeoutIgnore'),
 
   // Other elements
-  printArea: document.getElementById('printArea'),
   scrollTop: document.getElementById('scrollTop'),
   colorSheet: document.getElementById('colorSheet')
 }
