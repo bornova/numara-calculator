@@ -104,9 +104,10 @@ export function updateLineWidget(lineHandle, answer, lineIndex, isFolded) {
 /**
  * Synchronizes the heights of output display items with their corresponding CodeMirror inputs.
  * @param {boolean} [force=true] When false, skips full DOM height pass if CodeMirror geometry is unchanged.
+ * @param {Set<number>|null} [foldedLinesOverride=null] Optional precomputed set of folded line indices.
  */
-export function syncOutputHeights(force = true) {
-  const cmScroll = dom.el('.CodeMirror-scroll')
+export function syncOutputHeights(force = true, foldedLinesOverride = null) {
+  const cmScroll = cm.getScrollerElement()
 
   if (app.settings.answerPosition === 'bottom') {
     const newHeight = cmScroll.scrollHeight - 50
@@ -152,7 +153,7 @@ export function syncOutputHeights(force = true) {
   lastSyncedLineCount = totalLines
   lastSyncedLineDivWidth = lineDivWidth
 
-  const { foldedLines } = getFoldedState()
+  const foldedLines = foldedLinesOverride ?? getFoldedState().foldedLines
   const hasFolds = foldedLines.size > 0
   const visibleChildren = cm.display.lineDiv.children
   const visibleCount = visibleChildren.length
