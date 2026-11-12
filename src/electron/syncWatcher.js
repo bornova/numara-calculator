@@ -3,8 +3,7 @@ import log from 'electron-log'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 
-import { config } from './config.js'
-import { getWindow } from './window.js'
+import { getWindow, sendToWindow } from './window.js'
 
 let syncWatcher = null
 let syncWatchTimeout = null
@@ -37,7 +36,7 @@ async function withFsRetry(fn, retries = 3) {
  * @param {string} dirPath Directory path to check.
  * @returns {boolean}
  */
-function isValidDirectory(dirPath) {
+export function isValidDirectory(dirPath) {
   try {
     return (
       typeof dirPath === 'string' &&
@@ -106,15 +105,7 @@ function stopSyncWatcher() {
  * Registers IPC handlers for local directory synchronization and file watching.
  */
 export function setupSyncHandlers() {
-  ipcMain.handle('checkSyncDirectory', async (event, dirPath) => {
-    const valid = isValidDirectory(dirPath)
-
-    if (valid) {
-      config.set('syncDir', path.resolve(dirPath))
-    }
-
-    return valid
-  })
+  ipcMain.handle('checkSyncDirectory', async (event, dirPath) => isValidDirectory(dirPath))
 
   ipcMain.handle('selectSyncDirectory', async () => {
     const win = getWindow()
@@ -125,11 +116,7 @@ export function setupSyncHandlers() {
 
     if (result.canceled || !result.filePaths[0]) return null
 
-    const selectedDir = path.resolve(result.filePaths[0])
-
-    config.set('syncDir', selectedDir)
-
-    return selectedDir
+    return path.resolve(result.filePaths[0])
   })
 
   ipcMain.handle('readSyncDirectory', (event, dirPath) =>
@@ -210,17 +197,19 @@ export function setupSyncHandlers() {
 
     const resolvedDir = path.resolve(dirPath)
 
+    const notifyIfDeleted = () => {
+      if (!fs.existsSync(resolvedDir)) {
+        stopSyncWatcher()
+        sendToWindow('syncDirDeleted')
+        return true
+      }
+
+      return false
+    }
+
     try {
       syncWatcher = fs.watch(resolvedDir, (eventType, filename) => {
-        const win = getWindow()
-
-        if (!fs.existsSync(resolvedDir)) {
-          if (win && !win.isDestroyed()) {
-            win.webContents.send('syncDirDeleted')
-          }
-
-          return
-        }
+        if (notifyIfDeleted()) return
 
         if (filename && filename.toLowerCase().endsWith('.num')) {
           if (syncWatchTimeout) {
@@ -229,24 +218,14 @@ export function setupSyncHandlers() {
 
           syncWatchTimeout = setTimeout(() => {
             syncWatchTimeout = null
-            const activeWin = getWindow()
-
-            if (activeWin && !activeWin.isDestroyed()) {
-              activeWin.webContents.send('syncDirChanged')
-            }
+            sendToWindow('syncDirChanged')
           }, 100)
         }
       })
 
       syncWatcher.on('error', (error) => {
         log.error('Sync watcher error:', error)
-        const win = getWindow()
-
-        if (!fs.existsSync(resolvedDir)) {
-          if (win && !win.isDestroyed()) {
-            win.webContents.send('syncDirDeleted')
-          }
-        }
+        notifyIfDeleted()
       })
     } catch (error) {
       log.error('Error starting sync watcher:', error)
