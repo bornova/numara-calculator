@@ -3,12 +3,20 @@ import UIkit from 'uikit'
 import { calculate, clearEvaluationCache, syncOutputHeights } from '../calc/calcManager.js'
 import { getRates } from '../calc/currencies.js'
 import { app as coreApp } from '../core/mathInstance.js'
-import { escapeHTML, isCommaDecimal } from '../core/utils.js'
+import { isCommaDecimal, resolveEditorFontSize } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
-import { clearSyncCache, triggerFolderSync } from '../pages/sync.js'
+import { clearSyncCache, triggerFolderSync, updateSyncUiState } from '../pages/sync.js'
 import { app } from '../state/appState.js'
-import { checkSize, DEFAULT_APP_HEIGHT, DEFAULT_APP_WIDTH, getTheme, isElectron, isMac } from '../state/env.js'
+import {
+  checkSize,
+  DEFAULT_APP_HEIGHT,
+  DEFAULT_APP_WIDTH,
+  getTheme,
+  isElectron,
+  isMac,
+  isMobile
+} from '../state/env.js'
 import { migrateFromV7 } from '../state/migration.js'
 import { initStoreObject, store } from '../state/store.js'
 import { confirm, modal, showError } from './dialogs.js'
@@ -18,11 +26,7 @@ import { colors } from './theme.js'
 let updateInterval
 let eventsInitialized = false
 
-const FONT_SIZE_ZOOM_MAP = {
-  smaller: { '12px': '11px', '13px': '12px', '14px': '13px', '15px': '14px', '16px': '15px' },
-  normal: { '12px': '12px', '13px': '13px', '14px': '14px', '15px': '15px', '16px': '16px' },
-  larger: { '12px': '13px', '13px': '14px', '14px': '15px', '15px': '16px', '16px': '17px' }
-}
+const RANGE_KEYS = ['precision', 'expUpper', 'expLower', 'calcTimeout']
 
 const LINE_HEIGHT_ZOOM_MAP = {
   smaller: { '17px': '16px', '21px': '20px', '26px': '24px', '30px': '28px', '34px': '32px' },
@@ -49,38 +53,18 @@ function checkWarnings() {
 }
 
 /**
- * Updates the sync directory path display text and tooltip.
- * @param {string} path The sync directory path.
- */
-function updateSyncDirPathDisplay(path) {
-  if (dom.selectSyncDirButton) {
-    if (path) {
-      const safePath = escapeHTML(path).replaceAll(';', '&#59;')
-
-      dom.selectSyncDirButton.textContent = path
-      dom.selectSyncDirButton.setAttribute('uk-tooltip', `title: ${safePath}; pos: bottom`)
-    } else {
-      dom.selectSyncDirButton.textContent = 'Choose Folder'
-      dom.selectSyncDirButton.removeAttribute('uk-tooltip')
-    }
-  }
-}
-
-/**
  * Populates a select HTML element with given options.
  *
  * @param {HTMLSelectElement} selectEl The select element to populate.
- * @param {Array<Record<string, string>>} options Array of single-key `{ [value]: label }` option objects.
+ * @param {Record<string, string>} options Value-to-label map.
  * @param {string|null} [disabledValue=null] An optional value to disable in the select options.
  */
 function populateSelect(selectEl, options, disabledValue = null) {
-  const htmlOptions = options.map((option) => {
-    const [value, opt] = Object.entries(option)[0]
-
-    return value === disabledValue ? `<option disabled>${opt}</option>` : `<option value="${value}">${opt}</option>`
-  })
-
-  selectEl.innerHTML = htmlOptions.join('')
+  selectEl.innerHTML = Object.entries(options)
+    .map(([value, label]) =>
+      value === disabledValue ? `<option disabled>${label}</option>` : `<option value="${value}">${label}</option>`
+    )
+    .join('')
 }
 
 /**
@@ -119,14 +103,8 @@ function setupSettingsEvents() {
       }, 250)
     })
 
-    if (app.settings.syncDirEnabled) {
-      if (dom.confirmKeepSyncContainer) {
-        dom.confirmKeepSyncContainer.style.display = 'block'
-      }
-
-      if (dom.confirmKeepSync) {
-        dom.confirmKeepSync.checked = true
-      }
+    if (app.settings.syncDirEnabled && dom.confirmKeepSyncContainer) {
+      dom.confirmKeepSyncContainer.style.display = 'block'
     }
   })
 
@@ -163,7 +141,7 @@ function setupSettingsEvents() {
     showError('App restart needed', `Currencies used in existing calculations will be removed after app restart.`)
   })
 
-  ;['precision', 'expUpper', 'expLower', 'calcTimeout'].forEach((key) => {
+  RANGE_KEYS.forEach((key) => {
     dom[key].addEventListener('input', () => {
       dom[`${key}Label`].textContent = dom[key].value
     })
@@ -194,12 +172,8 @@ function setupSettingsEvents() {
         const path = await numara.selectSyncDirectory()
 
         if (path) {
-          if (dom.syncDir) {
-            dom.syncDir.value = path
-            dom.syncDir.dispatchEvent(new Event('change'))
-          }
-
-          updateSyncDirPathDisplay(path)
+          updateSyncUiState(dom.syncDirEnabled?.checked ?? true, path)
+          dom.syncDir?.dispatchEvent(new Event('change'))
         }
       })
 
@@ -220,8 +194,7 @@ function setupSettingsEvents() {
         const path = await numara.selectSyncDirectory()
 
         if (path) {
-          dom.syncDir.value = path
-          updateSyncDirPathDisplay(path)
+          updateSyncUiState(true, path)
         } else {
           el.checked = false
           showError('Sync Folder Required', 'A folder must be chosen to enable directory sync.')
@@ -254,9 +227,7 @@ function setupSettingsEvents() {
 
       await numara.resetSize(DEFAULT_APP_WIDTH, DEFAULT_APP_HEIGHT, pageListWidth)
       setupPageList(true, true)
-      dom.els('.modal.uk-open .uk-modal-dialog').forEach((dialog) => {
-        modal.center(dialog, true, DEFAULT_APP_WIDTH + pageListWidth, DEFAULT_APP_HEIGHT)
-      })
+      modal.centerOpen(true, DEFAULT_APP_WIDTH + pageListWidth, DEFAULT_APP_HEIGHT)
 
       setTimeout(() => {
         checkSize()
@@ -268,29 +239,17 @@ function setupSettingsEvents() {
 
 /**
  * Apply input/output panel widths and styles based on the current answerPosition setting.
- * Called on startup (setupPanelResizer) and on every settings change (settings.apply).
  */
-export function applyAnswerPositionLayout() {
-  switch (app.settings.answerPosition) {
-    case 'bottom':
-      dom.input.style.width = '100%'
-      dom.output.style.width = '20px'
-      dom.output.style.minWidth = '20px'
-      dom.output.style.textAlign = 'right'
-      break
-    case 'left':
-      dom.input.style.width = (store.get('inputWidth') || 60) + '%'
-      dom.output.style.minWidth = '120px'
-      dom.output.style.textAlign = 'left'
-      break
-    case 'right':
-    default:
-      dom.input.style.width = '60%'
-      dom.output.style.textAlign = 'right'
-      break
-  }
+function applyAnswerPositionLayout() {
+  const pos = app.settings.answerPosition
+  const isBottom = pos === 'bottom'
+  const isLeft = pos === 'left'
 
-  dom.panelDivider.style.display = app.settings.answerPosition === 'left' ? 'block' : 'none'
+  dom.input.style.width = isBottom ? '100%' : isLeft ? `${store.get('inputWidth') ?? 60}%` : '60%'
+  dom.output.style.width = isBottom ? '20px' : ''
+  dom.output.style.minWidth = isBottom ? '20px' : isLeft ? '120px' : ''
+  dom.output.style.textAlign = isLeft ? 'left' : 'right'
+  dom.panelDivider.style.display = isLeft ? 'block' : 'none'
 }
 
 export const settings = {
@@ -354,11 +313,10 @@ export const settings = {
       if (id === 'syncDir' || id === 'syncDirEnabled') return
 
       const span = document.createElement('span')
-      const icon = dom.icons.Dot
 
-      span.setAttribute('id', id + 'Mod')
-      span.setAttribute('class', item.getAttribute('type') === 'checkbox' ? 'settingModToggle' : 'settingMod')
-      span.innerHTML = icon
+      span.id = `${id}Mod`
+      span.className = 'settingMod'
+      span.innerHTML = dom.icons.Dot
       span.addEventListener('click', async () => {
         app.settings[id] = settings.defaults[id]
 
@@ -380,37 +338,38 @@ export const settings = {
       }
     })
 
-    const numberFormats = [
-      { '1,234.56': '1,234.56' },
-      { '1.234,56': '1.234,56' },
-      { '1 234.56': '1 234.56' },
-      { '1 234,56': '1 234,56' }
-    ]
-    const dateFormats = [{ 'MM/dd/yyyy': 'MM/DD/YYYY' }, { 'dd/MM/yyyy': 'DD/MM/YYYY' }, { 'yyyy-MM-dd': 'YYYY-MM-DD' }]
-    const answerPositions = [
-      { left: 'Left (with divider)' },
-      { right: 'Right (no divider)' },
-      { bottom: 'Below Expression' }
-    ]
-    const matrixTypes = [{ Matrix: 'Matrix' }, { Array: 'Array' }]
-    const numericOutputs = [{ number: 'Number' }, { BigNumber: 'BigNumber' }, { Fraction: 'Fraction' }]
-    const notations = [
-      { auto: 'Auto' },
-      { engineering: 'Engineering' },
-      { exponential: 'Exponential' },
-      { fixed: 'Fixed' },
-      { spacer: '-' },
-      { bin: 'Binary' },
-      { hex: 'Hexadecimal' },
-      { oct: 'Octal' }
-    ]
-
-    populateSelect(dom.answerPosition, answerPositions)
-    populateSelect(dom.numberFormat, numberFormats)
-    populateSelect(dom.dateFormat, dateFormats)
-    populateSelect(dom.numericOutput, numericOutputs)
-    populateSelect(dom.notation, notations, 'spacer')
-    populateSelect(dom.matrixType, matrixTypes)
+    populateSelect(dom.answerPosition, {
+      left: 'Left (with divider)',
+      right: 'Right (no divider)',
+      bottom: 'Below Expression'
+    })
+    populateSelect(dom.numberFormat, {
+      '1,234.56': '1,234.56',
+      '1.234,56': '1.234,56',
+      '1 234.56': '1 234.56',
+      '1 234,56': '1 234,56'
+    })
+    populateSelect(dom.dateFormat, {
+      'MM/dd/yyyy': 'MM/DD/YYYY',
+      'dd/MM/yyyy': 'DD/MM/YYYY',
+      'yyyy-MM-dd': 'YYYY-MM-DD'
+    })
+    populateSelect(dom.numericOutput, { number: 'Number', BigNumber: 'BigNumber', Fraction: 'Fraction' })
+    populateSelect(
+      dom.notation,
+      {
+        auto: 'Auto',
+        engineering: 'Engineering',
+        exponential: 'Exponential',
+        fixed: 'Fixed',
+        spacer: '-',
+        bin: 'Binary',
+        hex: 'Hexadecimal',
+        oct: 'Octal'
+      },
+      'spacer'
+    )
+    populateSelect(dom.matrixType, { Matrix: 'Matrix', Array: 'Array' })
 
     dom
       .els('#alwaysOnTopContainer, #showTrayContainer, #openAtLoginContainer, #escToCloseContainer, #syncTab')
@@ -430,7 +389,7 @@ export const settings = {
 
   /** Prepare settings dialog items. */
   prep: async () => {
-    ;['precision', 'expUpper', 'expLower', 'calcTimeout'].forEach((key) => {
+    RANGE_KEYS.forEach((key) => {
       dom[`${key}Label`].textContent = app.settings[key]
     })
 
@@ -450,11 +409,7 @@ export const settings = {
       btn.classList.toggle('active', btn.getAttribute('data-theme-value') === currentTheme)
     })
 
-    updateSyncDirPathDisplay(app.settings.syncDir)
-
-    if (dom.syncDirSection) {
-      dom.syncDirSection.style.display = app.settings.syncDirEnabled ? 'flex' : 'none'
-    }
+    updateSyncUiState(app.settings.syncDirEnabled, app.settings.syncDir)
 
     await checkSize()
     checkWarnings()
@@ -463,7 +418,7 @@ export const settings = {
   },
 
   /**
-   * Apply active theme to the document, logo, and UDF/UDU editors.
+   * Apply active theme to the document and logo.
    * @returns {Promise<void>}
    */
   setTheme: async () => {
@@ -474,8 +429,6 @@ export const settings = {
     document.documentElement.style.colorScheme = cssColorScheme
 
     dom.numaraLogo.setAttribute('src', 'assets/logo-' + appTheme + '.png')
-
-    setTimeout(colors.apply, 50)
   },
 
   /**
@@ -487,6 +440,7 @@ export const settings = {
     clearEvaluationCache()
 
     await settings.setTheme()
+    if (app.colors) colors.apply()
 
     if (isElectron) {
       numara.setTheme(app.settings.theme)
@@ -498,7 +452,7 @@ export const settings = {
     const zoomLevel = app.settings.zoomLevel || 'normal'
     document.documentElement.dataset.zoom = zoomLevel
 
-    const effectiveFontSize = FONT_SIZE_ZOOM_MAP[zoomLevel]?.[app.settings.fontSize] || app.settings.fontSize
+    const effectiveFontSize = resolveEditorFontSize(app.settings.fontSize, zoomLevel, isMac || isMobile)
     const effectiveLineHeight = LINE_HEIGHT_ZOOM_MAP[zoomLevel]?.[app.settings.lineHeight] || app.settings.lineHeight
 
     dom.els('.panelFont, .input .CodeMirror').forEach((el) => {
@@ -540,15 +494,9 @@ export const settings = {
     if (app.settings.syncDirEnabled && !app.settings.syncDir) {
       app.settings.syncDirEnabled = false
       store.set('settings', app.settings)
-
-      if (dom.syncDirEnabled) {
-        dom.syncDirEnabled.checked = false
-      }
     }
 
-    if (dom.syncDirSection) {
-      dom.syncDirSection.style.display = app.settings.syncDirEnabled ? 'flex' : 'none'
-    }
+    updateSyncUiState(app.settings.syncDirEnabled, app.settings.syncDir)
 
     if (isElectron && shouldCalculate) {
       if (app.settings.syncDirEnabled && app.settings.syncDir) {
