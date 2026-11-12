@@ -7,6 +7,7 @@ const addIpcListener = (channel, wrapper) => {
 
 contextBridge.exposeInMainWorld('numara', {
   isMac: process.platform === 'darwin',
+  isWin: process.platform === 'win32',
 
   versions: {
     chrome: () => process.versions.chrome,
