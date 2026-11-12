@@ -12,15 +12,8 @@
 .dockPageListButton,
 .pageListSort {
   -webkit-app-region: no-drag !important;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
   margin: 8px 6px;
-  border-radius: 4px;
   padding: 4px;
-  height: auto;
-  color: light-dark(#607d8b, #90b4dc);
 }
 
 .dockPageListButton,
@@ -40,17 +33,6 @@
 .page-list-docked .dockPageListButton {
   margin-right: 6px;
   margin-left: 0;
-}
-
-.closePageListButton:hover,
-.dockPageListButton:hover {
-  background-color: light-dark(#f4f6f8, #333333);
-  color: light-dark(#005cc5, #2196f3);
-}
-
-.pageListSort:hover {
-  background-color: light-dark(#f4f6f8, #333333);
-  color: light-dark(#4682b4, #0f6ecd);
 }
 
 .closePageListButton svg {
@@ -228,19 +210,6 @@
   height: var(--pagelist-footer-height);
 }
 
-.sortListItem {
-  -webkit-app-region: no-drag;
-  cursor: pointer;
-  border-radius: 4px;
-  padding: var(--menu-item-padding);
-  color: light-dark(#444444, #e6e6e6);
-}
-
-.sortListItem:hover {
-  background-color: light-dark(#f4f6f8, #333333);
-  color: light-dark(#005cc5, #2196f3);
-}
-
 .sortListDivider {
   margin: 4px 6px;
   border-top-color: light-dark(#eaeaea, #444444) !important;
@@ -406,32 +375,6 @@ body.is-sorting-pages * {
 
 :root.is-mobile .savePageButton {
   margin-right: calc(var(--icon-lg) / 2 - 4px) !important;
-}
-
-@media (hover: none), (pointer: coarse) {
-  .pageItemActions {
-    display: flex;
-    margin-right: calc(var(--icon-lg) / 2 - 4px) !important;
-  }
-
-  .renamePageButton,
-  .dupPageButton,
-  .deletePageButton {
-    display: none;
-  }
-
-  .pageMenuButton,
-  .savePageButton {
-    display: inline-flex;
-    box-sizing: border-box;
-    padding: 6px;
-    min-inline-size: 28px;
-    min-block-size: 28px;
-  }
-
-  .savePageButton {
-    margin-right: calc(var(--icon-lg) / 2 - 4px) !important;
-  }
 }
 
 /* Bottom-bar page tabs */
