@@ -2,6 +2,7 @@
 
 :root {
   --zoom-step: 0px;
+  --mono-weight: 400;
   --base-font-size: calc(13px + var(--zoom-step));
   --range-thumb-size: calc(15px + var(--zoom-step));
   --range-thumb-offset: calc(var(--range-thumb-size) / -2);
