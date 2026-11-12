@@ -57,12 +57,9 @@ async function initializeApp() {
   }
 
   if (document.fonts?.load) {
-    Promise.all([
-      document.fonts.load('400 1rem "Google Sans"'),
-      document.fonts.load('500 1rem "Google Sans"'),
-      document.fonts.load('600 1rem "Google Sans"'),
-      document.fonts.load('700 1rem "Google Sans"')
-    ]).catch(() => {})
+    Promise.all([document.fonts.load('400 1rem "Google Sans"'), document.fonts.load('400 1rem "Roboto Mono"')]).catch(
+      () => {}
+    )
   }
 
   migrateStorageAndPages()
