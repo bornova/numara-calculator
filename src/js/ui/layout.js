@@ -10,10 +10,11 @@ import { loadPage } from '../pages/pageManager.js'
 import { app } from '../state/appState.js'
 import { isElectron, isMac } from '../state/env.js'
 import { store } from '../state/store.js'
-import { copyAll } from './contextMenu.js'
-import { isModalOpen, modal, notify, showError } from './dialogs.js'
+import { copyAll, copyToClipboard } from './contextMenu.js'
+import { isModalOpen, modal, showError } from './dialogs.js'
+import { hideFloatingPageList } from './pageList.js'
 import { resetPlotSelection } from './plot.js'
-import { applyAnswerPositionLayout, settings } from './settings.js'
+import { settings } from './settings.js'
 
 /**
  * Configures the application title headers based on OS (Windows vs. macOS).
@@ -32,16 +33,20 @@ export function setupHeaders() {
  * Binds click event handlers for main application buttons in the title bar / actions.
  */
 export function setupAppButtons() {
-  const buttons = {
-    searchButton: () => {
-      UIkit.dropdown('#moreDropdown')?.hide(0)
-      showSearchPanel(cm, false)
-    },
-    printButton: () => {
-      UIkit.dropdown('#moreDropdown')?.hide(0)
-      if (!app.pageListDocked) {
-        UIkit.offcanvas('#pageListPanel').hide()
+  dom.el('#moreDropdown')?.addEventListener(
+    'click',
+    (event) => {
+      if (event.target.closest('.moreMenuItem')) {
+        UIkit.dropdown('#moreDropdown')?.hide(0)
       }
+    },
+    true
+  )
+
+  const buttons = {
+    searchButton: () => showSearchPanel(cm, false),
+    printButton: () => {
+      hideFloatingPageList()
       window.print()
     },
     clearButton: () => {
@@ -55,29 +60,15 @@ export function setupAppButtons() {
       )
       cm.focus()
       calculate()
-      if (!app.pageListDocked) {
-        UIkit.offcanvas('#pageListPanel').hide()
-      }
+      hideFloatingPageList()
     },
     copyButton: () => {
-      UIkit.dropdown('#moreDropdown')?.hide(0)
       copyAll()
-      if (!app.pageListDocked) {
-        UIkit.offcanvas('#pageListPanel').hide()
-      }
+      hideFloatingPageList()
     },
-    udfuButton: () => {
-      UIkit.dropdown('#moreDropdown')?.hide(0)
-      modal.show('#dialogUdfu')
-    },
-    settingsButton: () => {
-      UIkit.dropdown('#moreDropdown')?.hide(0)
-      modal.show('#dialogSettings')
-    },
-    aboutButton: () => {
-      UIkit.dropdown('#moreDropdown')?.hide(0)
-      modal.show('#dialogAbout')
-    }
+    udfuButton: () => modal.show('#dialogUdfu'),
+    settingsButton: () => modal.show('#dialogSettings'),
+    aboutButton: () => modal.show('#dialogAbout')
   }
 
   Object.entries(buttons).forEach(([btn, action]) => dom[btn].addEventListener('click', action))
@@ -106,8 +97,11 @@ export function setupAppButtons() {
           buttons.udfuButton()
           break
         case 'checkUpdates':
-          modal.show('#dialogAbout')
-          numara.checkUpdate()
+          if (dom.el('#dialogAbout')?.classList.contains('uk-open')) {
+            numara.checkUpdate()
+          } else {
+            modal.show('#dialogAbout')
+          }
           break
         case 'resetSize':
           dom.resetSizeButton.click()
@@ -124,7 +118,6 @@ export function setupAppButtons() {
 
   dom.updateMenuLink.addEventListener('click', (event) => {
     event.stopPropagation()
-    UIkit.dropdown('#moreDropdown')?.hide(0)
 
     if (app.updateReady) {
       numara.updateApp()
@@ -142,15 +135,13 @@ export function setupAppButtons() {
 function copyWithFlash(el, textToCopy) {
   if (!textToCopy) return
 
-  navigator.clipboard.writeText(textToCopy)
-
   el.classList.remove('copied')
   void el.offsetWidth
   el.classList.add('copied')
   clearTimeout(el._copiedTimer)
   el._copiedTimer = setTimeout(() => el.classList.remove('copied'), 350)
 
-  notify(`Copied '${escapeHTML(textToCopy)}' to clipboard.`)
+  copyToClipboard(textToCopy, `Copied '${escapeHTML(textToCopy)}' to clipboard.`)
 }
 
 /**
@@ -228,8 +219,6 @@ export function setupPanelResizer() {
   let calcTimeout
   let transitionTimer
 
-  applyAnswerPositionLayout()
-
   const dividerTooltip = () => {
     dom.panelDivider.title =
       dom.input.style.width === `${defaultWidth}%` ? 'Drag to resize' : 'Double click to reset position'
@@ -296,14 +285,14 @@ export function setupPanelResizer() {
     })
   })
 
-  dom.panelDivider.addEventListener('mousemove', dividerTooltip)
+  dom.panelDivider.addEventListener('mouseenter', dividerTooltip)
 }
 
 /**
  * Synchronizes scrolling between the CodeMirror editor and the output display panel.
  */
 export function setupSyncScroll() {
-  const inputPanel = dom.el('.CodeMirror-scroll')
+  const inputPanel = cm.getScrollerElement()
   const outputPanel = dom.output
 
   let activePanel = null
@@ -325,16 +314,6 @@ export function setupSyncScroll() {
     scrollTimeout = setTimeout(() => {
       activePanel = null
     }, 60)
-  }
-
-  const setInputActive = () => {
-    stopWheelAnimation()
-    activePanel = inputPanel
-  }
-
-  const setOutputActive = () => {
-    stopWheelAnimation()
-    activePanel = outputPanel
   }
 
   const stepWheelScroll = (now) => {
@@ -395,50 +374,37 @@ export function setupSyncScroll() {
     { passive: false, capture: true }
   )
 
-  inputPanel.addEventListener('pointerdown', setInputActive, { passive: true })
-  inputPanel.addEventListener('touchstart', setInputActive, { passive: true })
+  const bindSyncPanel = (source, target) => {
+    const setActive = () => {
+      stopWheelAnimation()
+      activePanel = source
+    }
 
-  outputPanel.addEventListener('pointerdown', setOutputActive, { passive: true })
-  outputPanel.addEventListener('touchstart', setOutputActive, { passive: true })
+    source.addEventListener('pointerdown', setActive, { passive: true })
+    source.addEventListener('touchstart', setActive, { passive: true })
+    source.addEventListener(
+      'scroll',
+      () => {
+        const top = source.scrollTop
 
-  inputPanel.addEventListener(
-    'scroll',
-    () => {
-      if (wheelRaf || activePanel === outputPanel) return
+        dom.scrollTop.style.display = top > 50 ? 'block' : 'none'
 
-      activePanel = inputPanel
+        if (wheelRaf || activePanel === target) return
 
-      const top = inputPanel.scrollTop
+        activePanel = source
 
-      if (outputPanel.scrollTop !== top) {
-        outputPanel.scrollTop = top
-      }
+        if (target.scrollTop !== top) {
+          target.scrollTop = top
+        }
 
-      dom.scrollTop.style.display = top > 50 ? 'block' : 'none'
-      clearActivePanel()
-    },
-    { passive: true }
-  )
+        clearActivePanel()
+      },
+      { passive: true }
+    )
+  }
 
-  outputPanel.addEventListener(
-    'scroll',
-    () => {
-      const top = outputPanel.scrollTop
-
-      dom.scrollTop.style.display = top > 50 ? 'block' : 'none'
-
-      if (wheelRaf || activePanel === inputPanel) return
-
-      activePanel = outputPanel
-
-      if (inputPanel.scrollTop !== top) {
-        inputPanel.scrollTop = top
-      }
-
-      clearActivePanel()
-    },
-    { passive: true }
-  )
+  bindSyncPanel(inputPanel, outputPanel)
+  bindSyncPanel(outputPanel, inputPanel)
 
   dom.scrollTop.addEventListener('click', () => {
     if (inputPanel.scrollTop <= 0) return
