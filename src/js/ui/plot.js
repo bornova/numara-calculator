@@ -1,9 +1,10 @@
+import UIkit from 'uikit'
 import functionPlot from 'function-plot'
 
 import { productName } from '../../../package.json'
-import { math } from '../calc/calcManager.js'
 import { INTERNAL_SCOPE_KEYS, REGEX_PLOT } from '../core/constants.js'
 import { parseStrictLocaleNumber } from '../core/formatter.js'
+import { math } from '../core/mathInstance.js'
 import { getSafeFilename } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { app } from '../state/appState.js'
@@ -409,6 +410,29 @@ function setupEventListeners() {
     if (app.activePlot && dom.dialogPlot.classList.contains('uk-open')) {
       plot()
     }
+  })
+
+  UIkit.util.on(
+    '#dialogPlot',
+    'shown',
+    () => {
+      app.activePlot = null
+      plot()
+    },
+    { self: true }
+  )
+
+  UIkit.util.on(
+    '#dialogPlot',
+    'hide',
+    () => {
+      app.activePlot = false
+    },
+    { self: true }
+  )
+
+  UIkit.util.on('#dialogPlotAxisSettings', 'shown', () => populatePlotDomainInputs(app.plotSettings.domain), {
+    self: true
   })
 }
 
