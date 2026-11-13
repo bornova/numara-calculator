@@ -351,13 +351,15 @@
 .uk-notification-close,
 .uk-notification-message:hover .uk-notification-close {
   display: inline-flex;
-  top: 50%;
+  top: 0;
   right: 5px;
-  transform: translateY(-50%);
+  bottom: 0;
   justify-content: center;
   align-items: center;
+  margin-block: auto;
   border-radius: 4px;
   padding: 4px;
+  height: fit-content;
 }
 
 .uk-notification-close:hover {
