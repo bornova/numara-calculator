@@ -1,16 +1,9 @@
 import UIkit from 'uikit'
 
 import { dom } from '../dom.js'
-import { prepareUdfuDialog } from '../calc/userDefined.js'
-import { cm } from '../editor/index.js'
-import { isSearchPanelOpen } from '../editor/searchPanel.js'
-import { hideTabContextMenu } from '../pages/pageTabs.js'
 import { app } from '../state/appState.js'
 import { isElectron } from '../state/env.js'
-import { plot, populatePlotDomainInputs } from './plot.js'
-import { settings } from './settings.js'
-import { checkColorChange, colors } from './theme.js'
-import { checkAppUpdate } from './updater.js'
+import { events } from '../state/events.js'
 
 let modalOpenState = false
 let defaultYesText = null
@@ -290,13 +283,21 @@ function setupDraggableModals() {
 }
 
 /**
+ * Hides the floating `#pageListPanel` offcanvas drawer when undocked and currently open.
+ * @returns {Promise<void>|undefined}
+ */
+export function hideFloatingPageList() {
+  if (!app.pageListDocked && dom.pageListPanel?.classList.contains('uk-open')) {
+    return UIkit.offcanvas('#pageListPanel')?.hide()
+  }
+}
+
+/**
  * Hides all open UIkit dropdowns, optionally excluding a specific dropdown element.
  * @param {Element|null} [excludeEl=null] Optional dropdown element to leave untouched.
  */
 export function hideOpenDropdowns(excludeEl = null) {
-  if (excludeEl !== dom.tabContextMenu) {
-    hideTabContextMenu()
-  }
+  events.emit('ui:hideDropdowns', excludeEl)
 
   dom.els('.uk-dropdown.uk-open').forEach((el) => {
     if (el !== excludeEl) {
@@ -316,8 +317,6 @@ export function setupUIkitUtils() {
   setupDraggableModals()
 
   UIkit.mixin({ data: { offset: 5, delay: 300 } }, 'tooltip')
-
-  cm.getWrapperElement().addEventListener('pointerdown', () => hideOpenDropdowns())
 
   UIkit.util.on(
     '.modal, .dialogConfirm, #pageListPanel',
@@ -346,8 +345,8 @@ export function setupUIkitUtils() {
         numara.transControls(modalOpenState)
       }
 
-      if (!modalOpenState && !isSearchPanelOpen()) {
-        setTimeout(() => cm.focus(), 100)
+      if (!modalOpenState) {
+        events.emit('ui:modalsClosed')
       }
     },
     { self: true }
@@ -372,72 +371,6 @@ export function setupUIkitUtils() {
       }
 
       hideOpenDropdowns()
-    },
-    { self: true }
-  )
-
-  UIkit.util.on(
-    '#dialogTheme',
-    'shown',
-    () => {
-      checkColorChange()
-      colors.checkDefaults()
-    },
-    { self: true }
-  )
-
-  UIkit.util.on('#dialogSettings', 'beforeshow', settings.prep, { self: true })
-
-  let udTab = 1
-
-  UIkit.util.on('#dialogUdfu', 'beforeshow', prepareUdfuDialog, { self: true })
-
-  UIkit.util.on(
-    '#dialogUdfu',
-    'shown',
-    () => {
-      ;(udTab === 1 ? dom.udfNameInput : dom.uduNameInput)?.focus()
-    },
-    { self: true }
-  )
-
-  UIkit.util.on(
-    '#udfTab, #uduTab',
-    'shown',
-    (event) => {
-      udTab = event.target.id === 'udfTab' ? 1 : 2
-      ;(udTab === 1 ? dom.udfNameInput : dom.uduNameInput)?.focus()
-    },
-    { self: true }
-  )
-
-  UIkit.util.on(
-    '#dialogPlot',
-    'shown',
-    () => {
-      app.activePlot = null
-      plot()
-    },
-    { self: true }
-  )
-  UIkit.util.on(
-    '#dialogPlot',
-    'hide',
-    () => {
-      app.activePlot = false
-    },
-    { self: true }
-  )
-
-  UIkit.util.on('#dialogPlotAxisSettings', 'shown', () => populatePlotDomainInputs(app.plotSettings.domain), {
-    self: true
-  })
-
-  UIkit.util.on(
-    '#dialogAbout',
-    'shown',
-    () => {
-      checkAppUpdate()
     },
     { self: true }
   )
