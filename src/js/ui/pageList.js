@@ -1,13 +1,14 @@
 import UIkit from 'uikit'
 
-import { syncOutputHeights } from '../calc/calcManager.js'
+import { syncOutputHeights } from '../calc/outputRenderer.js'
 import { updatePageTabsScroll } from '../pages/pageTabs.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
 import { app } from '../state/appState.js'
 import { checkSize, isElectron } from '../state/env.js'
+import { events } from '../state/events.js'
 import { store } from '../state/store.js'
-import { modal } from './dialogs.js'
+import { hideFloatingPageList, modal } from './dialogs.js'
 
 const PAGELIST_MIN_WIDTH = 210
 const PAGELIST_MAX_WIDTH = 510
@@ -17,16 +18,6 @@ const PAGELIST_TRANSITION_MS = 180
 let pageListResizerSetup = false
 let lastDockState = null
 let pageListTransitionTimer = null
-
-/**
- * Hides the floating `#pageListPanel` offcanvas drawer when undocked and currently open.
- * @returns {Promise<void>|undefined}
- */
-export function hideFloatingPageList() {
-  if (!app.pageListDocked && dom.pageListPanel?.classList.contains('uk-open')) {
-    return UIkit.offcanvas('#pageListPanel')?.hide()
-  }
-}
 
 /**
  * Returns the clamped width for the docked page list.
@@ -324,6 +315,8 @@ export function initializePageList() {
   if (dom.pageListPanel) {
     UIkit.util.on(dom.pageListPanel, 'beforeshow shown', updatePageListScroll)
   }
+
+  events.on('pages:populated', updatePageListScroll)
 
   dom.dockPageListButton?.addEventListener('click', () => {
     app.settings.pageListPosition = app.pageListDocked ? 'auto' : 'dock'
