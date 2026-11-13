@@ -1,9 +1,9 @@
 import ColorPicker from '@bornova/colorpicker'
 import { diff } from '@bornova/deep-diff'
+import UIkit from 'uikit'
 
 import { dom } from '../dom.js'
 import { app } from '../state/appState.js'
-import { migrateColors } from '../state/migration.js'
 import { initStoreObject, store } from '../state/store.js'
 import { confirm, modal } from './dialogs.js'
 
@@ -83,7 +83,7 @@ export const colors = {
    * Initializes theme styling, deep-diff defaults checks, picker events, and confirm actions.
    */
   initialize: () => {
-    app.colors = initStoreObject('colors', colors.defaults, (stored) => migrateColors(stored, colors.defaults))
+    app.colors = initStoreObject('colors', colors.defaults)
 
     const container = dom.el('.colorPickerContainer')
 
@@ -142,6 +142,16 @@ export const colors = {
     dom.defaultColorsButton.addEventListener('click', () => {
       confirm('This will reset all colors to their default values', colors.reset)
     })
+
+    UIkit.util.on(
+      '#dialogTheme',
+      'shown',
+      () => {
+        checkColorChange()
+        colors.checkDefaults()
+      },
+      { self: true }
+    )
   },
 
   /**
