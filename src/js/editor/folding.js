@@ -6,6 +6,23 @@ import { app } from '../state/appState.js'
 const HEADER_REGEXP = /^\s*(?:\/\/\s*)?(#{1,6})\s+(\S.*)$/
 const END_SECTION_REGEXP = /^\s*(?:\/\/\s*)?#[!\s]*$/
 
+let foldMarkerTemplate = null
+
+/**
+ * Returns a fold marker pill widget element using the Lucide Ellipsis SVG icon.
+ * @returns {HTMLSpanElement}
+ */
+export function createFoldMarkerWidget() {
+  if (!foldMarkerTemplate) {
+    foldMarkerTemplate = document.createElement('span')
+    foldMarkerTemplate.className = 'CodeMirror-foldmarker'
+    foldMarkerTemplate.title = 'Unfold section'
+    foldMarkerTemplate.innerHTML = dom.icons.Ellipsis || '...'
+  }
+
+  return foldMarkerTemplate
+}
+
 /**
  * Registers the `'numara'` markdown section fold rangefinder on CodeMirror.
  */

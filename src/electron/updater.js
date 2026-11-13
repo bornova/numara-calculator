@@ -2,17 +2,11 @@ import { app, ipcMain, Notification } from 'electron'
 import log from 'electron-log'
 import updater from 'electron-updater'
 
-import { getWindow, setAppQuitting } from './window.js'
+import { sendToWindow, setAppQuitting, showAndFocusWindow } from './window.js'
 
 const { autoUpdater } = updater
 
-const sendUpdateStatus = (...args) => {
-  const win = getWindow()
-
-  if (win && !win.isDestroyed() && win.webContents) {
-    win.webContents.send('updateStatus', ...args)
-  }
-}
+const sendUpdateStatus = (...args) => sendToWindow('updateStatus', ...args)
 
 /**
  * Configures electron-updater and registers update IPC handlers and event listeners.
@@ -49,16 +43,11 @@ export function setupAutoUpdater() {
       })
 
       notification.on('click', () => {
-        const activeWin = getWindow()
+        const activeWin = showAndFocusWindow()
 
-        if (!activeWin || activeWin.isDestroyed()) return
-
-        if (activeWin.isMinimized()) activeWin.restore()
-
-        activeWin.show()
-        activeWin.focus()
-
-        if (activeWin.webContents) activeWin.webContents.send('showAbout')
+        if (activeWin?.webContents) {
+          activeWin.webContents.send('showAbout')
+        }
       })
 
       notification.show()

@@ -14,8 +14,7 @@ export const schema = {
   fullSize: { type: 'boolean', default: false },
   position: { type: 'array', items: { type: 'integer' } },
   theme: { type: 'string', default: 'system' },
-  showTray: { type: 'boolean', default: false },
-  syncDir: { type: 'string', default: '' }
+  showTray: { type: 'boolean', default: false }
 }
 
 export const config = new Store({ schema, clearInvalidConfig: true, fileExtension: '' })

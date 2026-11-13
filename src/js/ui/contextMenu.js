@@ -9,13 +9,22 @@ import { notify } from './dialogs.js'
  * @param {string} text The text to copy.
  * @param {string} message The notification message.
  */
-function copyToClipboard(text, message) {
+export function copyToClipboard(text, message) {
   if (!text) {
     notify('Nothing to copy.')
     return
   }
 
   navigator.clipboard.writeText(text).then(() => notify(message))
+}
+
+/**
+ * Checks whether a rendered output row has a copyable `[data-answer]` value.
+ * @param {Element|null} rowEl Output element with `data-index`.
+ * @returns {boolean}
+ */
+function hasCopyableAnswer(rowEl) {
+  return Boolean(rowEl?.querySelector('[data-answer]')?.dataset.answer)
 }
 
 /**
@@ -42,12 +51,7 @@ function inputContext() {
   requestAnimationFrame(() => {
     const lineIndex = cm.getCursor().line
     const isEmpty = cm.getValue() === ''
-    const outputEl = dom.el(`[data-index="${lineIndex}"]`)
-    const isPlot =
-      Boolean(outputEl?.querySelector('.plotButton, [data-plot]')) ||
-      Boolean(outputEl?.classList?.contains('plotButton'))
-    const answerValue = outputEl?.dataset?.answer || outputEl?.querySelector('[data-answer]')?.dataset?.answer
-    const hasAnswer = Boolean(answerValue) && !isPlot
+    const hasAnswer = hasCopyableAnswer(dom.el(`[data-index="${lineIndex}"]`))
     const selections = cm.listSelections()
     const isMultiLine = selections.length > 1 || selections[0].anchor.line !== selections[0].head.line
 
@@ -145,16 +149,7 @@ export function outputContext(event) {
 
   const target = event.target.closest('[data-index]')
   const lineIndex = target ? target.dataset.index : cm.lastLine()
-  const isPlot =
-    Boolean(target?.classList?.contains('plotButton')) ||
-    Boolean(target?.closest?.('.plotButton, [data-plot]')) ||
-    Boolean(target?.querySelector?.('.plotButton, [data-plot]'))
-  const answer =
-    target?.dataset?.answer ||
-    target?.querySelector?.('[data-answer]')?.dataset?.answer ||
-    target?.textContent?.trim() ||
-    ''
-  const hasAnswer = lineIndex !== null && Boolean(answer) && answer !== 'Error' && answer !== 'Plot' && !isPlot
+  const hasAnswer = lineIndex !== null && hasCopyableAnswer(target)
   const isEmpty = cm.getValue() === ''
 
   numara.outputContextMenu(lineIndex, isEmpty, hasAnswer)
@@ -190,10 +185,16 @@ export function initializeContextMenus() {
   cm.on('contextmenu', inputContext)
   dom.output.addEventListener('contextmenu', outputContext)
 
+  cm.getWrapperElement().addEventListener('contextmenu', (event) => {
+    if (event.target.closest?.('.CodeMirror-linewidget [data-index]')) {
+      outputContext(event)
+    }
+  })
+
   document.addEventListener('contextmenu', (event) => {
     if (
       event.target.closest?.(
-        '.textBox, .udfuInput, .udfuTextarea, .search-input, .pageListRenameInput, .pageTabRenameInput, .clr-color'
+        '.domainTextBox, .udfuInput, .udfuTextarea, .search-input, .pageListRenameInput, .pageTabRenameInput, .clr-color'
       )
     ) {
       textboxContext()

@@ -9,16 +9,20 @@ import { store } from '../state/store.js'
  * Configures print area beforeprint/afterprint event listeners.
  */
 export function setupPrintArea() {
+  let printArea = null
+
   window.addEventListener('beforeprint', () => {
-    const printArea = document.createElement('div')
+    printArea?.remove()
+    printArea = document.createElement('div')
+
     const tableRows = []
     const outputChildren = dom.output.firstElementChild?.children
     const isBottom = app.settings.answerPosition === 'bottom'
     const inputWidth = store.get('inputWidth') ?? app.settings.inputWidth ?? 60
     const noBB = 'border-bottom: none !important;'
+    const trHeader = `<tr style="height: ${app.settings.lineHeight};">`
     let lineIndex = 0
 
-    printArea.setAttribute('id', 'printArea')
     printArea.className = 'printArea'
 
     cm.eachLine((line) => {
@@ -27,11 +31,6 @@ export function setupPrintArea() {
         ? app.widgetMap.get(line)?.node
         : outputChildren?.[lineIndex] || dom.el(`[data-index="${lineIndex}"]`)
       const answer = escapeHTML(answerEl ? answerEl.textContent : '')
-      const trHeader = `<tr style="
-        height: ${app.settings.lineHeight};
-        font-size: ${app.settings.fontSize};
-        font-weight: ${app.settings.fontWeight};"
-      >`
 
       const rowHtml = isBottom
         ? `
@@ -55,9 +54,8 @@ export function setupPrintArea() {
     })
 
     printArea.innerHTML = `
-      <div id="printTitle" class="printTitle">${name}</div>
+      <div class="printTitle">${name}</div>
       <table
-        id="printPage"
         class="printPage ${app.settings.rulers ? 'printRulers' : ''}"
         style="
           font-size: ${app.settings.fontSize};
@@ -65,14 +63,13 @@ export function setupPrintArea() {
           line-height: ${app.settings.lineHeight};"
       >${tableRows.join('')}</table>`
 
-    dom.printArea = printArea
     document.body.appendChild(printArea)
   })
 
   window.addEventListener('afterprint', () => {
-    if (dom.printArea) {
-      dom.printArea.remove()
-      dom.printArea = null
+    if (printArea) {
+      printArea.remove()
+      printArea = null
     }
   })
 }

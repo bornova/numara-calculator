@@ -1,21 +1,15 @@
+import UIkit from 'uikit'
 import { DateTime } from 'luxon'
 
-import {
-  applyUdfuToMath,
-  compileUdfItems,
-  compileUduItems,
-  parseLegacyUdf,
-  parseLegacyUdu,
-  RESERVED_KEYS,
-  VALID_IDENTIFIER
-} from '../core/udfu.js'
+import { math } from '../core/mathInstance.js'
+import { applyUdfuToMath, compileUdfItems, compileUduItems, RESERVED_KEYS, VALID_IDENTIFIER } from '../core/udfu.js'
 import { escapeHTML } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { refreshEditor } from '../editor/index.js'
 import { app } from '../state/appState.js'
 import { store } from '../state/store.js'
 import { notify, showError } from '../ui/dialogs.js'
-import { calculate, clearEvaluationCache, math } from './calcManager.js'
+import { calculate, clearEvaluationCache } from './calcManager.js'
 
 const udfuState = {
   previouslyImportedUDFs: [],
@@ -24,21 +18,6 @@ const udfuState = {
 
 let editingUdfIndex = null
 let editingUduIndex = null
-
-/**
- * Migrates legacy raw `udf` and `udu` strings into structured `udfItems` and `uduItems` arrays if not yet present.
- */
-export function migrateLegacyUdfu() {
-  if (store.get('udfItems') === null) {
-    const rawUdf = (store.get('udf') ?? '').trim()
-    store.set('udfItems', parseLegacyUdf(rawUdf, math, { luxon: DateTime }))
-  }
-
-  if (store.get('uduItems') === null) {
-    const rawUdu = (store.get('udu') ?? '').trim()
-    store.set('uduItems', parseLegacyUdu(rawUdu, math, { luxon: DateTime }))
-  }
-}
 
 /**
  * Apply user defined functions or units to the main-thread Math.js instance and persist to storage.
@@ -102,65 +81,74 @@ function resetUduForm() {
   setFormEditMode(dom.uduSaveIcon, dom.uduSaveLabel, dom.uduCancelButton, false)
 }
 
+function isValidUdfuIdentifier(str) {
+  return Boolean(str && VALID_IDENTIFIER.test(str) && !RESERVED_KEYS.has(str))
+}
+
+/**
+ * Renders rows into a UDF or UDU list container using a single DocumentFragment.
+ * @param {HTMLElement|null} listEl List container element.
+ * @param {Array} items Stored UDF/UDU items.
+ * @param {number|null} editingIndex Active editing index.
+ * @param {string} emptyText Placeholder text when empty.
+ * @param {(item: object, index: number) => string} buildRowHtml Row innerHTML builder.
+ */
+function renderUdfuRows(listEl, items, editingIndex, emptyText, buildRowHtml) {
+  if (!listEl) return
+
+  if (items.length === 0) {
+    listEl.innerHTML = `<div class="udfuEmpty">${emptyText}</div>`
+    return
+  }
+
+  const fragment = document.createDocumentFragment()
+
+  items.forEach((item, index) => {
+    const row = document.createElement('div')
+    row.className = `udfuItem${editingIndex === index ? ' is-editing' : ''}`
+    row.dataset.index = String(index)
+    row.innerHTML = buildRowHtml(item, index)
+    fragment.appendChild(row)
+  })
+
+  listEl.replaceChildren(fragment)
+}
+
 /**
  * Renders the list of user-defined functions/constants.
  */
 function renderUdfList() {
-  if (!dom.udfList) return
+  renderUdfuRows(
+    dom.udfList,
+    store.get('udfItems') || [],
+    editingUdfIndex,
+    'No user-defined functions or constants.',
+    (item, index) => {
+      const displayParams = item.params === '()' ? '' : item.params
+      const signature = item.params
+        ? `<strong>${escapeHTML(item.name)}</strong>(${escapeHTML(displayParams)})`
+        : `<strong>${escapeHTML(item.name)}</strong>`
+      const compactBody = escapeHTML(item.body.replace(/\s+/g, ' ').trim())
+      const fullTitle = escapeHTML(`${item.name}${item.params ? `(${displayParams})` : ''} = ${item.body}`)
 
-  const items = store.get('udfItems') || []
-  dom.udfList.innerHTML = ''
-
-  if (items.length === 0) {
-    dom.udfList.innerHTML = '<div class="udfuEmpty">No user-defined functions or constants.</div>'
-    return
-  }
-
-  items.forEach((item, index) => {
-    const row = document.createElement('div')
-    row.className = `udfuItem${editingUdfIndex === index ? ' is-editing' : ''}`
-    row.dataset.index = String(index)
-
-    const displayParams = item.params === '()' ? '' : item.params
-    const signature = item.params
-      ? `<strong>${escapeHTML(item.name)}</strong>(${escapeHTML(displayParams)})`
-      : `<strong>${escapeHTML(item.name)}</strong>`
-    const compactBody = escapeHTML(item.body.replace(/\s+/g, ' ').trim())
-    const fullTitle = escapeHTML(`${item.name}${item.params ? `(${displayParams})` : ''} = ${item.body}`)
-
-    row.innerHTML = `
-      <div class="udfuItemContent" title="${fullTitle}">
-        <span class="udfuItemSignature">${signature} = </span><span class="udfuItemCode">${compactBody}</span>
-      </div>
-      <div class="udfuItemActions">
-        <span class="editUdfuButton" data-action="edit-udf" data-index="${index}" title="Edit">${dom.icons.Pencil}</span>
-        <span class="deleteUdfuButton" data-action="delete-udf" data-index="${index}" title="Delete">${dom.icons.Trash2}</span>
-      </div>
-    `
-
-    dom.udfList.appendChild(row)
-  })
+      return `
+        <div class="udfuItemContent" title="${fullTitle}">
+          <span class="udfuItemSignature">${signature} = </span><span class="udfuItemCode">${compactBody}</span>
+        </div>
+        <div class="udfuItemActions">
+          <span class="editUdfuButton" data-action="edit-udf" data-index="${index}" title="Edit">${dom.icons.Pencil}</span>
+          <span class="deleteUdfuButton" data-action="delete-udf" data-index="${index}" title="Delete">${dom.icons.Trash2}</span>
+        </div>
+      `
+    }
+  )
 }
 
 /**
  * Renders the list of user-defined units.
  */
 function renderUduList() {
-  if (!dom.uduList) return
-
-  const items = store.get('uduItems') || []
-  dom.uduList.innerHTML = ''
-
-  if (items.length === 0) {
-    dom.uduList.innerHTML = '<div class="udfuEmpty">No user-defined units.</div>'
-    return
-  }
-
-  items.forEach((item, index) => {
-    const row = document.createElement('div')
-    row.className = `udfuItem${editingUduIndex === index ? ' is-editing' : ''}`
-    row.dataset.index = String(index)
-
+  renderUdfuRows(dom.uduList, store.get('uduItems') || [], editingUduIndex, 'No user-defined units.', (item, index) => {
     const badges = []
 
     if (item.aliases?.trim()) {
@@ -171,7 +159,7 @@ function renderUduList() {
       badges.push(`<span class="udfuBadge">Prefixes: ${escapeHTML(item.prefixes)}</span>`)
     }
 
-    row.innerHTML = `
+    return `
       <div class="udfuItemContent" title="${escapeHTML(`${item.name} = ${item.definition}`)}">
         <span class="udfuItemSignature"><strong>${escapeHTML(item.name)}</strong> = </span><span class="udfuItemCode">${escapeHTML(item.definition)}</span>
         ${badges.join('')}
@@ -181,26 +169,17 @@ function renderUduList() {
         <span class="deleteUdfuButton" data-action="delete-udu" data-index="${index}" title="Delete">${dom.icons.Trash2}</span>
       </div>
     `
-
-    dom.uduList.appendChild(row)
   })
 }
 
 /**
  * Refreshes the User Defined Functions & Units dialog lists and resets form state.
- * @param {number} [activeTab=1] 1 for Functions, 2 for Units.
  */
-export function prepareUdfuDialog(activeTab = 1) {
+export function prepareUdfuDialog() {
   resetUdfForm()
   resetUduForm()
   renderUdfList()
   renderUduList()
-
-  if (activeTab === 1) {
-    dom.udfNameInput?.focus()
-  } else {
-    dom.uduNameInput?.focus()
-  }
 }
 
 /**
@@ -218,7 +197,7 @@ function commitUdfuItems(nextItems, type) {
     applyUdfu(compiled, type, false)
     store.set(isFunc ? 'udfItems' : 'uduItems', nextItems)
     clearEvaluationCache()
-    refreshEditor(false)
+    refreshEditor()
     calculate()
     return true
   } catch (error) {
@@ -234,6 +213,31 @@ function commitUdfuItems(nextItems, type) {
 }
 
 /**
+ * Validates duplicate names, inserts or replaces an entry, and commits/refreshes the UDF or UDU form.
+ */
+function saveUdfuEntry({ storeKey, type, editingIndex, nameInput, entry, resetForm, renderList }) {
+  const items = [...(store.get(storeKey) || [])]
+
+  if (items.some((item, idx) => item.name === entry.name && idx !== editingIndex)) {
+    notify(`"${escapeHTML(entry.name)}" is already defined.`, 'danger')
+    nameInput.focus()
+    return
+  }
+
+  if (editingIndex !== null && editingIndex >= 0 && editingIndex < items.length) {
+    items[editingIndex] = entry
+  } else {
+    items.push(entry)
+  }
+
+  if (commitUdfuItems(items, type)) {
+    resetForm()
+    renderList()
+    nameInput.focus()
+  }
+}
+
+/**
  * Handles adding or saving a user-defined function/constant.
  */
 function handleSaveUdf() {
@@ -241,7 +245,7 @@ function handleSaveUdf() {
   const params = dom.udfParamsInput.value.trim()
   const body = dom.udfBodyInput.value.trim()
 
-  if (!name || !VALID_IDENTIFIER.test(name) || RESERVED_KEYS.has(name)) {
+  if (!isValidUdfuIdentifier(name)) {
     notify('Please enter a valid function or constant name (letters, numbers, _, $).', 'danger')
     dom.udfNameInput.focus()
     return
@@ -253,27 +257,15 @@ function handleSaveUdf() {
     return
   }
 
-  const items = [...(store.get('udfItems') || [])]
-
-  if (items.some((item, idx) => item.name === name && idx !== editingUdfIndex)) {
-    notify(`"${escapeHTML(name)}" is already defined.`, 'danger')
-    dom.udfNameInput.focus()
-    return
-  }
-
-  const entry = { name, params, body }
-
-  if (editingUdfIndex !== null && editingUdfIndex >= 0 && editingUdfIndex < items.length) {
-    items[editingUdfIndex] = entry
-  } else {
-    items.push(entry)
-  }
-
-  if (commitUdfuItems(items, 'func')) {
-    resetUdfForm()
-    renderUdfList()
-    dom.udfNameInput.focus()
-  }
+  saveUdfuEntry({
+    storeKey: 'udfItems',
+    type: 'func',
+    editingIndex: editingUdfIndex,
+    nameInput: dom.udfNameInput,
+    entry: { name, params, body },
+    resetForm: resetUdfForm,
+    renderList: renderUdfList
+  })
 }
 
 /**
@@ -285,7 +277,7 @@ function handleSaveUdu() {
   const aliases = dom.uduAliasesInput.value.trim()
   const prefixes = dom.uduPrefixesSelect.value || 'none'
 
-  if (!name || !VALID_IDENTIFIER.test(name) || RESERVED_KEYS.has(name)) {
+  if (!isValidUdfuIdentifier(name)) {
     notify('Please enter a valid unit name (letters, numbers, _, $).', 'danger')
     dom.uduNameInput.focus()
     return
@@ -303,34 +295,22 @@ function handleSaveUdu() {
     .filter(Boolean)
 
   for (const alias of aliasList) {
-    if (!VALID_IDENTIFIER.test(alias) || RESERVED_KEYS.has(alias)) {
+    if (!isValidUdfuIdentifier(alias)) {
       notify(`Invalid unit alias: "${escapeHTML(alias)}".`, 'danger')
       dom.uduAliasesInput.focus()
       return
     }
   }
 
-  const items = [...(store.get('uduItems') || [])]
-
-  if (items.some((item, idx) => item.name === name && idx !== editingUduIndex)) {
-    notify(`"${escapeHTML(name)}" is already defined.`, 'danger')
-    dom.uduNameInput.focus()
-    return
-  }
-
-  const entry = { name, definition, prefixes, aliases: aliasList.join(', ') }
-
-  if (editingUduIndex !== null && editingUduIndex >= 0 && editingUduIndex < items.length) {
-    items[editingUduIndex] = entry
-  } else {
-    items.push(entry)
-  }
-
-  if (commitUdfuItems(items, 'unit')) {
-    resetUduForm()
-    renderUduList()
-    dom.uduNameInput.focus()
-  }
+  saveUdfuEntry({
+    storeKey: 'uduItems',
+    type: 'unit',
+    editingIndex: editingUduIndex,
+    nameInput: dom.uduNameInput,
+    entry: { name, definition, prefixes, aliases: aliasList.join(', ') },
+    resetForm: resetUduForm,
+    renderList: renderUduList
+  })
 }
 
 /**
@@ -406,8 +386,6 @@ function bindUdfuListEvents(listEl, { editAction, deleteAction, onEdit, onDelete
  * Loads user-defined functions and units from storage and binds dialog UI events.
  */
 export function setupUserDefined() {
-  migrateLegacyUdfu()
-
   const udfItems = store.get('udfItems') || []
   const uduItems = store.get('uduItems') || []
 
@@ -435,14 +413,19 @@ export function setupUserDefined() {
     renderUduList()
   })
 
-  for (const input of [dom.udfNameInput, dom.udfParamsInput]) {
-    input.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') {
-        event.preventDefault()
-        handleSaveUdf()
-      }
-    })
+  const bindEnterToSave = (inputs, saveFn) => {
+    for (const input of inputs) {
+      input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault()
+          saveFn()
+        }
+      })
+    }
   }
+
+  bindEnterToSave([dom.udfNameInput, dom.udfParamsInput], handleSaveUdf)
+  bindEnterToSave([dom.uduNameInput, dom.uduDefInput, dom.uduAliasesInput], handleSaveUdu)
 
   dom.udfBodyInput.addEventListener('keydown', (event) => {
     if (event.key === 'Tab') {
@@ -458,44 +441,75 @@ export function setupUserDefined() {
     }
   })
 
-  for (const input of [dom.uduNameInput, dom.uduDefInput, dom.uduAliasesInput]) {
-    input.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') {
-        event.preventDefault()
-        handleSaveUdu()
-      }
-    })
+  const deleteUdfuAt = (index, storeKey, type, getEditIdx, setEditIdx, resetForm, renderList) => {
+    const items = [...(store.get(storeKey) || [])]
+
+    items.splice(index, 1)
+
+    if (commitUdfuItems(items, type)) {
+      const currentEdit = getEditIdx()
+      if (currentEdit === index) resetForm()
+      else if (currentEdit !== null && currentEdit > index) setEditIdx(currentEdit - 1)
+      renderList()
+    }
   }
 
   bindUdfuListEvents(dom.udfList, {
     editAction: 'edit-udf',
     deleteAction: 'delete-udf',
     onEdit: startEditUdf,
-    onDelete: (index) => {
-      const items = [...(store.get('udfItems') || [])]
-
-      items.splice(index, 1)
-
-      if (commitUdfuItems(items, 'func')) {
-        if (editingUdfIndex === index) resetUdfForm()
-        else if (editingUdfIndex !== null && editingUdfIndex > index) editingUdfIndex--
-        renderUdfList()
-      }
-    }
+    onDelete: (index) =>
+      deleteUdfuAt(
+        index,
+        'udfItems',
+        'func',
+        () => editingUdfIndex,
+        (v) => {
+          editingUdfIndex = v
+        },
+        resetUdfForm,
+        renderUdfList
+      )
   })
 
   bindUdfuListEvents(dom.uduList, {
     editAction: 'edit-udu',
     deleteAction: 'delete-udu',
     onEdit: startEditUdu,
-    onDelete: (index) => {
-      const items = [...(store.get('uduItems') || [])]
-      items.splice(index, 1)
-      if (commitUdfuItems(items, 'unit')) {
-        if (editingUduIndex === index) resetUduForm()
-        else if (editingUduIndex !== null && editingUduIndex > index) editingUduIndex--
-        renderUduList()
-      }
-    }
+    onDelete: (index) =>
+      deleteUdfuAt(
+        index,
+        'uduItems',
+        'unit',
+        () => editingUduIndex,
+        (v) => {
+          editingUduIndex = v
+        },
+        resetUduForm,
+        renderUduList
+      )
   })
+
+  let udTab = 1
+
+  UIkit.util.on('#dialogUdfu', 'beforeshow', prepareUdfuDialog, { self: true })
+
+  UIkit.util.on(
+    '#dialogUdfu',
+    'shown',
+    () => {
+      ;(udTab === 1 ? dom.udfNameInput : dom.uduNameInput)?.focus()
+    },
+    { self: true }
+  )
+
+  UIkit.util.on(
+    '#udfTab, #uduTab',
+    'shown',
+    (event) => {
+      udTab = event.target.id === 'udfTab' ? 1 : 2
+      ;(udTab === 1 ? dom.udfNameInput : dom.uduNameInput)?.focus()
+    },
+    { self: true }
+  )
 }

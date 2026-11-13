@@ -67,7 +67,7 @@ export const functionTokens = new Set(mathFunctions.map(([f]) => f))
 export const constantTokens = new Set(mathConstants.map(([c]) => c))
 export const unitTokens = new Set(allUnits.map((u) => u.token))
 export const keywordTokens = new Set(keywords.map((key) => key.text))
-export const currencyTokens = new Set()
+export const currencyTokens = new Map()
 export let currencySymbolRegex = null
 
 export const dateTimeStaticMethods = Object.getOwnPropertyNames(DateTime).filter(
@@ -88,9 +88,9 @@ export function refreshCurrencyTokens() {
 
   const nonAsciiWordSymbols = []
 
-  for (const c of Object.values(app.currencies || {})) {
-    if (c?.symbol) {
-      currencyTokens.add(c.symbol)
+  for (const [code, c] of Object.entries(app.currencies || {})) {
+    if (c?.symbol && !currencyTokens.has(c.symbol)) {
+      currencyTokens.set(c.symbol, code)
 
       if (!/^[a-zA-Z]+$/.test(c.symbol)) {
         nonAsciiWordSymbols.push(c.symbol)
@@ -98,7 +98,7 @@ export function refreshCurrencyTokens() {
     }
   }
 
-  const patterns = [...new Set(nonAsciiWordSymbols)]
+  const patterns = nonAsciiWordSymbols
     .sort((a, b) => b.length - a.length)
     .map((sym) => {
       const endsWithLetter = /[\p{L}\p{M}]$/u.test(sym)

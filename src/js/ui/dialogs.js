@@ -1,15 +1,9 @@
 import UIkit from 'uikit'
 
 import { dom } from '../dom.js'
-import { prepareUdfuDialog } from '../calc/userDefined.js'
-import { cm } from '../editor/index.js'
-import { isSearchPanelOpen } from '../editor/searchPanel.js'
 import { app } from '../state/appState.js'
 import { isElectron } from '../state/env.js'
-import { plot } from './plot.js'
-import { settings } from './settings.js'
-import { checkColorChange, colors } from './theme.js'
-import { checkAppUpdate } from './updater.js'
+import { events } from '../state/events.js'
 
 let modalOpenState = false
 let defaultYesText = null
@@ -156,6 +150,18 @@ export const modal = {
         visibility: ''
       })
     })
+  },
+
+  /**
+   * Centers all currently open modal dialogs.
+   * @param {boolean} [animate=true] Whether to smoothly animate the dialogs to center.
+   * @param {number} [targetWidth] Optional target viewport width.
+   * @param {number} [targetHeight] Optional target viewport height.
+   */
+  centerOpen: (animate = true, targetWidth, targetHeight) => {
+    dom.els('.modal.uk-open .uk-modal-dialog').forEach((dialog) => {
+      modal.center(dialog, animate, targetWidth, targetHeight)
+    })
   }
 }
 
@@ -277,13 +283,21 @@ function setupDraggableModals() {
 }
 
 /**
+ * Hides the floating `#pageListPanel` offcanvas drawer when undocked and currently open.
+ * @returns {Promise<void>|undefined}
+ */
+export function hideFloatingPageList() {
+  if (!app.pageListDocked && dom.pageListPanel?.classList.contains('uk-open')) {
+    return UIkit.offcanvas('#pageListPanel')?.hide()
+  }
+}
+
+/**
  * Hides all open UIkit dropdowns, optionally excluding a specific dropdown element.
  * @param {Element|null} [excludeEl=null] Optional dropdown element to leave untouched.
  */
 export function hideOpenDropdowns(excludeEl = null) {
-  if (excludeEl !== dom.tabContextMenu) {
-    dom.els('.pageMenuButton.is-active').forEach((btn) => btn.classList.remove('is-active'))
-  }
+  events.emit('ui:hideDropdowns', excludeEl)
 
   dom.els('.uk-dropdown.uk-open').forEach((el) => {
     if (el !== excludeEl) {
@@ -304,14 +318,13 @@ export function setupUIkitUtils() {
 
   UIkit.mixin({ data: { offset: 5, delay: 300 } }, 'tooltip')
 
-  cm.getWrapperElement().addEventListener('pointerdown', () => hideOpenDropdowns())
-
   UIkit.util.on(
     '.modal, .dialogConfirm, #pageListPanel',
     'beforeshow',
     (event) => {
       if (event.target.id === 'pageListPanel' && app.pageListDocked) return
 
+      hideOpenDropdowns()
       modalOpenState = true
 
       if (isElectron) {
@@ -332,8 +345,8 @@ export function setupUIkitUtils() {
         numara.transControls(modalOpenState)
       }
 
-      if (!modalOpenState && !isSearchPanelOpen()) {
-        setTimeout(() => cm.focus(), 100)
+      if (!modalOpenState) {
+        events.emit('ui:modalsClosed')
       }
     },
     { self: true }
@@ -358,104 +371,6 @@ export function setupUIkitUtils() {
       }
 
       hideOpenDropdowns()
-    },
-    { self: true }
-  )
-
-  UIkit.util.on(
-    '#dialogTheme',
-    'shown',
-    () => {
-      checkColorChange()
-      colors.checkDefaults()
-    },
-    { self: true }
-  )
-
-  UIkit.util.on('#dialogSettings', 'beforeshow', settings.prep, { self: true })
-
-  let udTab = 1
-
-  UIkit.util.on(
-    '#dialogUdfu',
-    'beforeshow',
-    () => {
-      prepareUdfuDialog(udTab)
-    },
-    { self: true }
-  )
-
-  UIkit.util.on(
-    '#dialogUdfu',
-    'shown',
-    () => {
-      ;(udTab === 1 ? dom.udfNameInput : dom.uduNameInput)?.focus()
-    },
-    { self: true }
-  )
-
-  UIkit.util.on(
-    '#udfTab',
-    'shown',
-    () => {
-      udTab = 1
-      dom.udfNameInput?.focus()
-    },
-    { self: true }
-  )
-
-  UIkit.util.on(
-    '#uduTab',
-    'shown',
-    () => {
-      udTab = 2
-      dom.uduNameInput?.focus()
-    },
-    { self: true }
-  )
-
-  UIkit.util.on(
-    '#dialogPlot',
-    'shown',
-    () => {
-      app.activePlot = null
-      plot()
-    },
-    { self: true }
-  )
-  UIkit.util.on(
-    '#dialogPlot',
-    'hide',
-    () => {
-      app.activePlot = false
-    },
-    { self: true }
-  )
-
-  UIkit.util.on(
-    '#dialogPlotAxisSettings',
-    'shown',
-    () => {
-      const { auto, x, y, axisPrecision } = app.plotSettings.domain
-      const minMaxInputs = [dom.plotXMin, dom.plotXMax, dom.plotYMin, dom.plotYMax]
-
-      dom.plotAutoDomain.checked = auto
-      dom.plotAxisPrecision.value = axisPrecision
-      dom.plotAxisPrecisionLabel.textContent = axisPrecision
-
-      minMaxInputs.forEach((input, i) => {
-        input.value = [...x, ...y][i]
-        input.disabled = auto
-      })
-    },
-    { self: true }
-  )
-
-  UIkit.util.on(
-    '#dialogAbout',
-    'shown',
-    () => {
-      checkAppUpdate()
     },
     { self: true }
   )

@@ -7,7 +7,8 @@
   background-color: light-dark(#ffffff, #1f1f1f);
   height: 100% !important;
   color: light-dark(#000000, #e6e6e6) !important;
-  font-family: 'Roboto Mono' !important;
+  font-family: 'Roboto Mono', monospace !important;
+  font-size-adjust: from-font;
 }
 
 .cm-s-numara .CodeMirror-gutters {
@@ -70,6 +71,7 @@ body.numara-search-panel-open .CodeMirror-selected {
   right: 8px !important;
 }
 
+.cm-s-numara .CodeMirror-scroll,
 .cm-s-numara .CodeMirror-hscrollbar,
 .cm-s-numara .CodeMirror-scrollbar-filler,
 .cm-s-numara .CodeMirror-gutter-filler {
@@ -262,6 +264,7 @@ body.numara-search-panel-open.numara-search-replace-open .mainPanel {
 .CodeMirror-hints {
   border-color: light-dark(#c0c0c0, #222222) !important;
   background-color: light-dark(#ffffff, #333333) !important;
+  font-weight: var(--mono-weight);
   font-family: 'Roboto Mono', monospace;
 }
 
@@ -321,16 +324,42 @@ li.CodeMirror-hint-active {
 }
 
 /* CodeMirror Fold Marker in-editor styling */
+.CodeMirror-widget:has(> .CodeMirror-foldmarker) {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: top;
+  height: 1lh;
+}
+
 .CodeMirror-foldmarker {
-  display: inline-block;
-  vertical-align: middle;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
   cursor: pointer;
-  margin-left: 5px;
+  box-sizing: border-box;
+  margin-left: 6px;
   border: 1px solid light-dark(#cccccc, #555555);
   border-radius: 4px;
   background-color: light-dark(#eaeaea, #333333);
-  padding: 0 5px;
+  padding: 0 4px;
+  height: var(--icon-xs);
   color: #1e87f0;
-  font-size: 0.8rem;
   line-height: 1;
+}
+
+.CodeMirror-foldmarker:hover {
+  border-color: light-dark(#8eb3d8, #4d5560);
+  background-color: light-dark(#dceefb, #3d3d3d);
+}
+
+.CodeMirror-foldmarker svg {
+  display: block;
+  flex-shrink: 0;
+  width: calc(var(--icon-xs) - 2px);
+  max-width: none;
+  height: calc(var(--icon-xs) - 2px);
+  pointer-events: none;
 }

@@ -1,13 +1,15 @@
 import { description } from '../../package.json'
+import { setupCalcManager } from './calc/calcManager.js'
 import { initCurrencies } from './calc/currencies.js'
 import { setupUserDefined } from './calc/userDefined.js'
 import { cm, setupEditor } from './editor/index.js'
 import { isSearchPanelOpen } from './editor/searchPanel.js'
+import { setupPageIo } from './pages/pageIo.js'
 import { initializePages } from './pages/pageManager.js'
-import { checkSyncDir, handleSyncDirDeleted, triggerFolderSync } from './pages/sync.js'
+import { checkSyncDir, handleSyncDirDeleted, setupSync, triggerFolderSync } from './pages/sync.js'
 import { app } from './state/appState.js'
 import { isElectron, isMobile } from './state/env.js'
-import { migrateStorageAndPages } from './state/migration.js'
+import { migrateAppState } from './state/migration.js'
 import { initializeContextMenus } from './ui/contextMenu.js'
 import { isModalOpen, setupUIkitUtils } from './ui/dialogs.js'
 import { generateIcons } from './ui/icons.js'
@@ -21,14 +23,14 @@ import { setupKeyboardShortcuts } from './ui/shortcuts.js'
 import { colors } from './ui/theme.js'
 import { checkAppUpdate, initAppUpdate, setupAppInfo } from './ui/updater.js'
 
-document.title = description
-
 /**
  * Bootstraps the application, initializes settings, currencies, colors, and UI layout.
  * @returns {Promise<void>}
  */
 async function initializeApp() {
-  document.documentElement.classList.toggle('is-mobile', isMobile)
+  document.title = description
+  const isCoarsePointer = Boolean(window.matchMedia?.('(hover: none), (pointer: coarse)')?.matches)
+  document.documentElement.classList.toggle('is-mobile', isMobile || isCoarsePointer)
 
   if (!isElectron && 'serviceWorker' in navigator) {
     let refreshing = false
@@ -56,26 +58,23 @@ async function initializeApp() {
   }
 
   if (document.fonts?.load) {
-    Promise.all([
-      document.fonts.load('400 1rem "Google Sans"'),
-      document.fonts.load('500 1rem "Google Sans"'),
-      document.fonts.load('600 1rem "Google Sans"'),
-      document.fonts.load('700 1rem "Google Sans"')
-    ]).catch(() => {})
+    Promise.all([document.fonts.load('400 1rem "Google Sans"'), document.fonts.load('400 1rem "Roboto Mono"')]).catch(
+      () => {}
+    )
   }
 
-  migrateStorageAndPages()
+  migrateAppState({ defaultColors: colors.defaults })
   generateIcons()
   setupEditor()
+  setupCalcManager()
+  setupSync()
   initCurrencies()
   setupUserDefined()
   setupPlot()
 
+  colors.initialize()
   await settings.initialize()
   await settings.apply(false)
-
-  colors.initialize()
-  colors.apply()
 
   setupHeaders()
   setupAppButtons()
@@ -87,6 +86,7 @@ async function initializeApp() {
   setupPrintArea()
   setupUIkitUtils()
   initializePageList()
+  setupPageIo()
   initializePages()
   initializeContextMenus()
   initializeSettingsTooltips()
@@ -120,7 +120,11 @@ async function initializeApp() {
     }
   })
 
-  setTimeout(() => cm.focus(), 500)
+  setTimeout(() => {
+    if (!isModalOpen() && !isSearchPanelOpen()) {
+      cm.focus()
+    }
+  }, 500)
 }
 
 initializeApp().catch((error) => console.error('Failed to initialize app:', error))

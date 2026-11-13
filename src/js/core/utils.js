@@ -164,3 +164,47 @@ export function debounce(func, wait) {
 
   return debounced
 }
+
+const FONT_SIZE_ZOOM_MAP = {
+  smaller: { '12px': '11px', '13px': '12px', '14px': '13px', '15px': '14px', '16px': '15px' },
+  normal: { '12px': '12px', '13px': '13px', '14px': '14px', '15px': '15px', '16px': '16px' },
+  larger: { '12px': '13px', '13px': '14px', '14px': '15px', '15px': '16px', '16px': '17px' }
+}
+
+/**
+ * Resolves the effective editor font size for a semantic size tier and zoom level.
+ * @param {string} fontSize Stored font size tier (`'12px'`..`'16px'`).
+ * @param {string} [zoomLevel='normal'] Active UI zoom level (`'smaller'`, `'normal'`, `'larger'`).
+ * @returns {string} Effective CSS font-size string.
+ */
+export function resolveEditorFontSize(fontSize, zoomLevel = 'normal') {
+  return FONT_SIZE_ZOOM_MAP[zoomLevel]?.[fontSize] || fontSize
+}
+
+/**
+ * Resolves the optically matched editor font weight for a platform.
+ * Non-macOS desktop displays lack CoreText stem dilation, so variable font weights below 700
+ * step up by +50 (e.g. `'400'` -> `'450'`) to match macOS stroke weight without altering glyph advance width.
+ * @param {string} fontWeight Stored font weight (`'200'`, `'300'`, `'400'`, `'500'`, `'700'`).
+ * @param {boolean} [useMacScale=true] True on macOS or mobile devices; false on Windows/Linux desktop.
+ * @returns {string} Effective CSS font-weight string.
+ */
+export function resolveEditorFontWeight(fontWeight, useMacScale = true) {
+  if (useMacScale) return fontWeight
+
+  const numeric = Number.parseInt(fontWeight, 10)
+  if (!Number.isFinite(numeric)) return fontWeight
+
+  return String(Math.min(700, numeric + 50))
+}
+
+/**
+ * Resolves the Google Sans variable `GRAD` axis value for a platform.
+ * Non-macOS desktop displays apply `+50` grade so UI text matches macOS CoreText stem dilation
+ * across all weights (400..700) without changing character advance widths.
+ * @param {boolean} [useMacScale=true] True on macOS or mobile devices; false on Windows/Linux desktop.
+ * @returns {string} CSS `GRAD` axis value (`'0'` or `'50'`).
+ */
+export function resolveUiFontGrade(useMacScale = true) {
+  return useMacScale ? '0' : '50'
+}

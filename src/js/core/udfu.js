@@ -1,121 +1,191 @@
 export const VALID_IDENTIFIER = /^[a-zA-Z_$][\w$]*$/
 export const RESERVED_KEYS = new Set(['__proto__', 'constructor', 'prototype'])
 
-const defaultProxy = new Proxy(() => defaultProxy, {
+export const defaultProxy = new Proxy(() => defaultProxy, {
   get: (target, prop) => (prop === Symbol.toPrimitive ? () => 0 : defaultProxy)
 })
 
 /**
- * Finds the index of the closing parenthesis matching the opening parenthesis at `openIndex`.
+ * If `idx` starts a string literal, template literal, or JS comment, returns the index
+ * immediately following it; otherwise returns `-1`.
  * @param {string} str Source string.
- * @param {number} openIndex Index of `(`.
- * @returns {number} Matching `)` index, or `-1` if unbalanced.
+ * @param {number} idx Current character index.
+ * @returns {number} End index past the string/comment, or `-1`.
  */
-function findMatchingParen(str, openIndex) {
-  let depth = 0
-  let inString = null
+export function skipStringOrComment(str, idx) {
+  const ch = str[idx]
 
-  for (let i = openIndex; i < str.length; i++) {
-    const ch = str[i]
+  if (ch === '/' && str[idx + 1] === '/') {
+    let i = idx + 2
 
-    if (inString) {
-      if (ch === '\\') {
-        i++
-      } else if (ch === inString) {
-        inString = null
+    while (i < str.length && str[i] !== '\n') i++
+
+    return i
+  }
+
+  if (ch === '/' && str[idx + 1] === '*') {
+    const end = str.indexOf('*/', idx + 2)
+    return end === -1 ? str.length : end + 2
+  }
+
+  if (ch === "'" || ch === '"') {
+    let i = idx + 1
+
+    while (i < str.length) {
+      if (str[i] === '\\') {
+        i += 2
+        continue
       }
 
-      continue
+      if (str[i] === ch) return i + 1
+      i++
     }
 
-    if (ch === '"' || ch === "'" || ch === '`') {
-      inString = ch
-    } else if (ch === '(') {
-      depth++
-    } else if (ch === ')') {
-      depth--
-      if (depth === 0) return i
+    return str.length
+  }
+
+  if (ch === '`') {
+    let i = idx + 1
+
+    while (i < str.length) {
+      if (str[i] === '\\') {
+        i += 2
+        continue
+      }
+
+      if (str[i] === '`') return i + 1
+
+      if (str[i] === '$' && str[i + 1] === '{') {
+        const closeIdx = findMatchingClose(str, i + 1)
+
+        i = closeIdx === -1 ? str.length : closeIdx + 1
+        continue
+      }
+
+      i++
     }
+
+    return str.length
   }
 
   return -1
 }
 
 /**
- * Strips a single balanced pair of outer parentheses from an expression string,
- * preserving parentheses when they wrap an object literal (`({ ... })`) or multiple groups (`(a) * (b)`).
- * @param {string} str Expression string.
- * @returns {string} Unwrapped expression string.
+ * Finds the index of the closing delimiter matching `(`, `[`, or `{` at `openIndex`.
+ * Respects nested strings, template expressions, and comments.
+ * @param {string} str Source string.
+ * @param {number} openIndex Index of opening delimiter.
+ * @returns {number} Matching closing delimiter index, or `-1` if unbalanced.
  */
-function unwrapBalancedParens(str) {
-  if (!str.startsWith('(') || !str.endsWith(')')) return str
+export function findMatchingClose(str, openIndex) {
+  const openChar = str[openIndex]
+  const closeChar = openChar === '(' ? ')' : openChar === '[' ? ']' : openChar === '{' ? '}' : null
 
-  const closeIdx = findMatchingParen(str, 0)
-  if (closeIdx !== str.length - 1) return str
+  if (!closeChar) return -1
 
-  const inner = str.slice(1, -1).trim()
-  return inner.startsWith('{') ? str : inner
+  let depth = 0
+  let i = openIndex
+
+  while (i < str.length) {
+    const after = skipStringOrComment(str, i)
+
+    if (after !== -1) {
+      i = after
+      continue
+    }
+
+    const ch = str[i]
+
+    if (ch === openChar) depth++
+    else if (ch === closeChar) {
+      depth--
+
+      if (depth === 0) return i
+    }
+
+    i++
+  }
+
+  return -1
 }
 
 /**
- * Extracts parameter list and body source from a runtime function value.
- * @param {Function} fn Function to inspect.
- * @returns {{ params: string, body: string }}
+ * Wraps an expression in parentheses, placing line breaks around multi-line or `//`-commented bodies
+ * so a trailing line comment cannot comment out the closing `)`.
+ * @param {string} expr Expression string.
+ * @returns {string}
  */
-function extractFunctionParts(fn) {
-  const src = fn.toString().trim()
+function wrapParenExpr(expr) {
+  return expr.includes('//') ? `(\n${expr}\n)` : `(${expr})`
+}
 
-  if (src.startsWith('(')) {
-    const closeIdx = findMatchingParen(src, 0)
+/**
+ * Checks whether a trimmed body string contains a top-level `return` statement (or an outer
+ * statement-block `return`), avoiding false positives inside nested functions or object methods.
+ * @param {string} str Body string.
+ * @param {boolean} isBlock Whether the outer string is a single `{ ... }` brace pair.
+ * @returns {boolean}
+ */
+function hasTopLevelReturn(str, isBlock) {
+  const targetBraceDepth = isBlock ? 1 : 0
+  let parenDepth = 0
+  let bracketDepth = 0
+  let braceDepth = 0
+  let sawReturnAtBlockDepth = false
+  let i = 0
 
-    if (closeIdx !== -1) {
-      const arrowMatch = src.slice(closeIdx + 1).match(/^\s*=>\s*([\s\S]*)$/)
+  while (i < str.length) {
+    const after = skipStringOrComment(str, i)
 
-      if (arrowMatch) {
-        const rawParams = src.slice(1, closeIdx).trim()
-        const params = rawParams.length > 0 ? rawParams : '()'
-        const rawBody = arrowMatch[1].trim()
-        const body =
-          rawBody.startsWith('{') && rawBody.endsWith('}') ? rawBody.slice(1, -1).trim() : unwrapBalancedParens(rawBody)
-
-        return { params, body }
-      }
+    if (after !== -1) {
+      i = after
+      continue
     }
-  }
 
-  const singleArrow = src.match(/^([a-zA-Z_$][\w$]*)\s*=>\s*([\s\S]*)$/)
+    const ch = str[i]
+    if (ch === '(') parenDepth++
+    else if (ch === ')') parenDepth--
+    else if (ch === '[') bracketDepth++
+    else if (ch === ']') bracketDepth--
+    else if (ch === '{') braceDepth++
+    else if (ch === '}') braceDepth--
+    else if (isBlock && ch === ':' && parenDepth === 0 && bracketDepth === 0 && braceDepth === 1) {
+      // Object literal syntax at outer brace depth (e.g. `{ return: 1, calc(x) { return x } }`)
+      return false
+    } else if (
+      parenDepth === 0 &&
+      bracketDepth === 0 &&
+      braceDepth === targetBraceDepth &&
+      str.startsWith('return', i) &&
+      !/[\w$.]/.test(str[i - 1] || '') &&
+      !/[\w$:]/.test(str[i + 6] || '')
+    ) {
+      if (!isBlock) return true
 
-  if (singleArrow) {
-    const params = singleArrow[1].trim()
-    const rawBody = singleArrow[2].trim()
-    const body =
-      rawBody.startsWith('{') && rawBody.endsWith('}') ? rawBody.slice(1, -1).trim() : unwrapBalancedParens(rawBody)
-
-    return { params, body }
-  }
-
-  const headerMatch = src.match(
-    /^(?:(?:async\s+)?function\s*(?:\*\s*)?[a-zA-Z_$]*[\w$]*|(?:async\s+)?[a-zA-Z_$][\w$]*)\s*\(/
-  )
-
-  if (headerMatch) {
-    const openIdx = headerMatch[0].length - 1
-    const closeIdx = findMatchingParen(src, openIdx)
-
-    if (closeIdx !== -1) {
-      const afterParams = src.slice(closeIdx + 1).trim()
-
-      if (afterParams.startsWith('{') && afterParams.endsWith('}')) {
-        const rawParams = src.slice(openIdx + 1, closeIdx).trim()
-        const params = rawParams.length > 0 ? rawParams : '()'
-        const body = afterParams.slice(1, -1).trim()
-
-        return { params, body }
-      }
+      sawReturnAtBlockDepth = true
     }
+
+    i++
   }
 
-  return { params: '', body: src }
+  return sawReturnAtBlockDepth
+}
+
+/**
+ * Evaluates a compiled UDF/UDU object-body string inside a `with (math)` scope.
+ * @param {string} body Object-literal interior string.
+ * @param {object} [math=defaultProxy] Math.js instance or fallback proxy.
+ * @param {object} [externalLibs={}] Optional external libraries `{ luxon, nerdamer, formulajs }`.
+ * @returns {object}
+ */
+export function evalUdfuObject(body, math = defaultProxy, externalLibs = {}) {
+  const luxon = externalLibs.luxon ?? defaultProxy
+  const nerdamer = externalLibs.nerdamer ?? defaultProxy
+  const formulajs = externalLibs.formulajs ?? defaultProxy
+  const fn = new Function('math', 'luxon', 'nerdamer', 'formulajs', `with (math) { return {${body}} }`)
+
+  return fn(math, luxon, nerdamer, formulajs)
 }
 
 /**
@@ -131,7 +201,7 @@ export function compileUdfItems(items) {
       const isZeroArgFunc = rawParams === '()'
       const cleanParams = rawParams.replace(/^\(|\)$/g, '').trim()
       const cleanBody = (body ?? '').trim()
-      const isBlock = cleanBody.startsWith('{') && cleanBody.endsWith('}')
+      const isBlock = cleanBody.startsWith('{') && findMatchingClose(cleanBody, 0) === cleanBody.length - 1
       const hasReturn = /\breturn\b/.test(cleanBody)
       const isMultiStmt = cleanBody.includes('\n') || cleanBody.includes(';') || hasReturn
 
@@ -144,16 +214,16 @@ export function compileUdfItems(items) {
           return `${JSON.stringify(cleanName)}: (${cleanParams}) => {\n${cleanBody}\n}`
         }
 
-        return `${JSON.stringify(cleanName)}: (${cleanParams}) => (${cleanBody})`
+        return `${JSON.stringify(cleanName)}: (${cleanParams}) => ${wrapParenExpr(cleanBody)}`
       }
 
-      if (hasReturn) {
+      if (hasTopLevelReturn(cleanBody, isBlock)) {
         if (isBlock) return `${JSON.stringify(cleanName)}: () => ${cleanBody}`
 
         return `${JSON.stringify(cleanName)}: () => {\n${cleanBody}\n}`
       }
 
-      return `${JSON.stringify(cleanName)}: (${cleanBody})`
+      return `${JSON.stringify(cleanName)}: ${wrapParenExpr(cleanBody)}`
     })
     .join(',\n')
 }
@@ -194,94 +264,6 @@ export function compileUduItems(items) {
 }
 
 /**
- * Parses a legacy v7 `udf` object-body string into structured `udfItems`.
- * @param {string} rawUdf Legacy `udf` string.
- * @param {object} [math] Optional Math.js instance.
- * @param {object} [externalLibs] Optional libraries `{ luxon, nerdamer, formulajs }`.
- * @returns {Array<{name: string, params: string, body: string}>}
- */
-export function parseLegacyUdf(rawUdf, math = defaultProxy, externalLibs = {}) {
-  const trimmed = (rawUdf ?? '').trim()
-  if (!trimmed) return []
-
-  const udfItems = []
-
-  try {
-    const luxon = externalLibs.luxon ?? defaultProxy
-    const nerdamer = externalLibs.nerdamer ?? defaultProxy
-    const formulajs = externalLibs.formulajs ?? defaultProxy
-    const fn = new Function('math', 'luxon', 'nerdamer', 'formulajs', `with (math) { return {${trimmed}} }`)
-    const obj = fn(math, luxon, nerdamer, formulajs)
-
-    for (const [key, val] of Object.entries(obj || {})) {
-      if (RESERVED_KEYS.has(key) || !VALID_IDENTIFIER.test(key)) continue
-
-      if (typeof val === 'function') {
-        const { params, body } = extractFunctionParts(val)
-        udfItems.push({ name: key, params, body })
-      } else if (val !== null && typeof val === 'object') {
-        udfItems.push({ name: key, params: '', body: JSON.stringify(val) })
-      } else {
-        udfItems.push({
-          name: key,
-          params: '',
-          body: typeof val === 'string' ? JSON.stringify(val) : String(val)
-        })
-      }
-    }
-  } catch {
-    // Return empty array if legacy string cannot be evaluated
-  }
-
-  return udfItems
-}
-
-/**
- * Parses a legacy v7 `udu` object-body string into structured `uduItems`.
- * @param {string} rawUdu Legacy `udu` string.
- * @param {object} [math] Optional Math.js instance.
- * @param {object} [externalLibs] Optional libraries `{ luxon, nerdamer, formulajs }`.
- * @returns {Array<{name: string, definition: string, prefixes: string, aliases: string}>}
- */
-export function parseLegacyUdu(rawUdu, math = defaultProxy, externalLibs = {}) {
-  const trimmed = (rawUdu ?? '').trim()
-  if (!trimmed) return []
-
-  const uduItems = []
-
-  try {
-    const luxon = externalLibs.luxon ?? defaultProxy
-    const nerdamer = externalLibs.nerdamer ?? defaultProxy
-    const formulajs = externalLibs.formulajs ?? defaultProxy
-    const fn = new Function('math', 'luxon', 'nerdamer', 'formulajs', `with (math) { return {${trimmed}} }`)
-    const obj = fn(math, luxon, nerdamer, formulajs)
-
-    for (const [key, val] of Object.entries(obj || {})) {
-      if (RESERVED_KEYS.has(key) || !VALID_IDENTIFIER.test(key)) continue
-
-      if (typeof val === 'string') {
-        uduItems.push({ name: key, definition: val, prefixes: 'none', aliases: '' })
-      } else if (val && typeof val === 'object') {
-        if (val.isUnit && typeof val.toString === 'function') {
-          uduItems.push({ name: key, definition: val.toString(), prefixes: 'none', aliases: '' })
-        } else {
-          uduItems.push({
-            name: key,
-            definition: String(val.definition ?? ''),
-            prefixes: val.prefixes || 'none',
-            aliases: Array.isArray(val.aliases) ? val.aliases.join(', ') : ''
-          })
-        }
-      }
-    }
-  } catch {
-    // Return empty array if legacy string cannot be evaluated
-  }
-
-  return uduItems
-}
-
-/**
  * Validate user defined function/unit object keys and guard against prototype pollution.
  * @param {object} obj The object to validate.
  * @param {boolean} [isFunc=true] True if validating functions, false if validating units.
@@ -310,7 +292,7 @@ function validateUdfObj(obj, isFunc = true) {
  * @param {*} val Value to inspect.
  * @returns {boolean}
  */
-function isPlainNamespaceObject(val) {
+export function isPlainNamespaceObject(val) {
   return Boolean(
     val &&
     typeof val === 'object' &&
@@ -319,8 +301,35 @@ function isPlainNamespaceObject(val) {
     !val.isComplex &&
     !val.isFraction &&
     !val.isUnit &&
-    !val.isMatrix
+    !val.isMatrix &&
+    !val.isLuxonDateTime
   )
+}
+
+/**
+ * Snapshots any existing built-in Math.js property, transform, or unit before overriding it.
+ * @param {object} math The Math.js instance.
+ * @param {string} key Key or unit name about to be overridden.
+ * @param {Map} savedMap Map of saved built-in descriptors.
+ * @param {boolean} [isUnit=false] Whether to also snapshot `math.Unit.UNITS[key]`.
+ */
+function saveBuiltinKey(math, key, savedMap, isUnit = false) {
+  if (savedMap.has(key)) return
+
+  const hasUnit = Boolean(isUnit && math.Unit?.UNITS && key in math.Unit.UNITS)
+  const hasMath = key in math
+  const hasTransform = Boolean(math.expression?.mathWithTransform && key in math.expression.mathWithTransform)
+
+  if (hasUnit || hasMath || hasTransform) {
+    savedMap.set(key, {
+      hasUnit,
+      unitVal: hasUnit ? math.Unit.UNITS[key] : undefined,
+      hasMath,
+      mathVal: math[key],
+      hasTransform,
+      transformVal: math.expression?.mathWithTransform?.[key]
+    })
+  }
 }
 
 /**
@@ -367,10 +376,6 @@ function restoreBuiltinKey(math, key, savedMap, isUnit = false) {
  * @returns {string[]} List of keys defined in the input.
  */
 export function applyUdfuToMath(math, input, isFunc, state, externalLibs = {}) {
-  const luxon = externalLibs.luxon ?? defaultProxy
-  const nerdamer = externalLibs.nerdamer ?? defaultProxy
-  const formulajs = externalLibs.formulajs ?? defaultProxy
-
   if (isFunc) {
     state.savedBuiltinUDFs ??= new Map()
 
@@ -378,29 +383,15 @@ export function applyUdfuToMath(math, input, isFunc, state, externalLibs = {}) {
     state.previouslyImportedUDFs = []
   }
 
-  const UDFunc = new Function('math', 'luxon', 'nerdamer', 'formulajs', `with (math) { return {${input}} }`)
-  const udfObj = UDFunc(math, luxon, nerdamer, formulajs)
+  const udfObj = evalUdfuObject(input, math, externalLibs)
 
   validateUdfObj(udfObj, isFunc)
 
   if (isFunc) {
-    for (const key of Object.keys(udfObj)) {
-      if (!state.savedBuiltinUDFs.has(key)) {
-        const hasMath = key in math
-        const hasTransform = Boolean(math.expression?.mathWithTransform && key in math.expression.mathWithTransform)
+    const udfKeys = Object.keys(udfObj)
 
-        if (hasMath || hasTransform) {
-          state.savedBuiltinUDFs.set(key, {
-            hasMath,
-            mathVal: math[key],
-            hasTransform,
-            transformVal: math.expression?.mathWithTransform?.[key]
-          })
-        }
-      }
-    }
-
-    state.previouslyImportedUDFs = Object.keys(udfObj)
+    udfKeys.forEach((key) => saveBuiltinKey(math, key, state.savedBuiltinUDFs, false))
+    state.previouslyImportedUDFs = udfKeys
 
     // Separate plain objects from functions/primitives because math.import flattens plain objects
     // into top-level math properties (which would overwrite built-ins without tracking).
@@ -421,46 +412,26 @@ export function applyUdfuToMath(math, input, isFunc, state, externalLibs = {}) {
     if (Object.keys(importableObj).length > 0) {
       math.import(importableObj, { override: true })
     }
-  } else {
-    state.savedBuiltinUnits ??= new Map()
 
-    state.previouslyCreatedUnits.forEach((unitName) => restoreBuiltinKey(math, unitName, state.savedBuiltinUnits, true))
-
-    const createdUnitNames = [...Object.keys(udfObj)]
-
-    for (const val of Object.values(udfObj)) {
-      if (val && typeof val === 'object' && Array.isArray(val.aliases)) {
-        createdUnitNames.push(...val.aliases)
-      }
-    }
-
-    for (const unitName of createdUnitNames) {
-      if (!state.savedBuiltinUnits.has(unitName)) {
-        const hasUnit = Boolean(math.Unit?.UNITS && unitName in math.Unit.UNITS)
-        const hasMath = unitName in math
-        const hasTransform = Boolean(
-          math.expression?.mathWithTransform && unitName in math.expression.mathWithTransform
-        )
-
-        if (hasUnit || hasMath || hasTransform) {
-          state.savedBuiltinUnits.set(unitName, {
-            hasUnit,
-            unitVal: math.Unit?.UNITS?.[unitName],
-            hasMath,
-            mathVal: math[unitName],
-            hasTransform,
-            transformVal: math.expression?.mathWithTransform?.[unitName]
-          })
-        }
-      }
-    }
-
-    state.previouslyCreatedUnits = createdUnitNames
-
-    math.createUnit(udfObj, { override: true })
-
-    return createdUnitNames
+    return udfKeys
   }
 
-  return Object.keys(udfObj)
+  state.savedBuiltinUnits ??= new Map()
+
+  state.previouslyCreatedUnits.forEach((unitName) => restoreBuiltinKey(math, unitName, state.savedBuiltinUnits, true))
+
+  const createdUnitNames = [...Object.keys(udfObj)]
+
+  for (const val of Object.values(udfObj)) {
+    if (val && typeof val === 'object' && Array.isArray(val.aliases)) {
+      createdUnitNames.push(...val.aliases)
+    }
+  }
+
+  createdUnitNames.forEach((unitName) => saveBuiltinKey(math, unitName, state.savedBuiltinUnits, true))
+  state.previouslyCreatedUnits = createdUnitNames
+
+  math.createUnit(udfObj, { override: true })
+
+  return createdUnitNames
 }

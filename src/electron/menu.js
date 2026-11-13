@@ -4,26 +4,10 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 
 import { config, isMac, isWin } from './config.js'
-import { getWindow, setAppQuitting } from './window.js'
+import { isValidDirectory } from './syncWatcher.js'
+import { getWindow, openMainLog, sendToWindow, setAppQuitting, showAndFocusWindow } from './window.js'
 
 let tray = null
-
-const showWindow = () => {
-  const win = getWindow()
-
-  if (win && !win.isDestroyed()) {
-    win.show()
-    win.focus()
-  }
-}
-
-const sendToWindow = (channel, ...args) => {
-  const win = getWindow()
-
-  if (win && !win.isDestroyed() && win.webContents) {
-    win.webContents.send(channel, ...args)
-  }
-}
 
 /**
  * Resolves the platform-appropriate tray icon path.
@@ -54,7 +38,7 @@ export function updateTrayState() {
       const contextMenu = Menu.buildFromTemplate([
         {
           label: 'Show Numara',
-          click: showWindow
+          click: showAndFocusWindow
         },
         {
           label: 'Hide Numara',
@@ -91,7 +75,7 @@ export function updateTrayState() {
           tray.popUpContextMenu(contextMenu)
         })
 
-        tray.on('click', showWindow)
+        tray.on('click', showAndFocusWindow)
       } catch (err) {
         log.error('Failed to create tray:', err)
       }
@@ -191,7 +175,7 @@ export function setupContextMenus() {
         label: 'Open folder',
         click: () => {
           try {
-            if (typeof dirPath === 'string' && fs.existsSync(dirPath) && fs.lstatSync(dirPath).isDirectory()) {
+            if (isValidDirectory(dirPath)) {
               shell.openPath(dirPath)
             }
           } catch (err) {
@@ -376,7 +360,7 @@ export function setupApplicationMenu({ promptImportPage, resetSize }) {
         { type: 'separator' },
         {
           label: 'Open Logs',
-          click: () => shell.openPath(path.join(app.getPath('logs'), 'main.log'))
+          click: openMainLog
         }
       ]
     }

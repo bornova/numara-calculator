@@ -1,13 +1,14 @@
 import UIkit from 'uikit'
 
-import { syncOutputHeights } from '../calc/calcManager.js'
+import { syncOutputHeights } from '../calc/outputRenderer.js'
 import { updatePageTabsScroll } from '../pages/pageTabs.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
 import { app } from '../state/appState.js'
 import { checkSize, isElectron } from '../state/env.js'
+import { events } from '../state/events.js'
 import { store } from '../state/store.js'
-import { modal } from './dialogs.js'
+import { hideFloatingPageList, modal } from './dialogs.js'
 
 const PAGELIST_MIN_WIDTH = 210
 const PAGELIST_MAX_WIDTH = 510
@@ -122,7 +123,7 @@ function setupPageListResizer() {
     resizerTooltip()
   })
 
-  resizer.addEventListener('mousemove', resizerTooltip)
+  resizer.addEventListener('mouseenter', resizerTooltip)
 }
 
 function triggerPageListTransition() {
@@ -159,9 +160,7 @@ function resetWindowToAppWrapper(pageListWidth = 0, appWrapperSize = getAppWrapp
 
       await numara.resetSize(appWrapperSize.width, appWrapperSize.height, pageListWidth)
 
-      dom.els('.modal.uk-open .uk-modal-dialog').forEach((dialog) => {
-        modal.center(dialog, true, targetWidth, targetHeight)
-      })
+      modal.centerOpen(true, targetWidth, targetHeight)
       setTimeout(() => {
         checkSize()
       }, PAGELIST_TRANSITION_MS + 40)
@@ -282,8 +281,8 @@ export function setupPageList(show = false, fromResize = false) {
     dom.appWrapper.style.left = '0'
 
     if (!dockChanged) {
-      if (isTabs && dom.pageListPanel.classList.contains('uk-open')) {
-        UIkit.offcanvas('#pageListPanel').hide()
+      if (isTabs) {
+        hideFloatingPageList()
       }
       return
     }
@@ -317,6 +316,8 @@ export function initializePageList() {
     UIkit.util.on(dom.pageListPanel, 'beforeshow shown', updatePageListScroll)
   }
 
+  events.on('pages:populated', updatePageListScroll)
+
   dom.dockPageListButton?.addEventListener('click', () => {
     app.settings.pageListPosition = app.pageListDocked ? 'auto' : 'dock'
     store.set('settings', app.settings)
@@ -328,9 +329,7 @@ export function initializePageList() {
 
     resizeTimer = setTimeout(() => {
       setupPageList(true, true)
-      dom.els('.modal.uk-open .uk-modal-dialog').forEach((dialog) => {
-        modal.center(dialog, true)
-      })
+      modal.centerOpen(true)
       syncOutputHeights()
       checkSize()
     }, 100)

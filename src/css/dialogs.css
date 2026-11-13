@@ -102,28 +102,35 @@
   margin: 5px 0 12px 0;
 }
 
-#dialogSettings .settingMod,
-#dialogSettings .settingModToggle {
+#dialogSettings .settingMod {
   display: none;
   position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
   cursor: pointer;
-  margin-top: -3px;
   margin-left: -20px;
   color: #dd9359;
 }
 
-#dialogSettings .settingMod > svg,
-#dialogSettings .settingModToggle > svg {
+#dialogSettings .settingMod > svg {
+  display: block;
   width: 24px;
+  height: 24px;
 }
 
 #dialogSettings #themeMod {
   position: relative;
+  top: auto;
+  transform: none;
 }
 
-#dialogSettings div:has(> .settingMod),
-#dialogSettings div:has(> .settingModToggle) {
+#dialogSettings div:has(> .settingMod) {
   position: relative;
+}
+
+#dialogSettings div:has(> .switch),
+#dialogSettings div:has(> .uk-range) {
+  line-height: 0;
 }
 
 #dialogSettings div:has(> .uk-range) .settingMod {
@@ -134,9 +141,7 @@
   cursor: default;
 }
 
-.precision,
-.expLower,
-.expUpper {
+.precision {
   border: 1px solid light-dark(#e5e5e5, #333333);
   background-color: transparent;
   padding: 1px 0 0 0;
@@ -147,14 +152,14 @@
 
 .dialog-settings-body .switch,
 .dialog-plot-settings-body .switch {
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .warn-icon {
   display: none;
   justify-content: center;
   align-items: center;
-  vertical-align: top;
+  vertical-align: middle;
   height: var(--select-height);
 }
 
@@ -244,8 +249,7 @@
 
 /* Sync folder tab */
 
-#syncDirSection,
-#syncDirHiddenWrapper {
+#syncDirSection {
   display: none;
 }
 
@@ -291,10 +295,6 @@
   width: var(--color-input-width);
   height: var(--select-height);
   color: light-dark(#333333, #e6e6e6);
-}
-
-.colorInputDefault {
-  border-left: 1px solid light-dark(#eaeaea, #666666);
 }
 
 .colorInputChanged {
@@ -451,8 +451,13 @@ div:has(> #logsLink) {
 }
 
 .domainTextBox {
+  box-sizing: border-box;
   margin: 10px;
+  border: 1px solid light-dark(#cccccc, #666666);
+  padding: 5px;
   width: var(--domain-textbox-width);
+  color: light-dark(#666666, #eaeaea);
+  user-select: text;
 }
 
 .domainTextBox:disabled {
@@ -475,6 +480,7 @@ div:has(> #logsLink) {
   background-color: light-dark(#f5f5f5, #2a2a2a);
   padding: 0 12px;
   color: light-dark(#666666, #aaaaaa);
+  font-weight: var(--mono-weight);
   font-size: 0.88rem;
   line-height: 19px;
   font-family: 'Roboto Mono', monospace;
@@ -563,6 +569,7 @@ div:has(> #logsLink) {
   min-height: 50px;
   max-height: 130px;
   resize: vertical;
+  font-weight: var(--mono-weight);
   line-height: 1.4;
   font-family: 'Roboto Mono', monospace;
 }
@@ -662,6 +669,7 @@ div:has(> #logsLink) {
 
 .udfuItemCode {
   color: light-dark(#555555, #cccccc);
+  font-weight: var(--mono-weight);
   font-size: 0.92em;
   font-family: 'Roboto Mono', monospace;
 }

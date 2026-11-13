@@ -95,36 +95,17 @@ export function registerEditorModes() {
           const memberMatch = stream.string.slice(0, stream.start).match(/([a-zA-Z_$][\w$]*)\.\s*$/)
           const parentIdent = memberMatch?.[1]
           const memberKey = parentIdent ? `${parentIdent}.${cmStream}` : null
-          const parentVal = parentIdent
-            ? app.mathScope?.get
-              ? app.mathScope.get(parentIdent)
-              : app.mathScope?.[parentIdent]
-            : null
           const isMemberVariable =
             parentIdent &&
-            ((app.mathScope?.has?.(memberKey) &&
-              typeof app.mathScope.get(memberKey) !== 'function' &&
-              app.scopeTypes?.[memberKey] !== 'function') ||
-              (memberKey in (app.mathScope || {}) &&
-                typeof app.mathScope[memberKey] !== 'function' &&
-                app.scopeTypes?.[memberKey] !== 'function') ||
-              app.scopeProperties?.[parentIdent]?.includes?.(cmStream) ||
-              (parentVal &&
-                typeof parentVal === 'object' &&
-                cmStream in parentVal &&
-                typeof parentVal[cmStream] !== 'function'))
+            ((app.mathScope.has(memberKey) && app.scopeTypes?.[memberKey] !== 'function') ||
+              app.scopeProperties?.[parentIdent]?.includes?.(cmStream))
 
           if (isMemberVariable) style = 'variable'
           else if (parentIdent && dateTimeMethodsSet.has(cmStream)) style = 'function'
           else if (currencyTokens.has(cmStream)) style = 'currency'
           else if (/\bline\d+\b/.test(cmStream)) style = 'lineNo'
           else if (keywordTokens.has(cmStream)) style = 'keyword'
-          else if (
-            app.mathScope.has(cmStream) &&
-            typeof app.mathScope.get(cmStream) !== 'function' &&
-            app.scopeTypes?.[cmStream] !== 'function'
-          )
-            style = 'variable'
+          else if (app.mathScope.has(cmStream) && app.scopeTypes?.[cmStream] !== 'function') style = 'variable'
           else if (math.Unit.UNITS[cmStream]?.base.key === `${USD_UNIT}_STUFF`) style = 'currency'
           else if (functionTokens.has(cmStream) || dateTimeMethodsSet.has(cmStream)) style = 'function'
           else if (constantTokens.has(cmStream)) style = 'constant'

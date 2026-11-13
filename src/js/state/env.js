@@ -1,8 +1,7 @@
-import { getSystemLocale as coreGetSystemLocale } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { app } from './appState.js'
 
-const userAgent = navigator.userAgent.toLowerCase()
+const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : ''
 
 export const DEFAULT_APP_WIDTH = 600
 export const DEFAULT_APP_HEIGHT = 515
@@ -52,13 +51,4 @@ export async function checkSize() {
 
   dom.resetSizeButton.style.display =
     isElectron && isAppWrapperResized && !(await numara.isMaximized()) ? 'inline-flex' : 'none'
-}
-
-/**
- * Get standard BCP 47 locale tag based on system preference.
- * @param {object} [settings=app.settings] The application settings.
- * @returns {string} The system locale.
- */
-export function getSystemLocale(settings = app.settings) {
-  return coreGetSystemLocale(settings)
 }
