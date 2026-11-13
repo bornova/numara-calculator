@@ -8,7 +8,6 @@
   height: 100% !important;
   color: light-dark(#000000, #e6e6e6) !important;
   font-family: 'Roboto Mono', monospace !important;
-  font-size-adjust: from-font;
 }
 
 .cm-s-numara .CodeMirror-gutters {
@@ -202,10 +201,12 @@ body.numara-search-panel-open .CodeMirror-selected {
 }
 
 .search-count {
+  display: flex;
   position: absolute;
-  top: 50%;
+  top: 0;
   right: 10px;
-  transform: translateY(-50%);
+  bottom: 0;
+  align-items: center;
   pointer-events: none;
   color: light-dark(#777777, #999999);
   font-size: 0.92rem;
