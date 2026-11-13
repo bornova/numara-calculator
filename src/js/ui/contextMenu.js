@@ -185,6 +185,12 @@ export function initializeContextMenus() {
   cm.on('contextmenu', inputContext)
   dom.output.addEventListener('contextmenu', outputContext)
 
+  cm.getWrapperElement().addEventListener('contextmenu', (event) => {
+    if (event.target.closest?.('.CodeMirror-linewidget [data-index]')) {
+      outputContext(event)
+    }
+  })
+
   document.addEventListener('contextmenu', (event) => {
     if (
       event.target.closest?.(
