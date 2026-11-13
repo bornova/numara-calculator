@@ -33,6 +33,7 @@
 
 .dialog-settings-body {
   margin-right: -8px;
+  background-color: light-dark(#ffffff, #1f1f1f);
   padding-right: 8px;
   height: calc(100vh - 230px);
   max-height: 420px;
@@ -274,6 +275,7 @@
 /* Color picker dialog */
 
 .colorPickerContainer {
+  background-color: light-dark(#ffffff, #1f1f1f);
   height: calc(100vh - 230px);
   max-height: 420px;
   overflow: scroll;
@@ -621,6 +623,7 @@ div:has(> #logsLink) {
   flex: 1;
   flex-direction: column;
   gap: 3px;
+  background-color: light-dark(#ffffff, #1f1f1f);
   padding-right: 2px;
   min-height: 0;
   overflow-x: hidden;

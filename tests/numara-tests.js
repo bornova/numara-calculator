@@ -10,12 +10,14 @@ import { parseLocaleNumber, parseStrictLocaleNumber } from '../src/js/core/forma
 import { stripComments } from '../src/js/core/preprocessor.js'
 import { applyUdfuToMath } from '../src/js/core/udfu.js'
 import {
+  HIDPI_MIN_DPR,
   debounce,
   escapeHTML,
   escapeRegExp,
   getSafeFilename,
   resolveEditorFontSize,
   resolveEditorFontWeight,
+  resolveEditorLineHeight,
   resolveUiFontGrade
 } from '../src/js/core/utils.js'
 import { dom, resetDomCache } from '../src/js/dom.js'
@@ -1389,12 +1391,29 @@ describe('Numara Calculation Engine vs Math.js', function () {
       )
     })
 
-    it('should resolve editor font sizes across zoom levels and optical font weights/grades across platforms', () => {
+    it('should resolve editor font sizes, line heights, optical weights, and grades across zoom levels and display DPI', () => {
+      assert.strictEqual(HIDPI_MIN_DPR, 1.5)
+
       assert.strictEqual(resolveEditorFontSize('14px', 'normal'), '14px')
       assert.strictEqual(resolveEditorFontSize('14px', 'smaller'), '13px')
       assert.strictEqual(resolveEditorFontSize('14px', 'larger'), '15px')
       assert.strictEqual(resolveEditorFontSize('12px', 'smaller'), '11px')
       assert.strictEqual(resolveEditorFontSize('16px', 'larger'), '17px')
+      assert.strictEqual(resolveEditorFontSize('14px', 'normal', true), '13px')
+      assert.strictEqual(resolveEditorFontSize('14px', 'smaller', true), '12px')
+      assert.strictEqual(resolveEditorFontSize('14px', 'larger', true), '14px')
+      assert.strictEqual(resolveEditorFontSize('12px', 'smaller', true), '10px')
+      assert.strictEqual(resolveEditorFontSize('16px', 'normal', true), '15px')
+
+      assert.strictEqual(resolveEditorLineHeight('26px', 'normal'), '26px')
+      assert.strictEqual(resolveEditorLineHeight('26px', 'smaller'), '24px')
+      assert.strictEqual(resolveEditorLineHeight('26px', 'larger'), '28px')
+      assert.strictEqual(resolveEditorLineHeight('34px', 'larger'), '36px')
+      assert.strictEqual(resolveEditorLineHeight('26px', 'normal', true), '24px')
+      assert.strictEqual(resolveEditorLineHeight('26px', 'smaller', true), '22px')
+      assert.strictEqual(resolveEditorLineHeight('26px', 'larger', true), '26px')
+      assert.strictEqual(resolveEditorLineHeight('17px', 'smaller', true), '15px')
+      assert.strictEqual(resolveEditorLineHeight('21px', 'normal', true), '20px')
 
       assert.strictEqual(resolveEditorFontWeight('400', true), '400')
       assert.strictEqual(resolveEditorFontWeight('700', true), '700')
@@ -1402,9 +1421,16 @@ describe('Numara Calculation Engine vs Math.js', function () {
       assert.strictEqual(resolveEditorFontWeight('400', false), '450')
       assert.strictEqual(resolveEditorFontWeight('500', false), '550')
       assert.strictEqual(resolveEditorFontWeight('700', false), '700')
+      assert.strictEqual(resolveEditorFontWeight('200', false, true), '250')
+      assert.strictEqual(resolveEditorFontWeight('200', false, false), '200')
+      assert.strictEqual(resolveEditorFontWeight('400', false, false), '400')
+      assert.strictEqual(resolveEditorFontWeight('500', false, false), '500')
+      assert.strictEqual(resolveEditorFontWeight('700', false, false), '700')
 
       assert.strictEqual(resolveUiFontGrade(true), '0')
       assert.strictEqual(resolveUiFontGrade(false), '50')
+      assert.strictEqual(resolveUiFontGrade(false, true), '50')
+      assert.strictEqual(resolveUiFontGrade(false, false), '0')
     })
 
     it('should parse strict localized numbers and classify internal scope keys accurately', () => {

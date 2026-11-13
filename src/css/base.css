@@ -1,7 +1,9 @@
 /* Base reset & elements */
 
 :root {
-  --zoom-step: 0px;
+  --zoom-level-step: 0px;
+  --dpi-step: 0px;
+  --zoom-step: calc(var(--zoom-level-step) + var(--dpi-step));
   --ui-font-grad: 0;
   --mono-weight: 400;
   --base-font-size: calc(13px + var(--zoom-step));
@@ -11,7 +13,7 @@
   --switch-height: calc(17px + var(--zoom-step));
   --switch-knob: calc(var(--switch-height) - 4px);
   --switch-line-height: calc(var(--switch-height) + 1px);
-  --scroll-top-bottom: 34px;
+  --scroll-top-bottom: calc(34px + var(--zoom-step));
   --icon-xs: calc(14px + var(--zoom-step));
   --icon-sm: calc(15px + var(--zoom-step));
   --icon-md: calc(16px + var(--zoom-step));
@@ -23,10 +25,10 @@
   --mac-header-height: calc(42px + 2 * var(--zoom-step));
   --main-panel-top: calc(53px + 3 * var(--zoom-step));
   --main-panel-bottom: calc(44px + 4 * var(--zoom-step));
-  --answer-height: 28px;
+  --answer-height: calc(28px + var(--zoom-step));
   --actions-height: calc(var(--answer-height) - 2px);
   --action-padding: 4px;
-  --actions-side-min-width: 52px;
+  --actions-side-min-width: calc(52px + 2 * var(--zoom-step));
   --menu-item-padding: calc(var(--action-padding) + 1px) calc(11px + var(--zoom-step));
   --pagelist-width: calc(265px + 15 * var(--zoom-step));
   --pagelist-float-bottom: calc(40px + 4 * var(--zoom-step));
@@ -36,7 +38,7 @@
   --pagelist-float-max-height: calc(450px + 30 * var(--zoom-step));
   --pagelist-float-vh-offset: calc(91px + 5 * var(--zoom-step));
   --pagelist-header-height: calc(42px + 2 * var(--zoom-step));
-  --pagelist-footer-height: 49px;
+  --pagelist-footer-height: calc(49px + 2 * var(--zoom-step));
   --pagelist-item-pad: calc(var(--action-padding) + 1px);
   --pagelist-rename-height: calc(30px + 2 * var(--zoom-step));
   --pagetab-padding: calc(var(--action-padding) - 2px) calc(9px + var(--zoom-step));
@@ -49,7 +51,7 @@
   --modal-xlarge: calc(850px + 50 * var(--zoom-step));
   --modal-settings: calc(450px + 30 * var(--zoom-step));
   --modal-udfu: calc(580px + 40 * var(--zoom-step));
-  --setting-item-width: 162px;
+  --setting-item-width: calc(162px + 12 * var(--zoom-step));
   --currency-interval-width: calc(135px + 10 * var(--zoom-step));
   --theme-pill-width: calc(125px + 10 * var(--zoom-step));
   --color-input-width: calc(85px + 5 * var(--zoom-step));
@@ -62,22 +64,23 @@
   --search-open-pad: calc(50px + 4 * var(--zoom-step));
   --search-replace-open-pad: calc(89px + 7 * var(--zoom-step));
   --foldgutter-width: calc(13px + var(--zoom-step));
-  --clr-picker-width: 172px;
+  --clr-picker-width: calc(172px + 12 * var(--zoom-step));
   --clr-control-height: calc(var(--answer-height) - 2px);
 }
 
+html[data-low-dpi='true'] {
+  --dpi-step: -1px;
+}
+
 html[data-zoom='smaller'] {
-  --zoom-step: -1px;
-  --scroll-top-bottom: 33px;
-  --answer-height: 27px;
-  --actions-side-min-width: 50px;
-  --pagelist-footer-height: 47px;
-  --setting-item-width: 150px;
-  --clr-picker-width: 160px;
+  --zoom-level-step: -1px;
 }
 
 html[data-zoom='larger'] {
-  --zoom-step: 1px;
+  --zoom-level-step: 1px;
+}
+
+html[data-zoom='larger']:not([data-low-dpi='true']) {
   --scroll-top-bottom: 36px;
   --dot-size: 6px;
   --dot-bottom: 14px;

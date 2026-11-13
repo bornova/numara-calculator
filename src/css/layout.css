@@ -6,6 +6,7 @@
   right: 0;
   bottom: 0;
   left: 0;
+  background-color: light-dark(#ffffff, #1f1f1f);
 }
 
 .page-list-width-animating .appWrapper,
@@ -291,7 +292,6 @@
 }
 
 .pageName {
-  opacity: 0.9;
   cursor: pointer;
   margin-top: 2px;
   border-radius: 5px;
@@ -323,7 +323,6 @@
 
 .selectionStats {
   display: none;
-  opacity: 0.95;
   cursor: pointer;
   margin-top: 2px;
   border-radius: 5px;
