@@ -1,6 +1,7 @@
 import UIkit from 'uikit'
 
-import { formatAnswer, math } from '../calc/calcManager.js'
+import { formatAnswer } from '../core/formatter.js'
+import { math } from '../core/mathInstance.js'
 import { escapeHTML, isCommaDecimal } from '../core/utils.js'
 import { app } from '../state/appState.js'
 import { CLASS_NAMES, currencyTokens, dateTimeInstanceMethods, keywords } from './constants.js'
@@ -170,7 +171,7 @@ function handleVariableTooltip(target) {
 
   if (!val || app.scopeTypes?.[lookupKey] === 'function') return
 
-  showTooltip(target, escapeHTML(formatAnswer(val)))
+  showTooltip(target, escapeHTML(formatAnswer(val, undefined, app.settings, app.currencies)))
 }
 
 /**
@@ -180,7 +181,10 @@ function handleVariableTooltip(target) {
 function handleLineNoTooltip(target) {
   const text = target.textContent
   const val = app.mathScope.get(text)
-  const lineTooltip = app.scopeTypes?.[text] === 'function' ? 'Function' : formatAnswer(val ?? 'Undefined')
+  const lineTooltip =
+    app.scopeTypes?.[text] === 'function'
+      ? 'Function'
+      : formatAnswer(val ?? 'Undefined', undefined, app.settings, app.currencies)
 
   showTooltip(target, escapeHTML(lineTooltip))
 }
