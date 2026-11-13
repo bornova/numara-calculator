@@ -1,3 +1,5 @@
+import UIkit from 'uikit'
+
 import { author, homepage, version } from '../../../package.json'
 import { dom } from '../dom.js'
 import { app } from '../state/appState.js'
@@ -41,6 +43,15 @@ export function setupAppInfo() {
 
     numara.showAbout(() => modal.show('#dialogAbout'))
   }
+
+  UIkit.util.on(
+    '#dialogAbout',
+    'shown',
+    () => {
+      checkAppUpdate()
+    },
+    { self: true }
+  )
 }
 
 /**
