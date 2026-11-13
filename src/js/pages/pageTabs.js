@@ -2,6 +2,7 @@ import { debouncedSavePageState } from '../calc/calcManager.js'
 import { escapeHTML } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { app } from '../state/appState.js'
+import { events } from '../state/events.js'
 import { store } from '../state/store.js'
 import { hideOpenDropdowns } from '../ui/dialogs.js'
 
@@ -332,4 +333,10 @@ export function setupPageTabsEvents({ onRename, onRenamePage, onDuplicate, onDel
   })
 
   window.addEventListener('resize', hideTabContextMenu)
+
+  events.on('ui:hideDropdowns', (excludeEl) => {
+    if (excludeEl !== dom.tabContextMenu) {
+      hideTabContextMenu()
+    }
+  })
 }
