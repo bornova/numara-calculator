@@ -1,7 +1,7 @@
 import { dom } from '../dom.js'
 import { app } from './appState.js'
 
-const userAgent = navigator.userAgent.toLowerCase()
+const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : ''
 
 export const DEFAULT_APP_WIDTH = 600
 export const DEFAULT_APP_HEIGHT = 515
@@ -16,11 +16,6 @@ export const isMac = isElectron ? window.numara.isMac : userAgent.includes('mac'
 export const isMobile =
   /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent) ||
   (typeof navigator !== 'undefined' && !!navigator.userAgentData?.mobile)
-
-/** Check if app is running on Windows. */
-export const isWin = isElectron
-  ? Boolean(window.numara.isWin)
-  : !isMobile && (navigator.userAgentData?.platform === 'Windows' || /windows|win32|win64/.test(userAgent))
 
 /**
  * Get the active application theme ('dark' or 'light').
