@@ -2,7 +2,6 @@ import { escapeHTML } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
 import { app } from '../state/appState.js'
-import { outputContext } from '../ui/contextMenu.js'
 
 let lastSyncedDocHeight = -1
 let lastSyncedLineCount = -1
@@ -91,7 +90,6 @@ export function updateLineWidget(lineHandle, answer, lineIndex, isFolded) {
     node.dataset.index = lineIndex
     node.dataset.rawHtml = answer
     node.innerHTML = answer
-    node.addEventListener('contextmenu', outputContext)
     node.style.display = isFolded ? 'none' : ''
 
     widget = cm.addLineWidget(lineHandle, node, { above: false, coverGutter: false, noHScroll: true })
