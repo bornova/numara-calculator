@@ -31,7 +31,7 @@
     "@eslint/js": "^10.0.1",
     "@formulajs/formulajs": "^4.6.1",
     "codemirror": "^5.65.21",
-    "electron": "^45.3.1",
+    "electron": "^45.3.2",
     "electron-builder": "^26.18.0",
     "esbuild": "^0.28.2",
     "eslint": "^10.14.0",
