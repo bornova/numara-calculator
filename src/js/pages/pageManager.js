@@ -4,15 +4,15 @@ import UIkit from 'uikit'
 Settings.defaultNumberingSystem = 'latn'
 Settings.defaultOutputCalendar = 'iso8601'
 
-import { calculate, debouncedSavePageState, renderAnswersToHTML, syncOutputHeights } from '../calc/calcManager.js'
+import { calculate, debouncedSavePageState } from '../calc/calcManager.js'
+import { renderAnswersToHTML, syncOutputHeights } from '../calc/outputRenderer.js'
 import { escapeHTML, sanitizePageName } from '../core/utils.js'
 import { dom } from '../dom.js'
-import { cm, debouncedSaveCursor } from '../editor/index.js'
+import { cm } from '../editor/index.js'
 import { app } from '../state/appState.js'
+import { events } from '../state/events.js'
 import { store } from '../state/store.js'
-import { confirm, hideOpenDropdowns, notify } from '../ui/dialogs.js'
-import { hideFloatingPageList, updatePageListScroll } from '../ui/pageList.js'
-import { setupPageIo } from './pageIo.js'
+import { confirm, hideFloatingPageList, hideOpenDropdowns, notify } from '../ui/dialogs.js'
 import { isPageDragging, setupPageListSort, setupPageTabsSort } from './pageSort.js'
 import {
   hideTabContextMenu,
@@ -22,7 +22,6 @@ import {
   startInlinePageRename,
   togglePageListContextMenu
 } from './pageTabs.js'
-import { syncPageDelete, syncPageRename, syncPageSave } from './sync.js'
 import { getSyncKey } from './syncPlan.js'
 
 let isScrolling = false
@@ -156,7 +155,7 @@ function createAndActivatePage(pages, pageId, pageName, pageData) {
   store.set('pages', pages)
 
   loadPage(pageId)
-  syncPageSave(pageName, pageData)
+  events.emit('page:saved', pageName, pageData)
 
   const hidePromise = hideFloatingPageList()
 
@@ -179,7 +178,6 @@ function createAndActivatePage(pages, pageId, pageName, pageData) {
  */
 export function newPage(isImport = false, importName = '', importData = '') {
   debouncedSavePageState.flush()
-  debouncedSaveCursor.flush()
 
   hideTabContextMenu()
   hideOpenDropdowns()
@@ -199,7 +197,6 @@ export function newPage(isImport = false, importName = '', importData = '') {
  */
 function duplicatePage(pageId) {
   debouncedSavePageState.flush()
-  debouncedSaveCursor.flush()
 
   const pages = store.get('pages') || []
   const dupPage = pages.find((page) => page.id === pageId)
@@ -246,7 +243,7 @@ function deletePage(pageId) {
       populatePages()
     }
 
-    syncPageDelete(pageName)
+    events.emit('page:deleted', pageName)
   })
 }
 
@@ -295,7 +292,7 @@ function commitPageRename(pageId, originalName, rawInput, save) {
     updatePageName(targetPage.name, pageId)
   }
 
-  syncPageRename(oldName, newName)
+  events.emit('page:renamed', oldName, newName)
 }
 
 /**
@@ -344,7 +341,6 @@ export function loadPage(pageId) {
   if (app.activePage && app.activePage !== pageId) {
     app.pageHistory.set(app.activePage, cm.getHistory())
     debouncedSavePageState.flush()
-    debouncedSaveCursor.flush()
   }
 
   const page = store.get('pages').find((p) => p.id === pageId)
@@ -474,7 +470,7 @@ export function populatePages() {
 
   dom.pageList.replaceChildren(fragment)
 
-  updatePageListScroll()
+  events.emit('pages:populated')
   populatePageTabs(pages, formatPageDate)
 }
 
@@ -591,7 +587,6 @@ export function initializePages() {
   setupPageListSort()
   setupPageTabsSort()
   setupPageEvents()
-  setupPageIo()
 
   const pages = store.get('pages')
 
