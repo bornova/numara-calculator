@@ -1,21 +1,15 @@
+import UIkit from 'uikit'
 import { DateTime } from 'luxon'
 
-import {
-  applyUdfuToMath,
-  compileUdfItems,
-  compileUduItems,
-  parseLegacyUdf,
-  parseLegacyUdu,
-  RESERVED_KEYS,
-  VALID_IDENTIFIER
-} from '../core/udfu.js'
+import { math } from '../core/mathInstance.js'
+import { applyUdfuToMath, compileUdfItems, compileUduItems, RESERVED_KEYS, VALID_IDENTIFIER } from '../core/udfu.js'
 import { escapeHTML } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { refreshEditor } from '../editor/index.js'
 import { app } from '../state/appState.js'
 import { store } from '../state/store.js'
 import { notify, showError } from '../ui/dialogs.js'
-import { calculate, clearEvaluationCache, math } from './calcManager.js'
+import { calculate, clearEvaluationCache } from './calcManager.js'
 
 const udfuState = {
   previouslyImportedUDFs: [],
@@ -24,21 +18,6 @@ const udfuState = {
 
 let editingUdfIndex = null
 let editingUduIndex = null
-
-/**
- * Migrates legacy raw `udf` and `udu` strings into structured `udfItems` and `uduItems` arrays if not yet present.
- */
-function migrateLegacyUdfu() {
-  if (store.get('udfItems') === null) {
-    const rawUdf = (store.get('udf') ?? '').trim()
-    store.set('udfItems', parseLegacyUdf(rawUdf, math, { luxon: DateTime }))
-  }
-
-  if (store.get('uduItems') === null) {
-    const rawUdu = (store.get('udu') ?? '').trim()
-    store.set('uduItems', parseLegacyUdu(rawUdu, math, { luxon: DateTime }))
-  }
-}
 
 /**
  * Apply user defined functions or units to the main-thread Math.js instance and persist to storage.
@@ -407,8 +386,6 @@ function bindUdfuListEvents(listEl, { editAction, deleteAction, onEdit, onDelete
  * Loads user-defined functions and units from storage and binds dialog UI events.
  */
 export function setupUserDefined() {
-  migrateLegacyUdfu()
-
   const udfItems = store.get('udfItems') || []
   const uduItems = store.get('uduItems') || []
 
@@ -512,4 +489,27 @@ export function setupUserDefined() {
         renderUduList
       )
   })
+
+  let udTab = 1
+
+  UIkit.util.on('#dialogUdfu', 'beforeshow', prepareUdfuDialog, { self: true })
+
+  UIkit.util.on(
+    '#dialogUdfu',
+    'shown',
+    () => {
+      ;(udTab === 1 ? dom.udfNameInput : dom.uduNameInput)?.focus()
+    },
+    { self: true }
+  )
+
+  UIkit.util.on(
+    '#udfTab, #uduTab',
+    'shown',
+    (event) => {
+      udTab = event.target.id === 'udfTab' ? 1 : 2
+      ;(udTab === 1 ? dom.udfNameInput : dom.uduNameInput)?.focus()
+    },
+    { self: true }
+  )
 }
