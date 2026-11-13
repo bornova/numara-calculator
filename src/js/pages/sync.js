@@ -4,6 +4,7 @@ import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
 import { app } from '../state/appState.js'
 import { isElectron } from '../state/env.js'
+import { events } from '../state/events.js'
 import { store } from '../state/store.js'
 import { customConfirm, notify } from '../ui/dialogs.js'
 import { defaultPage, generatePageId, loadPage, populatePages, updatePageName } from './pageManager.js'
@@ -546,4 +547,14 @@ export function syncPageSaveDebounced(pageName, content) {
   }, 500)
 
   debounceTimeouts.set(syncKey, timeout)
+}
+
+/**
+ * Subscribes folder synchronization handlers to local page persistence events.
+ */
+export function setupSync() {
+  events.on('page:contentSaved', syncPageSaveDebounced)
+  events.on('page:saved', syncPageSave)
+  events.on('page:renamed', syncPageRename)
+  events.on('page:deleted', syncPageDelete)
 }
