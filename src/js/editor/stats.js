@@ -1,8 +1,18 @@
-import { formatAnswer } from '../calc/calcManager.js'
-import { parseStrictLocaleNumber } from '../core/formatter.js'
+import { formatAnswer, parseStrictLocaleNumber } from '../core/formatter.js'
 import { dom } from '../dom.js'
 import { app } from '../state/appState.js'
-import { cm } from './index.js'
+import { events } from '../state/events.js'
+
+let cm = null
+
+/**
+ * Initializes live selection stats with the editor instance and subscribes to calculation updates.
+ * @param {object} cmInstance The CodeMirror instance.
+ */
+export function initStats(cmInstance) {
+  cm = cmInstance
+  events.on('calc:resultsApplied', () => updateSelectionStats())
+}
 
 /**
  * Resolves the inclusive `[startLine, endLine]` range for a CodeMirror selection,
@@ -22,11 +32,12 @@ export function getSelectionLineRange(sel) {
 
 /**
  * Computes and displays live sum, average, and count for multi-line selections.
+ * @param {object} [cmInstance=cm] CodeMirror instance to inspect.
  */
-export function updateSelectionStats() {
-  if (!dom.selectionStats) return
+export function updateSelectionStats(cmInstance = cm) {
+  if (!dom.selectionStats || !cmInstance) return
 
-  if (!cm.somethingSelected()) {
+  if (!cmInstance.somethingSelected()) {
     dom.selectionStats.style.display = 'none'
     dom.actions?.classList.remove('showing-stats')
     return
@@ -34,7 +45,7 @@ export function updateSelectionStats() {
 
   const selectedLines = new Set()
 
-  for (const sel of cm.listSelections()) {
+  for (const sel of cmInstance.listSelections()) {
     const { startLine, endLine } = getSelectionLineRange(sel)
 
     for (let i = startLine; i <= endLine; i++) {
@@ -68,9 +79,9 @@ export function updateSelectionStats() {
   const avg = sum / values.length
   const useThouSep = Boolean(app.settings?.thouSep)
   const copyGrouping = Boolean(useThouSep && app.settings?.copyThouSep)
-  const sumOut = formatAnswer(sum, useThouSep)
-  const sumCopy = copyGrouping === useThouSep ? sumOut : formatAnswer(sum, copyGrouping)
-  const avgOut = formatAnswer(avg, useThouSep)
+  const sumOut = formatAnswer(sum, useThouSep, app.settings, app.currencies)
+  const sumCopy = copyGrouping === useThouSep ? sumOut : formatAnswer(sum, copyGrouping, app.settings, app.currencies)
+  const avgOut = formatAnswer(avg, useThouSep, app.settings, app.currencies)
 
   dom.selectionStats.textContent = `Sum: ${sumOut}  •  Avg: ${avgOut}  •  Count: ${values.length}`
   dom.selectionStats.dataset.copy = sumCopy
