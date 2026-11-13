@@ -1,69 +1,175 @@
 export const VALID_IDENTIFIER = /^[a-zA-Z_$][\w$]*$/
 export const RESERVED_KEYS = new Set(['__proto__', 'constructor', 'prototype'])
 
-const defaultProxy = new Proxy(() => defaultProxy, {
+export const defaultProxy = new Proxy(() => defaultProxy, {
   get: (target, prop) => (prop === Symbol.toPrimitive ? () => 0 : defaultProxy)
 })
 
 /**
- * Finds the index of the closing parenthesis matching the opening parenthesis at `openIndex`.
+ * If `idx` starts a string literal, template literal, or JS comment, returns the index
+ * immediately following it; otherwise returns `-1`.
  * @param {string} str Source string.
- * @param {number} openIndex Index of `(`.
- * @returns {number} Matching `)` index, or `-1` if unbalanced.
+ * @param {number} idx Current character index.
+ * @returns {number} End index past the string/comment, or `-1`.
  */
-function findMatchingParen(str, openIndex) {
-  let depth = 0
-  let inString = null
+export function skipStringOrComment(str, idx) {
+  const ch = str[idx]
 
-  for (let i = openIndex; i < str.length; i++) {
-    const ch = str[i]
+  if (ch === '/' && str[idx + 1] === '/') {
+    let i = idx + 2
 
-    if (inString) {
-      if (ch === '\\') {
-        i++
-      } else if (ch === inString) {
-        inString = null
+    while (i < str.length && str[i] !== '\n') i++
+
+    return i
+  }
+
+  if (ch === '/' && str[idx + 1] === '*') {
+    const end = str.indexOf('*/', idx + 2)
+    return end === -1 ? str.length : end + 2
+  }
+
+  if (ch === "'" || ch === '"') {
+    let i = idx + 1
+
+    while (i < str.length) {
+      if (str[i] === '\\') {
+        i += 2
+        continue
       }
 
-      continue
+      if (str[i] === ch) return i + 1
+      i++
     }
 
-    if (ch === '"' || ch === "'" || ch === '`') {
-      inString = ch
-    } else if (ch === '(') {
-      depth++
-    } else if (ch === ')') {
-      depth--
-      if (depth === 0) return i
+    return str.length
+  }
+
+  if (ch === '`') {
+    let i = idx + 1
+
+    while (i < str.length) {
+      if (str[i] === '\\') {
+        i += 2
+        continue
+      }
+
+      if (str[i] === '`') return i + 1
+
+      if (str[i] === '$' && str[i + 1] === '{') {
+        const closeIdx = findMatchingClose(str, i + 1)
+
+        i = closeIdx === -1 ? str.length : closeIdx + 1
+        continue
+      }
+
+      i++
     }
+
+    return str.length
   }
 
   return -1
 }
 
 /**
- * Strips a single balanced pair of outer parentheses from an expression string,
- * preserving parentheses when they wrap an object literal (`({ ... })`) or multiple groups (`(a) * (b)`).
- * @param {string} str Expression string.
- * @returns {string} Unwrapped expression string.
+ * Finds the index of the closing delimiter matching `(`, `[`, or `{` at `openIndex`.
+ * Respects nested strings, template expressions, and comments.
+ * @param {string} str Source string.
+ * @param {number} openIndex Index of opening delimiter.
+ * @returns {number} Matching closing delimiter index, or `-1` if unbalanced.
  */
-function unwrapBalancedParens(str) {
-  if (!str.startsWith('(') || !str.endsWith(')')) return str
+export function findMatchingClose(str, openIndex) {
+  const openChar = str[openIndex]
+  const closeChar = openChar === '(' ? ')' : openChar === '[' ? ']' : openChar === '{' ? '}' : null
 
-  const closeIdx = findMatchingParen(str, 0)
-  if (closeIdx !== str.length - 1) return str
+  if (!closeChar) return -1
 
-  const inner = str.slice(1, -1).trim()
-  return inner.startsWith('{') ? str : inner
+  let depth = 0
+  let i = openIndex
+
+  while (i < str.length) {
+    const after = skipStringOrComment(str, i)
+
+    if (after !== -1) {
+      i = after
+      continue
+    }
+
+    const ch = str[i]
+
+    if (ch === openChar) depth++
+    else if (ch === closeChar) {
+      depth--
+
+      if (depth === 0) return i
+    }
+
+    i++
+  }
+
+  return -1
 }
 
 /**
- * Strips outer block braces or balanced parentheses from an arrow-function body string.
- * @param {string} rawBody Trimmed right-hand side of `=>`.
+ * Wraps an expression in parentheses, placing line breaks around multi-line or `//`-commented bodies
+ * so a trailing line comment cannot comment out the closing `)`.
+ * @param {string} expr Expression string.
  * @returns {string}
  */
-function normalizeArrowBody(rawBody) {
-  return rawBody.startsWith('{') && rawBody.endsWith('}') ? rawBody.slice(1, -1).trim() : unwrapBalancedParens(rawBody)
+function wrapParenExpr(expr) {
+  return expr.includes('//') ? `(\n${expr}\n)` : `(${expr})`
+}
+
+/**
+ * Checks whether a trimmed body string contains a top-level `return` statement (or an outer
+ * statement-block `return`), avoiding false positives inside nested functions or object methods.
+ * @param {string} str Body string.
+ * @param {boolean} isBlock Whether the outer string is a single `{ ... }` brace pair.
+ * @returns {boolean}
+ */
+function hasTopLevelReturn(str, isBlock) {
+  const targetBraceDepth = isBlock ? 1 : 0
+  let parenDepth = 0
+  let bracketDepth = 0
+  let braceDepth = 0
+  let sawReturnAtBlockDepth = false
+  let i = 0
+
+  while (i < str.length) {
+    const after = skipStringOrComment(str, i)
+
+    if (after !== -1) {
+      i = after
+      continue
+    }
+
+    const ch = str[i]
+    if (ch === '(') parenDepth++
+    else if (ch === ')') parenDepth--
+    else if (ch === '[') bracketDepth++
+    else if (ch === ']') bracketDepth--
+    else if (ch === '{') braceDepth++
+    else if (ch === '}') braceDepth--
+    else if (isBlock && ch === ':' && parenDepth === 0 && bracketDepth === 0 && braceDepth === 1) {
+      // Object literal syntax at outer brace depth (e.g. `{ return: 1, calc(x) { return x } }`)
+      return false
+    } else if (
+      parenDepth === 0 &&
+      bracketDepth === 0 &&
+      braceDepth === targetBraceDepth &&
+      str.startsWith('return', i) &&
+      !/[\w$.]/.test(str[i - 1] || '') &&
+      !/[\w$:]/.test(str[i + 6] || '')
+    ) {
+      if (!isBlock) return true
+
+      sawReturnAtBlockDepth = true
+    }
+
+    i++
+  }
+
+  return sawReturnAtBlockDepth
 }
 
 /**
@@ -73,66 +179,13 @@ function normalizeArrowBody(rawBody) {
  * @param {object} [externalLibs={}] Optional external libraries `{ luxon, nerdamer, formulajs }`.
  * @returns {object}
  */
-function evalUdfuObject(body, math = defaultProxy, externalLibs = {}) {
+export function evalUdfuObject(body, math = defaultProxy, externalLibs = {}) {
   const luxon = externalLibs.luxon ?? defaultProxy
   const nerdamer = externalLibs.nerdamer ?? defaultProxy
   const formulajs = externalLibs.formulajs ?? defaultProxy
   const fn = new Function('math', 'luxon', 'nerdamer', 'formulajs', `with (math) { return {${body}} }`)
 
   return fn(math, luxon, nerdamer, formulajs)
-}
-
-/**
- * Extracts parameter list and body source from a runtime function value.
- * @param {Function} fn Function to inspect.
- * @returns {{ params: string, body: string }}
- */
-function extractFunctionParts(fn) {
-  const src = fn.toString().trim()
-
-  if (src.startsWith('(')) {
-    const closeIdx = findMatchingParen(src, 0)
-
-    if (closeIdx !== -1) {
-      const arrowMatch = src.slice(closeIdx + 1).match(/^\s*=>\s*([\s\S]*)$/)
-
-      if (arrowMatch) {
-        const rawParams = src.slice(1, closeIdx).trim()
-        const params = rawParams.length > 0 ? rawParams : '()'
-
-        return { params, body: normalizeArrowBody(arrowMatch[1].trim()) }
-      }
-    }
-  }
-
-  const singleArrow = src.match(/^([a-zA-Z_$][\w$]*)\s*=>\s*([\s\S]*)$/)
-
-  if (singleArrow) {
-    return { params: singleArrow[1].trim(), body: normalizeArrowBody(singleArrow[2].trim()) }
-  }
-
-  const headerMatch = src.match(
-    /^(?:(?:async\s+)?function\s*(?:\*\s*)?[a-zA-Z_$]*[\w$]*|(?:async\s+)?[a-zA-Z_$][\w$]*)\s*\(/
-  )
-
-  if (headerMatch) {
-    const openIdx = headerMatch[0].length - 1
-    const closeIdx = findMatchingParen(src, openIdx)
-
-    if (closeIdx !== -1) {
-      const afterParams = src.slice(closeIdx + 1).trim()
-
-      if (afterParams.startsWith('{') && afterParams.endsWith('}')) {
-        const rawParams = src.slice(openIdx + 1, closeIdx).trim()
-        const params = rawParams.length > 0 ? rawParams : '()'
-        const body = afterParams.slice(1, -1).trim()
-
-        return { params, body }
-      }
-    }
-  }
-
-  return { params: '', body: src }
 }
 
 /**
@@ -148,7 +201,7 @@ export function compileUdfItems(items) {
       const isZeroArgFunc = rawParams === '()'
       const cleanParams = rawParams.replace(/^\(|\)$/g, '').trim()
       const cleanBody = (body ?? '').trim()
-      const isBlock = cleanBody.startsWith('{') && cleanBody.endsWith('}')
+      const isBlock = cleanBody.startsWith('{') && findMatchingClose(cleanBody, 0) === cleanBody.length - 1
       const hasReturn = /\breturn\b/.test(cleanBody)
       const isMultiStmt = cleanBody.includes('\n') || cleanBody.includes(';') || hasReturn
 
@@ -161,16 +214,16 @@ export function compileUdfItems(items) {
           return `${JSON.stringify(cleanName)}: (${cleanParams}) => {\n${cleanBody}\n}`
         }
 
-        return `${JSON.stringify(cleanName)}: (${cleanParams}) => (${cleanBody})`
+        return `${JSON.stringify(cleanName)}: (${cleanParams}) => ${wrapParenExpr(cleanBody)}`
       }
 
-      if (hasReturn) {
+      if (hasTopLevelReturn(cleanBody, isBlock)) {
         if (isBlock) return `${JSON.stringify(cleanName)}: () => ${cleanBody}`
 
         return `${JSON.stringify(cleanName)}: () => {\n${cleanBody}\n}`
       }
 
-      return `${JSON.stringify(cleanName)}: (${cleanBody})`
+      return `${JSON.stringify(cleanName)}: ${wrapParenExpr(cleanBody)}`
     })
     .join(',\n')
 }
@@ -208,86 +261,6 @@ export function compileUduItems(items) {
       return `${JSON.stringify(cleanName)}: ${JSON.stringify(unitObj)}`
     })
     .join(',\n')
-}
-
-/**
- * Parses a legacy v7 `udf` object-body string into structured `udfItems`.
- * @param {string} rawUdf Legacy `udf` string.
- * @param {object} [math] Optional Math.js instance.
- * @param {object} [externalLibs] Optional libraries `{ luxon, nerdamer, formulajs }`.
- * @returns {Array<{name: string, params: string, body: string}>}
- */
-export function parseLegacyUdf(rawUdf, math = defaultProxy, externalLibs = {}) {
-  const trimmed = (rawUdf ?? '').trim()
-  if (!trimmed) return []
-
-  const udfItems = []
-
-  try {
-    const obj = evalUdfuObject(trimmed, math, externalLibs)
-
-    for (const [key, val] of Object.entries(obj || {})) {
-      if (RESERVED_KEYS.has(key) || !VALID_IDENTIFIER.test(key)) continue
-
-      if (typeof val === 'function') {
-        const { params, body } = extractFunctionParts(val)
-        udfItems.push({ name: key, params, body })
-      } else if (val !== null && typeof val === 'object') {
-        udfItems.push({ name: key, params: '', body: JSON.stringify(val) })
-      } else {
-        udfItems.push({
-          name: key,
-          params: '',
-          body: typeof val === 'string' ? JSON.stringify(val) : String(val)
-        })
-      }
-    }
-  } catch {
-    // Return empty array if legacy string cannot be evaluated
-  }
-
-  return udfItems
-}
-
-/**
- * Parses a legacy v7 `udu` object-body string into structured `uduItems`.
- * @param {string} rawUdu Legacy `udu` string.
- * @param {object} [math] Optional Math.js instance.
- * @param {object} [externalLibs] Optional libraries `{ luxon, nerdamer, formulajs }`.
- * @returns {Array<{name: string, definition: string, prefixes: string, aliases: string}>}
- */
-export function parseLegacyUdu(rawUdu, math = defaultProxy, externalLibs = {}) {
-  const trimmed = (rawUdu ?? '').trim()
-  if (!trimmed) return []
-
-  const uduItems = []
-
-  try {
-    const obj = evalUdfuObject(trimmed, math, externalLibs)
-
-    for (const [key, val] of Object.entries(obj || {})) {
-      if (RESERVED_KEYS.has(key) || !VALID_IDENTIFIER.test(key)) continue
-
-      if (typeof val === 'string') {
-        uduItems.push({ name: key, definition: val, prefixes: 'none', aliases: '' })
-      } else if (val && typeof val === 'object') {
-        if (val.isUnit && typeof val.toString === 'function') {
-          uduItems.push({ name: key, definition: val.toString(), prefixes: 'none', aliases: '' })
-        } else {
-          uduItems.push({
-            name: key,
-            definition: String(val.definition ?? ''),
-            prefixes: val.prefixes || 'none',
-            aliases: Array.isArray(val.aliases) ? val.aliases.join(', ') : ''
-          })
-        }
-      }
-    }
-  } catch {
-    // Return empty array if legacy string cannot be evaluated
-  }
-
-  return uduItems
 }
 
 /**
