@@ -131,6 +131,11 @@
   clip-path: inset(-20px -20px -10px -20px);
 }
 
+#pageListPanel:not(.page-list-docked).uk-open > .uk-offcanvas-bar:not(.uk-offcanvas-bar-animation) {
+  transform: none;
+  clip-path: none;
+}
+
 #pageListPanel:not(.page-list-docked) .uk-offcanvas-bar-animation {
   transition:
     transform 0.2s ease-out,
@@ -403,6 +408,7 @@ body.is-sorting-pages * {
   position: relative;
   align-items: center;
   gap: 3px;
+  background-color: light-dark(#ffffff, #1f1f1f);
   min-width: 0;
   max-width: 100%;
   overflow-x: auto;
