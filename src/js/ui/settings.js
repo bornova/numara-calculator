@@ -1,15 +1,10 @@
 import UIkit from 'uikit'
 
-import { calculate, clearEvaluationCache, syncOutputHeights } from '../calc/calcManager.js'
+import { calculate, clearEvaluationCache } from '../calc/calcManager.js'
 import { getRates } from '../calc/currencies.js'
+import { syncOutputHeights } from '../calc/outputRenderer.js'
 import { app as coreApp } from '../core/mathInstance.js'
-import {
-  isCommaDecimal,
-  resolveEditorFontSize,
-  resolveEditorFontWeight,
-  resolveUiFontGrade,
-  resolveUiFontOffset
-} from '../core/utils.js'
+import { isCommaDecimal, resolveEditorFontSize, resolveEditorFontWeight, resolveUiFontGrade } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
 import { clearSyncCache, triggerFolderSync, updateSyncUiState } from '../pages/sync.js'
@@ -21,10 +16,8 @@ import {
   getTheme,
   isElectron,
   isMac,
-  isMobile,
-  isWin
+  isMobile
 } from '../state/env.js'
-import { migrateFromV7 } from '../state/migration.js'
 import { initStoreObject, store } from '../state/store.js'
 import { confirm, modal, showError } from './dialogs.js'
 import { getDockedPageListWidth, setupPageList } from './pageList.js'
@@ -81,6 +74,8 @@ function setupSettingsEvents() {
   if (eventsInitialized) return
 
   eventsInitialized = true
+
+  UIkit.util.on('#dialogSettings', 'beforeshow', settings.prep, { self: true })
 
   if (isElectron) {
     numara.themeUpdate(() => settings.setTheme())
@@ -311,7 +306,7 @@ export const settings = {
   initialize: async () => {
     setupSettingsEvents()
 
-    app.settings = initStoreObject('settings', settings.defaults, migrateFromV7)
+    app.settings = initStoreObject('settings', settings.defaults)
     coreApp.settings = app.settings
 
     dom.els('.settingItem').forEach((item) => {
@@ -459,11 +454,10 @@ export const settings = {
     const zoomLevel = app.settings.zoomLevel || 'normal'
     const useMacScale = isMac || isMobile
     document.documentElement.dataset.zoom = zoomLevel
-    document.documentElement.style.setProperty('--ui-font-offset', resolveUiFontOffset(isWin))
     document.documentElement.style.setProperty('--ui-font-grad', resolveUiFontGrade(useMacScale))
     document.documentElement.style.setProperty('--mono-weight', resolveEditorFontWeight('400', useMacScale))
 
-    const effectiveFontSize = resolveEditorFontSize(app.settings.fontSize, zoomLevel, useMacScale)
+    const effectiveFontSize = resolveEditorFontSize(app.settings.fontSize, zoomLevel)
     const effectiveFontWeight = resolveEditorFontWeight(app.settings.fontWeight, useMacScale)
     const effectiveLineHeight = LINE_HEIGHT_ZOOM_MAP[zoomLevel]?.[app.settings.lineHeight] || app.settings.lineHeight
 
