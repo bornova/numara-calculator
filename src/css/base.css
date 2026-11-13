@@ -2,10 +2,9 @@
 
 :root {
   --zoom-step: 0px;
-  --ui-font-offset: 0px;
   --ui-font-grad: 0;
   --mono-weight: 400;
-  --base-font-size: calc(13px + var(--zoom-step) + var(--ui-font-offset));
+  --base-font-size: calc(13px + var(--zoom-step));
   --range-thumb-size: calc(15px + var(--zoom-step));
   --range-thumb-offset: calc(var(--range-thumb-size) / -2);
   --switch-width: calc(30px + 2 * var(--zoom-step));
