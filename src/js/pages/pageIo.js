@@ -5,8 +5,7 @@ import { cm } from '../editor/index.js'
 import { app } from '../state/appState.js'
 import { isElectron } from '../state/env.js'
 import { store } from '../state/store.js'
-import { notify } from '../ui/dialogs.js'
-import { hideFloatingPageList } from '../ui/pageList.js'
+import { hideFloatingPageList, notify } from '../ui/dialogs.js'
 import { newPage } from './pageManager.js'
 
 /**
