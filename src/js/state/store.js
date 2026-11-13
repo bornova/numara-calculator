@@ -70,18 +70,6 @@ export const store = {
         return val !== null && typeof val === 'object' ? structuredClone(val) : val
       }
 
-      const rootItem = localStorage.getItem(key)
-
-      if (rootItem) {
-        const parsed = JSON.parse(rootItem)
-
-        if (store.set(key, parsed)) {
-          localStorage.removeItem(key)
-        }
-
-        return parsed
-      }
-
       return null
     } catch (error) {
       console.error(`Error parsing local storage for key "${key}":`, error)
@@ -117,8 +105,6 @@ export const store = {
    */
   remove: (key) => {
     try {
-      localStorage.removeItem(key)
-
       const obj = getConsolidatedStore()
 
       if (obj && key in obj) {
@@ -136,14 +122,13 @@ export const store = {
  * or initializes it with a deep clone of `defaults` if not yet stored.
  * @param {string} key Store key.
  * @param {object} defaults Default object template.
- * @param {(val: object) => void} [onExisting] Optional hook called before diffing when stored data exists.
  * @returns {object} The initialized store object.
  */
-export function initStoreObject(key, defaults, onExisting) {
+export function initStoreObject(key, defaults) {
   let value = store.get(key)
 
   if (value) {
-    let changed = Boolean(onExisting?.(value))
+    let changed = false
 
     observableDiff(value, defaults, (diff) => {
       if (diff.kind === 'E') return
