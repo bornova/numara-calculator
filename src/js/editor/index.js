@@ -1,25 +1,21 @@
 import CodeMirror from 'codemirror'
 import './addons.js'
 
-import { calculate, queueFoldStateSave, syncOutputHeights } from '../calc/calcManager.js'
-import { debounce } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { app } from '../state/appState.js'
-import { isMobile } from '../state/env.js'
-import { store } from '../state/store.js'
-import { showError } from '../ui/dialogs.js'
+import { events } from '../state/events.js'
+import { hideOpenDropdowns, showError } from '../ui/dialogs.js'
 import { createFoldMarkerWidget, registerEditorFolding, toggleFoldedOutputs } from './folding.js'
 import { registerEditorHints } from './hints.js'
 import { registerEditorModes } from './mode.js'
 import { hideSearchPanel, isSearchPanelOpen, showSearchPanel } from './searchPanel.js'
-import { getSelectionLineRange, updateSelectionStats } from './stats.js'
+import { getSelectionLineRange, initStats, updateSelectionStats } from './stats.js'
 import { initTooltips } from './tooltips.js'
 
-registerEditorModes()
-registerEditorHints()
-registerEditorFolding()
-
 let previousActiveLine = -1
+
+/** Main calculator CodeMirror instance. */
+export let cm = null
 
 /**
  * Forces CodeMirror editor scroll to focus line alignment at the bottom of the visible screen.
@@ -96,68 +92,6 @@ function toggleComment(cmInstance) {
   })
 }
 
-/** Main calculator CodeMirror instance. */
-export const cm = CodeMirror.fromTextArea(dom.inputArea, {
-  autofocus: true,
-  coverGutterNextToScrollbar: true,
-  extraKeys: {
-    'Ctrl-Space': 'autocomplete',
-    'Cmd-/': toggleComment,
-    'Ctrl-/': toggleComment,
-    'Ctrl-Q': (editor) => editor.foldCode(editor.getCursor(), { rangeFinder: CodeMirror.fold.numara }),
-    'Cmd-F': (editor) => showSearchPanel(editor, false),
-    'Ctrl-F': (editor) => showSearchPanel(editor, false),
-    'Cmd-Alt-F': (editor) => showSearchPanel(editor, true),
-    'Ctrl-H': (editor) => showSearchPanel(editor, true),
-    Esc: (editor) => {
-      if (isSearchPanelOpen()) {
-        hideSearchPanel(editor)
-      } else {
-        return CodeMirror.Pass
-      }
-    }
-  },
-  flattenSpans: true,
-  foldGutter: {
-    rangeFinder: CodeMirror.fold.numara,
-    foldOnChangeTimeSpan: 1,
-    updateViewportTimeSpan: 1
-  },
-  foldOptions: {
-    rangeFinder: CodeMirror.fold.numara,
-    widget: createFoldMarkerWidget
-  },
-  gutters: ['CodeMirror-foldgutter', 'CodeMirror-linenumbers'],
-  mode: 'numara',
-  smartIndent: false,
-  theme: 'numara',
-  undoDepth: 100,
-  viewportMargin: Infinity
-})
-
-const field = cm.getInputField()
-field.setAttribute('id', 'inputAreaCodeMirror')
-field.setAttribute('name', 'inputAreaCodeMirror')
-field.setAttribute('autocorrect', 'off')
-field.setAttribute('autocapitalize', 'off')
-field.setAttribute('spellcheck', 'false')
-
-export const debouncedCalculate = debounce(calculate, 100)
-
-export const debouncedSaveCursor = debounce(() => {
-  const pages = store.get('pages')
-  const page = pages?.find((p) => p.id === app.activePage)
-
-  if (!page) return
-
-  const cursor = cm.getCursor()
-
-  if (page.cursor?.line === cursor.line && page.cursor?.ch === cursor.ch) return
-
-  page.cursor = cursor
-  store.set('pages', pages)
-}, 600)
-
 /**
  * Refreshes the CodeMirror editor layout and syntax mode.
  */
@@ -169,32 +103,77 @@ export function refreshEditor() {
 }
 
 /**
- * Binds event listeners on the main CodeMirror instance and initializes hover tooltips.
+ * Initializes CodeMirror, registers editor modes/hints/folding, and binds event listeners.
  */
 export function setupEditor() {
-  cm.on('changes', (editor, changes) => {
+  registerEditorModes()
+  registerEditorHints()
+  registerEditorFolding()
+
+  cm = CodeMirror.fromTextArea(dom.inputArea, {
+    autofocus: true,
+    coverGutterNextToScrollbar: true,
+    extraKeys: {
+      'Ctrl-Space': 'autocomplete',
+      'Cmd-/': toggleComment,
+      'Ctrl-/': toggleComment,
+      'Ctrl-Q': (editor) => editor.foldCode(editor.getCursor(), { rangeFinder: CodeMirror.fold.numara }),
+      'Cmd-F': (editor) => showSearchPanel(editor, false),
+      'Ctrl-F': (editor) => showSearchPanel(editor, false),
+      'Cmd-Alt-F': (editor) => showSearchPanel(editor, true),
+      'Ctrl-H': (editor) => showSearchPanel(editor, true),
+      Esc: (editor) => {
+        if (isSearchPanelOpen()) {
+          hideSearchPanel(editor)
+        } else {
+          return CodeMirror.Pass
+        }
+      }
+    },
+    flattenSpans: true,
+    foldGutter: {
+      rangeFinder: CodeMirror.fold.numara,
+      foldOnChangeTimeSpan: 1,
+      updateViewportTimeSpan: 1
+    },
+    foldOptions: {
+      rangeFinder: CodeMirror.fold.numara,
+      widget: createFoldMarkerWidget
+    },
+    gutters: ['CodeMirror-foldgutter', 'CodeMirror-linenumbers'],
+    mode: 'numara',
+    smartIndent: false,
+    theme: 'numara',
+    undoDepth: 100,
+    viewportMargin: Infinity
+  })
+
+  const field = cm.getInputField()
+  field.setAttribute('id', 'inputAreaCodeMirror')
+  field.setAttribute('name', 'inputAreaCodeMirror')
+  field.setAttribute('autocorrect', 'off')
+  field.setAttribute('autocapitalize', 'off')
+  field.setAttribute('spellcheck', 'false')
+
+  cm.getWrapperElement().addEventListener('pointerdown', () => hideOpenDropdowns())
+
+  events.on('ui:modalsClosed', () => {
+    if (!isSearchPanelOpen()) {
+      setTimeout(() => cm?.focus(), 100)
+    }
+  })
+
+  cm.on('changes', (_editor, changes) => {
     if (app.loadingPage) return
 
-    if (isMobile) {
-      calculate()
-      return
-    }
-
-    const hasNewLine = changes.some((change) => change.text.length > 1 || change.removed?.length > 1)
-
-    if (hasNewLine) {
-      debouncedCalculate.cancel()
-      calculate()
-    } else {
-      debouncedCalculate()
-    }
+    events.emit('editor:changes', changes)
   })
 
   const handleFoldChange = (isFolded) => (editor, from, to) => {
     if (app.loadingPage) return
 
     toggleFoldedOutputs(editor, from.line, to.line, isFolded)
-    queueFoldStateSave()
+    events.emit('editor:foldChanges')
   }
 
   cm.on('fold', handleFoldChange(true))
@@ -203,7 +182,7 @@ export function setupEditor() {
   cm.on('update', () => {
     if (app.loadingPage) return
 
-    syncOutputHeights(false)
+    events.emit('editor:update')
   })
 
   cm.on('inputRead', (editor) => {
@@ -227,12 +206,8 @@ export function setupEditor() {
       previousActiveLine = activeLine
     }
 
-    updateSelectionStats()
+    updateSelectionStats(editor)
     setTimeout(cmForceBottom, 20)
-
-    if (!app.loadingPage) {
-      debouncedSaveCursor()
-    }
   })
 
   cm.on('gutterClick', (editor, line, gutter) => {
@@ -262,5 +237,6 @@ export function setupEditor() {
     app.refreshCM = true
   })
 
+  initStats(cm)
   initTooltips(cm)
 }
