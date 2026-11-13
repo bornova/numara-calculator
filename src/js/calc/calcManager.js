@@ -2,26 +2,16 @@ import UIkit from 'uikit'
 
 import { version } from '../../../package.json'
 
-import { formatAnswer as coreFormatAnswer } from '../core/formatter.js'
-import { math } from '../core/mathInstance.js'
 import { debounce, getSystemLocale } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { registerExcelFunctions } from '../editor/hints.js'
-import { cm, debouncedCalculate } from '../editor/index.js'
-import { updateSelectionStats } from '../editor/stats.js'
-import { syncPageSaveDebounced } from '../pages/sync.js'
+import { cm } from '../editor/index.js'
 import { app } from '../state/appState.js'
+import { isMobile } from '../state/env.js'
+import { events } from '../state/events.js'
 import { store } from '../state/store.js'
 import { notify } from '../ui/dialogs.js'
-import {
-  getFoldedState,
-  renderAnswersToHTML,
-  syncOutputHeights,
-  updateLineWidget,
-  updateOutputDOM
-} from './outputRenderer.js'
-
-export { math, renderAnswersToHTML, syncOutputHeights }
+import { getFoldedState, syncOutputHeights, updateLineWidget, updateOutputDOM } from './outputRenderer.js'
 
 const sharedBuffer = typeof SharedArrayBuffer !== 'undefined' ? new SharedArrayBuffer(4) : null
 const sharedArray = sharedBuffer ? new Int32Array(sharedBuffer) : null
@@ -231,7 +221,7 @@ function applyCalculationResults(answers, errorLines) {
   }
 
   syncOutputHeights(true, foldedLines)
-  updateSelectionStats()
+  events.emit('calc:resultsApplied')
 
   // Update in-memory undo history, answers cache, and queue debounced page persistence
   if (app.activePage) {
@@ -330,7 +320,7 @@ function showTimeoutDialog() {
 }
 
 /**
- * Persists any pending page calculation state to local storage.
+ * Persists any pending page calculation state (content, folds, and cursor) to local storage.
  */
 function savePendingPageState() {
   if (!pendingPageSave) return
@@ -343,33 +333,26 @@ function savePendingPageState() {
 
   if (!page) return
 
+  const nextCursor = pageId === app.activePage && !app.loadingPage && cm ? cm.getCursor() : cursor
+
   const foldsEqual =
     Array.isArray(page.folds) &&
     page.folds.length === folds.length &&
     page.folds.every((f, i) => f.from === folds[i].from && f.to === folds[i].to)
 
   const dataChanged = page.data !== data
+  const cursorChanged = page.cursor?.line !== nextCursor?.line || page.cursor?.ch !== nextCursor?.ch
 
-  if (dataChanged || !foldsEqual) {
+  if (dataChanged || !foldsEqual || cursorChanged) {
     page.data = data
     page.folds = folds
-    page.cursor = cursor
+    page.cursor = nextCursor
     store.set('pages', pages)
 
     if (dataChanged) {
-      syncPageSaveDebounced(page.name, data)
+      events.emit('page:contentSaved', page.name, data)
     }
   }
-}
-
-/**
- * Formats a calculation answer for display using application settings.
- * @param {*} answer The raw value to format.
- * @param {boolean} useGrouping Whether to use grouping/thousands separator.
- * @returns {string} The formatted answer string.
- */
-export function formatAnswer(answer, useGrouping) {
-  return coreFormatAnswer(answer, useGrouping, app.settings, app.currencies)
 }
 
 /**
@@ -453,6 +436,8 @@ export function calculate() {
   })
 }
 
+export const debouncedCalculate = debounce(calculate, 100)
+
 export const debouncedSavePageState = debounce(savePendingPageState, 300)
 
 const baseCancelPageState = debouncedSavePageState.cancel
@@ -479,6 +464,36 @@ debouncedSavePageState.flush = function () {
   savePendingPageState()
 }
 
-window.addEventListener('beforeunload', () => {
-  debouncedSavePageState.flush()
-})
+/**
+ * Subscribes calculation and persistence handlers to editor events and window unload.
+ */
+export function setupCalcManager() {
+  events.on('editor:changes', (changes) => {
+    if (isMobile) {
+      calculate()
+      return
+    }
+
+    const hasNewLine = changes.some((change) => change.text.length > 1 || change.removed?.length > 1)
+
+    if (hasNewLine) {
+      debouncedCalculate.cancel()
+      calculate()
+    } else {
+      debouncedCalculate()
+    }
+  })
+
+  events.on('editor:foldChanges', queueFoldStateSave)
+  events.on('editor:update', () => syncOutputHeights(false))
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      debouncedSavePageState.flush()
+    }
+  })
+
+  window.addEventListener('beforeunload', () => {
+    debouncedSavePageState.flush()
+  })
+}
