@@ -1,18 +1,14 @@
 import { describe, it, beforeEach } from 'node:test'
 import assert from 'node:assert'
+import fs from 'node:fs'
+import path from 'node:path'
 import { create, all } from 'mathjs'
 import { areBoundsEqual, isBoundsOnScreen, resolveWindowBounds } from '../src/electron/bounds.js'
 import { INTERNAL_SCOPE_KEYS, isInternalScopeKey } from '../src/js/core/constants.js'
 import { runCalculation, formatAnswer, applyUdfu } from '../src/js/core/evaluator.js'
 import { parseLocaleNumber, parseStrictLocaleNumber } from '../src/js/core/formatter.js'
 import { stripComments } from '../src/js/core/preprocessor.js'
-import {
-  applyUdfuToMath,
-  compileUdfItems,
-  compileUduItems,
-  parseLegacyUdf,
-  parseLegacyUdu
-} from '../src/js/core/udfu.js'
+import { applyUdfuToMath } from '../src/js/core/udfu.js'
 import {
   debounce,
   escapeHTML,
@@ -20,13 +16,24 @@ import {
   getSafeFilename,
   resolveEditorFontSize,
   resolveEditorFontWeight,
-  resolveUiFontGrade,
-  resolveUiFontOffset
+  resolveUiFontGrade
 } from '../src/js/core/utils.js'
+import { dom, resetDomCache } from '../src/js/dom.js'
+import { getSelectionLineRange, updateSelectionStats } from '../src/js/editor/stats.js'
 import { detectExternalRenames } from '../src/js/pages/syncPlan.js'
 import { app as appState } from '../src/js/state/appState.js'
-import { migrateColors, migrateFromV7, migrateStorageAndPages } from '../src/js/state/migration.js'
+import { isElectron } from '../src/js/state/env.js'
+import { clearEvents, events } from '../src/js/state/events.js'
+import {
+  migrateAppState,
+  migrateColors,
+  migrateFromV7,
+  migrateStorageAndPages,
+  parseLegacyUdf,
+  parseLegacyUdu
+} from '../src/js/state/migration.js'
 import { initStoreObject, store } from '../src/js/state/store.js'
+import { isModalOpen } from '../src/js/ui/dialogs.js'
 import { customCases } from './custom-cases.js'
 
 // Default settings from settings.js
@@ -915,45 +922,80 @@ describe('Numara Calculation Engine vs Math.js', function () {
     })
 
     it('should migrate legacy v7 settings and preserve valid v8 numberFormat and dateFormat values', () => {
-      const storage = new Map()
-      const prevLocalStorage = globalThis.localStorage
-      globalThis.localStorage = {
-        getItem: (k) => (storage.has(k) ? storage.get(k) : null),
-        setItem: (k, v) => storage.set(k, String(v)),
-        removeItem: (k) => storage.delete(k)
+      const legacyComma = { thouSep: 'comma', inputLocale: false, dateFormat: 'de-DE', pageListPosition: 'slide' }
+      assert.strictEqual(migrateFromV7(legacyComma), true)
+      assert.strictEqual(legacyComma.numberFormat, '1.234,56')
+      assert.strictEqual(legacyComma.thouSep, true)
+      assert.strictEqual(legacyComma.inputLocale, undefined)
+      assert.strictEqual(legacyComma.dateFormat, 'dd/MM/yyyy')
+      assert.strictEqual(legacyComma.pageListPosition, 'float')
+
+      const legacyPeriod = {
+        thouSep: 'period',
+        inputLocale: false,
+        dateFormat: 'system',
+        systemLocale: 'en-US'
+      }
+      assert.strictEqual(migrateFromV7(legacyPeriod), true)
+      assert.strictEqual(legacyPeriod.numberFormat, '1,234.56')
+      assert.strictEqual(legacyPeriod.thouSep, true)
+      assert.strictEqual(legacyPeriod.dateFormat, 'MM/dd/yyyy')
+
+      const legacyFrench = { thouSep: 'system', inputLocale: false, systemLocale: 'fr-FR' }
+      assert.strictEqual(migrateFromV7(legacyFrench), true)
+      assert.strictEqual(legacyFrench.numberFormat, '1 234,56')
+      assert.strictEqual(legacyFrench.thouSep, true)
+
+      const legacyPolish = { thouSep: 'system', inputLocale: false, systemLocale: 'pl-PL' }
+      assert.strictEqual(migrateFromV7(legacyPolish), true)
+      assert.strictEqual(legacyPolish.numberFormat, '1 234,56')
+      assert.strictEqual(legacyPolish.thouSep, true)
+
+      const legacyGerman = { thouSep: 'system', inputLocale: false, systemLocale: 'de-DE' }
+      assert.strictEqual(migrateFromV7(legacyGerman), true)
+      assert.strictEqual(legacyGerman.numberFormat, '1.234,56')
+      assert.strictEqual(legacyGerman.thouSep, true)
+
+      const legacyDisabled = { thouSep: 'disabled', inputLocale: false, dateFormat: 'sv-SE' }
+      assert.strictEqual(migrateFromV7(legacyDisabled), true)
+      assert.strictEqual(legacyDisabled.numberFormat, '1,234.56')
+      assert.strictEqual(legacyDisabled.thouSep, false)
+      assert.strictEqual(legacyDisabled.dateFormat, 'yyyy-MM-dd')
+
+      const lineHeightTiers = [
+        ['16px', '17px'],
+        ['20px', '21px'],
+        ['24px', '26px'],
+        ['28px', '30px'],
+        ['32px', '34px']
+      ]
+      for (const [oldLh, expectedLh] of lineHeightTiers) {
+        const s = { lineHeight: oldLh }
+        assert.strictEqual(migrateFromV7(s), true)
+        assert.strictEqual(s.lineHeight, expectedLh)
       }
 
-      try {
-        const legacyComma = { thouSep: 'comma', inputLocale: true, dateFormat: 'de-DE', pageListPosition: 'slide' }
-        assert.strictEqual(migrateFromV7(legacyComma), true)
-        assert.strictEqual(legacyComma.numberFormat, '1.234,56')
-        assert.strictEqual(legacyComma.thouSep, true)
-        assert.strictEqual(legacyComma.inputLocale, undefined)
-        assert.strictEqual(legacyComma.dateFormat, 'dd/MM/yyyy')
-        assert.strictEqual(legacyComma.pageListPosition, 'float')
-
-        const legacyDisabled = { locale: 'disabled', dateFormat: 'sv-SE' }
-        assert.strictEqual(migrateFromV7(legacyDisabled), true)
-        assert.strictEqual(legacyDisabled.numberFormat, '1,234.56')
-        assert.strictEqual(legacyDisabled.thouSep, false)
-        assert.strictEqual(legacyDisabled.locale, undefined)
-        assert.strictEqual(legacyDisabled.dateFormat, 'yyyy-MM-dd')
-
-        const validSpaceFormat = {
-          numberFormat: '1 234,56',
-          thouSep: 'period',
-          dateFormat: 'MM/dd/yyyy',
-          fontSize: '1.1rem',
-          lineHeight: '2em'
-        }
-        assert.strictEqual(migrateFromV7(validSpaceFormat), true)
-        assert.strictEqual(validSpaceFormat.numberFormat, '1 234,56')
-        assert.strictEqual(validSpaceFormat.thouSep, true)
-        assert.strictEqual(validSpaceFormat.fontSize, '14px')
-        assert.strictEqual(validSpaceFormat.lineHeight, '26px')
-      } finally {
-        globalThis.localStorage = prevLocalStorage
+      const fontSizeTiers = [
+        ['0.9rem', '12px'],
+        ['1.1rem', '14px'],
+        ['1.3rem', '16px']
+      ]
+      for (const [oldFs, expectedFs] of fontSizeTiers) {
+        const s = { fontSize: oldFs }
+        assert.strictEqual(migrateFromV7(s), true)
+        assert.strictEqual(s.fontSize, expectedFs)
       }
+
+      const validSpaceFormat = {
+        numberFormat: '1 234,56',
+        thouSep: 'period',
+        dateFormat: 'MM/dd/yyyy',
+        notation: 'legacyMode'
+      }
+      assert.strictEqual(migrateFromV7(validSpaceFormat), true)
+      assert.strictEqual(validSpaceFormat.numberFormat, '1 234,56')
+      assert.strictEqual(validSpaceFormat.thouSep, true)
+      assert.strictEqual('notation' in validSpaceFormat, false)
     })
 
     it('should seamlessly migrate v7 UDF/UDU definitions, theme customizations, pages, and clean up obsolete storage', () => {
@@ -966,14 +1008,67 @@ describe('Numara Calculation Engine vs Math.js', function () {
       }
 
       try {
-        // 1. Seed root localStorage keys and consolidated v7 keys with obsolete data
-        storage.set('sideBarWidth', '280')
-        storage.set('rateInterval', 'true')
-        storage.set('lastPage', JSON.stringify('p2'))
+        // Default v7 sideBarWidth (240) should not override v8 default (265); widths below 210 should clamp
+        storage.set('numara', JSON.stringify({ sideBarWidth: 240 }))
+        migrateStorageAndPages()
+        assert.strictEqual(store.get('pageListWidth'), null)
+
+        storage.clear()
+        storage.set('numara', JSON.stringify({ sideBarWidth: 180 }))
+        migrateStorageAndPages()
+        assert.strictEqual(store.get('pageListWidth'), 210)
+
+        // End-to-end single-entry migrateAppState() across v7 store keys
+        const defaultColors = {
+          answer: { title: 'Answers', class: '.answer', dark: '#1eb5f0', light: '#17586b' },
+          function: {
+            title: 'Functions',
+            class: '.cm-formulajs, .cm-function, .cm-nerdamer, .cm-udf, .cm-datetime',
+            dark: '#cb82f5',
+            light: '#6f42c1'
+          }
+        }
+        const legacyUdfStr = `
+          // User custom functions
+          double: x => x * 2,
+          /* Grouped arrow return */
+          mulGroups: (a, b) => (a + 1) * (b + 1),
+          zeroArg: () => luxon.fromObject({ year: 2026, month: 1 }).daysInMonth,
+          mySum: (a, b) => formulajs.SUM(a, b),
+          avgConst: formulajs.AVERAGE(10, 20), // top-level external constant
+          mySolve: (expr) => nerdamer(expr).solveFor("x").toString(),
+          methodStyle(a, b) { return a + b },
+          fiveKm: math.unit("5 km"),
+          bigVal: math.bignumber("1.25"),
+          twoPi: 2 * math.pi,
+          sk: { BaseCarry: 300, SteedStone: 100, Necromage: 1.25, boost(x) { return x * 2 } },
+          myConst: 42
+        `
+        const legacyUduStr = `
+          foo: "18 foot",
+          bar: { definition: "40 rod", prefixes: "long", aliases: ["bars", "br"] }
+        `
+
+        storage.clear()
         storage.set(
           'numara',
           JSON.stringify({
+            sideBarWidth: 280,
             rateInterval: false,
+            lastPage: 'p1',
+            settings: {
+              thouSep: 'comma',
+              inputLocale: false,
+              dateFormat: 'de-DE',
+              pageListPosition: 'slide',
+              fontSize: '1.1rem',
+              lineHeight: '28px',
+              notation: 'invalidLegacy'
+            },
+            colors: {
+              answer: { title: 'Old Title', class: '.output', dark: '#112233', light: '#445566' },
+              function: { title: 'Functions', class: '.cm-udf', dark: '#abcdef', light: '#fedcba' }
+            },
             pages: [
               {
                 id: 'p1',
@@ -985,28 +1080,35 @@ describe('Numara Calculation Engine vs Math.js', function () {
                 answers: ['10', '20']
               }
             ],
-            saved: {
-              p2: ['Migrated Saved Page', 'x = 50']
-            }
+            udf: legacyUdfStr,
+            udu: legacyUduStr
           })
         )
 
         appState.pageHistory.clear()
-        migrateStorageAndPages()
+        migrateAppState({ defaultColors })
 
-        // Root keys and obsolete consolidated keys must be cleaned up
-        assert.strictEqual(storage.has('sideBarWidth'), false)
-        assert.strictEqual(storage.has('rateInterval'), false)
-        assert.strictEqual(storage.has('lastPage'), false)
+        // Obsolete consolidated v7 keys must be cleaned up
         assert.strictEqual(store.get('sideBarWidth'), null)
         assert.strictEqual(store.get('rateInterval'), null)
-        assert.strictEqual(store.get('saved'), null)
         assert.strictEqual(store.get('pageListWidth'), 280)
-        assert.strictEqual(store.get('lastPage'), 'p2')
+        assert.strictEqual(store.get('lastPage'), 'p1')
+
+        // Settings must be migrated and invalid select values dropped for initStoreObject defaults
+        const migratedSettings = store.get('settings')
+        assert.strictEqual(migratedSettings.numberFormat, '1.234,56')
+        assert.strictEqual(migratedSettings.thouSep, true)
+        assert.strictEqual(migratedSettings.dateFormat, 'dd/MM/yyyy')
+        assert.strictEqual(migratedSettings.pageListPosition, 'float')
+        assert.strictEqual(migratedSettings.fontSize, '14px')
+        assert.strictEqual(migratedSettings.lineHeight, '30px')
+        assert.strictEqual('notation' in migratedSettings, false)
+        const initializedSettings = initStoreObject('settings', defaultSettings)
+        assert.strictEqual(initializedSettings.notation, defaultSettings.notation)
 
         // Pages should preserve data/cursor/folds, seed session pageHistory, and strip persisted history/answers
         const migratedPages = store.get('pages')
-        assert.strictEqual(migratedPages.length, 2)
+        assert.strictEqual(migratedPages.length, 1)
         assert.strictEqual(migratedPages[0].id, 'p1')
         assert.strictEqual(migratedPages[0].data, 'a = 10\na * 2')
         assert.deepStrictEqual(migratedPages[0].cursor, { line: 1, ch: 5 })
@@ -1014,25 +1116,10 @@ describe('Numara Calculation Engine vs Math.js', function () {
         assert.strictEqual('history' in migratedPages[0], false)
         assert.strictEqual('answers' in migratedPages[0], false)
         assert.deepStrictEqual(appState.pageHistory.get('p1'), { done: ['op1'], undone: [] })
-        assert.strictEqual(migratedPages[1].id, 'p2')
-        assert.strictEqual(migratedPages[1].name, 'Migrated Saved Page')
-        assert.strictEqual(migratedPages[1].data, 'x = 50')
 
-        // 2. Migrate theme customizations: preserve custom light/dark hex values while syncing class/title metadata
-        const storedColors = {
-          answer: { title: 'Old Title', class: '.output', dark: '#112233', light: '#445566' },
-          function: { title: 'Functions', class: '.cm-udf', dark: '#abcdef', light: '#fedcba' }
-        }
-        const defaultColors = {
-          answer: { title: 'Answers', class: '.answer', dark: '#1eb5f0', light: '#17586b' },
-          function: {
-            title: 'Functions',
-            class: '.cm-formulajs, .cm-function, .cm-nerdamer, .cm-udf, .cm-datetime',
-            dark: '#cb82f5',
-            light: '#6f42c1'
-          }
-        }
-        assert.strictEqual(migrateColors(storedColors, defaultColors), true)
+        // Theme customizations preserve user light/dark hex values while syncing class/title metadata
+        const storedColors = store.get('colors')
+        assert.strictEqual(migrateColors(storedColors, defaultColors), false)
         assert.strictEqual(storedColors.answer.title, 'Answers')
         assert.strictEqual(storedColors.answer.class, '.answer')
         assert.strictEqual(storedColors.answer.dark, '#112233')
@@ -1043,34 +1130,19 @@ describe('Numara Calculation Engine vs Math.js', function () {
         )
         assert.strictEqual(storedColors.function.dark, '#abcdef')
 
-        // 3. Migrate legacy v7 UDF and UDU strings into structured items, compile, and evaluate
-        const legacyUdfStr = `
-          double: x => x * 2,
-          mulGroups: (a, b) => (a + 1) * (b + 1),
-          zeroArg: () => luxon.fromObject({ year: 2026, month: 1 }).daysInMonth,
-          mySum: (a, b) => formulajs.SUM(a, b),
-          mySolve: (expr) => nerdamer(expr).solveFor("x").toString(),
-          methodStyle(a, b) { return a + b },
-          sk: { BaseCarry: 300, SteedStone: 100, Necromage: 1.25 },
-          myConst: 42
-        `
-        const legacyUduStr = `
-          foo: "18 foot",
-          bar: { definition: "40 rod", prefixes: "long", aliases: ["bars", "br"] }
-        `
-        const udfItems = parseLegacyUdf(legacyUdfStr, standardMath)
-        const uduItems = parseLegacyUdu(legacyUduStr, standardMath)
-
-        assert.strictEqual(udfItems.length, 8)
+        // UDF/UDU migrated via migrateAppState + compile/evaluate check
+        const udfItems = store.get('udfItems')
+        const uduItems = store.get('uduItems')
+        assert.strictEqual(udfItems.length, 12)
         assert.strictEqual(uduItems.length, 2)
         assert.strictEqual(udfItems.find((i) => i.name === 'zeroArg').params, '()')
         assert.strictEqual(udfItems.find((i) => i.name === 'mulGroups').body, '(a + 1) * (b + 1)')
+        assert.strictEqual(udfItems.find((i) => i.name === 'avgConst').body, 'formulajs.AVERAGE(10, 20)')
+        assert.deepStrictEqual(parseLegacyUdf('', standardMath), [])
+        assert.deepStrictEqual(parseLegacyUdu('', standardMath), [])
 
-        const compiledUdf = compileUdfItems(udfItems)
-        const compiledUdu = compileUduItems(uduItems)
-
-        applyUdfu(true, compiledUdf)
-        applyUdfu(false, compiledUdu)
+        applyUdfu(true, store.get('udf'))
+        applyUdfu(false, store.get('udu'))
 
         const calcRes = runCalculation({
           activePage: 'test-migrated-udfu',
@@ -1079,9 +1151,13 @@ describe('Numara Calculation Engine vs Math.js', function () {
             'mulGroups(2, 3)',
             'zeroArg()',
             'mySum(10, 15)',
+            'avgConst',
             'mySolve("x^2 = 16")',
             'methodStyle(7, 8)',
-            'sk.BaseCarry + sk.SteedStone * sk.Necromage',
+            'fiveKm in m',
+            'bigVal + 0.75',
+            'round(twoPi, 2)',
+            'sk.BaseCarry + sk.SteedStone * sk.Necromage + sk.boost(5)',
             'myConst',
             '1 foo in foot',
             '1 br in rod'
@@ -1092,7 +1168,7 @@ describe('Numara Calculation Engine vs Math.js', function () {
 
         assert.deepStrictEqual(
           calcRes.answers.map((h) => extractAnswer(h).answer),
-          ['10', '12', '31', '25', '4,-4', '15', '425', '42', '18 foot', '40 rod']
+          ['10', '12', '31', '25', '15', '4,-4', '15', '5000 m', '2', '6.28', '435', '42', '18 foot', '40 rod']
         )
 
         applyUdfu(true, '')
@@ -1313,15 +1389,12 @@ describe('Numara Calculation Engine vs Math.js', function () {
       )
     })
 
-    it('should resolve optical editor font sizes across zoom levels for macOS/mobile vs Windows/Linux desktop', () => {
-      assert.strictEqual(resolveEditorFontSize('14px', 'normal', true), '14px')
-      assert.strictEqual(resolveEditorFontSize('14px', 'smaller', true), '13px')
-      assert.strictEqual(resolveEditorFontSize('14px', 'larger', true), '15px')
-
-      assert.strictEqual(resolveEditorFontSize('14px', 'normal', false), '13px')
-      assert.strictEqual(resolveEditorFontSize('14px', 'smaller', false), '12px')
-      assert.strictEqual(resolveEditorFontSize('14px', 'larger', false), '14px')
-      assert.strictEqual(resolveEditorFontSize('12px', 'smaller', false), '11px')
+    it('should resolve editor font sizes across zoom levels and optical font weights/grades across platforms', () => {
+      assert.strictEqual(resolveEditorFontSize('14px', 'normal'), '14px')
+      assert.strictEqual(resolveEditorFontSize('14px', 'smaller'), '13px')
+      assert.strictEqual(resolveEditorFontSize('14px', 'larger'), '15px')
+      assert.strictEqual(resolveEditorFontSize('12px', 'smaller'), '11px')
+      assert.strictEqual(resolveEditorFontSize('16px', 'larger'), '17px')
 
       assert.strictEqual(resolveEditorFontWeight('400', true), '400')
       assert.strictEqual(resolveEditorFontWeight('700', true), '700')
@@ -1332,9 +1405,6 @@ describe('Numara Calculation Engine vs Math.js', function () {
 
       assert.strictEqual(resolveUiFontGrade(true), '0')
       assert.strictEqual(resolveUiFontGrade(false), '50')
-
-      assert.strictEqual(resolveUiFontOffset(false), '0px')
-      assert.strictEqual(resolveUiFontOffset(true), '-1px')
     })
 
     it('should parse strict localized numbers and classify internal scope keys accurately', () => {
@@ -1425,5 +1495,286 @@ describe('Numara Calculation Engine vs Math.js', function () {
       })
       assert.strictEqual(extractAnswer(res3.answers[1]).answer, '20')
     })
+  })
+})
+
+describe('Module Graph & Lazy DOM Architecture', () => {
+  function walkSourceFiles(dir) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true })
+    const files = []
+
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name)
+
+      if (entry.isDirectory()) {
+        files.push(...walkSourceFiles(fullPath))
+      } else if (entry.name.endsWith('.js') || entry.name.endsWith('.cjs')) {
+        files.push(fullPath)
+      }
+    }
+
+    return files.sort()
+  }
+
+  function buildImportGraph() {
+    const files = [...walkSourceFiles('src/js'), ...walkSourceFiles('src/electron')]
+    const importRe = /(?:import|export)\s+(?:[^'"]*?\s+from\s+)?['"](\.[^'"]+)['"]/g
+    const graph = new Map()
+
+    for (const file of files) {
+      const src = fs.readFileSync(file, 'utf8')
+      const deps = []
+
+      for (const match of src.matchAll(importRe)) {
+        const target = path.normalize(path.join(path.dirname(file), match[1])).replace(/\?.*$/, '')
+        deps.push(target)
+      }
+
+      graph.set(
+        file.split(path.sep).join('/'),
+        deps.map((d) => d.split(path.sep).join('/'))
+      )
+    }
+
+    return graph
+  }
+
+  function getLayer(filePath) {
+    if (filePath.startsWith('src/js/core/')) return 'core'
+    if (filePath === 'src/js/dom.js') return 'dom'
+    if (filePath.startsWith('src/js/state/')) return 'state'
+    if (filePath === 'src/js/ui/dialogs.js') return 'dialogs'
+    if (filePath.startsWith('src/js/editor/')) return 'editor'
+    if (filePath === 'src/js/calc/calc.worker.js') return 'worker'
+    if (filePath.startsWith('src/js/calc/')) return 'calc'
+    if (filePath.startsWith('src/js/pages/')) return 'pages'
+    if (filePath.startsWith('src/js/ui/')) return 'ui'
+    if (filePath === 'src/js/app.js') return 'app'
+    return 'other'
+  }
+
+  it('has zero circular dependencies across src/js and src/electron', () => {
+    const graph = buildImportGraph()
+    const visitState = new Map()
+    const cycles = []
+
+    function dfs(node, stack) {
+      visitState.set(node, 1)
+
+      for (const dep of graph.get(node) || []) {
+        if (visitState.get(dep) === 1) {
+          cycles.push([...stack.slice(stack.indexOf(dep)), dep].join(' -> '))
+        } else if (!visitState.has(dep)) {
+          dfs(dep, [...stack, dep])
+        }
+      }
+
+      visitState.set(node, 2)
+    }
+
+    for (const node of graph.keys()) {
+      if (!visitState.has(node)) {
+        dfs(node, [node])
+      }
+    }
+
+    assert.deepStrictEqual(cycles, [])
+  })
+
+  it('enforces strict downward layer boundaries in src/js', () => {
+    const graph = buildImportGraph()
+    const allowedLayers = {
+      core: new Set(['core']),
+      dom: new Set([]),
+      state: new Set(['core', 'dom', 'state']),
+      dialogs: new Set(['dom', 'state']),
+      editor: new Set(['core', 'dom', 'state', 'dialogs', 'editor']),
+      worker: new Set(['core']),
+      calc: new Set(['core', 'dom', 'state', 'dialogs', 'editor', 'calc']),
+      pages: new Set(['core', 'dom', 'state', 'dialogs', 'editor', 'calc', 'pages']),
+      ui: new Set(['core', 'dom', 'state', 'dialogs', 'editor', 'calc', 'pages', 'ui'])
+    }
+    const violations = []
+
+    for (const [file, deps] of graph.entries()) {
+      if (!file.startsWith('src/js/') || file === 'src/js/app.js') continue
+
+      const srcLayer = getLayer(file)
+      const allowed = allowedLayers[srcLayer]
+
+      for (const dep of deps) {
+        if (dep === 'package.json') continue
+
+        const depLayer = getLayer(dep)
+
+        if (!allowed?.has(depLayer)) {
+          violations.push(`${file} (${srcLayer}) -> ${dep} (${depLayer})`)
+        }
+      }
+    }
+
+    assert.deepStrictEqual(violations, [])
+    assert.strictEqual(graph.get('src/js/editor/index.js')?.includes('src/js/state/store.js'), false)
+  })
+
+  it('resolves dom elements lazily, caches hits, and resets cache cleanly', () => {
+    const prevDocDesc = Object.getOwnPropertyDescriptor(globalThis, 'document')
+    const idLookups = []
+    const selectorLookups = []
+
+    resetDomCache()
+
+    try {
+      Object.defineProperty(globalThis, 'document', {
+        configurable: true,
+        writable: true,
+        value: undefined
+      })
+
+      assert.strictEqual(dom.output, null)
+      assert.strictEqual(dom.confirmNo, null)
+
+      const mockOutput = { id: 'output' }
+      const mockHeaderWin = { id: 'winHeader' }
+      const mockConfirmNo = { className: 'uk-modal-close' }
+
+      Object.defineProperty(globalThis, 'document', {
+        configurable: true,
+        writable: true,
+        value: {
+          getElementById(id) {
+            idLookups.push(id)
+            if (id === 'output') return mockOutput
+            if (id === 'winHeader') return mockHeaderWin
+            return null
+          },
+          querySelector(selector) {
+            selectorLookups.push(selector)
+            if (selector === '#dialogConfirm .uk-modal-close') return mockConfirmNo
+            return null
+          },
+          querySelectorAll() {
+            return []
+          }
+        }
+      })
+
+      assert.strictEqual(dom.output, mockOutput)
+      assert.strictEqual(dom.output, mockOutput)
+      assert.deepStrictEqual(idLookups, ['output'])
+
+      assert.strictEqual(dom.headerWin, mockHeaderWin)
+      assert.deepStrictEqual(idLookups, ['output', 'winHeader'])
+
+      assert.strictEqual(dom.confirmNo, mockConfirmNo)
+      assert.strictEqual(dom.confirmNo, mockConfirmNo)
+      assert.deepStrictEqual(selectorLookups, ['#dialogConfirm .uk-modal-close'])
+
+      resetDomCache()
+      assert.strictEqual(dom.output, mockOutput)
+      assert.deepStrictEqual(idLookups, ['output', 'winHeader', 'output'])
+    } finally {
+      resetDomCache()
+
+      if (prevDocDesc) {
+        Object.defineProperty(globalThis, 'document', prevDocDesc)
+      } else {
+        delete globalThis.document
+      }
+    }
+  })
+
+  it('handles event bus subscriptions, unsubscribes safely mid-emit, and clears listeners', () => {
+    clearEvents()
+    const calls = []
+
+    let unsubscribeSecond = null
+    const unsubscribeFirst = events.on('test:event', (val) => {
+      calls.push(`first:${val}`)
+      unsubscribeSecond?.()
+    })
+
+    unsubscribeSecond = events.on('test:event', (val) => {
+      calls.push(`second:${val}`)
+    })
+
+    events.emit('test:event', 1)
+    assert.deepStrictEqual(calls, ['first:1', 'second:1'])
+
+    events.emit('test:event', 2)
+    assert.deepStrictEqual(calls, ['first:1', 'second:1', 'first:2'])
+
+    unsubscribeFirst()
+    events.emit('test:event', 3)
+    assert.deepStrictEqual(calls, ['first:1', 'second:1', 'first:2'])
+
+    events.on('test:clear', () => calls.push('should-not-run'))
+    clearEvents()
+    events.emit('test:clear')
+    assert.deepStrictEqual(calls, ['first:1', 'second:1', 'first:2'])
+  })
+
+  it('imports Node-safe UI/editor modules cleanly and computes selection stats', () => {
+    assert.strictEqual(typeof isElectron, 'boolean')
+    assert.strictEqual(isModalOpen(), false)
+
+    assert.deepStrictEqual(
+      getSelectionLineRange({
+        from: () => ({ line: 1, ch: 0 }),
+        to: () => ({ line: 3, ch: 0 }),
+        anchor: { line: 1, ch: 0 },
+        head: { line: 3, ch: 0 }
+      }),
+      { startLine: 1, endLine: 2 }
+    )
+
+    const prevSettings = appState.settings
+    const prevCurrencies = appState.currencies
+    const prevScope = appState.mathScope
+
+    const statsEl = { textContent: '', dataset: {}, style: {} }
+    const actionClasses = new Set()
+    const actionsEl = {
+      classList: {
+        add: (c) => actionClasses.add(c),
+        remove: (c) => actionClasses.delete(c)
+      }
+    }
+
+    resetDomCache()
+    dom.selectionStats = statsEl
+    dom.actions = actionsEl
+    appState.settings = { ...defaultSettings, thouSep: true, copyThouSep: false, precision: '4' }
+    appState.currencies = {}
+    appState.mathScope = new Map([
+      ['line1', '1000'],
+      ['line2', '2000']
+    ])
+
+    try {
+      const mockCm = {
+        somethingSelected: () => true,
+        listSelections: () => [
+          {
+            from: () => ({ line: 0, ch: 0 }),
+            to: () => ({ line: 1, ch: 4 }),
+            anchor: { line: 0, ch: 0 },
+            head: { line: 1, ch: 4 }
+          }
+        ]
+      }
+
+      updateSelectionStats(mockCm)
+
+      assert.strictEqual(statsEl.textContent, 'Sum: 3,000  •  Avg: 1,500  •  Count: 2')
+      assert.strictEqual(statsEl.dataset.copy, '3000')
+      assert.strictEqual(statsEl.style.display, 'inline-block')
+      assert.strictEqual(actionClasses.has('showing-stats'), true)
+    } finally {
+      resetDomCache()
+      appState.settings = prevSettings
+      appState.currencies = prevCurrencies
+      appState.mathScope = prevScope
+    }
   })
 })
