@@ -483,7 +483,7 @@ div:has(> #logsLink) {
   padding: 0 12px;
   color: light-dark(#666666, #aaaaaa);
   font-weight: var(--mono-weight);
-  font-size: 0.88rem;
+  font-size: var(--sm-font-size);
   line-height: 19px;
   font-family: 'Roboto Mono', monospace;
 }
@@ -572,7 +572,7 @@ div:has(> #logsLink) {
   max-height: 130px;
   resize: vertical;
   font-weight: var(--mono-weight);
-  line-height: 1.4;
+  line-height: var(--base-line-height);
   font-family: 'Roboto Mono', monospace;
 }
 
@@ -673,7 +673,7 @@ div:has(> #logsLink) {
 .udfuItemCode {
   color: light-dark(#555555, #cccccc);
   font-weight: var(--mono-weight);
-  font-size: 0.92em;
+  font-size: var(--sm-font-size);
   font-family: 'Roboto Mono', monospace;
 }
 
@@ -683,7 +683,7 @@ div:has(> #logsLink) {
   background-color: light-dark(#eaeef2, #383838);
   padding: 1px 6px;
   color: light-dark(#555555, #bbbbbb);
-  font-size: 0.85em;
+  font-size: var(--xs-font-size);
 }
 
 .udfuItemActions {

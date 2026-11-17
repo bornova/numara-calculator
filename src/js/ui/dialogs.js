@@ -82,8 +82,8 @@ function makeModalDraggable(modalElement) {
   const move = (e) => {
     if (!dragging) return
 
-    dialog.style.left = `${Math.max(10, Math.min(e.clientX - offsetX, window.innerWidth - dialog.offsetWidth - 10))}px`
-    dialog.style.top = `${Math.max(40, Math.min(e.clientY - offsetY, window.innerHeight - dialog.offsetHeight - 10))}px`
+    dialog.style.left = `${Math.round(Math.max(10, Math.min(e.clientX - offsetX, window.innerWidth - dialog.offsetWidth - 10)))}px`
+    dialog.style.top = `${Math.round(Math.max(40, Math.min(e.clientY - offsetY, window.innerHeight - dialog.offsetHeight - 10)))}px`
   }
 
   const up = () => {
@@ -145,8 +145,8 @@ export const modal = {
       const height = targetHeight ?? window.innerHeight
 
       Object.assign(element.style, {
-        left: `${(width - element.offsetWidth) / 2}px`,
-        top: `${(height - element.offsetHeight) / 2}px`,
+        left: `${Math.round((width - element.offsetWidth) / 2)}px`,
+        top: `${Math.round((height - element.offsetHeight) / 2)}px`,
         visibility: ''
       })
     })

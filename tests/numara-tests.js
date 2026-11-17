@@ -35,7 +35,7 @@ import {
   parseLegacyUdu
 } from '../src/js/state/migration.js'
 import { initStoreObject, store } from '../src/js/state/store.js'
-import { isModalOpen } from '../src/js/ui/dialogs.js'
+import { isModalOpen, modal } from '../src/js/ui/dialogs.js'
 import { customCases } from './custom-cases.js'
 
 // Default settings from settings.js
@@ -1801,6 +1801,169 @@ describe('Module Graph & Lazy DOM Architecture', () => {
       appState.settings = prevSettings
       appState.currencies = prevCurrencies
       appState.mathScope = prevScope
+    }
+  })
+
+  it('rounds modal centering coordinates to integer pixels to prevent half-pixel font blur', () => {
+    const prevRaf = globalThis.requestAnimationFrame
+    globalThis.requestAnimationFrame = (cb) => cb()
+
+    try {
+      const dialogEl = {
+        offsetWidth: 451,
+        offsetHeight: 373,
+        style: { visibility: 'hidden' },
+        classList: {
+          add() {},
+          remove() {}
+        }
+      }
+
+      modal.center(dialogEl, false, 1920, 1080)
+
+      assert.strictEqual(dialogEl.style.left, '735px')
+      assert.strictEqual(dialogEl.style.top, '354px')
+      assert.strictEqual(dialogEl.style.visibility, '')
+    } finally {
+      if (prevRaf) {
+        globalThis.requestAnimationFrame = prevRaf
+      } else {
+        delete globalThis.requestAnimationFrame
+      }
+    }
+  })
+
+  it('bundles TrueType ClearType hinting and CVT variation tables in all WOFF2 fonts', () => {
+    const woff2KnownTags = [
+      'cmap',
+      'head',
+      'hhea',
+      'hmtx',
+      'maxp',
+      'name',
+      'OS/2',
+      'post',
+      'cvt ',
+      'fpgm',
+      'glyf',
+      'loca',
+      'prep',
+      'CFF ',
+      'VORG',
+      'EBDT',
+      'EBLC',
+      'gasp',
+      'hdmx',
+      'kern',
+      'LTSH',
+      'PCLT',
+      'VDMX',
+      'vhea',
+      'vmtx',
+      'BASE',
+      'GDEF',
+      'GPOS',
+      'GSUB',
+      'EBSC',
+      'JSTF',
+      'MATH',
+      'CBDT',
+      'CBLC',
+      'COLR',
+      'CPAL',
+      'SVG ',
+      'sbix',
+      'acnt',
+      'avar',
+      'bdat',
+      'bloc',
+      'bsln',
+      'cvar',
+      'fdsc',
+      'feat',
+      'fmtx',
+      'fvar',
+      'gvar',
+      'hsty',
+      'just',
+      'lcar',
+      'mort',
+      'morx',
+      'opbd',
+      'prop',
+      'trak',
+      'Zapf',
+      'Silf',
+      'Glat',
+      'Gloc',
+      'Feat',
+      'Sill'
+    ]
+
+    const readBase128 = (buf, startOffset) => {
+      let accum = 0
+      let offset = startOffset
+
+      for (let i = 0; i < 5; i++) {
+        const byte = buf[offset++]
+        accum = (accum << 7) | (byte & 0x7f)
+        if ((byte & 0x80) === 0) return [accum >>> 0, offset]
+      }
+
+      throw new Error('Invalid UIntBase128 in WOFF2 header')
+    }
+
+    const readWoff2Tables = (fontFilename) => {
+      const fontPath = path.resolve(import.meta.dirname, '..', 'src', 'assets', 'fonts', fontFilename)
+      const buf = fs.readFileSync(fontPath)
+      assert.strictEqual(buf.toString('ascii', 0, 4), 'wOF2')
+
+      const numTables = buf.readUInt16BE(12)
+      let pos = 48
+      const tables = new Map()
+
+      for (let i = 0; i < numTables; i++) {
+        const flags = buf[pos++]
+        const tagIdx = flags & 0x3f
+        let tag
+
+        if (tagIdx === 63) {
+          tag = buf.toString('ascii', pos, pos + 4)
+          pos += 4
+        } else {
+          tag = woff2KnownTags[tagIdx]
+        }
+
+        let origLength
+        ;[origLength, pos] = readBase128(buf, pos)
+
+        const xformVer = (flags >> 6) & 0x03
+        const isGlyfOrLoca = tag === 'glyf' || tag === 'loca'
+
+        if ((isGlyfOrLoca && xformVer === 0) || (!isGlyfOrLoca && xformVer !== 0)) {
+          ;[, pos] = readBase128(buf, pos)
+        }
+
+        tables.set(tag, origLength)
+      }
+
+      return tables
+    }
+
+    for (const { file, variable } of [
+      { file: 'GoogleSans-Variable.woff2', variable: true },
+      { file: 'RobotoMono-Variable.woff2', variable: true },
+      { file: 'Numara.woff2', variable: false }
+    ]) {
+      const tables = readWoff2Tables(file)
+      assert.ok((tables.get('fpgm') ?? 0) > 0, `${file} must include TrueType fpgm hinting bytecode`)
+      assert.ok((tables.get('prep') ?? 0) > 0, `${file} must include TrueType prep CVT program`)
+      assert.ok((tables.get('cvt ') ?? 0) > 0, `${file} must include TrueType cvt control values`)
+      assert.strictEqual(tables.get('gasp'), 12, `${file} must include two-range ClearType gasp table`)
+
+      if (variable) {
+        assert.ok((tables.get('cvar') ?? 0) > 0, `${file} must include cvar variations for hinted masters`)
+      }
     }
   })
 })

@@ -209,7 +209,7 @@ body.numara-search-panel-open .CodeMirror-selected {
   align-items: center;
   pointer-events: none;
   color: light-dark(#777777, #999999);
-  font-size: 0.92rem;
+  font-size: var(--sm-font-size);
 }
 
 .search-actions {

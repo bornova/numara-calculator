@@ -28,6 +28,10 @@
   max-width: calc(100vw - 40px) !important;
 }
 
+.uk-open > .uk-modal-dialog {
+  transform: none;
+}
+
 .uk-modal-body {
   padding: 11px 18px 15px;
   color: light-dark(#444444, #e6e6e6);
@@ -189,6 +193,7 @@
 
 .uk-label {
   font-size: 1rem;
+  line-height: var(--base-line-height);
 }
 
 .uk-range {
@@ -241,6 +246,11 @@
   border-radius: 3px;
   padding: 3px 12px 1px;
   font-weight: 500;
+  font-size: var(--sm-font-size);
+}
+
+.uk-button-small {
+  font-size: var(--sm-font-size);
 }
 
 .uk-button:enabled:active {
@@ -342,6 +352,7 @@
   background-color: light-dark(#fdfdfd, #252525);
   padding: 5px 35px 5px 10px;
   font-size: 1rem;
+  line-height: var(--base-line-height);
 }
 
 .uk-notification-message-primary {
