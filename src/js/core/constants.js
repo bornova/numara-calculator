@@ -19,7 +19,7 @@ export function isInternalScopeKey(key) {
 }
 
 const DATE_UNIT_NAMES =
-  'millisecond|second|minute|hour|day|week|month|quarter|year|decade|century|centuries|millennium|millennia'
+  'millisecond|second|sec|minute|min|hour|hr|day|week|month|quarter|year|decade|century|centuries|millennium|millennia'
 const DATE_UNITS = `(?:${DATE_UNIT_NAMES})s?\\b`
 
 export const REGEX_CONTINUATION = /[+\-*/]/
@@ -33,7 +33,7 @@ export const REGEX_PCNT_RATIO =
   /^(?:([\p{L}\p{M}_][\p{L}\p{M}\w]*)\s*=\s*)?(.+?)\s+\b(?:as\s+(?:a\s+)?%|is\s+what\s+%)\s+of\s+(.+)$/iu
 export const REGEX_CONVERSION_SUFFIX = /^(.*?)\s+\b(?:to|in)\s+(hex|bin|oct|%)\s*$/i
 export const REGEX_PLOT = /^\s*[a-zA-Z_]\w*\s*\(\s*[a-zA-Z_]\w*\s*\)\s*=/
-export const REGEX_STRING_LITERAL = /("(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'|`(?:\\[\s\S]|[^`\\])*`)/g
+export const REGEX_STRING_LITERAL = /("(?:\\[\s\S]|[^"\\])*")/g
 
 export const CHART_SPLINE_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-spline">${ChartSpline.map(
   ([tag, attrs]) =>
