@@ -22,7 +22,7 @@ const jsBanner = `/**
 
 const cssBanner = `/* ${pkg.description} ${pkg.version} */\n`
 
-const EXCLUDED_PRECACHE_FILES = new Set(['sw.js', 'background.png', 'numara.png'])
+const EXCLUDED_PRECACHE_FILES = new Set(['sw.js', 'background.png', 'numara.png', 'icon.png'])
 const VERSIONED_PRECACHE_FILES = new Set([
   './assets/fonts/fonts.css',
   './css/app.css',
@@ -51,6 +51,7 @@ async function collectPrecacheUrls(dir, root = dir) {
       if (
         entry.name.endsWith('.map') ||
         entry.name.endsWith('.icns') ||
+        entry.name.endsWith('.ico') ||
         entry.name.includes('trayTemplate') ||
         EXCLUDED_PRECACHE_FILES.has(entry.name)
       ) {
