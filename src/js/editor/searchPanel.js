@@ -2,6 +2,7 @@ import CodeMirror from 'codemirror'
 
 import { debounce, escapeRegExp } from '../core/utils.js'
 import { dom } from '../dom.js'
+import { isMac } from '../state/env.js'
 
 let panelEl = null
 let findInputEl = null
@@ -236,11 +237,13 @@ function toggleReplaceMode(cm) {
 }
 
 function createPanel(cm) {
+  const replaceShortcutHint = isMac ? 'Cmd+Opt+F' : 'Ctrl+H'
+
   panelEl = document.createElement('div')
   panelEl.className = 'numara-search-panel hidden'
   panelEl.innerHTML = `
     <div class="search-panel-row">
-      <button class="search-toggle-replace" title="Toggle Replace (Ctrl+H)">
+      <button class="search-toggle-replace" title="Toggle Replace (${replaceShortcutHint})">
         ${dom.icons.ChevronRight}
       </button>
       <div class="search-input-wrapper">
@@ -281,7 +284,28 @@ function createPanel(cm) {
 
   findInputEl.addEventListener('input', () => updateSearch(cm))
 
+  const handleSearchShortcut = (e) => {
+    const key = e.key?.toLowerCase()
+
+    if ((isMac && e.metaKey && e.altKey && key === 'f') || (!isMac && e.ctrlKey && !e.altKey && key === 'h')) {
+      e.preventDefault()
+      toggleReplaceMode(cm)
+      return true
+    }
+
+    if (((isMac && e.metaKey) || (!isMac && e.ctrlKey)) && !e.altKey && key === 'f') {
+      e.preventDefault()
+      findInputEl.focus()
+      findInputEl.select()
+      return true
+    }
+
+    return false
+  }
+
   findInputEl.addEventListener('keydown', (e) => {
+    if (handleSearchShortcut(e)) return
+
     if (e.key === 'Enter') {
       e.preventDefault()
       navigateSearch(cm, e.shiftKey)
@@ -292,6 +316,8 @@ function createPanel(cm) {
   })
 
   replaceInputEl.addEventListener('keydown', (e) => {
+    if (handleSearchShortcut(e)) return
+
     if (e.key === 'Enter') {
       e.preventDefault()
       replaceCurrent(cm)
