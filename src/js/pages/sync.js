@@ -1,3 +1,5 @@
+import UIkit from 'uikit'
+
 import { calculate, debouncedSavePageState } from '../calc/calcManager.js'
 import { escapeHTML, getSafeFilename, getSyncKey, sanitizePageName } from '../core/utils.js'
 import { dom } from '../dom.js'
@@ -39,9 +41,10 @@ export function updateSyncUiState(enabled, dirPath = '') {
   if (dom.selectSyncDirButton) {
     if (dirPath) {
       dom.selectSyncDirButton.textContent = dirPath
-      dom.selectSyncDirButton.title = dirPath
-      dom.selectSyncDirButton.setAttribute('uk-tooltip', 'pos: bottom')
+      dom.selectSyncDirButton.removeAttribute('title')
+      UIkit.tooltip(dom.selectSyncDirButton, { title: escapeHTML(dirPath), pos: 'bottom' })
     } else {
+      UIkit.tooltip(dom.selectSyncDirButton)?.$destroy()
       dom.selectSyncDirButton.textContent = 'Choose Folder'
       dom.selectSyncDirButton.removeAttribute('title')
       dom.selectSyncDirButton.removeAttribute('uk-tooltip')
@@ -62,11 +65,26 @@ export function updateSyncUiState(enabled, dirPath = '') {
  * @param {string} syncKey The normalized sync key.
  */
 function clearSyncDebounce(syncKey) {
-  const pendingTimeout = debounceTimeouts.get(syncKey)
+  const pending = debounceTimeouts.get(syncKey)
 
-  if (pendingTimeout) {
-    clearTimeout(pendingTimeout)
+  if (pending) {
+    clearTimeout(pending.timeout)
     debounceTimeouts.delete(syncKey)
+  }
+}
+
+/**
+ * Immediately flushes all pending debounced page writes to the sync directory.
+ */
+function flushPendingSyncSaves() {
+  if (!isSyncActive() || debounceTimeouts.size === 0) return
+
+  const pendingEntries = [...debounceTimeouts.values()]
+  debounceTimeouts.clear()
+
+  for (const { timeout, pageName, content } of pendingEntries) {
+    clearTimeout(timeout)
+    syncPageSave(pageName, content)
   }
 }
 
@@ -123,7 +141,7 @@ export function clearSyncCache() {
   currentSyncDir = null
   lastSyncContent.clear()
 
-  for (const timeout of debounceTimeouts.values()) {
+  for (const { timeout } of debounceTimeouts.values()) {
     clearTimeout(timeout)
   }
 
@@ -165,7 +183,9 @@ async function handleSyncDirDeleted() {
   numara.stopWatchingSyncDir()
 
   if (dom.selectSyncDirButton) {
+    UIkit.tooltip(dom.selectSyncDirButton)?.$destroy()
     dom.selectSyncDirButton.textContent = 'Choose Folder'
+    dom.selectSyncDirButton.removeAttribute('title')
     dom.selectSyncDirButton.removeAttribute('uk-tooltip')
   }
 
@@ -227,6 +247,10 @@ export async function triggerFolderSync() {
     const dirPath = app.settings.syncDir
 
     if (dirPath !== currentSyncDir) {
+      for (const { timeout } of debounceTimeouts.values()) {
+        clearTimeout(timeout)
+      }
+      debounceTimeouts.clear()
       currentSyncDir = dirPath
       lastSyncContent.clear()
     }
@@ -262,11 +286,18 @@ export async function triggerFolderSync() {
     }
 
     // 1. Sync files -> local storage pages
+    const seenDiskSyncKeys = new Set()
+
     for (const file of files) {
       const pageName = file.name
       const fileContent = file.content
       const sanitizedName = sanitizePageName(pageName, 'Untitled')
-      const syncKey = getSyncKey(pageName)
+      const syncKey = getSyncKey(sanitizedName)
+
+      if (seenDiskSyncKeys.has(syncKey)) {
+        continue
+      }
+      seenDiskSyncKeys.add(syncKey)
 
       const localPage = pages.find((p) => getSyncKey(p.name) === syncKey)
 
@@ -401,6 +432,11 @@ export async function triggerFolderSync() {
 
         if (updatedPageData.has(page.id)) {
           page.data = updatedPageData.get(page.id)
+
+          if (page.id !== app.activePage) {
+            app.pageHistory?.delete(page.id)
+            app.pageAnswers?.delete(page.id)
+          }
         }
       }
 
@@ -426,9 +462,25 @@ export async function triggerFolderSync() {
         }
 
         if (updatedPageData.has(app.activePage)) {
+          const prevCursor = cm.getCursor()
+          const activePageObj = mergedPages.find((p) => p.id === app.activePage)
+
           app.loadingPage = true
           try {
             cm.setValue(updatedPageData.get(app.activePage))
+
+            if (Array.isArray(activePageObj?.folds)) {
+              for (const fold of activePageObj.folds) {
+                if (typeof fold.from === 'number' && fold.from < cm.lineCount()) {
+                  cm.foldCode({ line: fold.from, ch: 0 }, null, 'fold')
+                }
+              }
+            }
+
+            if (prevCursor) {
+              const clampedLine = Math.min(prevCursor.line, Math.max(0, cm.lineCount() - 1))
+              cm.setCursor({ line: clampedLine, ch: prevCursor.ch })
+            }
           } finally {
             app.loadingPage = false
           }
@@ -553,7 +605,7 @@ function syncPageSaveDebounced(pageName, content) {
     syncPageSave(pageName, content)
   }, 500)
 
-  debounceTimeouts.set(syncKey, timeout)
+  debounceTimeouts.set(syncKey, { timeout, pageName, content })
 }
 
 /**
@@ -564,6 +616,18 @@ export function setupSync() {
   events.on('page:saved', syncPageSave)
   events.on('page:renamed', syncPageRename)
   events.on('page:deleted', syncPageDelete)
+
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        flushPendingSyncSaves()
+      }
+    })
+  }
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', flushPendingSyncSaves)
+  }
 }
 
 /**
