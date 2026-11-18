@@ -47,24 +47,26 @@ if (startFile) {
 app.setAppUserModelId('com.numara.app')
 app.userAgentFallback = app.userAgentFallback.replace(/\s+(?:Electron|numara)\/\S+/gi, '')
 
+const openAppWindow = () => createAppWindow({ onWindowCreated: updateTrayState, onWindowClosed: resetRendererReady })
+
+const focusOrCreateWindow = () => {
+  if (getWindow()) {
+    showAndFocusWindow()
+  } else if (app.isReady()) {
+    openAppWindow()
+  }
+}
+
 // macOS open-file event handling
 app.on('open-file', (event, filePath) => {
   event.preventDefault()
-
-  if (app.isReady()) {
-    if (getWindow()) {
-      showAndFocusWindow()
-    } else {
-      createAppWindow({ onWindowCreated: updateTrayState, onWindowClosed: resetRendererReady })
-    }
-  }
-
+  focusOrCreateWindow()
   queueOrOpenFile(filePath)
 })
 
 app.whenReady().then(() => {
   powerMonitor.on('shutdown', () => setAppQuitting(true))
-  createAppWindow({ onWindowCreated: updateTrayState, onWindowClosed: resetRendererReady })
+  openAppWindow()
 })
 
 app.on('before-quit', (event) => {
@@ -92,20 +94,15 @@ app.on('before-quit', (event) => {
   }
 })
 
-app.on('activate', () => {
-  if (getWindow()) {
-    showAndFocusWindow()
-  } else if (app.isReady()) {
-    createAppWindow({ onWindowCreated: updateTrayState, onWindowClosed: resetRendererReady })
-  }
-})
+app.on('activate', focusOrCreateWindow)
 
 app.on('second-instance', (event, commandLine) => {
   const win = getWindow()
-  const winValid = win && !win.isDestroyed()
   const fileArg = getNumFilePath(commandLine)
 
-  if (winValid) {
+  if (!win && !app.isReady()) return
+
+  if (win) {
     if (!app.isPackaged && !fileArg) {
       showAndFocusWindow()
       win.reload()
@@ -118,16 +115,12 @@ app.on('second-instance', (event, commandLine) => {
     }
 
     showAndFocusWindow()
+  } else {
+    openAppWindow()
+  }
 
-    if (fileArg) {
-      queueOrOpenFile(fileArg)
-    }
-  } else if (app.isReady()) {
-    createAppWindow({ onWindowCreated: updateTrayState, onWindowClosed: resetRendererReady })
-
-    if (fileArg) {
-      queueOrOpenFile(fileArg)
-    }
+  if (fileArg) {
+    queueOrOpenFile(fileArg)
   }
 })
 
