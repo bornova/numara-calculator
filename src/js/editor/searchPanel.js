@@ -16,13 +16,17 @@ let matches = []
 let activeIndex = -1
 
 function queryCaseInsensitive(query) {
-  if (typeof query === 'string') return query === query.toLowerCase()
+  if (typeof query === 'string') {
+    return query === query.toLowerCase()
+  }
 
   return query.ignoreCase
 }
 
 function parseQuery(queryStr) {
-  if (!queryStr) return null
+  if (!queryStr) {
+    return null
+  }
 
   const isRE = queryStr.match(/^\/(.+)\/([a-z]*)$/)
 
@@ -72,7 +76,9 @@ function makeOverlay(query, caseInsensitive) {
 function getMatches(cm, query) {
   const list = []
 
-  if (!query) return list
+  if (!query) {
+    return list
+  }
 
   const cursor = cm.getSearchCursor(query, CodeMirror.Pos(cm.firstLine(), 0), {
     caseFold: queryCaseInsensitive(query)
@@ -109,6 +115,10 @@ function refreshMatches(cm, fromPos, select = true) {
   } else {
     activeIndex = -1
     countEl.textContent = '0 of 0'
+
+    if (select && cm.somethingSelected()) {
+      cm.setCursor(fromPos)
+    }
   }
 }
 
@@ -135,6 +145,10 @@ function updateSearch(cm, select = true) {
     matches = []
     activeIndex = -1
     countEl.textContent = 'No results'
+
+    if (select && cm.somethingSelected()) {
+      cm.setCursor(cm.getCursor('from'))
+    }
 
     return
   }
