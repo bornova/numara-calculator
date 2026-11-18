@@ -3,16 +3,16 @@ import UIkit from 'uikit'
 import { calculate, clearEvaluationCache } from '../calc/calcManager.js'
 import { getRates } from '../calc/currencies.js'
 import { syncOutputHeights } from '../calc/outputRenderer.js'
-import { app as coreApp } from '../core/mathInstance.js'
+import { refreshCurrencyState } from '../core/mathInstance.js'
 import { isCommaDecimal } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
 import { clearSyncCache, triggerFolderSync, updateSyncUiState } from '../pages/sync.js'
-import { app } from '../state/appState.js'
-import { checkSize, DEFAULT_APP_HEIGHT, DEFAULT_APP_WIDTH, getTheme, isElectron, isLinux, isMac } from '../state/env.js'
+import { app, DEFAULT_SETTINGS, SETTING_SELECT_OPTIONS } from '../state/appState.js'
+import { DEFAULT_APP_HEIGHT, DEFAULT_APP_WIDTH, isElectron, isLinux, isMac } from '../state/env.js'
 import { initStoreObject, store } from '../state/store.js'
 import { confirm, modal, showError } from './dialogs.js'
-import { getDockedPageListWidth, setupPageList } from './pageList.js'
+import { checkSize, getDockedPageListWidth, setupPageList } from './pageList.js'
 import { colors } from './theme.js'
 
 let updateInterval
@@ -54,13 +54,12 @@ function checkWarnings() {
  * Populates a select HTML element with given options.
  *
  * @param {HTMLSelectElement} selectEl The select element to populate.
- * @param {Record<string, string>} options Value-to-label map.
- * @param {string|null} [disabledValue=null] An optional value to disable in the select options.
+ * @param {Array<[string|null, string]>} options Ordered `[value, label]` tuples (`null` value renders a disabled option).
  */
-function populateSelect(selectEl, options, disabledValue = null) {
-  selectEl.innerHTML = Object.entries(options)
+function populateSelect(selectEl, options) {
+  selectEl.innerHTML = options
     .map(([value, label]) =>
-      value === disabledValue ? `<option disabled>${label}</option>` : `<option value="${value}">${label}</option>`
+      value === null ? `<option disabled>${label}</option>` : `<option value="${value}">${label}</option>`
     )
     .join('')
 }
@@ -135,10 +134,6 @@ function setupSettingsEvents() {
       `When ${app.settings.numberFormat} format is selected, comma (,) is used as the decimal separator. Therefore, you must use semicolon (;) as the argument separator in all applicable functions. Ex. sum(1;3) // 4`,
       true
     )
-  })
-
-  dom.currencyWarn.addEventListener('click', () => {
-    showError('App restart needed', `Currencies used in existing calculations will be removed after app restart.`)
   })
 
   RANGE_KEYS.forEach((key) => {
@@ -238,6 +233,21 @@ function setupSettingsEvents() {
 }
 
 /**
+ * Get the active application theme ('dark' or 'light').
+ * @returns {Promise<string>} Resolves to 'dark' or 'light'.
+ */
+async function getTheme() {
+  const theme = app.settings.theme
+
+  if (theme === 'dark') return 'dark'
+  if (theme !== 'system') return 'light'
+
+  const prefersDark = isElectron ? await numara.isDark() : window.matchMedia('(prefers-color-scheme: dark)').matches
+
+  return prefersDark ? 'dark' : 'light'
+}
+
+/**
  * Apply input/output panel widths and styles based on the current answerPosition setting.
  */
 function applyAnswerPositionLayout() {
@@ -254,58 +264,13 @@ function applyAnswerPositionLayout() {
 
 export const settings = {
   /** Default settings. */
-  defaults: {
-    alwaysOnTop: false,
-    syncDirEnabled: false,
-    syncDir: '',
-    answerPosition: 'left',
-    autocomplete: true,
-    closeBrackets: true,
-    contPrevLine: true,
-    copyThouSep: false,
-    currency: true,
-    currencyInterval: '0',
-    dateDay: false,
-    dateFormat: 'MM/dd/yyyy',
-    expLower: '-12',
-    expUpper: '12',
-    fontSize: '14px',
-    fontWeight: '400',
-    inputWidth: 60,
-    keywordTips: true,
-    lineErrors: false,
-    lineHeight: '26px',
-    lineNumbers: true,
-    lineWrap: true,
-    truncateAnswers: true,
-    matchBrackets: true,
-    matrixType: 'Matrix',
-    newPageOnStart: false,
-    notation: 'auto',
-    notifyDuration: '5000',
-    notifyLocation: 'bottom-center',
-    numberFormat: '1,234.56',
-    numericOutput: 'number',
-    pageListPosition: 'auto',
-    precision: '4',
-    calcTimeout: '10',
-    predictable: false,
-    rulers: false,
-    syntax: true,
-    theme: 'system',
-    zoomLevel: 'normal',
-    thouSep: true,
-    showTray: false,
-    openAtLogin: false,
-    escToClose: false
-  },
+  defaults: DEFAULT_SETTINGS,
 
   /** Initialize settings. */
   initialize: async () => {
     setupSettingsEvents()
 
     app.settings = initStoreObject('settings', settings.defaults)
-    coreApp.settings = app.settings
 
     dom.els('.settingItem').forEach((item) => {
       const id = item.getAttribute('id')
@@ -338,38 +303,9 @@ export const settings = {
       }
     })
 
-    populateSelect(dom.answerPosition, {
-      left: 'Left (with divider)',
-      right: 'Right (no divider)',
-      bottom: 'Below Expression'
-    })
-    populateSelect(dom.numberFormat, {
-      '1,234.56': '1,234.56',
-      '1.234,56': '1.234,56',
-      '1 234.56': '1 234.56',
-      '1 234,56': '1 234,56'
-    })
-    populateSelect(dom.dateFormat, {
-      'MM/dd/yyyy': 'MM/DD/YYYY',
-      'dd/MM/yyyy': 'DD/MM/YYYY',
-      'yyyy-MM-dd': 'YYYY-MM-DD'
-    })
-    populateSelect(dom.numericOutput, { number: 'Number', BigNumber: 'BigNumber', Fraction: 'Fraction' })
-    populateSelect(
-      dom.notation,
-      {
-        auto: 'Auto',
-        engineering: 'Engineering',
-        exponential: 'Exponential',
-        fixed: 'Fixed',
-        spacer: '-',
-        bin: 'Binary',
-        hex: 'Hexadecimal',
-        oct: 'Octal'
-      },
-      'spacer'
-    )
-    populateSelect(dom.matrixType, { Matrix: 'Matrix', Array: 'Array' })
+    for (const [id, options] of Object.entries(SETTING_SELECT_OPTIONS)) {
+      populateSelect(dom[id], options)
+    }
 
     dom.els('#alwaysOnTopContainer, #showTrayContainer, #escToCloseContainer, #syncTab').forEach((el) => {
       el.style.display = isElectron ? '' : 'none'
@@ -438,11 +374,11 @@ export const settings = {
    * @param {boolean} [shouldCalculate=true] Whether to trigger a recalculation after applying settings.
    */
   apply: async (shouldCalculate = true) => {
-    coreApp.settings = app.settings
     clearEvaluationCache()
 
     await settings.setTheme()
     if (app.colors) colors.apply()
+    refreshCurrencyState(app.currencies, app.settings.currency)
 
     if (isElectron) {
       numara.setTheme(app.settings.theme)
@@ -521,6 +457,9 @@ export const settings = {
 
   /** Save settings to local storage. */
   save: () => {
+    const prevCurrency = app.settings.currency
+    const prevInterval = app.settings.currencyInterval
+
     Object.keys(app.settings).forEach((key) => {
       const el = dom.el('#' + key)
 
@@ -530,13 +469,15 @@ export const settings = {
       }
     })
 
-    if (!dom.currency.checked) {
+    if (!app.settings.currency) {
       store.remove('rateDate')
     }
 
-    dom.currencyWarn.style.display = app.settings.currency ? 'none' : 'inline-flex'
-
-    if (!store.get('rateDate') && app.settings.currency) {
+    if (
+      app.settings.currency &&
+      (!prevCurrency || (prevInterval === 'manual' && app.settings.currencyInterval !== 'manual')) &&
+      !store.get('rateDate')
+    ) {
       getRates()
     }
 
