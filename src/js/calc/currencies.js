@@ -65,6 +65,10 @@ const DEFAULTS = {
 const registeredCurrencyHints = new Set()
 
 function hasBuiltinConflict(token) {
+  if (typeof token !== 'string' || !token) {
+    return false
+  }
+
   return (
     BUILTIN_UNIT_KEYS.has(token) ||
     BUILTIN_UNIT_KEYS.has(token.toLowerCase()) ||
@@ -203,7 +207,9 @@ export function initCurrencies() {
   for (const code of Object.keys(stored)) {
     const { symbol } = stored[code]
 
-    if (!DEFAULTS[code] && isMathUnit(code, symbol)) delete stored[code]
+    if (!DEFAULTS[code] && isMathUnit(code, symbol)) {
+      delete stored[code]
+    }
   }
 
   applyCurrenciesState(stored)
