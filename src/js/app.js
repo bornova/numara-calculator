@@ -33,16 +33,6 @@ async function initializeApp() {
   document.documentElement.classList.toggle('is-mobile', isMobile || isCoarsePointer)
 
   if (!isElectron && 'serviceWorker' in navigator) {
-    let refreshing = false
-
-    if (navigator.serviceWorker.controller) {
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (refreshing) return
-        refreshing = true
-        window.location.reload()
-      })
-    }
-
     const registerSW = () => {
       navigator.serviceWorker
         .register('sw.js', { updateViaCache: 'none' })
@@ -55,12 +45,6 @@ async function initializeApp() {
     } else {
       window.addEventListener('load', registerSW)
     }
-  }
-
-  if (document.fonts?.load) {
-    Promise.all([document.fonts.load('400 1rem "Google Sans"'), document.fonts.load('400 1rem "Roboto Mono"')]).catch(
-      () => {}
-    )
   }
 
   migrateAppState({ defaultColors: colors.defaults })
@@ -87,22 +71,8 @@ async function initializeApp() {
   setupUIkitUtils()
   initializePageList()
   setupPageIo()
-  initializePages()
-  initializeContextMenus()
-  initializeSettingsTooltips()
-  initAppUpdate()
-  checkAppUpdate()
 
   if (isElectron) {
-    if (app.settings.syncDirEnabled && app.settings.syncDir) {
-      const syncDirExists = await checkSyncDir()
-
-      if (syncDirExists) {
-        numara.startWatchingSyncDir(app.settings.syncDir)
-        triggerFolderSync().catch(console.error)
-      }
-    }
-
     numara.onSyncDirChanged(() => {
       triggerFolderSync().catch(console.error)
     })
@@ -111,6 +81,23 @@ async function initializeApp() {
       handleSyncDirDeleted().catch(console.error)
     })
 
+    if (app.settings.syncDirEnabled && app.settings.syncDir) {
+      const syncDirExists = await checkSyncDir()
+
+      if (syncDirExists) {
+        numara.startWatchingSyncDir(app.settings.syncDir)
+        await triggerFolderSync().catch(console.error)
+      }
+    }
+  }
+
+  initializePages()
+  initializeContextMenus()
+  initializeSettingsTooltips()
+  initAppUpdate()
+  checkAppUpdate()
+
+  if (isElectron) {
     numara.rendererReady()
   }
 
