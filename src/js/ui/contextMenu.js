@@ -61,7 +61,7 @@ function inputContext() {
   requestAnimationFrame(() => {
     const lineIndex = cm.getCursor().line
     const isEmpty = cm.getValue() === ''
-    const hasAnswer = hasCopyableAnswer(dom.el(`[data-index="${lineIndex}"]`))
+    const hasAnswer = hasCopyableAnswer(dom.el(`#mainPanel [data-index="${lineIndex}"]`))
     const selections = cm.listSelections()
     const isMultiLine = selections.length > 1 || selections[0].anchor.line !== selections[0].head.line
 
@@ -88,6 +88,12 @@ function copyLine(index) {
   copyToClipboard(line, `Copied Line ${index + 1} to clipboard.`)
 }
 
+function formatLineWithAnswer(line, answer) {
+  const expr = stripComments(line).trim()
+
+  return !answer || !expr || answer === line || answer === expr ? line : `${expr} = ${answer}`
+}
+
 /**
  * Copy line answer.
  * @param {number|string} lineIndex The 0-based index of the line.
@@ -97,15 +103,13 @@ function copyAnswer(lineIndex, withLines) {
   lineIndex = +lineIndex
 
   const line = cm.getLine(lineIndex).trim()
-  const answer = getLineCopyableAnswer(dom.el(`[data-index="${lineIndex}"]`))
+  const answer = getLineCopyableAnswer(dom.el(`#mainPanel [data-index="${lineIndex}"]`))
 
   if (!answer) {
     return copyToClipboard()
   }
 
-  const expr = stripComments(line).trim()
-  const lineWithAnswer = !expr || answer === line || answer === expr ? line : `${expr} = ${answer}`
-  const copiedText = withLines ? lineWithAnswer : `${answer}`
+  const copiedText = withLines ? formatLineWithAnswer(line, answer) : `${answer}`
   const safeText = escapeHTML(copiedText)
 
   copyToClipboard(
@@ -128,7 +132,7 @@ function copyAllLines() {
 function getAnswersMap() {
   const answersMap = {}
 
-  document.querySelectorAll('[data-index]').forEach((el) => {
+  dom.els('#mainPanel [data-index]').forEach((el) => {
     answersMap[el.getAttribute('data-index')] = getLineCopyableAnswer(el)
   })
 
@@ -159,7 +163,7 @@ function copyAllAnswers() {
  * Output panel context menu.
  * @param {Event} event The event object.
  */
-export function outputContext(event) {
+function outputContext(event) {
   event.stopPropagation()
 
   if (!isElectron) return
@@ -192,10 +196,7 @@ export function copyAll() {
     } else if (/^(#|\/\/)/.test(text)) {
       copiedCalc.push(text)
     } else {
-      const ans = answersMap[lineIdx] ?? ''
-      const expr = stripComments(text).trim()
-
-      copiedCalc.push(!ans || !expr || ans === text || ans === expr ? text : `${expr} = ${ans}`)
+      copiedCalc.push(formatLineWithAnswer(text, answersMap[lineIdx] ?? ''))
     }
 
     lineIdx++
