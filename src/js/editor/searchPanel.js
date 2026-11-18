@@ -235,58 +235,6 @@ function toggleReplaceMode(cm) {
   }
 }
 
-export function showSearchPanel(cm, replaceMode = false) {
-  if (!panelEl) {
-    createPanel(cm)
-  }
-
-  panelEl.classList.remove('hidden')
-
-  const selection = cm.getSelection()
-
-  if (selection && selection.indexOf('\n') === -1) {
-    findInputEl.value = selection
-  }
-
-  document.body.classList.add('numara-search-panel-open')
-  setReplaceModeVisible(cm, replaceMode)
-  updateSearch(cm)
-
-  const input = replaceMode ? replaceInputEl : findInputEl
-  input.focus()
-  input.select()
-
-  setTimeout(() => {
-    input.focus()
-    input.select()
-  }, 50)
-}
-
-export function hideSearchPanel(cm) {
-  if (!panelEl || panelEl.classList.contains('hidden')) return
-
-  panelEl.classList.add('hidden')
-
-  document.body.classList.remove('numara-search-panel-open')
-  document.body.classList.remove('numara-search-replace-open')
-
-  if (currentOverlay) {
-    cm.removeOverlay(currentOverlay)
-    currentOverlay = null
-  }
-
-  currentQuery = null
-  matches = []
-  activeIndex = -1
-
-  cm.refresh()
-  cm.focus()
-}
-
-export function isSearchPanelOpen() {
-  return panelEl && !panelEl.classList.contains('hidden')
-}
-
 function createPanel(cm) {
   panelEl = document.createElement('div')
   panelEl.className = 'numara-search-panel hidden'
@@ -374,4 +322,56 @@ function createPanel(cm) {
       debouncedUpdateSearch()
     }
   })
+}
+
+export function showSearchPanel(cm, replaceMode = false) {
+  if (!panelEl) {
+    createPanel(cm)
+  }
+
+  panelEl.classList.remove('hidden')
+
+  const selection = cm.getSelection()
+
+  if (selection && selection.indexOf('\n') === -1) {
+    findInputEl.value = selection
+  }
+
+  document.body.classList.add('numara-search-panel-open')
+  setReplaceModeVisible(cm, replaceMode)
+  updateSearch(cm)
+
+  const input = replaceMode ? replaceInputEl : findInputEl
+  input.focus()
+  input.select()
+
+  setTimeout(() => {
+    input.focus()
+    input.select()
+  }, 50)
+}
+
+export function hideSearchPanel(cm) {
+  if (!panelEl || panelEl.classList.contains('hidden')) return
+
+  panelEl.classList.add('hidden')
+
+  document.body.classList.remove('numara-search-panel-open')
+  document.body.classList.remove('numara-search-replace-open')
+
+  if (currentOverlay) {
+    cm.removeOverlay(currentOverlay)
+    currentOverlay = null
+  }
+
+  currentQuery = null
+  matches = []
+  activeIndex = -1
+
+  cm.refresh()
+  cm.focus()
+}
+
+export function isSearchPanelOpen() {
+  return panelEl && !panelEl.classList.contains('hidden')
 }
