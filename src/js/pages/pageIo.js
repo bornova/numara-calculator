@@ -44,12 +44,6 @@ export function setupPageIo() {
 
     numara.exportDataError((error) => notify(escapeHTML(String(error)), 'danger'))
     numara.requestExportPage(exportActivePage)
-
-    numara.print(() => {
-      if (!cm.getValue()) return
-      hideFloatingPageList()
-      window.print()
-    })
   } else {
     dom.els('#importExportDivider, #importPageButton, #exportPageButton').forEach((el) => el.remove())
   }
