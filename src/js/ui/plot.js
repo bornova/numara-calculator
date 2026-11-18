@@ -235,6 +235,57 @@ function getPagePlotFunctions() {
 }
 
 /**
+ * Parses an axis domain boundary input value, supporting localized number formats.
+ * @param {string|number} val Raw axis limit value.
+ * @returns {number}
+ */
+function resolveAxisLimit(val) {
+  const trimmed = String(val ?? '').trim()
+
+  if (!trimmed) {
+    return NaN
+  }
+
+  const localeNum = parseStrictLocaleNumber(trimmed, app.settings)
+
+  if (Number.isFinite(localeNum)) {
+    return localeNum
+  }
+
+  return /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(trimmed) ? Number(trimmed) : NaN
+}
+
+/**
+ * Populates the plot axis settings dialog inputs from a domain configuration object.
+ * @param {{ auto: boolean, axisPrecision: number, x: number[], y: number[] }} domain
+ */
+function populatePlotDomainInputs({ auto, x, y, axisPrecision }) {
+  const minMaxInputs = [dom.plotXMin, dom.plotXMax, dom.plotYMin, dom.plotYMax]
+  const limits = [...x, ...y]
+
+  dom.plotAutoDomain.checked = auto
+  dom.plotAxisPrecision.value = axisPrecision
+  dom.plotAxisPrecisionLabel.textContent = axisPrecision
+
+  minMaxInputs.forEach((input, i) => {
+    input.value = limits[i]
+    input.disabled = auto
+  })
+}
+
+/**
+ * Validates the plot boundary domains ensuring they are numbers and valid ranges.
+ * @param {number} xMin Minimum X axis boundary.
+ * @param {number} xMax Maximum X axis boundary.
+ * @param {number} yMin Minimum Y axis boundary.
+ * @param {number} yMax Maximum Y axis boundary.
+ * @returns {boolean} True if the domains are valid.
+ */
+function validateDomain(xMin, xMax, yMin, yMax) {
+  return !isNaN(xMin) && !isNaN(xMax) && !isNaN(yMin) && !isNaN(yMax) && xMin < xMax && yMin < yMax
+}
+
+/**
  * Normalizes a function definition (e.g. "f(t) = a * t^2") into an expression in "x".
  * @param {string} funcDef The raw function definition string.
  * @returns {string} The simplified expression in terms of x.
@@ -289,206 +340,9 @@ function preparePlotExpression(funcDef) {
 }
 
 /**
- * Updates a specific plot configuration setting and triggers a redrawing.
- * @param {string} setting The setting key.
- * @param {*} value The new setting value.
- */
-function updatePlotSetting(setting, value) {
-  app.plotSettings[setting] = value
-  store.set('plotSettings', app.plotSettings)
-  plot()
-}
-
-/**
- * Parses an axis domain boundary input value, supporting localized number formats.
- * @param {string|number} val Raw axis limit value.
- * @returns {number}
- */
-function resolveAxisLimit(val) {
-  const trimmed = String(val ?? '').trim()
-
-  if (!trimmed) {
-    return NaN
-  }
-
-  const localeNum = parseStrictLocaleNumber(trimmed, app.settings)
-
-  if (Number.isFinite(localeNum)) {
-    return localeNum
-  }
-
-  return /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(trimmed) ? Number(trimmed) : NaN
-}
-
-/**
- * Populates the plot axis settings dialog inputs from a domain configuration object.
- * @param {{ auto: boolean, axisPrecision: number, x: number[], y: number[] }} domain
- */
-export function populatePlotDomainInputs({ auto, x, y, axisPrecision }) {
-  const minMaxInputs = [dom.plotXMin, dom.plotXMax, dom.plotYMin, dom.plotYMax]
-  const limits = [...x, ...y]
-
-  dom.plotAutoDomain.checked = auto
-  dom.plotAxisPrecision.value = axisPrecision
-  dom.plotAxisPrecisionLabel.textContent = axisPrecision
-
-  minMaxInputs.forEach((input, i) => {
-    input.value = limits[i]
-    input.disabled = auto
-  })
-}
-
-/**
- * Validates the plot boundary domains ensuring they are numbers and valid ranges.
- * @param {number} xMin Minimum X axis boundary.
- * @param {number} xMax Maximum X axis boundary.
- * @param {number} yMin Minimum Y axis boundary.
- * @param {number} yMax Maximum Y axis boundary.
- * @returns {boolean} True if the domains are valid.
- */
-function validateDomain(xMin, xMax, yMin, yMax) {
-  return !isNaN(xMin) && !isNaN(xMax) && !isNaN(yMin) && !isNaN(yMax) && xMin < xMax && yMin < yMax
-}
-
-/**
- * Resets the plot zoom and domain state, redrawing from scratch.
- */
-function resetPlot() {
-  app.activePlot = null
-  plot()
-}
-
-/**
- * Sets up user event listeners for chart interactions, zoom adjustments, export buttons, etc.
- */
-function setupEventListeners() {
-  const minMaxInputs = [dom.plotXMin, dom.plotXMax, dom.plotYMin, dom.plotYMax]
-
-  dom.plotCrossModal.addEventListener('click', () => updatePlotSetting('showCross', dom.plotCrossModal.checked))
-  dom.plotGridModal.addEventListener('click', () => updatePlotSetting('showGrid', dom.plotGridModal.checked))
-  dom.plotDerivativeModal.addEventListener('click', () =>
-    updatePlotSetting('showDerivative', dom.plotDerivativeModal.checked)
-  )
-
-  dom.exportPlot.addEventListener('click', () => {
-    const svg = dom.el('.function-plot')
-    if (!svg) return
-
-    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
-    const fileName = `${getSafeFilename(`${productName} Plot ${app.plotFunction}`)}.svg`
-    const preface = '<?xml version="1.0" standalone="no"?>\r\n'
-    const svgBlob = new Blob([preface, svg.outerHTML], { type: 'image/svg+xml;charset=utf-8' })
-    const downloadLink = document.createElement('a')
-    const objectUrl = URL.createObjectURL(svgBlob)
-
-    downloadLink.href = objectUrl
-    downloadLink.download = fileName
-    downloadLink.click()
-
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 100)
-  })
-
-  dom.axisSettingsButton.addEventListener('click', () => modal.show(dom.dialogPlotAxisSettings))
-
-  dom.resetPlot.addEventListener('click', resetPlot)
-
-  dom.dialogPlotAxisSettingsSave.addEventListener('click', () => {
-    const isAutoDomain = dom.plotAutoDomain.checked
-    const [xMin, xMax, yMin, yMax] = minMaxInputs.map((input) => resolveAxisLimit(input.value))
-
-    // Skip domain validation if Auto Domain is checked
-    if (!isAutoDomain && !validateDomain(xMin, xMax, yMin, yMax)) {
-      showError(
-        'Invalid Domain',
-        'Please ensure all fields contain valid numbers and that the minimum values are less than the maximum values.'
-      )
-      return
-    }
-
-    app.plotSettings.domain.axisPrecision = parseFloat(dom.plotAxisPrecision.value)
-    app.plotSettings.domain.auto = isAutoDomain
-    app.plotSettings.domain.x = [xMin, xMax]
-    app.plotSettings.domain.y = [yMin, yMax]
-
-    store.set('plotSettings', app.plotSettings)
-    modal.hide(dom.dialogPlotAxisSettings)
-    resetPlot()
-  })
-
-  dom.plotAxisPrecision.addEventListener('input', () => {
-    dom.plotAxisPrecisionLabel.textContent = dom.plotAxisPrecision.value
-  })
-
-  dom.plotAutoDomain.addEventListener('change', () => {
-    const isAutoDomain = dom.plotAutoDomain.checked
-
-    minMaxInputs.forEach((input) => (input.disabled = isAutoDomain))
-  })
-
-  dom.defaultDomainsButton.addEventListener('click', () => {
-    populatePlotDomainInputs(plotSettings.defaults.domain)
-  })
-
-  window.addEventListener('resize', () => {
-    if (app.activePlot && dom.dialogPlot.classList.contains('uk-open')) {
-      plot()
-    }
-  })
-
-  UIkit.util.on(
-    '#dialogPlot',
-    'show',
-    () => {
-      app.activePlot = null
-
-      if (dom.plot.clientWidth > 0 && dom.plot.clientHeight > 0) {
-        plot()
-      }
-    },
-    { self: true }
-  )
-
-  UIkit.util.on(
-    '#dialogPlot',
-    'shown',
-    () => {
-      if (!app.activePlot) {
-        plot()
-        modal.center('#dialogPlot')
-      }
-    },
-    { self: true }
-  )
-
-  UIkit.util.on(
-    '#dialogPlot',
-    'hide',
-    () => {
-      app.activePlot = false
-    },
-    { self: true }
-  )
-
-  UIkit.util.on('#dialogPlotAxisSettings', 'shown', () => populatePlotDomainInputs(app.plotSettings.domain), {
-    self: true
-  })
-}
-
-/**
- * Resets the active function selection for the plot modal to the primary plot function.
- */
-export function resetPlotSelection() {
-  const primaryFunc = (app.plotFunction || '').trim()
-
-  lastOpenedPlotFunction = primaryFunc
-  activePlotFunctions = new Set(primaryFunc ? [primaryFunc] : [])
-  app.activePlot = null
-}
-
-/**
  * Renders the interactive function plot in the plot dialog.
  */
-export function plot() {
+function plot() {
   const primaryFunc = (app.plotFunction || '').trim()
 
   if (primaryFunc !== lastOpenedPlotFunction) {
@@ -620,9 +474,157 @@ export function plot() {
 }
 
 /**
+ * Updates a specific plot configuration setting and triggers a redrawing.
+ * @param {string} setting The setting key.
+ * @param {*} value The new setting value.
+ */
+function updatePlotSetting(setting, value) {
+  app.plotSettings[setting] = value
+  store.set('plotSettings', app.plotSettings)
+  plot()
+}
+
+/**
+ * Resets the plot zoom and domain state, redrawing from scratch.
+ */
+function resetPlot() {
+  app.activePlot = null
+  plot()
+}
+
+/**
+ * Sets up user event listeners for chart interactions, zoom adjustments, export buttons, etc.
+ */
+function setupEventListeners() {
+  const minMaxInputs = [dom.plotXMin, dom.plotXMax, dom.plotYMin, dom.plotYMax]
+
+  dom.plotCrossModal.addEventListener('click', () => updatePlotSetting('showCross', dom.plotCrossModal.checked))
+  dom.plotGridModal.addEventListener('click', () => updatePlotSetting('showGrid', dom.plotGridModal.checked))
+  dom.plotDerivativeModal.addEventListener('click', () =>
+    updatePlotSetting('showDerivative', dom.plotDerivativeModal.checked)
+  )
+
+  dom.exportPlot.addEventListener('click', () => {
+    const svg = dom.el('.function-plot')
+    if (!svg) return
+
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    const fileName = `${getSafeFilename(`${productName} Plot ${app.plotFunction}`)}.svg`
+    const preface = '<?xml version="1.0" standalone="no"?>\r\n'
+    const svgBlob = new Blob([preface, svg.outerHTML], { type: 'image/svg+xml;charset=utf-8' })
+    const downloadLink = document.createElement('a')
+    const objectUrl = URL.createObjectURL(svgBlob)
+
+    downloadLink.href = objectUrl
+    downloadLink.download = fileName
+    downloadLink.click()
+
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 100)
+  })
+
+  dom.axisSettingsButton.addEventListener('click', () => modal.show(dom.dialogPlotAxisSettings))
+
+  dom.resetPlot.addEventListener('click', resetPlot)
+
+  dom.dialogPlotAxisSettingsSave.addEventListener('click', () => {
+    const isAutoDomain = dom.plotAutoDomain.checked
+    const [xMin, xMax, yMin, yMax] = minMaxInputs.map((input) => resolveAxisLimit(input.value))
+
+    // Skip domain validation if Auto Domain is checked
+    if (!isAutoDomain && !validateDomain(xMin, xMax, yMin, yMax)) {
+      showError(
+        'Invalid Domain',
+        'Please ensure all fields contain valid numbers and that the minimum values are less than the maximum values.'
+      )
+      return
+    }
+
+    app.plotSettings.domain.axisPrecision = parseFloat(dom.plotAxisPrecision.value)
+    app.plotSettings.domain.auto = isAutoDomain
+    app.plotSettings.domain.x = [xMin, xMax]
+    app.plotSettings.domain.y = [yMin, yMax]
+
+    store.set('plotSettings', app.plotSettings)
+    modal.hide(dom.dialogPlotAxisSettings)
+    resetPlot()
+  })
+
+  dom.plotAxisPrecision.addEventListener('input', () => {
+    dom.plotAxisPrecisionLabel.textContent = dom.plotAxisPrecision.value
+  })
+
+  dom.plotAutoDomain.addEventListener('change', () => {
+    const isAutoDomain = dom.plotAutoDomain.checked
+
+    minMaxInputs.forEach((input) => (input.disabled = isAutoDomain))
+  })
+
+  dom.defaultDomainsButton.addEventListener('click', () => {
+    populatePlotDomainInputs(plotSettings.defaults.domain)
+  })
+
+  window.addEventListener('resize', () => {
+    if (app.activePlot && dom.dialogPlot.classList.contains('uk-open')) {
+      plot()
+    }
+  })
+
+  UIkit.util.on(
+    '#dialogPlot',
+    'show',
+    () => {
+      app.activePlot = null
+
+      if (dom.plot.clientWidth > 0 && dom.plot.clientHeight > 0) {
+        plot()
+      }
+    },
+    { self: true }
+  )
+
+  UIkit.util.on(
+    '#dialogPlot',
+    'shown',
+    () => {
+      if (!app.activePlot) {
+        plot()
+        modal.center('#dialogPlot')
+      }
+    },
+    { self: true }
+  )
+
+  UIkit.util.on(
+    '#dialogPlot',
+    'hide',
+    () => {
+      app.activePlot = false
+    },
+    { self: true }
+  )
+
+  UIkit.util.on('#dialogPlotAxisSettings', 'shown', () => populatePlotDomainInputs(app.plotSettings.domain), {
+    self: true
+  })
+}
+
+/**
+ * Resets the active function selection for the plot modal to the primary plot function.
+ */
+function resetPlotSelection() {
+  const primaryFunc = (app.plotFunction || '').trim()
+
+  lastOpenedPlotFunction = primaryFunc
+  activePlotFunctions = new Set(primaryFunc ? [primaryFunc] : [])
+  app.activePlot = null
+}
+
+/**
  * Initializes plot settings and binds plot dialog event listeners.
  */
-export function setupPlot() {
+function setupPlot() {
   plotSettings.initialize()
   setupEventListeners()
 }
+
+export { plot, resetPlotSelection, setupPlot }
