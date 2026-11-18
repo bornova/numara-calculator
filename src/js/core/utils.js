@@ -93,6 +93,23 @@ export function getSyncKey(name) {
 }
 
 /**
+ * Resolves a unique page name that does not collide with any existing normalized sync key.
+ * @param {string} baseName Candidate base page name.
+ * @param {Set<string>} usedKeys Set of already-used normalized sync keys.
+ * @returns {string} Non-conflicting page name.
+ */
+export function resolveUniquePageName(baseName, usedKeys) {
+  let candidate = baseName
+  let count = 1
+
+  while (usedKeys.has(getSyncKey(candidate))) {
+    candidate = `${baseName} (${count++})`
+  }
+
+  return candidate
+}
+
+/**
  * Get standard BCP 47 locale tag based on system preference.
  * @param {object} settings The application settings.
  * @returns {string} The system locale.
