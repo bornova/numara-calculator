@@ -5,7 +5,7 @@ import {
   CLASS_PLOT_BUTTON,
   PAGE_OBJECT_SYMBOL
 } from './constants.js'
-import { app, currencyFormatRegex, math } from './mathInstance.js'
+import { calcState, currencyFormatRegex, math } from './mathInstance.js'
 import { transformOutsideStrings } from './preprocessor.js'
 import { escapeHTML, getNumberFormat } from './utils.js'
 
@@ -76,10 +76,10 @@ export function stripAnswer(answer) {
 /**
  * Parses a localized number string into a standard JavaScript float.
  * @param {string} str Localized numeric string.
- * @param {object} [settings=app.settings] Settings object containing number format configuration.
+ * @param {object} [settings=calcState.settings] Settings object containing number format configuration.
  * @returns {number}
  */
-export function parseLocaleNumber(str, settings = app.settings) {
+export function parseLocaleNumber(str, settings = calcState.settings) {
   if (typeof str !== 'string') {
     return NaN
   }
@@ -99,10 +99,10 @@ const STRICT_LOCALE_NUMBER_REGEX = /^-?\d[\d.,\s\u00A0\u202F\u2009]*(?:e[+-]?\d+
 /**
  * Parses a localized numeric string only when the entire trimmed input is a numeric literal.
  * @param {string} str Raw string to validate and parse.
- * @param {object} [settings=app.settings] Settings object containing number format configuration.
+ * @param {object} [settings=calcState.settings] Settings object containing number format configuration.
  * @returns {number} Finite number or `NaN`.
  */
-export function parseStrictLocaleNumber(str, settings = app.settings) {
+export function parseStrictLocaleNumber(str, settings = calcState.settings) {
   if (typeof str !== 'string') {
     return NaN
   }
@@ -122,11 +122,11 @@ export function parseStrictLocaleNumber(str, settings = app.settings) {
  * Formats currency amounts within an output string using `Intl.NumberFormat`.
  * @param {string} str Output string potentially containing currency values.
  * @param {boolean} [useGrouping] Whether to apply thousands grouping.
- * @param {object} [settings=app.settings] Settings object.
- * @param {object} [currencies=app.currencies] Currencies configuration map.
+ * @param {object} [settings=calcState.settings] Settings object.
+ * @param {object} [currencies=calcState.currencies] Currencies configuration map.
  * @returns {string}
  */
-function formatCurrency(str, useGrouping, settings = app.settings, currencies = app.currencies) {
+function formatCurrency(str, useGrouping, settings = calcState.settings, currencies = calcState.currencies) {
   if (!currencyFormatRegex) {
     return str
   }
@@ -243,11 +243,11 @@ function cleanComplexValue(val, digits, notation) {
  * Formats an evaluated calculation value into a display/copy string according to settings.
  * @param {*} answer Evaluated value.
  * @param {boolean} [useGrouping] Whether to apply thousands grouping.
- * @param {object} [settings=app.settings] Settings object.
- * @param {object} [currencies=app.currencies] Currencies configuration map.
+ * @param {object} [settings=calcState.settings] Settings object.
+ * @param {object} [currencies=calcState.currencies] Currencies configuration map.
  * @returns {string}
  */
-export function formatAnswer(answer, useGrouping, settings = app.settings, currencies = app.currencies) {
+export function formatAnswer(answer, useGrouping, settings = calcState.settings, currencies = calcState.currencies) {
   if (typeof answer === 'string') {
     return stripAnswer(answer)
   }
@@ -333,9 +333,7 @@ export function formatAnswer(answer, useGrouping, settings = app.settings, curre
     return formatNumericString(valueStr, decimalSeparator, groupSeparator, effectiveGrouping)
   })
 
-  if (settings?.currency) {
-    formattedAnswer = formatCurrency(formattedAnswer, effectiveGrouping, settings, currencies)
-  }
+  formattedAnswer = formatCurrency(formattedAnswer, effectiveGrouping, settings, currencies)
 
   return stripAnswer(formattedAnswer)
 }
