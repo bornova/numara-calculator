@@ -216,7 +216,7 @@ export function setupEditor() {
 
     const lineNo = line + 1
     const activeLine = editor.getCursor().line + 1
-    const error = dom.el('[data-index="' + line + '"]')?.firstChild?.dataset.error
+    const error = dom.el(`#mainPanel [data-index="${line}"]`)?.firstChild?.dataset.error
 
     if (error) {
       showError(`Error on Line ${lineNo}`, error)
