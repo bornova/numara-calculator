@@ -2,11 +2,12 @@ import { describe, it, beforeEach } from 'node:test'
 import assert from 'node:assert'
 import fs from 'node:fs'
 import path from 'node:path'
+import { build as esbuild } from 'esbuild'
 import { create, all } from 'mathjs'
 import { areBoundsEqual, isBoundsOnScreen, resolveWindowBounds } from '../src/electron/bounds.js'
 import { INTERNAL_SCOPE_KEYS, isInternalScopeKey } from '../src/js/core/constants.js'
-import { runCalculation, formatAnswer, applyUdfu } from '../src/js/core/evaluator.js'
-import { parseLocaleNumber, parseStrictLocaleNumber } from '../src/js/core/formatter.js'
+import { runCalculation, applyUdfu } from '../src/js/core/evaluator.js'
+import { formatAnswer, parseLocaleNumber, parseStrictLocaleNumber } from '../src/js/core/formatter.js'
 import { stripComments } from '../src/js/core/preprocessor.js'
 import { applyUdfuToMath, compileUdfItems, compileUduItems } from '../src/js/core/udfu.js'
 import { debounce, escapeHTML, escapeRegExp, getSafeFilename, isCommaDecimal } from '../src/js/core/utils.js'
@@ -164,7 +165,6 @@ function compareStandardAndNumara(
     pages = [],
     settings = defaultSettings,
     transform,
-    allowColonBraceError = false,
     allowPlot = false,
     warmUp = false,
     contextLabel = '',
@@ -206,8 +206,6 @@ function compareStandardAndNumara(
       )
     } else if (!allowPlot || !num.isPlot) {
       if (num.error) {
-        if (allowColonBraceError && expr.includes(':') && num.error.includes('Unexpected operator }')) continue
-
         reportFailure(
           `${prefix}Expression "${expr}" failed in Numara with error: "${num.error}" (MathJS expected: "${std.answer}")`
         )
@@ -291,7 +289,6 @@ describe('Numara Calculation Engine vs Math.js', function () {
       it(`should evaluate examples for function: ${fn.name}`, () => {
         assertMatchesStandardMath(fn.examples, {
           pageId: `test-Function-${fn.name}`,
-          allowColonBraceError: true,
           allowPlot: true,
           warmUp: true
         })
@@ -465,7 +462,6 @@ describe('Numara Calculation Engine vs Math.js', function () {
             settings: profile.settings,
             useGrouping: copyGrouping,
             transform: profile.transform,
-            allowColonBraceError: true,
             allowPlot: true,
             contextLabel: `[${profile.name}] (${item.name})`
           })
@@ -1455,12 +1451,14 @@ describe('Module Graph & Lazy DOM Architecture', () => {
 
       assert.strictEqual(dom.output, null)
       assert.strictEqual(dom.confirmNo, null)
+      assert.strictEqual(dom.pageListBar, null)
 
       const mockOutput = { id: 'output' }
       const mockHeaderWin = { id: 'winHeader' }
       const mockDialogConfirm = { id: 'dialogConfirm' }
       const mockOpenAtLogin = { id: 'openAtLoginContainer' }
-      const mockConfirmNo = { className: 'uk-modal-close' }
+      const mockConfirmNo = { id: 'confirmNo', className: 'uk-modal-close' }
+      const mockPageListBar = { className: 'uk-offcanvas-bar' }
 
       Object.defineProperty(globalThis, 'document', {
         configurable: true,
@@ -1472,11 +1470,12 @@ describe('Module Graph & Lazy DOM Architecture', () => {
             if (id === 'winHeader') return mockHeaderWin
             if (id === 'dialogConfirm') return mockDialogConfirm
             if (id === 'openAtLoginContainer') return mockOpenAtLogin
+            if (id === 'confirmNo') return mockConfirmNo
             return null
           },
           querySelector(selector) {
             selectorLookups.push(selector)
-            if (selector === '#dialogConfirm .uk-modal-close') return mockConfirmNo
+            if (selector === '#pageListPanel .uk-offcanvas-bar') return mockPageListBar
             return null
           },
           querySelectorAll() {
@@ -1493,15 +1492,23 @@ describe('Module Graph & Lazy DOM Architecture', () => {
       assert.strictEqual(dom.headerWin, mockHeaderWin)
       assert.strictEqual(dom.dialogConfirm, mockDialogConfirm)
       assert.strictEqual(dom.openAtLoginContainer, mockOpenAtLogin)
-      assert.deepStrictEqual(idLookups, ['output', 'winHeader', 'dialogConfirm', 'openAtLoginContainer'])
+      assert.strictEqual(dom.confirmNo, mockConfirmNo)
+      assert.deepStrictEqual(idLookups, ['output', 'winHeader', 'dialogConfirm', 'openAtLoginContainer', 'confirmNo'])
 
-      assert.strictEqual(dom.confirmNo, mockConfirmNo)
-      assert.strictEqual(dom.confirmNo, mockConfirmNo)
-      assert.deepStrictEqual(selectorLookups, ['#dialogConfirm .uk-modal-close'])
+      assert.strictEqual(dom.pageListBar, mockPageListBar)
+      assert.strictEqual(dom.pageListBar, mockPageListBar)
+      assert.deepStrictEqual(selectorLookups, ['#pageListPanel .uk-offcanvas-bar'])
 
       resetDomCache()
       assert.strictEqual(dom.output, mockOutput)
-      assert.deepStrictEqual(idLookups, ['output', 'winHeader', 'dialogConfirm', 'openAtLoginContainer', 'output'])
+      assert.deepStrictEqual(idLookups, [
+        'output',
+        'winHeader',
+        'dialogConfirm',
+        'openAtLoginContainer',
+        'confirmNo',
+        'output'
+      ])
     } finally {
       resetDomCache()
 
@@ -1952,6 +1959,318 @@ describe('Module Graph & Lazy DOM Architecture', () => {
         appState.currencies = prevCurrencies
         refreshCurrencyTokens()
       }
+    })
+
+    it('bundles app, worker, CSS, and resolves functionPlot CJS/ESM interop cleanly via esbuild', async () => {
+      const appBundle = await esbuild({
+        entryPoints: ['src/js/app.js'],
+        bundle: true,
+        minify: true,
+        write: false
+      })
+      assert.strictEqual(appBundle.errors.length, 0)
+      assert.ok(appBundle.outputFiles[0].contents.byteLength > 0)
+
+      const workerBundle = await esbuild({
+        entryPoints: ['src/js/calc/calc.worker.js'],
+        bundle: true,
+        metafile: true,
+        minify: true,
+        write: false
+      })
+      assert.strictEqual(workerBundle.errors.length, 0)
+      assert.ok(workerBundle.outputFiles[0].contents.byteLength > 0)
+      assert.strictEqual(
+        Object.keys(workerBundle.metafile.inputs).some((p) => p.includes('lucide')),
+        false
+      )
+
+      const cssBundle = await esbuild({
+        entryPoints: ['src/css/app.css'],
+        bundle: true,
+        minify: true,
+        write: false,
+        loader: { '.woff2': 'file', '.png': 'file', '.svg': 'file' },
+        outdir: 'build/css'
+      })
+      assert.strictEqual(cssBundle.errors.length, 0)
+
+      // Verify function-plot interop resolves to a callable function inside an esbuild bundle
+      const interopProbe = await esbuild({
+        stdin: {
+          contents: `import functionPlot from 'function-plot'; export const renderPlot = typeof functionPlot === 'function' ? functionPlot : functionPlot.default;`,
+          resolveDir: process.cwd(),
+          loader: 'js'
+        },
+        bundle: true,
+        format: 'esm',
+        write: false
+      })
+      const modUrl = `data:text/javascript;base64,${Buffer.from(interopProbe.outputFiles[0].text).toString('base64')}`
+      const imported = await import(modUrl)
+      assert.strictEqual(typeof imported.renderPlot, 'function')
+    })
+
+    it('compiles control-flow block UDFs, rejects __proto__ UDF pollution, and preserves UDU offset/baseName', () => {
+      const compiledUdf = compileUdfItems([
+        { name: 'clampPos', params: 'x', body: 'if (x > 0) { return x * 2 }\nreturn 0' },
+        { name: 'sumTo', params: 'n', body: 'let s = 0; for (let i = 1; i <= n; i++) { s += i } return s' },
+        { name: '$tax', params: 'v', body: 'v * 0.1' }
+      ])
+
+      applyUdfu(true, compiledUdf)
+
+      try {
+        const res = runCalculation({
+          activePage: 'test-control-flow-udf',
+          lines: ['clampPos(5)', 'clampPos(-3)', 'sumTo(4)', '$tax(200)'],
+          settings: defaultSettings,
+          currencies: mockCurrencies
+        })
+        assert.deepStrictEqual(
+          res.answers.map((h) => extractAnswer(h).answer),
+          ['10', '0', '10', '20']
+        )
+      } finally {
+        applyUdfu(true, '')
+      }
+
+      assert.throws(
+        () => applyUdfuToMath(standardMath, '"__proto__": { "polluted": 1 }', true, {}),
+        /User defined input must resolve to an object/
+      )
+
+      const compiledUdu = compileUduItems([
+        { name: 'degMy', definition: '1 degC', prefixes: 'none', aliases: '', offset: 10, baseName: 'TEMP_MY' }
+      ])
+      assert.strictEqual(compiledUdu.includes('"offset":10'), true)
+      assert.strictEqual(compiledUdu.includes('"baseName":"TEMP_MY"'), true)
+
+      withMockLocalStorage((storage) => {
+        storage.set(
+          'numara',
+          JSON.stringify({
+            udf: 'grade: (x) => { if (x >= 50) { return "pass" } return "fail" }',
+            udu: 'uoff: { definition: "1 m", offset: 5 }'
+          })
+        )
+
+        migrateAppState()
+
+        const udfItems = store.get('udfItems')
+        assert.strictEqual(udfItems.length, 1)
+        assert.doesNotThrow(() => new Function(`return ({${store.get('udf')}})`))
+        assert.strictEqual(store.get('uduItems')[0].offset, 5)
+      })
+    })
+
+    it('evaluates formulajs.* and DateTime.* across number, BigNumber, and Fraction modes', () => {
+      for (const numericOutput of ['number', 'BigNumber', 'Fraction']) {
+        const res = runCalculation({
+          activePage: `test-interop-${numericOutput}`,
+          lines: [
+            'formulajs.ABS(-42)',
+            'formulajs.SUM(10, 20, 30)',
+            'formulajs.ROUND(formulajs.PMT(0.05 / 12, 12, -1000), 2)',
+            'DateTime.fromISO("2026-05-01").plus({ days: 5 }).toFormat("yyyy-MM-dd")',
+            'DateTime.local(2026, 5, 1).plus({ days: 10 }).day'
+          ],
+          settings: { ...defaultSettings, numericOutput },
+          currencies: mockCurrencies
+        })
+
+        assert.strictEqual(
+          res.errorLines.length,
+          0,
+          `Unexpected errors in ${numericOutput}: ${res.answers.join(' | ')}`
+        )
+        assert.deepStrictEqual(
+          res.answers.map((h) => extractAnswer(h).answer),
+          ['42', '60', '85.61', '2026-05-06', '11']
+        )
+      }
+    })
+
+    it('evaluates non-date time units, keyword assignments, and object/range colons without date hijack', () => {
+      const res = runCalculation({
+        activePage: 'test-alt-eval-fixes',
+        lines: [
+          '2 days',
+          '3 days',
+          'total + 1 day',
+          't = total + 1 day',
+          '',
+          'pct = 10% of 50',
+          'obj = {a: subtotal}',
+          'arr = 1:3',
+          '10% of 100 hours + 2 hours',
+          '15/01/2026 + 1 day'
+        ],
+        settings: { ...defaultSettings, matrixType: 'Array' },
+        currencies: mockCurrencies
+      })
+
+      assert.deepStrictEqual(
+        res.answers.map((h) => extractAnswer(h).answer),
+        ['2 days', '3 days', '6 days', '6 days', '', '5', '{"a": 5}', '[1, 2, 3]', '12 hours', 'Invalid Date']
+      )
+    })
+
+    it('formats negative prefix currencies, Fraction currencies, Nordic kr symbols, and >15-digit BigNumber currencies', () => {
+      const nordicCurrencies = {
+        ...mockCurrencies,
+        DKK: { symbol: 'kr.', name: 'Danish Krone', locale: 'da-DK', rate: 0.15 },
+        NOK: { symbol: 'kr', name: 'Norwegian Krone', locale: 'nb-NO', rate: 0.095 },
+        ISK: { symbol: 'kr', name: 'Icelandic Króna', locale: 'is-IS', rate: 0.007 },
+        SEK: { symbol: 'kr', name: 'Swedish Krona', locale: 'sv-SE', rate: 0.098 }
+      }
+
+      const curRes = runCalculation({
+        activePage: 'test-currency-fixes',
+        lines: ['-$50 + $20', '$-50 + $20', '-€20 + €50', '$100 / $50', '100 DKK', '100 NOK', '100 SEK'],
+        settings: { ...defaultSettings, thouSep: true },
+        currencies: nordicCurrencies
+      })
+      assert.strictEqual(curRes.errorLines.length, 0)
+      const curAnswers = curRes.answers.map((h) => extractAnswer(h).answer)
+      assert.strictEqual(curAnswers[0], '-$30.00')
+      assert.strictEqual(curAnswers[1], '-$30.00')
+      assert.strictEqual(curAnswers[2].includes('30'), true)
+      assert.strictEqual(curAnswers[3], '2')
+      assert.strictEqual(curAnswers[4].includes('kr'), true)
+      assert.strictEqual(curAnswers[5].includes('kr'), true)
+      assert.strictEqual(curAnswers[6].includes('kr'), true)
+
+      const fracRes = runCalculation({
+        activePage: 'test-currency-fraction',
+        lines: ['$1 / 3', '0 USD - $50'],
+        settings: { ...defaultSettings, numericOutput: 'Fraction', thouSep: true },
+        currencies: mockCurrencies
+      })
+      assert.deepStrictEqual(
+        fracRes.answers.map((h) => extractAnswer(h).answer),
+        ['1/3 USD', '-$50.00']
+      )
+
+      const bigCurRes = runCalculation({
+        activePage: 'test-currency-bignum',
+        lines: ['bignumber("12345678901234567.89") * 1 USD'],
+        settings: {
+          ...defaultSettings,
+          numericOutput: 'BigNumber',
+          precision: '4',
+          expUpper: '20',
+          thouSep: true,
+          copyThouSep: true
+        },
+        currencies: mockCurrencies
+      })
+      assert.strictEqual(extractAnswer(bigCurRes.answers[0]).answer, '$12,345,678,901,234,567.89')
+    })
+
+    it('guards contPrevLine against non-numeric/non-date types while preserving strings, quotes, plots, and bigint %', () => {
+      const res = runCalculation({
+        activePage: 'test-cont-and-strings',
+        lines: [
+          '10',
+          's = ""',
+          '20',
+          'subtotal',
+          'obj = {a: 1}',
+          '+ 5',
+          '"He said \\"hello\\""',
+          '"f(x) = 1"',
+          'f(θ) = θ^2',
+          'f(4)',
+          'bigint(2) in %',
+          '1 : 4',
+          '2026-01-01 + 1 day',
+          '+ 2 days'
+        ],
+        settings: { ...defaultSettings, contPrevLine: true, dateFormat: 'yyyy-MM-dd', matrixType: 'Array' },
+        currencies: mockCurrencies
+      })
+
+      assert.strictEqual(extractAnswer(res.answers[1]).answer, '')
+      assert.strictEqual(extractAnswer(res.answers[3]).answer, '30')
+      assert.strictEqual(extractAnswer(res.answers[5]).answer, '5')
+      assert.strictEqual(extractAnswer(res.answers[6]).answer, 'He said "hello"')
+      assert.strictEqual(extractAnswer(res.answers[7]).answer, 'f(x) = 1')
+      assert.strictEqual(extractAnswer(res.answers[7]).isPlot, undefined)
+      assert.strictEqual(extractAnswer(res.answers[8]).isPlot, true)
+      assert.strictEqual(extractAnswer(res.answers[9]).answer, '16')
+      assert.strictEqual(extractAnswer(res.answers[10]).answer, '200%')
+      assert.strictEqual(extractAnswer(res.answers[11]).answer, '[1, 2, 3, 4]')
+      assert.strictEqual(extractAnswer(res.answers[13]).answer, '2026-01-04')
+    })
+
+    it('hardens store recovery, legacy root consolidation, page collision non-stealing, syncPlan <>, and Windows filenames', () => {
+      assert.strictEqual(getSafeFilename('CON'), '_CON')
+      assert.strictEqual(getSafeFilename('aux'), '_aux')
+      assert.strictEqual(getSafeFilename('lpt1'), '_lpt1')
+      assert.strictEqual(getSafeFilename('Budget\x00\x1f\x7f'), 'Budget')
+
+      withMockLocalStorage((storage) => {
+        // Array root in localStorage['numara'] should recover cleanly, back up raw data, and log once
+        const loggedErrors = []
+        const origConsoleError = console.error
+        console.error = (...args) => loggedErrors.push(args)
+
+        try {
+          storage.set('numara', '[1, 2, 3]')
+          assert.strictEqual(store.get('pages'), null)
+        } finally {
+          console.error = origConsoleError
+        }
+
+        assert.strictEqual(loggedErrors.length, 1)
+        assert.match(String(loggedErrors[0][0]), /Error parsing consolidated local storage/)
+        assert.strictEqual(
+          [...storage.keys()].some((k) => k.startsWith('numara_corrupt_')),
+          true
+        )
+        store.set('inputWidth', 55)
+        assert.strictEqual(store.get('inputWidth'), 55)
+
+        // initStoreObject repairs mismatched primitive vs object field types
+        storage.set('numara', JSON.stringify({ colors: { answer: 'broken-string' } }))
+        const repairedColors = initStoreObject('colors', { answer: { light: '#111', dark: '#eee' } })
+        assert.deepStrictEqual(repairedColors, { answer: { light: '#111', dark: '#eee' } })
+
+        // Legacy v6/v7 root keys consolidate and page collision renaming does not steal existing names
+        storage.clear()
+        storage.set(
+          'pages',
+          JSON.stringify([
+            { id: 'p1', name: 'Budget', data: '1' },
+            { id: 'p2', name: 'budget', data: '2' },
+            { id: 'p3', name: 'budget (1)', data: '3' },
+            { id: 'p4', name: '<Script>', data: '4' },
+            null
+          ])
+        )
+        storage.set('settings', JSON.stringify({ locale: 'de-DE', inputWidth: 48 }))
+
+        migrateAppState()
+
+        assert.strictEqual(storage.has('pages'), false)
+        assert.strictEqual(storage.has('settings'), false)
+        assert.strictEqual(store.get('inputWidth'), 48)
+        assert.strictEqual(store.get('settings').numberFormat, '1.234,56')
+        assert.deepStrictEqual(
+          store.get('pages').map((p) => p.name),
+          ['Budget', 'budget (2)', 'budget (1)', 'Script']
+        )
+      })
+
+      const renames = detectExternalRenames({
+        pages: [{ id: 'p1', name: 'OldBudget', data: '10 + 20' }],
+        files: [{ name: '<Budget>', content: '10 + 20' }],
+        lastSyncContent: new Map([['oldbudget', '10 + 20']])
+      })
+      assert.strictEqual(renames.length, 1)
+      assert.strictEqual(renames[0].sanitizedName, 'Budget')
+      assert.strictEqual(renames[0].newSyncKey, 'budget')
     })
   })
 })
