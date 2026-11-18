@@ -8,14 +8,28 @@ let fileToOpen = null
 let isRendererReady = false
 
 /**
- * Extracts a valid `.num` file path from command-line arguments if present.
+ * Resets renderer-ready tracking when the main window closes.
+ */
+export function resetRendererReady() {
+  isRendererReady = false
+}
+
+/**
+ * Extracts a `.num` file path from command-line arguments if present.
  * @param {string[]} args Command-line arguments array.
  * @returns {string|null} Path to `.num` file or null.
  */
 export function getNumFilePath(args) {
-  if (!args || !Array.isArray(args)) return null
+  if (!args || !Array.isArray(args)) {
+    return null
+  }
 
-  return args.find((arg) => arg.toLowerCase().endsWith('.num') && fs.existsSync(arg)) || null
+  return (
+    args.find(
+      (arg) =>
+        typeof arg === 'string' && !arg.startsWith('-') && arg.toLowerCase().endsWith('.num') && fs.existsSync(arg)
+    ) || null
+  )
 }
 
 /**
@@ -68,6 +82,8 @@ export function promptImportPage() {
 
 /**
  * Registers IPC handlers for page file importing, exporting, and startup file opening.
+ * @param {object} [options]
+ * @param {function} [options.onRendererReady] Callback invoked once the renderer signals readiness.
  */
 export function setupFileHandlers() {
   ipcMain.on('renderer-ready', () => {
@@ -96,7 +112,7 @@ export function setupFileHandlers() {
 
     if (!file) return
 
-    fs.writeFile(file, content, (error) => {
+    fs.writeFile(file, String(content ?? ''), (error) => {
       if (!win || win.isDestroyed() || event.sender.isDestroyed()) return
 
       if (error) {
