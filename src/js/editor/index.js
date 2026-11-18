@@ -123,11 +123,11 @@ export function setupEditor() {
       'Cmd-Alt-F': (editor) => showSearchPanel(editor, true),
       'Ctrl-H': (editor) => showSearchPanel(editor, true),
       Esc: (editor) => {
-        if (isSearchPanelOpen()) {
-          hideSearchPanel(editor)
-        } else {
+        if (!isSearchPanelOpen()) {
           return CodeMirror.Pass
         }
+
+        hideSearchPanel(editor)
       }
     },
     flattenSpans: true,
@@ -193,10 +193,11 @@ export function setupEditor() {
 
   cm.on('cursorActivity', (editor) => {
     const activeLine = editor.getCursor().line
+    const hasActiveClass = editor.lineInfo(activeLine)?.gutterClass?.includes('activeLine')
 
-    if (previousActiveLine !== activeLine) {
+    if (previousActiveLine !== activeLine || !hasActiveClass) {
       editor.operation(() => {
-        if (previousActiveLine !== -1) {
+        if (previousActiveLine !== -1 && previousActiveLine < editor.lineCount()) {
           editor.removeLineClass(previousActiveLine, 'gutter', 'activeLine')
         }
 
