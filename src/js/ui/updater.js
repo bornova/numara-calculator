@@ -48,7 +48,9 @@ export function setupAppInfo() {
     '#dialogAbout',
     'shown',
     () => {
-      checkAppUpdate()
+      if (!app.updateReady) {
+        checkAppUpdate()
+      }
     },
     { self: true }
   )
@@ -70,6 +72,7 @@ export function initAppUpdate() {
         updateStatusMessage('Checking for updates...')
         break
       case 'available':
+        updateStatusMessage(`Downloading version ${version}...`)
         dom.notificationDot.style.display = 'block'
         dom.notificationDot.setAttribute('uk-tooltip', `New version available`)
         dom.updateMenuLink.style.display = 'inline'
@@ -89,10 +92,15 @@ export function initAppUpdate() {
         app.updateReady = true
         dom.updateMenuLink.style.display = 'inline'
         dom.updateButton.style.display = 'inline-block'
-        dom.updateButton.onclick = () => numara.updateApp()
+        dom.updateButton.removeAttribute('disabled')
+        dom.updateButton.onclick = () => {
+          dom.updateButton.setAttribute('disabled', 'true')
+          numara.updateApp()
+        }
         break
       }
       case 'error':
+        dom.updateButton.removeAttribute('disabled')
         updateStatusMessage('Error while checking for updates.')
         break
       default:
