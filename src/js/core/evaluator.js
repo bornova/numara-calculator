@@ -3,13 +3,12 @@ import { DateTime, Settings } from 'luxon'
 import { factory } from 'mathjs'
 import nerdamer from 'nerdamer-prime'
 
-Settings.defaultNumberingSystem = 'latn'
-Settings.defaultOutputCalendar = 'iso8601'
-
 import {
   CLASS_LINE_ERROR_LINK,
+  DATE_DIFF_CANDIDATE_REGEX,
   isInternalScopeKey,
   PAGE_OBJECT_SYMBOL,
+  REGEX_ASSIGNMENT,
   REGEX_CONTINUATION,
   REGEX_CONVERSION_SUFFIX,
   REGEX_DATE_TERM,
@@ -27,7 +26,7 @@ import {
   stripAnswer
 } from './formatter.js'
 import {
-  app,
+  calcState,
   currencySymbolsRegex,
   getDateFormatSettings,
   getFlexibleFormat,
@@ -39,13 +38,16 @@ import { normalizeNumberInput, stripComments, stripLeadingColonLabel, transformO
 import { applyUdfuToMath, isPlainNamespaceObject } from './udfu.js'
 import { findPageByRef, getSystemLocale } from './utils.js'
 
-export { formatAnswer }
-export const formulajsKeys = Object.keys(formulajs)
+Settings.defaultNumberingSystem = 'latn'
+Settings.defaultOutputCalendar = 'iso8601'
 
-// Import Formula.js, Nerdamer, and Luxon DateTime into Math.js
+// Import Formula.js, Nerdamer, Luxon DateTime, and cross-page helper into Math.js
 math.import(factory('formulajs', [], () => formulajs))
 math.import(factory('nerdamer', [], () => nerdamer))
 math.import(factory('DateTime', [], () => DateTime))
+math.import({ page: (name) => loadPageScope(name) }, { override: true })
+
+export const formulajsKeys = Object.keys(formulajs)
 
 const keywords = [
   { key: 'avg', regex: /\bavg\b/, fn: (stats) => math.mean(stats.runningTotal) },
@@ -64,6 +66,19 @@ const udfuState = {
   previouslyImportedUDFs: [],
   previouslyCreatedUnits: []
 }
+
+const lastApplied = {
+  func: null,
+  unit: null
+}
+
+let evaluationCache = []
+let lastActivePage = null
+let lastSettingsSignature = ''
+let lastPagesSignature = ''
+let lastDateTimeSignature = ''
+let currentPages = []
+let activePageId = null
 
 /**
  * Checks whether a scope value can be mutated in place by expressions (e.g. `a[1] = 99`, `o.x = 99`).
@@ -151,16 +166,6 @@ class TrackedScope extends Map {
   }
 }
 
-let evaluationCache = []
-let lastActivePage = null
-let lastSettingsSignature = ''
-let lastPagesSignature = ''
-let lastDateTimeSignature = ''
-let lastAppliedUdf = null
-let lastAppliedUdu = null
-let currentPages = []
-let activePageId = null
-
 /**
  * Builds a deterministic signature of calculation-affecting settings only.
  * @param {object} settings Application settings.
@@ -226,9 +231,6 @@ function isSummableValue(value) {
   )
 }
 
-const DATE_DIFF_CANDIDATE_REGEX =
-  /\b\d{1,4}[/-]\d{1,2}[/-]\d{1,4}\b.*-.*(?:\b\d{1,4}[/-]\d{1,2}[/-]\d{1,4}\b|\b(?:today|now)\b)|\b(?:today|now)\b.*-.*\b\d{1,4}[/-]\d{1,2}[/-]\d{1,4}\b/i
-
 /**
  * Resolves a date/time string or scope variable into a Luxon `DateTime` according to active date format settings.
  * @param {string} rawCandidate Date expression or variable name.
@@ -241,7 +243,7 @@ function resolveDateOperand(rawCandidate) {
     return null
   }
 
-  const sysLocale = getSystemLocale(app.settings)
+  const sysLocale = getSystemLocale(calcState.settings)
   const locales = sysLocale && sysLocale.toLowerCase() !== 'en-us' ? [sysLocale, 'en-US'] : ['en-US']
   const dateFormats = getDateFormatSettings()
   const flexToday = getFlexibleFormat(dateFormats.todayFormat)
@@ -272,15 +274,15 @@ function resolveDateOperand(rawCandidate) {
   let found = matchDateFormats(stripAnswer(candidate).trim())
 
   if (!found) {
-    if (/^[a-zA-Z_\p{L}][\w\p{L}\p{M}]*$/u.test(candidate) && app.mathScope.has(candidate)) {
-      const scopeVal = app.mathScope.peek(candidate)
+    if (/^[a-zA-Z_\p{L}][\w\p{L}\p{M}]*$/u.test(candidate) && calcState.mathScope.has(candidate)) {
+      const scopeVal = calcState.mathScope.peek(candidate)
 
       if (typeof scopeVal === 'string') {
         found = matchDateFormats(stripAnswer(scopeVal).trim())
       }
     } else {
       try {
-        const evaluatedDate = math.evaluate(candidate, app.mathScope)
+        const evaluatedDate = math.evaluate(candidate, calcState.mathScope)
 
         if (typeof evaluatedDate === 'string') {
           found = matchDateFormats(stripAnswer(evaluatedDate).trim())
@@ -303,7 +305,7 @@ function tryEvaluateDateDiff(line) {
   let assignVar = null
   let expr = line.trim()
 
-  const assignMatch = expr.match(/^([\p{L}\p{M}_][\p{L}\p{M}\w]*)\s*=\s*(.+)$/u)
+  const assignMatch = expr.match(REGEX_ASSIGNMENT)
   if (assignMatch) {
     assignVar = assignMatch[1]
     expr = assignMatch[2].trim()
@@ -345,7 +347,7 @@ function tryEvaluateDateDiff(line) {
   }
 
   if (assignVar) {
-    app.mathScope.set(assignVar, resultUnit)
+    calcState.mathScope.set(assignVar, resultUnit)
   }
 
   return resultUnit
@@ -367,7 +369,7 @@ function altEvaluate(line, stats) {
     const left = parsedLine.slice(0, colonIndex).trim()
 
     if (!left.includes('?') && !left.includes('"') && !left.includes("'")) {
-      let isLabel = !app.mathScope.has(left) && /^[a-zA-Z_\p{L}][\w\p{L}\p{M}\s]*$/u.test(left)
+      let isLabel = !calcState.mathScope.has(left) && /^[a-zA-Z_\p{L}][\w\p{L}\p{M}\s]*$/u.test(left)
 
       if (!isLabel) {
         try {
@@ -391,8 +393,8 @@ function altEvaluate(line, stats) {
   if (KEYWORDS_REGEX.test(parsedLine)) {
     for (const { key, regex, fn } of keywords) {
       if (regex.test(parsedLine)) {
-        if (app.mathScope.has(key)) {
-          savedKeywords.set(key, app.mathScope.peek(key))
+        if (calcState.mathScope.has(key)) {
+          savedKeywords.set(key, calcState.mathScope.peek(key))
         }
 
         let kwVal
@@ -403,7 +405,7 @@ function altEvaluate(line, stats) {
           kwVal = 'n/a'
         }
 
-        app.mathScope.setUntracked(key, kwVal)
+        calcState.mathScope.setUntracked(key, kwVal)
         injectedKeywords.push(key)
       }
     }
@@ -422,7 +424,7 @@ function altEvaluate(line, stats) {
       let assignPrefix = ''
       let datePart = parsedLine
 
-      const assignMatch = parsedLine.match(/^([\p{L}\p{M}_][\p{L}\p{M}\w]*)\s*=\s*(.+)$/u)
+      const assignMatch = parsedLine.match(REGEX_ASSIGNMENT)
 
       if (assignMatch) {
         assignPrefix = `${assignMatch[1]} = `
@@ -452,7 +454,7 @@ function altEvaluate(line, stats) {
           const rawUnit = match[3].toLowerCase()
           const unitAliases = { sec: 'second', min: 'minute', hr: 'hour' }
           const unitName = unitAliases[rawUnit] || rawUnit
-          const amount = Number(math.evaluate(exprStr, app.mathScope)) * sign
+          const amount = Number(math.evaluate(exprStr, calcState.mathScope)) * sign
 
           if (!Number.isFinite(amount)) {
             throw new Error('Invalid date duration')
@@ -469,7 +471,7 @@ function altEvaluate(line, stats) {
           }
         }
       } else {
-        const rightUnit = math.evaluate(lineDateRight + ' to hours', app.mathScope)
+        const rightUnit = math.evaluate(lineDateRight + ' to hours', calcState.mathScope)
         const durHrs =
           typeof rightUnit?.toNumber === 'function'
             ? rightUnit.toNumber('hours')
@@ -484,7 +486,7 @@ function altEvaluate(line, stats) {
 
       let outputFmt = found.fmt
 
-      if (app.settings.dateDay && !outputFmt.includes('ccc')) {
+      if (calcState.settings.dateDay && !outputFmt.includes('ccc')) {
         outputFmt = 'ccc, ' + outputFmt
       }
 
@@ -496,13 +498,13 @@ function altEvaluate(line, stats) {
     // Convert "% of" syntax to arithmetic outside string literals
     parsedLine = transformOutsideStrings(parsedLine, (segment) => segment.replaceAll(REGEX_PCNT_OF, '/100*'))
 
-    return math.evaluate(parsedLine, app.mathScope)
+    return math.evaluate(parsedLine, calcState.mathScope)
   } finally {
     for (const key of injectedKeywords) {
       if (savedKeywords.has(key)) {
-        app.mathScope.setUntracked(key, savedKeywords.get(key))
+        calcState.mathScope.setUntracked(key, savedKeywords.get(key))
       } else {
-        app.mathScope.deleteUntracked(key)
+        calcState.mathScope.deleteUntracked(key)
       }
     }
   }
@@ -553,19 +555,19 @@ function evaluateLine(line, lineIndex, stats, prevLineText) {
     // Pre-process number format and currency symbols
     line = normalizeNumberInput(line)
 
-    if (app.settings.currency && currencySymbolsRegex) {
+    if (currencySymbolsRegex) {
       line = transformOutsideStrings(line, (segment) =>
         segment.replace(currencySymbolsRegex, (match, num, symbol) => (num ? num : replaceCurrencySymbol(symbol)))
       )
     }
 
     // Handle line continuation
-    if (lineIndex > 0 && REGEX_CONTINUATION.test(line.charAt(0)) && app.settings.contPrevLine) {
+    if (lineIndex > 0 && REGEX_CONTINUATION.test(line.charAt(0)) && calcState.settings.contPrevLine) {
       const prevClean = prevLineText ? stripComments(prevLineText.trim()) : ''
       const prevLineKey = `line${lineIndex}`
 
-      if (prevClean.length > 0 && app.mathScope.has('ans') && app.mathScope.has(prevLineKey)) {
-        const prevAns = app.mathScope.get('ans')
+      if (prevClean.length > 0 && calcState.mathScope.has('ans') && calcState.mathScope.has(prevLineKey)) {
+        const prevAns = calcState.mathScope.get('ans')
         const isPlotOrPage =
           (typeof prevAns === 'string' && REGEX_PLOT.test(prevAns)) ||
           (prevAns && typeof prevAns === 'object' && prevAns[PAGE_OBJECT_SYMBOL])
@@ -608,7 +610,7 @@ function evaluateLine(line, lineIndex, stats, prevLineText) {
     }
 
     // Evaluate the expression. Route lines with unbound keywords or literal date differences directly to altEvaluate.
-    if (hasUnboundKeyword(line, app.mathScope)) {
+    if (hasUnboundKeyword(line, calcState.mathScope)) {
       answer = altEvaluate(line, stats)
     } else {
       if (DATE_DIFF_CANDIDATE_REGEX.test(line)) {
@@ -623,7 +625,7 @@ function evaluateLine(line, lineIndex, stats, prevLineText) {
         try {
           const compiled = getCompiledExpression(line.trim())
 
-          answer = compiled.evaluate(app.mathScope)
+          answer = compiled.evaluate(calcState.mathScope)
         } catch {
           answer = altEvaluate(line, stats)
         }
@@ -645,16 +647,16 @@ function evaluateLine(line, lineIndex, stats, prevLineText) {
     // Format the answer for display and copying.
     const displayValue = conversionTarget === '%' ? math.multiply(answer, 100) : answer
     const suffix = conversionTarget === '%' ? '%' : ''
-    const outGrouping = Boolean(app.settings.thouSep)
-    const copyGrouping = Boolean(outGrouping && app.settings.copyThouSep)
+    const outGrouping = Boolean(calcState.settings.thouSep)
+    const copyGrouping = Boolean(outGrouping && calcState.settings.copyThouSep)
 
     answerOut = `${formatAnswer(displayValue, outGrouping)}${suffix}`
     answerCopy = copyGrouping === outGrouping ? answerOut : `${formatAnswer(displayValue, copyGrouping)}${suffix}`
 
     // Update the scope with the new answer.
-    app.mathScope.set('_', answer)
-    app.mathScope.set('ans', answer)
-    app.mathScope.set(`line${lineIndex + 1}`, answer)
+    calcState.mathScope.set('_', answer)
+    calcState.mathScope.set('ans', answer)
+    calcState.mathScope.set(`line${lineIndex + 1}`, answer)
 
     // Update stats after evaluation (only summable numeric/unit values)
     if (!KEYWORDS_REGEX.test(line) && isSummableValue(answer)) {
@@ -667,8 +669,8 @@ function evaluateLine(line, lineIndex, stats, prevLineText) {
     if (REGEX_PLOT.test(line) || REGEX_PLOT.test(answerOut)) {
       const plotAns = REGEX_PLOT.test(line) ? line : answerOut
 
-      app.mathScope.set('ans', plotAns)
-      app.mathScope.set(`line${lineIndex + 1}`, plotAns)
+      calcState.mathScope.set('ans', plotAns)
+      calcState.mathScope.set(`line${lineIndex + 1}`, plotAns)
 
       return { html: formatPlotAnswerHtml(plotAns), resetSubtotal, summableVal }
     }
@@ -681,14 +683,14 @@ function evaluateLine(line, lineIndex, stats, prevLineText) {
     return { html: formatAnswerHtml(answerCopy, answerOut), resetSubtotal, summableVal }
   } catch (error) {
     // Clear out stale 'ans', '_' and runningSubtotal on failure so downstream continuations don't use stale states
-    app.mathScope.delete('ans')
-    app.mathScope.delete('_')
+    calcState.mathScope.delete('ans')
+    calcState.mathScope.delete('_')
     if (stats && stats.runningSubtotal) {
       stats.runningSubtotal.length = 0
       resetSubtotal = true
     }
 
-    return { html: formatErrorHtml(error, app.settings.lineErrors), resetSubtotal, summableVal }
+    return { html: formatErrorHtml(error, calcState.settings.lineErrors), resetSubtotal, summableVal }
   }
 }
 
@@ -719,10 +721,10 @@ function loadPageScope(pageName) {
   }
 
   const targetLines = (targetPage.data || '').split('\n')
-  const savedScope = app.mathScope
+  const savedScope = calcState.mathScope
   const localScope = new TrackedScope()
 
-  app.mathScope = localScope
+  calcState.mathScope = localScope
 
   if (savedScope.has('now')) localScope.set('now', savedScope.get('now'))
   if (savedScope.has('today')) localScope.set('today', savedScope.get('today'))
@@ -751,7 +753,7 @@ function loadPageScope(pageName) {
     }
   } finally {
     loadingStack.delete(targetPage.id)
-    app.mathScope = savedScope
+    calcState.mathScope = savedScope
   }
 
   const result = {}
@@ -780,13 +782,44 @@ function loadPageScope(pageName) {
   return result
 }
 
-// Register functional cross-page `page()` helper
-math.import(
-  {
-    page: (name) => loadPageScope(name)
-  },
-  { override: true }
-)
+/**
+ * Safely formats a scope variable value for serialization back to the UI thread.
+ * @param {*} val Value to format.
+ * @param {boolean} useGrouping Whether thousands grouping is enabled.
+ * @returns {string}
+ */
+function formatScopeValue(val, useGrouping) {
+  try {
+    return formatAnswer(val, useGrouping)
+  } catch {
+    try {
+      return String(val)
+    } catch {
+      return ''
+    }
+  }
+}
+
+/**
+ * Serializes enumerable properties of a namespace/page object into scope metadata maps.
+ */
+function serializeObjectProps(obj, name, filterPrivate, useGrouping, serializedScope, scopeProperties, scopeTypes) {
+  const props = filterPrivate ? Object.keys(obj).filter((k) => !k.startsWith('_')) : Object.keys(obj)
+
+  scopeProperties[name] = props
+
+  for (const prop of props) {
+    const propKey = `${name}.${prop}`
+    const propVal = obj[prop]
+
+    if (typeof propVal === 'function') {
+      serializedScope[propKey] = 'Function'
+      scopeTypes[propKey] = 'function'
+    } else {
+      serializedScope[propKey] = formatScopeValue(propVal, useGrouping)
+    }
+  }
+}
 
 /**
  * Clears the line-by-line calculation cache memory.
@@ -805,8 +838,9 @@ export function clearEvaluationCache() {
  * @param {boolean} [force=false] Re-apply even when input matches last applied string.
  */
 export function applyUdfu(isFunc, input, force = false) {
-  if (!force && isFunc && lastAppliedUdf === input) return
-  if (!force && !isFunc && lastAppliedUdu === input) return
+  const kind = isFunc ? 'func' : 'unit'
+
+  if (!force && lastApplied[kind] === input) return
 
   clearEvaluationCache()
 
@@ -817,13 +851,8 @@ export function applyUdfu(isFunc, input, force = false) {
       formulajs
     })
 
-    if (isFunc) {
-      app.udfList = keys
-      lastAppliedUdf = input
-    } else {
-      app.uduList = keys
-      lastAppliedUdu = input
-    }
+    calcState[isFunc ? 'udfList' : 'uduList'] = keys
+    lastApplied[kind] = input
   } catch (error) {
     console.error('applyUdfu Error:', error)
   }
@@ -837,16 +866,28 @@ export function applyUdfu(isFunc, input, force = false) {
  * @param {object[]} [params.pages=[]] The full list of workbook pages.
  * @param {object} params.settings The application settings.
  * @param {object} params.currencies The application currencies config map.
+ * @param {string} [params.udf] Optional compiled user-defined functions string.
+ * @param {string} [params.udu] Optional compiled user-defined units string.
  * @param {SharedArrayBuffer} [params.sharedBuffer] Shared buffer to communicate progress back to main thread.
  * @param {function} [params.onLineStart] Progress callback fired when starting to process a line.
  * @returns {object} The answers, errorLines, serializedScope, scopeProperties, scopeTypes, and user defined lists.
  */
-export function runCalculation({ activePage, lines, pages = [], settings, currencies, sharedBuffer, onLineStart }) {
+export function runCalculation({
+  activePage,
+  lines,
+  pages = [],
+  settings,
+  currencies,
+  udf,
+  udu,
+  sharedBuffer,
+  onLineStart
+}) {
   currentPages = pages
   activePageId = activePage
   loadingStack.clear()
-  app.settings = settings
-  app.currencies = currencies
+  calcState.settings = settings
+  calcState.currencies = currencies
 
   const sharedArray = sharedBuffer ? new Int32Array(sharedBuffer) : null
 
@@ -861,14 +902,24 @@ export function runCalculation({ activePage, lines, pages = [], settings, curren
     // Ignore config adjustment error
   }
 
-  const currenciesChanged = refreshCurrencyState()
+  const currenciesChanged = refreshCurrencyState(undefined, Boolean(settings?.currency ?? true))
 
-  if (currenciesChanged && lastAppliedUdu) {
-    applyUdfu(false, lastAppliedUdu, true)
+  if (currenciesChanged) {
+    clearEvaluationCache()
+  }
+
+  if (typeof udf === 'string') {
+    applyUdfu(true, udf)
+  }
+
+  if (typeof udu === 'string') {
+    applyUdfu(false, udu, currenciesChanged)
+  } else if (currenciesChanged && lastApplied.unit) {
+    applyUdfu(false, lastApplied.unit, true)
   }
 
   const settingsSignature = getCalcSettingsSignature(settings)
-  const hasPageRef = lines.some((l) => l.includes('page')) || Boolean(lastAppliedUdf?.includes('page'))
+  const hasPageRef = lines.some((l) => l.includes('page')) || Boolean(lastApplied.func?.includes('page'))
   const pagesSignature = hasPageRef
     ? (pages || [])
         .filter((p) => p && p.id !== activePage)
@@ -878,8 +929,8 @@ export function runCalculation({ activePage, lines, pages = [], settings, curren
 
   const dateTime = DateTime.now().setLocale(getSystemLocale(settings))
   const dateFormats = getDateFormatSettings()
-  const nowStr = dateTime.toFormat(app.settings.dateDay ? dateFormats.nowDayFormat : dateFormats.nowFormat)
-  const todayStr = dateTime.toFormat(app.settings.dateDay ? dateFormats.todayDayFormat : dateFormats.todayFormat)
+  const nowStr = dateTime.toFormat(calcState.settings.dateDay ? dateFormats.nowDayFormat : dateFormats.nowFormat)
+  const todayStr = dateTime.toFormat(calcState.settings.dateDay ? dateFormats.todayDayFormat : dateFormats.todayFormat)
   const dateTimeSignature = `${nowStr}|${todayStr}`
 
   if (
@@ -906,15 +957,15 @@ export function runCalculation({ activePage, lines, pages = [], settings, curren
 
   const trackedScope = new TrackedScope()
 
-  app.mathScope = trackedScope
+  calcState.mathScope = trackedScope
 
   const stats = {
     runningTotal: [],
     runningSubtotal: []
   }
 
-  app.mathScope.set('now', nowStr)
-  app.mathScope.set('today', todayStr)
+  calcState.mathScope.set('now', nowStr)
+  calcState.mathScope.set('today', todayStr)
 
   const totalLines = lines.length
   const newCache = []
@@ -1026,61 +1077,32 @@ export function runCalculation({ activePage, lines, pages = [], settings, curren
 
   evaluationCache = newCache
 
-  // Convert app.mathScope Map to a serializable object of pre-formatted answers
+  // Convert calcState.mathScope Map to a serializable object of pre-formatted answers
   const serializedScope = {}
   const scopeProperties = {}
   const scopeTypes = {}
-  const useGrouping = Boolean(app.settings.thouSep)
-  const safeFormat = (val) => {
-    try {
-      return formatAnswer(val, useGrouping)
-    } catch {
-      try {
-        return String(val)
-      } catch {
-        return ''
-      }
-    }
-  }
+  const useGrouping = Boolean(calcState.settings.thouSep)
 
-  function serializeObjectProps(obj, name, filterPrivate = false) {
-    const props = filterPrivate ? Object.keys(obj).filter((k) => !k.startsWith('_')) : Object.keys(obj)
-
-    scopeProperties[name] = props
-
-    for (const prop of props) {
-      const propKey = `${name}.${prop}`
-      const propVal = obj[prop]
-
-      if (typeof propVal === 'function') {
-        serializedScope[propKey] = 'Function'
-        scopeTypes[propKey] = 'function'
-      } else {
-        serializedScope[propKey] = safeFormat(propVal)
-      }
-    }
-  }
-
-  for (const udfKey of app.udfList) {
+  for (const udfKey of calcState.udfList) {
     if (isPlainNamespaceObject(math[udfKey])) {
       scopeTypes[udfKey] = 'object'
-      serializeObjectProps(math[udfKey], udfKey)
+      serializeObjectProps(math[udfKey], udfKey, false, useGrouping, serializedScope, scopeProperties, scopeTypes)
     }
   }
 
-  for (const [key, value] of app.mathScope.entries()) {
+  for (const [key, value] of calcState.mathScope.entries()) {
     if (typeof value === 'function') {
       serializedScope[key] = 'Function'
       scopeTypes[key] = 'function'
     } else if (DateTime.isDateTime(value)) {
       scopeTypes[key] = 'datetime'
-      serializedScope[key] = safeFormat(value)
+      serializedScope[key] = formatScopeValue(value, useGrouping)
     } else if (isPlainNamespaceObject(value)) {
       scopeTypes[key] = value[PAGE_OBJECT_SYMBOL] ? 'page' : 'object'
-      serializeObjectProps(value, key, true)
-      serializedScope[key] = safeFormat(value)
+      serializeObjectProps(value, key, true, useGrouping, serializedScope, scopeProperties, scopeTypes)
+      serializedScope[key] = formatScopeValue(value, useGrouping)
     } else {
-      serializedScope[key] = safeFormat(value)
+      serializedScope[key] = formatScopeValue(value, useGrouping)
     }
   }
 
@@ -1090,7 +1112,9 @@ export function runCalculation({ activePage, lines, pages = [], settings, curren
     serializedScope,
     scopeProperties,
     scopeTypes,
-    udfList: app.udfList,
-    uduList: app.uduList
+    udfList: calcState.udfList,
+    uduList: calcState.uduList
   }
 }
+
+export { formatAnswer }
