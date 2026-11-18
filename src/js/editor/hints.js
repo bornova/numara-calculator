@@ -61,6 +61,7 @@ export function registerExcelFunctions(keys) {
 
   for (const key of keys) {
     const hint = { text: `formulajs.${key}`, className: CLASS_NAMES.EXCEL }
+
     excelHints.push(hint)
     numaraHints.push(hint)
   }
@@ -75,7 +76,9 @@ export function registerExcelFunctions(keys) {
 function getPageExportedVars(rawPageName, pages = store.get('pages') || []) {
   const foundPage = findPageByRef(pages, rawPageName)
 
-  if (!foundPage || !foundPage.data) return null
+  if (!foundPage || !foundPage.data) {
+    return null
+  }
 
   const varNames = new Set()
 
@@ -151,6 +154,7 @@ export function registerEditorHints() {
 
             if (lineNum >= cmCursor.line + 1) continue
           }
+
           variableHints.push({ text: key, className: CLASS_NAMES.VARIABLE })
         }
       }
