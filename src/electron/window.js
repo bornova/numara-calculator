@@ -258,8 +258,8 @@ export function createAppWindow({ onWindowCreated, onWindowClosed } = {}) {
   const initialBounds = resolveWindowBounds(
     {
       position: config.get('position'),
-      width: parseInt(config.get('appWidth')),
-      height: parseInt(config.get('appHeight'))
+      width: config.get('appWidth'),
+      height: config.get('appHeight')
     },
     screen.getAllDisplays(),
     screen.getPrimaryDisplay(),
@@ -313,12 +313,12 @@ export function createAppWindow({ onWindowCreated, onWindowClosed } = {}) {
     ensureWindowOnScreen()
 
     if (config.get('fullSize') && !isMac) win.maximize()
-    if (!app.isPackaged) win.webContents.openDevTools()
+    if (!app.isPackaged && !process.argv.includes('--hidden')) win.webContents.openDevTools()
 
     const showTray = config.get('showTray')
-    const loginItemSettings = app.getLoginItemSettings({ args: ['--hidden'] })
     const wasOpenedAtLogin =
-      loginItemSettings.wasOpenedAsHidden || loginItemSettings.wasOpenedAtLogin || process.argv.includes('--hidden')
+      ((isMac || isWin) && app.getLoginItemSettings({ args: ['--hidden'] }).wasOpenedAtLogin) ||
+      process.argv.includes('--hidden')
     const startHidden = showTray && wasOpenedAtLogin
 
     if (!startHidden) {
@@ -392,7 +392,9 @@ export function createAppWindow({ onWindowCreated, onWindowClosed } = {}) {
     })
 
     win.on('hide', () => {
-      app.dock.hide()
+      if (config.get('showTray')) {
+        app.dock.hide()
+      }
     })
   }
 
@@ -412,9 +414,12 @@ export function createAppWindow({ onWindowCreated, onWindowClosed } = {}) {
  * @param {object} [options]
  * @param {function} [options.onTrayChanged] Callback invoked when the showTray setting is updated.
  */
-export function setupWindowHandlers({ onTrayChanged } = {}) {
+export function setupWindowHandlers({ onTrayChanged, onBeforeReset } = {}) {
   nativeTheme.on('updated', () => {
-    if (getWindow()?.webContents) {
+    const activeWin = getWindow()
+
+    if (activeWin?.webContents) {
+      activeWin.setBackgroundColor(getThemeColor())
       sendToWindow('themeUpdate', nativeTheme.shouldUseDarkColors)
       setTitleBarOverlay(isOverlayTrans)
     }
@@ -423,7 +428,10 @@ export function setupWindowHandlers({ onTrayChanged } = {}) {
   ipcMain.handle('isDark', () => nativeTheme.shouldUseDarkColors)
 
   ipcMain.on('setTheme', (event, mode) => {
-    config.set('theme', mode)
+    const nextMode = ['system', 'light', 'dark'].includes(mode) ? mode : 'system'
+
+    config.set('theme', nextMode)
+    getWindow()?.setBackgroundColor(getThemeColor())
     setTitleBarOverlay(isOverlayTrans)
   })
 
@@ -436,12 +444,17 @@ export function setupWindowHandlers({ onTrayChanged } = {}) {
   ipcMain.on('close-window', hideOrMinimizeWindow)
 
   ipcMain.on('setTray', (event, bool) => {
-    config.set('showTray', Boolean(bool))
+    const enabled = Boolean(bool)
+
+    config.set('showTray', enabled)
+    if (isMac && !enabled) {
+      app.dock.show()
+    }
     onTrayChanged?.()
   })
 
   ipcMain.on('setOpenAtLogin', (event, bool) => {
-    if (!app.isPackaged) return
+    if (!app.isPackaged || (!isMac && !isWin)) return
 
     const openAtLogin = Boolean(bool)
 
@@ -449,7 +462,6 @@ export function setupWindowHandlers({ onTrayChanged } = {}) {
 
     app.setLoginItemSettings({
       openAtLogin,
-      openAsHidden: true,
       args: ['--hidden']
     })
   })
@@ -461,6 +473,8 @@ export function setupWindowHandlers({ onTrayChanged } = {}) {
   })
 
   ipcMain.on('resetApp', () => {
+    onBeforeReset?.()
+
     session.defaultSession
       .clearStorageData()
       .catch((error) => log.error('Failed to clear session storage data on reset:', error))
