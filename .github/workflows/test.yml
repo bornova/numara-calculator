@@ -36,8 +36,8 @@ jobs:
       - name: Run linter
         run: npm run lint
 
-      - name: Run unit tests
-        run: npm test
-
       - name: Build application
-        run: npm run build
+        run: node build.js --prod
+
+      - name: Run unit, combinatorial, and E2E tests
+        run: npm test
