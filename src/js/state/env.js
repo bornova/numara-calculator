@@ -12,6 +12,11 @@ export const isElectron = typeof window !== 'undefined' && window.numara !== und
 /** Check if app is running on macOS. */
 export const isMac = isElectron ? window.numara.isMac : userAgent.includes('mac') && !/iphone|ipad|ipod/.test(userAgent)
 
+/** Check if app is running on Linux. */
+export const isLinux = isElectron
+  ? Boolean(window.numara.isLinux)
+  : userAgent.includes('linux') && !userAgent.includes('android')
+
 /** Check if app is running on a mobile device. */
 export const isMobile =
   /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent) ||
