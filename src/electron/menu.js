@@ -21,7 +21,9 @@ function getTrayIconPath() {
   ]
 
   for (const p of possiblePaths) {
-    if (fs.existsSync(p)) return p
+    if (fs.existsSync(p)) {
+      return p
+    }
   }
 
   return path.join(app.getAppPath(), `build/assets/${iconFileName}`)
@@ -70,6 +72,10 @@ export function updateTrayState() {
 
         tray = new Tray(trayIcon)
         tray.setToolTip('Numara Calculator')
+
+        if (!isMac && !isWin) {
+          tray.setContextMenu(contextMenu)
+        }
 
         tray.on('right-click', () => {
           tray.popUpContextMenu(contextMenu)
@@ -174,12 +180,8 @@ export function setupContextMenus() {
       {
         label: 'Open folder',
         click: () => {
-          try {
-            if (isValidDirectory(dirPath)) {
-              shell.openPath(dirPath)
-            }
-          } catch (err) {
-            log.error('Failed to open sync folder:', err)
+          if (isValidDirectory(dirPath)) {
+            shell.openPath(dirPath)
           }
         }
       }
@@ -264,7 +266,15 @@ export function setupApplicationMenu({ promptImportPage, resetSize }) {
           click: () => sendToWindow('print')
         },
         { type: 'separator' },
-        isMac ? { role: 'close' } : { role: 'quit' }
+        isMac
+          ? { role: 'close' }
+          : {
+              label: 'Quit',
+              click: () => {
+                setAppQuitting(true)
+                app.quit()
+              }
+            }
       ]
     },
     {
@@ -317,8 +327,7 @@ export function setupApplicationMenu({ promptImportPage, resetSize }) {
         { role: 'zoomOut' },
         { type: 'separator' },
         { role: 'togglefullscreen' },
-        { type: 'separator' },
-        { role: 'toggleDevTools' }
+        ...(app.isPackaged ? [] : [{ type: 'separator' }, { role: 'toggleDevTools' }])
       ]
     },
     {
