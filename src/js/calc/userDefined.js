@@ -19,6 +19,10 @@ const udfuState = {
 let editingUdfIndex = null
 let editingUduIndex = null
 
+if (!('DateTime' in math)) {
+  math.import({ DateTime }, { override: true })
+}
+
 /**
  * Apply user defined functions or units to the main-thread Math.js instance and persist to storage.
  * @param {string} input User defined function or unit definition string.
@@ -207,7 +211,7 @@ function commitUdfuItems(nextItems, type) {
       // Ignore fallback error
     }
 
-    notify(error.message || 'Invalid definition.', 'danger')
+    notify(escapeHTML(error.message || 'Invalid definition.'), 'danger')
     return false
   }
 }
@@ -448,8 +452,13 @@ export function setupUserDefined() {
 
     if (commitUdfuItems(items, type)) {
       const currentEdit = getEditIdx()
-      if (currentEdit === index) resetForm()
-      else if (currentEdit !== null && currentEdit > index) setEditIdx(currentEdit - 1)
+
+      if (currentEdit === index) {
+        resetForm()
+      } else if (currentEdit !== null && currentEdit > index) {
+        setEditIdx(currentEdit - 1)
+      }
+
       renderList()
     }
   }
