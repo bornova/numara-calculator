@@ -43,7 +43,7 @@ function resetActivePickerColor() {
 /**
  * Toggles changed indicator classes on each color picker input based on default colors.
  */
-export function checkColorChange() {
+function checkColorChange() {
   colorInputs.forEach((picker) => {
     const isSame = picker.value === colors.defaults[picker.dataset.class][picker.dataset.theme]
 
