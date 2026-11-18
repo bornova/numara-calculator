@@ -1,5 +1,5 @@
 import { calculate, debouncedSavePageState } from '../calc/calcManager.js'
-import { escapeHTML, getSafeFilename, sanitizePageName } from '../core/utils.js'
+import { escapeHTML, getSafeFilename, getSyncKey, sanitizePageName } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
 import { app } from '../state/appState.js'
@@ -8,7 +8,7 @@ import { events } from '../state/events.js'
 import { store } from '../state/store.js'
 import { customConfirm, notify } from '../ui/dialogs.js'
 import { defaultPage, generatePageId, loadPage, populatePages, updatePageName } from './pageManager.js'
-import { detectExternalRenames, getSyncKey } from './syncPlan.js'
+import { detectExternalRenames } from './syncPlan.js'
 
 const lastSyncContent = new Map()
 const debounceTimeouts = new Map()
@@ -134,7 +134,7 @@ export function clearSyncCache() {
  * Checks if the sync directory exists. If not, disables sync, clears cache, stops watching, and displays a notification.
  * @returns {Promise<boolean>} Resolves to true if the directory exists, otherwise false.
  */
-export async function checkSyncDir() {
+async function checkSyncDir() {
   if (!isSyncActive()) {
     return false
   }
@@ -158,7 +158,7 @@ export async function checkSyncDir() {
 /**
  * Handles the event when the sync directory is deleted or no longer accessible, presenting options to select a new folder or disable sync.
  */
-export async function handleSyncDirDeleted() {
+async function handleSyncDirDeleted() {
   if (!isSyncActive() || activeDeletionDialog) return
 
   activeDeletionDialog = true
@@ -482,7 +482,7 @@ async function runSyncFileOp(syncKey, errorLabel, operation, extraRollback) {
  * @param {string} content The content string to write.
  * @returns {Promise<void>}
  */
-export async function syncPageSave(pageName, content) {
+async function syncPageSave(pageName, content) {
   const syncKey = getSyncKey(pageName)
   const nextContent = content || ''
 
@@ -498,7 +498,7 @@ export async function syncPageSave(pageName, content) {
  * @param {string} newName The new page name.
  * @returns {Promise<void>}
  */
-export async function syncPageRename(oldName, newName) {
+async function syncPageRename(oldName, newName) {
   const oldSyncKey = getSyncKey(oldName)
   const newSyncKey = getSyncKey(newName)
 
@@ -527,7 +527,7 @@ export async function syncPageRename(oldName, newName) {
  * @param {string} pageName The name of the page to delete.
  * @returns {Promise<void>}
  */
-export async function syncPageDelete(pageName) {
+async function syncPageDelete(pageName) {
   const syncKey = getSyncKey(pageName)
 
   await runSyncFileOp(syncKey, `deleting page ${pageName} from sync dir`, async (dirPath) => {
@@ -541,7 +541,7 @@ export async function syncPageDelete(pageName) {
  * @param {string} pageName The name of the page to save.
  * @param {string} content The content string to write.
  */
-export function syncPageSaveDebounced(pageName, content) {
+function syncPageSaveDebounced(pageName, content) {
   if (!isSyncActive()) return
 
   const syncKey = getSyncKey(pageName)
@@ -564,4 +564,29 @@ export function setupSync() {
   events.on('page:saved', syncPageSave)
   events.on('page:renamed', syncPageRename)
   events.on('page:deleted', syncPageDelete)
+}
+
+/**
+ * Initializes Electron sync directory listeners and performs startup sync if configured.
+ * @returns {Promise<void>}
+ */
+export async function initializeSync() {
+  if (!isElectron) return
+
+  numara.onSyncDirChanged(() => {
+    triggerFolderSync().catch(console.error)
+  })
+
+  numara.onSyncDirDeleted(() => {
+    handleSyncDirDeleted().catch(console.error)
+  })
+
+  if (app.settings.syncDirEnabled && app.settings.syncDir) {
+    const syncDirExists = await checkSyncDir()
+
+    if (syncDirExists) {
+      numara.startWatchingSyncDir(app.settings.syncDir)
+      await triggerFolderSync().catch(console.error)
+    }
+  }
 }
