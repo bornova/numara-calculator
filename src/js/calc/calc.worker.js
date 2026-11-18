@@ -21,6 +21,7 @@ self.onmessage = (event) => {
     const { taskId, activePage, lines, pages, settings, currencies, udf, udu, sharedBuffer } = payload
 
     try {
+      let lastProgressPost = 0
       const result = runCalculation({
         activePage,
         lines,
@@ -33,13 +34,18 @@ self.onmessage = (event) => {
         onLineStart: sharedBuffer
           ? undefined
           : (lineIndex) => {
-              self.postMessage({
-                type: 'lineStart',
-                payload: {
-                  taskId,
-                  lineIndex
-                }
-              })
+              const now = performance.now()
+
+              if (lineIndex === 0 || now - lastProgressPost >= 25) {
+                lastProgressPost = now
+                self.postMessage({
+                  type: 'lineStart',
+                  payload: {
+                    taskId,
+                    lineIndex
+                  }
+                })
+              }
             }
       })
 
