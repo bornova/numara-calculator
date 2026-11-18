@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon'
 
-import { math } from '../core/mathInstance.js'
+import { math, refreshCurrencyState } from '../core/mathInstance.js'
 import {
   compileUdfItems,
   compileUduItems,
@@ -11,7 +11,7 @@ import {
   skipStringOrComment,
   VALID_IDENTIFIER
 } from '../core/udfu.js'
-import { getSystemLocale } from '../core/utils.js'
+import { getSyncKey, getSystemLocale, sanitizePageName } from '../core/utils.js'
 import { app } from './appState.js'
 import { store } from './store.js'
 
@@ -86,8 +86,13 @@ function resolveLocaleDateFormat(locale) {
     const parts = new Intl.DateTimeFormat(locale).formatToParts(new Date(2026, 10, 25))
     const firstDatePart = parts.find((part) => part.type === 'year' || part.type === 'month' || part.type === 'day')
 
-    if (firstDatePart?.type === 'year') return 'yyyy-MM-dd'
-    if (firstDatePart?.type === 'day') return 'dd/MM/yyyy'
+    if (firstDatePart?.type === 'year') {
+      return 'yyyy-MM-dd'
+    }
+
+    if (firstDatePart?.type === 'day') {
+      return 'dd/MM/yyyy'
+    }
   } catch {
     // Fall back to default format if locale tag is invalid
   }
@@ -160,10 +165,14 @@ function trimJsComments(str) {
  * @returns {string} Unwrapped expression string.
  */
 function unwrapBalancedParens(str) {
-  if (!str.startsWith('(') || !str.endsWith(')')) return str
+  if (!str.startsWith('(') || !str.endsWith(')')) {
+    return str
+  }
 
   const closeIdx = findMatchingClose(str, 0)
-  if (closeIdx !== str.length - 1) return str
+  if (closeIdx !== str.length - 1) {
+    return str
+  }
 
   const inner = trimJsComments(str.slice(1, -1))
   return inner.startsWith('{') ? str : inner
@@ -232,28 +241,41 @@ function splitTopLevelObjectEntries(src) {
  * @returns {{ name: string, params: string, body: string }|null}
  */
 function parseSourceKeyValue(key, rawValue) {
-  if (!rawValue) return null
+  if (!rawValue) {
+    return null
+  }
 
   if (rawValue[0] === '(') {
     const closeParen = findMatchingClose(rawValue, 0)
     if (closeParen !== -1) {
       const afterIdx = skipWsAndComments(rawValue, closeParen + 1)
+
       if (rawValue.slice(afterIdx, afterIdx + 2) === '=>') {
         const rawParams = rawValue.slice(1, closeParen).trim()
         const rhs = trimJsComments(rawValue.slice(afterIdx + 2))
-        if (!rhs) return null
+
+        if (!rhs) {
+          return null
+        }
+
         return { name: key, params: rawParams || '()', body: normalizeArrowBody(rhs) }
       }
     }
   }
 
   const singleParamMatch = rawValue.match(/^([a-zA-Z_$][\w$]*)/)
+
   if (singleParamMatch && singleParamMatch[1] !== 'async') {
     const param = singleParamMatch[1]
     const afterIdx = skipWsAndComments(rawValue, param.length)
+
     if (rawValue.slice(afterIdx, afterIdx + 2) === '=>') {
       const rhs = trimJsComments(rawValue.slice(afterIdx + 2))
-      if (!rhs) return null
+
+      if (!rhs) {
+        return null
+      }
+
       return { name: key, params: param, body: normalizeArrowBody(rhs) }
     }
   }
@@ -262,8 +284,10 @@ function parseSourceKeyValue(key, rawValue) {
   if (fnMatch) {
     const openParen = fnMatch[0].length - 1
     const closeParen = findMatchingClose(rawValue, openParen)
+
     if (closeParen !== -1) {
       const bracePos = skipWsAndComments(rawValue, closeParen + 1)
+
       if (rawValue[bracePos] === '{' && findMatchingClose(rawValue, bracePos) === rawValue.length - 1) {
         const fnName = fnMatch[1] || ''
         const rawParams = rawValue.slice(openParen + 1, closeParen).trim()
@@ -296,12 +320,18 @@ function parseSourceUdfEntries(rawUdf) {
 
     if (entry[0] === '"' || entry[0] === "'") {
       const strEnd = skipStringOrComment(entry, 0)
-      if (strEnd === -1) return null
+      if (strEnd === -1) {
+        return null
+      }
+
       key = entry.slice(1, strEnd - 1)
       afterKeyPos = skipWsAndComments(entry, strEnd)
     } else {
       const idMatch = entry.match(/^[a-zA-Z_$][\w$]*/)
-      if (!idMatch) return null
+      if (!idMatch) {
+        return null
+      }
+
       key = idMatch[0]
       afterKeyPos = skipWsAndComments(entry, key.length)
 
@@ -323,13 +353,21 @@ function parseSourceUdfEntries(rawUdf) {
 
     if (delim === ':') {
       const parsed = parseSourceKeyValue(key, trimJsComments(entry.slice(afterKeyPos + 1)))
-      if (!parsed) return null
+      if (!parsed) {
+        return null
+      }
+
       items.push(parsed)
     } else if (delim === '(') {
       const closeParen = findMatchingClose(entry, afterKeyPos)
-      if (closeParen === -1) return null
+      if (closeParen === -1) {
+        return null
+      }
+
       const bracePos = skipWsAndComments(entry, closeParen + 1)
-      if (entry[bracePos] !== '{' || findMatchingClose(entry, bracePos) !== entry.length - 1) return null
+      if (entry[bracePos] !== '{' || findMatchingClose(entry, bracePos) !== entry.length - 1) {
+        return null
+      }
 
       const rawParams = entry.slice(afterKeyPos + 1, closeParen).trim()
       const innerBody = trimJsComments(entry.slice(bracePos + 1, -1))
@@ -350,12 +388,30 @@ function parseSourceUdfEntries(rawUdf) {
  */
 function serializeEvaluatedUdfValue(val) {
   if (val !== null && typeof val === 'object') {
-    if (val.isUnit) return `math.unit(${JSON.stringify(val.toString())})`
-    if (val.isBigNumber) return `math.bignumber(${JSON.stringify(val.toString())})`
-    if (val.isFraction) return `math.fraction(${JSON.stringify(val.toFraction())})`
-    if (val.isComplex) return `math.complex(${JSON.stringify(val.toString())})`
-    if (val.isMatrix) return JSON.stringify(val.toArray())
-    if (val.isLuxonDateTime) return `luxon.fromISO(${JSON.stringify(val.toISO())})`
+    if (val.isUnit) {
+      return `math.unit(${JSON.stringify(val.toString())})`
+    }
+
+    if (val.isBigNumber) {
+      return `math.bignumber(${JSON.stringify(val.toString())})`
+    }
+
+    if (val.isFraction) {
+      return `math.fraction(${JSON.stringify(val.toFraction())})`
+    }
+
+    if (val.isComplex) {
+      return `math.complex(${JSON.stringify(val.toString())})`
+    }
+
+    if (val.isMatrix) {
+      return JSON.stringify(val.toArray())
+    }
+
+    if (val.isLuxonDateTime) {
+      return `luxon.fromISO(${JSON.stringify(val.toISO())})`
+    }
+
     return JSON.stringify(val)
   }
 
@@ -424,7 +480,9 @@ function extractFunctionParts(fn) {
  */
 export function parseLegacyUdf(rawUdf, mathInstance = defaultProxy, externalLibs = {}) {
   const trimmed = (rawUdf ?? '').trim()
-  if (!trimmed) return []
+  if (!trimmed) {
+    return []
+  }
 
   const sourceItems = parseSourceUdfEntries(trimmed)
 
@@ -463,7 +521,9 @@ export function parseLegacyUdf(rawUdf, mathInstance = defaultProxy, externalLibs
  */
 export function parseLegacyUdu(rawUdu, mathInstance = defaultProxy, externalLibs = {}) {
   const trimmed = (rawUdu ?? '').trim()
-  if (!trimmed) return []
+  if (!trimmed) {
+    return []
+  }
 
   const uduItems = []
 
@@ -518,6 +578,8 @@ export function migrateStorageAndPages() {
   let pagesModified = false
 
   if (Array.isArray(pages)) {
+    const seenSyncKeys = new Set()
+
     for (const page of pages) {
       if (!page || typeof page !== 'object') continue
 
@@ -531,10 +593,28 @@ export function migrateStorageAndPages() {
         pagesModified = true
       }
 
-      if (typeof page.name !== 'string') {
-        page.name = String(page.name ?? 'Page')
+      const safeBaseName = sanitizePageName(typeof page.name === 'string' ? page.name : String(page.name ?? ''), 'Page')
+
+      if (typeof page.name !== 'string' || !page.name.trim()) {
+        page.name = safeBaseName
         pagesModified = true
       }
+
+      const initialKey = getSyncKey(page.name)
+
+      if (seenSyncKeys.has(initialKey)) {
+        let count = 1
+        let candidate = `${safeBaseName} (${count++})`
+
+        while (seenSyncKeys.has(getSyncKey(candidate))) {
+          candidate = `${safeBaseName} (${count++})`
+        }
+
+        page.name = candidate
+        pagesModified = true
+      }
+
+      seenSyncKeys.add(getSyncKey(page.name))
 
       if (typeof page.data !== 'string') {
         page.data = String(page.data ?? '')
@@ -561,7 +641,9 @@ export function migrateStorageAndPages() {
  * @returns {boolean} True if any color metadata was updated.
  */
 export function migrateColors(targetColors, defaultColors) {
-  if (!targetColors || typeof targetColors !== 'object' || !defaultColors) return false
+  if (!targetColors || typeof targetColors !== 'object' || !defaultColors) {
+    return false
+  }
 
   let migrated = false
 
@@ -589,7 +671,9 @@ export function migrateColors(targetColors, defaultColors) {
  * @returns {boolean} True if any v7 fields were migrated.
  */
 export function migrateFromV7(targetSettings) {
-  if (!targetSettings || typeof targetSettings !== 'object') return false
+  if (!targetSettings || typeof targetSettings !== 'object') {
+    return false
+  }
 
   let migrated = false
   const systemLocale = getSystemLocale(targetSettings)
@@ -671,32 +755,34 @@ export function migrateFromV7(targetSettings) {
  * Migrates v7 raw `udf` and `udu` strings into structured `udfItems` and `uduItems` arrays if not yet present.
  */
 function migrateUdfu() {
-  if (store.get('udfItems') === null) {
-    const rawUdf = store.get('udf')
+  if (store.get('udfItems') === null && store.get('udf') !== null) {
+    refreshCurrencyState(store.get('currencies') || {})
 
-    if (rawUdf !== null) {
-      const trimmedUdf = String(rawUdf).trim()
+    const trimmedUdf = String(store.get('udf')).trim()
 
-      if (!trimmedUdf) {
-        store.set('udfItems', [])
-      } else {
-        const parsedUdf = parseLegacyUdf(trimmedUdf, math, { luxon: DateTime })
+    if (!trimmedUdf) {
+      store.set('udfItems', [])
+    } else {
+      const parsedUdf = parseLegacyUdf(trimmedUdf, math, { luxon: DateTime })
+
+      if (parsedUdf.length > 0) {
         store.set('udfItems', parsedUdf)
         store.set('udf', compileUdfItems(parsedUdf))
       }
     }
   }
 
-  if (store.get('uduItems') === null) {
-    const rawUdu = store.get('udu')
+  if (store.get('uduItems') === null && store.get('udu') !== null) {
+    refreshCurrencyState(store.get('currencies') || {})
 
-    if (rawUdu !== null) {
-      const trimmedUdu = String(rawUdu).trim()
+    const trimmedUdu = String(store.get('udu')).trim()
 
-      if (!trimmedUdu) {
-        store.set('uduItems', [])
-      } else {
-        const parsedUdu = parseLegacyUdu(trimmedUdu, math, { luxon: DateTime })
+    if (!trimmedUdu) {
+      store.set('uduItems', [])
+    } else {
+      const parsedUdu = parseLegacyUdu(trimmedUdu, math, { luxon: DateTime })
+
+      if (parsedUdu.length > 0) {
         store.set('uduItems', parsedUdu)
         store.set('udu', compileUduItems(parsedUdu))
       }
