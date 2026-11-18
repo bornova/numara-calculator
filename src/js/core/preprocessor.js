@@ -113,10 +113,14 @@ export function stripComments(line) {
  */
 export function stripLeadingColonLabel(line) {
   const trimmed = line.trim()
-  if (trimmed.startsWith('{')) return line
+  if (trimmed.startsWith('{')) {
+    return line
+  }
 
   const match = line.match(/^\s*([a-zA-Z_\p{L}][\w\p{L}\p{M}\s]*):\s+(.+)$/u)
-  if (!match) return line
+  if (!match) {
+    return line
+  }
 
   return match[2]
 }
