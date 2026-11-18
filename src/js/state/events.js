@@ -6,7 +6,7 @@ const listeners = new Map()
  * @param {Function} handler Callback invoked when the event is emitted.
  * @returns {() => void} Unsubscribe callback.
  */
-export function on(event, handler) {
+function on(event, handler) {
   let handlers = listeners.get(event)
 
   if (!handlers) {
@@ -24,7 +24,7 @@ export function on(event, handler) {
  * @param {string} event Event name.
  * @param {Function} handler Callback to remove.
  */
-export function off(event, handler) {
+function off(event, handler) {
   const handlers = listeners.get(event)
 
   if (!handlers) return
@@ -41,7 +41,7 @@ export function off(event, handler) {
  * @param {string} event Event name.
  * @param {...*} args Arguments forwarded to each handler.
  */
-export function emit(event, ...args) {
+function emit(event, ...args) {
   const handlers = listeners.get(event)
 
   if (!handlers) return
