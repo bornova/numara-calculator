@@ -3,12 +3,13 @@ import UIkit from 'uikit'
 import { calculate, clearEvaluationCache } from '../calc/calcManager.js'
 import { getRates } from '../calc/currencies.js'
 import { syncOutputHeights } from '../calc/outputRenderer.js'
+import { reapplyMainThreadUdu } from '../calc/userDefined.js'
 import { refreshCurrencyState } from '../core/mathInstance.js'
 import { isCommaDecimal } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
 import { clearSyncCache, triggerFolderSync, updateSyncUiState } from '../pages/sync.js'
-import { app, DEFAULT_SETTINGS, SETTING_SELECT_OPTIONS } from '../state/appState.js'
+import { app, DEFAULT_INPUT_WIDTH, DEFAULT_SETTINGS, SETTING_SELECT_OPTIONS } from '../state/appState.js'
 import { DEFAULT_APP_HEIGHT, DEFAULT_APP_WIDTH, isElectron, isLinux, isMac } from '../state/env.js'
 import { initStoreObject, store } from '../state/store.js'
 import { confirm, modal, showError } from './dialogs.js'
@@ -131,8 +132,7 @@ function setupSettingsEvents() {
   dom.localeWarn.addEventListener('click', () => {
     showError(
       'Caution: Semicolon argument separator',
-      `When ${app.settings.numberFormat} format is selected, comma (,) is used as the decimal separator. Therefore, you must use semicolon (;) as the argument separator in all applicable functions. Ex. sum(1;3) // 4`,
-      true
+      `When ${app.settings.numberFormat} format is selected, comma (,) is used as the decimal separator. Therefore, you must use semicolon (;) as the argument separator in all applicable functions. Ex. sum(1;3) // 4`
     )
   })
 
@@ -202,7 +202,7 @@ function setupSettingsEvents() {
       if (id === 'syncDirEnabled' || id === 'syncDir') {
         if (app.settings.syncDirEnabled && app.settings.syncDir) {
           triggerFolderSync().catch(console.error)
-        } else {
+        } else if (!isElectron) {
           clearSyncCache()
         }
       }
@@ -255,7 +255,11 @@ function applyAnswerPositionLayout() {
   const isBottom = pos === 'bottom'
   const isLeft = pos === 'left'
 
-  dom.input.style.width = isBottom ? '100%' : isLeft ? `${store.get('inputWidth') ?? 60}%` : '60%'
+  dom.input.style.width = isBottom
+    ? '100%'
+    : isLeft
+      ? `${store.get('inputWidth') ?? DEFAULT_INPUT_WIDTH}%`
+      : `${DEFAULT_INPUT_WIDTH}%`
   dom.output.style.width = isBottom ? '20px' : ''
   dom.output.style.minWidth = isBottom ? '20px' : isLeft ? '120px' : ''
   dom.output.style.textAlign = isLeft ? 'left' : 'right'
@@ -378,7 +382,9 @@ export const settings = {
 
     await settings.setTheme()
     if (app.colors) colors.apply()
-    refreshCurrencyState(app.currencies, app.settings.currency)
+    if (refreshCurrencyState(app.currencies, app.settings.currency)) {
+      reapplyMainThreadUdu()
+    }
 
     if (isElectron) {
       numara.setTheme(app.settings.theme)
@@ -400,6 +406,7 @@ export const settings = {
     })
 
     dom.mainPanel.classList.toggle('showRulers', app.settings.rulers)
+    dom.mainPanel.classList.toggle('truncateAnswers', app.settings.truncateAnswers)
     dom.output.classList.toggle('truncateAnswers', app.settings.truncateAnswers)
 
     if (app.settings.answerPosition !== 'bottom') {
@@ -498,7 +505,10 @@ export const settings = {
 
       if (mod) {
         mod.style.pointerEvents = enabled ? 'auto' : 'none'
-        mod.parentNode.style.opacity = enabled ? '1' : '0.5'
+
+        if (mod.parentNode !== el.parentNode) {
+          mod.style.opacity = enabled ? '1' : '0.5'
+        }
       }
     }
 
@@ -509,9 +519,21 @@ export const settings = {
 
     toggle(dom.expUpper, isAutoNotation)
     toggle(dom.expLower, isAutoNotation)
+    dom.expUpperLabel.style.opacity = isAutoNotation ? '1' : '0.5'
+    dom.expLowerLabel.style.opacity = isAutoNotation ? '1' : '0.5'
+
     toggle(dom.copyThouSep, app.settings.thouSep)
 
-    dom.currencyInterval.disabled = !app.settings.currency
-    dom.updateRatesLink.dataset.enabled = app.settings.currency
+    const isCurrency = app.settings.currency
+
+    dom.currencyInterval.disabled = !isCurrency
+    dom.currencyInterval.style.opacity = isCurrency ? '1' : '0.5'
+    dom.updateRatesLink.dataset.enabled = isCurrency
+
+    const currencyIntervalMod = dom.el('#currencyIntervalMod')
+    if (currencyIntervalMod) {
+      currencyIntervalMod.style.pointerEvents = isCurrency ? 'auto' : 'none'
+      currencyIntervalMod.style.opacity = isCurrency ? '1' : '0.5'
+    }
   }
 }
