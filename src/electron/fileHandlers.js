@@ -67,7 +67,7 @@ export function queueOrOpenFile(filePath) {
 export function promptImportPage() {
   const win = getWindow()
 
-  if (!win || win.isDestroyed()) return
+  if (!win) return
 
   const file = dialog.showOpenDialogSync(win, {
     filters: [{ name: 'Numara', extensions: ['num'] }],
@@ -82,8 +82,6 @@ export function promptImportPage() {
 
 /**
  * Registers IPC handlers for page file importing, exporting, and startup file opening.
- * @param {object} [options]
- * @param {function} [options.onRendererReady] Callback invoked once the renderer signals readiness.
  */
 export function setupFileHandlers() {
   ipcMain.on('renderer-ready', () => {
@@ -95,14 +93,12 @@ export function setupFileHandlers() {
     }
   })
 
-  ipcMain.on('importPage', () => {
-    promptImportPage()
-  })
+  ipcMain.on('importPage', promptImportPage)
 
   ipcMain.on('exportPage', (event, fileName, content) => {
     const win = getWindow()
 
-    if (!win || win.isDestroyed()) return
+    if (!win) return
 
     const file = dialog.showSaveDialogSync(win, {
       defaultPath: fileName,
@@ -113,7 +109,7 @@ export function setupFileHandlers() {
     if (!file) return
 
     fs.writeFile(file, String(content ?? ''), (error) => {
-      if (!win || win.isDestroyed() || event.sender.isDestroyed()) return
+      if (!getWindow() || event.sender.isDestroyed()) return
 
       if (error) {
         event.sender.send('exportDataError', error)
