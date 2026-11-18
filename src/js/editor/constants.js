@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon'
 
-import { BUILTIN_MATH_KEYS, BUILTIN_UNIT_KEYS, math } from '../core/mathInstance.js'
+import { hasBuiltinConflict, math } from '../core/mathInstance.js'
 import { escapeRegExp } from '../core/utils.js'
 import { app } from '../state/appState.js'
 
@@ -38,7 +38,7 @@ export const mathConstants = mathEntries.filter(
   ([k]) =>
     typeof math[k] !== 'function' &&
     typeof math[k] !== 'boolean' &&
-    (math[k]?.value || ((math[k] === null || typeof math[k] === 'number') && !isNaN(math[k])))
+    (math[k]?.value || math[k]?.isComplex || ((math[k] === null || typeof math[k] === 'number') && !isNaN(math[k])))
 )
 
 /**
@@ -74,8 +74,18 @@ export const currencyTokens = new Map()
 export const currencyCodeTokens = new Set()
 export let currencySymbolRegex = null
 
+const INTERNAL_LUXON_STATICS = new Set([
+  'parseFormatForOpts',
+  'expandFormat',
+  'resetCache',
+  'buildFormatParser',
+  'fromFormatParser',
+  'fromFormatExplain',
+  'fromStringExplain'
+])
+
 export const dateTimeStaticMethods = Object.getOwnPropertyNames(DateTime).filter(
-  (prop) => typeof DateTime[prop] === 'function'
+  (prop) => typeof DateTime[prop] === 'function' && !INTERNAL_LUXON_STATICS.has(prop)
 )
 
 export const dateTimeInstanceMethods = Object.getOwnPropertyNames(DateTime.prototype).filter(
@@ -98,7 +108,7 @@ export function refreshCurrencyTokens() {
 
     const lowerCode = code.toLowerCase()
 
-    if (!BUILTIN_UNIT_KEYS.has(lowerCode) && !BUILTIN_MATH_KEYS.has(lowerCode)) {
+    if (!hasBuiltinConflict(lowerCode)) {
       currencyCodeTokens.add(lowerCode)
     }
 
