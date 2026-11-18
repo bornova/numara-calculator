@@ -1,13 +1,6 @@
-import { getSafeFilename, sanitizePageName } from '../core/utils.js'
+import { getSyncKey, sanitizePageName } from '../core/utils.js'
 
-/**
- * Computes a normalized case-insensitive sync key for a page or file name.
- * @param {string} name Page or file name.
- * @returns {string}
- */
-export function getSyncKey(name) {
-  return getSafeFilename(name).toLowerCase()
-}
+export { getSyncKey }
 
 /**
  * Pure helper that detects external file renames in the sync directory by matching
