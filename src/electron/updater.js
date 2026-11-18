@@ -8,6 +8,8 @@ const { autoUpdater } = updater
 
 const sendUpdateStatus = (...args) => sendToWindow('updateStatus', ...args)
 
+let isInstallingUpdate = false
+
 /**
  * Configures electron-updater and registers update IPC handlers and event listeners.
  */
@@ -21,6 +23,9 @@ export function setupAutoUpdater() {
   })
 
   ipcMain.on('updateApp', () => {
+    if (isInstallingUpdate) return
+
+    isInstallingUpdate = true
     setAppQuitting(true)
     setImmediate(() => autoUpdater.quitAndInstall(true, true))
   })
@@ -54,5 +59,9 @@ export function setupAutoUpdater() {
     }
   })
 
-  autoUpdater.on('error', () => sendUpdateStatus('error'))
+  autoUpdater.on('error', () => {
+    isInstallingUpdate = false
+    setAppQuitting(false)
+    sendUpdateStatus('error')
+  })
 }
