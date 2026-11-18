@@ -1,3 +1,5 @@
+import { PAGE_OBJECT_SYMBOL } from './constants.js'
+
 export const VALID_IDENTIFIER = /^[a-zA-Z_$][\w$]*$/
 export const RESERVED_KEYS = new Set(['__proto__', 'constructor', 'prototype'])
 
@@ -194,6 +196,32 @@ function hasTopLevelReturn(str, isBlock, allowSemicolon = false) {
 }
 
 /**
+ * Checks whether a trimmed body string requires a function statement block `{ ... }`
+ * rather than a parenthesized expression `(...)`.
+ * @param {string} cleanBody Trimmed body string.
+ * @param {boolean} isBlock Whether `cleanBody` is wrapped in a single `{ ... }` brace pair.
+ * @param {boolean} [allowSemicolon=false] Whether top-level semicolons force statement mode.
+ * @returns {boolean}
+ */
+function isStatementBody(cleanBody, isBlock, allowSemicolon = false) {
+  if (hasTopLevelReturn(cleanBody, isBlock, allowSemicolon)) {
+    return true
+  }
+
+  try {
+    new Function(`return ${wrapParenExpr(cleanBody)}`)
+    return false
+  } catch {
+    try {
+      new Function(isBlock ? cleanBody.slice(1, -1) : cleanBody)
+      return true
+    } catch {
+      return false
+    }
+  }
+}
+
+/**
  * Evaluates a compiled UDF/UDU object-body string inside a `with (math)` scope.
  * @param {string} body Object-literal interior string.
  * @param {object} [math=defaultProxy] Math.js instance or fallback proxy.
@@ -227,7 +255,7 @@ export function compileUdfItems(items) {
       const cleanParams = rawParams.replace(/^\(|\)$/g, '').trim()
       const cleanBody = (body ?? '').trim()
       const isBlock = cleanBody.startsWith('{') && findMatchingClose(cleanBody, 0) === cleanBody.length - 1
-      const isMultiStmt = hasTopLevelReturn(cleanBody, isBlock, true)
+      const isMultiStmt = isStatementBody(cleanBody, isBlock, true)
 
       if (cleanParams.length > 0 || isZeroArgFunc) {
         if (isBlock && isMultiStmt) {
@@ -241,7 +269,7 @@ export function compileUdfItems(items) {
         return `${JSON.stringify(cleanName)}: (${cleanParams}) => ${wrapParenExpr(cleanBody)}`
       }
 
-      if (hasTopLevelReturn(cleanBody, isBlock)) {
+      if (isStatementBody(cleanBody, isBlock, false)) {
         if (isBlock) {
           return `${JSON.stringify(cleanName)}: () => ${cleanBody}`
         }
@@ -256,12 +284,12 @@ export function compileUdfItems(items) {
 
 /**
  * Compiles structured user-defined unit items into a JS object body string.
- * @param {Array<{name: string, definition: string, prefixes?: string, aliases?: string}>} items
+ * @param {Array<{name: string, definition: string, prefixes?: string, aliases?: string, offset?: number, baseName?: string}>} items
  * @returns {string}
  */
 export function compileUduItems(items) {
   return items
-    .map(({ name, definition, prefixes, aliases }) => {
+    .map(({ name, definition, prefixes, aliases, offset, baseName }) => {
       const cleanName = name.trim()
       const cleanDef = (definition ?? '').trim().replace(/^["']|["']$/g, '')
       const cleanPrefixes = (prefixes ?? 'none').trim()
@@ -269,12 +297,17 @@ export function compileUduItems(items) {
         .split(',')
         .map((a) => a.trim())
         .filter(Boolean)
+      const hasExtra = offset !== undefined || Boolean(baseName)
 
-      if ((!cleanPrefixes || cleanPrefixes === 'none') && aliasList.length === 0) {
+      if ((!cleanPrefixes || cleanPrefixes === 'none') && aliasList.length === 0 && !hasExtra) {
         return `${JSON.stringify(cleanName)}: ${JSON.stringify(cleanDef)}`
       }
 
-      const unitObj = { definition: cleanDef }
+      const unitObj = {}
+
+      if (cleanDef) {
+        unitObj.definition = cleanDef
+      }
 
       if (cleanPrefixes && cleanPrefixes !== 'none') {
         unitObj.prefixes = cleanPrefixes
@@ -282,6 +315,14 @@ export function compileUduItems(items) {
 
       if (aliasList.length > 0) {
         unitObj.aliases = aliasList
+      }
+
+      if (offset !== undefined && Number.isFinite(Number(offset))) {
+        unitObj.offset = Number(offset)
+      }
+
+      if (baseName) {
+        unitObj.baseName = String(baseName)
       }
 
       return `${JSON.stringify(cleanName)}: ${JSON.stringify(unitObj)}`
@@ -295,7 +336,12 @@ export function compileUduItems(items) {
  * @param {boolean} [isFunc=true] True if validating functions, false if validating units.
  */
 function validateUdfObj(obj, isFunc = true) {
-  if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) {
+  if (
+    obj === null ||
+    typeof obj !== 'object' ||
+    Array.isArray(obj) ||
+    Object.getPrototypeOf(obj) !== Object.prototype
+  ) {
     throw new TypeError('User defined input must resolve to an object.')
   }
 
@@ -319,22 +365,46 @@ function validateUdfObj(obj, isFunc = true) {
 }
 
 /**
- * Checks whether a UDF entry is a plain namespace object that should not be flattened by `math.import`.
+ * Checks whether a UDF or scope entry is a plain namespace/page object that should not be flattened by `math.import`.
  * @param {*} val Value to inspect.
  * @returns {boolean}
  */
 export function isPlainNamespaceObject(val) {
-  return Boolean(
-    val &&
-    typeof val === 'object' &&
-    !Array.isArray(val) &&
-    !val.isBigNumber &&
-    !val.isComplex &&
-    !val.isFraction &&
-    !val.isUnit &&
-    !val.isMatrix &&
-    !val.isLuxonDateTime
-  )
+  if (!val || typeof val !== 'object') {
+    return false
+  }
+
+  const proto = Object.getPrototypeOf(val)
+
+  return proto === Object.prototype || proto === null || Boolean(val[PAGE_OBJECT_SYMBOL])
+}
+
+/**
+ * Creates or re-creates a standalone Math.js base unit safely without throwing when its `<name>_STUFF`
+ * base dimension was already registered during a prior run.
+ * @param {object} mathInst Math.js instance.
+ * @param {string} code Unit name.
+ * @param {object} [options={}] Unit options (`aliases`, `prefixes`, `baseName`).
+ */
+export function createOrReuseBaseUnit(mathInst, code, options = {}) {
+  const baseKey = options.baseName ? `${String(options.baseName).replace(/\W+/g, '_')}_STUFF` : `${code}_STUFF`
+  const existingBase = mathInst.Unit?.BASE_UNITS?.[baseKey]
+
+  if (existingBase) {
+    const def = new mathInst.Unit()
+    def.value = 1
+    def.dimensions = existingBase.dimensions.slice()
+
+    const restOpts = { ...options, definition: def }
+    delete restOpts.baseName
+    mathInst.createUnit(code, restOpts, { override: true })
+
+    if (mathInst.Unit.UNIT_SYSTEMS?.auto?.[baseKey] && mathInst.Unit.UNITS?.[code]) {
+      mathInst.Unit.UNIT_SYSTEMS.auto[baseKey].unit = mathInst.Unit.UNITS[code]
+    }
+  } else {
+    mathInst.createUnit(code, options, { override: true })
+  }
 }
 
 /**
@@ -397,6 +467,8 @@ function restoreBuiltinKey(math, key, savedMap, isUnit = false) {
       delete math.expression.mathWithTransform[key]
     }
   }
+
+  savedMap.delete(key)
 }
 
 /**
@@ -409,9 +481,10 @@ function restoreBuiltinKey(math, key, savedMap, isUnit = false) {
  * @param {object} [externalLibs] Optional libraries to expose in the function scope { luxon, nerdamer, formulajs }.
  * @returns {string[]} List of keys defined in the input.
  */
-export function applyUdfuToMath(math, input, isFunc, state, externalLibs = {}) {
+export function applyUdfuToMath(math, input, isFunc, state = {}, externalLibs = {}) {
   if (isFunc) {
     state.savedBuiltinUDFs ??= new Map()
+    state.previouslyImportedUDFs ??= []
 
     state.previouslyImportedUDFs.forEach((key) => restoreBuiltinKey(math, key, state.savedBuiltinUDFs, false))
     state.previouslyImportedUDFs = []
@@ -453,6 +526,7 @@ export function applyUdfuToMath(math, input, isFunc, state, externalLibs = {}) {
   state.savedBuiltinUnits ??= new Map()
 
   state.previouslyCreatedUnits.forEach((unitName) => restoreBuiltinKey(math, unitName, state.savedBuiltinUnits, true))
+  state.previouslyCreatedUnits = []
 
   const createdUnitNames = [...Object.keys(udfObj)]
 
@@ -463,9 +537,38 @@ export function applyUdfuToMath(math, input, isFunc, state, externalLibs = {}) {
   }
 
   createdUnitNames.forEach((unitName) => saveBuiltinKey(math, unitName, state.savedBuiltinUnits, true))
-  state.previouslyCreatedUnits = createdUnitNames
 
-  math.createUnit(udfObj, { override: true })
+  try {
+    const dependentUnits = {}
+
+    for (const [unitKey, unitVal] of Object.entries(udfObj)) {
+      const isStandaloneStr = typeof unitVal === 'string' && !unitVal.trim()
+      const isStandaloneObj =
+        unitVal &&
+        typeof unitVal === 'object' &&
+        !unitVal.isUnit &&
+        (!unitVal.definition || (typeof unitVal.definition === 'string' && !unitVal.definition.trim()))
+
+      if (isStandaloneStr) {
+        createOrReuseBaseUnit(math, unitKey)
+      } else if (isStandaloneObj) {
+        const baseOpts = { ...unitVal }
+        delete baseOpts.definition
+        createOrReuseBaseUnit(math, unitKey, baseOpts)
+      } else {
+        dependentUnits[unitKey] = unitVal
+      }
+    }
+
+    if (Object.keys(dependentUnits).length > 0) {
+      math.createUnit(dependentUnits, { override: true })
+    }
+  } catch (error) {
+    createdUnitNames.forEach((unitName) => restoreBuiltinKey(math, unitName, state.savedBuiltinUnits, true))
+    throw error
+  }
+
+  state.previouslyCreatedUnits = createdUnitNames
 
   return createdUnitNames
 }
