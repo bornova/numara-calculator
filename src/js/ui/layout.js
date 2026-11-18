@@ -46,6 +46,7 @@ export function setupAppButtons() {
   const buttons = {
     searchButton: () => showSearchPanel(cm, false),
     printButton: () => {
+      if (!cm.getValue()) return
       hideFloatingPageList()
       window.print()
     },
@@ -107,11 +108,17 @@ export function setupAppButtons() {
           dom.resetSizeButton.click()
           break
         case 'undo':
-        case 'redo':
-          if (cm?.hasFocus() || !isModalOpen()) {
+        case 'redo': {
+          const activeEl = document.activeElement
+          const inNonEditorInput = activeEl?.matches?.('input, textarea') && !activeEl.closest?.('.CodeMirror')
+
+          if (inNonEditorInput) {
+            document.execCommand?.(action)
+          } else if (cm?.hasFocus() || !isModalOpen()) {
             cm?.[action]()
           }
           break
+        }
       }
     })
   }
