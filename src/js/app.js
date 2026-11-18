@@ -6,8 +6,7 @@ import { cm, setupEditor } from './editor/index.js'
 import { isSearchPanelOpen } from './editor/searchPanel.js'
 import { setupPageIo } from './pages/pageIo.js'
 import { initializePages } from './pages/pageManager.js'
-import { checkSyncDir, handleSyncDirDeleted, setupSync, triggerFolderSync } from './pages/sync.js'
-import { app } from './state/appState.js'
+import { initializeSync, setupSync } from './pages/sync.js'
 import { isElectron, isMobile } from './state/env.js'
 import { migrateAppState } from './state/migration.js'
 import { initializeContextMenus } from './ui/contextMenu.js'
@@ -72,24 +71,7 @@ async function initializeApp() {
   initializePageList()
   setupPageIo()
 
-  if (isElectron) {
-    numara.onSyncDirChanged(() => {
-      triggerFolderSync().catch(console.error)
-    })
-
-    numara.onSyncDirDeleted(() => {
-      handleSyncDirDeleted().catch(console.error)
-    })
-
-    if (app.settings.syncDirEnabled && app.settings.syncDir) {
-      const syncDirExists = await checkSyncDir()
-
-      if (syncDirExists) {
-        numara.startWatchingSyncDir(app.settings.syncDir)
-        await triggerFolderSync().catch(console.error)
-      }
-    }
-  }
+  await initializeSync()
 
   initializePages()
   initializeContextMenus()
