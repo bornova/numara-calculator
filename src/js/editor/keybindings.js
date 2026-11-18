@@ -40,8 +40,10 @@ function parseKeybinding(str) {
  * @returns {boolean}
  */
 function matchKeyBindingPress(event, [mods, key]) {
+  const eventKeyUpper = typeof event.key === 'string' ? event.key.toUpperCase() : ''
+
   return !(
-    (key.toUpperCase() !== event.key.toUpperCase() && key !== event.code) ||
+    (key.toUpperCase() !== eventKeyUpper && key !== event.code) ||
     mods.some((mod) => !getModifierState(event, mod)) ||
     KEYBINDING_MODIFIER_KEYS.some((mod) => !mods.includes(mod) && key !== mod && getModifierState(event, mod))
   )
