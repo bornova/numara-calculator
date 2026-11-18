@@ -3,6 +3,10 @@ import { applyChange, observableDiff } from '@bornova/deep-diff'
 let cachedConsolidatedRaw = null
 let cachedConsolidatedObj = null
 
+function isPlainStoreObject(val) {
+  return val !== null && typeof val === 'object' && !Array.isArray(val)
+}
+
 /**
  * Retrieves and parses the consolidated `numara` storage object from localStorage.
  * @returns {object|null}
@@ -18,16 +22,27 @@ function getConsolidatedStore() {
 
   if (raw !== cachedConsolidatedRaw || !cachedConsolidatedObj) {
     try {
-      cachedConsolidatedObj = JSON.parse(raw)
+      const parsed = JSON.parse(raw)
+
+      if (!isPlainStoreObject(parsed)) {
+        throw new TypeError('Consolidated store root must be a plain object')
+      }
+
+      cachedConsolidatedObj = parsed
       cachedConsolidatedRaw = raw
     } catch (error) {
       console.error('Error parsing consolidated local storage, backing up corrupted data:', error)
 
       try {
-        localStorage.setItem(`numara_corrupt_${Date.now()}`, raw)
         localStorage.removeItem('numara')
       } catch {
-        // Ignore storage errors during backup
+        // Ignore removal error
+      }
+
+      try {
+        localStorage.setItem(`numara_corrupt_${Date.now()}`, raw)
+      } catch {
+        // Ignore quota or storage errors during backup
       }
 
       cachedConsolidatedRaw = null
@@ -131,7 +146,14 @@ export function initStoreObject(key, defaults) {
     let changed = false
 
     observableDiff(value, defaults, (diff) => {
-      if (diff.kind === 'E') return
+      if (
+        diff.kind === 'E' &&
+        typeof diff.lhs === typeof diff.rhs &&
+        (diff.lhs === null) === (diff.rhs === null) &&
+        Array.isArray(diff.lhs) === Array.isArray(diff.rhs)
+      ) {
+        return
+      }
 
       applyChange(value, defaults, 'rhs' in diff ? { ...diff, rhs: structuredClone(diff.rhs) } : diff)
       changed = true
