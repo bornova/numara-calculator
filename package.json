@@ -23,7 +23,9 @@
     "prettier:fix": "prettier --write .",
     "publish": "npm run prebuild && node build.js --prod && electron-builder --x64 --arm64 -p always -c.forceCodeSigning=true",
     "start": "npm run build && electron .",
-    "test": "node --test tests/numara-tests.js",
+    "test": "node --test tests/numara-tests.js tests/combinatorial-tests.js tests/e2e-tests.js",
+    "test:unit": "node --test tests/numara-tests.js tests/combinatorial-tests.js",
+    "test:e2e": "node --test tests/e2e-tests.js",
     "wiki": "node src/misc/wiki.js"
   },
   "devDependencies": {
@@ -36,7 +38,6 @@
     "electron-builder": "^26.18.0",
     "esbuild": "^0.28.2",
     "eslint": "^10.15.0",
-    "fs-extra": "^11.4.1",
     "function-plot": "^1.26.0",
     "globals": "^17.14.0",
     "lucide": "^1.75.0",
