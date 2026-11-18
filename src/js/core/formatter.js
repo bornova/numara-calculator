@@ -57,7 +57,9 @@ function formatNumericString(numStr, decSep, grpSep, useGrp) {
     }
   }
 
-  if (decimalPart) return integerPart + decSep + decimalPart
+  if (decimalPart) {
+    return integerPart + decSep + decimalPart
+  }
 
   return integerPart
 }
@@ -78,7 +80,9 @@ export function stripAnswer(answer) {
  * @returns {number}
  */
 export function parseLocaleNumber(str, settings = app.settings) {
-  if (typeof str !== 'string') return NaN
+  if (typeof str !== 'string') {
+    return NaN
+  }
 
   const { group, decimal } = getNumberFormat(settings)
   const cleaned = str
@@ -99,11 +103,15 @@ const STRICT_LOCALE_NUMBER_REGEX = /^-?\d[\d.,\s\u00A0\u202F\u2009]*(?:e[+-]?\d+
  * @returns {number} Finite number or `NaN`.
  */
 export function parseStrictLocaleNumber(str, settings = app.settings) {
-  if (typeof str !== 'string') return NaN
+  if (typeof str !== 'string') {
+    return NaN
+  }
 
   const trimmed = str.trim()
 
-  if (!STRICT_LOCALE_NUMBER_REGEX.test(trimmed)) return NaN
+  if (!STRICT_LOCALE_NUMBER_REGEX.test(trimmed)) {
+    return NaN
+  }
 
   const num = parseLocaleNumber(trimmed, settings)
 
@@ -119,7 +127,9 @@ export function parseStrictLocaleNumber(str, settings = app.settings) {
  * @returns {string}
  */
 function formatCurrency(str, useGrouping, settings = app.settings, currencies = app.currencies) {
-  if (!currencyFormatRegex) return str
+  if (!currencyFormatRegex) {
+    return str
+  }
 
   const { locale, group, useGrouping: defaultGrouping } = getNumberFormat(settings)
   const effectiveGrouping = useGrouping ?? defaultGrouping
@@ -130,7 +140,9 @@ function formatCurrency(str, useGrouping, settings = app.settings, currencies = 
       const upperCode = code.toUpperCase()
       const info = currencies?.[upperCode]
 
-      if (!info) return match
+      if (!info) {
+        return match
+      }
 
       const trimmed = amount.trim()
       const eIndex = trimmed.search(/e[+-]?\d+$/i)
@@ -138,7 +150,9 @@ function formatCurrency(str, useGrouping, settings = app.settings, currencies = 
       const expStr = eIndex >= 0 ? trimmed.slice(eIndex) : ''
       const value = parseLocaleNumber(baseStr, settings)
 
-      if (!Number.isFinite(value)) return `${info.symbol ?? ''}${trimmed}`
+      if (!Number.isFinite(value)) {
+        return `${info.symbol ?? ''}${trimmed}`
+      }
 
       try {
         const formatter = getNumberFormatter(locale, {
@@ -149,27 +163,80 @@ function formatCurrency(str, useGrouping, settings = app.settings, currencies = 
           maximumFractionDigits
         })
 
-        const customDollarSymbol = info.symbol && info.symbol !== '$' && info.symbol !== upperCode ? info.symbol : null
-        const needsPartsTransform = (effectiveGrouping && group === ' ') || Boolean(customDollarSymbol)
+        const customSymbol = info.symbol && info.symbol !== '$' && info.symbol !== upperCode ? info.symbol : null
 
-        const formattedCurrency = needsPartsTransform
-          ? formatter
-              .formatToParts(value)
-              .map((part) => {
+        if ((effectiveGrouping && group === ' ') || customSymbol) {
+          const parts = formatter.formatToParts(value)
+          const nonLetterSymbol = customSymbol && !/[\p{L}\p{M}]$/u.test(customSymbol)
+          let skipSpace = false
+
+          return (
+            parts
+              .map((part, idx) => {
+                if (skipSpace) {
+                  skipSpace = false
+                  if (part.type === 'literal' && /^\s+$/.test(part.value)) return ''
+                }
+
                 if (effectiveGrouping && group === ' ' && part.type === 'group') return group
-                if (customDollarSymbol && part.type === 'currency' && part.value === '$') return customDollarSymbol
+
+                if (
+                  customSymbol &&
+                  part.type === 'currency' &&
+                  (part.value === '$' || part.value.toUpperCase() === upperCode)
+                ) {
+                  const isPrefix = !parts.slice(0, idx).some((p) => p.type === 'integer' || p.type === 'fraction')
+                  skipSpace = Boolean(isPrefix && nonLetterSymbol && part.value.toUpperCase() === upperCode)
+                  return customSymbol
+                }
 
                 return part.value
               })
-              .join('')
-          : formatter.format(value)
+              .join('') + expStr
+          )
+        }
 
-        return formattedCurrency + expStr
+        return formatter.format(value) + expStr
       } catch {
         return `${info.symbol ?? ''}${trimmed}${expStr}`
       }
     })
   )
+}
+
+function roundScalar(value, digits, notation) {
+  if (math.isFraction(value)) return value
+
+  try {
+    const rounded = math.round(value, digits)
+
+    if (notation === 'fixed' || Number(rounded) !== 0 || Number(value) === 0 || !Number.isFinite(Number(value))) {
+      return rounded
+    }
+
+    const sig = value.toPrecision(Math.max(1, digits + 1))
+
+    return math.isBigNumber(value) ? math.bignumber(sig) : Number(sig)
+  } catch {
+    return value
+  }
+}
+
+function cleanComplexValue(val, digits, notation) {
+  if (val && typeof val === 'object') {
+    if (math.isComplex(val)) {
+      const re = Math.abs(val.re) < 1e-14 * Math.max(1, Math.abs(val.im)) ? 0 : val.re
+      const im = Math.abs(val.im) < 1e-14 * Math.max(1, Math.abs(val.re)) ? 0 : val.im
+
+      return math.complex(roundScalar(re, digits, notation), roundScalar(im, digits, notation))
+    }
+
+    if (Array.isArray(val) || (val.isMatrix && typeof val.map === 'function')) {
+      return val.map((item) => cleanComplexValue(item, digits, notation))
+    }
+  }
+
+  return val
 }
 
 /**
@@ -181,7 +248,10 @@ function formatCurrency(str, useGrouping, settings = app.settings, currencies = 
  * @returns {string}
  */
 export function formatAnswer(answer, useGrouping, settings = app.settings, currencies = app.currencies) {
-  if (typeof answer === 'string') return stripAnswer(answer)
+  if (typeof answer === 'string') {
+    return stripAnswer(answer)
+  }
+
   if (answer && typeof answer === 'object' && answer[PAGE_OBJECT_SYMBOL] && typeof answer.format === 'function') {
     return String(answer.format())
   }
@@ -222,34 +292,36 @@ export function formatAnswer(answer, useGrouping, settings = app.settings, curre
   let processedAnswer = answer
   let wasRounded = false
 
-  if (!answer?.isUnit && !math.isFraction(answer)) {
+  if (notation === 'fixed' && !answer?.isUnit && !math.isFraction(answer)) {
     try {
       processedAnswer = math.round(answer, maximumFractionDigits)
       wasRounded = true
     } catch {
       // ignore
     }
+  } else {
+    processedAnswer = cleanComplexValue(answer, maximumFractionDigits, notation)
   }
 
   let formattedAnswer = math.format(processedAnswer, (value) => {
-    let roundedValue = value
-
-    if (!wasRounded && !math.isFraction(value)) {
-      try {
-        roundedValue = math.round(value, maximumFractionDigits)
-      } catch {
-        // ignore
-      }
-    }
+    const roundedValue = wasRounded ? value : roundScalar(value, maximumFractionDigits, notation)
 
     const valueStr = math.format(roundedValue, formatOptions)
 
-    if (typeof roundedValue === 'number' && notation === 'auto' && !valueStr.includes('e') && groupSeparator !== ' ') {
+    if (
+      typeof roundedValue === 'number' &&
+      notation === 'auto' &&
+      !valueStr.includes('e') &&
+      groupSeparator !== ' ' &&
+      (roundedValue === 0 || Math.abs(roundedValue) >= Math.pow(10, -maximumFractionDigits))
+    ) {
       const formatted = formatter.format(roundedValue)
       const expectedDecimal = decimalSeparator
       const hasDecimal = valueStr.includes('.')
 
-      if (!hasDecimal || formatted.includes(expectedDecimal)) return formatted
+      if (!hasDecimal || formatted.includes(expectedDecimal)) {
+        return formatted
+      }
     }
 
     if (valueStr.includes('e')) {
