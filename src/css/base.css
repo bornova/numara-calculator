@@ -1,16 +1,8 @@
 /* Base reset & elements */
 
 :root {
-  --zoom-level-step: 0px;
-  --dpi-step: 0px;
-  --zoom-step: calc(var(--zoom-level-step) + var(--dpi-step));
-  --ui-font-grad: 0;
-  --mono-weight: 400;
+  --zoom-step: 0px;
   --base-font-size: calc(13px + var(--zoom-step));
-  --base-line-height: calc(20px + 2 * var(--zoom-step));
-  --header-font-size: calc(var(--base-font-size) + 1px);
-  --sm-font-size: calc(var(--base-font-size) - 1px);
-  --xs-font-size: calc(var(--base-font-size) - 2px);
   --range-thumb-size: calc(15px + var(--zoom-step));
   --range-thumb-offset: calc(var(--range-thumb-size) / -2);
   --switch-width: calc(30px + 2 * var(--zoom-step));
@@ -37,7 +29,8 @@
   --pagelist-width: calc(265px + 15 * var(--zoom-step));
   --pagelist-float-bottom: calc(40px + 4 * var(--zoom-step));
   --pagelist-float-min-height: calc(
-    2px + var(--pagelist-header-height) + 4 * (var(--base-line-height) + 4 * var(--pagelist-item-pad) + 1px)
+    2px + var(--pagelist-header-height) + 4 *
+      (round(1.5 * var(--base-font-size), 1px) + 4 * var(--pagelist-item-pad) + 1px)
   );
   --pagelist-float-max-height: calc(450px + 30 * var(--zoom-step));
   --pagelist-float-vh-offset: calc(91px + 5 * var(--zoom-step));
@@ -52,7 +45,6 @@
   --select-line-height: calc(var(--select-height) - 1px);
   --modal-small: calc(300px + 20 * var(--zoom-step));
   --modal-medium: calc(375px + 25 * var(--zoom-step));
-  --modal-xlarge: calc(850px + 50 * var(--zoom-step));
   --modal-settings: calc(450px + 30 * var(--zoom-step));
   --modal-udfu: calc(580px + 40 * var(--zoom-step));
   --setting-item-width: calc(162px + 12 * var(--zoom-step));
@@ -72,19 +64,12 @@
   --clr-control-height: calc(var(--answer-height) - 2px);
 }
 
-html[data-low-dpi='true'] {
-  --dpi-step: -1px;
-}
-
 html[data-zoom='smaller'] {
-  --zoom-level-step: -1px;
+  --zoom-step: -1px;
 }
 
 html[data-zoom='larger'] {
-  --zoom-level-step: 1px;
-}
-
-html[data-zoom='larger']:not([data-low-dpi='true']) {
+  --zoom-step: 1px;
   --scroll-top-bottom: 36px;
   --dot-size: 6px;
   --dot-bottom: 14px;
@@ -114,9 +99,8 @@ body {
   height: 100%;
   color: light-dark(#444444, #ffffff);
   font-size: var(--base-font-size);
-  line-height: var(--base-line-height);
+  line-height: round(1.5em, 1px);
   font-family: 'Google Sans', sans-serif;
-  font-variation-settings: 'GRAD' var(--ui-font-grad);
 }
 
 ::selection {
@@ -155,7 +139,6 @@ h2 {
 
 button,
 input,
-optgroup,
 select,
 textarea {
   font-size: inherit;
@@ -193,7 +176,7 @@ textarea {
 
 text {
   fill: light-dark(#444444, #e6e6e6);
-  font-size: var(--sm-font-size);
+  font-size: 0.9rem;
 }
 
 :not(pre) > code {
@@ -275,8 +258,8 @@ input:checked + .slider:before {
   right: max(5px, calc(env(safe-area-inset-right, 8px) - 3px));
   bottom: var(--scroll-top-bottom);
   cursor: pointer;
-  width: var(--icon-sm);
-  height: var(--icon-sm);
+  width: var(--icon-xs);
+  height: var(--icon-xs);
   color: light-dark(#607d8b, #90b4dc);
 }
 
@@ -286,8 +269,8 @@ input:checked + .slider:before {
 
 .scrollTop svg {
   display: block;
-  width: var(--icon-sm);
-  height: var(--icon-sm);
+  width: var(--icon-xs);
+  height: var(--icon-xs);
   pointer-events: none;
 }
 
