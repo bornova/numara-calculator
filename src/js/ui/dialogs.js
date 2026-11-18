@@ -13,13 +13,23 @@ let defaultYesText = null
 let defaultNoText = null
 let pendingCancelHandler = null
 let suppressConfirmReset = false
+let confirmRequestId = 0
 
 const modal = {
   /**
-   * Show modal dialog for given id.
+   * Show modal dialog for given id, deferring safely if UIkit is still finishing a hide transition.
    * @param {string|HTMLElement} id Modal selector or element.
    */
-  show: (id) => UIkit.modal(id, { bgClose: false, stack: true }).show(),
+  show: (id) => {
+    const instance = UIkit.modal(id, { bgClose: false, stack: true })
+
+    if (instance?.$el?.classList?.contains('uk-togglable-leave')) {
+      UIkit.util.once(instance.$el, 'hidden', () => queueMicrotask(() => instance.show()), { self: true })
+      return
+    }
+
+    return instance?.show()
+  },
 
   /**
    * Hide modal dialog for given id.
@@ -204,18 +214,43 @@ function showError(title, error, allowHtml = false) {
 }
 
 /**
+ * Opens `#dialogConfirm` with `options`, waiting for any in-flight hide transition without resetting the new prompt.
+ * @param {object} options UIkit modal options.
+ */
+function showConfirmModal(options) {
+  const el = dom.dialogConfirm
+
+  if (el?.classList?.contains('uk-togglable-leave')) {
+    suppressConfirmReset = true
+    const requestId = ++confirmRequestId
+
+    UIkit.util.once(
+      el,
+      'hidden',
+      () => {
+        queueMicrotask(() => {
+          if (requestId === confirmRequestId) {
+            UIkit.modal('#dialogConfirm', options).show()
+          }
+        })
+      },
+      { self: true }
+    )
+    return
+  }
+
+  UIkit.modal('#dialogConfirm', options).show()
+}
+
+/**
  * Show confirmation dialog.
  * @param {string} msg Confirmation message to show.
  * @param {function} action Function to run upon selecting Yes.
  */
 function confirm(msg, action) {
-  suppressConfirmReset = Boolean(dom.dialogConfirm?.classList.contains('uk-open'))
   resetConfirmDialog()
 
   dom.confirmMsg.textContent = msg
-
-  modal.show('#dialogConfirm')
-  suppressConfirmReset = false
 
   const yesAction = (event) => {
     if (dom.confirmYes) dom.confirmYes.blur()
@@ -229,6 +264,7 @@ function confirm(msg, action) {
   }
 
   dom.confirmYes.onclick = yesAction
+  showConfirmModal({ bgClose: false, stack: true })
 }
 
 /**
@@ -240,16 +276,12 @@ function confirm(msg, action) {
  * @param {function} noAction Callback fired on no/dismiss select.
  */
 function customConfirm(msg, yesLabel, noLabel, yesAction, noAction) {
-  suppressConfirmReset = Boolean(dom.dialogConfirm?.classList.contains('uk-open'))
   resetConfirmDialog()
 
   dom.confirmMsg.innerHTML = msg
   dom.confirmYes.textContent = yesLabel
   dom.confirmNo.textContent = noLabel
   dom.confirmNo.classList.remove('uk-modal-close')
-
-  UIkit.modal('#dialogConfirm', { bgClose: false, escClose: false, stack: true }).show()
-  suppressConfirmReset = false
 
   const cleanup = () => {
     pendingCancelHandler = null
@@ -275,6 +307,8 @@ function customConfirm(msg, yesLabel, noLabel, yesAction, noAction) {
     cleanup()
     Promise.resolve(UIkit.modal('#dialogConfirm').hide()).then(() => noAction?.())
   }
+
+  showConfirmModal({ bgClose: false, escClose: false, stack: true })
 }
 
 /**

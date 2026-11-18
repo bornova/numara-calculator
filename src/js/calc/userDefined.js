@@ -8,7 +8,7 @@ import { dom } from '../dom.js'
 import { refreshEditor } from '../editor/index.js'
 import { app } from '../state/appState.js'
 import { store } from '../state/store.js'
-import { notify } from '../ui/dialogs.js'
+import { confirm, notify } from '../ui/dialogs.js'
 import { calculate, clearEvaluationCache } from './calcManager.js'
 
 if (!('DateTime' in math)) {
@@ -356,27 +356,40 @@ function startEdit(type, index) {
 }
 
 /**
- * Deletes a UDF or UDU entry at `index` and adjusts active edit state.
+ * Prompts for confirmation, deletes a UDF or UDU entry at `index`, and adjusts active edit state.
  * @param {'func'|'unit'} type Definition type.
  * @param {number} index Index to remove.
  */
 function deleteUdfuAt(type, index) {
-  const { storeKey } = getTabConfig(type)
-  const items = [...(store.get(storeKey) || [])]
+  const { storeKey, nameInput } = getTabConfig(type)
+  const target = (store.get(storeKey) || [])[index]
 
-  items.splice(index, 1)
+  if (!target) return
 
-  if (commitUdfuItems(items, type)) {
-    const currentEdit = editingIndex[type]
+  confirm(`"${target.name}" will be deleted.`, () => {
+    const items = [...(store.get(storeKey) || [])]
+    const targetIdx = items[index]?.name === target.name ? index : items.findIndex((item) => item.name === target.name)
 
-    if (currentEdit === index) {
-      resetForm(type)
-    } else if (currentEdit !== null && currentEdit > index) {
-      editingIndex[type] = currentEdit - 1
+    if (targetIdx === -1) return
+
+    items.splice(targetIdx, 1)
+
+    if (commitUdfuItems(items, type)) {
+      const currentEdit = editingIndex[type]
+
+      if (currentEdit === targetIdx) {
+        resetForm(type)
+      } else if (currentEdit !== null && currentEdit > targetIdx) {
+        editingIndex[type] = currentEdit - 1
+      }
+
+      renderList(type)
+
+      if (dom.dialogUdfu?.classList.contains('uk-open')) {
+        nameInput?.focus()
+      }
     }
-
-    renderList(type)
-  }
+  })
 }
 
 /**

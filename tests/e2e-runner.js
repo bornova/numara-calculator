@@ -707,11 +707,94 @@ app.whenReady().then(async () => {
           return texts[2] === '24 ft' ? texts : null
         })
 
-        return { answers }
+        // Re-open UDFU dialog to verify delete confirmation (Cancel + Confirm + edit-state adjustment)
+        document.getElementById('udfuButton').click()
+        await waitFor(() => document.getElementById('dialogUdfu').classList.contains('uk-open'))
+        document.querySelectorAll('#dialogUdfu [uk-tab] a')[0].click()
+        await wait(80)
+
+        // Add a second UDF and begin editing it so index-shift & active-edit reset on delete are exercised
+        document.getElementById('udfNameInput').value = 'doubleIt'
+        document.getElementById('udfParamsInput').value = 'x'
+        document.getElementById('udfBodyInput').value = 'x * 2'
+        document.getElementById('udfSaveButton').click()
+        await waitFor(() => document.querySelectorAll('#udfList .udfuItem').length === 2)
+
+        document.querySelectorAll('#udfList .editUdfuButton')[1].click()
+        await waitFor(() => document.getElementById('udfSaveLabel').textContent === 'Save')
+
+        // 1. Click Delete on clampPos (index 0) and choose No -> item remains, dialog stays open
+        document.querySelectorAll('#udfList .deleteUdfuButton')[0].click()
+        await waitFor(() => document.getElementById('dialogConfirm').classList.contains('uk-open'))
+        const udfConfirmMsg = document.getElementById('confirmMsg').textContent
+        document.getElementById('confirmNo').click()
+        await waitFor(() => !document.getElementById('dialogConfirm').classList.contains('uk-open'))
+        const countAfterUdfCancel = document.querySelectorAll('#udfList .udfuItem').length
+        const udfuOpenAfterCancel = document.getElementById('dialogUdfu').classList.contains('uk-open')
+
+        // 2. Click Delete on clampPos (index 0) and choose Yes -> removed, doubleIt shifts to index 0 still editing
+        document.querySelectorAll('#udfList .deleteUdfuButton')[0].click()
+        await waitFor(() => document.getElementById('dialogConfirm').classList.contains('uk-open'))
+        document.getElementById('confirmYes').click()
+        await waitFor(() => !document.getElementById('dialogConfirm').classList.contains('uk-open'))
+        await waitFor(() => document.querySelectorAll('#udfList .udfuItem').length === 1)
+        const shiftedStillEditing =
+          document.querySelector('#udfList .udfuItem')?.classList.contains('is-editing') &&
+          document.getElementById('udfSaveLabel').textContent === 'Save'
+
+        // 3. Delete doubleIt while actively editing it -> form resets back to Add and list becomes empty
+        document.querySelector('#udfList .deleteUdfuButton').click()
+        await waitFor(() => document.getElementById('dialogConfirm').classList.contains('uk-open'))
+        const udfSecondConfirmMsg = document.getElementById('confirmMsg').textContent
+        document.getElementById('confirmYes').click()
+        await waitFor(() => !document.getElementById('dialogConfirm').classList.contains('uk-open'))
+        await waitFor(() => Boolean(document.querySelector('#udfList .udfuEmpty')))
+        const formResetAfterDelete = document.getElementById('udfSaveLabel').textContent === 'Add'
+
+        // 4. Switch to Units tab -> test Cancel then Confirm delete on custom unit xunit
+        document.querySelectorAll('#dialogUdfu [uk-tab] a')[1].click()
+        await wait(80)
+        document.querySelector('#uduList .deleteUdfuButton').click()
+        await waitFor(() => document.getElementById('dialogConfirm').classList.contains('uk-open'))
+        const uduConfirmMsg = document.getElementById('confirmMsg').textContent
+        document.getElementById('confirmNo').click()
+        await waitFor(() => !document.getElementById('dialogConfirm').classList.contains('uk-open'))
+        const countAfterUduCancel = document.querySelectorAll('#uduList .udfuItem').length
+
+        document.querySelector('#uduList .deleteUdfuButton').click()
+        await waitFor(() => document.getElementById('dialogConfirm').classList.contains('uk-open'))
+        document.getElementById('confirmYes').click()
+        await waitFor(() => !document.getElementById('dialogConfirm').classList.contains('uk-open'))
+        await waitFor(() => Boolean(document.querySelector('#uduList .udfuEmpty')))
+
+        document.querySelector('#dialogUdfu .uk-modal-close-default').click()
+        await wait(150)
+
+        return {
+          answers,
+          udfConfirmMsg,
+          countAfterUdfCancel,
+          udfuOpenAfterCancel,
+          shiftedStillEditing,
+          udfSecondConfirmMsg,
+          formResetAfterDelete,
+          uduConfirmMsg,
+          countAfterUduCancel
+        }
       })
 
-      if (JSON.stringify(udfuRes.answers) !== JSON.stringify(['12', '0', '24 ft'])) {
-        throw new Error(`UDFU evaluation mismatch: ${JSON.stringify(udfuRes)}`)
+      if (
+        JSON.stringify(udfuRes.answers) !== JSON.stringify(['12', '0', '24 ft']) ||
+        udfuRes.udfConfirmMsg !== '"clampPos" will be deleted.' ||
+        udfuRes.countAfterUdfCancel !== 2 ||
+        !udfuRes.udfuOpenAfterCancel ||
+        !udfuRes.shiftedStillEditing ||
+        udfuRes.udfSecondConfirmMsg !== '"doubleIt" will be deleted.' ||
+        !udfuRes.formResetAfterDelete ||
+        udfuRes.uduConfirmMsg !== '"xunit" will be deleted.' ||
+        udfuRes.countAfterUduCancel !== 1
+      ) {
+        throw new Error(`UDFU evaluation or delete-confirmation mismatch: ${JSON.stringify(udfuRes)}`)
       }
     })
 
