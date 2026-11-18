@@ -72,8 +72,6 @@ Whether you're jotting down quick arithmetic, testing formulas, or mixing notes 
 - MIT-licensed.
 - Unlimited and free to use.
 
-</div>
-
 ##
 
 <div align="center">
