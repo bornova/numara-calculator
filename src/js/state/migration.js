@@ -13,7 +13,7 @@ import {
   VALID_IDENTIFIER
 } from '../core/udfu.js'
 import { getSyncKey, getSystemLocale, resolveUniquePageName, sanitizePageName } from '../core/utils.js'
-import { app, SETTING_SELECT_OPTIONS } from './appState.js'
+import { app, DEFAULT_INPUT_WIDTH, SETTING_SELECT_OPTIONS } from './appState.js'
 import { store } from './store.js'
 
 const VALID_SELECT_OPTIONS = Object.fromEntries(
@@ -25,7 +25,21 @@ const VALID_SELECT_OPTIONS = Object.fromEntries(
 const VALID_NUMBER_FORMATS = VALID_SELECT_OPTIONS.numberFormat
 const VALID_DATE_FORMATS = VALID_SELECT_OPTIONS.dateFormat
 
-const OBSOLETE_STORE_KEYS = ['sideBarWidth', 'rateInterval']
+const OBSOLETE_STORE_KEYS = ['sideBarWidth', 'sidePanelWidth', 'rateInterval']
+const LEGACY_ROOT_STORE_KEYS = [
+  'pages',
+  'settings',
+  'colors',
+  'udf',
+  'udu',
+  'currencies',
+  'rateDate',
+  'lastPage',
+  'plotSettings',
+  'inputWidth',
+  'sideBarWidth',
+  'sidePanelWidth'
+]
 
 const LEGACY_FONT_SIZE_MAP = {
   '0.9rem': '12px',
@@ -530,12 +544,22 @@ export function parseLegacyUdu(rawUdu, mathInstance = defaultProxy, externalLibs
           uduItems.push({ name: key, definition: val.toString(), prefixes: 'none', aliases: '' })
         } else if (val.definition !== defaultProxy) {
           const defStr = val.definition?.isUnit ? val.definition.toString() : String(val.definition ?? '')
-          uduItems.push({
+          const item = {
             name: key,
             definition: defStr,
             prefixes: val.prefixes || 'none',
             aliases: Array.isArray(val.aliases) ? val.aliases.join(', ') : ''
-          })
+          }
+
+          if (val.offset !== undefined && Number.isFinite(Number(val.offset))) {
+            item.offset = Number(val.offset)
+          }
+
+          if (typeof val.baseName === 'string' && val.baseName.trim()) {
+            item.baseName = val.baseName.trim()
+          }
+
+          uduItems.push(item)
         }
       }
     }
@@ -547,12 +571,39 @@ export function parseLegacyUdu(rawUdu, mathInstance = defaultProxy, externalLibs
 }
 
 /**
+ * Consolidates any legacy pre-v8 root-level `localStorage` keys into the `numara` store object.
+ */
+function consolidateLegacyRootKeys() {
+  if (typeof localStorage === 'undefined' || typeof localStorage.getItem !== 'function') {
+    return
+  }
+
+  for (const key of LEGACY_ROOT_STORE_KEYS) {
+    try {
+      const rawRoot = localStorage.getItem(key)
+      if (rawRoot === null || rawRoot === undefined) continue
+
+      if (store.get(key) === null) {
+        const parsed = JSON.parse(rawRoot)
+        store.set(key, parsed)
+      }
+
+      localStorage.removeItem(key)
+    } catch {
+      // Ignore malformed root key
+    }
+  }
+}
+
+/**
  * Migrates v7 `sideBarWidth` -> `pageListWidth`, cleans up v7 persisted page `history`/`answers`
  * fields while seeding session history, and removes obsolete v7 store keys.
  */
 export function migrateStorageAndPages() {
-  // 1. Migrate v7 `sideBarWidth` -> v8 `pageListWidth`
-  const oldSideBarWidth = store.get('sideBarWidth')
+  consolidateLegacyRootKeys()
+
+  // 1. Migrate v6/v7 `sideBarWidth` / `sidePanelWidth` -> v8 `pageListWidth`
+  const oldSideBarWidth = store.get('sideBarWidth') ?? store.get('sidePanelWidth')
 
   if (
     typeof oldSideBarWidth === 'number' &&
@@ -568,10 +619,21 @@ export function migrateStorageAndPages() {
   let pagesModified = false
 
   if (Array.isArray(pages)) {
-    const seenSyncKeys = new Set()
+    const validPages = []
+    const claimedSyncKeys = new Set()
+    const duplicatePages = []
+    let fallbackCounter = 1
 
     for (const page of pages) {
-      if (!page || typeof page !== 'object') continue
+      if (!page || typeof page !== 'object' || Array.isArray(page)) {
+        pagesModified = true
+        continue
+      }
+
+      if (typeof page.id !== 'string' || !page.id.trim()) {
+        page.id = `${Date.now()}${String(fallbackCounter++).padStart(4, '0')}`
+        pagesModified = true
+      }
 
       if (page.history && app.pageHistory && !app.pageHistory.has(page.id)) {
         app.pageHistory.set(page.id, page.history)
@@ -583,30 +645,38 @@ export function migrateStorageAndPages() {
         pagesModified = true
       }
 
-      const safeBaseName = sanitizePageName(typeof page.name === 'string' ? page.name : String(page.name ?? ''), 'Page')
+      const rawName = typeof page.name === 'string' ? page.name : String(page.name ?? '')
+      const safeBaseName = sanitizePageName(rawName, 'Page')
 
-      if (typeof page.name !== 'string' || !page.name.trim()) {
+      if (typeof page.name !== 'string' || page.name !== safeBaseName) {
         page.name = safeBaseName
         pagesModified = true
       }
 
       const initialKey = getSyncKey(page.name)
 
-      if (seenSyncKeys.has(initialKey)) {
-        page.name = resolveUniquePageName(safeBaseName, seenSyncKeys)
-        pagesModified = true
+      if (claimedSyncKeys.has(initialKey)) {
+        duplicatePages.push(page)
+      } else {
+        claimedSyncKeys.add(initialKey)
       }
-
-      seenSyncKeys.add(getSyncKey(page.name))
 
       if (typeof page.data !== 'string') {
         page.data = String(page.data ?? '')
         pagesModified = true
       }
+
+      validPages.push(page)
+    }
+
+    for (const page of duplicatePages) {
+      page.name = resolveUniquePageName(page.name, claimedSyncKeys)
+      claimedSyncKeys.add(getSyncKey(page.name))
+      pagesModified = true
     }
 
     if (pagesModified) {
-      store.set('pages', pages)
+      store.set('pages', validPages)
     }
   }
 
@@ -660,6 +730,29 @@ export function migrateFromV7(targetSettings) {
 
   let migrated = false
   const systemLocale = getSystemLocale(targetSettings)
+
+  if (targetSettings.locale !== undefined) {
+    if (typeof targetSettings.thouSep !== 'string') {
+      targetSettings.thouSep = targetSettings.thouSep === false ? 'disabled' : targetSettings.locale
+    }
+
+    delete targetSettings.locale
+    migrated = true
+  }
+
+  if (targetSettings.inputWidth !== undefined) {
+    if (
+      typeof targetSettings.inputWidth === 'number' &&
+      Number.isFinite(targetSettings.inputWidth) &&
+      targetSettings.inputWidth !== DEFAULT_INPUT_WIDTH &&
+      store.get('inputWidth') === null
+    ) {
+      store.set('inputWidth', targetSettings.inputWidth)
+    }
+
+    delete targetSettings.inputWidth
+    migrated = true
+  }
 
   // v7 `thouSep` ('system' | 'period' | 'comma' | 'disabled' or carried-over locale) & `inputLocale` (boolean)
   // -> v8 `thouSep` (boolean) & `numberFormat` ('1,234.56' | '1.234,56' | '1 234.56' | '1 234,56')
@@ -784,8 +877,28 @@ function migrateUdfu() {
     }
 
     if (parsed.length > 0) {
-      store.set(itemsKey, parsed)
-      store.set(rawKey, compileItems(parsed))
+      const compiled = compileItems(parsed)
+
+      try {
+        evalUdfuObject(compiled)
+        store.set(itemsKey, parsed)
+        store.set(rawKey, compiled)
+      } catch {
+        // Leave legacy string untouched if compiled form fails syntax validation
+      }
+    } else {
+      let legacySyntaxValid = true
+
+      try {
+        evalUdfuObject(trimmed)
+      } catch {
+        legacySyntaxValid = false
+      }
+
+      if (!legacySyntaxValid) {
+        store.set(itemsKey, [])
+        store.set(rawKey, '')
+      }
     }
   }
 }
