@@ -33,7 +33,10 @@ export const REGEX_PCNT_RATIO =
   /^(?:([\p{L}\p{M}_][\p{L}\p{M}\w]*)\s*=\s*)?(.+?)\s+\b(?:as\s+(?:a\s+)?%|is\s+what\s+%)\s+of\s+(.+)$/iu
 export const REGEX_CONVERSION_SUFFIX = /^(.*?)\s+\b(?:to|in)\s+(hex|bin|oct|%)\s*$/i
 export const REGEX_PLOT = /^\s*[a-zA-Z_]\w*\s*\(\s*[a-zA-Z_]\w*\s*\)\s*=/
+export const REGEX_ASSIGNMENT = /^([\p{L}\p{M}_][\p{L}\p{M}\w]*)\s*=\s*(.+)$/u
 export const REGEX_STRING_LITERAL = /("(?:\\[\s\S]|[^"\\])*")/g
+export const DATE_DIFF_CANDIDATE_REGEX =
+  /\b\d{1,4}[/-]\d{1,2}[/-]\d{1,4}\b.*-.*(?:\b\d{1,4}[/-]\d{1,2}[/-]\d{1,4}\b|\b(?:today|now)\b)|\b(?:today|now)\b.*-.*\b\d{1,4}[/-]\d{1,2}[/-]\d{1,4}\b/i
 
 export const CHART_SPLINE_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-spline">${ChartSpline.map(
   ([tag, attrs]) =>
