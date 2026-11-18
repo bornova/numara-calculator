@@ -37,9 +37,9 @@
   float: left;
   margin: 0 0 0 15px;
   font-weight: 600;
-  font-size: var(--header-font-size);
+  font-size: 1.1em;
   line-height: var(--win-header-height);
-  font-family: 'Numara';
+  font-family: 'Numara', sans-serif;
 }
 
 .macHeader {
@@ -55,8 +55,8 @@
 .macHeaderTitle {
   padding-top: max(12px, env(safe-area-inset-top, 12px));
   font-weight: 600;
-  font-size: var(--header-font-size);
-  font-family: 'Numara';
+  font-size: 1.1em;
+  font-family: 'Numara', sans-serif;
   text-align: center;
 }
 
@@ -117,7 +117,7 @@
   min-width: 120px;
   height: 100%;
   overflow: scroll;
-  font-weight: var(--mono-weight);
+  font-weight: 400;
   white-space: nowrap;
 }
 
@@ -331,7 +331,7 @@
   max-width: 100%;
   overflow: hidden;
   color: light-dark(#455a64, #90b4dc);
-  font-size: var(--sm-font-size);
+  font-size: 0.92em;
   font-variant-numeric: tabular-nums;
   text-overflow: ellipsis;
   white-space: nowrap;
