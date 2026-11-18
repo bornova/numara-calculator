@@ -3,7 +3,7 @@ import { all, create } from 'mathjs'
 import { USD_UNIT } from './constants.js'
 import { escapeRegExp } from './utils.js'
 
-export const app = {
+export const calcState = {
   settings: {},
   currencies: {},
   mathScope: new Map(),
@@ -33,6 +33,7 @@ export let currencyFormatRegex = null
 
 let currencySymbolToCode = {}
 let lastProcessedCurrencies = null
+let lastProcessedUseRates = null
 
 /**
  * Checks whether two currency maps have identical rates and symbols.
@@ -68,7 +69,7 @@ function isSameCurrencies(a, b) {
  * @returns {{ todayFormat: string, todayDayFormat: string, nowFormat: string, nowDayFormat: string }}
  */
 export function getDateFormatSettings() {
-  const fmt = app.settings.dateFormat || 'MM/dd/yyyy'
+  const fmt = calcState.settings.dateFormat || 'MM/dd/yyyy'
 
   return {
     todayFormat: fmt,
@@ -90,25 +91,29 @@ export function getFlexibleFormat(fmt) {
 /**
  * Registers currency units in Math.js and rebuilds symbol/code matching regexes.
  * @param {object} [currencies] Optional currency configuration map to apply before refreshing.
+ * @param {boolean} [useRates=Boolean(calcState.settings?.currency ?? true)] Whether exchange rate definitions should be applied.
  * @returns {boolean} True if currency state changed.
  */
-export function refreshCurrencyState(currencies) {
+export function refreshCurrencyState(currencies, useRates = Boolean(calcState.settings?.currency ?? true)) {
   if (currencies !== undefined) {
-    app.currencies = currencies
+    calcState.currencies = currencies
   }
 
-  if (app.currencies === lastProcessedCurrencies) {
+  const effectiveUseRates = Boolean(useRates)
+
+  if (
+    effectiveUseRates === lastProcessedUseRates &&
+    (calcState.currencies === lastProcessedCurrencies ||
+      (lastProcessedCurrencies && isSameCurrencies(calcState.currencies, lastProcessedCurrencies)))
+  ) {
+    lastProcessedCurrencies = calcState.currencies
     return false
   }
 
-  if (lastProcessedCurrencies && isSameCurrencies(app.currencies, lastProcessedCurrencies)) {
-    lastProcessedCurrencies = app.currencies
-    return false
-  }
+  lastProcessedCurrencies = calcState.currencies
+  lastProcessedUseRates = effectiveUseRates
 
-  lastProcessedCurrencies = app.currencies
-
-  const entries = Object.entries(app.currencies || {})
+  const entries = Object.entries(calcState.currencies || {})
   const codes = []
   const symbols = []
 
@@ -130,19 +135,34 @@ export function refreshCurrencyState(currencies) {
       symbols.push(info.symbol)
     }
 
-    if (code !== USD_UNIT && info?.rate) {
+    if (code !== USD_UNIT) {
+      const aliases =
+        BUILTIN_UNIT_KEYS.has(code.toLowerCase()) || BUILTIN_MATH_KEYS.has(code.toLowerCase())
+          ? []
+          : [code.toLowerCase()]
+
       try {
-        math.createUnit(
-          code,
-          {
-            aliases:
-              BUILTIN_UNIT_KEYS.has(code.toLowerCase()) || BUILTIN_MATH_KEYS.has(code.toLowerCase())
-                ? []
-                : [code.toLowerCase()],
-            definition: math.unit(`${info.rate} ${USD_UNIT}`)
-          },
-          { override: true }
-        )
+        if (effectiveUseRates && info?.rate) {
+          math.createUnit(code, { aliases, definition: math.unit(`${info.rate} ${USD_UNIT}`) }, { override: true })
+        } else {
+          const baseName = `${code}_STUFF`
+          const existingBase = math.Unit.BASE_UNITS[baseName]
+
+          if (existingBase) {
+            // Reusing the cached base dimension avoids Math.js throwing on re-created standalone base units
+            const def = new math.Unit()
+            def.value = 1
+            def.dimensions = existingBase.dimensions.slice()
+
+            math.createUnit(code, { aliases, definition: def }, { override: true })
+
+            if (math.Unit.UNIT_SYSTEMS.auto?.[baseName] && math.Unit.UNITS[code]) {
+              math.Unit.UNIT_SYSTEMS.auto[baseName].unit = math.Unit.UNITS[code]
+            }
+          } else {
+            math.createUnit(code, { aliases }, { override: true })
+          }
+        }
       } catch {
         // Ignore
       }
