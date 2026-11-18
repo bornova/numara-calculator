@@ -1,7 +1,6 @@
 import { debouncedSavePageState } from '../calc/calcManager.js'
 import { escapeHTML, getSafeFilename } from '../core/utils.js'
 import { dom } from '../dom.js'
-import { cm } from '../editor/index.js'
 import { app } from '../state/appState.js'
 import { isElectron } from '../state/env.js'
 import { store } from '../state/store.js'
@@ -31,7 +30,6 @@ export function setupPageIo() {
 
     numara.pageImported((data, msg, name) => {
       newPage(true, name, data)
-      cm.clearHistory()
       notify(escapeHTML(msg), 'success')
     })
 
