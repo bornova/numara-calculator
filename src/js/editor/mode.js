@@ -32,6 +32,11 @@ export function registerEditorModes() {
         return null
       }
 
+      if (stream.match(/^"(?:\\.|[^"\\])*"?/)) {
+        state.lastToken = 'text'
+        return 'text'
+      }
+
       if (stream.match(/\/\/.*/) || stream.match(/#.*/)) {
         state.lastToken = 'comment'
         return 'comment'
@@ -96,7 +101,7 @@ export function registerEditorModes() {
         } else if (state.lastToken === 'datetime.') {
           style = 'function'
         } else {
-          const memberMatch = stream.string.slice(0, stream.start).match(/([a-zA-Z_$][\w$]*)\.\s*$/)
+          const memberMatch = stream.string.slice(0, stream.start).match(/([\p{L}\p{M}_$][\p{L}\p{M}\w$]*)\.\s*$/u)
           const parentIdent = memberMatch?.[1]
           const memberKey = parentIdent ? `${parentIdent}.${cmStream}` : null
           const isMemberVariable =
@@ -111,7 +116,7 @@ export function registerEditorModes() {
           else if (keywordTokens.has(cmStream)) style = 'keyword'
           else if (app.mathScope.has(cmStream) && app.scopeTypes?.[cmStream] !== 'function') style = 'variable'
           else if (currencyCodeTokens.has(cmStream)) style = 'currency'
-          else if (functionTokens.has(cmStream) || dateTimeMethodsSet.has(cmStream)) style = 'function'
+          else if (functionTokens.has(cmStream)) style = 'function'
           else if (constantTokens.has(cmStream)) style = 'constant'
           else if (unitTokens.has(cmStream)) style = 'unit'
           else if (app.udfList.includes(cmStream)) style = 'udf'
