@@ -202,13 +202,16 @@ export const dom = new Proxy(baseDom, {
         return elementCache.get(prop)
       }
 
-      if (typeof document === 'undefined') return null
+      if (typeof document === 'undefined') {
+        return null
+      }
 
       const entry = ELEMENT_SELECTORS[prop]
       const resolved =
         typeof entry === 'string' ? document.getElementById(entry) : document.querySelector(entry.selector)
 
       elementCache.set(prop, resolved)
+
       return resolved
     }
 
