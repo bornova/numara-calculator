@@ -1,7 +1,5 @@
 import { getSyncKey, sanitizePageName } from '../core/utils.js'
 
-export { getSyncKey }
-
 /**
  * Pure helper that detects external file renames in the sync directory by matching
  * missing previously synced pages against unmatched new disk files.
