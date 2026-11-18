@@ -3,13 +3,29 @@ import { escapeHTML } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
 import { app } from '../state/appState.js'
+import { isElectron } from '../state/env.js'
 import { store } from '../state/store.js'
+import { hideFloatingPageList } from './dialogs.js'
 
 /**
- * Configures print area beforeprint/afterprint event listeners.
+ * Triggers printing for the current non-empty page after closing any floating page list drawer.
+ */
+export function printPage() {
+  if (!cm.getValue()) return
+
+  hideFloatingPageList()
+  window.print()
+}
+
+/**
+ * Configures print area beforeprint/afterprint event listeners and desktop print IPC.
  */
 export function setupPrintArea() {
   let printArea = null
+
+  if (isElectron) {
+    numara.print(printPage)
+  }
 
   window.addEventListener('beforeprint', () => {
     printArea?.remove()
@@ -29,7 +45,7 @@ export function setupPrintArea() {
       const input = escapeHTML(line.text)
       const answerEl = isBottom
         ? app.widgetMap.get(line)?.node
-        : outputChildren?.[lineIndex] || dom.el(`[data-index="${lineIndex}"]`)
+        : outputChildren?.[lineIndex] || dom.el(`#mainPanel [data-index="${lineIndex}"]`)
       const answer = escapeHTML(answerEl ? answerEl.textContent : '')
 
       const rowHtml = isBottom
