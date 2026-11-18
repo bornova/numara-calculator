@@ -266,7 +266,7 @@
   padding: 4px 6px;
   width: 100%;
   height: var(--pagelist-rename-height);
-  line-height: var(--base-line-height);
+  line-height: 1.5;
 }
 
 /* Drag-and-drop page sorting */
