@@ -1,6 +1,7 @@
 import { all, create } from 'mathjs'
 
 import { USD_UNIT } from './constants.js'
+import { createOrReuseBaseUnit } from './udfu.js'
 import { escapeRegExp } from './utils.js'
 
 export const calcState = {
@@ -25,8 +26,26 @@ math.import(
   { override: true }
 )
 
-export const BUILTIN_UNIT_KEYS = new Set(Object.keys(math.Unit.UNITS))
-export const BUILTIN_MATH_KEYS = new Set(Object.keys(math.expression.mathWithTransform))
+const BUILTIN_UNIT_KEYS = new Set(Object.keys(math.Unit.UNITS))
+const BUILTIN_MATH_KEYS = new Set(Object.keys(math.expression.mathWithTransform))
+
+/**
+ * Checks whether a token or unit/currency code collides with a built-in Math.js unit, function, or constant.
+ * @param {string} token Identifier or symbol to check.
+ * @returns {boolean}
+ */
+export function hasBuiltinConflict(token) {
+  if (typeof token !== 'string' || !token) {
+    return false
+  }
+
+  return (
+    BUILTIN_UNIT_KEYS.has(token) ||
+    BUILTIN_UNIT_KEYS.has(token.toLowerCase()) ||
+    BUILTIN_MATH_KEYS.has(token) ||
+    BUILTIN_MATH_KEYS.has(token.toLowerCase())
+  )
+}
 
 export let currencySymbolsRegex = null
 export let currencyFormatRegex = null
@@ -136,32 +155,13 @@ export function refreshCurrencyState(currencies, useRates = Boolean(calcState.se
     }
 
     if (code !== USD_UNIT) {
-      const aliases =
-        BUILTIN_UNIT_KEYS.has(code.toLowerCase()) || BUILTIN_MATH_KEYS.has(code.toLowerCase())
-          ? []
-          : [code.toLowerCase()]
+      const aliases = hasBuiltinConflict(code.toLowerCase()) ? [] : [code.toLowerCase()]
 
       try {
         if (effectiveUseRates && info?.rate) {
           math.createUnit(code, { aliases, definition: math.unit(`${info.rate} ${USD_UNIT}`) }, { override: true })
         } else {
-          const baseName = `${code}_STUFF`
-          const existingBase = math.Unit.BASE_UNITS[baseName]
-
-          if (existingBase) {
-            // Reusing the cached base dimension avoids Math.js throwing on re-created standalone base units
-            const def = new math.Unit()
-            def.value = 1
-            def.dimensions = existingBase.dimensions.slice()
-
-            math.createUnit(code, { aliases, definition: def }, { override: true })
-
-            if (math.Unit.UNIT_SYSTEMS.auto?.[baseName] && math.Unit.UNITS[code]) {
-              math.Unit.UNIT_SYSTEMS.auto[baseName].unit = math.Unit.UNITS[code]
-            }
-          } else {
-            math.createUnit(code, { aliases }, { override: true })
-          }
+          createOrReuseBaseUnit(math, code, { aliases })
         }
       } catch {
         // Ignore
@@ -170,7 +170,7 @@ export function refreshCurrencyState(currencies, useRates = Boolean(calcState.se
   }
 
   const numPattern =
-    '\\b0[xX][0-9a-fA-F]+\\b|\\b0[bB][01]+\\b|\\b0[oO][0-7]+\\b|\\b(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?\\b'
+    '\\b0[xX][0-9a-fA-F]+\\b|\\b0[bB][01]+\\b|\\b0[oO][0-7]+\\b|(?:\\b\\d+(?:\\.\\d*)?|(?<!\\d)\\.\\d+)(?:[eE][+-]?\\d+)?\\b'
 
   const symbolPatterns = symbols
     .sort((a, b) => b.length - a.length)
@@ -178,30 +178,49 @@ export function refreshCurrencyState(currencies, useRates = Boolean(calcState.se
       const startsWithLetter = /^[\p{L}\p{M}]/u.test(symbol)
       const endsWithLetter = /[\p{L}\p{M}]$/u.test(symbol)
       const isAsciiLettersOnly = /^[a-zA-Z]+$/.test(symbol)
-      const prefix = startsWithLetter ? '(?<![\\p{L}\\p{M}_][\\p{L}\\p{M}\\d_]*)' : ''
-      const suffix = endsWithLetter ? (isAsciiLettersOnly ? '(?![\\p{L}\\p{M}\\d_])' : '(?![\\p{L}\\p{M}_])') : ''
+      const hasDollar = symbol.includes('$')
+      const prefix = startsWithLetter
+        ? '(?<![\\p{L}\\p{M}_$][\\p{L}\\p{M}\\d_$]*)'
+        : hasDollar
+          ? '(?<![\\p{L}\\p{M}_$])'
+          : ''
+      const suffix = endsWithLetter
+        ? isAsciiLettersOnly
+          ? '(?![\\p{L}\\p{M}\\d_$])'
+          : '(?![\\p{L}\\p{M}_$])'
+        : hasDollar
+          ? '(?![\\p{L}\\p{M}_$])'
+          : ''
 
       return `${prefix}${escapeRegExp(symbol)}${suffix}`
     })
 
   const escapedCodes = codes.map(escapeRegExp).join('|')
   const formattedNumPattern = "-?(?:\\d{1,3}(?:[.,'\\u00A0\\u202F\\u2009 ]\\d{3})+|\\d+)(?:[.,]\\d+)?(?:e[+-]?\\d+)?"
+  const symbolUnion = symbolPatterns.join('|')
 
   currencySymbolsRegex = symbolPatterns.length
-    ? new RegExp(`(${numPattern})|(${symbolPatterns.join('|')})`, 'gu')
+    ? new RegExp(`(${numPattern})|(${symbolUnion})(?:[ \\t]*(${numPattern})|(-(?:${numPattern})))?`, 'gu')
     : null
-  currencyFormatRegex = codes.length ? new RegExp(`(${formattedNumPattern})\\s*\\b(${escapedCodes})\\b`, 'gi') : null
+  currencyFormatRegex = codes.length
+    ? new RegExp(`(?<!\\/)(?:(-?\\d+)\\/1|(${formattedNumPattern}))\\s*\\b(${escapedCodes})\\b`, 'gi')
+    : null
 
   return true
 }
 
 /**
- * Replaces a currency symbol glyph with its 3-letter ISO currency code.
+ * Replaces a currency symbol glyph (and optional attached numeric literal) with its 3-letter ISO currency code.
  * @param {string} symbol Currency symbol.
+ * @param {string} [attachedNum] Optional numeric literal immediately following the symbol.
  * @returns {string}
  */
-export function replaceCurrencySymbol(symbol) {
+export function replaceCurrencySymbol(symbol, attachedNum) {
   const code = currencySymbolToCode[symbol]
 
-  return code ? code + ' ' : symbol
+  if (!code) {
+    return attachedNum ? `${symbol}${attachedNum}` : symbol
+  }
+
+  return attachedNum ? `(${attachedNum} ${code})` : `${code} `
 }
