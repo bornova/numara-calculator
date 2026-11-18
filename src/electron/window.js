@@ -157,7 +157,9 @@ function ensureWindowOnScreen() {
  * @returns {BrowserWindow|null}
  */
 export function showAndFocusWindow() {
-  if (!win || win.isDestroyed()) return null
+  if (!win || win.isDestroyed()) {
+    return null
+  }
 
   if (win.isMinimized()) {
     win.restore()
@@ -236,7 +238,7 @@ export function resetSize(
  * @param {object} [options]
  * @param {function} [options.onWindowCreated] Callback invoked after window creation (e.g. to update tray state).
  */
-export function createAppWindow({ onWindowCreated } = {}) {
+export function createAppWindow({ onWindowCreated, onWindowClosed } = {}) {
   bindDisplayListeners()
 
   const initialBounds = resolveWindowBounds(
@@ -250,9 +252,11 @@ export function createAppWindow({ onWindowCreated } = {}) {
     defaultSizeOptions
   )
   const hasInitialPos = Number.isFinite(initialBounds.x) && Number.isFinite(initialBounds.y)
+  const linuxIconPath = path.join(app.getAppPath(), 'build/assets/icon.png')
 
   win = new BrowserWindow({
     ...(hasInitialPos ? { x: initialBounds.x, y: initialBounds.y } : {}),
+    ...(isMac || isWin ? {} : { icon: linuxIconPath }),
     backgroundColor: getThemeColor(),
     frame: false,
     height: initialBounds.height,
@@ -266,7 +270,8 @@ export function createAppWindow({ onWindowCreated } = {}) {
       preload: path.join(import.meta.dirname, 'preload.cjs'),
       spellcheck: false,
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      sandbox: true
     }
   })
 
@@ -293,11 +298,11 @@ export function createAppWindow({ onWindowCreated } = {}) {
 
     ensureWindowOnScreen()
 
-    if (config.get('fullSize') && isWin) win.maximize()
+    if (config.get('fullSize') && !isMac) win.maximize()
     if (!app.isPackaged) win.webContents.openDevTools()
 
     const showTray = config.get('showTray')
-    const loginItemSettings = app.getLoginItemSettings()
+    const loginItemSettings = app.getLoginItemSettings({ args: ['--hidden'] })
     const wasOpenedAtLogin =
       loginItemSettings.wasOpenedAsHidden || loginItemSettings.wasOpenedAtLogin || process.argv.includes('--hidden')
     const startHidden = showTray && wasOpenedAtLogin
@@ -380,6 +385,7 @@ export function createAppWindow({ onWindowCreated } = {}) {
   win.on('closed', () => {
     win = null
     normalBounds = null
+    onWindowClosed?.()
   })
 
   if (typeof onWindowCreated === 'function') {
@@ -410,19 +416,14 @@ export function setupWindowHandlers({ onTrayChanged } = {}) {
   ipcMain.on('transControls', (event, isTrans) => setTitleBarOverlay(isTrans))
 
   ipcMain.on('setOnTop', (event, bool) => {
-    if (win && !win.isDestroyed()) {
-      win.setAlwaysOnTop(bool)
-    }
+    if (win && !win.isDestroyed()) win.setAlwaysOnTop(Boolean(bool))
   })
 
   ipcMain.on('close-window', hideOrMinimizeWindow)
 
   ipcMain.on('setTray', (event, bool) => {
-    config.set('showTray', bool)
-
-    if (typeof onTrayChanged === 'function') {
-      onTrayChanged()
-    }
+    config.set('showTray', Boolean(bool))
+    onTrayChanged?.()
   })
 
   ipcMain.on('setOpenAtLogin', (event, bool) => {
@@ -430,7 +431,7 @@ export function setupWindowHandlers({ onTrayChanged } = {}) {
 
     const openAtLogin = Boolean(bool)
 
-    if (app.getLoginItemSettings().openAtLogin === openAtLogin) return
+    if (app.getLoginItemSettings({ args: ['--hidden'] }).openAtLogin === openAtLogin) return
 
     app.setLoginItemSettings({
       openAtLogin,
@@ -451,7 +452,13 @@ export function setupWindowHandlers({ onTrayChanged } = {}) {
       .catch((error) => log.error('Failed to clear session storage data on reset:', error))
       .finally(() => {
         config.clear()
-        app.relaunch()
+
+        if (process.env.APPIMAGE) {
+          app.relaunch({ execPath: process.env.APPIMAGE, args: [] })
+        } else {
+          app.relaunch({ args: [] })
+        }
+
         app.exit()
       })
   })
