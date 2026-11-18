@@ -17,11 +17,20 @@ const DEFAULTS = {
   EUR: { symbol: '€', name: 'Euro' },
   GBP: { symbol: '£', name: 'British Pound' },
   CNY: { symbol: '¥', name: 'Chinese Yuan' },
+  JPY: { symbol: 'JPY', name: 'Japanese Yen' },
+  CAD: { symbol: 'CA$', name: 'Canadian Dollar' },
+  AUD: { symbol: 'A$', name: 'Australian Dollar' },
+  CHF: { symbol: 'CHF', name: 'Swiss Franc' },
+  HKD: { symbol: 'HK$', name: 'Hong Kong Dollar' },
+  SGD: { symbol: 'S$', name: 'Singapore Dollar' },
+  NZD: { symbol: 'NZ$', name: 'New Zealand Dollar' },
   INR: { symbol: '₹', name: 'Indian Rupee' },
   KRW: { symbol: '₩', name: 'South Korean Won' },
   RUB: { symbol: '₽', name: 'Russian Ruble' },
   TRY: { symbol: '₺', name: 'Turkish Lira' },
   BRL: { symbol: 'R$', name: 'Brazilian Real' },
+  MXN: { symbol: 'MX$', name: 'Mexican Peso' },
+  TWD: { symbol: 'NT$', name: 'New Taiwan Dollar' },
   ILS: { symbol: '₪', name: 'Israeli New Shekel' },
   PHP: { symbol: '₱', name: 'Philippine Peso' },
   THB: { symbol: '฿', name: 'Thai Baht' },
@@ -32,6 +41,12 @@ const DEFAULTS = {
   CZK: { symbol: 'Kč', name: 'Czech Koruna' },
   SEK: { symbol: 'kr', name: 'Swedish Krona' },
   DKK: { symbol: 'kr.', name: 'Danish Krone' },
+  NOK: { symbol: 'NOK', name: 'Norwegian Krone' },
+  ISK: { symbol: 'ISK', name: 'Icelandic Króna' },
+  HUF: { symbol: 'HUF', name: 'Hungarian Forint' },
+  RON: { symbol: 'RON', name: 'Romanian Leu' },
+  BGN: { symbol: 'BGN', name: 'Bulgarian Lev' },
+  ZAR: { symbol: 'ZAR', name: 'South African Rand' },
   IDR: { symbol: 'Rp', name: 'Indonesian Rupiah' },
   MYR: { symbol: 'RM', name: 'Malaysian Ringgit' },
   KZT: { symbol: '₸', name: 'Kazakhstani Tenge' },
@@ -110,7 +125,7 @@ function applyCurrenciesState(currencies) {
     }
   }
 
-  refreshCurrencyState(currencies)
+  refreshCurrencyState(currencies, app.settings?.currency ?? true)
   refreshCurrencyTokens()
 }
 
@@ -162,7 +177,15 @@ function buildCurrencies(symbolList, rateList) {
 
   if (Array.isArray(symbolList)) {
     for (const { iso_code: code, symbol, name } of symbolList) {
-      if (!code || currencies[code] || isMathUnit(code)) continue
+      if (!code || isMathUnit(code)) continue
+
+      if (currencies[code]) {
+        if (currencies[code].symbol === code && symbol && !isSymbolConflict(symbol)) {
+          currencies[code].symbol = symbol
+        }
+
+        continue
+      }
 
       const safeSymbol = symbol && !isSymbolConflict(symbol) ? symbol : code
 
@@ -221,6 +244,8 @@ export function initCurrencies() {
  * @returns {Promise<void>}
  */
 export async function getRates(isManual = false) {
+  if (app.settings && !app.settings.currency) return
+
   if (!navigator.onLine) {
     if (isManual || !store.get('rateDate')) {
       notify('No internet connection. Could not update exchange rates.', 'warning')
