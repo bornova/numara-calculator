@@ -14,6 +14,7 @@ import { store } from '../state/store.js'
 import { copyAll, copyToClipboard } from './contextMenu.js'
 import { hideFloatingPageList, isModalOpen, modal, showError } from './dialogs.js'
 import { resetPlotSelection } from './plot.js'
+import { printPage } from './print.js'
 import { settings } from './settings.js'
 
 /**
@@ -45,11 +46,7 @@ export function setupAppButtons() {
 
   const buttons = {
     searchButton: () => showSearchPanel(cm, false),
-    printButton: () => {
-      if (!cm.getValue()) return
-      hideFloatingPageList()
-      window.print()
-    },
+    printButton: printPage,
     clearButton: () => {
       if (!cm.getValue()) return
 
@@ -221,8 +218,7 @@ export function setupPanelResizer() {
   const defaultWidth = settings.defaults.inputWidth
   const transitionMs = 180
 
-  let isResizing = false
-  let resizeRaf // Request Animation Frame reference
+  let resizeRaf
   let calcTimeout
   let transitionTimer
 
@@ -250,46 +246,42 @@ export function setupPanelResizer() {
   })
 
   dom.panelDivider.addEventListener('mousedown', (event) => {
-    isResizing = event.button === 0 && event.target === dom.panelDivider
+    if (event.button !== 0 || event.target !== dom.panelDivider) return
 
-    if (isResizing) {
-      clearTimeout(transitionTimer)
-      dom.input.classList.remove('panel-width-animating')
-      dom.panelDivider.classList.add('resizing')
+    clearTimeout(transitionTimer)
+    dom.input.classList.remove('panel-width-animating')
+    dom.panelDivider.classList.add('resizing')
+
+    const onMouseMove = (moveEvent) => {
+      if (resizeRaf) cancelAnimationFrame(resizeRaf)
+
+      resizeRaf = requestAnimationFrame(() => {
+        const offset = 10
+        const pointerRelativeXpos = moveEvent.clientX - dom.mainPanel.getBoundingClientRect().left - offset
+        const inputWidth = Math.max(0, Math.min(100, (pointerRelativeXpos / dom.mainPanel.clientWidth) * 100))
+
+        dom.input.style.width = inputWidth + '%'
+        syncOutputHeights()
+
+        clearTimeout(calcTimeout)
+        calcTimeout = setTimeout(() => {
+          store.set('inputWidth', inputWidth)
+          cm.refresh()
+          syncOutputHeights()
+        }, 50)
+      })
     }
-  })
 
-  document.addEventListener('mouseup', () => {
-    if (isResizing) {
-      isResizing = false
+    const onMouseUp = () => {
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
       dom.panelDivider.classList.remove('resizing')
       cm.refresh()
       syncOutputHeights()
     }
-  })
 
-  document.addEventListener('mousemove', (event) => {
-    if (!isResizing) return
-
-    if (resizeRaf) cancelAnimationFrame(resizeRaf)
-
-    resizeRaf = requestAnimationFrame(() => {
-      const offset = 10
-      const pointerRelativeXpos = event.clientX - dom.mainPanel.getBoundingClientRect().left - offset
-      let inputWidth = (pointerRelativeXpos / dom.mainPanel.clientWidth) * 100
-
-      inputWidth = Math.max(0, Math.min(100, inputWidth))
-
-      dom.input.style.width = inputWidth + '%'
-      syncOutputHeights()
-
-      clearTimeout(calcTimeout)
-      calcTimeout = setTimeout(() => {
-        store.set('inputWidth', inputWidth)
-        cm.refresh()
-        syncOutputHeights()
-      }, 50)
-    })
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
   })
 
   dom.panelDivider.addEventListener('mouseenter', dividerTooltip)
