@@ -138,7 +138,8 @@
   width: 100%;
 }
 
-.truncateAnswers .outputWrapper > div {
+.truncateAnswers .outputWrapper > div,
+.truncateAnswers .CodeMirror-linewidget > div {
   width: 100%;
   min-width: 0;
   max-width: 100%;
@@ -248,6 +249,7 @@
 .action:hover {
   background-color: light-dark(#f4f6f8, #333333);
   color: light-dark(#005cc5, #2196f3);
+  text-decoration: none;
 }
 
 .action[disabled='true'],
@@ -261,11 +263,6 @@
 .centerActions a,
 .rightActions a {
   margin: 0 1px;
-}
-
-.leftActions a:hover,
-.pageListActions a:hover {
-  text-decoration: none;
 }
 
 .pageListActions .newPageButton {
