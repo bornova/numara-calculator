@@ -8,7 +8,7 @@ import { dom } from '../dom.js'
 import { refreshEditor } from '../editor/index.js'
 import { app } from '../state/appState.js'
 import { store } from '../state/store.js'
-import { notify, showError } from '../ui/dialogs.js'
+import { notify } from '../ui/dialogs.js'
 import { calculate, clearEvaluationCache } from './calcManager.js'
 
 if (!('DateTime' in math)) {
@@ -111,23 +111,28 @@ function getTabConfig(type) {
  * Apply user defined functions or units to the main-thread Math.js instance and persist to storage.
  * @param {string} input User defined function or unit definition string.
  * @param {'func'|'unit'} type Definition type.
- * @param {boolean} [showErr=true] Whether to display an error modal if evaluation fails and lineErrors is enabled.
  */
-function applyUdfu(input, type, showErr = true) {
+function applyUdfu(input, type) {
+  const isFunc = type === 'func'
+  const keys = applyUdfuToMath(math, input, isFunc, udfuState, {
+    luxon: DateTime
+  })
+
+  app[isFunc ? 'udfList' : 'uduList'] = keys
+  store.set(isFunc ? 'udf' : 'udu', input)
+}
+
+/**
+ * Re-applies active user-defined units to the main-thread Math.js instance after currency state refreshes.
+ */
+export function reapplyMainThreadUdu() {
+  const uduSource = store.get('udu')
+  if (!uduSource) return
+
   try {
-    const isFunc = type === 'func'
-    const keys = applyUdfuToMath(math, input, isFunc, udfuState, {
-      luxon: DateTime
-    })
-
-    app[isFunc ? 'udfList' : 'uduList'] = keys
-    store.set(isFunc ? 'udf' : 'udu', input)
-  } catch (error) {
-    if (showErr && app.settings?.lineErrors) {
-      showError(error.name, error.message)
-    }
-
-    throw error
+    app.uduList = applyUdfuToMath(math, uduSource, false, udfuState, { luxon: DateTime })
+  } catch {
+    // Ignore main-thread re-apply error
   }
 }
 
@@ -217,7 +222,7 @@ function commitUdfuItems(nextItems, type) {
   const prevCompiled = store.get(isFunc ? 'udf' : 'udu') ?? ''
 
   try {
-    applyUdfu(compiled, type, false)
+    applyUdfu(compiled, type)
     store.set(isFunc ? 'udfItems' : 'uduItems', nextItems)
     clearEvaluationCache()
     refreshEditor()
@@ -225,7 +230,7 @@ function commitUdfuItems(nextItems, type) {
     return true
   } catch (error) {
     try {
-      applyUdfu(prevCompiled, type, false)
+      applyUdfu(prevCompiled, type)
     } catch {
       // Ignore fallback error
     }
@@ -302,7 +307,10 @@ function handleSaveUdu() {
     return
   }
 
-  if (!definition) {
+  const existingItem = editingIndex.unit !== null ? (store.get('uduItems') || [])[editingIndex.unit] : null
+  const allowsStandaloneBase = Boolean(existingItem && !existingItem.definition)
+
+  if (!definition && !allowsStandaloneBase) {
     notify('Please enter a unit definition (e.g. 18 foot).', 'danger')
     dom.uduDefInput.focus()
     return
@@ -321,7 +329,11 @@ function handleSaveUdu() {
     }
   }
 
-  saveUdfuEntry('unit', { name, definition, prefixes, aliases: aliasList.join(', ') })
+  const extraFields = {}
+  if (existingItem?.offset !== undefined) extraFields.offset = existingItem.offset
+  if (existingItem?.baseName) extraFields.baseName = existingItem.baseName
+
+  saveUdfuEntry('unit', { name, definition, prefixes, aliases: aliasList.join(', '), ...extraFields })
 }
 
 /**
