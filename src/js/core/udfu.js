@@ -25,6 +25,7 @@ export function skipStringOrComment(str, idx) {
 
   if (ch === '/' && str[idx + 1] === '*') {
     const end = str.indexOf('*/', idx + 2)
+
     return end === -1 ? str.length : end + 2
   }
 
@@ -37,7 +38,10 @@ export function skipStringOrComment(str, idx) {
         continue
       }
 
-      if (str[i] === ch) return i + 1
+      if (str[i] === ch) {
+        return i + 1
+      }
+
       i++
     }
 
@@ -53,7 +57,9 @@ export function skipStringOrComment(str, idx) {
         continue
       }
 
-      if (str[i] === '`') return i + 1
+      if (str[i] === '`') {
+        return i + 1
+      }
 
       if (str[i] === '$' && str[i + 1] === '{') {
         const closeIdx = findMatchingClose(str, i + 1)
@@ -82,7 +88,9 @@ export function findMatchingClose(str, openIndex) {
   const openChar = str[openIndex]
   const closeChar = openChar === '(' ? ')' : openChar === '[' ? ']' : openChar === '{' ? '}' : null
 
-  if (!closeChar) return -1
+  if (!closeChar) {
+    return -1
+  }
 
   let depth = 0
   let i = openIndex
@@ -97,11 +105,14 @@ export function findMatchingClose(str, openIndex) {
 
     const ch = str[i]
 
-    if (ch === openChar) depth++
-    else if (ch === closeChar) {
+    if (ch === openChar) {
+      depth++
+    } else if (ch === closeChar) {
       depth--
 
-      if (depth === 0) return i
+      if (depth === 0) {
+        return i
+      }
     }
 
     i++
@@ -127,7 +138,7 @@ function wrapParenExpr(expr) {
  * @param {boolean} isBlock Whether the outer string is a single `{ ... }` brace pair.
  * @returns {boolean}
  */
-function hasTopLevelReturn(str, isBlock) {
+function hasTopLevelReturn(str, isBlock, allowSemicolon = false) {
   const targetBraceDepth = isBlock ? 1 : 0
   let parenDepth = 0
   let bracketDepth = 0
@@ -154,6 +165,14 @@ function hasTopLevelReturn(str, isBlock) {
       // Object literal syntax at outer brace depth (e.g. `{ return: 1, calc(x) { return x } }`)
       return false
     } else if (
+      allowSemicolon &&
+      ch === ';' &&
+      parenDepth === 0 &&
+      bracketDepth === 0 &&
+      braceDepth === targetBraceDepth
+    ) {
+      return true
+    } else if (
       parenDepth === 0 &&
       bracketDepth === 0 &&
       braceDepth === targetBraceDepth &&
@@ -161,7 +180,9 @@ function hasTopLevelReturn(str, isBlock) {
       !/[\w$.]/.test(str[i - 1] || '') &&
       !/[\w$:]/.test(str[i + 6] || '')
     ) {
-      if (!isBlock) return true
+      if (!isBlock) {
+        return true
+      }
 
       sawReturnAtBlockDepth = true
     }
@@ -180,6 +201,10 @@ function hasTopLevelReturn(str, isBlock) {
  * @returns {object}
  */
 export function evalUdfuObject(body, math = defaultProxy, externalLibs = {}) {
+  if (!body || !String(body).trim()) {
+    return {}
+  }
+
   const luxon = externalLibs.luxon ?? defaultProxy
   const nerdamer = externalLibs.nerdamer ?? defaultProxy
   const formulajs = externalLibs.formulajs ?? defaultProxy
@@ -202,11 +227,10 @@ export function compileUdfItems(items) {
       const cleanParams = rawParams.replace(/^\(|\)$/g, '').trim()
       const cleanBody = (body ?? '').trim()
       const isBlock = cleanBody.startsWith('{') && findMatchingClose(cleanBody, 0) === cleanBody.length - 1
-      const hasReturn = /\breturn\b/.test(cleanBody)
-      const isMultiStmt = cleanBody.includes('\n') || cleanBody.includes(';') || hasReturn
+      const isMultiStmt = hasTopLevelReturn(cleanBody, isBlock, true)
 
       if (cleanParams.length > 0 || isZeroArgFunc) {
-        if (isBlock && (hasReturn || cleanBody.includes(';'))) {
+        if (isBlock && isMultiStmt) {
           return `${JSON.stringify(cleanName)}: (${cleanParams}) => ${cleanBody}`
         }
 
@@ -218,7 +242,9 @@ export function compileUdfItems(items) {
       }
 
       if (hasTopLevelReturn(cleanBody, isBlock)) {
-        if (isBlock) return `${JSON.stringify(cleanName)}: () => ${cleanBody}`
+        if (isBlock) {
+          return `${JSON.stringify(cleanName)}: () => ${cleanBody}`
+        }
 
         return `${JSON.stringify(cleanName)}: () => {\n${cleanBody}\n}`
       }
@@ -274,8 +300,13 @@ function validateUdfObj(obj, isFunc = true) {
   }
 
   for (const [key, val] of Object.entries(obj)) {
-    if (RESERVED_KEYS.has(key)) throw new Error(`Reserved key not allowed: "${key}"`)
-    if (!VALID_IDENTIFIER.test(key)) throw new Error(`Invalid identifier: "${key}"`)
+    if (RESERVED_KEYS.has(key)) {
+      throw new Error(`Reserved key not allowed: "${key}"`)
+    }
+
+    if (!VALID_IDENTIFIER.test(key)) {
+      throw new Error(`Invalid identifier: "${key}"`)
+    }
 
     if (!isFunc && val && typeof val === 'object' && Array.isArray(val.aliases)) {
       for (const alias of val.aliases) {
@@ -345,6 +376,9 @@ function restoreBuiltinKey(math, key, savedMap, isUnit = false) {
   if (isUnit && math.Unit?.UNITS) {
     if (saved?.hasUnit) {
       math.Unit.UNITS[key] = saved.unitVal
+      math.Unit.deleteUnit?.('__numara_cache_flush__')
+    } else if (typeof math.Unit.deleteUnit === 'function') {
+      math.Unit.deleteUnit(key)
     } else {
       delete math.Unit.UNITS[key]
     }
