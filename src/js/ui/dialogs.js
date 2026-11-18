@@ -5,10 +5,14 @@ import { app } from '../state/appState.js'
 import { isElectron } from '../state/env.js'
 import { events } from '../state/events.js'
 
+const MODAL_MIN_MARGIN = 10
+const MODAL_MIN_TOP = 44
+
 let modalOpenState = false
 let defaultYesText = null
 let defaultNoText = null
 let pendingCancelHandler = null
+let suppressConfirmReset = false
 
 /**
  * Resets the confirmation modal buttons to their default labels/handlers and settles any active pending confirmation.
@@ -82,8 +86,11 @@ function makeModalDraggable(modalElement) {
   const move = (e) => {
     if (!dragging) return
 
-    dialog.style.left = `${Math.round(Math.max(10, Math.min(e.clientX - offsetX, window.innerWidth - dialog.offsetWidth - 10)))}px`
-    dialog.style.top = `${Math.round(Math.max(40, Math.min(e.clientY - offsetY, window.innerHeight - dialog.offsetHeight - 10)))}px`
+    const maxLeft = Math.max(MODAL_MIN_MARGIN, window.innerWidth - dialog.offsetWidth - MODAL_MIN_MARGIN)
+    const maxTop = Math.max(MODAL_MIN_TOP, window.innerHeight - dialog.offsetHeight - MODAL_MIN_MARGIN)
+
+    dialog.style.left = `${Math.round(Math.max(MODAL_MIN_MARGIN, Math.min(e.clientX - offsetX, maxLeft)))}px`
+    dialog.style.top = `${Math.round(Math.max(MODAL_MIN_TOP, Math.min(e.clientY - offsetY, maxTop)))}px`
   }
 
   const up = () => {
@@ -128,7 +135,10 @@ export const modal = {
    * @param {number} [targetHeight] Optional target viewport height.
    */
   center: (target, animate = false, targetWidth, targetHeight) => {
-    const element = typeof target === 'string' ? document.querySelector(`${target} .uk-modal-dialog`) : target
+    const element =
+      typeof target === 'string'
+        ? document.querySelector(`${target} .uk-modal-dialog`)
+        : target?.querySelector?.('.uk-modal-dialog') || target
 
     if (!element) return
 
@@ -145,8 +155,8 @@ export const modal = {
       const height = targetHeight ?? window.innerHeight
 
       Object.assign(element.style, {
-        left: `${Math.round((width - element.offsetWidth) / 2)}px`,
-        top: `${Math.round((height - element.offsetHeight) / 2)}px`,
+        left: `${Math.max(MODAL_MIN_MARGIN, Math.round((width - element.offsetWidth) / 2))}px`,
+        top: `${Math.max(MODAL_MIN_TOP, Math.round((height - element.offsetHeight) / 2))}px`,
         visibility: ''
       })
     })
@@ -195,11 +205,13 @@ export function showError(title, error, allowHtml = false) {
  * @param {function} action Function to run upon selecting Yes.
  */
 export function confirm(msg, action) {
+  suppressConfirmReset = Boolean(dom.dialogConfirm?.classList.contains('uk-open'))
   resetConfirmDialog()
 
   dom.confirmMsg.textContent = msg
 
   modal.show('#dialogConfirm')
+  suppressConfirmReset = false
 
   const yesAction = (event) => {
     if (dom.confirmYes) dom.confirmYes.blur()
@@ -208,8 +220,8 @@ export function confirm(msg, action) {
 
     event.stopPropagation()
     pendingCancelHandler = null
-    UIkit.modal('#dialogConfirm').hide()
-    setTimeout(() => action(keepSync), 50)
+
+    Promise.resolve(UIkit.modal('#dialogConfirm').hide()).then(() => action(keepSync))
   }
 
   dom.confirmYes.onclick = yesAction
@@ -224,6 +236,7 @@ export function confirm(msg, action) {
  * @param {function} noAction Callback fired on no/dismiss select.
  */
 export function customConfirm(msg, yesLabel, noLabel, yesAction, noAction) {
+  suppressConfirmReset = Boolean(dom.dialogConfirm?.classList.contains('uk-open'))
   resetConfirmDialog()
 
   dom.confirmMsg.innerHTML = msg
@@ -232,6 +245,7 @@ export function customConfirm(msg, yesLabel, noLabel, yesAction, noAction) {
   dom.confirmNo.classList.remove('uk-modal-close')
 
   UIkit.modal('#dialogConfirm', { bgClose: false, escClose: false, stack: true }).show()
+  suppressConfirmReset = false
 
   const cleanup = () => {
     pendingCancelHandler = null
@@ -249,15 +263,13 @@ export function customConfirm(msg, yesLabel, noLabel, yesAction, noAction) {
   dom.confirmYes.onclick = (event) => {
     event.stopPropagation()
     cleanup()
-    UIkit.modal('#dialogConfirm').hide()
-    setTimeout(yesAction, 50)
+    Promise.resolve(UIkit.modal('#dialogConfirm').hide()).then(() => yesAction?.())
   }
 
   dom.confirmNo.onclick = (event) => {
     event.stopPropagation()
     cleanup()
-    UIkit.modal('#dialogConfirm').hide()
-    setTimeout(noAction, 50)
+    Promise.resolve(UIkit.modal('#dialogConfirm').hide()).then(() => noAction?.())
   }
 }
 
@@ -356,6 +368,11 @@ export function setupUIkitUtils() {
     '#dialogConfirm',
     'hidden',
     () => {
+      if (suppressConfirmReset) {
+        suppressConfirmReset = false
+        return
+      }
+
       resetConfirmDialog()
     },
     { self: true }
