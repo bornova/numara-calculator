@@ -16,7 +16,7 @@ function exportActivePage() {
   const pages = store.get('pages') || []
   const page = pages.find((p) => p.id === app.activePage)
 
-  if (page) {
+  if (page && page.data) {
     numara.exportPage(getSafeFilename(page.name), page.data)
   }
 }
@@ -46,6 +46,7 @@ export function setupPageIo() {
     numara.requestExportPage(exportActivePage)
 
     numara.print(() => {
+      if (!cm.getValue()) return
       hideFloatingPageList()
       window.print()
     })
