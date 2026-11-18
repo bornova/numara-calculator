@@ -4,7 +4,7 @@ import * as path from 'node:path'
 
 import { getWindow, sendToWindow } from './window.js'
 
-let fileToOpen = null
+const pendingFiles = []
 let isRendererReady = false
 
 /**
@@ -17,19 +17,31 @@ export function resetRendererReady() {
 /**
  * Extracts a `.num` file path from command-line arguments if present.
  * @param {string[]} args Command-line arguments array.
- * @returns {string|null} Path to `.num` file or null.
+ * @param {string} [baseDir] Optional working directory used to resolve relative paths.
+ * @returns {string|null} Resolved path to `.num` file or null.
  */
-export function getNumFilePath(args) {
+export function getNumFilePath(args, baseDir) {
   if (!args || !Array.isArray(args)) {
     return null
   }
 
-  return (
-    args.find(
-      (arg) =>
-        typeof arg === 'string' && !arg.startsWith('-') && arg.toLowerCase().endsWith('.num') && fs.existsSync(arg)
-    ) || null
-  )
+  for (const arg of args) {
+    if (typeof arg !== 'string' || arg.startsWith('-') || !arg.toLowerCase().endsWith('.num')) {
+      continue
+    }
+
+    const resolved = baseDir && !path.isAbsolute(arg) ? path.resolve(baseDir, arg) : path.resolve(arg)
+
+    try {
+      if (fs.statSync(resolved).isFile()) {
+        return resolved
+      }
+    } catch {
+      // Ignore missing or inaccessible paths
+    }
+  }
+
+  return null
 }
 
 /**
@@ -56,8 +68,8 @@ export function queueOrOpenFile(filePath) {
 
   if (isRendererReady && getWindow()) {
     openFileInRenderer(filePath)
-  } else {
-    fileToOpen = filePath
+  } else if (!pendingFiles.includes(filePath)) {
+    pendingFiles.push(filePath)
   }
 }
 
@@ -87,9 +99,8 @@ export function setupFileHandlers() {
   ipcMain.on('renderer-ready', () => {
     isRendererReady = true
 
-    if (fileToOpen) {
-      openFileInRenderer(fileToOpen)
-      fileToOpen = null
+    for (const filePath of pendingFiles.splice(0)) {
+      openFileInRenderer(filePath)
     }
   })
 
