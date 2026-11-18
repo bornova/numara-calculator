@@ -1,10 +1,9 @@
 import CodeMirror from 'codemirror'
 
-import { USD_UNIT } from '../core/constants.js'
-import { math } from '../core/mathInstance.js'
 import { app } from '../state/appState.js'
 import {
   constantTokens,
+  currencyCodeTokens,
   currencySymbolRegex,
   currencyTokens,
   dateTimeMethodsSet,
@@ -111,7 +110,7 @@ export function registerEditorModes() {
           else if (/\bline\d+\b/.test(cmStream)) style = 'lineNo'
           else if (keywordTokens.has(cmStream)) style = 'keyword'
           else if (app.mathScope.has(cmStream) && app.scopeTypes?.[cmStream] !== 'function') style = 'variable'
-          else if (math.Unit.UNITS[cmStream]?.base.key === `${USD_UNIT}_STUFF`) style = 'currency'
+          else if (currencyCodeTokens.has(cmStream)) style = 'currency'
           else if (functionTokens.has(cmStream) || dateTimeMethodsSet.has(cmStream)) style = 'function'
           else if (constantTokens.has(cmStream)) style = 'constant'
           else if (unitTokens.has(cmStream)) style = 'unit'
