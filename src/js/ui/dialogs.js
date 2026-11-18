@@ -14,6 +14,67 @@ let defaultNoText = null
 let pendingCancelHandler = null
 let suppressConfirmReset = false
 
+const modal = {
+  /**
+   * Show modal dialog for given id.
+   * @param {string|HTMLElement} id Modal selector or element.
+   */
+  show: (id) => UIkit.modal(id, { bgClose: false, stack: true }).show(),
+
+  /**
+   * Hide modal dialog for given id.
+   * @param {string|HTMLElement} id Modal selector or element.
+   */
+  hide: (id) => UIkit.modal(id).hide(),
+
+  /**
+   * Center the dialog of a modal. Uses requestAnimationFrame to center precisely.
+   * @param {string|HTMLElement} target Modal Id or modal dialog HTMLElement.
+   * @param {boolean} [animate=false] Whether to smoothly animate the dialog to center.
+   * @param {number} [targetWidth] Optional target viewport width.
+   * @param {number} [targetHeight] Optional target viewport height.
+   */
+  center: (target, animate = false, targetWidth, targetHeight) => {
+    const element =
+      typeof target === 'string'
+        ? document.querySelector(`${target} .uk-modal-dialog`)
+        : target?.querySelector?.('.uk-modal-dialog') || target
+
+    if (!element) return
+
+    if (animate) {
+      element.classList.add('modal-centering')
+      clearTimeout(element._centerTimeout)
+      element._centerTimeout = setTimeout(() => {
+        element.classList.remove('modal-centering')
+      }, 220)
+    }
+
+    requestAnimationFrame(() => {
+      const width = targetWidth ?? window.innerWidth
+      const height = targetHeight ?? window.innerHeight
+
+      Object.assign(element.style, {
+        left: `${Math.max(MODAL_MIN_MARGIN, Math.round((width - element.offsetWidth) / 2))}px`,
+        top: `${Math.max(MODAL_MIN_TOP, Math.round((height - element.offsetHeight) / 2))}px`,
+        visibility: ''
+      })
+    })
+  },
+
+  /**
+   * Centers all currently open modal dialogs.
+   * @param {boolean} [animate=true] Whether to smoothly animate the dialogs to center.
+   * @param {number} [targetWidth] Optional target viewport width.
+   * @param {number} [targetHeight] Optional target viewport height.
+   */
+  centerOpen: (animate = true, targetWidth, targetHeight) => {
+    dom.els('.modal.uk-open .uk-modal-dialog').forEach((dialog) => {
+      modal.center(dialog, animate, targetWidth, targetHeight)
+    })
+  }
+}
+
 /**
  * Resets the confirmation modal buttons to their default labels/handlers and settles any active pending confirmation.
  */
@@ -114,72 +175,11 @@ function makeModalDraggable(modalElement) {
   header.addEventListener('dblclick', () => modal.center(dialog, true))
 }
 
-export const modal = {
-  /**
-   * Show modal dialog for given id.
-   * @param {string|HTMLElement} id Modal selector or element.
-   */
-  show: (id) => UIkit.modal(id, { bgClose: false, stack: true }).show(),
-
-  /**
-   * Hide modal dialog for given id.
-   * @param {string|HTMLElement} id Modal selector or element.
-   */
-  hide: (id) => UIkit.modal(id).hide(),
-
-  /**
-   * Center the dialog of a modal. Uses requestAnimationFrame to center precisely.
-   * @param {string|HTMLElement} target Modal Id or modal dialog HTMLElement.
-   * @param {boolean} [animate=false] Whether to smoothly animate the dialog to center.
-   * @param {number} [targetWidth] Optional target viewport width.
-   * @param {number} [targetHeight] Optional target viewport height.
-   */
-  center: (target, animate = false, targetWidth, targetHeight) => {
-    const element =
-      typeof target === 'string'
-        ? document.querySelector(`${target} .uk-modal-dialog`)
-        : target?.querySelector?.('.uk-modal-dialog') || target
-
-    if (!element) return
-
-    if (animate) {
-      element.classList.add('modal-centering')
-      clearTimeout(element._centerTimeout)
-      element._centerTimeout = setTimeout(() => {
-        element.classList.remove('modal-centering')
-      }, 220)
-    }
-
-    requestAnimationFrame(() => {
-      const width = targetWidth ?? window.innerWidth
-      const height = targetHeight ?? window.innerHeight
-
-      Object.assign(element.style, {
-        left: `${Math.max(MODAL_MIN_MARGIN, Math.round((width - element.offsetWidth) / 2))}px`,
-        top: `${Math.max(MODAL_MIN_TOP, Math.round((height - element.offsetHeight) / 2))}px`,
-        visibility: ''
-      })
-    })
-  },
-
-  /**
-   * Centers all currently open modal dialogs.
-   * @param {boolean} [animate=true] Whether to smoothly animate the dialogs to center.
-   * @param {number} [targetWidth] Optional target viewport width.
-   * @param {number} [targetHeight] Optional target viewport height.
-   */
-  centerOpen: (animate = true, targetWidth, targetHeight) => {
-    dom.els('.modal.uk-open .uk-modal-dialog').forEach((dialog) => {
-      modal.center(dialog, animate, targetWidth, targetHeight)
-    })
-  }
-}
-
 /**
  * Checks whether any modal dialog or offcanvas panel is currently open.
  * @returns {boolean} True if any modal or page list panel is open.
  */
-export const isModalOpen = () => modalOpenState
+const isModalOpen = () => modalOpenState
 
 /**
  * Show error dialog.
@@ -187,7 +187,7 @@ export const isModalOpen = () => modalOpenState
  * @param {string} error Error message to show.
  * @param {boolean} [allowHtml=false] Whether to render error message as HTML.
  */
-export function showError(title, error, allowHtml = false) {
+function showError(title, error, allowHtml = false) {
   dom.errTitle.textContent = title
 
   if (allowHtml) {
@@ -204,7 +204,7 @@ export function showError(title, error, allowHtml = false) {
  * @param {string} msg Confirmation message to show.
  * @param {function} action Function to run upon selecting Yes.
  */
-export function confirm(msg, action) {
+function confirm(msg, action) {
   suppressConfirmReset = Boolean(dom.dialogConfirm?.classList.contains('uk-open'))
   resetConfirmDialog()
 
@@ -235,7 +235,7 @@ export function confirm(msg, action) {
  * @param {function} yesAction Callback fired on yes/action select.
  * @param {function} noAction Callback fired on no/dismiss select.
  */
-export function customConfirm(msg, yesLabel, noLabel, yesAction, noAction) {
+function customConfirm(msg, yesLabel, noLabel, yesAction, noAction) {
   suppressConfirmReset = Boolean(dom.dialogConfirm?.classList.contains('uk-open'))
   resetConfirmDialog()
 
@@ -278,7 +278,7 @@ export function customConfirm(msg, yesLabel, noLabel, yesAction, noAction) {
  * @param {string} msg Notification to show.
  * @param {string} [stat='primary'] Notification status: primary | success | warning | danger
  */
-export function notify(msg, stat = 'primary') {
+function notify(msg, stat = 'primary') {
   UIkit.notification({
     message: msg,
     pos: app.settings.notifyLocation,
@@ -288,17 +288,10 @@ export function notify(msg, stat = 'primary') {
 }
 
 /**
- * Makes all modal dialogs draggable by their header.
- */
-function setupDraggableModals() {
-  dom.els('.modal').forEach(makeModalDraggable)
-}
-
-/**
  * Hides the floating `#pageListPanel` offcanvas drawer when undocked and currently open.
  * @returns {Promise<void>|undefined}
  */
-export function hideFloatingPageList() {
+function hideFloatingPageList() {
   if (!app.pageListDocked && dom.pageListPanel?.classList.contains('uk-open')) {
     return UIkit.offcanvas('#pageListPanel')?.hide()
   }
@@ -308,7 +301,7 @@ export function hideFloatingPageList() {
  * Hides all open UIkit dropdowns, optionally excluding a specific dropdown element.
  * @param {Element|null} [excludeEl=null] Optional dropdown element to leave untouched.
  */
-export function hideOpenDropdowns(excludeEl = null) {
+function hideOpenDropdowns(excludeEl = null) {
   events.emit('ui:hideDropdowns', excludeEl)
 
   dom.els('.uk-dropdown.uk-open').forEach((el) => {
@@ -323,10 +316,28 @@ export function hideOpenDropdowns(excludeEl = null) {
 }
 
 /**
+ * Synchronizes `modalOpenState`, Electron titlebar controls, and `ui:modalsClosed` with open dialogs and floating page list.
+ */
+function syncModalOpenState() {
+  const wasOpen = modalOpenState
+
+  modalOpenState =
+    dom.els('.modal.uk-open, .dialogConfirm.uk-open, #pageListPanel.uk-open:not(.page-list-docked)').length > 0
+
+  if (isElectron && modalOpenState !== wasOpen) {
+    numara.transControls(modalOpenState)
+  }
+
+  if (wasOpen && !modalOpenState) {
+    events.emit('ui:modalsClosed')
+  }
+}
+
+/**
  * Configures UIkit helper events, modals, and tab initialization callbacks.
  */
-export function setupUIkitUtils() {
-  setupDraggableModals()
+function setupUIkitUtils() {
+  dom.els('.modal').forEach(makeModalDraggable)
 
   UIkit.mixin({ data: { offset: 5, delay: 300 } }, 'tooltip')
 
@@ -346,23 +357,7 @@ export function setupUIkitUtils() {
     { self: true }
   )
 
-  UIkit.util.on(
-    '.modal, .dialogConfirm, #pageListPanel',
-    'hidden',
-    () => {
-      modalOpenState =
-        dom.els('.modal.uk-open, .dialogConfirm.uk-open, #pageListPanel.uk-open:not(.page-list-docked)').length > 0
-
-      if (isElectron) {
-        numara.transControls(modalOpenState)
-      }
-
-      if (!modalOpenState) {
-        events.emit('ui:modalsClosed')
-      }
-    },
-    { self: true }
-  )
+  UIkit.util.on('.modal, .dialogConfirm, #pageListPanel', 'hidden', syncModalOpenState, { self: true })
 
   UIkit.util.on(
     '#dialogConfirm',
@@ -411,4 +406,17 @@ export function setupUIkitUtils() {
       event.preventDefault()
     }
   })
+}
+
+export {
+  confirm,
+  customConfirm,
+  hideFloatingPageList,
+  hideOpenDropdowns,
+  isModalOpen,
+  modal,
+  notify,
+  setupUIkitUtils,
+  showError,
+  syncModalOpenState
 }
