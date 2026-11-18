@@ -7,6 +7,7 @@ import { getWindow, sendToWindow } from './window.js'
 
 let syncWatcher = null
 let syncWatchTimeout = null
+let watchedDirPath = null
 
 const TRANSIENT_FS_CODES = new Set(['EBUSY', 'EPERM', 'EACCES', 'UNKNOWN'])
 
@@ -89,7 +90,9 @@ function getSafeSyncBasename(filename) {
 /**
  * Stops any active file watcher and pending debounce timeout on the sync directory.
  */
-function stopSyncWatcher() {
+export function stopSyncWatcher() {
+  watchedDirPath = null
+
   if (syncWatchTimeout) {
     clearTimeout(syncWatchTimeout)
     syncWatchTimeout = null
@@ -109,6 +112,9 @@ export function setupSyncHandlers() {
 
   ipcMain.handle('selectSyncDirectory', async () => {
     const win = getWindow()
+
+    if (!win) return null
+
     const result = await dialog.showOpenDialog(win, {
       properties: ['openDirectory', 'createDirectory'],
       title: 'Select Local Sync Directory'
@@ -201,11 +207,19 @@ export function setupSyncHandlers() {
   )
 
   ipcMain.on('startWatchingSyncDir', (event, dirPath) => {
-    stopSyncWatcher()
-
-    if (!isValidDirectory(dirPath)) return
+    if (!isValidDirectory(dirPath)) {
+      stopSyncWatcher()
+      return
+    }
 
     const resolvedDir = path.resolve(dirPath)
+
+    if (syncWatcher && watchedDirPath === resolvedDir && fs.existsSync(resolvedDir)) {
+      return
+    }
+
+    stopSyncWatcher()
+    watchedDirPath = resolvedDir
 
     const notifyIfDeleted = () => {
       if (!fs.existsSync(resolvedDir)) {
