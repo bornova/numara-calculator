@@ -1,5 +1,4 @@
-import { applyUdfu, clearEvaluationCache, formulajsKeys, runCalculation } from '../core/evaluator.js'
-import { refreshCurrencyState } from '../core/mathInstance.js'
+import { clearEvaluationCache, formulajsKeys, runCalculation } from '../core/evaluator.js'
 
 // Lock down network and external script APIs inside the calculation worker sandbox
 for (const api of ['fetch', 'XMLHttpRequest', 'WebSocket', 'EventSource', 'importScripts']) {
@@ -22,26 +21,14 @@ self.onmessage = (event) => {
     const { taskId, activePage, lines, pages, settings, currencies, udf, udu, sharedBuffer } = payload
 
     try {
-      const currenciesChanged = refreshCurrencyState(currencies)
-
-      if (currenciesChanged) {
-        clearEvaluationCache()
-      }
-
-      if (typeof udf === 'string') {
-        applyUdfu(true, udf)
-      }
-
-      if (typeof udu === 'string') {
-        applyUdfu(false, udu, currenciesChanged)
-      }
-
       const result = runCalculation({
         activePage,
         lines,
         pages,
         settings,
         currencies,
+        udf,
+        udu,
         sharedBuffer,
         onLineStart: sharedBuffer
           ? undefined
