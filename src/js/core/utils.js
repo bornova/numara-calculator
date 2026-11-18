@@ -51,6 +51,10 @@ export function findPageByRef(pages, rawPageName, excludePageId = null) {
   }
 
   const trimmedRef = String(rawPageName).trim()
+  if (!trimmedRef) {
+    return null
+  }
+
   const query = trimmedRef.toLowerCase().replace(/\.num$/, '')
 
   return (
@@ -69,18 +73,26 @@ export function findPageByRef(pages, rawPageName, excludePageId = null) {
   )
 }
 
+const WIN_RESERVED_BASENAME_REGEX =
+  /^(?:con|prn|aux|nul|com[1-9\u00b9\u00b2\u00b3]|lpt[1-9\u00b9\u00b2\u00b3])(?:\..*)?$/i
+
 /**
- * Sanitizes a page name to ensure it is safe to use as a file name.
+ * Sanitizes a page name to ensure it is safe to use as a file name across Windows, macOS, and Linux.
  * @param {string} name The page name.
  * @returns {string} The safe file name.
  */
 export function getSafeFilename(name) {
-  return (
-    name
-      .replace(/[/\\:*?"<>|]/g, '-')
-      .replace(/[. ]+$/g, '')
-      .trim() || 'Untitled'
-  )
+  const cleaned = String(name || '')
+    .replace(/\p{Cc}/gu, '')
+    .replace(/[/\\:*?"<>|]/g, '-')
+    .replace(/[. ]+$/g, '')
+    .trim()
+
+  if (!cleaned) {
+    return 'Untitled'
+  }
+
+  return WIN_RESERVED_BASENAME_REGEX.test(cleaned) ? `_${cleaned}` : cleaned
 }
 
 /**
@@ -170,22 +182,35 @@ export function getNumberFormat(settings) {
  */
 export function debounce(func, wait) {
   let timeout = null
+  let lastArgs = null
+  let lastThis = null
 
   const debounced = function (...args) {
-    const context = this
+    lastThis = this
+    lastArgs = args
 
     clearTimeout(timeout)
     timeout = setTimeout(() => {
+      const ctx = lastThis
+      const callArgs = lastArgs
+
       timeout = null
-      func.apply(context, args)
+      lastThis = null
+      lastArgs = null
+      func.apply(ctx, callArgs)
     }, wait)
   }
 
   debounced.flush = function () {
     if (timeout) {
+      const ctx = lastThis
+      const callArgs = lastArgs ?? []
+
       clearTimeout(timeout)
       timeout = null
-      func()
+      lastThis = null
+      lastArgs = null
+      func.apply(ctx, callArgs)
     }
   }
 
@@ -194,6 +219,9 @@ export function debounce(func, wait) {
       clearTimeout(timeout)
       timeout = null
     }
+
+    lastThis = null
+    lastArgs = null
   }
 
   return debounced
