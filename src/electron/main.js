@@ -2,7 +2,7 @@ import { app, dialog, powerMonitor } from 'electron'
 import log from 'electron-log'
 import * as path from 'node:path'
 
-import { config } from './config.js'
+import { config, isMac } from './config.js'
 import {
   getNumFilePath,
   promptImportPage,
@@ -11,7 +11,7 @@ import {
   setupFileHandlers
 } from './fileHandlers.js'
 import { setupApplicationMenu, setupContextMenus, updateTrayState } from './menu.js'
-import { setupSyncHandlers } from './syncWatcher.js'
+import { setupSyncHandlers, stopSyncWatcher } from './syncWatcher.js'
 import { setupAutoUpdater } from './updater.js'
 import {
   createAppWindow,
@@ -74,31 +74,34 @@ app.on('before-quit', (event) => {
     event.preventDefault()
 
     const win = showAndFocusWindow()
-
-    const choice = dialog.showMessageBoxSync(win, {
+    const options = {
       type: 'question',
       buttons: ['Cancel', 'Quit'],
       defaultId: 0,
       cancelId: 0,
       title: 'Quit Numara',
       message: 'Are you sure you want to quit Numara?',
-      detail: 'This will close the calculator and remove it from the menu bar.'
-    })
+      detail: `This will close the calculator and remove it from the ${isMac ? 'menu bar' : 'system tray'}.`
+    }
+
+    const choice = win ? dialog.showMessageBoxSync(win, options) : dialog.showMessageBoxSync(options)
 
     if (choice === 1) {
+      stopSyncWatcher()
       setAppQuitting(true)
       app.quit()
     }
   } else {
+    stopSyncWatcher()
     setAppQuitting(true)
   }
 })
 
 app.on('activate', focusOrCreateWindow)
 
-app.on('second-instance', (event, commandLine) => {
+app.on('second-instance', (event, commandLine, workingDirectory) => {
   const win = getWindow()
-  const fileArg = getNumFilePath(commandLine)
+  const fileArg = getNumFilePath(commandLine, workingDirectory)
 
   if (!win && !app.isReady()) return
 
@@ -124,7 +127,7 @@ app.on('second-instance', (event, commandLine) => {
   }
 })
 
-setupWindowHandlers({ onTrayChanged: updateTrayState })
+setupWindowHandlers({ onTrayChanged: updateTrayState, onBeforeReset: stopSyncWatcher })
 setupFileHandlers()
 setupSyncHandlers()
 setupContextMenus()
