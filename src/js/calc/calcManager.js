@@ -272,9 +272,10 @@ function getWorker() {
         const { taskId, answers, errorLines, serializedScope, scopeProperties, scopeTypes, udfList, uduList } = payload
 
         if (taskId !== currentTaskId) return
-        if (app.activePage !== currentTaskPageId || cm.getValue() !== currentTaskDocValue) return
 
         finishCalcState()
+
+        if (app.activePage !== currentTaskPageId || cm.getValue() !== currentTaskDocValue) return
 
         // Update the main thread's math scope mapping keys to serialized strings
         const keysChanged = checkScopeKeysChanged(serializedScope, udfList, uduList)
@@ -310,6 +311,7 @@ function getWorker() {
 
     worker.onerror = (error) => {
       finishCalcState()
+      worker = null
       console.error('Calculation worker error:', error)
     }
   }
@@ -317,10 +319,14 @@ function getWorker() {
   return worker
 }
 
+const PAGE_CALL_REGEX = /\bpage\s*\(/
+
 /**
  * Triggers asynchronous calculations in the background web worker.
  */
 function calculate() {
+  debouncedCalculate.cancel()
+
   if (app.refreshCM) cm.refresh()
 
   const cmValue = cm.getValue()
@@ -338,7 +344,7 @@ function calculate() {
   const lines = cmValue.split('\n')
 
   if (sharedArray) {
-    sharedArray[0] = -1
+    Atomics.store(sharedArray, 0, -1)
   }
 
   isCalculating = true
@@ -361,7 +367,7 @@ function calculate() {
   }, timeoutDuration)
 
   const w = getWorker()
-  const needsPages = cmValue.includes('page') || (store.get('udf') ?? '').includes('page')
+  const needsPages = PAGE_CALL_REGEX.test(cmValue) || PAGE_CALL_REGEX.test(store.get('udf') ?? '')
   const allPages = needsPages
     ? (store.get('pages') ?? []).map((p) => ({
         id: p.id,
@@ -400,7 +406,8 @@ function showTimeoutDialog() {
   clearAutoCloseTimeout()
 
   const timedOutPageId = currentTaskPageId
-  const stuckLineIndex = sharedArray && sharedArray[0] !== -1 ? sharedArray[0] : lastActiveLineIndex
+  const sabLine = sharedArray ? Atomics.load(sharedArray, 0) : -1
+  const stuckLineIndex = sabLine !== -1 ? sabLine : lastActiveLineIndex
   const lineNo = stuckLineIndex !== -1 ? stuckLineIndex + 1 : null
 
   const msg = lineNo
@@ -448,7 +455,7 @@ function showTimeoutDialog() {
       notify('Calculations took too long and were cancelled.', 'danger')
     }
 
-    debouncedCalculate.flush()
+    calculate()
   }
 }
 
