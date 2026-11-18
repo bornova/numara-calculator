@@ -96,7 +96,7 @@ function setupAxisDragSort({ container, axis, itemSelector, ignoreSelector, drag
   const isVertical = axis === 'y'
 
   container.addEventListener('pointerdown', (event) => {
-    if (event.button !== 0) return
+    if (!event.isPrimary || event.button !== 0) return
     if (event.target.closest(ignoreSelector)) return
 
     const item = event.target.closest(itemSelector)
