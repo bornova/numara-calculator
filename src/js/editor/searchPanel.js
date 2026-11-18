@@ -2,6 +2,7 @@ import CodeMirror from 'codemirror'
 
 import { debounce, escapeRegExp } from '../core/utils.js'
 import { dom } from '../dom.js'
+import { isMac } from '../state/env.js'
 
 let panelEl = null
 let findInputEl = null
@@ -16,13 +17,17 @@ let matches = []
 let activeIndex = -1
 
 function queryCaseInsensitive(query) {
-  if (typeof query === 'string') return query === query.toLowerCase()
+  if (typeof query === 'string') {
+    return query === query.toLowerCase()
+  }
 
   return query.ignoreCase
 }
 
 function parseQuery(queryStr) {
-  if (!queryStr) return null
+  if (!queryStr) {
+    return null
+  }
 
   const isRE = queryStr.match(/^\/(.+)\/([a-z]*)$/)
 
@@ -72,7 +77,9 @@ function makeOverlay(query, caseInsensitive) {
 function getMatches(cm, query) {
   const list = []
 
-  if (!query) return list
+  if (!query) {
+    return list
+  }
 
   const cursor = cm.getSearchCursor(query, CodeMirror.Pos(cm.firstLine(), 0), {
     caseFold: queryCaseInsensitive(query)
@@ -109,6 +116,10 @@ function refreshMatches(cm, fromPos, select = true) {
   } else {
     activeIndex = -1
     countEl.textContent = '0 of 0'
+
+    if (select && cm.somethingSelected()) {
+      cm.setCursor(fromPos)
+    }
   }
 }
 
@@ -135,6 +146,10 @@ function updateSearch(cm, select = true) {
     matches = []
     activeIndex = -1
     countEl.textContent = 'No results'
+
+    if (select && cm.somethingSelected()) {
+      cm.setCursor(cm.getCursor('from'))
+    }
 
     return
   }
@@ -221,6 +236,120 @@ function toggleReplaceMode(cm) {
   }
 }
 
+function createPanel(cm) {
+  const replaceShortcutHint = isMac ? 'Cmd+Opt+F' : 'Ctrl+H'
+
+  panelEl = document.createElement('div')
+  panelEl.className = 'numara-search-panel hidden'
+  panelEl.innerHTML = `
+    <div class="search-panel-row">
+      <button class="search-toggle-replace" title="Toggle Replace (${replaceShortcutHint})">
+        ${dom.icons.ChevronRight}
+      </button>
+      <div class="search-input-wrapper">
+        <input type="text" class="search-input find-input" placeholder="Find" />
+        <span class="search-count">No results</span>
+      </div>
+      <div class="search-actions">
+        <button class="search-btn btn-prev" title="Previous Match (Shift+Enter)">
+          ${dom.icons.ChevronUp}
+        </button>
+        <button class="search-btn btn-next" title="Next Match (Enter)">
+          ${dom.icons.ChevronDown}
+        </button>
+      </div>
+      <button class="search-close-btn" title="Close (Esc)">
+        ${dom.icons.X}
+      </button>
+    </div>
+    <div class="search-panel-row replace-row hidden">
+      <div class="replace-spacer"></div>
+      <div class="search-input-wrapper">
+        <input type="text" class="search-input replace-input" placeholder="Replace with" />
+      </div>
+      <div class="search-actions">
+        <button class="search-action-btn btn-replace" title="Replace Current Match">Replace</button>
+        <button class="search-action-btn btn-replace-all" title="Replace All Matches">Replace All</button>
+      </div>
+    </div>
+  `
+
+  dom.mainPanel.insertBefore(panelEl, dom.mainPanel.firstChild)
+
+  findInputEl = panelEl.querySelector('.find-input')
+  replaceInputEl = panelEl.querySelector('.replace-input')
+  countEl = panelEl.querySelector('.search-count')
+  replaceRowEl = panelEl.querySelector('.replace-row')
+  toggleReplaceBtn = panelEl.querySelector('.search-toggle-replace')
+
+  findInputEl.addEventListener('input', () => updateSearch(cm))
+
+  const handleSearchShortcut = (e) => {
+    const key = e.key?.toLowerCase()
+
+    if ((isMac && e.metaKey && e.altKey && key === 'f') || (!isMac && e.ctrlKey && !e.altKey && key === 'h')) {
+      e.preventDefault()
+      toggleReplaceMode(cm)
+      return true
+    }
+
+    if (((isMac && e.metaKey) || (!isMac && e.ctrlKey)) && !e.altKey && key === 'f') {
+      e.preventDefault()
+      findInputEl.focus()
+      findInputEl.select()
+      return true
+    }
+
+    return false
+  }
+
+  findInputEl.addEventListener('keydown', (e) => {
+    if (handleSearchShortcut(e)) return
+
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      navigateSearch(cm, e.shiftKey)
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      hideSearchPanel(cm)
+    }
+  })
+
+  replaceInputEl.addEventListener('keydown', (e) => {
+    if (handleSearchShortcut(e)) return
+
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      replaceCurrent(cm)
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      hideSearchPanel(cm)
+    }
+  })
+
+  toggleReplaceBtn.addEventListener('click', () => {
+    toggleReplaceMode(cm)
+  })
+
+  panelEl.querySelector('.btn-next').addEventListener('click', () => navigateSearch(cm, false))
+  panelEl.querySelector('.btn-prev').addEventListener('click', () => navigateSearch(cm, true))
+  panelEl.querySelector('.search-close-btn').addEventListener('click', () => hideSearchPanel(cm))
+  panelEl.querySelector('.btn-replace').addEventListener('click', () => replaceCurrent(cm))
+  panelEl.querySelector('.btn-replace-all').addEventListener('click', () => replaceAll(cm))
+
+  debouncedUpdateSearch = debounce(() => {
+    if (isSearchPanelOpen()) {
+      updateSearch(cm, false)
+    }
+  }, 120)
+
+  cm.on('changes', () => {
+    if (isSearchPanelOpen()) {
+      debouncedUpdateSearch()
+    }
+  })
+}
+
 export function showSearchPanel(cm, replaceMode = false) {
   if (!panelEl) {
     createPanel(cm)
@@ -271,93 +400,4 @@ export function hideSearchPanel(cm) {
 
 export function isSearchPanelOpen() {
   return panelEl && !panelEl.classList.contains('hidden')
-}
-
-function createPanel(cm) {
-  panelEl = document.createElement('div')
-  panelEl.className = 'numara-search-panel hidden'
-  panelEl.innerHTML = `
-    <div class="search-panel-row">
-      <button class="search-toggle-replace" title="Toggle Replace (Ctrl+H)">
-        ${dom.icons.ChevronRight}
-      </button>
-      <div class="search-input-wrapper">
-        <input type="text" class="search-input find-input" placeholder="Find" />
-        <span class="search-count">No results</span>
-      </div>
-      <div class="search-actions">
-        <button class="search-btn btn-prev" title="Previous Match (Shift+Enter)">
-          ${dom.icons.ChevronUp}
-        </button>
-        <button class="search-btn btn-next" title="Next Match (Enter)">
-          ${dom.icons.ChevronDown}
-        </button>
-      </div>
-      <button class="search-close-btn" title="Close (Esc)">
-        ${dom.icons.X}
-      </button>
-    </div>
-    <div class="search-panel-row replace-row hidden">
-      <div class="replace-spacer"></div>
-      <div class="search-input-wrapper">
-        <input type="text" class="search-input replace-input" placeholder="Replace with" />
-      </div>
-      <div class="search-actions">
-        <button class="search-action-btn btn-replace" title="Replace Current Match">Replace</button>
-        <button class="search-action-btn btn-replace-all" title="Replace All Matches">Replace All</button>
-      </div>
-    </div>
-  `
-
-  dom.mainPanel.insertBefore(panelEl, dom.mainPanel.firstChild)
-
-  findInputEl = panelEl.querySelector('.find-input')
-  replaceInputEl = panelEl.querySelector('.replace-input')
-  countEl = panelEl.querySelector('.search-count')
-  replaceRowEl = panelEl.querySelector('.replace-row')
-  toggleReplaceBtn = panelEl.querySelector('.search-toggle-replace')
-
-  findInputEl.addEventListener('input', () => updateSearch(cm))
-
-  findInputEl.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      navigateSearch(cm, e.shiftKey)
-    } else if (e.key === 'Escape') {
-      e.preventDefault()
-      hideSearchPanel(cm)
-    }
-  })
-
-  replaceInputEl.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      replaceCurrent(cm)
-    } else if (e.key === 'Escape') {
-      e.preventDefault()
-      hideSearchPanel(cm)
-    }
-  })
-
-  toggleReplaceBtn.addEventListener('click', () => {
-    toggleReplaceMode(cm)
-  })
-
-  panelEl.querySelector('.btn-next').addEventListener('click', () => navigateSearch(cm, false))
-  panelEl.querySelector('.btn-prev').addEventListener('click', () => navigateSearch(cm, true))
-  panelEl.querySelector('.search-close-btn').addEventListener('click', () => hideSearchPanel(cm))
-  panelEl.querySelector('.btn-replace').addEventListener('click', () => replaceCurrent(cm))
-  panelEl.querySelector('.btn-replace-all').addEventListener('click', () => replaceAll(cm))
-
-  debouncedUpdateSearch = debounce(() => {
-    if (isSearchPanelOpen()) {
-      updateSearch(cm, false)
-    }
-  }, 120)
-
-  cm.on('changes', () => {
-    if (isSearchPanelOpen()) {
-      debouncedUpdateSearch()
-    }
-  })
 }

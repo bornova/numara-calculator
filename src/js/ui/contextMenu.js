@@ -1,3 +1,4 @@
+import { stripComments } from '../core/preprocessor.js'
 import { escapeHTML } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
@@ -15,16 +16,19 @@ export function copyToClipboard(text, message) {
     return
   }
 
-  navigator.clipboard.writeText(text).then(() => notify(message))
+  navigator.clipboard
+    ?.writeText(text)
+    ?.then(() => notify(message))
+    ?.catch(() => notify('Failed to copy to clipboard.', 'danger'))
 }
 
 /**
- * Checks whether a rendered output row has a copyable `[data-answer]` value.
+ * Checks whether a rendered output row has a copyable answer or plot expression.
  * @param {Element|null} rowEl Output element with `data-index`.
  * @returns {boolean}
  */
 function hasCopyableAnswer(rowEl) {
-  return Boolean(rowEl?.querySelector('[data-answer]')?.dataset.answer)
+  return Boolean(getLineCopyableAnswer(rowEl))
 }
 
 /**
@@ -33,13 +37,19 @@ function hasCopyableAnswer(rowEl) {
  * @returns {string} The copyable answer string.
  */
 function getLineCopyableAnswer(outputEl) {
-  if (!outputEl) return ''
+  if (!outputEl) {
+    return ''
+  }
 
   const answerEl = outputEl.querySelector('[data-answer]')
-  if (answerEl) return answerEl.dataset.answer || ''
+  if (answerEl) {
+    return answerEl.dataset.answer || ''
+  }
 
   const plotEl = outputEl.querySelector('.plotButton, [data-plot]')
-  if (plotEl) return plotEl.dataset.plot || ''
+  if (plotEl) {
+    return plotEl.dataset.plot || ''
+  }
 
   return ''
 }
@@ -51,11 +61,12 @@ function inputContext() {
   requestAnimationFrame(() => {
     const lineIndex = cm.getCursor().line
     const isEmpty = cm.getValue() === ''
-    const hasAnswer = hasCopyableAnswer(dom.el(`[data-index="${lineIndex}"]`))
+    const hasLine = Boolean(cm.getLine(lineIndex)?.trim())
+    const hasAnswer = hasCopyableAnswer(dom.el(`#mainPanel [data-index="${lineIndex}"]`))
     const selections = cm.listSelections()
     const isMultiLine = selections.length > 1 || selections[0].anchor.line !== selections[0].head.line
 
-    numara.inputContextMenu(lineIndex, isEmpty, isMultiLine, hasAnswer)
+    numara.inputContextMenu(lineIndex, isEmpty, isMultiLine, hasAnswer, hasLine)
   })
 }
 
@@ -78,6 +89,12 @@ function copyLine(index) {
   copyToClipboard(line, `Copied Line ${index + 1} to clipboard.`)
 }
 
+function formatLineWithAnswer(line, answer) {
+  const expr = stripComments(line).trim()
+
+  return !answer || !expr || answer === line || answer === expr ? line : `${expr} = ${answer}`
+}
+
 /**
  * Copy line answer.
  * @param {number|string} lineIndex The 0-based index of the line.
@@ -87,10 +104,13 @@ function copyAnswer(lineIndex, withLines) {
   lineIndex = +lineIndex
 
   const line = cm.getLine(lineIndex).trim()
-  const answer = getLineCopyableAnswer(dom.el(`[data-index="${lineIndex}"]`))
-  if (!answer) return copyToClipboard()
+  const answer = getLineCopyableAnswer(dom.el(`#mainPanel [data-index="${lineIndex}"]`))
 
-  const copiedText = withLines ? `${line} = ${answer}` : `${answer}`
+  if (!answer) {
+    return copyToClipboard()
+  }
+
+  const copiedText = withLines ? formatLineWithAnswer(line, answer) : `${answer}`
   const safeText = escapeHTML(copiedText)
 
   copyToClipboard(
@@ -113,7 +133,7 @@ function copyAllLines() {
 function getAnswersMap() {
   const answersMap = {}
 
-  document.querySelectorAll('[data-index]').forEach((el) => {
+  dom.els('#mainPanel [data-index]').forEach((el) => {
     answersMap[el.getAttribute('data-index')] = getLineCopyableAnswer(el)
   })
 
@@ -124,7 +144,9 @@ function getAnswersMap() {
  * Copy all answers.
  */
 function copyAllAnswers() {
-  if (cm.getValue() === '') return copyToClipboard()
+  if (cm.getValue() === '') {
+    return copyToClipboard()
+  }
 
   const copiedOutputs = []
   const answersMap = getAnswersMap()
@@ -142,24 +164,27 @@ function copyAllAnswers() {
  * Output panel context menu.
  * @param {Event} event The event object.
  */
-export function outputContext(event) {
+function outputContext(event) {
   event.stopPropagation()
 
   if (!isElectron) return
 
   const target = event.target.closest('[data-index]')
-  const lineIndex = target ? target.dataset.index : cm.lastLine()
-  const hasAnswer = lineIndex !== null && hasCopyableAnswer(target)
+  const lineIndex = target ? +target.dataset.index : cm.lastLine()
+  const hasLine = Boolean(cm.getLine(lineIndex)?.trim())
+  const hasAnswer = target !== null && hasCopyableAnswer(target)
   const isEmpty = cm.getValue() === ''
 
-  numara.outputContextMenu(lineIndex, isEmpty, hasAnswer)
+  numara.outputContextMenu(lineIndex, isEmpty, hasAnswer, hasLine)
 }
 
 /**
  * Copy page.
  */
 export function copyAll() {
-  if (cm.getValue() === '') return copyToClipboard()
+  if (cm.getValue() === '') {
+    return copyToClipboard()
+  }
 
   const copiedCalc = []
   const answersMap = getAnswersMap()
@@ -168,7 +193,13 @@ export function copyAll() {
   cm.eachLine((line) => {
     const text = line.text.trim()
 
-    copiedCalc.push(!text ? '' : text.match(/^(#|\/\/)/) ? text : `${text} = ${answersMap[lineIdx] ?? ''}`)
+    if (!text) {
+      copiedCalc.push('')
+    } else if (/^(#|\/\/)/.test(text)) {
+      copiedCalc.push(text)
+    } else {
+      copiedCalc.push(formatLineWithAnswer(text, answersMap[lineIdx] ?? ''))
+    }
 
     lineIdx++
   })

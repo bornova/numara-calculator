@@ -108,63 +108,65 @@ function finishCalcState() {
 }
 
 /**
- * Lazily spawns or retrieves the background Web Worker for calculation execution.
- * @returns {Worker} The spawned web worker instance.
+ * Persists any pending page calculation state (content, folds, and cursor) to local storage.
  */
-function getWorker() {
-  if (!worker) {
-    worker = new Worker(`js/calc.worker.js?v=${version}`)
+function savePendingPageState() {
+  if (!pendingPageSave) return
 
-    worker.onmessage = (event) => {
-      const { type, payload } = event.data
+  const { pageId, data, folds, cursor } = pendingPageSave
+  pendingPageSave = null
 
-      if (type === 'calcResult') {
-        const { taskId, answers, errorLines, serializedScope, scopeProperties, scopeTypes, udfList, uduList } = payload
+  const pages = store.get('pages')
+  const page = pages?.find((p) => p.id === pageId)
 
-        if (taskId !== currentTaskId) return
-        if (app.activePage !== currentTaskPageId || cm.getValue() !== currentTaskDocValue) return
+  if (!page) return
 
-        finishCalcState()
+  const nextCursor = pageId === app.activePage && !app.loadingPage && cm ? cm.getCursor() : cursor
 
-        // Update the main thread's math scope mapping keys to serialized strings
-        const keysChanged = checkScopeKeysChanged(serializedScope, udfList, uduList)
+  const foldsEqual =
+    Array.isArray(page.folds) &&
+    page.folds.length === folds.length &&
+    page.folds.every((f, i) => f.from === folds[i].from && f.to === folds[i].to)
 
-        app.mathScope = new Map(Object.entries(serializedScope))
-        app.scopeProperties = scopeProperties || {}
-        app.scopeTypes = scopeTypes || {}
-        app.udfList = udfList
-        app.uduList = uduList
+  const dataChanged = page.data !== data
+  const cursorChanged = page.cursor?.line !== nextCursor?.line || page.cursor?.ch !== nextCursor?.ch
 
-        applyCalculationResults(answers, errorLines)
+  if (dataChanged || !foldsEqual || cursorChanged) {
+    page.data = data
+    page.folds = folds
+    page.cursor = nextCursor
+    store.set('pages', pages)
 
-        if (keysChanged) {
-          cm.setOption('mode', cm.getOption('mode'))
-        }
-      } else if (type === 'initFormulajs') {
-        registerExcelFunctions(payload.keys)
-      } else if (type === 'lineStart') {
-        const { taskId, lineIndex } = payload || {}
-
-        if (taskId === currentTaskId) {
-          lastActiveLineIndex = lineIndex
-        }
-      } else if (type === 'calcError') {
-        const { taskId } = payload || {}
-
-        if (taskId === currentTaskId) {
-          finishCalcState()
-        }
-        console.error('Calculation worker returned error:', payload?.error)
-      }
+    if (dataChanged) {
+      events.emit('page:contentSaved', page.name, data)
     }
+  }
+}
 
-    worker.onerror = (error) => {
-      finishCalcState()
-      console.error('Calculation worker error:', error)
+const debouncedSavePageState = debounce(savePendingPageState, 300)
+
+const baseCancelPageState = debouncedSavePageState.cancel
+
+debouncedSavePageState.cancel = function () {
+  pendingPageSave = null
+  baseCancelPageState.call(this)
+}
+
+debouncedSavePageState.flush = function () {
+  baseCancelPageState.call(this)
+
+  if (app.activePage && !app.loadingPage && typeof cm?.getValue === 'function') {
+    const { folds } = getFoldedState()
+
+    pendingPageSave = {
+      pageId: app.activePage,
+      data: cm.getValue(),
+      folds,
+      cursor: cm.getCursor()
     }
   }
 
-  return worker
+  savePendingPageState()
 }
 
 /**
@@ -240,7 +242,7 @@ function applyCalculationResults(answers, errorLines) {
 /**
  * Queues a debounced persistence update for the active page's folded sections and cursor without recalculating.
  */
-export function queueFoldStateSave() {
+function queueFoldStateSave() {
   if (!app.activePage || app.loadingPage) return
 
   const { foldedLines, folds } = getFoldedState()
@@ -256,6 +258,146 @@ export function queueFoldStateSave() {
 }
 
 /**
+ * Lazily spawns or retrieves the background Web Worker for calculation execution.
+ * @returns {Worker} The spawned web worker instance.
+ */
+function getWorker() {
+  if (!worker) {
+    worker = new Worker(`js/calc.worker.js?v=${version}`)
+
+    worker.onmessage = (event) => {
+      const { type, payload } = event.data
+
+      if (type === 'calcResult') {
+        const { taskId, answers, errorLines, serializedScope, scopeProperties, scopeTypes, udfList, uduList } = payload
+
+        if (taskId !== currentTaskId) return
+
+        finishCalcState()
+
+        if (app.activePage !== currentTaskPageId || cm.getValue() !== currentTaskDocValue) return
+
+        // Update the main thread's math scope mapping keys to serialized strings
+        const keysChanged = checkScopeKeysChanged(serializedScope, udfList, uduList)
+
+        app.mathScope = new Map(Object.entries(serializedScope))
+        app.scopeProperties = scopeProperties || {}
+        app.scopeTypes = scopeTypes || {}
+        app.udfList = udfList
+        app.uduList = uduList
+
+        applyCalculationResults(answers, errorLines)
+
+        if (keysChanged) {
+          cm.setOption('mode', cm.getOption('mode'))
+        }
+      } else if (type === 'initFormulajs') {
+        registerExcelFunctions(payload.keys)
+      } else if (type === 'lineStart') {
+        const { taskId, lineIndex } = payload || {}
+
+        if (taskId === currentTaskId) {
+          lastActiveLineIndex = lineIndex
+        }
+      } else if (type === 'calcError') {
+        const { taskId } = payload || {}
+
+        if (taskId === currentTaskId) {
+          finishCalcState()
+        }
+        console.error('Calculation worker returned error:', payload?.error)
+      }
+    }
+
+    worker.onerror = (error) => {
+      finishCalcState()
+      worker = null
+      console.error('Calculation worker error:', error)
+    }
+  }
+
+  return worker
+}
+
+const PAGE_CALL_REGEX = /\bpage\s*\(/
+
+/**
+ * Triggers asynchronous calculations in the background web worker.
+ */
+function calculate() {
+  debouncedCalculate.cancel()
+
+  if (app.refreshCM) cm.refresh()
+
+  const cmValue = cm.getValue()
+  const isEmpty = cmValue === ''
+
+  dom.clearButton.setAttribute('disabled', isEmpty)
+  dom.searchButton.setAttribute('disabled', isEmpty)
+  dom.copyButton.setAttribute('disabled', isEmpty)
+  dom.printButton.setAttribute('disabled', isEmpty)
+
+  if (dom.exportPageButton) {
+    dom.exportPageButton.setAttribute('disabled', isEmpty)
+  }
+
+  const lines = cmValue.split('\n')
+
+  if (sharedArray) {
+    Atomics.store(sharedArray, 0, -1)
+  }
+
+  isCalculating = true
+  clearAutoCloseTimeout()
+
+  currentTaskId++
+  currentTaskPageId = app.activePage
+  currentTaskDocValue = cmValue
+  clearCalcTimeouts()
+
+  const timeoutDuration = (parseInt(app.settings.calcTimeout) || 10) * 1000
+  const slowDuration = Math.min(5000, timeoutDuration / 2)
+
+  slowCalcTimeout = setTimeout(() => {
+    notify('Calculations are running but taking longer than expected...', 'warning')
+  }, slowDuration)
+
+  hardCalcTimeout = setTimeout(() => {
+    showTimeoutDialog()
+  }, timeoutDuration)
+
+  const w = getWorker()
+  const needsPages = PAGE_CALL_REGEX.test(cmValue) || PAGE_CALL_REGEX.test(store.get('udf') ?? '')
+  const allPages = needsPages
+    ? (store.get('pages') ?? []).map((p) => ({
+        id: p.id,
+        name: p.name,
+        data: p.id === app.activePage ? cmValue : p.data
+      }))
+    : []
+
+  w.postMessage({
+    type: 'calculate',
+    payload: {
+      taskId: currentTaskId,
+      activePage: app.activePage,
+      lines,
+      pages: allPages,
+      settings: {
+        ...app.settings,
+        systemLocale: getSystemLocale(app.settings)
+      },
+      currencies: app.currencies,
+      udf: store.get('udf') ?? '',
+      udu: store.get('udu') ?? '',
+      sharedBuffer
+    }
+  })
+}
+
+const debouncedCalculate = debounce(calculate, 100)
+
+/**
  * Displays a dialog warning the user that calculation is taking longer than expected.
  */
 function showTimeoutDialog() {
@@ -263,7 +405,9 @@ function showTimeoutDialog() {
   isDialogVisible = true
   clearAutoCloseTimeout()
 
-  const stuckLineIndex = sharedArray && sharedArray[0] !== -1 ? sharedArray[0] : lastActiveLineIndex
+  const timedOutPageId = currentTaskPageId
+  const sabLine = sharedArray ? Atomics.load(sharedArray, 0) : -1
+  const stuckLineIndex = sabLine !== -1 ? sabLine : lastActiveLineIndex
   const lineNo = stuckLineIndex !== -1 ? stuckLineIndex + 1 : null
 
   const msg = lineNo
@@ -301,173 +445,33 @@ function showTimeoutDialog() {
 
     isCalculating = false
 
-    if (stuckLineIndex !== -1 && stuckLineIndex < cm.lineCount()) {
+    if (app.activePage === timedOutPageId && stuckLineIndex !== -1 && stuckLineIndex < cm.lineCount()) {
       const lineText = cm.getLine(stuckLineIndex)
 
       if (lineText !== null && !lineText.trim().startsWith('//') && !lineText.trim().startsWith('#')) {
         cm.replaceRange('// ', { line: stuckLineIndex, ch: 0 })
       }
-
-      if (debouncedCalculate) {
-        debouncedCalculate.flush()
-      } else {
-        calculate()
-      }
     } else {
       notify('Calculations took too long and were cancelled.', 'danger')
     }
-  }
-}
 
-/**
- * Persists any pending page calculation state (content, folds, and cursor) to local storage.
- */
-function savePendingPageState() {
-  if (!pendingPageSave) return
-
-  const { pageId, data, folds, cursor } = pendingPageSave
-  pendingPageSave = null
-
-  const pages = store.get('pages')
-  const page = pages?.find((p) => p.id === pageId)
-
-  if (!page) return
-
-  const nextCursor = pageId === app.activePage && !app.loadingPage && cm ? cm.getCursor() : cursor
-
-  const foldsEqual =
-    Array.isArray(page.folds) &&
-    page.folds.length === folds.length &&
-    page.folds.every((f, i) => f.from === folds[i].from && f.to === folds[i].to)
-
-  const dataChanged = page.data !== data
-  const cursorChanged = page.cursor?.line !== nextCursor?.line || page.cursor?.ch !== nextCursor?.ch
-
-  if (dataChanged || !foldsEqual || cursorChanged) {
-    page.data = data
-    page.folds = folds
-    page.cursor = nextCursor
-    store.set('pages', pages)
-
-    if (dataChanged) {
-      events.emit('page:contentSaved', page.name, data)
-    }
+    calculate()
   }
 }
 
 /**
  * Tells the background calculation worker to clear its evaluation cache if already spawned.
  */
-export function clearEvaluationCache() {
+function clearEvaluationCache() {
   if (worker) {
     worker.postMessage({ type: 'clearCache' })
   }
 }
 
 /**
- * Triggers asynchronous calculations in the background web worker.
- */
-export function calculate() {
-  if (app.refreshCM) cm.refresh()
-
-  const cmValue = cm.getValue()
-  const isEmpty = cmValue === ''
-
-  dom.clearButton.setAttribute('disabled', isEmpty)
-  dom.searchButton.setAttribute('disabled', isEmpty)
-  dom.copyButton.setAttribute('disabled', isEmpty)
-  dom.printButton.setAttribute('disabled', isEmpty)
-
-  if (dom.exportPageButton) {
-    dom.exportPageButton.setAttribute('disabled', isEmpty)
-  }
-
-  const lines = cmValue.split('\n')
-
-  if (sharedArray) {
-    sharedArray[0] = -1
-  }
-
-  isCalculating = true
-  clearAutoCloseTimeout()
-
-  currentTaskId++
-  currentTaskPageId = app.activePage
-  currentTaskDocValue = cmValue
-  clearCalcTimeouts()
-
-  const timeoutDuration = (parseInt(app.settings.calcTimeout) || 10) * 1000
-  const slowDuration = Math.min(5000, timeoutDuration / 2)
-
-  slowCalcTimeout = setTimeout(() => {
-    notify('Calculations are running but taking longer than expected...', 'warning')
-  }, slowDuration)
-
-  hardCalcTimeout = setTimeout(() => {
-    showTimeoutDialog()
-  }, timeoutDuration)
-
-  const w = getWorker()
-  const needsPages = cmValue.includes('page')
-  const allPages = needsPages
-    ? (store.get('pages') ?? []).map((p) => ({
-        id: p.id,
-        name: p.name,
-        data: p.id === app.activePage ? cmValue : p.data
-      }))
-    : []
-
-  w.postMessage({
-    type: 'calculate',
-    payload: {
-      taskId: currentTaskId,
-      activePage: app.activePage,
-      lines,
-      pages: allPages,
-      settings: {
-        ...app.settings,
-        systemLocale: getSystemLocale(app.settings)
-      },
-      currencies: app.currencies,
-      udf: store.get('udf') ?? '',
-      udu: store.get('udu') ?? '',
-      sharedBuffer
-    }
-  })
-}
-
-export const debouncedCalculate = debounce(calculate, 100)
-
-export const debouncedSavePageState = debounce(savePendingPageState, 300)
-
-const baseCancelPageState = debouncedSavePageState.cancel
-
-debouncedSavePageState.cancel = function () {
-  pendingPageSave = null
-  baseCancelPageState.call(this)
-}
-
-debouncedSavePageState.flush = function () {
-  baseCancelPageState.call(this)
-
-  if (app.activePage && !app.loadingPage && typeof cm?.getValue === 'function') {
-    const { folds } = getFoldedState()
-
-    pendingPageSave = {
-      pageId: app.activePage,
-      data: cm.getValue(),
-      folds,
-      cursor: cm.getCursor()
-    }
-  }
-
-  savePendingPageState()
-}
-
-/**
  * Subscribes calculation and persistence handlers to editor events and window unload.
  */
-export function setupCalcManager() {
+function setupCalcManager() {
   events.on('editor:changes', (changes) => {
     if (isMobile) {
       calculate()
@@ -497,3 +501,5 @@ export function setupCalcManager() {
     debouncedSavePageState.flush()
   })
 }
+
+export { calculate, clearEvaluationCache, debouncedSavePageState, setupCalcManager }

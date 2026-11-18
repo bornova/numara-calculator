@@ -1,10 +1,11 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
+    <title>Numara Calculator</title>
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://api.frankfurter.dev;"
+      content="default-src 'self'; script-src 'self' 'unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://api.frankfurter.dev; object-src 'none'; base-uri 'none'; form-action 'none';"
     />
     <meta
       name="description"
@@ -97,7 +98,7 @@
           </a>
         </div>
         <div id="pageList" class="pageList uk-flex-1"></div>
-        <div class="pageListFooter uk-flex-bottom">
+        <div class="pageListFooter">
           <div class="pageListActions uk-flex uk-flex-between uk-flex-middle">
             <div class="leftActions uk-flex uk-flex-middle">
               <a id="newPageButtonPL" class="action newPageButton" title="New page" uk-tooltip>
@@ -180,12 +181,12 @@
     </div>
 
     <div id="dialogUdfu" class="modal" uk-modal>
-      <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-xlarge">
+      <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical">
         <button class="uk-modal-close-default" type="button"><i data-lucide="x"></i></button>
         <h2 class="uk-modal-title uk-text-center">User Defined Functions & Units</h2>
         <ul uk-tab>
-          <li><a>Functions</a></li>
-          <li><a>Units</a></li>
+          <li><a href="#">Functions</a></li>
+          <li><a href="#">Units</a></li>
         </ul>
         <ul id="udfuSwitcher" class="uk-switcher uk-margin-small-top">
           <li id="udfTab">
@@ -337,7 +338,7 @@
                   <input type="hidden" id="theme" class="settingItem" />
                   <a
                     id="customizeThemeButton"
-                    class="customizeThemeButton uk-flex-right uk-margin-small-left"
+                    class="customizeThemeButton uk-margin-small-left"
                     title="Customize theme"
                     uk-tooltip
                   >
@@ -349,11 +350,7 @@
             <div class="uk-flex uk-flex-middle uk-flex-between">
               <div data-help="zoomLevel">Zoom level</div>
               <div class="uk-position-relative">
-                <select id="zoomLevel" name="zoomLevel" aria-label="Zoom level" class="uk-select settingItem">
-                  <option value="smaller">Smaller</option>
-                  <option value="normal">Normal</option>
-                  <option value="larger">Larger</option>
-                </select>
+                <select id="zoomLevel" name="zoomLevel" aria-label="Zoom level" class="uk-select settingItem"></select>
               </div>
             </div>
             <div class="uk-flex uk-flex-middle uk-flex-between">
@@ -364,12 +361,7 @@
                   name="pageListPosition"
                   aria-label="Page list position"
                   class="uk-select settingItem"
-                >
-                  <option value="auto">Auto</option>
-                  <option value="float">Floating</option>
-                  <option value="dock">Docked</option>
-                  <option value="tabs">Tabs</option>
-                </select>
+                ></select>
               </div>
             </div>
             <div id="alwaysOnTopContainer" class="uk-flex uk-flex-middle uk-flex-between">
@@ -427,15 +419,7 @@
                   name="notifyLocation"
                   aria-label="Notification position"
                   class="uk-select settingItem"
-                >
-                  <option value="top-left">Top Left</option>
-                  <option value="top-center">Top Center</option>
-                  <option value="top-right">Top Right</option>
-                  <option disabled>-</option>
-                  <option value="bottom-left">Bottom Left</option>
-                  <option value="bottom-center">Bottom Center</option>
-                  <option value="bottom-right">Bottom Right</option>
-                </select>
+                ></select>
               </div>
             </div>
             <div class="uk-flex uk-flex-middle uk-flex-between">
@@ -446,14 +430,7 @@
                   name="notifyDuration"
                   aria-label="Notification duration"
                   class="uk-select settingItem"
-                >
-                  <option value="1000">1 second</option>
-                  <option value="3000">3 seconds</option>
-                  <option value="5000">5 seconds</option>
-                  <option value="10000">10 seconds</option>
-                  <option value="30000">30 seconds</option>
-                  <option value="0">Close manually</option>
-                </select>
+                ></select>
               </div>
             </div>
           </li>
@@ -464,37 +441,29 @@
             <div class="uk-flex uk-flex-middle uk-flex-between">
               <div data-help="fontSize">Font size</div>
               <div>
-                <select id="fontSize" name="fontSize" aria-label="Font size" class="uk-select settingItem">
-                  <option value="12px">Tiny</option>
-                  <option value="13px">Small</option>
-                  <option value="14px">Normal</option>
-                  <option value="15px">Large</option>
-                  <option value="16px">X-Large</option>
-                </select>
+                <select id="fontSize" name="fontSize" aria-label="Font size" class="uk-select settingItem"></select>
               </div>
             </div>
             <div class="uk-flex uk-flex-middle uk-flex-between">
               <div data-help="fontWeight">Font weight</div>
               <div>
-                <select id="fontWeight" name="fontWeight" aria-label="Font weight" class="uk-select settingItem">
-                  <option value="200">Light</option>
-                  <option value="300">Thin</option>
-                  <option value="400">Normal</option>
-                  <option value="500">Semi Bold</option>
-                  <option value="700">Bold</option>
-                </select>
+                <select
+                  id="fontWeight"
+                  name="fontWeight"
+                  aria-label="Font weight"
+                  class="uk-select settingItem"
+                ></select>
               </div>
             </div>
             <div class="uk-flex uk-flex-middle uk-flex-between">
               <div data-help="lineHeight">Line height</div>
               <div>
-                <select id="lineHeight" name="lineHeight" aria-label="Line height" class="uk-select settingItem">
-                  <option value="17px">Tiny</option>
-                  <option value="21px">Small</option>
-                  <option value="26px">Normal</option>
-                  <option value="30px">Large</option>
-                  <option value="34px">X-Large</option>
-                </select>
+                <select
+                  id="lineHeight"
+                  name="lineHeight"
+                  aria-label="Line height"
+                  class="uk-select settingItem"
+                ></select>
               </div>
             </div>
 
@@ -778,7 +747,6 @@
             <div class="uk-flex uk-flex-middle uk-flex-between">
               <div data-help="currency">Enabled</div>
               <div class="uk-text-right uk-width-2-5 uk-position-relative">
-                <a id="currencyWarn" class="warn-icon"><i data-lucide="alert-circle"></i></a>
                 <label class="switch">
                   <input id="currency" type="checkbox" class="settingItem" />
                   <span class="slider round"></span>
@@ -794,22 +762,10 @@
                     id="currencyInterval"
                     name="currencyInterval"
                     aria-label="Rate update interval"
-                    class="uk-select settingItem uk-flex-left"
-                  >
-                    <option value="0">On start</option>
-                    <option value="3600000">1 hour</option>
-                    <option value="10800000">3 hours</option>
-                    <option value="21600000">6 hours</option>
-                    <option value="43200000">12 hours</option>
-                    <option value="manual">Manual</option>
-                  </select>
+                    class="uk-select settingItem"
+                  ></select>
 
-                  <a
-                    id="updateRatesLink"
-                    class="updateRatesLink uk-flex-right uk-margin-small-left"
-                    title="Update now"
-                    uk-tooltip
-                  >
+                  <a id="updateRatesLink" class="updateRatesLink uk-margin-small-left" title="Update now" uk-tooltip>
                     <i data-lucide="refresh-ccw"></i>
                   </a>
                 </div>
@@ -830,7 +786,7 @@
             </div>
 
             <div id="syncDirSection" class="uk-flex uk-flex-middle uk-flex-between">
-              <div class="uk-width-auto sync-label" data-help="syncDir">Sync folder</div>
+              <div class="sync-label" data-help="syncDir">Sync folder</div>
               <div class="sync-path">
                 <a id="selectSyncDirButton" href="#" class="sync-path-link">Choose Folder</a>
               </div>
@@ -875,7 +831,7 @@
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
         <button class="uk-modal-close-default" type="button"><i data-lucide="x"></i></button>
         <div class="dialog-about-header">
-          <img id="numaraLogo" />
+          <img id="numaraLogo" alt="Numara" />
         </div>
         <div>
           <span id="dialogAboutAppVersion" class="dialogAboutAppVersion" uk-tooltip></span>
@@ -889,11 +845,11 @@
         </div>
 
         <div class="dialog-about-links">
-          <div><a id="gitLink" target="_blank">GitHub</a></div>
-          <div><a id="webLink" target="_blank">Web</a></div>
-          <div><a id="licenseLink" target="_blank">Licence</a></div>
-          <div><a id="helpLink" target="_blank">Help</a></div>
-          <div><a id="logsLink" target="_blank">Logs</a></div>
+          <div><a id="gitLink" target="_blank" rel="noopener noreferrer">GitHub</a></div>
+          <div><a id="webLink" target="_blank" rel="noopener noreferrer">Web</a></div>
+          <div><a id="licenseLink" target="_blank" rel="noopener noreferrer">Licence</a></div>
+          <div><a id="helpLink" target="_blank" rel="noopener noreferrer">Help</a></div>
+          <div><a id="logsLink">Logs</a></div>
         </div>
       </div>
     </div>
@@ -909,7 +865,7 @@
         </div>
         <div class="uk-flex">
           <div class="dialog-buttons uk-width-3-5 uk-flex-left uk-flex-middle">
-            <div class="plotSwitches">
+            <div>
               <label class="switch">
                 <input id="plotCrossModal" type="checkbox" />
                 <span class="slider round"></span>
@@ -1006,7 +962,7 @@
         </div>
         <div class="dialog-buttons uk-flex-right">
           <button id="confirmYes" class="uk-button uk-button-danger uk-button-small">Yes</button>
-          <button class="uk-button uk-button-default uk-modal-close uk-button-small">No</button>
+          <button id="confirmNo" class="uk-button uk-button-default uk-modal-close uk-button-small">No</button>
         </div>
       </div>
     </div>

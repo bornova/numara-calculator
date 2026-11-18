@@ -107,7 +107,7 @@ export function toggleFoldedOutputs(cm, fromLine, toLine, isFolded) {
         }
       }
     } else {
-      const el = outputChildren?.[i] || dom.el(`[data-index="${i}"]`)
+      const el = outputChildren?.[i] || dom.el(`#mainPanel [data-index="${i}"]`)
 
       if (el) {
         el.style.display = isFolded ? 'none' : ''

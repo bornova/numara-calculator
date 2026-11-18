@@ -117,17 +117,17 @@ export function setupEditor() {
       'Ctrl-Space': 'autocomplete',
       'Cmd-/': toggleComment,
       'Ctrl-/': toggleComment,
-      'Ctrl-Q': (editor) => editor.foldCode(editor.getCursor(), { rangeFinder: CodeMirror.fold.numara }),
+      'Ctrl-Q': (editor) => editor.foldCode(editor.getCursor(), { rangeFinder: CodeMirror.fold.numara, scanUp: true }),
       'Cmd-F': (editor) => showSearchPanel(editor, false),
       'Ctrl-F': (editor) => showSearchPanel(editor, false),
       'Cmd-Alt-F': (editor) => showSearchPanel(editor, true),
       'Ctrl-H': (editor) => showSearchPanel(editor, true),
       Esc: (editor) => {
-        if (isSearchPanelOpen()) {
-          hideSearchPanel(editor)
-        } else {
+        if (!isSearchPanelOpen()) {
           return CodeMirror.Pass
         }
+
+        hideSearchPanel(editor)
       }
     },
     flattenSpans: true,
@@ -193,10 +193,11 @@ export function setupEditor() {
 
   cm.on('cursorActivity', (editor) => {
     const activeLine = editor.getCursor().line
+    const hasActiveClass = editor.lineInfo(activeLine)?.gutterClass?.includes('activeLine')
 
-    if (previousActiveLine !== activeLine) {
+    if (previousActiveLine !== activeLine || !hasActiveClass) {
       editor.operation(() => {
-        if (previousActiveLine !== -1) {
+        if (previousActiveLine !== -1 && previousActiveLine < editor.lineCount()) {
           editor.removeLineClass(previousActiveLine, 'gutter', 'activeLine')
         }
 
@@ -215,7 +216,7 @@ export function setupEditor() {
 
     const lineNo = line + 1
     const activeLine = editor.getCursor().line + 1
-    const error = dom.el('[data-index="' + line + '"]')?.firstChild?.dataset.error
+    const error = dom.el(`#mainPanel [data-index="${line}"]`)?.firstChild?.dataset.error
 
     if (error) {
       showError(`Error on Line ${lineNo}`, error)

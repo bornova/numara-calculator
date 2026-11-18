@@ -1,7 +1,6 @@
 import { debouncedSavePageState } from '../calc/calcManager.js'
 import { escapeHTML, getSafeFilename } from '../core/utils.js'
 import { dom } from '../dom.js'
-import { cm } from '../editor/index.js'
 import { app } from '../state/appState.js'
 import { isElectron } from '../state/env.js'
 import { store } from '../state/store.js'
@@ -16,7 +15,7 @@ function exportActivePage() {
   const pages = store.get('pages') || []
   const page = pages.find((p) => p.id === app.activePage)
 
-  if (page) {
+  if (page && page.data) {
     numara.exportPage(getSafeFilename(page.name), page.data)
   }
 }
@@ -31,7 +30,6 @@ export function setupPageIo() {
 
     numara.pageImported((data, msg, name) => {
       newPage(true, name, data)
-      cm.clearHistory()
       notify(escapeHTML(msg), 'success')
     })
 
@@ -44,11 +42,6 @@ export function setupPageIo() {
 
     numara.exportDataError((error) => notify(escapeHTML(String(error)), 'danger'))
     numara.requestExportPage(exportActivePage)
-
-    numara.print(() => {
-      hideFloatingPageList()
-      window.print()
-    })
   } else {
     dom.els('#importExportDivider, #importPageButton, #exportPageButton').forEach((el) => el.remove())
   }

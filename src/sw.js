@@ -9,6 +9,20 @@ const CACHE_NAME = `numara-v${VERSION}`
 // Precache list dynamically injected at build time from the build directory
 const PRECACHE_URLS = ['__PRECACHE__']
 
+/**
+ * Strips the `redirected` flag from a Response so browsers accept it for navigation requests.
+ * @param {Response} response Fetch response.
+ * @returns {Response}
+ */
+const cleanResponse = (response) =>
+  response.redirected
+    ? new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers
+      })
+    : response
+
 // Install: Pre-cache app shell.
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -20,7 +34,7 @@ self.addEventListener('install', (event) => {
             fetch(new Request(url, { cache: 'reload' })).then((response) => {
               if (!response.ok) throw new Error(`Failed to precache ${url}: ${response.status}`)
 
-              return cache.put(url, response)
+              return cache.put(url, cleanResponse(response))
             })
           )
         )
@@ -36,14 +50,6 @@ self.addEventListener('activate', (event) => {
       const oldKeys = keys.filter((key) => key.startsWith('numara-') && key !== CACHE_NAME)
       await Promise.all(oldKeys.map((key) => caches.delete(key)))
       await self.clients.claim()
-
-      if (oldKeys.length > 0) {
-        const clients = await self.clients.matchAll({ type: 'window' })
-
-        for (const client of clients) {
-          client.navigate(client.url).catch(() => {})
-        }
-      }
     })
   )
 })
@@ -53,16 +59,20 @@ self.addEventListener('fetch', (event) => {
 
   if (request.method !== 'GET') return
 
+  const requestUrl = new URL(request.url)
+
   // Only handle same-origin requests. Cross-origin calls (e.g. Frankfurter currency rates) go straight to network.
-  if (new URL(request.url).origin !== self.location.origin) return
+  if (requestUrl.origin !== self.location.origin) return
 
   // Network-first for navigations so new releases are picked up, falling back to cached shell when offline.
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request, { cache: 'no-cache' })
+      fetch(request.url, { cache: 'no-cache' })
         .then((response) => {
-          if (response.ok) {
-            const copy = response.clone()
+          const clean = cleanResponse(response)
+
+          if (clean.ok) {
+            const copy = clean.clone()
 
             caches
               .open(CACHE_NAME)
@@ -70,33 +80,36 @@ self.addEventListener('fetch', (event) => {
               .catch(() => {})
           }
 
-          return response
+          return clean
         })
         .catch(() =>
           caches
             .match(request)
             .then((cached) => cached || caches.match('./index.html'))
             .then((cached) => cached || caches.match('./'))
+            .then((cached) => cached || Response.error())
         )
     )
 
     return
   }
 
-  // Stale-while-revalidate for static assets: serve from cache for speed and refresh in the background.
+  // Cache-first for versioned precached static assets, falling back to network on cache miss.
   event.respondWith(
     caches.open(CACHE_NAME).then((cache) =>
       cache.match(request).then((cached) => {
-        const network = fetch(request, { cache: 'no-cache' })
+        if (cached) return cached
+
+        return fetch(request)
           .then((response) => {
             if (response.status === 200 && response.type === 'basic') {
-              cache.put(request, response.clone()).catch(() => {})
+              const clean = cleanResponse(response)
+              cache.put(request, clean.clone()).catch(() => {})
+              return clean
             }
             return response
           })
-          .catch(() => cached)
-
-        return cached || network
+          .catch(() => Response.error())
       })
     )
   )

@@ -7,6 +7,7 @@ const addIpcListener = (channel, wrapper) => {
 
 contextBridge.exposeInMainWorld('numara', {
   isMac: process.platform === 'darwin',
+  isLinux: process.platform === 'linux',
 
   versions: {
     chrome: () => process.versions.chrome,
@@ -24,7 +25,7 @@ contextBridge.exposeInMainWorld('numara', {
   isMaximized: () => ipcRenderer.invoke('isMaximized'),
   resetSize: (appWrapperWidth, appWrapperHeight, pageListWidth) =>
     ipcRenderer.invoke('resetSize', appWrapperWidth, appWrapperHeight, pageListWidth),
-  setOnTop: (callback) => ipcRenderer.send('setOnTop', callback),
+  setOnTop: (bool) => ipcRenderer.send('setOnTop', bool),
   setTray: (bool) => ipcRenderer.send('setTray', bool),
   setOpenAtLogin: (bool) => ipcRenderer.send('setOpenAtLogin', bool),
   transControls: (isTrans) => ipcRenderer.send('transControls', isTrans),
@@ -47,9 +48,10 @@ contextBridge.exposeInMainWorld('numara', {
   menuAction: (callback) => addIpcListener('menuAction', (event, action) => callback(action)),
 
   // Context menus
-  inputContextMenu: (index, isEmpty, isMultiLine, hasAnswer) =>
-    ipcRenderer.send('inputContextMenu', index, isEmpty, isMultiLine, hasAnswer),
-  outputContextMenu: (index, isEmpty, hasAnswer) => ipcRenderer.send('outputContextMenu', index, isEmpty, hasAnswer),
+  inputContextMenu: (index, isEmpty, isMultiLine, hasAnswer, hasLine) =>
+    ipcRenderer.send('inputContextMenu', index, isEmpty, isMultiLine, hasAnswer, hasLine),
+  outputContextMenu: (index, isEmpty, hasAnswer, hasLine) =>
+    ipcRenderer.send('outputContextMenu', index, isEmpty, hasAnswer, hasLine),
   textboxContextMenu: () => ipcRenderer.send('textboxContextMenu'),
 
   copyAll: (callback) => addIpcListener('copyAll', () => callback()),

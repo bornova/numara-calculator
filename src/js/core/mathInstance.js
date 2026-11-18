@@ -1,9 +1,10 @@
 import { all, create } from 'mathjs'
 
 import { USD_UNIT } from './constants.js'
+import { createOrReuseBaseUnit } from './udfu.js'
 import { escapeRegExp } from './utils.js'
 
-export const app = {
+export const calcState = {
   settings: {},
   currencies: {},
   mathScope: new Map(),
@@ -25,14 +26,33 @@ math.import(
   { override: true }
 )
 
-export const BUILTIN_UNIT_KEYS = new Set(Object.keys(math.Unit.UNITS))
-export const BUILTIN_MATH_KEYS = new Set(Object.keys(math.expression.mathWithTransform))
+const BUILTIN_UNIT_KEYS = new Set(Object.keys(math.Unit.UNITS))
+const BUILTIN_MATH_KEYS = new Set(Object.keys(math.expression.mathWithTransform))
+
+/**
+ * Checks whether a token or unit/currency code collides with a built-in Math.js unit, function, or constant.
+ * @param {string} token Identifier or symbol to check.
+ * @returns {boolean}
+ */
+export function hasBuiltinConflict(token) {
+  if (typeof token !== 'string' || !token) {
+    return false
+  }
+
+  return (
+    BUILTIN_UNIT_KEYS.has(token) ||
+    BUILTIN_UNIT_KEYS.has(token.toLowerCase()) ||
+    BUILTIN_MATH_KEYS.has(token) ||
+    BUILTIN_MATH_KEYS.has(token.toLowerCase())
+  )
+}
 
 export let currencySymbolsRegex = null
 export let currencyFormatRegex = null
 
 let currencySymbolToCode = {}
 let lastProcessedCurrencies = null
+let lastProcessedUseRates = null
 
 /**
  * Checks whether two currency maps have identical rates and symbols.
@@ -41,17 +61,23 @@ let lastProcessedCurrencies = null
  * @returns {boolean}
  */
 function isSameCurrencies(a, b) {
-  if (!a || !b) return false
+  if (!a || !b) {
+    return false
+  }
 
   const keysA = Object.keys(a)
   const keysB = Object.keys(b)
 
-  if (keysA.length !== keysB.length) return false
+  if (keysA.length !== keysB.length) {
+    return false
+  }
 
   for (let i = 0; i < keysA.length; i++) {
     const key = keysA[i]
 
-    if (!b[key] || a[key].rate !== b[key].rate || a[key].symbol !== b[key].symbol) return false
+    if (!b[key] || a[key].rate !== b[key].rate || a[key].symbol !== b[key].symbol) {
+      return false
+    }
   }
 
   return true
@@ -62,7 +88,7 @@ function isSameCurrencies(a, b) {
  * @returns {{ todayFormat: string, todayDayFormat: string, nowFormat: string, nowDayFormat: string }}
  */
 export function getDateFormatSettings() {
-  const fmt = app.settings.dateFormat || 'MM/dd/yyyy'
+  const fmt = calcState.settings.dateFormat || 'MM/dd/yyyy'
 
   return {
     todayFormat: fmt,
@@ -84,23 +110,29 @@ export function getFlexibleFormat(fmt) {
 /**
  * Registers currency units in Math.js and rebuilds symbol/code matching regexes.
  * @param {object} [currencies] Optional currency configuration map to apply before refreshing.
+ * @param {boolean} [useRates=Boolean(calcState.settings?.currency ?? true)] Whether exchange rate definitions should be applied.
  * @returns {boolean} True if currency state changed.
  */
-export function refreshCurrencyState(currencies) {
+export function refreshCurrencyState(currencies, useRates = Boolean(calcState.settings?.currency ?? true)) {
   if (currencies !== undefined) {
-    app.currencies = currencies
+    calcState.currencies = currencies
   }
 
-  if (app.currencies === lastProcessedCurrencies) return false
+  const effectiveUseRates = Boolean(useRates)
 
-  if (lastProcessedCurrencies && isSameCurrencies(app.currencies, lastProcessedCurrencies)) {
-    lastProcessedCurrencies = app.currencies
+  if (
+    effectiveUseRates === lastProcessedUseRates &&
+    (calcState.currencies === lastProcessedCurrencies ||
+      (lastProcessedCurrencies && isSameCurrencies(calcState.currencies, lastProcessedCurrencies)))
+  ) {
+    lastProcessedCurrencies = calcState.currencies
     return false
   }
 
-  lastProcessedCurrencies = app.currencies
+  lastProcessedCurrencies = calcState.currencies
+  lastProcessedUseRates = effectiveUseRates
 
-  const entries = Object.entries(app.currencies || {})
+  const entries = Object.entries(calcState.currencies || {})
   const codes = []
   const symbols = []
 
@@ -122,19 +154,15 @@ export function refreshCurrencyState(currencies) {
       symbols.push(info.symbol)
     }
 
-    if (code !== USD_UNIT && info?.rate) {
+    if (code !== USD_UNIT) {
+      const aliases = hasBuiltinConflict(code.toLowerCase()) ? [] : [code.toLowerCase()]
+
       try {
-        math.createUnit(
-          code,
-          {
-            aliases:
-              BUILTIN_UNIT_KEYS.has(code.toLowerCase()) || BUILTIN_MATH_KEYS.has(code.toLowerCase())
-                ? []
-                : [code.toLowerCase()],
-            definition: math.unit(`${info.rate} ${USD_UNIT}`)
-          },
-          { override: true }
-        )
+        if (effectiveUseRates && info?.rate) {
+          math.createUnit(code, { aliases, definition: math.unit(`${info.rate} ${USD_UNIT}`) }, { override: true })
+        } else {
+          createOrReuseBaseUnit(math, code, { aliases })
+        }
       } catch {
         // Ignore
       }
@@ -142,7 +170,7 @@ export function refreshCurrencyState(currencies) {
   }
 
   const numPattern =
-    '\\b0[xX][0-9a-fA-F]+\\b|\\b0[bB][01]+\\b|\\b0[oO][0-7]+\\b|\\b(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?\\b'
+    '\\b0[xX][0-9a-fA-F]+\\b|\\b0[bB][01]+\\b|\\b0[oO][0-7]+\\b|(?:\\b\\d+(?:\\.\\d*)?|(?<!\\d)\\.\\d+)(?:[eE][+-]?\\d+)?\\b'
 
   const symbolPatterns = symbols
     .sort((a, b) => b.length - a.length)
@@ -150,29 +178,49 @@ export function refreshCurrencyState(currencies) {
       const startsWithLetter = /^[\p{L}\p{M}]/u.test(symbol)
       const endsWithLetter = /[\p{L}\p{M}]$/u.test(symbol)
       const isAsciiLettersOnly = /^[a-zA-Z]+$/.test(symbol)
-      const prefix = startsWithLetter ? '(?<![\\p{L}\\p{M}_][\\p{L}\\p{M}\\d_]*)' : ''
-      const suffix = endsWithLetter ? (isAsciiLettersOnly ? '(?![\\p{L}\\p{M}\\d_])' : '(?![\\p{L}\\p{M}_])') : ''
+      const hasDollar = symbol.includes('$')
+      const prefix = startsWithLetter
+        ? '(?<![\\p{L}\\p{M}_$][\\p{L}\\p{M}\\d_$]*)'
+        : hasDollar
+          ? '(?<![\\p{L}\\p{M}_$])'
+          : ''
+      const suffix = endsWithLetter
+        ? isAsciiLettersOnly
+          ? '(?![\\p{L}\\p{M}\\d_$])'
+          : '(?![\\p{L}\\p{M}_$])'
+        : hasDollar
+          ? '(?![\\p{L}\\p{M}_$])'
+          : ''
 
       return `${prefix}${escapeRegExp(symbol)}${suffix}`
     })
 
+  const escapedCodes = codes.map(escapeRegExp).join('|')
+  const formattedNumPattern = "-?(?:\\d{1,3}(?:[.,'\\u00A0\\u202F\\u2009 ]\\d{3})+|\\d+)(?:[.,]\\d+)?(?:e[+-]?\\d+)?"
+  const symbolUnion = symbolPatterns.join('|')
+
   currencySymbolsRegex = symbolPatterns.length
-    ? new RegExp(`(${numPattern})|(${symbolPatterns.join('|')})`, 'gu')
+    ? new RegExp(`(${numPattern})|(${symbolUnion})(?:[ \\t]*(${numPattern})|(-(?:${numPattern})))?`, 'gu')
     : null
   currencyFormatRegex = codes.length
-    ? new RegExp(`(-?\\d[\\d.,'\\u00A0\\u202F\\u2009 ]*(?:e[+-]?\\d+)?)\\s*\\b(${codes.join('|')})\\b`, 'gi')
+    ? new RegExp(`(?<!\\/)(?:(-?\\d+)\\/1|(${formattedNumPattern}))\\s*\\b(${escapedCodes})\\b`, 'gi')
     : null
 
   return true
 }
 
 /**
- * Replaces a currency symbol glyph with its 3-letter ISO currency code.
+ * Replaces a currency symbol glyph (and optional attached numeric literal) with its 3-letter ISO currency code.
  * @param {string} symbol Currency symbol.
+ * @param {string} [attachedNum] Optional numeric literal immediately following the symbol.
  * @returns {string}
  */
-export function replaceCurrencySymbol(symbol) {
+export function replaceCurrencySymbol(symbol, attachedNum) {
   const code = currencySymbolToCode[symbol]
 
-  return code ? code + ' ' : symbol
+  if (!code) {
+    return attachedNum ? `${symbol}${attachedNum}` : symbol
+  }
+
+  return attachedNum ? `(${attachedNum} ${code})` : `${code} `
 }

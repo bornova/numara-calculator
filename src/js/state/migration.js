@@ -1,7 +1,8 @@
 import { DateTime } from 'luxon'
 
-import { math } from '../core/mathInstance.js'
+import { math, refreshCurrencyState } from '../core/mathInstance.js'
 import {
+  applyUdfuToMath,
   compileUdfItems,
   compileUduItems,
   defaultProxy,
@@ -11,31 +12,34 @@ import {
   skipStringOrComment,
   VALID_IDENTIFIER
 } from '../core/udfu.js'
-import { getSystemLocale } from '../core/utils.js'
-import { app } from './appState.js'
+import { getSyncKey, getSystemLocale, resolveUniquePageName, sanitizePageName } from '../core/utils.js'
+import { app, DEFAULT_INPUT_WIDTH, SETTING_SELECT_OPTIONS } from './appState.js'
 import { store } from './store.js'
 
-const VALID_NUMBER_FORMATS = new Set(['1,234.56', '1.234,56', '1 234.56', '1 234,56'])
-const VALID_DATE_FORMATS = new Set(['MM/dd/yyyy', 'dd/MM/yyyy', 'yyyy-MM-dd'])
+const VALID_SELECT_OPTIONS = Object.fromEntries(
+  Object.entries(SETTING_SELECT_OPTIONS).map(([key, opts]) => [
+    key,
+    new Set(opts.filter(([val]) => val !== null).map(([val]) => val))
+  ])
+)
+const VALID_NUMBER_FORMATS = VALID_SELECT_OPTIONS.numberFormat
+const VALID_DATE_FORMATS = VALID_SELECT_OPTIONS.dateFormat
 
-const VALID_SELECT_OPTIONS = {
-  zoomLevel: new Set(['smaller', 'normal', 'larger']),
-  pageListPosition: new Set(['auto', 'float', 'dock', 'tabs']),
-  notifyLocation: new Set(['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right']),
-  notifyDuration: new Set(['1000', '3000', '5000', '10000', '30000', '0']),
-  fontSize: new Set(['12px', '13px', '14px', '15px', '16px']),
-  fontWeight: new Set(['200', '300', '400', '500', '700']),
-  lineHeight: new Set(['17px', '21px', '26px', '30px', '34px']),
-  answerPosition: new Set(['left', 'right', 'bottom']),
-  numericOutput: new Set(['number', 'BigNumber', 'Fraction']),
-  matrixType: new Set(['Matrix', 'Array']),
-  notation: new Set(['auto', 'engineering', 'exponential', 'fixed', 'bin', 'hex', 'oct']),
-  numberFormat: VALID_NUMBER_FORMATS,
-  dateFormat: VALID_DATE_FORMATS,
-  currencyInterval: new Set(['0', '3600000', '10800000', '21600000', '43200000', 'manual'])
-}
-
-const OBSOLETE_STORE_KEYS = ['sideBarWidth', 'rateInterval']
+const OBSOLETE_STORE_KEYS = ['sideBarWidth', 'sidePanelWidth', 'rateInterval']
+const LEGACY_ROOT_STORE_KEYS = [
+  'pages',
+  'settings',
+  'colors',
+  'udf',
+  'udu',
+  'currencies',
+  'rateDate',
+  'lastPage',
+  'plotSettings',
+  'inputWidth',
+  'sideBarWidth',
+  'sidePanelWidth'
+]
 
 const LEGACY_FONT_SIZE_MAP = {
   '0.9rem': '12px',
@@ -86,8 +90,13 @@ function resolveLocaleDateFormat(locale) {
     const parts = new Intl.DateTimeFormat(locale).formatToParts(new Date(2026, 10, 25))
     const firstDatePart = parts.find((part) => part.type === 'year' || part.type === 'month' || part.type === 'day')
 
-    if (firstDatePart?.type === 'year') return 'yyyy-MM-dd'
-    if (firstDatePart?.type === 'day') return 'dd/MM/yyyy'
+    if (firstDatePart?.type === 'year') {
+      return 'yyyy-MM-dd'
+    }
+
+    if (firstDatePart?.type === 'day') {
+      return 'dd/MM/yyyy'
+    }
   } catch {
     // Fall back to default format if locale tag is invalid
   }
@@ -160,10 +169,14 @@ function trimJsComments(str) {
  * @returns {string} Unwrapped expression string.
  */
 function unwrapBalancedParens(str) {
-  if (!str.startsWith('(') || !str.endsWith(')')) return str
+  if (!str.startsWith('(') || !str.endsWith(')')) {
+    return str
+  }
 
   const closeIdx = findMatchingClose(str, 0)
-  if (closeIdx !== str.length - 1) return str
+  if (closeIdx !== str.length - 1) {
+    return str
+  }
 
   const inner = trimJsComments(str.slice(1, -1))
   return inner.startsWith('{') ? str : inner
@@ -232,28 +245,41 @@ function splitTopLevelObjectEntries(src) {
  * @returns {{ name: string, params: string, body: string }|null}
  */
 function parseSourceKeyValue(key, rawValue) {
-  if (!rawValue) return null
+  if (!rawValue) {
+    return null
+  }
 
   if (rawValue[0] === '(') {
     const closeParen = findMatchingClose(rawValue, 0)
     if (closeParen !== -1) {
       const afterIdx = skipWsAndComments(rawValue, closeParen + 1)
+
       if (rawValue.slice(afterIdx, afterIdx + 2) === '=>') {
         const rawParams = rawValue.slice(1, closeParen).trim()
         const rhs = trimJsComments(rawValue.slice(afterIdx + 2))
-        if (!rhs) return null
+
+        if (!rhs) {
+          return null
+        }
+
         return { name: key, params: rawParams || '()', body: normalizeArrowBody(rhs) }
       }
     }
   }
 
   const singleParamMatch = rawValue.match(/^([a-zA-Z_$][\w$]*)/)
+
   if (singleParamMatch && singleParamMatch[1] !== 'async') {
     const param = singleParamMatch[1]
     const afterIdx = skipWsAndComments(rawValue, param.length)
+
     if (rawValue.slice(afterIdx, afterIdx + 2) === '=>') {
       const rhs = trimJsComments(rawValue.slice(afterIdx + 2))
-      if (!rhs) return null
+
+      if (!rhs) {
+        return null
+      }
+
       return { name: key, params: param, body: normalizeArrowBody(rhs) }
     }
   }
@@ -262,8 +288,10 @@ function parseSourceKeyValue(key, rawValue) {
   if (fnMatch) {
     const openParen = fnMatch[0].length - 1
     const closeParen = findMatchingClose(rawValue, openParen)
+
     if (closeParen !== -1) {
       const bracePos = skipWsAndComments(rawValue, closeParen + 1)
+
       if (rawValue[bracePos] === '{' && findMatchingClose(rawValue, bracePos) === rawValue.length - 1) {
         const fnName = fnMatch[1] || ''
         const rawParams = rawValue.slice(openParen + 1, closeParen).trim()
@@ -296,12 +324,18 @@ function parseSourceUdfEntries(rawUdf) {
 
     if (entry[0] === '"' || entry[0] === "'") {
       const strEnd = skipStringOrComment(entry, 0)
-      if (strEnd === -1) return null
+      if (strEnd === -1) {
+        return null
+      }
+
       key = entry.slice(1, strEnd - 1)
       afterKeyPos = skipWsAndComments(entry, strEnd)
     } else {
       const idMatch = entry.match(/^[a-zA-Z_$][\w$]*/)
-      if (!idMatch) return null
+      if (!idMatch) {
+        return null
+      }
+
       key = idMatch[0]
       afterKeyPos = skipWsAndComments(entry, key.length)
 
@@ -323,13 +357,21 @@ function parseSourceUdfEntries(rawUdf) {
 
     if (delim === ':') {
       const parsed = parseSourceKeyValue(key, trimJsComments(entry.slice(afterKeyPos + 1)))
-      if (!parsed) return null
+      if (!parsed) {
+        return null
+      }
+
       items.push(parsed)
     } else if (delim === '(') {
       const closeParen = findMatchingClose(entry, afterKeyPos)
-      if (closeParen === -1) return null
+      if (closeParen === -1) {
+        return null
+      }
+
       const bracePos = skipWsAndComments(entry, closeParen + 1)
-      if (entry[bracePos] !== '{' || findMatchingClose(entry, bracePos) !== entry.length - 1) return null
+      if (entry[bracePos] !== '{' || findMatchingClose(entry, bracePos) !== entry.length - 1) {
+        return null
+      }
 
       const rawParams = entry.slice(afterKeyPos + 1, closeParen).trim()
       const innerBody = trimJsComments(entry.slice(bracePos + 1, -1))
@@ -350,12 +392,30 @@ function parseSourceUdfEntries(rawUdf) {
  */
 function serializeEvaluatedUdfValue(val) {
   if (val !== null && typeof val === 'object') {
-    if (val.isUnit) return `math.unit(${JSON.stringify(val.toString())})`
-    if (val.isBigNumber) return `math.bignumber(${JSON.stringify(val.toString())})`
-    if (val.isFraction) return `math.fraction(${JSON.stringify(val.toFraction())})`
-    if (val.isComplex) return `math.complex(${JSON.stringify(val.toString())})`
-    if (val.isMatrix) return JSON.stringify(val.toArray())
-    if (val.isLuxonDateTime) return `luxon.fromISO(${JSON.stringify(val.toISO())})`
+    if (val.isUnit) {
+      return `math.unit(${JSON.stringify(val.toString())})`
+    }
+
+    if (val.isBigNumber) {
+      return `math.bignumber(${JSON.stringify(val.toString())})`
+    }
+
+    if (val.isFraction) {
+      return `math.fraction(${JSON.stringify(val.toFraction())})`
+    }
+
+    if (val.isComplex) {
+      return `math.complex(${JSON.stringify(val.toString())})`
+    }
+
+    if (val.isMatrix) {
+      return JSON.stringify(val.toArray())
+    }
+
+    if (val.isLuxonDateTime) {
+      return `luxon.fromISO(${JSON.stringify(val.toISO())})`
+    }
+
     return JSON.stringify(val)
   }
 
@@ -424,7 +484,9 @@ function extractFunctionParts(fn) {
  */
 export function parseLegacyUdf(rawUdf, mathInstance = defaultProxy, externalLibs = {}) {
   const trimmed = (rawUdf ?? '').trim()
-  if (!trimmed) return []
+  if (!trimmed) {
+    return []
+  }
 
   const sourceItems = parseSourceUdfEntries(trimmed)
 
@@ -463,7 +525,9 @@ export function parseLegacyUdf(rawUdf, mathInstance = defaultProxy, externalLibs
  */
 export function parseLegacyUdu(rawUdu, mathInstance = defaultProxy, externalLibs = {}) {
   const trimmed = (rawUdu ?? '').trim()
-  if (!trimmed) return []
+  if (!trimmed) {
+    return []
+  }
 
   const uduItems = []
 
@@ -480,12 +544,22 @@ export function parseLegacyUdu(rawUdu, mathInstance = defaultProxy, externalLibs
           uduItems.push({ name: key, definition: val.toString(), prefixes: 'none', aliases: '' })
         } else if (val.definition !== defaultProxy) {
           const defStr = val.definition?.isUnit ? val.definition.toString() : String(val.definition ?? '')
-          uduItems.push({
+          const item = {
             name: key,
             definition: defStr,
             prefixes: val.prefixes || 'none',
             aliases: Array.isArray(val.aliases) ? val.aliases.join(', ') : ''
-          })
+          }
+
+          if (val.offset !== undefined && Number.isFinite(Number(val.offset))) {
+            item.offset = Number(val.offset)
+          }
+
+          if (typeof val.baseName === 'string' && val.baseName.trim()) {
+            item.baseName = val.baseName.trim()
+          }
+
+          uduItems.push(item)
         }
       }
     }
@@ -497,12 +571,39 @@ export function parseLegacyUdu(rawUdu, mathInstance = defaultProxy, externalLibs
 }
 
 /**
+ * Consolidates any legacy pre-v8 root-level `localStorage` keys into the `numara` store object.
+ */
+function consolidateLegacyRootKeys() {
+  if (typeof localStorage === 'undefined' || typeof localStorage.getItem !== 'function') {
+    return
+  }
+
+  for (const key of LEGACY_ROOT_STORE_KEYS) {
+    try {
+      const rawRoot = localStorage.getItem(key)
+      if (rawRoot === null || rawRoot === undefined) continue
+
+      if (store.get(key) === null) {
+        const parsed = JSON.parse(rawRoot)
+        store.set(key, parsed)
+      }
+
+      localStorage.removeItem(key)
+    } catch {
+      // Ignore malformed root key
+    }
+  }
+}
+
+/**
  * Migrates v7 `sideBarWidth` -> `pageListWidth`, cleans up v7 persisted page `history`/`answers`
  * fields while seeding session history, and removes obsolete v7 store keys.
  */
 export function migrateStorageAndPages() {
-  // 1. Migrate v7 `sideBarWidth` -> v8 `pageListWidth`
-  const oldSideBarWidth = store.get('sideBarWidth')
+  consolidateLegacyRootKeys()
+
+  // 1. Migrate v6/v7 `sideBarWidth` / `sidePanelWidth` -> v8 `pageListWidth`
+  const oldSideBarWidth = store.get('sideBarWidth') ?? store.get('sidePanelWidth')
 
   if (
     typeof oldSideBarWidth === 'number' &&
@@ -518,8 +619,21 @@ export function migrateStorageAndPages() {
   let pagesModified = false
 
   if (Array.isArray(pages)) {
+    const validPages = []
+    const claimedSyncKeys = new Set()
+    const duplicatePages = []
+    let fallbackCounter = 1
+
     for (const page of pages) {
-      if (!page || typeof page !== 'object') continue
+      if (!page || typeof page !== 'object' || Array.isArray(page)) {
+        pagesModified = true
+        continue
+      }
+
+      if (typeof page.id !== 'string' || !page.id.trim()) {
+        page.id = `${Date.now()}${String(fallbackCounter++).padStart(4, '0')}`
+        pagesModified = true
+      }
 
       if (page.history && app.pageHistory && !app.pageHistory.has(page.id)) {
         app.pageHistory.set(page.id, page.history)
@@ -531,19 +645,38 @@ export function migrateStorageAndPages() {
         pagesModified = true
       }
 
-      if (typeof page.name !== 'string') {
-        page.name = String(page.name ?? 'Page')
+      const rawName = typeof page.name === 'string' ? page.name : String(page.name ?? '')
+      const safeBaseName = sanitizePageName(rawName, 'Page')
+
+      if (typeof page.name !== 'string' || page.name !== safeBaseName) {
+        page.name = safeBaseName
         pagesModified = true
+      }
+
+      const initialKey = getSyncKey(page.name)
+
+      if (claimedSyncKeys.has(initialKey)) {
+        duplicatePages.push(page)
+      } else {
+        claimedSyncKeys.add(initialKey)
       }
 
       if (typeof page.data !== 'string') {
         page.data = String(page.data ?? '')
         pagesModified = true
       }
+
+      validPages.push(page)
+    }
+
+    for (const page of duplicatePages) {
+      page.name = resolveUniquePageName(page.name, claimedSyncKeys)
+      claimedSyncKeys.add(getSyncKey(page.name))
+      pagesModified = true
     }
 
     if (pagesModified) {
-      store.set('pages', pages)
+      store.set('pages', validPages)
     }
   }
 
@@ -561,7 +694,9 @@ export function migrateStorageAndPages() {
  * @returns {boolean} True if any color metadata was updated.
  */
 export function migrateColors(targetColors, defaultColors) {
-  if (!targetColors || typeof targetColors !== 'object' || !defaultColors) return false
+  if (!targetColors || typeof targetColors !== 'object' || !defaultColors) {
+    return false
+  }
 
   let migrated = false
 
@@ -589,10 +724,35 @@ export function migrateColors(targetColors, defaultColors) {
  * @returns {boolean} True if any v7 fields were migrated.
  */
 export function migrateFromV7(targetSettings) {
-  if (!targetSettings || typeof targetSettings !== 'object') return false
+  if (!targetSettings || typeof targetSettings !== 'object') {
+    return false
+  }
 
   let migrated = false
   const systemLocale = getSystemLocale(targetSettings)
+
+  if (targetSettings.locale !== undefined) {
+    if (typeof targetSettings.thouSep !== 'string') {
+      targetSettings.thouSep = targetSettings.thouSep === false ? 'disabled' : targetSettings.locale
+    }
+
+    delete targetSettings.locale
+    migrated = true
+  }
+
+  if (targetSettings.inputWidth !== undefined) {
+    if (
+      typeof targetSettings.inputWidth === 'number' &&
+      Number.isFinite(targetSettings.inputWidth) &&
+      targetSettings.inputWidth !== DEFAULT_INPUT_WIDTH &&
+      store.get('inputWidth') === null
+    ) {
+      store.set('inputWidth', targetSettings.inputWidth)
+    }
+
+    delete targetSettings.inputWidth
+    migrated = true
+  }
 
   // v7 `thouSep` ('system' | 'period' | 'comma' | 'disabled' or carried-over locale) & `inputLocale` (boolean)
   // -> v8 `thouSep` (boolean) & `numberFormat` ('1,234.56' | '1.234,56' | '1 234.56' | '1 234,56')
@@ -671,34 +831,73 @@ export function migrateFromV7(targetSettings) {
  * Migrates v7 raw `udf` and `udu` strings into structured `udfItems` and `uduItems` arrays if not yet present.
  */
 function migrateUdfu() {
-  if (store.get('udfItems') === null) {
-    const rawUdf = store.get('udf')
+  let refreshedCurrencies = false
 
-    if (rawUdf !== null) {
-      const trimmedUdf = String(rawUdf).trim()
+  for (const [rawKey, itemsKey, parseLegacy, compileItems] of [
+    ['udf', 'udfItems', parseLegacyUdf, compileUdfItems],
+    ['udu', 'uduItems', parseLegacyUdu, compileUduItems]
+  ]) {
+    if (store.get(itemsKey) !== null || store.get(rawKey) === null) continue
 
-      if (!trimmedUdf) {
-        store.set('udfItems', [])
-      } else {
-        const parsedUdf = parseLegacyUdf(trimmedUdf, math, { luxon: DateTime })
-        store.set('udfItems', parsedUdf)
-        store.set('udf', compileUdfItems(parsedUdf))
+    if (!refreshedCurrencies) {
+      refreshCurrencyState(store.get('currencies') || {})
+      refreshedCurrencies = true
+    }
+
+    const trimmed = String(store.get(rawKey)).trim()
+
+    if (!trimJsComments(trimmed)) {
+      store.set(itemsKey, [])
+      store.set(rawKey, '')
+      continue
+    }
+
+    let parsed
+    const tempUdfState = rawKey === 'udu' ? { previouslyImportedUDFs: [], previouslyCreatedUnits: [] } : null
+    const activeUdf = rawKey === 'udu' ? String(store.get('udf') ?? '').trim() : ''
+
+    try {
+      if (tempUdfState && activeUdf) {
+        try {
+          applyUdfuToMath(math, activeUdf, true, tempUdfState, { luxon: DateTime })
+        } catch {
+          // Ignore invalid legacy UDF definitions during UDU migration
+        }
+      }
+
+      parsed = parseLegacy(trimmed, math, { luxon: DateTime })
+    } finally {
+      if (tempUdfState && tempUdfState.previouslyImportedUDFs.length > 0) {
+        try {
+          applyUdfuToMath(math, '', true, tempUdfState)
+        } catch {
+          // Ignore cleanup error
+        }
       }
     }
-  }
 
-  if (store.get('uduItems') === null) {
-    const rawUdu = store.get('udu')
+    if (parsed.length > 0) {
+      const compiled = compileItems(parsed)
 
-    if (rawUdu !== null) {
-      const trimmedUdu = String(rawUdu).trim()
+      try {
+        evalUdfuObject(compiled)
+        store.set(itemsKey, parsed)
+        store.set(rawKey, compiled)
+      } catch {
+        // Leave legacy string untouched if compiled form fails syntax validation
+      }
+    } else {
+      let legacySyntaxValid = true
 
-      if (!trimmedUdu) {
-        store.set('uduItems', [])
-      } else {
-        const parsedUdu = parseLegacyUdu(trimmedUdu, math, { luxon: DateTime })
-        store.set('uduItems', parsedUdu)
-        store.set('udu', compileUduItems(parsedUdu))
+      try {
+        evalUdfuObject(trimmed)
+      } catch {
+        legacySyntaxValid = false
+      }
+
+      if (!legacySyntaxValid) {
+        store.set(itemsKey, [])
+        store.set(rawKey, '')
       }
     }
   }

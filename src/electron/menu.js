@@ -1,6 +1,5 @@
 import { app, ipcMain, Menu, nativeImage, shell, Tray } from 'electron'
 import log from 'electron-log'
-import * as fs from 'node:fs'
 import * as path from 'node:path'
 
 import { config, isMac, isWin } from './config.js'
@@ -15,16 +14,8 @@ let tray = null
  */
 function getTrayIconPath() {
   const iconFileName = isWin ? 'icon.ico' : isMac ? 'trayTemplate.png' : 'icon.png'
-  const possiblePaths = [
-    path.join(import.meta.dirname, `../../build/assets/${iconFileName}`),
-    path.join(app.getAppPath(), `build/assets/${iconFileName}`)
-  ]
 
-  for (const p of possiblePaths) {
-    if (fs.existsSync(p)) return p
-  }
-
-  return path.join(app.getAppPath(), `build/assets/${iconFileName}`)
+  return path.join(app.getAppPath(), 'build/assets', iconFileName)
 }
 
 /**
@@ -42,13 +33,7 @@ export function updateTrayState() {
         },
         {
           label: 'Hide Numara',
-          click: () => {
-            const win = getWindow()
-
-            if (win && !win.isDestroyed()) {
-              win.hide()
-            }
-          }
+          click: () => getWindow()?.hide()
         },
         { type: 'separator' },
         {
@@ -71,9 +56,13 @@ export function updateTrayState() {
         tray = new Tray(trayIcon)
         tray.setToolTip('Numara Calculator')
 
-        tray.on('right-click', () => {
-          tray.popUpContextMenu(contextMenu)
-        })
+        if (isMac || isWin) {
+          tray.on('right-click', () => {
+            tray.popUpContextMenu(contextMenu)
+          })
+        } else {
+          tray.setContextMenu(contextMenu)
+        }
 
         tray.on('click', showAndFocusWindow)
       } catch (err) {
@@ -87,22 +76,33 @@ export function updateTrayState() {
 }
 
 /**
- * Generate context menu header.
- * @param {number} index The line index.
- * @param {boolean} isMultiLine Is it a multi-line selection.
- * @param {boolean} hasAnswer Does the line have an answer.
- * @returns {Array} The context menu header template.
+ * Generates context menu header items for the editor input panel.
+ * @param {number} index The 0-based line index.
+ * @param {boolean} isEmpty Whether the editor document is empty.
+ * @param {boolean} isMultiLine Whether multiple lines are selected.
+ * @returns {Array}
  */
-const contextHeader = (index, isMultiLine, hasAnswer) =>
-  hasAnswer || index !== null
-    ? [
-        { label: isMultiLine ? 'Multiple lines:' : `Line ${+index + 1}:`, enabled: false, click: () => {} },
+const inputContextHeader = (index, isEmpty, isMultiLine) =>
+  isEmpty
+    ? [{ role: 'paste' }, { type: 'separator' }]
+    : [
+        { label: isMultiLine ? 'Multiple lines:' : `Line ${+index + 1}:`, enabled: false },
         { type: 'separator' },
         { role: 'copy' },
         { role: 'paste' },
         { type: 'separator' }
       ]
-    : [{ label: '', visible: false }]
+
+/**
+ * Generates context menu header items for the read-only output panel.
+ * @param {number} index The 0-based line index.
+ * @param {boolean} isEmpty Whether the editor document is empty.
+ * @returns {Array}
+ */
+const outputContextHeader = (index, isEmpty) =>
+  isEmpty || index === null
+    ? []
+    : [{ label: `Line ${+index + 1}:`, enabled: false }, { type: 'separator' }, { role: 'copy' }, { type: 'separator' }]
 
 /**
  * Generate common context menu items.
@@ -111,22 +111,23 @@ const contextHeader = (index, isMultiLine, hasAnswer) =>
  * @param {boolean} isEmpty Is the input empty.
  * @param {boolean} isMultiLine Is it a multi-line selection.
  * @param {boolean} hasAnswer Does the line have an answer.
+ * @param {boolean} [hasLine=hasAnswer] Does the line have non-empty input text.
  * @returns {Array} The common context menu template.
  */
-const commonContext = (event, index, isEmpty, isMultiLine, hasAnswer) => [
+const commonContext = (event, index, isEmpty, isMultiLine, hasAnswer, hasLine = hasAnswer) => [
   {
     label: 'Copy line',
-    enabled: hasAnswer && !isMultiLine,
+    enabled: Boolean(hasLine) && !isEmpty && !isMultiLine,
     click: () => event.sender.send('copyLine', index)
   },
   {
     label: 'Copy answer',
-    enabled: hasAnswer && !isMultiLine,
+    enabled: Boolean(hasAnswer) && !isMultiLine,
     click: () => event.sender.send('copyAnswer', index, false)
   },
   {
     label: 'Copy line with answer',
-    enabled: hasAnswer && !isMultiLine,
+    enabled: Boolean(hasAnswer) && !isMultiLine,
     click: () => event.sender.send('copyAnswer', index, true)
   },
   { type: 'separator' },
@@ -151,17 +152,17 @@ const commonContext = (event, index, isEmpty, isMultiLine, hasAnswer) => [
  * Registers IPC handlers for input, output, textbox, and sync folder context menus.
  */
 export function setupContextMenus() {
-  ipcMain.on('inputContextMenu', (event, index, isEmpty, isMultiLine, hasAnswer) => {
+  ipcMain.on('inputContextMenu', (event, index, isEmpty, isMultiLine, hasAnswer, hasLine = hasAnswer) => {
     Menu.buildFromTemplate([
-      ...contextHeader(index, isMultiLine, hasAnswer),
-      ...commonContext(event, index, isEmpty, isMultiLine, hasAnswer)
+      ...inputContextHeader(index, isEmpty, isMultiLine),
+      ...commonContext(event, index, isEmpty, isMultiLine, hasAnswer, hasLine)
     ]).popup()
   })
 
-  ipcMain.on('outputContextMenu', (event, index, isEmpty, hasAnswer) => {
+  ipcMain.on('outputContextMenu', (event, index, isEmpty, hasAnswer, hasLine = hasAnswer) => {
     Menu.buildFromTemplate([
-      ...contextHeader(index, false, hasAnswer),
-      ...commonContext(event, index, isEmpty, false, hasAnswer)
+      ...outputContextHeader(index, isEmpty),
+      ...commonContext(event, index, isEmpty, false, hasAnswer, hasLine)
     ]).popup()
   })
 
@@ -174,12 +175,8 @@ export function setupContextMenus() {
       {
         label: 'Open folder',
         click: () => {
-          try {
-            if (isValidDirectory(dirPath)) {
-              shell.openPath(dirPath)
-            }
-          } catch (err) {
-            log.error('Failed to open sync folder:', err)
+          if (isValidDirectory(dirPath)) {
+            shell.openPath(dirPath)
           }
         }
       }
@@ -212,6 +209,7 @@ export function setupApplicationMenu({ promptImportPage, resetSize }) {
               {
                 label: 'Settings...',
                 accelerator: 'CmdOrCtrl+,',
+                registerAccelerator: false,
                 click: () => sendToWindow('menuAction', 'openSettings')
               },
               {
@@ -248,9 +246,7 @@ export function setupApplicationMenu({ promptImportPage, resetSize }) {
         { type: 'separator' },
         {
           label: 'Import Page...',
-          click: () => {
-            promptImportPage()
-          }
+          click: promptImportPage
         },
         {
           label: 'Export Page...',
@@ -264,7 +260,15 @@ export function setupApplicationMenu({ promptImportPage, resetSize }) {
           click: () => sendToWindow('print')
         },
         { type: 'separator' },
-        isMac ? { role: 'close' } : { role: 'quit' }
+        isMac
+          ? { role: 'close' }
+          : {
+              label: 'Quit',
+              click: () => {
+                setAppQuitting(true)
+                app.quit()
+              }
+            }
       ]
     },
     {
@@ -317,8 +321,7 @@ export function setupApplicationMenu({ promptImportPage, resetSize }) {
         { role: 'zoomOut' },
         { type: 'separator' },
         { role: 'togglefullscreen' },
-        { type: 'separator' },
-        { role: 'toggleDevTools' }
+        ...(app.isPackaged ? [] : [{ type: 'separator' }, { role: 'toggleDevTools' }])
       ]
     },
     {
@@ -330,9 +333,7 @@ export function setupApplicationMenu({ promptImportPage, resetSize }) {
         {
           label: 'Reset Window Size',
           click: () => {
-            const win = getWindow()
-
-            if (win && !win.isDestroyed() && win.webContents) {
+            if (getWindow()?.webContents) {
               sendToWindow('menuAction', 'resetSize')
             } else {
               resetSize()

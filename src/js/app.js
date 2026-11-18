@@ -6,8 +6,7 @@ import { cm, setupEditor } from './editor/index.js'
 import { isSearchPanelOpen } from './editor/searchPanel.js'
 import { setupPageIo } from './pages/pageIo.js'
 import { initializePages } from './pages/pageManager.js'
-import { checkSyncDir, handleSyncDirDeleted, setupSync, triggerFolderSync } from './pages/sync.js'
-import { app } from './state/appState.js'
+import { initializeSync, setupSync } from './pages/sync.js'
 import { isElectron, isMobile } from './state/env.js'
 import { migrateAppState } from './state/migration.js'
 import { initializeContextMenus } from './ui/contextMenu.js'
@@ -33,16 +32,6 @@ async function initializeApp() {
   document.documentElement.classList.toggle('is-mobile', isMobile || isCoarsePointer)
 
   if (!isElectron && 'serviceWorker' in navigator) {
-    let refreshing = false
-
-    if (navigator.serviceWorker.controller) {
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (refreshing) return
-        refreshing = true
-        window.location.reload()
-      })
-    }
-
     const registerSW = () => {
       navigator.serviceWorker
         .register('sw.js', { updateViaCache: 'none' })
@@ -55,12 +44,6 @@ async function initializeApp() {
     } else {
       window.addEventListener('load', registerSW)
     }
-  }
-
-  if (document.fonts?.load) {
-    Promise.all([document.fonts.load('400 1rem "Google Sans"'), document.fonts.load('400 1rem "Roboto Mono"')]).catch(
-      () => {}
-    )
   }
 
   migrateAppState({ defaultColors: colors.defaults })
@@ -87,6 +70,9 @@ async function initializeApp() {
   setupUIkitUtils()
   initializePageList()
   setupPageIo()
+
+  await initializeSync()
+
   initializePages()
   initializeContextMenus()
   initializeSettingsTooltips()
@@ -94,37 +80,21 @@ async function initializeApp() {
   checkAppUpdate()
 
   if (isElectron) {
-    if (app.settings.syncDirEnabled && app.settings.syncDir) {
-      const syncDirExists = await checkSyncDir()
-
-      if (syncDirExists) {
-        numara.startWatchingSyncDir(app.settings.syncDir)
-        triggerFolderSync().catch(console.error)
-      }
-    }
-
-    numara.onSyncDirChanged(() => {
-      triggerFolderSync().catch(console.error)
-    })
-
-    numara.onSyncDirDeleted(() => {
-      handleSyncDirDeleted().catch(console.error)
-    })
-
     numara.rendererReady()
   }
 
-  window.addEventListener('focus', () => {
-    if (!isModalOpen() && !isSearchPanelOpen()) {
+  const focusEditorIfIdle = () => {
+    if (
+      !isModalOpen() &&
+      !isSearchPanelOpen() &&
+      !document.activeElement?.matches?.('.pageListRenameInput, .pageTabRenameInput')
+    ) {
       cm.focus()
     }
-  })
+  }
 
-  setTimeout(() => {
-    if (!isModalOpen() && !isSearchPanelOpen()) {
-      cm.focus()
-    }
-  }, 500)
+  window.addEventListener('focus', focusEditorIfIdle)
+  setTimeout(focusEditorIfIdle, 500)
 }
 
 initializeApp().catch((error) => console.error('Failed to initialize app:', error))

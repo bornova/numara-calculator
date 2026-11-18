@@ -3,37 +3,35 @@ import UIkit from 'uikit'
 import { calculate, clearEvaluationCache } from '../calc/calcManager.js'
 import { getRates } from '../calc/currencies.js'
 import { syncOutputHeights } from '../calc/outputRenderer.js'
-import { app as coreApp } from '../core/mathInstance.js'
-import {
-  HIDPI_MIN_DPR,
-  isCommaDecimal,
-  resolveEditorFontSize,
-  resolveEditorFontWeight,
-  resolveEditorLineHeight,
-  resolveUiFontGrade
-} from '../core/utils.js'
+import { reapplyMainThreadUdu } from '../calc/userDefined.js'
+import { refreshCurrencyState } from '../core/mathInstance.js'
+import { isCommaDecimal } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
 import { clearSyncCache, triggerFolderSync, updateSyncUiState } from '../pages/sync.js'
-import { app } from '../state/appState.js'
-import {
-  checkSize,
-  DEFAULT_APP_HEIGHT,
-  DEFAULT_APP_WIDTH,
-  getTheme,
-  isElectron,
-  isMac,
-  isMobile
-} from '../state/env.js'
+import { app, DEFAULT_INPUT_WIDTH, DEFAULT_SETTINGS, SETTING_SELECT_OPTIONS } from '../state/appState.js'
+import { DEFAULT_APP_HEIGHT, DEFAULT_APP_WIDTH, isElectron, isLinux, isMac } from '../state/env.js'
 import { initStoreObject, store } from '../state/store.js'
 import { confirm, modal, showError } from './dialogs.js'
-import { getDockedPageListWidth, setupPageList } from './pageList.js'
+import { checkSize, getDockedPageListWidth, setupPageList } from './pageList.js'
 import { colors } from './theme.js'
 
 let updateInterval
 let eventsInitialized = false
 
 const RANGE_KEYS = ['precision', 'expUpper', 'expLower', 'calcTimeout']
+
+const FONT_SIZE_ZOOM_MAP = {
+  smaller: { '12px': '11px', '13px': '12px', '14px': '13px', '15px': '14px', '16px': '15px' },
+  normal: { '12px': '12px', '13px': '13px', '14px': '14px', '15px': '15px', '16px': '16px' },
+  larger: { '12px': '13px', '13px': '14px', '14px': '15px', '15px': '16px', '16px': '17px' }
+}
+
+const LINE_HEIGHT_ZOOM_MAP = {
+  smaller: { '17px': '16px', '21px': '20px', '26px': '24px', '30px': '28px', '34px': '32px' },
+  normal: { '17px': '17px', '21px': '21px', '26px': '26px', '30px': '30px', '34px': '34px' },
+  larger: { '17px': '18px', '21px': '22px', '26px': '28px', '30px': '32px', '34px': '36px' }
+}
 
 /**
  * Check if a setting is modified from its default value and toggle its indicator dot.
@@ -57,13 +55,12 @@ function checkWarnings() {
  * Populates a select HTML element with given options.
  *
  * @param {HTMLSelectElement} selectEl The select element to populate.
- * @param {Record<string, string>} options Value-to-label map.
- * @param {string|null} [disabledValue=null] An optional value to disable in the select options.
+ * @param {Array<[string|null, string]>} options Ordered `[value, label]` tuples (`null` value renders a disabled option).
  */
-function populateSelect(selectEl, options, disabledValue = null) {
-  selectEl.innerHTML = Object.entries(options)
+function populateSelect(selectEl, options) {
+  selectEl.innerHTML = options
     .map(([value, label]) =>
-      value === disabledValue ? `<option disabled>${label}</option>` : `<option value="${value}">${label}</option>`
+      value === null ? `<option disabled>${label}</option>` : `<option value="${value}">${label}</option>`
     )
     .join('')
 }
@@ -80,12 +77,6 @@ function setupSettingsEvents() {
 
   if (isElectron) {
     numara.themeUpdate(() => settings.setTheme())
-  }
-
-  if (!isMac && !isMobile && window.matchMedia) {
-    window.matchMedia(`(min-resolution: ${HIDPI_MIN_DPR}dppx)`).addEventListener('change', () => {
-      settings.apply()
-    })
   }
 
   dom.defaultSettingsButton.addEventListener('click', () => {
@@ -141,13 +132,8 @@ function setupSettingsEvents() {
   dom.localeWarn.addEventListener('click', () => {
     showError(
       'Caution: Semicolon argument separator',
-      `When ${app.settings.numberFormat} format is selected, comma (,) is used as the decimal separator. Therefore, you must use semicolon (;) as the argument separator in all applicable functions. Ex. sum(1;3) // 4`,
-      true
+      `When ${app.settings.numberFormat} format is selected, comma (,) is used as the decimal separator. Therefore, you must use semicolon (;) as the argument separator in all applicable functions. Ex. sum(1;3) // 4`
     )
-  })
-
-  dom.currencyWarn.addEventListener('click', () => {
-    showError('App restart needed', `Currencies used in existing calculations will be removed after app restart.`)
   })
 
   RANGE_KEYS.forEach((key) => {
@@ -216,7 +202,7 @@ function setupSettingsEvents() {
       if (id === 'syncDirEnabled' || id === 'syncDir') {
         if (app.settings.syncDirEnabled && app.settings.syncDir) {
           triggerFolderSync().catch(console.error)
-        } else {
+        } else if (!isElectron) {
           clearSyncCache()
         }
       }
@@ -247,6 +233,21 @@ function setupSettingsEvents() {
 }
 
 /**
+ * Get the active application theme ('dark' or 'light').
+ * @returns {Promise<string>} Resolves to 'dark' or 'light'.
+ */
+async function getTheme() {
+  const theme = app.settings.theme
+
+  if (theme === 'dark') return 'dark'
+  if (theme !== 'system') return 'light'
+
+  const prefersDark = isElectron ? await numara.isDark() : window.matchMedia('(prefers-color-scheme: dark)').matches
+
+  return prefersDark ? 'dark' : 'light'
+}
+
+/**
  * Apply input/output panel widths and styles based on the current answerPosition setting.
  */
 function applyAnswerPositionLayout() {
@@ -254,7 +255,11 @@ function applyAnswerPositionLayout() {
   const isBottom = pos === 'bottom'
   const isLeft = pos === 'left'
 
-  dom.input.style.width = isBottom ? '100%' : isLeft ? `${store.get('inputWidth') ?? 60}%` : '60%'
+  dom.input.style.width = isBottom
+    ? '100%'
+    : isLeft
+      ? `${store.get('inputWidth') ?? DEFAULT_INPUT_WIDTH}%`
+      : `${DEFAULT_INPUT_WIDTH}%`
   dom.output.style.width = isBottom ? '20px' : ''
   dom.output.style.minWidth = isBottom ? '20px' : isLeft ? '120px' : ''
   dom.output.style.textAlign = isLeft ? 'left' : 'right'
@@ -263,58 +268,13 @@ function applyAnswerPositionLayout() {
 
 export const settings = {
   /** Default settings. */
-  defaults: {
-    alwaysOnTop: false,
-    syncDirEnabled: false,
-    syncDir: '',
-    answerPosition: 'left',
-    autocomplete: true,
-    closeBrackets: true,
-    contPrevLine: true,
-    copyThouSep: false,
-    currency: true,
-    currencyInterval: '0',
-    dateDay: false,
-    dateFormat: 'MM/dd/yyyy',
-    expLower: '-12',
-    expUpper: '12',
-    fontSize: '14px',
-    fontWeight: '400',
-    inputWidth: 60,
-    keywordTips: true,
-    lineErrors: false,
-    lineHeight: '26px',
-    lineNumbers: true,
-    lineWrap: true,
-    truncateAnswers: true,
-    matchBrackets: true,
-    matrixType: 'Matrix',
-    newPageOnStart: false,
-    notation: 'auto',
-    notifyDuration: '5000',
-    notifyLocation: 'bottom-center',
-    numberFormat: '1,234.56',
-    numericOutput: 'number',
-    pageListPosition: 'auto',
-    precision: '4',
-    calcTimeout: '10',
-    predictable: false,
-    rulers: false,
-    syntax: true,
-    theme: 'system',
-    zoomLevel: 'normal',
-    thouSep: true,
-    showTray: false,
-    openAtLogin: false,
-    escToClose: false
-  },
+  defaults: DEFAULT_SETTINGS,
 
   /** Initialize settings. */
   initialize: async () => {
     setupSettingsEvents()
 
     app.settings = initStoreObject('settings', settings.defaults)
-    coreApp.settings = app.settings
 
     dom.els('.settingItem').forEach((item) => {
       const id = item.getAttribute('id')
@@ -347,44 +307,17 @@ export const settings = {
       }
     })
 
-    populateSelect(dom.answerPosition, {
-      left: 'Left (with divider)',
-      right: 'Right (no divider)',
-      bottom: 'Below Expression'
-    })
-    populateSelect(dom.numberFormat, {
-      '1,234.56': '1,234.56',
-      '1.234,56': '1.234,56',
-      '1 234.56': '1 234.56',
-      '1 234,56': '1 234,56'
-    })
-    populateSelect(dom.dateFormat, {
-      'MM/dd/yyyy': 'MM/DD/YYYY',
-      'dd/MM/yyyy': 'DD/MM/YYYY',
-      'yyyy-MM-dd': 'YYYY-MM-DD'
-    })
-    populateSelect(dom.numericOutput, { number: 'Number', BigNumber: 'BigNumber', Fraction: 'Fraction' })
-    populateSelect(
-      dom.notation,
-      {
-        auto: 'Auto',
-        engineering: 'Engineering',
-        exponential: 'Exponential',
-        fixed: 'Fixed',
-        spacer: '-',
-        bin: 'Binary',
-        hex: 'Hexadecimal',
-        oct: 'Octal'
-      },
-      'spacer'
-    )
-    populateSelect(dom.matrixType, { Matrix: 'Matrix', Array: 'Array' })
+    for (const [id, options] of Object.entries(SETTING_SELECT_OPTIONS)) {
+      populateSelect(dom[id], options)
+    }
 
-    dom
-      .els('#alwaysOnTopContainer, #showTrayContainer, #openAtLoginContainer, #escToCloseContainer, #syncTab')
-      .forEach((el) => {
-        el.style.display = isElectron ? '' : 'none'
-      })
+    dom.els('#alwaysOnTopContainer, #showTrayContainer, #escToCloseContainer, #syncTab').forEach((el) => {
+      el.style.display = isElectron ? '' : 'none'
+    })
+
+    if (dom.openAtLoginContainer) {
+      dom.openAtLoginContainer.style.display = isElectron && !isLinux ? '' : 'none'
+    }
 
     const showTrayLabel = dom.el('#showTrayContainer [data-help="showTray"]')
     if (showTrayLabel) {
@@ -445,11 +378,13 @@ export const settings = {
    * @param {boolean} [shouldCalculate=true] Whether to trigger a recalculation after applying settings.
    */
   apply: async (shouldCalculate = true) => {
-    coreApp.settings = app.settings
     clearEvaluationCache()
 
     await settings.setTheme()
     if (app.colors) colors.apply()
+    if (refreshCurrencyState(app.currencies, app.settings.currency)) {
+      reapplyMainThreadUdu()
+    }
 
     if (isElectron) {
       numara.setTheme(app.settings.theme)
@@ -459,32 +394,19 @@ export const settings = {
     }
 
     const zoomLevel = app.settings.zoomLevel || 'normal'
-    const useMacScale = isMac || isMobile
-    const isHiDpi = (window.devicePixelRatio || 1) >= HIDPI_MIN_DPR
-    const isLowDpiDesktop = !useMacScale && !isHiDpi
-
     document.documentElement.dataset.zoom = zoomLevel
 
-    if (isLowDpiDesktop) {
-      document.documentElement.dataset.lowDpi = 'true'
-    } else {
-      delete document.documentElement.dataset.lowDpi
-    }
-
-    document.documentElement.style.setProperty('--ui-font-grad', resolveUiFontGrade(useMacScale, isHiDpi))
-    document.documentElement.style.setProperty('--mono-weight', resolveEditorFontWeight('400', useMacScale, isHiDpi))
-
-    const effectiveFontSize = resolveEditorFontSize(app.settings.fontSize, zoomLevel, isLowDpiDesktop)
-    const effectiveFontWeight = resolveEditorFontWeight(app.settings.fontWeight, useMacScale, isHiDpi)
-    const effectiveLineHeight = resolveEditorLineHeight(app.settings.lineHeight, zoomLevel, isLowDpiDesktop)
+    const effectiveFontSize = FONT_SIZE_ZOOM_MAP[zoomLevel]?.[app.settings.fontSize] || app.settings.fontSize
+    const effectiveLineHeight = LINE_HEIGHT_ZOOM_MAP[zoomLevel]?.[app.settings.lineHeight] || app.settings.lineHeight
 
     dom.els('.panelFont, .input .CodeMirror').forEach((el) => {
       el.style.fontSize = effectiveFontSize
-      el.style.fontWeight = effectiveFontWeight
+      el.style.fontWeight = app.settings.fontWeight
       el.style.setProperty('line-height', effectiveLineHeight, 'important')
     })
 
     dom.mainPanel.classList.toggle('showRulers', app.settings.rulers)
+    dom.mainPanel.classList.toggle('truncateAnswers', app.settings.truncateAnswers)
     dom.output.classList.toggle('truncateAnswers', app.settings.truncateAnswers)
 
     if (app.settings.answerPosition !== 'bottom') {
@@ -542,6 +464,9 @@ export const settings = {
 
   /** Save settings to local storage. */
   save: () => {
+    const prevCurrency = app.settings.currency
+    const prevInterval = app.settings.currencyInterval
+
     Object.keys(app.settings).forEach((key) => {
       const el = dom.el('#' + key)
 
@@ -551,13 +476,15 @@ export const settings = {
       }
     })
 
-    if (!dom.currency.checked) {
+    if (!app.settings.currency) {
       store.remove('rateDate')
     }
 
-    dom.currencyWarn.style.display = app.settings.currency ? 'none' : 'inline-flex'
-
-    if (!store.get('rateDate') && app.settings.currency) {
+    if (
+      app.settings.currency &&
+      (!prevCurrency || (prevInterval === 'manual' && app.settings.currencyInterval !== 'manual')) &&
+      !store.get('rateDate')
+    ) {
       getRates()
     }
 
@@ -578,7 +505,10 @@ export const settings = {
 
       if (mod) {
         mod.style.pointerEvents = enabled ? 'auto' : 'none'
-        mod.parentNode.style.opacity = enabled ? '1' : '0.5'
+
+        if (mod.parentNode !== el.parentNode) {
+          mod.style.opacity = enabled ? '1' : '0.5'
+        }
       }
     }
 
@@ -589,9 +519,21 @@ export const settings = {
 
     toggle(dom.expUpper, isAutoNotation)
     toggle(dom.expLower, isAutoNotation)
+    dom.expUpperLabel.style.opacity = isAutoNotation ? '1' : '0.5'
+    dom.expLowerLabel.style.opacity = isAutoNotation ? '1' : '0.5'
+
     toggle(dom.copyThouSep, app.settings.thouSep)
 
-    dom.currencyInterval.disabled = !app.settings.currency
-    dom.updateRatesLink.dataset.enabled = app.settings.currency
+    const isCurrency = app.settings.currency
+
+    dom.currencyInterval.disabled = !isCurrency
+    dom.currencyInterval.style.opacity = isCurrency ? '1' : '0.5'
+    dom.updateRatesLink.dataset.enabled = isCurrency
+
+    const currencyIntervalMod = dom.el('#currencyIntervalMod')
+    if (currencyIntervalMod) {
+      currencyIntervalMod.style.pointerEvents = isCurrency ? 'auto' : 'none'
+      currencyIntervalMod.style.opacity = isCurrency ? '1' : '0.5'
+    }
   }
 }

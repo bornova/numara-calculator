@@ -1,9 +1,15 @@
-import fs from 'fs-extra'
+import fs from 'node:fs'
+import path from 'node:path'
 import { create, all } from 'mathjs'
 
-export const math = create(all)
+const math = create(all)
 
 const WIKI_BASE_URL = 'https://github.com/bornova/numara-calculator/wiki'
+
+function writeWikiFile(filePath, content) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true })
+  fs.writeFileSync(filePath, content, 'utf8')
+}
 
 const categorize = (obj) =>
   obj.reduce((catList, key) => {
@@ -14,7 +20,7 @@ const categorize = (obj) =>
   }, {})
 
 /** Generate Home wiki page */
-export function generateHomeWiki() {
+function generateHomeWiki() {
   const homeWiki = `Welcome to the **Numara Calculator** wiki!
 
 Numara is a sleek, minimal-but-powerful notepad calculator that evaluates expressions as you type, combining the flexibility of a text editor with the power of a scientific calculator.
@@ -29,11 +35,11 @@ Numara is a sleek, minimal-but-powerful notepad calculator that evaluates expres
 * [Known issues](${WIKI_BASE_URL}/Known-issues) — Known platform and third-party issues
 `
 
-  fs.outputFileSync('wiki/Home.md', homeWiki)
+  writeWikiFile('wiki/Home.md', homeWiki)
 }
 
 /** Generate Features wiki page */
-export function generateFeaturesWiki() {
+function generateFeaturesWiki() {
   const featuresWiki = `In addition to all [constants](https://mathjs.org/docs/reference/constants.html), [functions](https://mathjs.org/docs/reference/functions.html), and [units](https://mathjs.org/docs/datatypes/units.html) provided by Math.js, the following functionalities are provided:
 
 ### Variables and data structures
@@ -106,7 +112,7 @@ Plot functions can also reference numeric variables defined earlier on the page 
 
 ### Currency calculations
 
-When enabled, Numara fetches exchange rates from [frankfurter.dev](https://frankfurter.dev) and registers currencies as units. You can use three-letter ISO currency codes (case-insensitive) or currency symbols (\`$\`, \`€\`, \`£\`, \`¥\`, \`₹\`, \`₩\`, \`₽\`, \`₺\`, \`R$\`, \`₪\`, \`₱\`, \`฿\`, \`₫\`, \`₴\`, \`₦\`, \`zł\`, \`Kč\`, \`₿\`, etc.) in calculations such as \`1 usd to eur\`, \`$10 to EUR\`, \`10 € to USD\`, \`R$50 to USD\`, and \`25 hours * $50/hr\`.
+Currency symbols (\`$\`, \`€\`, \`£\`, \`¥\`, \`₹\`, \`₩\`, \`₽\`, \`₺\`, \`R$\`, \`₪\`, \`₱\`, \`฿\`, \`₫\`, \`₴\`, \`₦\`, \`zł\`, \`Kč\`, \`₿\`, etc.) and three-letter ISO currency codes (case-insensitive) work as calculation units (e.g. \`$10 + $5\`, \`100 EUR + 50 EUR\`, or \`25 hours * $50/hr\`). When **Currency** is enabled in settings, Numara fetches exchange rates from [frankfurter.dev](https://frankfurter.dev) so you can convert between currencies such as \`1 usd to eur\`, \`$10 to EUR\`, \`10 € to USD\`, and \`R$50 to USD\`. When disabled, rate fetching and cross-currency conversions are turned off while currency symbols and codes remain usable as standalone units.
 
 ### Commenting
 
@@ -214,12 +220,12 @@ Click **Search** in the menu or press \`Cmd/Ctrl+F\` to open the search panel, o
   \`\`\`
 `
 
-  fs.outputFileSync('wiki/Features.md', featuresWiki)
+  writeWikiFile('wiki/Features.md', featuresWiki)
 }
 
 /** Generate Settings wiki page */
-export function generateSettingsWiki() {
-  const settingsWiki = `> Any setting modified from its default value displays a blue indicator dot next to its control. Clicking the indicator dot resets that individual setting back to its default.
+function generateSettingsWiki() {
+  const settingsWiki = `> Any setting modified from its default value displays an orange indicator dot next to its control. Clicking the indicator dot resets that individual setting back to its default.
 
 ### General
 
@@ -240,7 +246,7 @@ export function generateSettingsWiki() {
 \`Always on top\` On | Off (Default) *(Desktop only)*
 - Keep the Numara window floating on top of all other application windows on the screen.
 
-\`Start at login\` On | Off (Default) *(Desktop only)*
+\`Start at login\` On | Off (Default) *(macOS and Windows only)*
 - Start Numara automatically when logging into your computer.
 
 \`Start with blank page\` On | Off (Default)
@@ -380,7 +386,7 @@ export function generateSettingsWiki() {
 #### Currency
 
 \`Enabled\` On (Default) | Off
-- Enable currency conversions and currency code/symbol recognition. Exchange rates are provided by [frankfurter.dev](https://frankfurter.dev). *(Note: When turned Off, currencies already registered in the current session are removed after restarting the app.)*
+- Enable exchange rate updates and cross-currency conversions (rates provided by [frankfurter.dev](https://frankfurter.dev)). When Off, currency symbols and ISO codes remain usable as standalone units without exchange-rate conversions.
 
 \`Rate update interval\` On start (Default) | 1 hour | 3 hours | 6 hours | 12 hours | Manual
 - Set how often currency exchange rates are updated in the background, or select \`Manual\` to update only when clicking the **Update now** refresh button next to the selector (requires \`Currency\` to be Enabled).
@@ -403,11 +409,11 @@ export function generateSettingsWiki() {
 - **Reset window size** *(Desktop only)*: Restore the application window to its default dimensions when resized.
 `
 
-  fs.outputFileSync('wiki/Settings.md', settingsWiki)
+  writeWikiFile('wiki/Settings.md', settingsWiki)
 }
 
 /** Generate Keyboard shortcuts wiki page */
-export function generateShortcutsWiki() {
+function generateShortcutsWiki() {
   const shortcutsWiki = `### Application Shortcuts
 
 | Shortcut (macOS) | Shortcut (Windows / Linux) | Action |
@@ -415,7 +421,7 @@ export function generateShortcutsWiki() {
 | \`Cmd+N\` | \`Ctrl+N\` | Create a new page |
 | \`Cmd+D\` | \`Ctrl+D\` | Clear the current page |
 | \`Cmd+P\` | \`Ctrl+P\` | Print the current page |
-| \`Cmd+,\` | \`Ctrl+,\` *(Linux)* | Open Settings *(Desktop)* |
+| \`Cmd+,\` | \`Ctrl+,\` | Open Settings |
 | \`Shift+Tab\` | \`Shift+Tab\` | Open or close the page list (when not docked or in Tabs mode) |
 | \`Esc\` | \`Esc\` | Close open modal, dropdown, search panel, or app window (when **Close app on Esc key** is enabled) |
 
@@ -453,20 +459,20 @@ export function generateShortcutsWiki() {
 | **Right-click input / output panel** *(Desktop)* | Copy line, answer, line with answer, or all lines/answers |
 `
 
-  fs.outputFileSync('wiki/Keyboard-shortcuts.md', shortcutsWiki)
+  writeWikiFile('wiki/Keyboard-shortcuts.md', shortcutsWiki)
 }
 
 /** Generate Known issues wiki page */
-export function generateKnownIssuesWiki() {
+function generateKnownIssuesWiki() {
   const knownIssuesWiki = `#### Known issues as of 2026-05-14
 - Microsoft SwiftKey backspace button does not move cursor to previous line when cursor reaches the beginning of a line ([#183](https://github.com/bornova/numara-calculator/issues/183))
 `
 
-  fs.outputFileSync('wiki/Known-issues.md', knownIssuesWiki)
+  writeWikiFile('wiki/Known-issues.md', knownIssuesWiki)
 }
 
 /** Generate function references page */
-export function generateFunctionsWiki() {
+function generateFunctionsWiki() {
   const functions = Object.entries(math.expression.mathWithTransform).reduce((help, [f]) => {
     try {
       help.push(math.help(f).toJSON())
@@ -477,7 +483,7 @@ export function generateFunctionsWiki() {
     return help
   }, [])
 
-  const functionsByCat = Object.entries(categorize(functions)).sort()
+  const functionsByCat = Object.entries(categorize(functions)).sort(([a], [b]) => a.localeCompare(b))
 
   const exclusions = ['Core', 'Expression']
 
@@ -519,11 +525,11 @@ export function generateFunctionsWiki() {
     })
   }
 
-  fs.outputFileSync('wiki/Function-references.md', functionsWiki.replace(/^ +/gm, ''))
+  writeWikiFile('wiki/Function-references.md', functionsWiki.replace(/^ +/gm, ''))
 }
 
 /** Generate unit references page */
-export function generateUnitsWiki() {
+function generateUnitsWiki() {
   const units = Object.entries(math.Unit.UNITS).reduce((units, [u, value]) => {
     units.push({
       category: value.base.key,
@@ -534,7 +540,7 @@ export function generateUnitsWiki() {
     return units
   }, [])
 
-  const unitsByCategory = Object.entries(categorize(units)).sort()
+  const unitsByCategory = Object.entries(categorize(units)).sort(([a], [b]) => a.localeCompare(b))
 
   let unitsWiki = ``
 
@@ -558,7 +564,7 @@ export function generateUnitsWiki() {
     })
   }
 
-  fs.outputFileSync('wiki/Unit-references.md', unitsWiki.replace(/^ +/gm, ''))
+  writeWikiFile('wiki/Unit-references.md', unitsWiki.replace(/^ +/gm, ''))
 }
 
 generateHomeWiki()

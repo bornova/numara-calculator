@@ -172,7 +172,10 @@ function attachInlineRenameInput(titleEl, initialValue, className, onFinish) {
     }
   })
 
-  input.addEventListener('blur', () => finish(true))
+  input.addEventListener('blur', () => {
+    if (!input.isConnected) return
+    finish(true)
+  })
   input.addEventListener('click', (event) => event.stopPropagation())
   input.addEventListener('dblclick', (event) => event.stopPropagation())
 
@@ -186,7 +189,7 @@ function attachInlineRenameInput(titleEl, initialValue, className, onFinish) {
  * @param {HTMLElement|null|undefined} params.containerEl Item or tab element.
  * @param {string} params.titleSelector Selector for the inner title element to replace.
  * @param {string} params.inputClass CSS class for the rename `<input>`.
- * @param {(pageId: string, originalName: string, rawInput: string, save: boolean) => void} params.commitRename Commit callback.
+ * @param {(pageId: string, originalName: string, rawInput: string, save: boolean, restoreDom: (finalName?: string) => void) => void} params.commitRename Commit callback.
  * @returns {{ input: HTMLInputElement, finish: (save: boolean) => void, titleHeight: number }|null}
  */
 export function startInlinePageRename({ pageId, containerEl, titleSelector, inputClass, commitRename }) {
@@ -195,7 +198,9 @@ export function startInlinePageRename({ pageId, containerEl, titleSelector, inpu
   const page = (store.get('pages') || []).find((p) => p.id === pageId)
   const titleEl = containerEl?.querySelector(titleSelector)
 
-  if (!page || !containerEl || !titleEl || containerEl.classList.contains('is-renaming')) return null
+  if (!page || !containerEl || !titleEl || containerEl.classList.contains('is-renaming')) {
+    return null
+  }
 
   const containerHeight = containerEl.offsetHeight
   const titleHeight = titleEl.offsetHeight
@@ -204,9 +209,25 @@ export function startInlinePageRename({ pageId, containerEl, titleSelector, inpu
   containerEl.style.height = `${containerHeight}px`
   containerEl.classList.add('is-renaming')
 
+  let inputRef = null
+  const restoreDom = (finalName = page.name) => {
+    titleEl.textContent = finalName
+
+    if (inputRef?.isConnected) {
+      inputRef.replaceWith(titleEl)
+    }
+
+    containerEl.querySelector('.savePageButton')?.remove()
+    containerEl.style.boxSizing = ''
+    containerEl.style.height = ''
+    containerEl.classList.remove('is-renaming')
+    updatePageTabsScroll()
+  }
+
   const { input, finish } = attachInlineRenameInput(titleEl, page.name, inputClass, (rawValue, save) =>
-    commitRename(pageId, page.name, rawValue, save)
+    commitRename(pageId, page.name, rawValue, save, restoreDom)
   )
+  inputRef = input
 
   return { input, finish, titleHeight }
 }
@@ -275,6 +296,12 @@ export function setupPageTabsEvents({ onRename, onRenamePage, onDuplicate, onDel
     ro.observe(dom.pageTabs)
   }
 
+  dom.pageTabs.addEventListener('mousedown', (event) => {
+    if (event.button === 1) {
+      event.preventDefault()
+    }
+  })
+
   dom.pageTabs.addEventListener('dblclick', (event) => {
     const tabEl = event.target.closest('.pageTab')
 
@@ -291,9 +318,11 @@ export function setupPageTabsEvents({ onRename, onRenamePage, onDuplicate, onDel
     event.preventDefault()
     event.stopPropagation()
 
+    const rect = tabEl.getBoundingClientRect()
+
     openPageContextMenu(tabEl.dataset.page, 'tab', (menuRect) => ({
       left: event.clientX,
-      top: tabEl.getBoundingClientRect().top - menuRect.height - 6
+      top: rect.top - menuRect.height - 6
     }))
   })
 

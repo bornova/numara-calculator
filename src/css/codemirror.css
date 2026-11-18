@@ -209,7 +209,7 @@ body.numara-search-panel-open .CodeMirror-selected {
   align-items: center;
   pointer-events: none;
   color: light-dark(#777777, #999999);
-  font-size: var(--sm-font-size);
+  font-size: 0.92rem;
 }
 
 .search-actions {
@@ -265,7 +265,6 @@ body.numara-search-panel-open.numara-search-replace-open .mainPanel {
 .CodeMirror-hints {
   border-color: light-dark(#c0c0c0, #222222) !important;
   background-color: light-dark(#ffffff, #333333) !important;
-  font-weight: var(--mono-weight);
   font-family: 'Roboto Mono', monospace;
 }
 

@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon'
 
-import { math } from '../core/mathInstance.js'
+import { hasBuiltinConflict, math } from '../core/mathInstance.js'
 import { escapeRegExp } from '../core/utils.js'
 import { app } from '../state/appState.js'
 
@@ -35,7 +35,10 @@ const mathEntries = Object.entries(math.expression.mathWithTransform)
 
 export const mathFunctions = mathEntries.filter(([k]) => typeof math[k] === 'function')
 export const mathConstants = mathEntries.filter(
-  ([k]) => typeof math[k] !== 'function' && typeof math[k] !== 'boolean' && (math[k]?.value || !isNaN(math[k]))
+  ([k]) =>
+    typeof math[k] !== 'function' &&
+    typeof math[k] !== 'boolean' &&
+    (math[k]?.value || math[k]?.isComplex || ((math[k] === null || typeof math[k] === 'number') && !isNaN(math[k])))
 )
 
 /**
@@ -68,10 +71,21 @@ export const constantTokens = new Set(mathConstants.map(([c]) => c))
 export const unitTokens = new Set(allUnits.map((u) => u.token))
 export const keywordTokens = new Set(keywords.map((key) => key.text))
 export const currencyTokens = new Map()
+export const currencyCodeTokens = new Set()
 export let currencySymbolRegex = null
 
+const INTERNAL_LUXON_STATICS = new Set([
+  'parseFormatForOpts',
+  'expandFormat',
+  'resetCache',
+  'buildFormatParser',
+  'fromFormatParser',
+  'fromFormatExplain',
+  'fromStringExplain'
+])
+
 export const dateTimeStaticMethods = Object.getOwnPropertyNames(DateTime).filter(
-  (prop) => typeof DateTime[prop] === 'function'
+  (prop) => typeof DateTime[prop] === 'function' && !INTERNAL_LUXON_STATICS.has(prop)
 )
 
 export const dateTimeInstanceMethods = Object.getOwnPropertyNames(DateTime.prototype).filter(
@@ -81,14 +95,23 @@ export const dateTimeInstanceMethods = Object.getOwnPropertyNames(DateTime.proto
 export const dateTimeMethodsSet = new Set([...dateTimeStaticMethods, ...dateTimeInstanceMethods])
 
 /**
- * Rebuilds the set of currency symbol glyphs from `app.currencies`.
+ * Rebuilds the set of currency symbol glyphs and ISO code tokens from `app.currencies`.
  */
 export function refreshCurrencyTokens() {
   currencyTokens.clear()
+  currencyCodeTokens.clear()
 
   const nonAsciiWordSymbols = []
 
   for (const [code, c] of Object.entries(app.currencies || {})) {
+    currencyCodeTokens.add(code)
+
+    const lowerCode = code.toLowerCase()
+
+    if (!hasBuiltinConflict(lowerCode)) {
+      currencyCodeTokens.add(lowerCode)
+    }
+
     if (c?.symbol && !currencyTokens.has(c.symbol)) {
       currencyTokens.set(c.symbol, code)
 

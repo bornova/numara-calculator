@@ -25,7 +25,8 @@
   margin-bottom: 10px;
 }
 
-#settingsTabs::before {
+#settingsTabs::before,
+#dialogUdfu .uk-tab::before {
   right: 15px;
   left: 15px;
   border-bottom: 1px solid light-dark(#e5e5e5, #333333);
@@ -278,7 +279,8 @@
   background-color: light-dark(#ffffff, #1f1f1f);
   height: calc(100vh - 230px);
   max-height: 420px;
-  overflow: scroll;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .colorPickerContainer > div {
@@ -316,7 +318,6 @@
 .dialog-about-header {
   display: inline-block;
   margin: 0 auto;
-  font-weight: 600;
 }
 
 .dialog-about-header img {
@@ -374,8 +375,8 @@ div:has(> #logsLink) {
 
 #plot,
 .function-plot {
-  height: calc(100vh - 180px) !important;
-  max-height: 800px;
+  height: calc(100vh - 230px) !important;
+  max-height: 750px;
 }
 
 .domain {
@@ -473,6 +474,9 @@ div:has(> #logsLink) {
   justify-content: center;
   gap: 6px;
   margin: 0 0 5px 0;
+  padding: 0 28px;
+  max-height: 54px;
+  overflow-y: auto;
 }
 
 .plotSeriesChip {
@@ -482,8 +486,7 @@ div:has(> #logsLink) {
   background-color: light-dark(#f5f5f5, #2a2a2a);
   padding: 0 12px;
   color: light-dark(#666666, #aaaaaa);
-  font-weight: var(--mono-weight);
-  font-size: var(--sm-font-size);
+  font-size: 0.88rem;
   line-height: 19px;
   font-family: 'Roboto Mono', monospace;
 }
@@ -497,10 +500,6 @@ div:has(> #logsLink) {
   border-color: #1e87f0;
   background-color: light-dark(#eef6ff, #1f3247);
   color: light-dark(#1565c0, #7cc0ff);
-}
-
-.plotSwitches {
-  margin: 0;
 }
 
 /* User Defined Functions & Units dialog */
@@ -571,8 +570,7 @@ div:has(> #logsLink) {
   min-height: 50px;
   max-height: 130px;
   resize: vertical;
-  font-weight: var(--mono-weight);
-  line-height: var(--base-line-height);
+  line-height: 1.4;
   font-family: 'Roboto Mono', monospace;
 }
 
@@ -672,8 +670,7 @@ div:has(> #logsLink) {
 
 .udfuItemCode {
   color: light-dark(#555555, #cccccc);
-  font-weight: var(--mono-weight);
-  font-size: var(--sm-font-size);
+  font-size: 0.92em;
   font-family: 'Roboto Mono', monospace;
 }
 
@@ -683,7 +680,7 @@ div:has(> #logsLink) {
   background-color: light-dark(#eaeef2, #383838);
   padding: 1px 6px;
   color: light-dark(#555555, #bbbbbb);
-  font-size: var(--xs-font-size);
+  font-size: 0.85em;
 }
 
 .udfuItemActions {

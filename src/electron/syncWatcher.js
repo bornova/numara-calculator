@@ -7,6 +7,7 @@ import { getWindow, sendToWindow } from './window.js'
 
 let syncWatcher = null
 let syncWatchTimeout = null
+let watchedDirPath = null
 
 const TRANSIENT_FS_CODES = new Set(['EBUSY', 'EPERM', 'EACCES', 'UNKNOWN'])
 
@@ -51,7 +52,7 @@ export function isValidDirectory(dirPath) {
 }
 
 /**
- * Validates and resolves a sync directory, runs `fn(resolvedDir)`, and logs/rethrows any error.
+ * Validates and resolves a sync directory path, runs `fn(resolvedDir)`, and logs/rethrows any error.
  * @template T
  * @param {string} dirPath Sync directory path.
  * @param {string} label Action description for error logging.
@@ -89,7 +90,9 @@ function getSafeSyncBasename(filename) {
 /**
  * Stops any active file watcher and pending debounce timeout on the sync directory.
  */
-function stopSyncWatcher() {
+export function stopSyncWatcher() {
+  watchedDirPath = null
+
   if (syncWatchTimeout) {
     clearTimeout(syncWatchTimeout)
     syncWatchTimeout = null
@@ -109,30 +112,42 @@ export function setupSyncHandlers() {
 
   ipcMain.handle('selectSyncDirectory', async () => {
     const win = getWindow()
+
+    if (!win) return null
+
     const result = await dialog.showOpenDialog(win, {
       properties: ['openDirectory', 'createDirectory'],
       title: 'Select Local Sync Directory'
     })
 
-    if (result.canceled || !result.filePaths[0]) return null
-
-    return path.resolve(result.filePaths[0])
+    return result.canceled || !result.filePaths[0] ? null : result.filePaths[0]
   })
 
   ipcMain.handle('readSyncDirectory', (event, dirPath) =>
     withValidSyncDir(dirPath, 'reading sync directory', async (resolvedDir) => {
-      const files = await fs.promises.readdir(resolvedDir)
-      const numFiles = files.filter((f) => f.toLowerCase().endsWith('.num'))
+      const entries = await fs.promises.readdir(resolvedDir, { withFileTypes: true })
+      const numEntries = entries.filter((entry) => entry.isFile() && entry.name.toLowerCase().endsWith('.num'))
 
-      return Promise.all(
-        numFiles.map(async (file) => {
-          const filePath = path.join(resolvedDir, file)
-          const content = await withFsRetry(() => fs.promises.readFile(filePath, 'utf8'))
-          const name = file.slice(0, -4)
+      const results = await Promise.all(
+        numEntries.map(async (entry) => {
+          const filePath = path.join(resolvedDir, entry.name)
 
-          return { name, content }
+          try {
+            const content = await withFsRetry(() => fs.promises.readFile(filePath, 'utf8'))
+            const name = entry.name.slice(0, -4)
+
+            return { name, content }
+          } catch (error) {
+            if (error?.code === 'ENOENT') {
+              return null
+            }
+
+            throw error
+          }
         })
       )
+
+      return results.filter(Boolean)
     })
   )
 
@@ -184,23 +199,33 @@ export function setupSyncHandlers() {
 
       if (await pathExists(oldPath)) {
         await withFsRetry(() => fs.promises.rename(oldPath, newPath))
+        return true
       }
 
-      return true
+      return false
     })
   )
 
   ipcMain.on('startWatchingSyncDir', (event, dirPath) => {
-    stopSyncWatcher()
-
-    if (!isValidDirectory(dirPath)) return
+    if (!isValidDirectory(dirPath)) {
+      stopSyncWatcher()
+      return
+    }
 
     const resolvedDir = path.resolve(dirPath)
+
+    if (syncWatcher && watchedDirPath === resolvedDir && fs.existsSync(resolvedDir)) {
+      return
+    }
+
+    stopSyncWatcher()
+    watchedDirPath = resolvedDir
 
     const notifyIfDeleted = () => {
       if (!fs.existsSync(resolvedDir)) {
         stopSyncWatcher()
         sendToWindow('syncDirDeleted')
+
         return true
       }
 
@@ -211,7 +236,7 @@ export function setupSyncHandlers() {
       syncWatcher = fs.watch(resolvedDir, (eventType, filename) => {
         if (notifyIfDeleted()) return
 
-        if (filename && filename.toLowerCase().endsWith('.num')) {
+        if (!filename || filename.toLowerCase().endsWith('.num')) {
           if (syncWatchTimeout) {
             clearTimeout(syncWatchTimeout)
           }

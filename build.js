@@ -4,7 +4,11 @@ import path from 'path'
 
 const pkg = JSON.parse(readFileSync('./package.json'))
 const buildPath = 'build'
-const isProd = process.env.PROD === 'true' || process.env.PROD === '1' || process.env.NODE_ENV === 'production'
+const isProd =
+  process.argv.includes('--prod') ||
+  process.env.PROD === 'true' ||
+  process.env.PROD === '1' ||
+  process.env.NODE_ENV === 'production'
 
 const jsBanner = `/**
 * ${pkg.description}
@@ -18,8 +22,13 @@ const jsBanner = `/**
 
 const cssBanner = `/* ${pkg.description} ${pkg.version} */\n`
 
-const EXCLUDED_PRECACHE_FILES = new Set(['sw.js', 'background.png', 'numara.png', 'icon.ico'])
-const VERSIONED_PRECACHE_FILES = new Set(['./css/app.css', './js/numara.js', './js/calc.worker.js'])
+const EXCLUDED_PRECACHE_FILES = new Set(['sw.js', 'background.png', 'numara.png', 'icon.png'])
+const VERSIONED_PRECACHE_FILES = new Set([
+  './assets/fonts/fonts.css',
+  './css/app.css',
+  './js/numara.js',
+  './js/calc.worker.js'
+])
 
 /**
  * Recursively collect files in the build directory for service worker precaching.
@@ -35,10 +44,14 @@ async function collectPrecacheUrls(dir, root = dir) {
     entries.map((entry) => {
       const entryPath = path.join(dir, entry.name)
 
-      if (entry.isDirectory()) return collectPrecacheUrls(entryPath, root)
+      if (entry.isDirectory()) {
+        return collectPrecacheUrls(entryPath, root)
+      }
+
       if (
         entry.name.endsWith('.map') ||
         entry.name.endsWith('.icns') ||
+        entry.name.endsWith('.ico') ||
         entry.name.includes('trayTemplate') ||
         EXCLUDED_PRECACHE_FILES.has(entry.name)
       ) {
@@ -75,6 +88,7 @@ async function buildNumara() {
         fs.writeFile(
           `${buildPath}/index.html`,
           html
+            .replace('href="assets/fonts/fonts.css"', `href="assets/fonts/fonts.css?v=${pkg.version}"`)
             .replace('href="css/app.css"', `href="css/app.css?v=${pkg.version}"`)
             .replace('src="js/numara.js"', `src="js/numara.js?v=${pkg.version}"`)
         )

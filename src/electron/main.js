@@ -1,11 +1,17 @@
-import { app, dialog } from 'electron'
+import { app, dialog, powerMonitor } from 'electron'
 import log from 'electron-log'
 import * as path from 'node:path'
 
-import { config } from './config.js'
-import { getNumFilePath, promptImportPage, queueOrOpenFile, setupFileHandlers } from './fileHandlers.js'
+import { config, isMac } from './config.js'
+import {
+  getNumFilePath,
+  promptImportPage,
+  queueOrOpenFile,
+  resetRendererReady,
+  setupFileHandlers
+} from './fileHandlers.js'
 import { setupApplicationMenu, setupContextMenus, updateTrayState } from './menu.js'
-import { setupSyncHandlers } from './syncWatcher.js'
+import { setupSyncHandlers, stopSyncWatcher } from './syncWatcher.js'
 import { setupAutoUpdater } from './updater.js'
 import {
   createAppWindow,
@@ -39,16 +45,28 @@ if (startFile) {
 }
 
 app.setAppUserModelId('com.numara.app')
-app.userAgentFallback = `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome || '130.0.0.0'} Safari/537.36`
+app.userAgentFallback = app.userAgentFallback.replace(/\s+(?:Electron|numara)\/\S+/gi, '')
+
+const openAppWindow = () => createAppWindow({ onWindowCreated: updateTrayState, onWindowClosed: resetRendererReady })
+
+const focusOrCreateWindow = () => {
+  if (getWindow()) {
+    showAndFocusWindow()
+  } else if (app.isReady()) {
+    openAppWindow()
+  }
+}
 
 // macOS open-file event handling
 app.on('open-file', (event, filePath) => {
   event.preventDefault()
+  focusOrCreateWindow()
   queueOrOpenFile(filePath)
 })
 
 app.whenReady().then(() => {
-  createAppWindow({ onWindowCreated: updateTrayState })
+  powerMonitor.on('shutdown', () => setAppQuitting(true))
+  openAppWindow()
 })
 
 app.on('before-quit', (event) => {
@@ -56,41 +74,38 @@ app.on('before-quit', (event) => {
     event.preventDefault()
 
     const win = showAndFocusWindow()
-
-    const choice = dialog.showMessageBoxSync(win, {
+    const options = {
       type: 'question',
       buttons: ['Cancel', 'Quit'],
       defaultId: 0,
       cancelId: 0,
       title: 'Quit Numara',
       message: 'Are you sure you want to quit Numara?',
-      detail: 'This will close the calculator and remove it from the menu bar.'
-    })
+      detail: `This will close the calculator and remove it from the ${isMac ? 'menu bar' : 'system tray'}.`
+    }
+
+    const choice = win ? dialog.showMessageBoxSync(win, options) : dialog.showMessageBoxSync(options)
 
     if (choice === 1) {
+      stopSyncWatcher()
       setAppQuitting(true)
       app.quit()
     }
   } else {
+    stopSyncWatcher()
     setAppQuitting(true)
   }
 })
 
-app.on('activate', () => {
-  if (getWindow()) {
-    showAndFocusWindow()
-  } else if (app.isReady()) {
-    createAppWindow({ onWindowCreated: updateTrayState })
-  }
-})
+app.on('activate', focusOrCreateWindow)
 
-app.on('second-instance', (event, commandLine) => {
+app.on('second-instance', (event, commandLine, workingDirectory) => {
   const win = getWindow()
-  const winValid = win && !win.isDestroyed()
+  const fileArg = getNumFilePath(commandLine, workingDirectory)
 
-  if (winValid) {
-    const fileArg = getNumFilePath(commandLine)
+  if (!win && !app.isReady()) return
 
+  if (win) {
     if (!app.isPackaged && !fileArg) {
       showAndFocusWindow()
       win.reload()
@@ -103,14 +118,16 @@ app.on('second-instance', (event, commandLine) => {
     }
 
     showAndFocusWindow()
+  } else {
+    openAppWindow()
+  }
 
-    if (fileArg) {
-      queueOrOpenFile(fileArg)
-    }
+  if (fileArg) {
+    queueOrOpenFile(fileArg)
   }
 })
 
-setupWindowHandlers({ onTrayChanged: updateTrayState })
+setupWindowHandlers({ onTrayChanged: updateTrayState, onBeforeReset: stopSyncWatcher })
 setupFileHandlers()
 setupSyncHandlers()
 setupContextMenus()

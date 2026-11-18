@@ -61,6 +61,7 @@ export function registerExcelFunctions(keys) {
 
   for (const key of keys) {
     const hint = { text: `formulajs.${key}`, className: CLASS_NAMES.EXCEL }
+
     excelHints.push(hint)
     numaraHints.push(hint)
   }
@@ -75,7 +76,9 @@ export function registerExcelFunctions(keys) {
 function getPageExportedVars(rawPageName, pages = store.get('pages') || []) {
   const foundPage = findPageByRef(pages, rawPageName)
 
-  if (!foundPage || !foundPage.data) return null
+  if (!foundPage || !foundPage.data) {
+    return null
+  }
 
   const varNames = new Set()
 
@@ -151,6 +154,7 @@ export function registerEditorHints() {
 
             if (lineNum >= cmCursor.line + 1) continue
           }
+
           variableHints.push({ text: key, className: CLASS_NAMES.VARIABLE })
         }
       }
@@ -210,12 +214,7 @@ export function registerEditorHints() {
                     : `.<span class="cm-variable">${escapeHTML(prop)}</span>`
                 }
               }))
-          } else if (
-            baseVarLower === 'today' ||
-            baseVarLower === 'now' ||
-            app.scopeTypes?.[baseVar] === 'datetime' ||
-            prefix.toLowerCase().startsWith('datetime.')
-          ) {
+          } else if (app.scopeTypes?.[baseVar] === 'datetime' || prefix.toLowerCase().startsWith('datetime.')) {
             matches = dateTimeInstanceMethods
               .filter((m) => m.toLowerCase().startsWith(suffix))
               .map((m) => ({

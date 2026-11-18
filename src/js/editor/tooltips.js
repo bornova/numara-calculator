@@ -1,6 +1,5 @@
 import UIkit from 'uikit'
 
-import { formatAnswer } from '../core/formatter.js'
 import { math } from '../core/mathInstance.js'
 import { escapeHTML, isCommaDecimal } from '../core/utils.js'
 import { app } from '../state/appState.js'
@@ -31,6 +30,10 @@ function showTooltip(target, title) {
     pos: getTooltipPosition(target),
     title
   }).show()
+
+  if (target?.closest?.('.CodeMirror-code') && target.getAttribute('tabindex') === '0') {
+    target.removeAttribute('tabindex')
+  }
 }
 
 /**
@@ -141,7 +144,10 @@ function handleUnitTooltip(target) {
 
   if (!hint) {
     hint = numaraHints.find((h) => h.text === text)
-    if (hint) hintMap.set(text, hint)
+
+    if (hint) {
+      hintMap.set(text, hint)
+    }
   }
 
   showTooltip(target, escapeHTML(hint?.desc || 'Unit description not available'))
@@ -169,9 +175,9 @@ function handleVariableTooltip(target) {
   const lookupKey = parentName ? `${parentName}.${text}` : text
   const val = app.mathScope.get(lookupKey)
 
-  if (!val || app.scopeTypes?.[lookupKey] === 'function') return
+  if (val === undefined || val === '' || app.scopeTypes?.[lookupKey] === 'function') return
 
-  showTooltip(target, escapeHTML(formatAnswer(val, undefined, app.settings, app.currencies)))
+  showTooltip(target, escapeHTML(String(val)))
 }
 
 /**
@@ -181,10 +187,7 @@ function handleVariableTooltip(target) {
 function handleLineNoTooltip(target) {
   const text = target.textContent
   const val = app.mathScope.get(text)
-  const lineTooltip =
-    app.scopeTypes?.[text] === 'function'
-      ? 'Function'
-      : formatAnswer(val ?? 'Undefined', undefined, app.settings, app.currencies)
+  const lineTooltip = app.scopeTypes?.[text] === 'function' ? 'Function' : String(val ?? 'Undefined')
 
   showTooltip(target, escapeHTML(lineTooltip))
 }
@@ -230,7 +233,9 @@ export function initTooltips(cmInstance) {
     if (app.settings.keywordTips && className?.startsWith('cm-')) {
       const handler = TOOLTIP_HANDLERS[className]
 
-      if (handler) handler(event.target)
+      if (handler) {
+        handler(event.target)
+      }
     }
 
     if (className !== 'CodeMirror-linenumber') return

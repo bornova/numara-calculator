@@ -11,10 +11,21 @@ import { isModalOpen } from './dialogs.js'
  */
 export function setupKeyboardShortcuts() {
   const keys = {
+    '$mod+,': 'settingsButton',
     '$mod+D': 'clearButton',
     '$mod+N': 'newPageButton',
     '$mod+P': 'printButton',
     'Shift+TAB': 'pageName'
+  }
+
+  const isEditableNonEditorTarget = (event) => {
+    const target = event.target
+
+    if (!target || typeof target.closest !== 'function' || target.closest('.CodeMirror')) {
+      return false
+    }
+
+    return Boolean(target.closest('input, textarea, select, [contenteditable="true"]'))
   }
 
   const closePageListIfOpen = () =>
@@ -24,6 +35,8 @@ export function setupKeyboardShortcuts() {
 
   for (const [command, button] of Object.entries(keys)) {
     shortcuts[command] = (event) => {
+      if (isEditableNonEditorTarget(event)) return
+
       if (command === 'Shift+TAB') {
         if (app.pageListDocked || app.settings.pageListPosition === 'tabs') return
 
@@ -46,7 +59,7 @@ export function setupKeyboardShortcuts() {
         event.stopPropagation()
       }
 
-      if (!isModalOpen()) {
+      if (!dom.el('.modal.uk-open, .dialogConfirm.uk-open')) {
         dom[button].click()
       } else {
         closePageListIfOpen()
@@ -76,7 +89,7 @@ export function setupKeyboardShortcuts() {
           !isModalOpen() &&
           !isSearchPanelOpen() &&
           !event.target.closest?.('.pageListRenameInput, .pageTabRenameInput') &&
-          !dom.tabContextMenu?.classList.contains('uk-open') &&
+          !dom.el('.uk-dropdown.uk-open') &&
           (!cm || !cm.state.completionActive)
         ) {
           event.preventDefault()

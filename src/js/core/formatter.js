@@ -5,7 +5,7 @@ import {
   CLASS_PLOT_BUTTON,
   PAGE_OBJECT_SYMBOL
 } from './constants.js'
-import { app, currencyFormatRegex, math } from './mathInstance.js'
+import { calcState, currencyFormatRegex, math } from './mathInstance.js'
 import { transformOutsideStrings } from './preprocessor.js'
 import { escapeHTML, getNumberFormat } from './utils.js'
 
@@ -57,28 +57,34 @@ function formatNumericString(numStr, decSep, grpSep, useGrp) {
     }
   }
 
-  if (decimalPart) return integerPart + decSep + decimalPart
+  if (decimalPart) {
+    return integerPart + decSep + decimalPart
+  }
 
   return integerPart
 }
 
 /**
- * Strips surrounding double quotes from a formatted string answer.
+ * Strips a balanced pair of surrounding double quotes from a formatted string answer.
  * @param {*} answer Raw or formatted answer.
  * @returns {*}
  */
 export function stripAnswer(answer) {
-  return typeof answer === 'string' ? answer.replace(/^"|"$/g, '') : answer
+  return typeof answer === 'string' && answer.length >= 2 && answer.startsWith('"') && answer.endsWith('"')
+    ? answer.slice(1, -1)
+    : answer
 }
 
 /**
  * Parses a localized number string into a standard JavaScript float.
  * @param {string} str Localized numeric string.
- * @param {object} [settings=app.settings] Settings object containing number format configuration.
+ * @param {object} [settings=calcState.settings] Settings object containing number format configuration.
  * @returns {number}
  */
-export function parseLocaleNumber(str, settings = app.settings) {
-  if (typeof str !== 'string') return NaN
+export function parseLocaleNumber(str, settings = calcState.settings) {
+  if (typeof str !== 'string') {
+    return NaN
+  }
 
   const { group, decimal } = getNumberFormat(settings)
   const cleaned = str
@@ -95,15 +101,19 @@ const STRICT_LOCALE_NUMBER_REGEX = /^-?\d[\d.,\s\u00A0\u202F\u2009]*(?:e[+-]?\d+
 /**
  * Parses a localized numeric string only when the entire trimmed input is a numeric literal.
  * @param {string} str Raw string to validate and parse.
- * @param {object} [settings=app.settings] Settings object containing number format configuration.
+ * @param {object} [settings=calcState.settings] Settings object containing number format configuration.
  * @returns {number} Finite number or `NaN`.
  */
-export function parseStrictLocaleNumber(str, settings = app.settings) {
-  if (typeof str !== 'string') return NaN
+export function parseStrictLocaleNumber(str, settings = calcState.settings) {
+  if (typeof str !== 'string') {
+    return NaN
+  }
 
   const trimmed = str.trim()
 
-  if (!STRICT_LOCALE_NUMBER_REGEX.test(trimmed)) return NaN
+  if (!STRICT_LOCALE_NUMBER_REGEX.test(trimmed)) {
+    return NaN
+  }
 
   const num = parseLocaleNumber(trimmed, settings)
 
@@ -114,31 +124,49 @@ export function parseStrictLocaleNumber(str, settings = app.settings) {
  * Formats currency amounts within an output string using `Intl.NumberFormat`.
  * @param {string} str Output string potentially containing currency values.
  * @param {boolean} [useGrouping] Whether to apply thousands grouping.
- * @param {object} [settings=app.settings] Settings object.
- * @param {object} [currencies=app.currencies] Currencies configuration map.
+ * @param {object} [settings=calcState.settings] Settings object.
+ * @param {object} [currencies=calcState.currencies] Currencies configuration map.
  * @returns {string}
  */
-function formatCurrency(str, useGrouping, settings = app.settings, currencies = app.currencies) {
-  if (!currencyFormatRegex) return str
+function formatCurrency(str, useGrouping, settings = calcState.settings, currencies = calcState.currencies) {
+  if (!currencyFormatRegex) {
+    return str
+  }
 
   const { locale, group, useGrouping: defaultGrouping } = getNumberFormat(settings)
   const effectiveGrouping = useGrouping ?? defaultGrouping
   const maximumFractionDigits = clampPrecision(settings?.precision ?? 4)
 
   return transformOutsideStrings(str, (segment) =>
-    segment.replace(currencyFormatRegex, (match, amount, code) => {
+    segment.replace(currencyFormatRegex, (match, fracIntAmount, stdAmount, code) => {
+      const amount = fracIntAmount ?? stdAmount
       const upperCode = code.toUpperCase()
       const info = currencies?.[upperCode]
 
-      if (!info) return match
+      if (!info) {
+        return match
+      }
 
       const trimmed = amount.trim()
       const eIndex = trimmed.search(/e[+-]?\d+$/i)
       const baseStr = eIndex >= 0 ? trimmed.slice(0, eIndex) : trimmed
       const expStr = eIndex >= 0 ? trimmed.slice(eIndex) : ''
+      const sigDigits = baseStr.replace(/\D/g, '').replace(/^0+/, '')
+
+      if (sigDigits.length > 15) {
+        const isNeg = trimmed.startsWith('-')
+        const absTrimmed = isNeg ? trimmed.slice(1) : trimmed
+        const sym = info.symbol ?? upperCode
+        const sep = /^[a-zA-Z]+$/.test(sym) ? ' ' : ''
+
+        return `${isNeg ? '-' : ''}${sym}${sep}${absTrimmed}`
+      }
+
       const value = parseLocaleNumber(baseStr, settings)
 
-      if (!Number.isFinite(value)) return `${info.symbol ?? ''}${trimmed}`
+      if (!Number.isFinite(value)) {
+        return `${info.symbol ?? ''}${trimmed}`
+      }
 
       try {
         const formatter = getNumberFormatter(locale, {
@@ -149,22 +177,47 @@ function formatCurrency(str, useGrouping, settings = app.settings, currencies = 
           maximumFractionDigits
         })
 
-        const customDollarSymbol = info.symbol && info.symbol !== '$' && info.symbol !== upperCode ? info.symbol : null
-        const needsPartsTransform = (effectiveGrouping && group === ' ') || Boolean(customDollarSymbol)
+        const customSymbol =
+          info.symbol &&
+          info.symbol !== '$' &&
+          (info.symbol !== upperCode || upperCode === 'NOK' || upperCode === 'ISK')
+            ? info.symbol
+            : null
 
-        const formattedCurrency = needsPartsTransform
-          ? formatter
-              .formatToParts(value)
-              .map((part) => {
+        if ((effectiveGrouping && group === ' ') || customSymbol) {
+          const parts = formatter.formatToParts(value)
+          const nonLetterSymbol = customSymbol && (!/[\p{L}\p{M}]/u.test(customSymbol) || customSymbol.endsWith('$'))
+          let skipSpace = false
+
+          return (
+            parts
+              .map((part, idx) => {
+                if (skipSpace) {
+                  skipSpace = false
+                  if (part.type === 'literal' && /^\s+$/.test(part.value)) return ''
+                }
+
                 if (effectiveGrouping && group === ' ' && part.type === 'group') return group
-                if (customDollarSymbol && part.type === 'currency' && part.value === '$') return customDollarSymbol
+
+                if (
+                  customSymbol &&
+                  part.type === 'currency' &&
+                  (part.value === '$' || part.value === 'kr' || part.value.toUpperCase() === upperCode)
+                ) {
+                  const isPrefix = !parts.slice(0, idx).some((p) => p.type === 'integer' || p.type === 'fraction')
+                  skipSpace = Boolean(
+                    isPrefix && nonLetterSymbol && (part.value === 'kr' || part.value.toUpperCase() === upperCode)
+                  )
+                  return customSymbol
+                }
 
                 return part.value
               })
-              .join('')
-          : formatter.format(value)
+              .join('') + expStr
+          )
+        }
 
-        return formattedCurrency + expStr
+        return formatter.format(value) + expStr
       } catch {
         return `${info.symbol ?? ''}${trimmed}${expStr}`
       }
@@ -172,16 +225,67 @@ function formatCurrency(str, useGrouping, settings = app.settings, currencies = 
   )
 }
 
+function isExactZero(val) {
+  if (math.isBigNumber(val)) {
+    return val.isZero()
+  }
+
+  return Number(val) === 0
+}
+
+function roundScalar(value, digits, notation) {
+  if (math.isFraction(value)) return value
+
+  try {
+    const rounded = math.round(value, digits)
+
+    if (
+      notation === 'fixed' ||
+      !isExactZero(rounded) ||
+      isExactZero(value) ||
+      (typeof value === 'number' && !Number.isFinite(value))
+    ) {
+      return rounded
+    }
+
+    const sig = value.toPrecision(Math.max(1, digits + 1))
+
+    return math.isBigNumber(value) ? math.bignumber(sig) : Number(sig)
+  } catch {
+    return value
+  }
+}
+
+function cleanComplexValue(val, digits, notation) {
+  if (val && typeof val === 'object') {
+    if (math.isComplex(val)) {
+      const re = Math.abs(val.re) < 1e-14 * Math.max(1, Math.abs(val.im)) ? 0 : val.re
+      const im = Math.abs(val.im) < 1e-14 * Math.max(1, Math.abs(val.re)) ? 0 : val.im
+
+      return math.complex(roundScalar(re, digits, notation), roundScalar(im, digits, notation))
+    }
+
+    if (Array.isArray(val) || (val.isMatrix && typeof val.map === 'function')) {
+      return val.map((item) => cleanComplexValue(item, digits, notation))
+    }
+  }
+
+  return val
+}
+
 /**
  * Formats an evaluated calculation value into a display/copy string according to settings.
  * @param {*} answer Evaluated value.
  * @param {boolean} [useGrouping] Whether to apply thousands grouping.
- * @param {object} [settings=app.settings] Settings object.
- * @param {object} [currencies=app.currencies] Currencies configuration map.
+ * @param {object} [settings=calcState.settings] Settings object.
+ * @param {object} [currencies=calcState.currencies] Currencies configuration map.
  * @returns {string}
  */
-export function formatAnswer(answer, useGrouping, settings = app.settings, currencies = app.currencies) {
-  if (typeof answer === 'string') return stripAnswer(answer)
+export function formatAnswer(answer, useGrouping, settings = calcState.settings, currencies = calcState.currencies) {
+  if (typeof answer === 'string') {
+    return answer
+  }
+
   if (answer && typeof answer === 'object' && answer[PAGE_OBJECT_SYMBOL] && typeof answer.format === 'function') {
     return String(answer.format())
   }
@@ -199,15 +303,31 @@ export function formatAnswer(answer, useGrouping, settings = app.settings, curre
   const maximumFractionDigits = clampPrecision(settings?.precision ?? 4)
 
   if (['bin', 'hex', 'oct'].includes(notation)) {
-    if (typeof answer === 'bigint') {
+    const formatBigIntBase = (val) => {
       const [base, prefix] = { bin: [2, '0b'], oct: [8, '0o'], hex: [16, '0x'] }[notation]
 
-      return `${answer < 0n ? '-' : ''}${prefix}${(answer < 0n ? -answer : answer).toString(base)}`
+      return `${val < 0n ? '-' : ''}${prefix}${(val < 0n ? -val : val).toString(base)}`
     }
 
-    answer = math.format(answer, { notation })
+    if (typeof answer === 'bigint') {
+      return formatBigIntBase(answer)
+    }
 
-    return stripAnswer(answer)
+    const formattedBase = math.format(answer, (value) => {
+      if (typeof value === 'bigint') {
+        return formatBigIntBase(value)
+      }
+
+      if (math.isFraction(value)) {
+        const numVal = value.d === 1n ? math.bignumber((value.s * value.n).toString()) : Number(value.valueOf())
+
+        return math.format(numVal, { notation })
+      }
+
+      return math.format(value, { notation })
+    })
+
+    return stripAnswer(formattedBase)
   }
 
   const formatOptions = {
@@ -219,12 +339,12 @@ export function formatAnswer(answer, useGrouping, settings = app.settings, curre
   const localeOptions = { maximumFractionDigits, useGrouping: effectiveGrouping }
   const formatter = getNumberFormatter(locale, localeOptions)
 
-  let processedAnswer = answer
+  let processedAnswer = cleanComplexValue(answer, maximumFractionDigits, notation)
   let wasRounded = false
 
-  if (!answer?.isUnit && !math.isFraction(answer)) {
+  if (notation === 'fixed' && !answer?.isUnit && !math.isFraction(answer)) {
     try {
-      processedAnswer = math.round(answer, maximumFractionDigits)
+      processedAnswer = math.round(processedAnswer, maximumFractionDigits)
       wasRounded = true
     } catch {
       // ignore
@@ -232,24 +352,24 @@ export function formatAnswer(answer, useGrouping, settings = app.settings, curre
   }
 
   let formattedAnswer = math.format(processedAnswer, (value) => {
-    let roundedValue = value
-
-    if (!wasRounded && !math.isFraction(value)) {
-      try {
-        roundedValue = math.round(value, maximumFractionDigits)
-      } catch {
-        // ignore
-      }
-    }
+    const roundedValue = wasRounded ? value : roundScalar(value, maximumFractionDigits, notation)
 
     const valueStr = math.format(roundedValue, formatOptions)
 
-    if (typeof roundedValue === 'number' && notation === 'auto' && !valueStr.includes('e') && groupSeparator !== ' ') {
+    if (
+      typeof roundedValue === 'number' &&
+      notation === 'auto' &&
+      !valueStr.includes('e') &&
+      groupSeparator !== ' ' &&
+      (roundedValue === 0 || Math.abs(roundedValue) >= Math.pow(10, -maximumFractionDigits))
+    ) {
       const formatted = formatter.format(roundedValue)
       const expectedDecimal = decimalSeparator
       const hasDecimal = valueStr.includes('.')
 
-      if (!hasDecimal || formatted.includes(expectedDecimal)) return formatted
+      if (!hasDecimal || formatted.includes(expectedDecimal)) {
+        return formatted
+      }
     }
 
     if (valueStr.includes('e')) {
@@ -261,9 +381,7 @@ export function formatAnswer(answer, useGrouping, settings = app.settings, curre
     return formatNumericString(valueStr, decimalSeparator, groupSeparator, effectiveGrouping)
   })
 
-  if (settings?.currency) {
-    formattedAnswer = formatCurrency(formattedAnswer, effectiveGrouping, settings, currencies)
-  }
+  formattedAnswer = formatCurrency(formattedAnswer, effectiveGrouping, settings, currencies)
 
   return stripAnswer(formattedAnswer)
 }
@@ -300,7 +418,7 @@ export function formatPageLinkHtml(answer, answerCopy, answerOut) {
         class="pageLink ${CLASS_ANSWER}"
         data-page-id="${escapeHTML(pageId)}"
         data-answer="${escapeHTML(answerCopy)}"
-        title="${escapeHTML(tooltipText)}"
+        title="${escapeHTML(escapeHTML(tooltipText))}"
         uk-tooltip>
           ${escapeHTML(answerOut)}
         </a>`

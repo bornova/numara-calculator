@@ -1,10 +1,9 @@
 import CodeMirror from 'codemirror'
 
-import { USD_UNIT } from '../core/constants.js'
-import { math } from '../core/mathInstance.js'
 import { app } from '../state/appState.js'
 import {
   constantTokens,
+  currencyCodeTokens,
   currencySymbolRegex,
   currencyTokens,
   dateTimeMethodsSet,
@@ -25,8 +24,18 @@ export function registerEditorModes() {
       state.lastToken = null
     },
     token: (stream, state) => {
-      if (stream.sol()) state.lastToken = null
-      if (stream.eatSpace()) return null
+      if (stream.sol()) {
+        state.lastToken = null
+      }
+
+      if (stream.eatSpace()) {
+        return null
+      }
+
+      if (stream.match(/^"(?:\\.|[^"\\])*"?/)) {
+        state.lastToken = 'text'
+        return 'text'
+      }
 
       if (stream.match(/\/\/.*/) || stream.match(/#.*/)) {
         state.lastToken = 'comment'
@@ -92,7 +101,7 @@ export function registerEditorModes() {
         } else if (state.lastToken === 'datetime.') {
           style = 'function'
         } else {
-          const memberMatch = stream.string.slice(0, stream.start).match(/([a-zA-Z_$][\w$]*)\.\s*$/)
+          const memberMatch = stream.string.slice(0, stream.start).match(/([\p{L}\p{M}_$][\p{L}\p{M}\w$]*)\.\s*$/u)
           const parentIdent = memberMatch?.[1]
           const memberKey = parentIdent ? `${parentIdent}.${cmStream}` : null
           const isMemberVariable =
@@ -106,8 +115,8 @@ export function registerEditorModes() {
           else if (/\bline\d+\b/.test(cmStream)) style = 'lineNo'
           else if (keywordTokens.has(cmStream)) style = 'keyword'
           else if (app.mathScope.has(cmStream) && app.scopeTypes?.[cmStream] !== 'function') style = 'variable'
-          else if (math.Unit.UNITS[cmStream]?.base.key === `${USD_UNIT}_STUFF`) style = 'currency'
-          else if (functionTokens.has(cmStream) || dateTimeMethodsSet.has(cmStream)) style = 'function'
+          else if (currencyCodeTokens.has(cmStream)) style = 'currency'
+          else if (functionTokens.has(cmStream)) style = 'function'
           else if (constantTokens.has(cmStream)) style = 'constant'
           else if (unitTokens.has(cmStream)) style = 'unit'
           else if (app.udfList.includes(cmStream)) style = 'udf'

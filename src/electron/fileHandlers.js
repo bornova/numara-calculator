@@ -4,18 +4,44 @@ import * as path from 'node:path'
 
 import { getWindow, sendToWindow } from './window.js'
 
-let fileToOpen = null
+const pendingFiles = []
 let isRendererReady = false
 
 /**
- * Extracts a valid `.num` file path from command-line arguments if present.
- * @param {string[]} args Command-line arguments array.
- * @returns {string|null} Path to `.num` file or null.
+ * Resets renderer-ready tracking when the main window closes.
  */
-export function getNumFilePath(args) {
-  if (!args || !Array.isArray(args)) return null
+export function resetRendererReady() {
+  isRendererReady = false
+}
 
-  return args.find((arg) => arg.toLowerCase().endsWith('.num') && fs.existsSync(arg)) || null
+/**
+ * Extracts a `.num` file path from command-line arguments if present.
+ * @param {string[]} args Command-line arguments array.
+ * @param {string} [baseDir] Optional working directory used to resolve relative paths.
+ * @returns {string|null} Resolved path to `.num` file or null.
+ */
+export function getNumFilePath(args, baseDir) {
+  if (!args || !Array.isArray(args)) {
+    return null
+  }
+
+  for (const arg of args) {
+    if (typeof arg !== 'string' || arg.startsWith('-') || !arg.toLowerCase().endsWith('.num')) {
+      continue
+    }
+
+    const resolved = baseDir && !path.isAbsolute(arg) ? path.resolve(baseDir, arg) : path.resolve(arg)
+
+    try {
+      if (fs.statSync(resolved).isFile()) {
+        return resolved
+      }
+    } catch {
+      // Ignore missing or inaccessible paths
+    }
+  }
+
+  return null
 }
 
 /**
@@ -42,8 +68,8 @@ export function queueOrOpenFile(filePath) {
 
   if (isRendererReady && getWindow()) {
     openFileInRenderer(filePath)
-  } else {
-    fileToOpen = filePath
+  } else if (!pendingFiles.includes(filePath)) {
+    pendingFiles.push(filePath)
   }
 }
 
@@ -53,7 +79,7 @@ export function queueOrOpenFile(filePath) {
 export function promptImportPage() {
   const win = getWindow()
 
-  if (!win || win.isDestroyed()) return
+  if (!win) return
 
   const file = dialog.showOpenDialogSync(win, {
     filters: [{ name: 'Numara', extensions: ['num'] }],
@@ -73,20 +99,17 @@ export function setupFileHandlers() {
   ipcMain.on('renderer-ready', () => {
     isRendererReady = true
 
-    if (fileToOpen) {
-      openFileInRenderer(fileToOpen)
-      fileToOpen = null
+    for (const filePath of pendingFiles.splice(0)) {
+      openFileInRenderer(filePath)
     }
   })
 
-  ipcMain.on('importPage', () => {
-    promptImportPage()
-  })
+  ipcMain.on('importPage', promptImportPage)
 
   ipcMain.on('exportPage', (event, fileName, content) => {
     const win = getWindow()
 
-    if (!win || win.isDestroyed()) return
+    if (!win) return
 
     const file = dialog.showSaveDialogSync(win, {
       defaultPath: fileName,
@@ -96,8 +119,8 @@ export function setupFileHandlers() {
 
     if (!file) return
 
-    fs.writeFile(file, content, (error) => {
-      if (!win || win.isDestroyed() || event.sender.isDestroyed()) return
+    fs.writeFile(file, String(content ?? ''), (error) => {
+      if (!getWindow() || event.sender.isDestroyed()) return
 
       if (error) {
         event.sender.send('exportDataError', error)

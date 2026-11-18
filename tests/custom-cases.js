@@ -706,8 +706,26 @@ export const customCases = [
     settings: {
       currency: false
     },
-    expressions: ['100 USD + 50 USD', '$100 + $50'],
-    expected: ['150 USD', /Unexpected|Undefined/]
+    expressions: [
+      '100 USD + 50 USD',
+      '$100 + $50',
+      '€100 + €50',
+      '100 eur + 50 eur',
+      '25 hours * $50/hr',
+      '100 USD to EUR',
+      '$100 to EUR',
+      '$100 + €50'
+    ],
+    expected: [
+      '$150.00',
+      '$150.00',
+      '€150.00',
+      '€150.00',
+      '$1250.00',
+      /Units do not match/,
+      /Units do not match/,
+      /Units do not match/
+    ]
   },
   {
     name: 'Date Formats With Day of Week Prefix (MM/dd/yyyy and yyyy-MM-dd)',

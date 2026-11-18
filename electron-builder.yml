@@ -22,10 +22,23 @@ files:
   - build
   - src/electron/**/*
   - '!**/*.map'
+  - '!build/sw.js'
+  - '!build/numara.webmanifest'
+  - '!build/assets/background.png'
+  - '!build/assets/icon.icns'
+  - '!build/assets/numara.png'
+  - '!build/assets/icon-192.png'
+  - '!build/assets/icon-512.png'
+  - '!build/assets/icon-maskable-*.png'
+  - '!build/assets/apple-touch-icon.png'
 
 # Linux configuration
 linux:
   category: Utility
+  syncDesktopName: true
+  files:
+    - '!build/assets/icon.ico'
+    - '!build/assets/trayTemplate*.png'
   target:
     - AppImage
     - deb
@@ -37,9 +50,15 @@ mac:
   entitlements: src/misc/entitlements.mac.plist
   entitlementsInherit: src/misc/entitlements.mac.plist
   hardenedRuntime: true
+  files:
+    - '!build/assets/icon.ico'
+    - '!build/assets/icon.png'
 
 # Windows configuration
 win:
+  files:
+    - '!build/assets/icon.png'
+    - '!build/assets/trayTemplate*.png'
   azureSignOptions:
     publisherName: 'Timur Atalay'
     endpoint: 'https://wus.codesigning.azure.net'
@@ -57,3 +76,4 @@ fileAssociations:
     name: Numara Document
     role: Editor
     description: Numara calculation file
+    mimeType: application/x-numara

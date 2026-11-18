@@ -8,13 +8,13 @@ import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
 import { showSearchPanel } from '../editor/searchPanel.js'
 import { loadPage } from '../pages/pageManager.js'
-import { app } from '../state/appState.js'
+import { app, DEFAULT_INPUT_WIDTH } from '../state/appState.js'
 import { isElectron, isMac } from '../state/env.js'
 import { store } from '../state/store.js'
 import { copyAll, copyToClipboard } from './contextMenu.js'
 import { hideFloatingPageList, isModalOpen, modal, showError } from './dialogs.js'
 import { resetPlotSelection } from './plot.js'
-import { settings } from './settings.js'
+import { printPage } from './print.js'
 
 /**
  * Configures the application title headers based on OS (Windows vs. macOS).
@@ -45,10 +45,7 @@ export function setupAppButtons() {
 
   const buttons = {
     searchButton: () => showSearchPanel(cm, false),
-    printButton: () => {
-      hideFloatingPageList()
-      window.print()
-    },
+    printButton: printPage,
     clearButton: () => {
       if (!cm.getValue()) return
 
@@ -74,13 +71,15 @@ export function setupAppButtons() {
   Object.entries(buttons).forEach(([btn, action]) => dom[btn].addEventListener('click', action))
 
   if (isElectron) {
+    const hasOpenDialog = () => Boolean(dom.el('.modal.uk-open, .dialogConfirm.uk-open'))
+
     numara.menuAction((action) => {
       switch (action) {
         case 'newPage':
-          if (!isModalOpen()) dom.newPageButton.click()
+          if (!hasOpenDialog()) dom.newPageButton.click()
           break
         case 'clearPage':
-          if (!isModalOpen()) dom.clearButton.click()
+          if (!hasOpenDialog()) dom.clearButton.click()
           break
         case 'togglePageList':
           if (app.settings.pageListPosition === 'tabs') break
@@ -107,11 +106,17 @@ export function setupAppButtons() {
           dom.resetSizeButton.click()
           break
         case 'undo':
-        case 'redo':
-          if (cm?.hasFocus() || !isModalOpen()) {
+        case 'redo': {
+          const activeEl = document.activeElement
+          const inNonEditorInput = activeEl?.matches?.('input, textarea') && !activeEl.closest?.('.CodeMirror')
+
+          if (inNonEditorInput) {
+            document.execCommand?.(action)
+          } else if (cm?.hasFocus() || !isModalOpen()) {
             cm?.[action]()
           }
           break
+        }
       }
     })
   }
@@ -168,7 +173,7 @@ export function setupResultActions() {
     if (plotEl) {
       const func = plotEl.getAttribute('data-plot')
 
-      app.plotFunction = func.startsWith('line') ? app.mathScope.get(func) : func
+      app.plotFunction = /^line\d+$/.test(func) ? app.mathScope.get(func) : func
 
       try {
         dom.plotCrossModal.checked = app.plotSettings.showCross
@@ -211,11 +216,10 @@ export function setupResultActions() {
  * Initializes resizer interactions for adjusting the width ratio of input and output panels.
  */
 export function setupPanelResizer() {
-  const defaultWidth = settings.defaults.inputWidth
+  const defaultWidth = DEFAULT_INPUT_WIDTH
   const transitionMs = 180
 
-  let isResizing = false
-  let resizeRaf // Request Animation Frame reference
+  let resizeRaf
   let calcTimeout
   let transitionTimer
 
@@ -243,46 +247,42 @@ export function setupPanelResizer() {
   })
 
   dom.panelDivider.addEventListener('mousedown', (event) => {
-    isResizing = event.button === 0 && event.target === dom.panelDivider
+    if (event.button !== 0 || event.target !== dom.panelDivider) return
 
-    if (isResizing) {
-      clearTimeout(transitionTimer)
-      dom.input.classList.remove('panel-width-animating')
-      dom.panelDivider.classList.add('resizing')
+    clearTimeout(transitionTimer)
+    dom.input.classList.remove('panel-width-animating')
+    dom.panelDivider.classList.add('resizing')
+
+    const onMouseMove = (moveEvent) => {
+      if (resizeRaf) cancelAnimationFrame(resizeRaf)
+
+      resizeRaf = requestAnimationFrame(() => {
+        const offset = 10
+        const pointerRelativeXpos = moveEvent.clientX - dom.mainPanel.getBoundingClientRect().left - offset
+        const inputWidth = Math.max(15, Math.min(85, (pointerRelativeXpos / dom.mainPanel.clientWidth) * 100))
+
+        dom.input.style.width = inputWidth + '%'
+        syncOutputHeights()
+
+        clearTimeout(calcTimeout)
+        calcTimeout = setTimeout(() => {
+          store.set('inputWidth', inputWidth)
+          cm.refresh()
+          syncOutputHeights()
+        }, 50)
+      })
     }
-  })
 
-  document.addEventListener('mouseup', () => {
-    if (isResizing) {
-      isResizing = false
+    const onMouseUp = () => {
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
       dom.panelDivider.classList.remove('resizing')
       cm.refresh()
       syncOutputHeights()
     }
-  })
 
-  document.addEventListener('mousemove', (event) => {
-    if (!isResizing) return
-
-    if (resizeRaf) cancelAnimationFrame(resizeRaf)
-
-    resizeRaf = requestAnimationFrame(() => {
-      const offset = 10
-      const pointerRelativeXpos = event.clientX - dom.mainPanel.getBoundingClientRect().left - offset
-      let inputWidth = (pointerRelativeXpos / dom.mainPanel.clientWidth) * 100
-
-      inputWidth = Math.max(0, Math.min(100, inputWidth))
-
-      dom.input.style.width = inputWidth + '%'
-      syncOutputHeights()
-
-      clearTimeout(calcTimeout)
-      calcTimeout = setTimeout(() => {
-        store.set('inputWidth', inputWidth)
-        cm.refresh()
-        syncOutputHeights()
-      }, 50)
-    })
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
   })
 
   dom.panelDivider.addEventListener('mouseenter', dividerTooltip)

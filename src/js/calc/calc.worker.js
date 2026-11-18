@@ -1,4 +1,4 @@
-import { applyUdfu, clearEvaluationCache, formulajsKeys, runCalculation } from '../core/evaluator.js'
+import { clearEvaluationCache, formulajsKeys, runCalculation } from '../core/evaluator.js'
 
 // Lock down network and external script APIs inside the calculation worker sandbox
 for (const api of ['fetch', 'XMLHttpRequest', 'WebSocket', 'EventSource', 'importScripts']) {
@@ -21,31 +21,31 @@ self.onmessage = (event) => {
     const { taskId, activePage, lines, pages, settings, currencies, udf, udu, sharedBuffer } = payload
 
     try {
-      if (typeof udf === 'string') {
-        applyUdfu(true, udf)
-      }
-
-      if (typeof udu === 'string') {
-        applyUdfu(false, udu)
-      }
-
+      let lastProgressPost = 0
       const result = runCalculation({
         activePage,
         lines,
         pages,
         settings,
         currencies,
+        udf,
+        udu,
         sharedBuffer,
         onLineStart: sharedBuffer
           ? undefined
           : (lineIndex) => {
-              self.postMessage({
-                type: 'lineStart',
-                payload: {
-                  taskId,
-                  lineIndex
-                }
-              })
+              const now = performance.now()
+
+              if (lineIndex === 0 || now - lastProgressPost >= 25) {
+                lastProgressPost = now
+                self.postMessage({
+                  type: 'lineStart',
+                  payload: {
+                    taskId,
+                    lineIndex
+                  }
+                })
+              }
             }
       })
 

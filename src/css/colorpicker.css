@@ -17,8 +17,7 @@ input.clr-color {
   height: 90px;
 }
 
-.clr-hue,
-.clr-alpha {
+.clr-hue {
   margin: 5px 15px;
   width: calc(100% - 30px);
 }
@@ -37,7 +36,7 @@ input.clr-color {
 }
 
 .clr-preview button {
-  border: 1px solid light-dark(#ffffff, #ffffff);
+  border: 1px solid #ffffff;
 }
 
 .clr-field button {

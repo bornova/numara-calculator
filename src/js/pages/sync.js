@@ -1,5 +1,7 @@
+import UIkit from 'uikit'
+
 import { calculate, debouncedSavePageState } from '../calc/calcManager.js'
-import { escapeHTML, getSafeFilename, sanitizePageName } from '../core/utils.js'
+import { escapeHTML, getSafeFilename, getSyncKey, sanitizePageName } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
 import { app } from '../state/appState.js'
@@ -8,7 +10,7 @@ import { events } from '../state/events.js'
 import { store } from '../state/store.js'
 import { customConfirm, notify } from '../ui/dialogs.js'
 import { defaultPage, generatePageId, loadPage, populatePages, updatePageName } from './pageManager.js'
-import { detectExternalRenames, getSyncKey } from './syncPlan.js'
+import { detectExternalRenames } from './syncPlan.js'
 
 const lastSyncContent = new Map()
 const debounceTimeouts = new Map()
@@ -38,12 +40,13 @@ export function updateSyncUiState(enabled, dirPath = '') {
 
   if (dom.selectSyncDirButton) {
     if (dirPath) {
-      const safePath = escapeHTML(dirPath).replaceAll(';', '&#59;')
-
       dom.selectSyncDirButton.textContent = dirPath
-      dom.selectSyncDirButton.setAttribute('uk-tooltip', `title: ${safePath}; pos: bottom`)
+      dom.selectSyncDirButton.removeAttribute('title')
+      UIkit.tooltip(dom.selectSyncDirButton, { title: escapeHTML(dirPath), pos: 'bottom' })
     } else {
+      UIkit.tooltip(dom.selectSyncDirButton)?.$destroy()
       dom.selectSyncDirButton.textContent = 'Choose Folder'
+      dom.selectSyncDirButton.removeAttribute('title')
       dom.selectSyncDirButton.removeAttribute('uk-tooltip')
     }
   }
@@ -62,11 +65,26 @@ export function updateSyncUiState(enabled, dirPath = '') {
  * @param {string} syncKey The normalized sync key.
  */
 function clearSyncDebounce(syncKey) {
-  const pendingTimeout = debounceTimeouts.get(syncKey)
+  const pending = debounceTimeouts.get(syncKey)
 
-  if (pendingTimeout) {
-    clearTimeout(pendingTimeout)
+  if (pending) {
+    clearTimeout(pending.timeout)
     debounceTimeouts.delete(syncKey)
+  }
+}
+
+/**
+ * Immediately flushes all pending debounced page writes to the sync directory.
+ */
+function flushPendingSyncSaves() {
+  if (!isSyncActive() || debounceTimeouts.size === 0) return
+
+  const pendingEntries = [...debounceTimeouts.values()]
+  debounceTimeouts.clear()
+
+  for (const { timeout, pageName, content } of pendingEntries) {
+    clearTimeout(timeout)
+    syncPageSave(pageName, content)
   }
 }
 
@@ -123,7 +141,7 @@ export function clearSyncCache() {
   currentSyncDir = null
   lastSyncContent.clear()
 
-  for (const timeout of debounceTimeouts.values()) {
+  for (const { timeout } of debounceTimeouts.values()) {
     clearTimeout(timeout)
   }
 
@@ -134,8 +152,10 @@ export function clearSyncCache() {
  * Checks if the sync directory exists. If not, disables sync, clears cache, stops watching, and displays a notification.
  * @returns {Promise<boolean>} Resolves to true if the directory exists, otherwise false.
  */
-export async function checkSyncDir() {
-  if (!isSyncActive()) return false
+async function checkSyncDir() {
+  if (!isSyncActive()) {
+    return false
+  }
 
   try {
     const exists = await numara.checkSyncDirectory(app.settings.syncDir)
@@ -156,14 +176,16 @@ export async function checkSyncDir() {
 /**
  * Handles the event when the sync directory is deleted or no longer accessible, presenting options to select a new folder or disable sync.
  */
-export async function handleSyncDirDeleted() {
+async function handleSyncDirDeleted() {
   if (!isSyncActive() || activeDeletionDialog) return
 
   activeDeletionDialog = true
   numara.stopWatchingSyncDir()
 
   if (dom.selectSyncDirButton) {
+    UIkit.tooltip(dom.selectSyncDirButton)?.$destroy()
     dom.selectSyncDirButton.textContent = 'Choose Folder'
+    dom.selectSyncDirButton.removeAttribute('title')
     dom.selectSyncDirButton.removeAttribute('uk-tooltip')
   }
 
@@ -225,6 +247,10 @@ export async function triggerFolderSync() {
     const dirPath = app.settings.syncDir
 
     if (dirPath !== currentSyncDir) {
+      for (const { timeout } of debounceTimeouts.values()) {
+        clearTimeout(timeout)
+      }
+      debounceTimeouts.clear()
       currentSyncDir = dirPath
       lastSyncContent.clear()
     }
@@ -260,15 +286,26 @@ export async function triggerFolderSync() {
     }
 
     // 1. Sync files -> local storage pages
+    const seenDiskSyncKeys = new Set()
+
     for (const file of files) {
       const pageName = file.name
       const fileContent = file.content
       const sanitizedName = sanitizePageName(pageName, 'Untitled')
-      const syncKey = getSyncKey(pageName)
+      const syncKey = getSyncKey(sanitizedName)
+
+      if (seenDiskSyncKeys.has(syncKey)) {
+        continue
+      }
+      seenDiskSyncKeys.add(syncKey)
 
       const localPage = pages.find((p) => getSyncKey(p.name) === syncKey)
 
-      if (localPage && localPage.name !== sanitizedName) {
+      if (
+        localPage &&
+        localPage.name !== sanitizedName &&
+        getSafeFilename(localPage.name) !== getSafeFilename(sanitizedName)
+      ) {
         localPage.name = sanitizedName
         renamedPageNames.set(localPage.id, sanitizedName)
         modified = true
@@ -395,6 +432,11 @@ export async function triggerFolderSync() {
 
         if (updatedPageData.has(page.id)) {
           page.data = updatedPageData.get(page.id)
+
+          if (page.id !== app.activePage) {
+            app.pageHistory?.delete(page.id)
+            app.pageAnswers?.delete(page.id)
+          }
         }
       }
 
@@ -406,7 +448,9 @@ export async function triggerFolderSync() {
 
       store.set('pages', mergedPages)
 
-      if (mergedPages.length === 0) {
+      if (!app.activePage && !activePageDeleted) {
+        // Pre-initializePages startup sync: initializePages() will load and calculate the initial page.
+      } else if (mergedPages.length === 0) {
         app.activePage = null
         defaultPage()
       } else if (activePageDeleted) {
@@ -418,9 +462,25 @@ export async function triggerFolderSync() {
         }
 
         if (updatedPageData.has(app.activePage)) {
+          const prevCursor = cm.getCursor()
+          const activePageObj = mergedPages.find((p) => p.id === app.activePage)
+
           app.loadingPage = true
           try {
             cm.setValue(updatedPageData.get(app.activePage))
+
+            if (Array.isArray(activePageObj?.folds)) {
+              for (const fold of activePageObj.folds) {
+                if (typeof fold.from === 'number' && fold.from < cm.lineCount()) {
+                  cm.foldCode({ line: fold.from, ch: 0 }, null, 'fold')
+                }
+              }
+            }
+
+            if (prevCursor) {
+              const clampedLine = Math.min(prevCursor.line, Math.max(0, cm.lineCount() - 1))
+              cm.setCursor({ line: clampedLine, ch: prevCursor.ch })
+            }
           } finally {
             app.loadingPage = false
           }
@@ -474,7 +534,7 @@ async function runSyncFileOp(syncKey, errorLabel, operation, extraRollback) {
  * @param {string} content The content string to write.
  * @returns {Promise<void>}
  */
-export async function syncPageSave(pageName, content) {
+async function syncPageSave(pageName, content) {
   const syncKey = getSyncKey(pageName)
   const nextContent = content || ''
 
@@ -490,7 +550,7 @@ export async function syncPageSave(pageName, content) {
  * @param {string} newName The new page name.
  * @returns {Promise<void>}
  */
-export async function syncPageRename(oldName, newName) {
+async function syncPageRename(oldName, newName) {
   const oldSyncKey = getSyncKey(oldName)
   const newSyncKey = getSyncKey(newName)
 
@@ -503,12 +563,11 @@ export async function syncPageRename(oldName, newName) {
       lastSyncContent.delete(oldSyncKey)
       lastSyncContent.set(newSyncKey, content)
 
-      await numara.renameSyncFile(dirPath, getSafeFilename(oldName), getSafeFilename(newName))
-
+      const renamed = await numara.renameSyncFile(dirPath, getSafeFilename(oldName), getSafeFilename(newName))
       const page = (store.get('pages') || []).find((p) => getSyncKey(p.name) === newSyncKey)
 
-      if (page && (page.data || '') !== content) {
-        await syncPageSave(newName, page.data)
+      if (!renamed || (page && (page.data || '') !== content)) {
+        await syncPageSave(newName, page?.data ?? content)
       }
     },
     () => lastSyncContent.delete(newSyncKey)
@@ -520,7 +579,7 @@ export async function syncPageRename(oldName, newName) {
  * @param {string} pageName The name of the page to delete.
  * @returns {Promise<void>}
  */
-export async function syncPageDelete(pageName) {
+async function syncPageDelete(pageName) {
   const syncKey = getSyncKey(pageName)
 
   await runSyncFileOp(syncKey, `deleting page ${pageName} from sync dir`, async (dirPath) => {
@@ -534,7 +593,7 @@ export async function syncPageDelete(pageName) {
  * @param {string} pageName The name of the page to save.
  * @param {string} content The content string to write.
  */
-export function syncPageSaveDebounced(pageName, content) {
+function syncPageSaveDebounced(pageName, content) {
   if (!isSyncActive()) return
 
   const syncKey = getSyncKey(pageName)
@@ -546,7 +605,7 @@ export function syncPageSaveDebounced(pageName, content) {
     syncPageSave(pageName, content)
   }, 500)
 
-  debounceTimeouts.set(syncKey, timeout)
+  debounceTimeouts.set(syncKey, { timeout, pageName, content })
 }
 
 /**
@@ -557,4 +616,41 @@ export function setupSync() {
   events.on('page:saved', syncPageSave)
   events.on('page:renamed', syncPageRename)
   events.on('page:deleted', syncPageDelete)
+
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        flushPendingSyncSaves()
+      }
+    })
+  }
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', flushPendingSyncSaves)
+  }
+}
+
+/**
+ * Initializes Electron sync directory listeners and performs startup sync if configured.
+ * @returns {Promise<void>}
+ */
+export async function initializeSync() {
+  if (!isElectron) return
+
+  numara.onSyncDirChanged(() => {
+    triggerFolderSync().catch(console.error)
+  })
+
+  numara.onSyncDirDeleted(() => {
+    handleSyncDirDeleted().catch(console.error)
+  })
+
+  if (app.settings.syncDirEnabled && app.settings.syncDir) {
+    const syncDirExists = await checkSyncDir()
+
+    if (syncDirExists) {
+      numara.startWatchingSyncDir(app.settings.syncDir)
+      await triggerFolderSync().catch(console.error)
+    }
+  }
 }

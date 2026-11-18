@@ -6,6 +6,8 @@ import { app } from '../state/appState.js'
 import { isElectron } from '../state/env.js'
 import { modal } from './dialogs.js'
 
+let isUpdateCheckActive = false
+
 /**
  * Configures the "About" dialog contents, version, copyright, and system dependencies info.
  */
@@ -48,7 +50,9 @@ export function setupAppInfo() {
     '#dialogAbout',
     'shown',
     () => {
-      checkAppUpdate()
+      if (!app.updateReady && !isUpdateCheckActive) {
+        checkAppUpdate()
+      }
     },
     { self: true }
   )
@@ -67,35 +71,50 @@ export function initAppUpdate() {
   numara.updateStatus((status, version, progress) => {
     switch (status) {
       case 'checking':
+        isUpdateCheckActive = true
         updateStatusMessage('Checking for updates...')
         break
       case 'available':
+        isUpdateCheckActive = true
+        updateStatusMessage(`Downloading version ${version}...`)
         dom.notificationDot.style.display = 'block'
-        dom.notificationDot.setAttribute('uk-tooltip', `New version available`)
+        UIkit.tooltip(dom.notificationDot, { title: 'New version available' })
         dom.updateMenuLink.style.display = 'inline'
         break
 
       case 'notAvailable':
+        isUpdateCheckActive = false
         updateStatusMessage('Numara is up to date.')
         break
       case 'downloading':
+        isUpdateCheckActive = true
         updateStatusMessage(`Downloading update... (${Math.round(progress?.percent ?? 0)}%)`)
         break
       case 'downloaded': {
         const notice = `New version ${version} is ready to install.`
 
+        isUpdateCheckActive = false
         updateStatusMessage(notice)
 
         app.updateReady = true
+        dom.notificationDot.style.display = 'block'
+        UIkit.tooltip(dom.notificationDot, { title: 'Update ready to install' })
         dom.updateMenuLink.style.display = 'inline'
         dom.updateButton.style.display = 'inline-block'
-        dom.updateButton.onclick = () => numara.updateApp()
+        dom.updateButton.removeAttribute('disabled')
+        dom.updateButton.onclick = () => {
+          dom.updateButton.setAttribute('disabled', 'true')
+          numara.updateApp()
+        }
         break
       }
       case 'error':
+        isUpdateCheckActive = false
+        dom.updateButton.removeAttribute('disabled')
         updateStatusMessage('Error while checking for updates.')
         break
       default:
+        isUpdateCheckActive = false
         updateStatusMessage('Unable to check for update.')
     }
   })

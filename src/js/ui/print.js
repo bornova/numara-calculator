@@ -2,14 +2,30 @@ import { name } from '../../../package.json'
 import { escapeHTML } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
-import { app } from '../state/appState.js'
+import { app, DEFAULT_INPUT_WIDTH } from '../state/appState.js'
+import { isElectron } from '../state/env.js'
 import { store } from '../state/store.js'
+import { hideFloatingPageList } from './dialogs.js'
 
 /**
- * Configures print area beforeprint/afterprint event listeners.
+ * Triggers printing for the current non-empty page after closing any floating page list drawer.
+ */
+export function printPage() {
+  if (!cm.getValue()) return
+
+  hideFloatingPageList()
+  window.print()
+}
+
+/**
+ * Configures print area beforeprint/afterprint event listeners and desktop print IPC.
  */
 export function setupPrintArea() {
   let printArea = null
+
+  if (isElectron) {
+    numara.print(printPage)
+  }
 
   window.addEventListener('beforeprint', () => {
     printArea?.remove()
@@ -18,7 +34,8 @@ export function setupPrintArea() {
     const tableRows = []
     const outputChildren = dom.output.firstElementChild?.children
     const isBottom = app.settings.answerPosition === 'bottom'
-    const inputWidth = store.get('inputWidth') ?? app.settings.inputWidth ?? 60
+    const inputWidth =
+      app.settings.answerPosition === 'left' ? (store.get('inputWidth') ?? DEFAULT_INPUT_WIDTH) : DEFAULT_INPUT_WIDTH
     const noBB = 'border-bottom: none !important;'
     const trHeader = `<tr style="height: ${app.settings.lineHeight};">`
     let lineIndex = 0
@@ -29,7 +46,7 @@ export function setupPrintArea() {
       const input = escapeHTML(line.text)
       const answerEl = isBottom
         ? app.widgetMap.get(line)?.node
-        : outputChildren?.[lineIndex] || dom.el(`[data-index="${lineIndex}"]`)
+        : outputChildren?.[lineIndex] || dom.el(`#mainPanel [data-index="${lineIndex}"]`)
       const answer = escapeHTML(answerEl ? answerEl.textContent : '')
 
       const rowHtml = isBottom

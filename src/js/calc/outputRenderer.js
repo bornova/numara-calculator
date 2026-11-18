@@ -59,6 +59,7 @@ export function getFoldedState() {
  * @param {boolean} isFolded Whether the line is currently folded.
  */
 export function updateLineWidget(lineHandle, answer, lineIndex, isFolded) {
+  const displayResult = formatDisplayAnswer(answer)
   let widget = app.widgetMap.get(lineHandle)
 
   if (widget) {
@@ -68,9 +69,9 @@ export function updateLineWidget(lineHandle, answer, lineIndex, isFolded) {
       widget.node.dataset.index = lineIndex
     }
 
-    if (widget.node.dataset.rawHtml !== answer) {
-      widget.node.dataset.rawHtml = answer
-      widget.node.innerHTML = answer
+    if (widget.node.dataset.rawHtml !== displayResult) {
+      widget.node.dataset.rawHtml = displayResult
+      widget.node.innerHTML = displayResult
       changed = true
     }
 
@@ -88,8 +89,8 @@ export function updateLineWidget(lineHandle, answer, lineIndex, isFolded) {
     const node = document.createElement('div')
 
     node.dataset.index = lineIndex
-    node.dataset.rawHtml = answer
-    node.innerHTML = answer
+    node.dataset.rawHtml = displayResult
+    node.innerHTML = displayResult
     node.style.display = isFolded ? 'none' : ''
 
     widget = cm.addLineWidget(lineHandle, node, { above: false, coverGutter: false, noHScroll: true })
@@ -108,7 +109,7 @@ export function syncOutputHeights(force = true, foldedLinesOverride = null) {
   const cmScroll = cm.getScrollerElement()
 
   if (app.settings.answerPosition === 'bottom') {
-    const newHeight = cmScroll.scrollHeight - 50
+    const newHeight = Math.max(0, cmScroll.scrollHeight - 8)
     const currentEl = dom.output.firstElementChild
 
     if (!currentEl || currentEl.style.height !== `${newHeight}px`) {
@@ -199,11 +200,11 @@ export function syncOutputHeights(force = true, foldedLinesOverride = null) {
     let visibleIndex = 0
     let lineIndex = 0
 
-    cm.eachLine((lineHandle) => {
+    cm.eachLine(() => {
       if (lineIndex >= totalLines) return
 
       const el = outputChildren[lineIndex]
-      const isHidden = Boolean(lineHandle.hidden) || (hasFolds && foldedLines.has(lineIndex))
+      const isHidden = hasFolds && foldedLines.has(lineIndex)
 
       if (isHidden) {
         if (el.style.display !== 'none') {

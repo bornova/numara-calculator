@@ -1,18 +1,16 @@
 import { DateTime, Settings } from 'luxon'
 import UIkit from 'uikit'
 
-Settings.defaultNumberingSystem = 'latn'
-Settings.defaultOutputCalendar = 'iso8601'
-
 import { calculate, debouncedSavePageState } from '../calc/calcManager.js'
 import { renderAnswersToHTML, syncOutputHeights } from '../calc/outputRenderer.js'
-import { escapeHTML, sanitizePageName } from '../core/utils.js'
+import { escapeHTML, getSyncKey, resolveUniquePageName, sanitizePageName } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
+import { isSearchPanelOpen } from '../editor/searchPanel.js'
 import { app } from '../state/appState.js'
 import { events } from '../state/events.js'
 import { store } from '../state/store.js'
-import { confirm, hideFloatingPageList, hideOpenDropdowns, notify } from '../ui/dialogs.js'
+import { confirm, hideFloatingPageList, hideOpenDropdowns, isModalOpen, notify } from '../ui/dialogs.js'
 import { isPageDragging, setupPageListSort, setupPageTabsSort } from './pageSort.js'
 import {
   hideTabContextMenu,
@@ -22,11 +20,22 @@ import {
   startInlinePageRename,
   togglePageListContextMenu
 } from './pageTabs.js'
-import { getSyncKey } from './syncPlan.js'
+
+Settings.defaultNumberingSystem = 'latn'
+Settings.defaultOutputCalendar = 'iso8601'
 
 let isScrolling = false
 let lastGeneratedPageId = ''
 let pageNameFlashTimer = null
+let loadPageFocusTimer = null
+
+function canFocusEditor() {
+  return (
+    !isModalOpen() &&
+    !isSearchPanelOpen() &&
+    (typeof document === 'undefined' || !document.activeElement?.matches?.('.pageListRenameInput, .pageTabRenameInput'))
+  )
+}
 
 /**
  * Triggers a subtle highlight flash on the active page name or tab when a page is created.
@@ -57,41 +66,6 @@ function formatPageDate(pageId) {
 }
 
 /**
- * Generates a unique 17-digit timestamp page ID (`yyyyMMddHHmmssSSS`),
- * guaranteeing strictly increasing uniqueness across rapid calls.
- * @returns {string} The unique page ID.
- */
-export function generatePageId() {
-  let pageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
-
-  if (pageId <= lastGeneratedPageId) {
-    const nextDt = DateTime.fromFormat(lastGeneratedPageId, 'yyyyMMddHHmmssSSS').plus({ milliseconds: 1 })
-
-    pageId = nextDt.isValid
-      ? nextDt.toFormat('yyyyMMddHHmmssSSS')
-      : String(BigInt(lastGeneratedPageId) + 1n).padStart(17, '0')
-  }
-
-  lastGeneratedPageId = pageId
-
-  return pageId
-}
-
-/**
- * Updates the active page name label display and tooltip in the bottom bar.
- * @param {string} name The page name.
- * @param {string} pageId The page ID timestamp string.
- */
-export function updatePageName(name, pageId) {
-  const pageDate = formatPageDate(pageId)
-  const tooltipTitle = escapeHTML(`${name} - ${pageDate}`).replace(/;/g, '&#59;')
-
-  dom.pageName.textContent = name
-  dom.pageName.removeAttribute('title')
-  dom.pageName.setAttribute('uk-tooltip', `title: ${tooltipTitle}; delay: 1000`)
-}
-
-/**
  * Get page name/number to use.
  * @param {Array<{name: string}>} [pages] Existing pages list.
  * @returns {string} The page name.
@@ -114,33 +88,13 @@ function getPageName(pages = store.get('pages') || []) {
 }
 
 /**
- * Generate default page.
- */
-export function defaultPage() {
-  const pageId = generatePageId()
-  const pageName = getPageName([])
-
-  store.set('pages', [{ id: pageId, name: pageName, data: '' }])
-
-  loadPage(pageId)
-}
-
-/**
  * Returns a unique page name that does not conflict with existing pages' safe filenames.
  * @param {Array<{name: string}>} pages Existing pages list.
  * @param {string} baseName Initial candidate name.
  * @returns {string} A non-conflicting page name.
  */
 function getUniquePageName(pages, baseName) {
-  const usedKeys = new Set(pages.map((p) => getSyncKey(p.name)))
-  let candidate = baseName
-  let count = 1
-
-  while (usedKeys.has(getSyncKey(candidate))) {
-    candidate = `${baseName} (${count++})`
-  }
-
-  return candidate
+  return resolveUniquePageName(baseName, new Set(pages.map((p) => getSyncKey(p.name))))
 }
 
 /**
@@ -168,27 +122,6 @@ function createAndActivatePage(pages, pageId, pageName, pageData) {
     flashPageName()
     cm.focus()
   }
-}
-
-/**
- * Create new page.
- * @param {boolean} [isImport=false] Whether the new page is imported.
- * @param {string} [importName=''] Imported page name when `isImport` is true.
- * @param {string} [importData=''] Imported page content when `isImport` is true.
- */
-export function newPage(isImport = false, importName = '', importData = '') {
-  debouncedSavePageState.flush()
-
-  hideTabContextMenu()
-  hideOpenDropdowns()
-  UIkit.tooltip(app.pageListDocked ? dom.newPageButtonPL : dom.newPageButton)?.hide()
-
-  const pageId = generatePageId()
-  const pages = store.get('pages') || []
-  const baseName = sanitizePageName(isImport ? importName : '', isImport ? `Import #${pageId}` : getPageName(pages))
-  const pageName = getUniquePageName(pages, baseName)
-
-  createAndActivatePage(pages, pageId, pageName, isImport ? importData : '')
 }
 
 /**
@@ -241,6 +174,7 @@ function deletePage(pageId) {
       loadPage(pages[pages.length - 1].id)
     } else {
       populatePages()
+      calculate()
     }
 
     events.emit('page:deleted', pageName)
@@ -253,12 +187,17 @@ function deletePage(pageId) {
  * @param {string} originalName Original page name.
  * @param {string} rawInput Raw user input string.
  * @param {boolean} save Whether to commit or cancel.
+ * @param {(finalName?: string) => void} [restoreDom] Optional in-place DOM restoration callback.
  */
-function commitPageRename(pageId, originalName, rawInput, save) {
+function commitPageRename(pageId, originalName, rawInput, save, restoreDom) {
   const newName = sanitizePageName(rawInput)
 
   if (!save || !newName || newName === originalName) {
-    populatePages()
+    if (restoreDom) {
+      restoreDom(originalName)
+    } else {
+      populatePages()
+    }
     return
   }
 
@@ -277,19 +216,43 @@ function commitPageRename(pageId, originalName, rawInput, save) {
       `"${escapeHTML(newName)}" (or a page with a conflicting file name) already exists. Please choose a different page name.`,
       'danger'
     )
-    populatePages()
+    if (restoreDom) {
+      restoreDom(originalName)
+    } else {
+      populatePages()
+    }
     return
   }
 
   const oldName = targetPage.name
+  const pageDate = formatPageDate(pageId)
 
   targetPage.name = newName
   store.set('pages', currentPages)
 
-  populatePages()
+  if (restoreDom) {
+    restoreDom(newName)
+
+    const listTitleEl = document.getElementById(pageId)?.querySelector('.pageListItemTitle')
+    if (listTitleEl) {
+      listTitleEl.textContent = newName
+      listTitleEl.title = `${newName} - ${pageDate}`
+    }
+
+    const tabEl = dom.pageTabs?.querySelector(`.pageTab[data-page="${pageId}"]`)
+    if (tabEl) {
+      tabEl.title = `${newName} - ${pageDate}`
+      const tabTitleEl = tabEl.querySelector('.pageTabTitle')
+      if (tabTitleEl) tabTitleEl.textContent = newName
+    }
+  } else {
+    populatePages()
+  }
 
   if (pageId === app.activePage) {
     updatePageName(targetPage.name, pageId)
+  } else {
+    calculate()
   }
 
   events.emit('page:renamed', oldName, newName)
@@ -315,7 +278,7 @@ function renamePage(pageId) {
   session.input.style.height = `${session.titleHeight}px`
 
   const saveBtn = document.createElement('span')
-  saveBtn.className = 'savePageButton uk-flex-right uk-margin-small-right'
+  saveBtn.className = 'savePageButton uk-margin-small-right'
   saveBtn.title = 'Save page name'
   saveBtn.innerHTML = dom.icons.Save
 
@@ -331,147 +294,6 @@ function renamePage(pageId) {
     event.stopPropagation()
     session.finish(true)
   })
-}
-
-/**
- * Load page.
- * @param {string} pageId Id of the page to load.
- */
-export function loadPage(pageId) {
-  if (app.activePage && app.activePage !== pageId) {
-    app.pageHistory.set(app.activePage, cm.getHistory())
-    debouncedSavePageState.flush()
-  }
-
-  const page = store.get('pages').find((p) => p.id === pageId)
-
-  if (!page) {
-    notify('Page not found.', 'danger')
-    return
-  }
-
-  const { name, data, cursor, folds } = page
-  const history = app.pageHistory.get(pageId)
-  const answers = app.pageAnswers.get(pageId)
-
-  app.activePage = pageId
-  store.set('lastPage', pageId)
-
-  updatePageName(name, pageId)
-
-  app.loadingPage = true
-
-  if (answers && answers.length > 0 && app.settings.answerPosition !== 'bottom') {
-    dom.output.innerHTML = renderAnswersToHTML(answers)
-  } else {
-    dom.output.innerHTML = ''
-  }
-
-  cm.setValue(data)
-
-  if (history) {
-    cm.setHistory(history)
-  } else {
-    cm.clearHistory()
-  }
-
-  if (folds && folds.length > 0) {
-    for (const fold of folds) {
-      if (typeof fold.from === 'number') {
-        cm.foldCode({ line: fold.from, ch: 0 }, null, 'fold')
-      }
-    }
-  }
-
-  if (cursor) {
-    cm.setCursor(cursor)
-  } else {
-    cm.execCommand('goDocEnd')
-  }
-
-  app.loadingPage = false
-
-  if (answers && answers.length > 0 && app.settings.answerPosition !== 'bottom') {
-    syncOutputHeights()
-  }
-
-  calculate()
-  populatePages()
-  cm.focus()
-
-  const targetCursor = cm.getCursor()
-
-  setTimeout(() => {
-    try {
-      cm.scrollIntoView({ ch: targetCursor.ch, line: targetCursor.line + 1 })
-    } catch {
-      cm.scrollIntoView(targetCursor)
-    }
-
-    cm.focus()
-  }, 100)
-}
-
-/**
- * Populate the page list and bottom-bar page tabs.
- */
-export function populatePages() {
-  const pages = store.get('pages')
-
-  if (!pages || pages.length === 0) {
-    defaultPage()
-    return
-  }
-
-  const fragment = document.createDocumentFragment()
-
-  for (const page of pages) {
-    const pageListItem = document.createElement('div')
-
-    pageListItem.id = page.id
-    pageListItem.classList.add('pageListItem', 'uk-flex', 'uk-flex-middle')
-
-    if (app.activePage === page.id) {
-      pageListItem.classList.add('activePage')
-    }
-
-    const pageDate = formatPageDate(page.id)
-
-    pageListItem.innerHTML = `
-      <div class="uk-flex-1" data-action="load" data-page="${page.id}">
-        <div class="pageListItemTitle" title="${escapeHTML(page.name)} - ${pageDate}">${escapeHTML(page.name)}</div>
-      </div>
-      <div class="pageItemActions uk-flex-right uk-margin-small-right">
-        <span
-          class="renamePageButton"
-          data-page="${page.id}"
-          data-action="rename"
-          title="Rename page">${dom.icons.Pencil}</span>
-        <span
-          class="dupPageButton"
-          data-page="${page.id}"
-          data-action="duplicate"
-          title="Duplicate page">${dom.icons.CopyPlus}</span>
-        <span
-          class="deletePageButton"
-          data-page="${page.id}"
-          data-action="delete"
-          title="Delete page">${dom.icons.Trash2}</span>
-        <span
-          class="pageMenuButton"
-          data-page="${page.id}"
-          data-action="pageMenu"
-          title="Page actions">${dom.icons.EllipsisVertical}</span>
-      </div>
-    `
-
-    fragment.appendChild(pageListItem)
-  }
-
-  dom.pageList.replaceChildren(fragment)
-
-  events.emit('pages:populated')
-  populatePageTabs(pages, formatPageDate)
 }
 
 /**
@@ -553,13 +375,11 @@ function setupPageEvents() {
 
     switch (action) {
       case 'load':
-        hideFloatingPageList()
-
-        if (pageId !== app.activePage) {
-          loadPage(pageId)
-        }
-        break
       case 'loadTab':
+        if (action === 'load') {
+          hideFloatingPageList()
+        }
+
         if (pageId !== app.activePage) {
           loadPage(pageId)
         }
@@ -581,21 +401,237 @@ function setupPageEvents() {
 }
 
 /**
+ * Generates a unique 17-digit timestamp page ID (`yyyyMMddHHmmssSSS`),
+ * guaranteeing strictly increasing uniqueness across rapid calls.
+ * @returns {string} The unique page ID.
+ */
+function generatePageId() {
+  let pageId = DateTime.local().toFormat('yyyyMMddHHmmssSSS')
+
+  if (pageId <= lastGeneratedPageId) {
+    const nextDt = DateTime.fromFormat(lastGeneratedPageId, 'yyyyMMddHHmmssSSS').plus({ milliseconds: 1 })
+
+    pageId = nextDt.isValid
+      ? nextDt.toFormat('yyyyMMddHHmmssSSS')
+      : String(BigInt(lastGeneratedPageId) + 1n).padStart(17, '0')
+  }
+
+  lastGeneratedPageId = pageId
+
+  return pageId
+}
+
+/**
+ * Updates the active page name label display and tooltip in the bottom bar.
+ * @param {string} name The page name.
+ * @param {string} pageId The page ID timestamp string.
+ */
+function updatePageName(name, pageId) {
+  const pageDate = formatPageDate(pageId)
+
+  dom.pageName.textContent = name
+  dom.pageName.removeAttribute('title')
+  UIkit.tooltip(dom.pageName, { title: escapeHTML(`${name} - ${pageDate}`), delay: 1000 })
+}
+
+/**
+ * Generate default page.
+ */
+function defaultPage() {
+  const pageId = generatePageId()
+  const pageName = getPageName([])
+
+  store.set('pages', [{ id: pageId, name: pageName, data: '' }])
+
+  loadPage(pageId)
+}
+
+/**
+ * Create new page.
+ * @param {boolean} [isImport=false] Whether the new page is imported.
+ * @param {string} [importName=''] Imported page name when `isImport` is true.
+ * @param {string} [importData=''] Imported page content when `isImport` is true.
+ */
+function newPage(isImport = false, importName = '', importData = '') {
+  debouncedSavePageState.flush()
+
+  hideTabContextMenu()
+  hideOpenDropdowns()
+  UIkit.tooltip(app.pageListDocked ? dom.newPageButtonPL : dom.newPageButton)?.hide()
+
+  const pageId = generatePageId()
+  const pages = store.get('pages') || []
+  const baseName = sanitizePageName(isImport ? importName : '', isImport ? `Import #${pageId}` : getPageName(pages))
+  const pageName = getUniquePageName(pages, baseName)
+
+  createAndActivatePage(pages, pageId, pageName, isImport ? importData : '')
+}
+
+/**
+ * Load page.
+ * @param {string} pageId Id of the page to load.
+ */
+function loadPage(pageId) {
+  if (app.activePage && app.activePage !== pageId) {
+    app.pageHistory.set(app.activePage, cm.getHistory())
+    debouncedSavePageState.flush()
+  }
+
+  const page = store.get('pages').find((p) => p.id === pageId)
+
+  if (!page) {
+    notify('Page not found.', 'danger')
+    return
+  }
+
+  const { name, data, cursor, folds } = page
+  const history = app.pageHistory.get(pageId)
+  const answers = app.pageAnswers.get(pageId)
+
+  app.activePage = pageId
+  store.set('lastPage', pageId)
+
+  updatePageName(name, pageId)
+
+  app.loadingPage = true
+
+  if (answers && answers.length > 0 && app.settings.answerPosition !== 'bottom') {
+    dom.output.innerHTML = renderAnswersToHTML(answers)
+  } else {
+    dom.output.innerHTML = ''
+  }
+
+  cm.setValue(data)
+
+  if (history) {
+    cm.setHistory(history)
+  } else {
+    cm.clearHistory()
+  }
+
+  if (folds && folds.length > 0) {
+    for (const fold of folds) {
+      if (typeof fold.from === 'number') {
+        cm.foldCode({ line: fold.from, ch: 0 }, null, 'fold')
+      }
+    }
+  }
+
+  if (cursor) {
+    cm.setCursor(cursor)
+  } else {
+    cm.execCommand('goDocEnd')
+  }
+
+  app.loadingPage = false
+
+  if (answers && answers.length > 0 && app.settings.answerPosition !== 'bottom') {
+    syncOutputHeights()
+  }
+
+  calculate()
+  populatePages()
+
+  if (canFocusEditor()) {
+    cm.focus()
+  }
+
+  const targetCursor = cm.getCursor()
+
+  clearTimeout(loadPageFocusTimer)
+  loadPageFocusTimer = setTimeout(() => {
+    loadPageFocusTimer = null
+    if (app.activePage !== pageId) return
+
+    try {
+      cm.scrollIntoView({ ch: targetCursor.ch, line: targetCursor.line + 1 })
+    } catch {
+      cm.scrollIntoView(targetCursor)
+    }
+
+    if (canFocusEditor()) {
+      cm.focus()
+    }
+  }, 100)
+}
+
+/**
+ * Populate the page list and bottom-bar page tabs.
+ */
+function populatePages() {
+  const pages = store.get('pages')
+
+  if (!pages || pages.length === 0) {
+    defaultPage()
+    return
+  }
+
+  const fragment = document.createDocumentFragment()
+
+  for (const page of pages) {
+    const pageListItem = document.createElement('div')
+
+    pageListItem.id = page.id
+    pageListItem.classList.add('pageListItem', 'uk-flex', 'uk-flex-middle')
+
+    if (app.activePage === page.id) {
+      pageListItem.classList.add('activePage')
+    }
+
+    const pageDate = formatPageDate(page.id)
+
+    pageListItem.innerHTML = `
+      <div class="uk-flex-1" data-action="load" data-page="${page.id}">
+        <div class="pageListItemTitle" title="${escapeHTML(page.name)} - ${pageDate}">${escapeHTML(page.name)}</div>
+      </div>
+      <div class="pageItemActions uk-flex-right uk-margin-small-right">
+        <span
+          class="renamePageButton"
+          data-page="${page.id}"
+          data-action="rename"
+          title="Rename page">${dom.icons.Pencil}</span>
+        <span
+          class="dupPageButton"
+          data-page="${page.id}"
+          data-action="duplicate"
+          title="Duplicate page">${dom.icons.CopyPlus}</span>
+        <span
+          class="deletePageButton"
+          data-page="${page.id}"
+          data-action="delete"
+          title="Delete page">${dom.icons.Trash2}</span>
+        <span
+          class="pageMenuButton"
+          data-page="${page.id}"
+          data-action="pageMenu"
+          title="Page actions">${dom.icons.EllipsisVertical}</span>
+      </div>
+    `
+
+    fragment.appendChild(pageListItem)
+  }
+
+  dom.pageList.replaceChildren(fragment)
+
+  events.emit('pages:populated')
+  populatePageTabs(pages, formatPageDate)
+}
+
+/**
  * Initializes pages from storage, sets up drag sorting, file I/O, and page UI events.
  */
-export function initializePages() {
+function initializePages() {
   setupPageListSort()
   setupPageTabsSort()
   setupPageEvents()
 
   const pages = store.get('pages')
 
-  if (pages) {
+  if (Array.isArray(pages) && pages.length > 0) {
     if (app.settings.newPageOnStart) {
       const blankPage = pages.find((page) => page.data === '')
 
       if (blankPage) {
-        app.activePage = blankPage.id
         loadPage(blankPage.id)
       } else {
         newPage()
@@ -603,11 +639,10 @@ export function initializePages() {
     } else {
       const lastPageId = store.get('lastPage')
       const pageExists = pages.some((p) => p.id === lastPageId)
+      const initialPageId = pageExists ? lastPageId : pages[0]?.id || null
 
-      app.activePage = pageExists ? lastPageId : pages[0]?.id || null
-
-      if (app.activePage) {
-        loadPage(app.activePage)
+      if (initialPageId) {
+        loadPage(initialPageId)
       } else {
         defaultPage()
       }
@@ -616,3 +651,5 @@ export function initializePages() {
     defaultPage()
   }
 }
+
+export { defaultPage, generatePageId, initializePages, loadPage, newPage, populatePages, updatePageName }

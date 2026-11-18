@@ -1,14 +1,14 @@
 import UIkit from 'uikit'
 
 import { syncOutputHeights } from '../calc/outputRenderer.js'
-import { updatePageTabsScroll } from '../pages/pageTabs.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
+import { updatePageTabsScroll } from '../pages/pageTabs.js'
 import { app } from '../state/appState.js'
-import { checkSize, isElectron } from '../state/env.js'
+import { DEFAULT_APP_HEIGHT, DEFAULT_APP_WIDTH, isElectron, MIN_APP_HEIGHT, MIN_APP_WIDTH } from '../state/env.js'
 import { events } from '../state/events.js'
 import { store } from '../state/store.js'
-import { hideFloatingPageList, modal } from './dialogs.js'
+import { hideFloatingPageList, modal, syncModalOpenState } from './dialogs.js'
 
 const PAGELIST_MIN_WIDTH = 210
 const PAGELIST_MAX_WIDTH = 510
@@ -23,7 +23,7 @@ let pageListTransitionTimer = null
  * Returns the clamped width for the docked page list.
  * @returns {number}
  */
-export function getDockedPageListWidth() {
+function getDockedPageListWidth() {
   return Math.min(
     PAGELIST_MAX_WIDTH,
     Math.max(PAGELIST_MIN_WIDTH, store.get('pageListWidth') ?? PAGELIST_DEFAULT_WIDTH)
@@ -47,6 +47,39 @@ function applyPageListWidth(width) {
   }
 
   dom.appWrapper.style.left = `${width}px`
+}
+
+function getAppWrapperSize() {
+  const rect = dom.appWrapper.getBoundingClientRect()
+
+  return {
+    width: Math.round(rect.width),
+    height: Math.round(rect.height)
+  }
+}
+
+/**
+ * Check whether the window size differs from the default dimensions and toggle the reset size button.
+ * @returns {Promise<void>}
+ */
+async function checkSize() {
+  const { width, height } = getAppWrapperSize()
+  const isAppWrapperResized = Math.abs(width - DEFAULT_APP_WIDTH) > 1 || Math.abs(height - DEFAULT_APP_HEIGHT) > 1
+
+  dom.resetSizeButton.style.display =
+    isElectron && isAppWrapperResized && !(await numara.isMaximized()) ? 'inline-flex' : 'none'
+}
+
+function triggerPageListTransition() {
+  document.body.classList.add('page-list-width-animating')
+
+  clearTimeout(pageListTransitionTimer)
+  pageListTransitionTimer = setTimeout(() => {
+    document.body.classList.remove('page-list-width-animating')
+    cm.refresh()
+    syncOutputHeights()
+    checkSize()
+  }, PAGELIST_TRANSITION_MS)
 }
 
 /**
@@ -126,27 +159,6 @@ function setupPageListResizer() {
   resizer.addEventListener('mouseenter', resizerTooltip)
 }
 
-function triggerPageListTransition() {
-  document.body.classList.add('page-list-width-animating')
-
-  clearTimeout(pageListTransitionTimer)
-  pageListTransitionTimer = setTimeout(() => {
-    document.body.classList.remove('page-list-width-animating')
-    cm.refresh()
-    syncOutputHeights()
-    checkSize()
-  }, PAGELIST_TRANSITION_MS)
-}
-
-function getAppWrapperSize() {
-  const rect = dom.appWrapper.getBoundingClientRect()
-
-  return {
-    width: Math.round(rect.width),
-    height: Math.round(rect.height)
-  }
-}
-
 function resetWindowToAppWrapper(pageListWidth = 0, appWrapperSize = getAppWrapperSize()) {
   if (!isElectron) return
 
@@ -155,8 +167,8 @@ function resetWindowToAppWrapper(pageListWidth = 0, appWrapperSize = getAppWrapp
     .then(async (maximized) => {
       if (maximized) return
 
-      const targetWidth = Math.max(480, appWrapperSize.width + pageListWidth)
-      const targetHeight = Math.max(420, appWrapperSize.height)
+      const targetWidth = Math.max(MIN_APP_WIDTH, appWrapperSize.width + pageListWidth)
+      const targetHeight = Math.max(MIN_APP_HEIGHT, appWrapperSize.height)
 
       await numara.resetSize(appWrapperSize.width, appWrapperSize.height, pageListWidth)
 
@@ -173,7 +185,7 @@ function resetWindowToAppWrapper(pageListWidth = 0, appWrapperSize = getAppWrapp
 /**
  * Updates `.is-scrollable` on `#pageList` when items reach or overflow the bottom of the list.
  */
-export function updatePageListScroll() {
+function updatePageListScroll() {
   if (!dom.pageList) return
 
   requestAnimationFrame(() => {
@@ -191,7 +203,7 @@ export function updatePageListScroll() {
  * @param {boolean} [show=false] When true, ensure the docked panel is visible.
  * @param {boolean} [fromResize=false] When true, skip resizing the OS window on dock state changes.
  */
-export function setupPageList(show = false, fromResize = false) {
+function setupPageList(show = false, fromResize = false) {
   const appWrapperSize = getAppWrapperSize()
   const { pageListPosition } = app.settings
   const viewportWidth = window.visualViewport?.width ?? window.innerWidth
@@ -246,30 +258,42 @@ export function setupPageList(show = false, fromResize = false) {
       return
     }
 
-    app.pageListDocked = false
+    if (dockChanged && isVisible) {
+      app.pageListDocked = false
 
-    const offcanvas = UIkit.offcanvas('#pageListPanel', {
-      overlay: false,
-      mode: 'none',
-      escClose: false,
-      bgClose: false
-    })
+      const offcanvas = UIkit.offcanvas('#pageListPanel', {
+        overlay: false,
+        mode: 'none',
+        escClose: false,
+        bgClose: false
+      })
 
-    app.pageListDocked = true
+      dom.pageListPanel.classList.remove('uk-offcanvas-overlay')
 
-    if (show || dockChanged) {
-      if (document.querySelector('.uk-modal.uk-open')) {
-        dom.pageListPanel.classList.add('uk-open')
-        dom.pageListPanel.style.display = 'block'
+      Promise.resolve(offcanvas.hide())
+        .catch(() => {})
+        .finally(() => {
+          if (!lastDockState) return
 
-        const bar = dom.pageListBar
+          app.pageListDocked = true
+          dom.pageListPanel.classList.add('uk-open')
+          dom.pageListPanel.style.display = 'block'
+          dom.pageListBar?.classList.add('uk-open')
+          syncModalOpenState()
+        })
+    } else if (show || dockChanged) {
+      UIkit.offcanvas('#pageListPanel', {
+        overlay: false,
+        mode: 'none',
+        escClose: false,
+        bgClose: false
+      })
 
-        if (bar) {
-          bar.classList.add('uk-open')
-        }
-      } else {
-        offcanvas.show()
-      }
+      app.pageListDocked = true
+      dom.pageListPanel.classList.add('uk-open')
+      dom.pageListPanel.style.display = 'block'
+      dom.pageListBar?.classList.add('uk-open')
+      syncModalOpenState()
     }
   } else {
     app.pageListDocked = false
@@ -298,13 +322,15 @@ export function setupPageList(show = false, fromResize = false) {
       bar.style.width = ''
       bar.classList.remove('uk-open')
     }
+
+    syncModalOpenState()
   }
 }
 
 /**
  * Initializes the page list panel settings, offcanvas drawer, and handles window resize changes.
  */
-export function initializePageList() {
+function initializePageList() {
   let resizeTimer
 
   if (dom.pageList && typeof ResizeObserver !== 'undefined') {
@@ -335,3 +361,5 @@ export function initializePageList() {
     }, 100)
   })
 }
+
+export { checkSize, getDockedPageListWidth, initializePageList, setupPageList }

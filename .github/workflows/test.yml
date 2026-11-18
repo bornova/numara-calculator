@@ -19,12 +19,12 @@ jobs:
 
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 26
           cache: 'npm'
 
       - name: Install dependencies
@@ -36,8 +36,8 @@ jobs:
       - name: Run linter
         run: npm run lint
 
-      - name: Run unit tests
-        run: npm test
-
       - name: Build application
-        run: npm run build
+        run: node build.js --prod
+
+      - name: Run unit, combinatorial, and E2E tests
+        run: npm test
