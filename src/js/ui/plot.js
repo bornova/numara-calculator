@@ -32,20 +32,43 @@ const plotSettings = {
 }
 
 /**
+ * Evaluates a compiled expression at x, returning raw numeric values (including `Infinity`/`-Infinity`) for curve sampling.
+ * @param {object} compiled Compiled Math.js expression.
+ * @param {number} x X coordinate.
+ * @returns {number} Evaluated numeric value or NaN.
+ */
+function evalRawAt(compiled, x) {
+  try {
+    const val = compiled.evaluate({ x })
+
+    if (typeof val === 'number') {
+      return val
+    }
+
+    if (typeof val?.toNumber === 'function') {
+      return val.toNumber()
+    }
+
+    if (typeof val === 'bigint') {
+      return Number(val)
+    }
+
+    return NaN
+  } catch {
+    return NaN
+  }
+}
+
+/**
  * Evaluates a compiled expression at x and returns a finite number or NaN.
  * @param {object} compiled Compiled Math.js expression.
  * @param {number} x X coordinate.
  * @returns {number} Evaluated numeric value or NaN.
  */
 function evalAt(compiled, x) {
-  try {
-    const val = compiled.evaluate({ x })
-    const num = typeof val?.toNumber === 'function' ? val.toNumber() : Number(val)
+  const num = evalRawAt(compiled, x)
 
-    return Number.isFinite(num) ? num : NaN
-  } catch {
-    return NaN
-  }
+  return Number.isFinite(num) ? num : NaN
 }
 
 /**
@@ -56,10 +79,7 @@ function evalAt(compiled, x) {
 function getDomains(expressions) {
   if (app.plotSettings.domain.auto) {
     if (app.activePlot) {
-      return {
-        x: app.activePlot.meta.xScale.domain(),
-        y: app.activePlot.meta.yScale.domain()
-      }
+      return { x: app.activePlot.meta.xScale.domain(), y: app.activePlot.meta.yScale.domain() }
     }
 
     const compiledList = expressions
@@ -153,10 +173,7 @@ function getDomains(expressions) {
     }
 
     if (yValues.length === 0) {
-      return {
-        x: [-xSpan, xSpan],
-        y: [-xSpan, xSpan]
-      }
+      return { x: [-xSpan, xSpan], y: [-xSpan, xSpan] }
     }
 
     const absY = yValues.map(Math.abs).sort((a, b) => a - b)
@@ -290,11 +307,17 @@ function updatePlotSetting(setting, value) {
 function resolveAxisLimit(val) {
   const trimmed = String(val ?? '').trim()
 
-  if (!trimmed) return NaN
+  if (!trimmed) {
+    return NaN
+  }
 
   const localeNum = parseStrictLocaleNumber(trimmed, app.settings)
 
-  return Number.isFinite(localeNum) ? localeNum : parseFloat(trimmed)
+  if (Number.isFinite(localeNum)) {
+    return localeNum
+  }
+
+  return /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(trimmed) ? Number(trimmed) : NaN
 }
 
 /**
@@ -414,10 +437,25 @@ function setupEventListeners() {
 
   UIkit.util.on(
     '#dialogPlot',
-    'shown',
+    'show',
     () => {
       app.activePlot = null
-      plot()
+
+      if (dom.plot.clientWidth > 0 && dom.plot.clientHeight > 0) {
+        plot()
+      }
+    },
+    { self: true }
+  )
+
+  UIkit.util.on(
+    '#dialogPlot',
+    'shown',
+    () => {
+      if (!app.activePlot) {
+        plot()
+        modal.center('#dialogPlot')
+      }
     },
     { self: true }
   )
@@ -492,86 +530,93 @@ export function plot() {
     dom.plot.innerHTML = ''
   }
 
-  const selectedList = pageFunctions.filter((fn) => activePlotFunctions.has(fn))
-  const activeDefs = selectedList.length > 0 ? selectedList : [primaryFunc]
-  const activeExpressions = activeDefs.map(preparePlotExpression)
+  try {
+    const selectedList = pageFunctions.filter((fn) => activePlotFunctions.has(fn))
+    const activeDefs = selectedList.length > 0 ? selectedList : [primaryFunc]
+    const activeExpressions = activeDefs.map(preparePlotExpression)
 
-  const { x: xDomain, y: yDomain } = getDomains(activeExpressions)
+    const { x: xDomain, y: yDomain } = getDomains(activeExpressions)
 
-  const compiledSeries = activeExpressions.map((expr) => {
-    let compiledF = null
-    let compiledDerivative = null
-    let seriesDerivative = null
+    const compiledSeries = activeExpressions.map((expr) => {
+      const compiledF = math.compile(expr)
+      let compiledDerivative = null
+      let derivativeFn = null
 
-    try {
-      compiledF = math.compile(expr)
-    } catch {
-      // Ignore compilation error
-    }
-
-    if (app.plotSettings.showDerivative) {
-      try {
-        seriesDerivative = math.derivative(expr, 'x').toString()
-        compiledDerivative = math.compile(seriesDerivative)
-      } catch {
-        // Ignore derivative error
-      }
-    }
-
-    return { compiledF, compiledDerivative, seriesDerivative, expr }
-  })
-
-  const seriesData = compiledSeries.map(({ expr, seriesDerivative }) => ({
-    derivative:
-      app.plotSettings.showDerivative && seriesDerivative ? { fn: seriesDerivative, updateOnMouseMove: true } : false,
-    fn: expr,
-    graphType: 'polyline',
-    sampler: 'builtIn'
-  }))
-
-  app.activePlot = functionPlot.default({
-    data: seriesData,
-    grid: app.plotSettings.showGrid,
-    height: dom.plot.clientHeight,
-    target: '#plot',
-    tip: {
-      xLine: app.plotSettings.showCross,
-      yLine: app.plotSettings.showCross,
-      renderer: (x, y, index) => {
-        const activeSeries = compiledSeries[index] || compiledSeries[0]
-        const compiledF = activeSeries?.compiledF
-        const compiledDerivative = activeSeries?.compiledDerivative
-        const precision = app.plotSettings.domain.axisPrecision
-        const xFixed = x.toFixed(precision)
-        const xNum = Number(xFixed)
-
-        let yFixed = y.toFixed(precision)
-
-        if (compiledF) {
-          const numVal = evalAt(compiledF, xNum)
-
-          if (Number.isFinite(numVal)) {
-            yFixed = numVal.toFixed(precision)
-          }
+      if (app.plotSettings.showDerivative) {
+        try {
+          const seriesDerivative = math.derivative(expr, 'x').toString()
+          compiledDerivative = math.compile(seriesDerivative)
+          derivativeFn = ({ x }) => evalRawAt(compiledDerivative, x)
+        } catch {
+          // Ignore derivative error
         }
-
-        let dStr = ''
-
-        if (app.plotSettings.showDerivative && compiledDerivative) {
-          const derivNum = evalAt(compiledDerivative, xNum)
-
-          if (Number.isFinite(derivNum)) {
-            dStr = ', d: ' + derivNum.toFixed(precision)
-          }
-        }
-
-        return ` x: ${xFixed}, y: ${yFixed}${dStr}`
       }
-    },
-    width: dom.plot.clientWidth,
-    xAxis: { domain: xDomain },
-    yAxis: { domain: yDomain }
-  })
+
+      return {
+        compiledF,
+        compiledDerivative,
+        fn: ({ x }) => evalRawAt(compiledF, x),
+        derivativeFn,
+        expr
+      }
+    })
+
+    const seriesData = compiledSeries.map(({ fn, derivativeFn }) => ({
+      derivative:
+        app.plotSettings.showDerivative && derivativeFn ? { fn: derivativeFn, updateOnMouseMove: true } : false,
+      fn,
+      graphType: 'polyline',
+      sampler: 'builtIn'
+    }))
+
+    app.activePlot = functionPlot.default({
+      data: seriesData,
+      grid: app.plotSettings.showGrid,
+      height: dom.plot.clientHeight,
+      target: '#plot',
+      tip: {
+        xLine: app.plotSettings.showCross,
+        yLine: app.plotSettings.showCross,
+        renderer: (x, y, index) => {
+          const activeSeries = compiledSeries[index] || compiledSeries[0]
+          const compiledF = activeSeries?.compiledF
+          const compiledDerivative = activeSeries?.compiledDerivative
+          const precision = app.plotSettings.domain.axisPrecision
+          const xFixed = x.toFixed(precision)
+          const xNum = Number(xFixed)
+
+          let yFixed = y.toFixed(precision)
+
+          if (compiledF) {
+            const numVal = evalAt(compiledF, xNum)
+
+            if (Number.isFinite(numVal)) {
+              yFixed = numVal.toFixed(precision)
+            }
+          }
+
+          let dStr = ''
+
+          if (app.plotSettings.showDerivative && compiledDerivative) {
+            const derivNum = evalAt(compiledDerivative, xNum)
+
+            if (Number.isFinite(derivNum)) {
+              dStr = ', d: ' + derivNum.toFixed(precision)
+            }
+          }
+
+          return ` x: ${xFixed}, y: ${yFixed}${dStr}`
+        }
+      },
+      width: dom.plot.clientWidth,
+      xAxis: { domain: xDomain },
+      yAxis: { domain: yDomain }
+    })
+  } catch (error) {
+    app.activePlot = null
+    modal.hide('#dialogPlot')
+    showError('Plot Error', error?.message || String(error))
+  }
 }
 
 /**
