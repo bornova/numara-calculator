@@ -36,14 +36,6 @@ self.addEventListener('activate', (event) => {
       const oldKeys = keys.filter((key) => key.startsWith('numara-') && key !== CACHE_NAME)
       await Promise.all(oldKeys.map((key) => caches.delete(key)))
       await self.clients.claim()
-
-      if (oldKeys.length > 0) {
-        const clients = await self.clients.matchAll({ type: 'window' })
-
-        for (const client of clients) {
-          client.navigate(client.url).catch(() => {})
-        }
-      }
     })
   )
 })
@@ -53,8 +45,10 @@ self.addEventListener('fetch', (event) => {
 
   if (request.method !== 'GET') return
 
+  const requestUrl = new URL(request.url)
+
   // Only handle same-origin requests. Cross-origin calls (e.g. Frankfurter currency rates) go straight to network.
-  if (new URL(request.url).origin !== self.location.origin) return
+  if (requestUrl.origin !== self.location.origin) return
 
   // Network-first for navigations so new releases are picked up, falling back to cached shell when offline.
   if (request.mode === 'navigate') {
@@ -77,13 +71,14 @@ self.addEventListener('fetch', (event) => {
             .match(request)
             .then((cached) => cached || caches.match('./index.html'))
             .then((cached) => cached || caches.match('./'))
+            .then((cached) => cached || Response.error())
         )
     )
 
     return
   }
 
-  // Stale-while-revalidate for static assets: serve from cache for speed and refresh in the background.
+  // Stale-while-revalidate for static assets: serve cached immediately and refresh in background.
   event.respondWith(
     caches.open(CACHE_NAME).then((cache) =>
       cache.match(request).then((cached) => {
@@ -94,7 +89,7 @@ self.addEventListener('fetch', (event) => {
             }
             return response
           })
-          .catch(() => cached)
+          .catch(() => cached || Response.error())
 
         return cached || network
       })
