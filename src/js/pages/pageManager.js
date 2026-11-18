@@ -84,11 +84,10 @@ export function generatePageId() {
  */
 export function updatePageName(name, pageId) {
   const pageDate = formatPageDate(pageId)
-  const tooltipTitle = escapeHTML(`${name} - ${pageDate}`).replace(/;/g, '&#59;')
 
   dom.pageName.textContent = name
-  dom.pageName.removeAttribute('title')
-  dom.pageName.setAttribute('uk-tooltip', `title: ${tooltipTitle}; delay: 1000`)
+  dom.pageName.title = `${name} - ${pageDate}`
+  dom.pageName.setAttribute('uk-tooltip', 'delay: 1000')
 }
 
 /**
@@ -241,6 +240,7 @@ function deletePage(pageId) {
       loadPage(pages[pages.length - 1].id)
     } else {
       populatePages()
+      calculate()
     }
 
     events.emit('page:deleted', pageName)
@@ -290,6 +290,8 @@ function commitPageRename(pageId, originalName, rawInput, save) {
 
   if (pageId === app.activePage) {
     updatePageName(targetPage.name, pageId)
+  } else {
+    calculate()
   }
 
   events.emit('page:renamed', oldName, newName)
@@ -590,7 +592,7 @@ export function initializePages() {
 
   const pages = store.get('pages')
 
-  if (pages) {
+  if (Array.isArray(pages) && pages.length > 0) {
     if (app.settings.newPageOnStart) {
       const blankPage = pages.find((page) => page.data === '')
 
