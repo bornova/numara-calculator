@@ -11,6 +11,7 @@ import { isModalOpen } from './dialogs.js'
  */
 export function setupKeyboardShortcuts() {
   const keys = {
+    '$mod+,': 'settingsButton',
     '$mod+D': 'clearButton',
     '$mod+N': 'newPageButton',
     '$mod+P': 'printButton',
@@ -58,7 +59,7 @@ export function setupKeyboardShortcuts() {
         event.stopPropagation()
       }
 
-      if (!isModalOpen()) {
+      if (!dom.el('.modal.uk-open, .dialogConfirm.uk-open')) {
         dom[button].click()
       } else {
         closePageListIfOpen()
@@ -88,7 +89,7 @@ export function setupKeyboardShortcuts() {
           !isModalOpen() &&
           !isSearchPanelOpen() &&
           !event.target.closest?.('.pageListRenameInput, .pageTabRenameInput') &&
-          !dom.tabContextMenu?.classList.contains('uk-open') &&
+          !dom.el('.uk-dropdown.uk-open') &&
           (!cm || !cm.state.completionActive)
         ) {
           event.preventDefault()
