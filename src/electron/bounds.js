@@ -46,7 +46,9 @@ function getIntersection(a, b) {
  * @returns {{workArea: {x: number, y: number, width: number, height: number}}|null}
  */
 function findMatchingDisplay(bounds, displays = [], minVisible = MIN_VISIBLE_OVERLAP) {
-  if (!Array.isArray(displays) || displays.length === 0) return null
+  if (!Array.isArray(displays) || displays.length === 0) {
+    return null
+  }
 
   let bestDisplay = null
   let bestArea = 0
@@ -163,6 +165,7 @@ export function resolveWindowBounds(
   const validDisplays = Array.isArray(displays)
     ? displays.filter((d) => d?.workArea && d.workArea.width > 0 && d.workArea.height > 0)
     : []
+
   const fallbackWorkArea =
     primaryDisplay?.workArea && primaryDisplay.workArea.width > 0 && primaryDisplay.workArea.height > 0
       ? primaryDisplay.workArea
