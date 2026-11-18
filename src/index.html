@@ -1,7 +1,8 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
+    <title>Numara Calculator</title>
     <meta
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self' 'unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://api.frankfurter.dev; object-src 'none'; base-uri 'none'; form-action 'none';"
@@ -97,7 +98,7 @@
           </a>
         </div>
         <div id="pageList" class="pageList uk-flex-1"></div>
-        <div class="pageListFooter uk-flex-bottom">
+        <div class="pageListFooter">
           <div class="pageListActions uk-flex uk-flex-between uk-flex-middle">
             <div class="leftActions uk-flex uk-flex-middle">
               <a id="newPageButtonPL" class="action newPageButton" title="New page" uk-tooltip>
@@ -184,8 +185,8 @@
         <button class="uk-modal-close-default" type="button"><i data-lucide="x"></i></button>
         <h2 class="uk-modal-title uk-text-center">User Defined Functions & Units</h2>
         <ul uk-tab>
-          <li><a>Functions</a></li>
-          <li><a>Units</a></li>
+          <li><a href="#">Functions</a></li>
+          <li><a href="#">Units</a></li>
         </ul>
         <ul id="udfuSwitcher" class="uk-switcher uk-margin-small-top">
           <li id="udfTab">
@@ -337,7 +338,7 @@
                   <input type="hidden" id="theme" class="settingItem" />
                   <a
                     id="customizeThemeButton"
-                    class="customizeThemeButton uk-flex-right uk-margin-small-left"
+                    class="customizeThemeButton uk-margin-small-left"
                     title="Customize theme"
                     uk-tooltip
                   >
@@ -761,15 +762,10 @@
                     id="currencyInterval"
                     name="currencyInterval"
                     aria-label="Rate update interval"
-                    class="uk-select settingItem uk-flex-left"
+                    class="uk-select settingItem"
                   ></select>
 
-                  <a
-                    id="updateRatesLink"
-                    class="updateRatesLink uk-flex-right uk-margin-small-left"
-                    title="Update now"
-                    uk-tooltip
-                  >
+                  <a id="updateRatesLink" class="updateRatesLink uk-margin-small-left" title="Update now" uk-tooltip>
                     <i data-lucide="refresh-ccw"></i>
                   </a>
                 </div>
@@ -790,7 +786,7 @@
             </div>
 
             <div id="syncDirSection" class="uk-flex uk-flex-middle uk-flex-between">
-              <div class="uk-width-auto sync-label" data-help="syncDir">Sync folder</div>
+              <div class="sync-label" data-help="syncDir">Sync folder</div>
               <div class="sync-path">
                 <a id="selectSyncDirButton" href="#" class="sync-path-link">Choose Folder</a>
               </div>
@@ -835,7 +831,7 @@
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical uk-width-small">
         <button class="uk-modal-close-default" type="button"><i data-lucide="x"></i></button>
         <div class="dialog-about-header">
-          <img id="numaraLogo" />
+          <img id="numaraLogo" alt="Numara" />
         </div>
         <div>
           <span id="dialogAboutAppVersion" class="dialogAboutAppVersion" uk-tooltip></span>
@@ -849,11 +845,11 @@
         </div>
 
         <div class="dialog-about-links">
-          <div><a id="gitLink" target="_blank">GitHub</a></div>
-          <div><a id="webLink" target="_blank">Web</a></div>
-          <div><a id="licenseLink" target="_blank">Licence</a></div>
-          <div><a id="helpLink" target="_blank">Help</a></div>
-          <div><a id="logsLink" target="_blank">Logs</a></div>
+          <div><a id="gitLink" target="_blank" rel="noopener noreferrer">GitHub</a></div>
+          <div><a id="webLink" target="_blank" rel="noopener noreferrer">Web</a></div>
+          <div><a id="licenseLink" target="_blank" rel="noopener noreferrer">Licence</a></div>
+          <div><a id="helpLink" target="_blank" rel="noopener noreferrer">Help</a></div>
+          <div><a id="logsLink">Logs</a></div>
         </div>
       </div>
     </div>
@@ -966,7 +962,7 @@
         </div>
         <div class="dialog-buttons uk-flex-right">
           <button id="confirmYes" class="uk-button uk-button-danger uk-button-small">Yes</button>
-          <button class="uk-button uk-button-default uk-modal-close uk-button-small">No</button>
+          <button id="confirmNo" class="uk-button uk-button-default uk-modal-close uk-button-small">No</button>
         </div>
       </div>
     </div>
