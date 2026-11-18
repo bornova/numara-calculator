@@ -23,12 +23,12 @@ export function copyToClipboard(text, message) {
 }
 
 /**
- * Checks whether a rendered output row has a copyable `[data-answer]` value.
+ * Checks whether a rendered output row has a copyable answer or plot expression.
  * @param {Element|null} rowEl Output element with `data-index`.
  * @returns {boolean}
  */
 function hasCopyableAnswer(rowEl) {
-  return Boolean(rowEl?.querySelector('[data-answer]')?.dataset.answer)
+  return Boolean(getLineCopyableAnswer(rowEl))
 }
 
 /**
@@ -61,11 +61,12 @@ function inputContext() {
   requestAnimationFrame(() => {
     const lineIndex = cm.getCursor().line
     const isEmpty = cm.getValue() === ''
+    const hasLine = Boolean(cm.getLine(lineIndex)?.trim())
     const hasAnswer = hasCopyableAnswer(dom.el(`#mainPanel [data-index="${lineIndex}"]`))
     const selections = cm.listSelections()
     const isMultiLine = selections.length > 1 || selections[0].anchor.line !== selections[0].head.line
 
-    numara.inputContextMenu(lineIndex, isEmpty, isMultiLine, hasAnswer)
+    numara.inputContextMenu(lineIndex, isEmpty, isMultiLine, hasAnswer, hasLine)
   })
 }
 
@@ -169,11 +170,12 @@ function outputContext(event) {
   if (!isElectron) return
 
   const target = event.target.closest('[data-index]')
-  const lineIndex = target ? target.dataset.index : cm.lastLine()
-  const hasAnswer = lineIndex !== null && hasCopyableAnswer(target)
+  const lineIndex = target ? +target.dataset.index : cm.lastLine()
+  const hasLine = Boolean(cm.getLine(lineIndex)?.trim())
+  const hasAnswer = target !== null && hasCopyableAnswer(target)
   const isEmpty = cm.getValue() === ''
 
-  numara.outputContextMenu(lineIndex, isEmpty, hasAnswer)
+  numara.outputContextMenu(lineIndex, isEmpty, hasAnswer, hasLine)
 }
 
 /**
