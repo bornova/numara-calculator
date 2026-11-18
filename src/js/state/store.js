@@ -127,13 +127,13 @@ export const store = {
 export function initStoreObject(key, defaults) {
   let value = store.get(key)
 
-  if (value) {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
     let changed = false
 
     observableDiff(value, defaults, (diff) => {
       if (diff.kind === 'E') return
 
-      applyChange(value, defaults, diff)
+      applyChange(value, defaults, 'rhs' in diff ? { ...diff, rhs: structuredClone(diff.rhs) } : diff)
       changed = true
     })
 
