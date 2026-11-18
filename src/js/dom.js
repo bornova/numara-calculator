@@ -7,8 +7,7 @@ const SELECTOR_OVERRIDES = {
   plotXMin: 'xMin',
   plotXMax: 'xMax',
   plotYMin: 'yMin',
-  plotYMax: 'yMax',
-  confirmNo: { selector: '#dialogConfirm .uk-modal-close' }
+  plotYMax: 'yMax'
 }
 
 const elementCache = new Map()
