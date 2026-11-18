@@ -2,7 +2,7 @@ import { name } from '../../../package.json'
 import { escapeHTML } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
-import { app } from '../state/appState.js'
+import { app, DEFAULT_INPUT_WIDTH } from '../state/appState.js'
 import { isElectron } from '../state/env.js'
 import { store } from '../state/store.js'
 import { hideFloatingPageList } from './dialogs.js'
@@ -34,7 +34,8 @@ export function setupPrintArea() {
     const tableRows = []
     const outputChildren = dom.output.firstElementChild?.children
     const isBottom = app.settings.answerPosition === 'bottom'
-    const inputWidth = store.get('inputWidth') ?? app.settings.inputWidth ?? 60
+    const inputWidth =
+      app.settings.answerPosition === 'left' ? (store.get('inputWidth') ?? DEFAULT_INPUT_WIDTH) : DEFAULT_INPUT_WIDTH
     const noBB = 'border-bottom: none !important;'
     const trHeader = `<tr style="height: ${app.settings.lineHeight};">`
     let lineIndex = 0
