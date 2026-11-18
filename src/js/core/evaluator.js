@@ -71,11 +71,15 @@ const udfuState = {
  * @returns {boolean}
  */
 function isMutableScopeValue(val) {
-  if (!val || typeof val !== 'object') return false
-  if (Array.isArray(val) || math.isMatrix(val)) return true
-  if (val.constructor === Object && !val[PAGE_OBJECT_SYMBOL]) return true
+  if (!val || typeof val !== 'object') {
+    return false
+  }
 
-  return false
+  if (Array.isArray(val) || math.isMatrix(val)) {
+    return true
+  }
+
+  return val.constructor === Object && !val[PAGE_OBJECT_SYMBOL]
 }
 
 /**
@@ -85,7 +89,9 @@ function isMutableScopeValue(val) {
  * @returns {*}
  */
 function cloneScopeValue(val) {
-  if (!isMutableScopeValue(val)) return val
+  if (!isMutableScopeValue(val)) {
+    return val
+  }
 
   try {
     return math.clone(val)
@@ -161,7 +167,9 @@ let activePageId = null
  * @returns {string}
  */
 function getCalcSettingsSignature(settings) {
-  if (!settings) return ''
+  if (!settings) {
+    return ''
+  }
 
   return JSON.stringify({
     contPrevLine: settings.contPrevLine,
@@ -228,7 +236,10 @@ const DATE_DIFF_CANDIDATE_REGEX =
  */
 function resolveDateOperand(rawCandidate) {
   const candidate = rawCandidate ? rawCandidate.trim() : ''
-  if (!candidate) return null
+
+  if (!candidate) {
+    return null
+  }
 
   const sysLocale = getSystemLocale(app.settings)
   const locales = sysLocale && sysLocale.toLowerCase() !== 'en-us' ? [sysLocale, 'en-US'] : ['en-US']
@@ -305,17 +316,25 @@ function tryEvaluateDateDiff(line) {
     targetUnit = unitSuffixMatch[2]
   }
 
-  if (REGEX_DATE_TIME.test(expr)) return null
+  if (REGEX_DATE_TIME.test(expr)) {
+    return null
+  }
 
   const splitMatch =
     expr.match(/^(.+?)\s+-\s+(.+)$/) || expr.match(/^(.+?)(?<!\b\d{4}|\b\d{4}-\d{1,2})-(?!\d{1,2}-\d{1,2}\b)(.+)$/)
-  if (!splitMatch) return null
+  if (!splitMatch) {
+    return null
+  }
 
   const leftFound = resolveDateOperand(splitMatch[1])
-  if (!leftFound) return null
+  if (!leftFound) {
+    return null
+  }
 
   const rightFound = resolveDateOperand(splitMatch[2])
-  if (!rightFound) return null
+  if (!rightFound) {
+    return null
+  }
 
   const baseUnit = leftFound.hasTime || rightFound.hasTime ? 'hours' : 'days'
   const diffVal = leftFound.dt.diff(rightFound.dt, baseUnit)[baseUnit]
@@ -416,7 +435,9 @@ function altEvaluate(line, stats) {
 
       const found = resolveDateOperand(rawLineDate)
 
-      if (!found) return 'Invalid Date'
+      if (!found) {
+        return 'Invalid Date'
+      }
 
       const remaining = lineDateRight.replace(REGEX_DATE_TERM, '').trim()
       let updatedDt = found.dt
@@ -429,25 +450,34 @@ function altEvaluate(line, stats) {
           const sign = match[1] === '-' ? -1 : 1
           const exprStr = match[2].trim() || '1'
           const rawUnit = match[3].toLowerCase()
+          const unitAliases = { sec: 'second', min: 'minute', hr: 'hour' }
+          const unitName = unitAliases[rawUnit] || rawUnit
           const amount = Number(math.evaluate(exprStr, app.mathScope)) * sign
 
           if (!Number.isFinite(amount)) {
             throw new Error('Invalid date duration')
           }
 
-          if (rawUnit === 'decade') {
+          if (unitName === 'decade') {
             updatedDt = updatedDt.plus({ years: amount * 10 })
-          } else if (rawUnit === 'century' || rawUnit === 'centuries') {
+          } else if (unitName === 'century' || unitName === 'centuries') {
             updatedDt = updatedDt.plus({ years: amount * 100 })
-          } else if (rawUnit === 'millennium' || rawUnit === 'millennia') {
+          } else if (unitName === 'millennium' || unitName === 'millennia') {
             updatedDt = updatedDt.plus({ years: amount * 1000 })
           } else {
-            updatedDt = updatedDt.plus({ [rawUnit + 's']: amount })
+            updatedDt = updatedDt.plus({ [unitName + 's']: amount })
           }
         }
       } else {
-        const rightOfDate = String(math.evaluate(lineDateRight + ' to hours', app.mathScope))
-        const durHrs = Number(rightOfDate.split(' ')[0])
+        const rightUnit = math.evaluate(lineDateRight + ' to hours', app.mathScope)
+        const durHrs =
+          typeof rightUnit?.toNumber === 'function'
+            ? rightUnit.toNumber('hours')
+            : Number(String(rightUnit).split(' ')[0])
+
+        if (!Number.isFinite(durHrs)) {
+          throw new Error('Invalid date duration')
+        }
 
         updatedDt = updatedDt.plus({ hours: durHrs })
       }
@@ -486,8 +516,13 @@ function altEvaluate(line, stats) {
  * @returns {boolean}
  */
 function hasUnboundKeyword(line, scope) {
-  if (!KEYWORDS_REGEX.test(line)) return false
-  if (/^\s*(?:avg|subavg|total|subtotal)\s*=[^=]/.test(line)) return false
+  if (!KEYWORDS_REGEX.test(line)) {
+    return false
+  }
+
+  if (/^\s*(?:avg|subavg|total|subtotal)\s*=[^=]/.test(line)) {
+    return false
+  }
 
   for (const { key, regex } of keywords) {
     if (regex.test(line) && !scope.has(key)) {
@@ -519,22 +554,39 @@ function evaluateLine(line, lineIndex, stats, prevLineText) {
     line = normalizeNumberInput(line)
 
     if (app.settings.currency && currencySymbolsRegex) {
-      line = line.replace(currencySymbolsRegex, (match, num, symbol) => {
-        if (num) return num
-
-        return replaceCurrencySymbol(symbol)
-      })
+      line = transformOutsideStrings(line, (segment) =>
+        segment.replace(currencySymbolsRegex, (match, num, symbol) => (num ? num : replaceCurrencySymbol(symbol)))
+      )
     }
 
     // Handle line continuation
     if (lineIndex > 0 && REGEX_CONTINUATION.test(line.charAt(0)) && app.settings.contPrevLine) {
       const prevClean = prevLineText ? stripComments(prevLineText.trim()) : ''
+      const prevLineKey = `line${lineIndex}`
 
-      if (prevClean.length > 0) {
+      if (prevClean.length > 0 && app.mathScope.has('ans') && app.mathScope.has(prevLineKey)) {
         const prevAns = app.mathScope.get('ans')
-        const prevAnsStr = math.isFraction(prevAns) ? `(${prevAns.toFraction()})` : (prevAns ?? '')
+        const isPlotOrPage =
+          (typeof prevAns === 'string' && REGEX_PLOT.test(prevAns)) ||
+          (prevAns && typeof prevAns === 'object' && prevAns[PAGE_OBJECT_SYMBOL])
 
-        line = prevAnsStr + line
+        if (!isPlotOrPage) {
+          let prevAnsStr = ''
+
+          if (math.isFraction(prevAns)) {
+            prevAnsStr = `(${prevAns.toFraction()})`
+          } else if (math.isComplex(prevAns)) {
+            prevAnsStr = `(${prevAns})`
+          } else if (typeof prevAns === 'bigint') {
+            prevAnsStr = prevAns.toString()
+          } else if (prevAns !== undefined && prevAns !== null) {
+            prevAnsStr = String(prevAns)
+          }
+
+          if (prevAnsStr) {
+            line = prevAnsStr + line
+          }
+        }
       }
     }
 
@@ -750,10 +802,11 @@ export function clearEvaluationCache() {
  * Imports and applies user-defined functions or units into the MathJS context.
  * @param {boolean} isFunc True if parsing functions, false if units.
  * @param {string} input The raw definition string content.
+ * @param {boolean} [force=false] Re-apply even when input matches last applied string.
  */
-export function applyUdfu(isFunc, input) {
-  if (isFunc && lastAppliedUdf === input) return
-  if (!isFunc && lastAppliedUdu === input) return
+export function applyUdfu(isFunc, input, force = false) {
+  if (!force && isFunc && lastAppliedUdf === input) return
+  if (!force && !isFunc && lastAppliedUdu === input) return
 
   clearEvaluationCache()
 
@@ -809,8 +862,13 @@ export function runCalculation({ activePage, lines, pages = [], settings, curren
   }
 
   const currenciesChanged = refreshCurrencyState()
+
+  if (currenciesChanged && lastAppliedUdu) {
+    applyUdfu(false, lastAppliedUdu, true)
+  }
+
   const settingsSignature = getCalcSettingsSignature(settings)
-  const hasPageRef = lines.some((l) => l.includes('page'))
+  const hasPageRef = lines.some((l) => l.includes('page')) || Boolean(lastAppliedUdf?.includes('page'))
   const pagesSignature = hasPageRef
     ? (pages || [])
         .filter((p) => p && p.id !== activePage)
