@@ -44,13 +44,7 @@ export function updateTrayState() {
         },
         {
           label: 'Hide Numara',
-          click: () => {
-            const win = getWindow()
-
-            if (win && !win.isDestroyed()) {
-              win.hide()
-            }
-          }
+          click: () => getWindow()?.hide()
         },
         { type: 'separator' },
         {
@@ -250,9 +244,7 @@ export function setupApplicationMenu({ promptImportPage, resetSize }) {
         { type: 'separator' },
         {
           label: 'Import Page...',
-          click: () => {
-            promptImportPage()
-          }
+          click: promptImportPage
         },
         {
           label: 'Export Page...',
@@ -339,9 +331,7 @@ export function setupApplicationMenu({ promptImportPage, resetSize }) {
         {
           label: 'Reset Window Size',
           click: () => {
-            const win = getWindow()
-
-            if (win && !win.isDestroyed() && win.webContents) {
+            if (getWindow()?.webContents) {
               sendToWindow('menuAction', 'resetSize')
             } else {
               resetSize()
