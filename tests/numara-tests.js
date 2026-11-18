@@ -9,11 +9,12 @@ import { runCalculation, formatAnswer, applyUdfu } from '../src/js/core/evaluato
 import { parseLocaleNumber, parseStrictLocaleNumber } from '../src/js/core/formatter.js'
 import { stripComments } from '../src/js/core/preprocessor.js'
 import { applyUdfuToMath, compileUdfItems, compileUduItems } from '../src/js/core/udfu.js'
-import { debounce, escapeHTML, escapeRegExp, getSafeFilename } from '../src/js/core/utils.js'
+import { debounce, escapeHTML, escapeRegExp, getSafeFilename, isCommaDecimal } from '../src/js/core/utils.js'
 import { dom, resetDomCache } from '../src/js/dom.js'
+import { currencyCodeTokens, refreshCurrencyTokens } from '../src/js/editor/constants.js'
 import { getSelectionLineRange, updateSelectionStats } from '../src/js/editor/stats.js'
 import { detectExternalRenames } from '../src/js/pages/syncPlan.js'
-import { app as appState } from '../src/js/state/appState.js'
+import { app as appState, DEFAULT_SETTINGS } from '../src/js/state/appState.js'
 import { isElectron } from '../src/js/state/env.js'
 import { clearEvents, events } from '../src/js/state/events.js'
 import {
@@ -28,49 +29,10 @@ import { initStoreObject, store } from '../src/js/state/store.js'
 import { isModalOpen, modal } from '../src/js/ui/dialogs.js'
 import { customCases } from './custom-cases.js'
 
-// Default settings from settings.js
 const defaultSettings = {
-  alwaysOnTop: false,
-  syncDirEnabled: false,
-  syncDir: '',
-  answerPosition: 'left',
-  autocomplete: true,
-  closeBrackets: true,
+  ...DEFAULT_SETTINGS,
   contPrevLine: false, // Disabled line-continuation for pure mathematical matching
-  copyThouSep: false,
-  currency: true,
-  currencyInterval: '0',
-  dateDay: false,
-  dateFormat: 'MM/dd/yyyy',
-  expLower: '-12',
-  expUpper: '12',
-  fontSize: '14px',
-  fontWeight: '400',
-  inputWidth: 60,
-  keywordTips: true,
-  lineErrors: true,
-  lineHeight: '24px',
-  lineNumbers: true,
-  lineWrap: true,
-  truncateAnswers: true,
-  matchBrackets: true,
-  matrixType: 'Matrix',
-  newPageOnStart: false,
-  notation: 'auto',
-  notifyDuration: '5000',
-  notifyLocation: 'bottom-center',
-  numberFormat: '1,234.56',
-  numericOutput: 'number',
-  pageListPosition: 'auto',
-  precision: '4',
-  calcTimeout: '10',
-  predictable: false,
-  rulers: false,
-  syntax: true,
-  theme: 'system',
-  thouSep: true,
-  showTray: false,
-  openAtLogin: false
+  lineErrors: true
 }
 
 const mockCurrencies = {
@@ -162,6 +124,152 @@ function getMathjsExamples() {
   return { functions, constants }
 }
 
+function evaluateStandardLines(expressions, settings = defaultSettings, useGrouping = false) {
+  const standardScope = {}
+
+  standardMath.config({
+    matrix: settings.matrixType || 'Matrix',
+    number: settings.numericOutput || 'number',
+    predictable: settings.predictable || false
+  })
+
+  return expressions.map((expr) => {
+    try {
+      const val = standardMath.evaluate(expr, standardScope)
+
+      return {
+        answer: val !== undefined && val !== null ? formatAnswer(val, useGrouping, settings, mockCurrencies) : ''
+      }
+    } catch (e) {
+      return { error: e.message }
+    }
+  })
+}
+
+function parseNumericForTolerance(str, settings) {
+  const localized = parseLocaleNumber(str, settings)
+
+  if (!Number.isNaN(localized)) {
+    return localized
+  }
+
+  return !isCommaDecimal(settings) ? parseFloat(str) : NaN
+}
+
+function compareStandardAndNumara(
+  expressions,
+  standardAnswers,
+  {
+    pageId,
+    pages = [],
+    settings = defaultSettings,
+    transform,
+    allowColonBraceError = false,
+    allowPlot = false,
+    warmUp = false,
+    contextLabel = '',
+    collectErrors = false
+  }
+) {
+  if (warmUp) {
+    runCalculation({ activePage: pageId, lines: [], settings, currencies: mockCurrencies })
+  }
+
+  const lines = transform ? expressions.map(transform) : expressions
+  const numaraResult = runCalculation({
+    activePage: pageId,
+    lines,
+    pages,
+    settings,
+    currencies: mockCurrencies
+  })
+  const prefix = contextLabel ? `${contextLabel} ` : ''
+  const errors = []
+  const reportFailure = (msg) => {
+    if (collectErrors) {
+      errors.push(msg)
+    } else {
+      assert.fail(msg)
+    }
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const expr = lines[i]
+    const std = standardAnswers[i]
+    const num = extractAnswer(numaraResult.answers[i])
+
+    if (std.error) {
+      if (num.error) continue
+
+      reportFailure(
+        `${prefix}Expected standard error: "${std.error}" but got successful Numara answer: "${num.answer}" for expression "${expr}"`
+      )
+    } else if (!allowPlot || !num.isPlot) {
+      if (num.error) {
+        if (allowColonBraceError && expr.includes(':') && num.error.includes('Unexpected operator }')) continue
+
+        reportFailure(
+          `${prefix}Expression "${expr}" failed in Numara with error: "${num.error}" (MathJS expected: "${std.answer}")`
+        )
+      } else if (std.answer !== num.answer) {
+        const stdNum = parseNumericForTolerance(std.answer, settings)
+        const numNum = parseNumericForTolerance(num.answer, settings)
+
+        if (!isNaN(stdNum) && !isNaN(numNum) && Math.abs(stdNum - numNum) < 1e-4) continue
+
+        const mismatchMsg = `${prefix}Value mismatch for expression: "${expr}" (got "${num.answer}", expected "${std.answer}")`
+
+        if (collectErrors) {
+          errors.push(mismatchMsg)
+        } else {
+          assert.strictEqual(num.answer, std.answer, mismatchMsg)
+        }
+      }
+    }
+  }
+
+  return errors
+}
+
+function assertMatchesStandardMath(expressions, options) {
+  const standardAnswers = evaluateStandardLines(
+    expressions,
+    options.standardSettings ?? options.settings,
+    options.useGrouping
+  )
+
+  compareStandardAndNumara(expressions, standardAnswers, options)
+}
+
+function withMockLocalStorage(fn) {
+  const storage = new Map()
+  const stats = { setCount: 0 }
+  const prevDesc = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+
+  Object.defineProperty(globalThis, 'localStorage', {
+    configurable: true,
+    writable: true,
+    value: {
+      getItem: (k) => (storage.has(k) ? storage.get(k) : null),
+      setItem: (k, v) => {
+        stats.setCount++
+        storage.set(k, String(v))
+      },
+      removeItem: (k) => storage.delete(k)
+    }
+  })
+
+  try {
+    return fn(storage, stats)
+  } finally {
+    if (prevDesc) {
+      Object.defineProperty(globalThis, 'localStorage', prevDesc)
+    } else {
+      delete globalThis.localStorage
+    }
+  }
+}
+
 describe('Numara Calculation Engine vs Math.js', function () {
   beforeEach(() => {
     // Ensure Numara engine is initialized with default settings before every test
@@ -181,82 +289,12 @@ describe('Numara Calculation Engine vs Math.js', function () {
       if (SKIPPED_FUNCTIONS.has(fn.name)) continue
 
       it(`should evaluate examples for function: ${fn.name}`, () => {
-        const standardScope = {}
-
-        // Reset standard config before each test suite category
-        standardMath.config({
-          matrix: 'Matrix',
-          number: 'number',
-          predictable: false
+        assertMatchesStandardMath(fn.examples, {
+          pageId: `test-Function-${fn.name}`,
+          allowColonBraceError: true,
+          allowPlot: true,
+          warmUp: true
         })
-
-        // 1. Evaluate sequentially in standard mathjs
-        const standardAnswers = fn.examples.map((expr) => {
-          try {
-            const val = standardMath.evaluate(expr, standardScope)
-            let formatted = ''
-
-            if (val !== undefined && val !== null) {
-              formatted = formatAnswer(val, false)
-            }
-
-            return { answer: formatted }
-          } catch (e) {
-            return { error: e.message }
-          }
-        })
-
-        // 2. Evaluate sequentially in Numara
-        const pageId = `test-Function-${fn.name}`
-        runCalculation({ activePage: pageId, lines: [], settings: defaultSettings, currencies: mockCurrencies })
-
-        const numaraResult = runCalculation({
-          activePage: pageId,
-          lines: fn.examples,
-          settings: defaultSettings,
-          currencies: mockCurrencies
-        })
-
-        // 3. Assert outputs
-        for (let i = 0; i < fn.examples.length; i++) {
-          const expr = fn.examples[i]
-          const std = standardAnswers[i]
-          const numRaw = numaraResult.answers[i]
-          const num = extractAnswer(numRaw)
-
-          if (std.error) {
-            if (num.error) {
-              // Both errored - PASS
-              continue
-            }
-            assert.fail(
-              `Expected standard error: "${std.error}" but got successful Numara answer: "${num.answer}" for expression "${expr}"`
-            )
-          } else {
-            if (num.error) {
-              // Check if it's an expected difference (like colons inside objects, which Numara strips as labels)
-              if (expr.includes(':') && num.error.includes('Unexpected operator }')) {
-                continue
-              }
-
-              assert.fail(
-                `Expression "${expr}" failed in Numara with error: "${num.error}" (MathJS expected: "${std.answer}")`
-              )
-            } else if (num.isPlot) {
-              continue
-            } else if (std.answer !== num.answer) {
-              // Float check
-              const stdNum = parseFloat(std.answer)
-              const numNum = parseFloat(num.answer)
-
-              if (!isNaN(stdNum) && !isNaN(numNum) && Math.abs(stdNum - numNum) < 1e-4) {
-                continue
-              }
-
-              assert.strictEqual(num.answer, std.answer, `Value mismatch for expression: "${expr}"`)
-            }
-          }
-        }
       })
     }
   })
@@ -264,66 +302,10 @@ describe('Numara Calculation Engine vs Math.js', function () {
   describe('Math.js Constants', () => {
     for (const cn of constants) {
       it(`should evaluate examples for constant: ${cn.name}`, () => {
-        const standardScope = {}
-
-        standardMath.config({
-          matrix: 'Matrix',
-          number: 'number',
-          predictable: false
+        assertMatchesStandardMath(cn.examples, {
+          pageId: `test-Constant-${cn.name}`,
+          warmUp: true
         })
-
-        const standardAnswers = cn.examples.map((expr) => {
-          try {
-            const val = standardMath.evaluate(expr, standardScope)
-            let formatted = ''
-
-            if (val !== undefined && val !== null) {
-              formatted = formatAnswer(val, false)
-            }
-
-            return { answer: formatted }
-          } catch (e) {
-            return { error: e.message }
-          }
-        })
-
-        const pageId = `test-Constant-${cn.name}`
-        runCalculation({ activePage: pageId, lines: [], settings: defaultSettings, currencies: mockCurrencies })
-
-        const numaraResult = runCalculation({
-          activePage: pageId,
-          lines: cn.examples,
-          settings: defaultSettings,
-          currencies: mockCurrencies
-        })
-
-        for (let i = 0; i < cn.examples.length; i++) {
-          const expr = cn.examples[i]
-          const std = standardAnswers[i]
-          const numRaw = numaraResult.answers[i]
-          const num = extractAnswer(numRaw)
-
-          if (std.error) {
-            if (num.error) continue
-            assert.fail(
-              `Expected standard error: "${std.error}" but got successful Numara answer: "${num.answer}" for expression "${expr}"`
-            )
-          } else {
-            if (num.error) {
-              assert.fail(
-                `Expression "${expr}" failed in Numara with error: "${num.error}" (MathJS expected: "${std.answer}")`
-              )
-            } else if (std.answer !== num.answer) {
-              const stdNum = parseFloat(std.answer)
-              const numNum = parseFloat(num.answer)
-
-              if (!isNaN(stdNum) && !isNaN(numNum) && Math.abs(stdNum - numNum) < 1e-4) {
-                continue
-              }
-              assert.strictEqual(num.answer, std.answer, `Value mismatch for expression: "${expr}"`)
-            }
-          }
-        }
       })
     }
   })
@@ -345,49 +327,10 @@ describe('Numara Calculation Engine vs Math.js', function () {
       const finalExpr = expr // capture value for closure
 
       it(`should evaluate unit: ${unit} ("${finalExpr}")`, () => {
-        const standardScope = {}
-
-        standardMath.config({
-          matrix: 'Matrix',
-          number: 'number',
-          predictable: false
+        assertMatchesStandardMath([finalExpr], {
+          pageId: `test-Unit-${unit}`,
+          warmUp: true
         })
-
-        let stdAns = ''
-
-        try {
-          const val = standardMath.evaluate(finalExpr, standardScope)
-          if (val !== undefined && val !== null) {
-            stdAns = formatAnswer(val, false)
-          }
-        } catch (e) {
-          assert.fail(`MathJS standard failed to evaluate unit expression "${finalExpr}": ${e.message}`)
-        }
-
-        const pageId = `test-Unit-${unit}`
-        runCalculation({ activePage: pageId, lines: [], settings: defaultSettings, currencies: mockCurrencies })
-
-        const numaraResult = runCalculation({
-          activePage: pageId,
-          lines: [finalExpr],
-          settings: defaultSettings,
-          currencies: mockCurrencies
-        })
-
-        const num = extractAnswer(numaraResult.answers[0])
-
-        if (num.error) {
-          assert.fail(
-            `Expression "${finalExpr}" failed in Numara with error: "${num.error}" (MathJS expected: "${stdAns}")`
-          )
-        } else if (stdAns !== num.answer) {
-          const stdNum = parseFloat(stdAns)
-          const numNum = parseFloat(num.answer)
-
-          if (!isNaN(stdNum) && !isNaN(numNum) && Math.abs(stdNum - numNum) < 1e-4) return
-
-          assert.strictEqual(num.answer, stdAns, `Value mismatch for unit expression: "${finalExpr}"`)
-        }
       })
     }
   })
@@ -516,70 +459,16 @@ describe('Numara Calculation Engine vs Math.js', function () {
         ]
         const copyGrouping = Boolean(profile.settings.thouSep && profile.settings.copyThouSep)
 
-        standardMath.config({
-          matrix: profile.settings.matrixType,
-          number: profile.settings.numericOutput,
-          predictable: profile.settings.predictable
-        })
-
         for (const item of items) {
-          const standardScope = {}
-
-          const standardAnswers = item.examples.map((expr) => {
-            try {
-              const val = standardMath.evaluate(expr, standardScope)
-              const formatted =
-                val !== undefined && val !== null
-                  ? formatAnswer(val, copyGrouping, profile.settings, mockCurrencies)
-                  : ''
-
-              return { answer: formatted }
-            } catch (e) {
-              return { error: e.message }
-            }
-          })
-
-          const lines = profile.transform ? item.examples.map(profile.transform) : item.examples
-          const pageId = `test-profile-${profile.name}-${item.name}`
-          const numaraResult = runCalculation({
-            activePage: pageId,
-            lines,
+          assertMatchesStandardMath(item.examples, {
+            pageId: `test-profile-${profile.name}-${item.name}`,
             settings: profile.settings,
-            currencies: mockCurrencies
+            useGrouping: copyGrouping,
+            transform: profile.transform,
+            allowColonBraceError: true,
+            allowPlot: true,
+            contextLabel: `[${profile.name}] (${item.name})`
           })
-
-          for (let i = 0; i < lines.length; i++) {
-            const expr = lines[i]
-            const std = standardAnswers[i]
-            const num = extractAnswer(numaraResult.answers[i])
-
-            if (std.error) {
-              if (num.error) continue
-
-              assert.fail(
-                `[${profile.name}] (${item.name}) Expected error "${std.error}" but got "${num.answer}" for "${expr}"`
-              )
-            } else if (!num.isPlot) {
-              if (num.error) {
-                if (expr.includes(':') && num.error.includes('Unexpected operator }')) continue
-
-                assert.fail(
-                  `[${profile.name}] (${item.name}) Expression "${expr}" failed with "${num.error}" (expected "${std.answer}")`
-                )
-              } else if (std.answer !== num.answer) {
-                const stdNum = parseLocaleNumber(std.answer, profile.settings)
-                const numNum = parseLocaleNumber(num.answer, profile.settings)
-
-                if (!isNaN(stdNum) && !isNaN(numNum) && Math.abs(stdNum - numNum) < 1e-4) continue
-
-                assert.strictEqual(
-                  num.answer,
-                  std.answer,
-                  `[${profile.name}] (${item.name}) Value mismatch for "${expr}"`
-                )
-              }
-            }
-          }
         }
       })
     }
@@ -589,55 +478,27 @@ describe('Numara Calculation Engine vs Math.js', function () {
     for (const testCase of customCases) {
       it(`should evaluate custom case: "${testCase.name}"`, () => {
         const caseSettings = { ...defaultSettings, ...(testCase.settings || {}) }
-        const standardScope = {}
-        const standardAnswers = []
 
-        if (testCase.udf) {
-          applyUdfu(true, testCase.udf)
-        } else {
-          applyUdfu(true, '')
-        }
-        if (testCase.udu) {
-          applyUdfu(false, testCase.udu)
-        } else {
-          applyUdfu(false, '')
-        }
-
-        if (!testCase.expected) {
-          standardMath.config({
-            matrix: 'Matrix',
-            number: 'number',
-            predictable: false
-          })
-
-          for (const expr of testCase.expressions) {
-            try {
-              const val = standardMath.evaluate(expr, standardScope)
-              standardAnswers.push({ answer: val !== undefined && val !== null ? formatAnswer(val, false) : '' })
-            } catch (e) {
-              standardAnswers.push({ error: e.message })
-            }
-          }
-        }
+        applyUdfu(true, testCase.udf || '')
+        applyUdfu(false, testCase.udu || '')
 
         const pageId = `test-Custom-${testCase.name}`
-        runCalculation({ activePage: pageId, lines: [], settings: caseSettings, currencies: mockCurrencies })
+        let errors = []
 
-        const numaraResult = runCalculation({
-          activePage: pageId,
-          lines: testCase.expressions,
-          pages: testCase.pages || [],
-          settings: caseSettings,
-          currencies: mockCurrencies
-        })
+        if (testCase.expected) {
+          runCalculation({ activePage: pageId, lines: [], settings: caseSettings, currencies: mockCurrencies })
 
-        const errors = []
-        for (let i = 0; i < testCase.expressions.length; i++) {
-          const expr = testCase.expressions[i]
-          const numRaw = numaraResult.answers[i]
-          const num = extractAnswer(numRaw)
+          const numaraResult = runCalculation({
+            activePage: pageId,
+            lines: testCase.expressions,
+            pages: testCase.pages || [],
+            settings: caseSettings,
+            currencies: mockCurrencies
+          })
 
-          if (testCase.expected) {
+          for (let i = 0; i < testCase.expressions.length; i++) {
+            const expr = testCase.expressions[i]
+            const num = extractAnswer(numaraResult.answers[i])
             const expVal = testCase.expected[i]
             const answerValue = num.answer !== undefined ? num.answer : num.error
             const isMatch = expVal instanceof RegExp ? expVal.test(answerValue) : String(expVal) === answerValue
@@ -647,33 +508,17 @@ describe('Numara Calculation Engine vs Math.js', function () {
                 `Expected value matching "${expVal}" but got "${num.answer || num.error}" for expression "${expr}"`
               )
             }
-          } else {
-            const std = standardAnswers[i]
-
-            if (std.error) {
-              if (num.error) continue
-              errors.push(
-                `Expected standard error: "${std.error}" but got successful Numara answer: "${num.answer}" for expression "${expr}"`
-              )
-            } else {
-              if (num.error) {
-                errors.push(
-                  `Expression "${expr}" failed in Numara with error: "${num.error}" (MathJS expected: "${std.answer}")`
-                )
-              } else if (std.answer !== num.answer) {
-                const stdNum = parseFloat(std.answer)
-                const numNum = parseFloat(num.answer)
-
-                if (!isNaN(stdNum) && !isNaN(numNum) && Math.abs(stdNum - numNum) < 1e-4) {
-                  continue
-                }
-
-                errors.push(
-                  `Value mismatch for expression: "${expr}" (got "${num.answer}", expected standard "${std.answer}")`
-                )
-              }
-            }
           }
+        } else {
+          const standardAnswers = evaluateStandardLines(testCase.expressions, defaultSettings, false)
+
+          errors = compareStandardAndNumara(testCase.expressions, standardAnswers, {
+            pageId,
+            pages: testCase.pages || [],
+            settings: caseSettings,
+            warmUp: true,
+            collectErrors: true
+          })
         }
 
         if (errors.length > 0) {
@@ -786,7 +631,7 @@ describe('Numara Calculation Engine vs Math.js', function () {
       )
     })
 
-    it('should update lowercase currency unit aliases when exchange rates change', () => {
+    it('should update lowercase currency unit aliases when exchange rates change and toggle rate conversion dynamically', () => {
       const pageId = 'test-lowercase-currency-update'
       const ratesA = {
         ...mockCurrencies,
@@ -799,25 +644,56 @@ describe('Numara Calculation Engine vs Math.js', function () {
 
       const resA = runCalculation({
         activePage: pageId,
-        lines: ['10 eur in usd', '10 EUR in USD'],
-        settings: { ...defaultSettings, currency: false },
+        lines: ['10 eur in usd', '10 EUR in USD', '12 usd in eur'],
+        settings: defaultSettings,
         currencies: ratesA
       })
       assert.deepStrictEqual(
         resA.answers.map((h) => extractAnswer(h).answer),
-        ['12 usd', '12 USD']
+        ['$12.00', '$12.00', '€10.00']
       )
 
       const resB = runCalculation({
         activePage: pageId,
-        lines: ['10 eur in usd', '10 EUR in USD'],
-        settings: { ...defaultSettings, currency: false },
+        lines: ['10 eur in usd', '10 EUR in USD', '12 usd in eur'],
+        settings: defaultSettings,
         currencies: ratesB
       })
       assert.deepStrictEqual(
         resB.answers.map((h) => extractAnswer(h).answer),
-        ['20 usd', '20 USD']
+        ['$20.00', '$20.00', '€6.00']
       )
+
+      const disabledRes = runCalculation({
+        activePage: 'test-currency-toggle',
+        lines: ['$10 + $5', '10 eur + 5 eur', '10 eur in usd'],
+        settings: { ...defaultSettings, currency: false },
+        currencies: ratesB
+      })
+      assert.deepStrictEqual(disabledRes.errorLines, [2])
+      assert.strictEqual(extractAnswer(disabledRes.answers[0]).answer, '$15.00')
+      assert.strictEqual(extractAnswer(disabledRes.answers[1]).answer, '€15.00')
+
+      const reEnabledRes = runCalculation({
+        activePage: 'test-currency-toggle',
+        lines: ['$10 + $5', '10 eur + 5 eur', '10 eur in usd'],
+        settings: defaultSettings,
+        currencies: ratesB
+      })
+      assert.deepStrictEqual(reEnabledRes.errorLines, [])
+      assert.strictEqual(extractAnswer(reEnabledRes.answers[2]).answer, '$20.00')
+
+      const reDisabledRes = runCalculation({
+        activePage: 'test-currency-toggle',
+        lines: ['$10 + $5', '10 eur + 5 eur', '25 hours * 50 eur/hr', '10 eur in usd'],
+        settings: { ...defaultSettings, currency: false },
+        currencies: ratesB
+      })
+      assert.deepStrictEqual(reDisabledRes.errorLines, [3])
+      assert.strictEqual(extractAnswer(reDisabledRes.answers[0]).answer, '$15.00')
+      assert.strictEqual(extractAnswer(reDisabledRes.answers[1]).answer, '€15.00')
+      assert.strictEqual(extractAnswer(reDisabledRes.answers[2]).answer, '€1250.00')
+      assert.strictEqual(reDisabledRes.answers[2].replace(/<\/?[^>]+(>|$)/g, '').trim(), '€1,250.00')
     })
 
     it('should not flatten plain UDF objects onto built-in math functions and should include UDU aliases', () => {
@@ -991,15 +867,7 @@ describe('Numara Calculation Engine vs Math.js', function () {
     })
 
     it('should seamlessly migrate v7 UDF/UDU definitions, theme customizations, pages, and clean up obsolete storage', () => {
-      const storage = new Map()
-      const prevLocalStorage = globalThis.localStorage
-      globalThis.localStorage = {
-        getItem: (k) => (storage.has(k) ? storage.get(k) : null),
-        setItem: (k, v) => storage.set(k, String(v)),
-        removeItem: (k) => storage.delete(k)
-      }
-
-      try {
+      withMockLocalStorage((storage) => {
         // Default v7 sideBarWidth (240) should not override v8 default (265); widths below 210 should clamp
         storage.set('numara', JSON.stringify({ sideBarWidth: 240 }))
         migrateStorageAndPages()
@@ -1165,9 +1033,7 @@ describe('Numara Calculation Engine vs Math.js', function () {
 
         applyUdfu(true, '')
         applyUdfu(false, '')
-      } finally {
-        globalThis.localStorage = prevLocalStorage
-      }
+      })
     })
 
     it('should control error link text via lineErrors setting while always recording errorLines', () => {
@@ -1396,41 +1262,23 @@ describe('Numara Calculation Engine vs Math.js', function () {
     })
 
     it('should avoid no-op store writes and invalidate cross-page scope cache when referenced pages change', () => {
-      const storage = new Map()
-      let setCount = 0
-      const prevDesc = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
-      Object.defineProperty(globalThis, 'localStorage', {
-        configurable: true,
-        writable: true,
-        value: {
-          getItem: (k) => (storage.has(k) ? storage.get(k) : null),
-          setItem: (k, v) => {
-            setCount++
-            storage.set(k, String(v))
-          },
-          removeItem: (k) => storage.delete(k)
-        }
-      })
-
-      try {
+      withMockLocalStorage((_, stats) => {
         store.set('settings', { a: 1 })
-        const writesAfterSeed = setCount
+        const writesAfterSeed = stats.setCount
 
         // Removing a missing key must not rewrite localStorage
         store.remove('nonExistentObsoleteKey')
-        assert.strictEqual(setCount, writesAfterSeed)
+        assert.strictEqual(stats.setCount, writesAfterSeed)
 
         // initStoreObject with multiple missing defaults should batch into a single store.set
         const merged = initStoreObject('settings', { a: 0, b: 2, c: 3 })
         assert.deepStrictEqual(merged, { a: 1, b: 2, c: 3 })
-        assert.strictEqual(setCount, writesAfterSeed + 1)
+        assert.strictEqual(stats.setCount, writesAfterSeed + 1)
 
         // Subsequent launch with all keys present must perform zero writes
         initStoreObject('settings', { a: 0, b: 2, c: 3 })
-        assert.strictEqual(setCount, writesAfterSeed + 1)
-      } finally {
-        if (prevDesc) Object.defineProperty(globalThis, 'localStorage', prevDesc)
-      }
+        assert.strictEqual(stats.setCount, writesAfterSeed + 1)
+      })
 
       const pagesV1 = [
         { id: 'src', name: 'Rates', data: 'tax = 0.08' },
@@ -1560,7 +1408,7 @@ describe('Module Graph & Lazy DOM Architecture', () => {
     const allowedLayers = {
       core: new Set(['core']),
       dom: new Set([]),
-      state: new Set(['core', 'dom', 'state']),
+      state: new Set(['core', 'state']),
       dialogs: new Set(['dom', 'state']),
       editor: new Set(['core', 'dom', 'state', 'dialogs', 'editor']),
       worker: new Set(['core']),
@@ -1610,6 +1458,8 @@ describe('Module Graph & Lazy DOM Architecture', () => {
 
       const mockOutput = { id: 'output' }
       const mockHeaderWin = { id: 'winHeader' }
+      const mockDialogConfirm = { id: 'dialogConfirm' }
+      const mockOpenAtLogin = { id: 'openAtLoginContainer' }
       const mockConfirmNo = { className: 'uk-modal-close' }
 
       Object.defineProperty(globalThis, 'document', {
@@ -1620,6 +1470,8 @@ describe('Module Graph & Lazy DOM Architecture', () => {
             idLookups.push(id)
             if (id === 'output') return mockOutput
             if (id === 'winHeader') return mockHeaderWin
+            if (id === 'dialogConfirm') return mockDialogConfirm
+            if (id === 'openAtLoginContainer') return mockOpenAtLogin
             return null
           },
           querySelector(selector) {
@@ -1633,12 +1485,15 @@ describe('Module Graph & Lazy DOM Architecture', () => {
         }
       })
 
+      assert.strictEqual(dom.then, undefined)
       assert.strictEqual(dom.output, mockOutput)
       assert.strictEqual(dom.output, mockOutput)
       assert.deepStrictEqual(idLookups, ['output'])
 
       assert.strictEqual(dom.headerWin, mockHeaderWin)
-      assert.deepStrictEqual(idLookups, ['output', 'winHeader'])
+      assert.strictEqual(dom.dialogConfirm, mockDialogConfirm)
+      assert.strictEqual(dom.openAtLoginContainer, mockOpenAtLogin)
+      assert.deepStrictEqual(idLookups, ['output', 'winHeader', 'dialogConfirm', 'openAtLoginContainer'])
 
       assert.strictEqual(dom.confirmNo, mockConfirmNo)
       assert.strictEqual(dom.confirmNo, mockConfirmNo)
@@ -1646,7 +1501,7 @@ describe('Module Graph & Lazy DOM Architecture', () => {
 
       resetDomCache()
       assert.strictEqual(dom.output, mockOutput)
-      assert.deepStrictEqual(idLookups, ['output', 'winHeader', 'output'])
+      assert.deepStrictEqual(idLookups, ['output', 'winHeader', 'dialogConfirm', 'openAtLoginContainer', 'output'])
     } finally {
       resetDomCache()
 
@@ -2011,19 +1866,7 @@ describe('Module Graph & Lazy DOM Architecture', () => {
     })
 
     it('preserves currency-based v7 UDUs, deduplicates colliding page names during migration, and isolates initStoreObject', () => {
-      const storage = new Map()
-      const prevDesc = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
-      Object.defineProperty(globalThis, 'localStorage', {
-        configurable: true,
-        writable: true,
-        value: {
-          getItem: (k) => (storage.has(k) ? storage.get(k) : null),
-          setItem: (k, v) => storage.set(k, String(v)),
-          removeItem: (k) => storage.delete(k)
-        }
-      })
-
-      try {
+      withMockLocalStorage((storage) => {
         storage.set(
           'numara',
           JSON.stringify({
@@ -2054,8 +1897,60 @@ describe('Module Graph & Lazy DOM Architecture', () => {
         const initialized = initStoreObject('testObj', tmpl)
         initialized.nested.x = 99
         assert.strictEqual(tmpl.nested.x, 1)
+      })
+    })
+
+    it('migrates cross-dependent v7 UDF/UDU definitions, normalizes comment-only legacy defs, and populates currencyCodeTokens', () => {
+      withMockLocalStorage((storage) => {
+        storage.set(
+          'numara',
+          JSON.stringify({
+            udf: 'factor: 2.5',
+            udu: 'myu: `${factor} m`'
+          })
+        )
+
+        migrateAppState()
+
+        assert.deepStrictEqual(store.get('udfItems'), [{ name: 'factor', params: '', body: '2.5' }])
+        assert.deepStrictEqual(store.get('uduItems'), [
+          { name: 'myu', definition: '2.5 m', prefixes: 'none', aliases: '' }
+        ])
+
+        storage.set(
+          'numara',
+          JSON.stringify({
+            udf: '// user comment only',
+            udu: '/* block comment */'
+          })
+        )
+
+        migrateAppState()
+
+        assert.deepStrictEqual(store.get('udfItems'), [])
+        assert.deepStrictEqual(store.get('uduItems'), [])
+        assert.strictEqual(store.get('udf'), '')
+        assert.strictEqual(store.get('udu'), '')
+      })
+
+      const prevCurrencies = appState.currencies
+      appState.currencies = {
+        ...mockCurrencies,
+        CAD: { symbol: 'CA$', name: 'Canadian Dollar' },
+        MAD: { symbol: 'MAD', name: 'Moroccan Dirham' }
+      }
+
+      try {
+        refreshCurrencyTokens()
+        assert.strictEqual(currencyCodeTokens.has('USD'), true)
+        assert.strictEqual(currencyCodeTokens.has('usd'), true)
+        assert.strictEqual(currencyCodeTokens.has('CAD'), true)
+        assert.strictEqual(currencyCodeTokens.has('cad'), true)
+        assert.strictEqual(currencyCodeTokens.has('MAD'), true)
+        assert.strictEqual(currencyCodeTokens.has('mad'), false)
       } finally {
-        if (prevDesc) Object.defineProperty(globalThis, 'localStorage', prevDesc)
+        appState.currencies = prevCurrencies
+        refreshCurrencyTokens()
       }
     })
   })
