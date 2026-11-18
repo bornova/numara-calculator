@@ -117,7 +117,7 @@ export function setupEditor() {
       'Ctrl-Space': 'autocomplete',
       'Cmd-/': toggleComment,
       'Ctrl-/': toggleComment,
-      'Ctrl-Q': (editor) => editor.foldCode(editor.getCursor(), { rangeFinder: CodeMirror.fold.numara }),
+      'Ctrl-Q': (editor) => editor.foldCode(editor.getCursor(), { rangeFinder: CodeMirror.fold.numara, scanUp: true }),
       'Cmd-F': (editor) => showSearchPanel(editor, false),
       'Ctrl-F': (editor) => showSearchPanel(editor, false),
       'Cmd-Alt-F': (editor) => showSearchPanel(editor, true),
