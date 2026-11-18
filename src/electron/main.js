@@ -1,9 +1,15 @@
-import { app, dialog } from 'electron'
+import { app, dialog, powerMonitor } from 'electron'
 import log from 'electron-log'
 import * as path from 'node:path'
 
 import { config } from './config.js'
-import { getNumFilePath, promptImportPage, queueOrOpenFile, setupFileHandlers } from './fileHandlers.js'
+import {
+  getNumFilePath,
+  promptImportPage,
+  queueOrOpenFile,
+  resetRendererReady,
+  setupFileHandlers
+} from './fileHandlers.js'
 import { setupApplicationMenu, setupContextMenus, updateTrayState } from './menu.js'
 import { setupSyncHandlers } from './syncWatcher.js'
 import { setupAutoUpdater } from './updater.js'
@@ -39,16 +45,26 @@ if (startFile) {
 }
 
 app.setAppUserModelId('com.numara.app')
-app.userAgentFallback = `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome || '130.0.0.0'} Safari/537.36`
+app.userAgentFallback = app.userAgentFallback.replace(/\s+(?:Electron|numara)\/\S+/gi, '')
 
 // macOS open-file event handling
 app.on('open-file', (event, filePath) => {
   event.preventDefault()
+
+  if (app.isReady()) {
+    if (getWindow()) {
+      showAndFocusWindow()
+    } else {
+      createAppWindow({ onWindowCreated: updateTrayState, onWindowClosed: resetRendererReady })
+    }
+  }
+
   queueOrOpenFile(filePath)
 })
 
 app.whenReady().then(() => {
-  createAppWindow({ onWindowCreated: updateTrayState })
+  powerMonitor.on('shutdown', () => setAppQuitting(true))
+  createAppWindow({ onWindowCreated: updateTrayState, onWindowClosed: resetRendererReady })
 })
 
 app.on('before-quit', (event) => {
@@ -80,17 +96,16 @@ app.on('activate', () => {
   if (getWindow()) {
     showAndFocusWindow()
   } else if (app.isReady()) {
-    createAppWindow({ onWindowCreated: updateTrayState })
+    createAppWindow({ onWindowCreated: updateTrayState, onWindowClosed: resetRendererReady })
   }
 })
 
 app.on('second-instance', (event, commandLine) => {
   const win = getWindow()
   const winValid = win && !win.isDestroyed()
+  const fileArg = getNumFilePath(commandLine)
 
   if (winValid) {
-    const fileArg = getNumFilePath(commandLine)
-
     if (!app.isPackaged && !fileArg) {
       showAndFocusWindow()
       win.reload()
@@ -103,6 +118,12 @@ app.on('second-instance', (event, commandLine) => {
     }
 
     showAndFocusWindow()
+
+    if (fileArg) {
+      queueOrOpenFile(fileArg)
+    }
+  } else if (app.isReady()) {
+    createAppWindow({ onWindowCreated: updateTrayState, onWindowClosed: resetRendererReady })
 
     if (fileArg) {
       queueOrOpenFile(fileArg)
