@@ -126,7 +126,7 @@ function setupAxisDragSort({ container, axis, itemSelector, ignoreSelector, drag
       const clampedPos = Math.min(maxBound, Math.max(minBound, coord - offset))
 
       dragClone.style.left = isVertical ? `${rect.left}px` : `${clampedPos}px`
-      dragClone.style.top = isVertical ? `${clampedPos}px` : `${rect.top}px`
+      dragClone.style.top = isVertical ? `${clampedPos}px` : `${itemRect.top}px`
 
       const dragCenter = clampedPos + itemSize / 2
       const siblings = Array.from(container.children).filter((child) => child !== item)
@@ -225,7 +225,6 @@ function setupAxisDragSort({ container, axis, itemSelector, ignoreSelector, drag
 
       dragClone = item.cloneNode(true)
       dragClone.removeAttribute('id')
-      dragClone.querySelectorAll('[uk-dropdown]').forEach((el) => el.remove())
       dragClone.classList.add(dragClass)
       dragClone.style.width = `${itemRect.width}px`
       dragClone.style.height = `${itemRect.height}px`
@@ -340,7 +339,7 @@ export function setupPageListSort() {
     container: dom.pageList,
     axis: 'y',
     itemSelector: '.pageListItem',
-    ignoreSelector: '.pageItemActions, .uk-dropdown, .pageListRenameInput, .savePageButton, .is-renaming',
+    ignoreSelector: '.pageItemActions, .pageListRenameInput, .savePageButton, .is-renaming',
     dragClass: 'pageListItemDrag',
     placeholderClass: 'pageListItemPlaceholder',
     onReorder: pageOrder
