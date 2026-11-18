@@ -1,3 +1,4 @@
+import { stripComments } from '../core/preprocessor.js'
 import { escapeHTML } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
@@ -15,7 +16,10 @@ export function copyToClipboard(text, message) {
     return
   }
 
-  navigator.clipboard.writeText(text).then(() => notify(message))
+  navigator.clipboard
+    ?.writeText(text)
+    ?.then(() => notify(message))
+    ?.catch(() => notify('Failed to copy to clipboard.', 'danger'))
 }
 
 /**
@@ -33,13 +37,19 @@ function hasCopyableAnswer(rowEl) {
  * @returns {string} The copyable answer string.
  */
 function getLineCopyableAnswer(outputEl) {
-  if (!outputEl) return ''
+  if (!outputEl) {
+    return ''
+  }
 
   const answerEl = outputEl.querySelector('[data-answer]')
-  if (answerEl) return answerEl.dataset.answer || ''
+  if (answerEl) {
+    return answerEl.dataset.answer || ''
+  }
 
   const plotEl = outputEl.querySelector('.plotButton, [data-plot]')
-  if (plotEl) return plotEl.dataset.plot || ''
+  if (plotEl) {
+    return plotEl.dataset.plot || ''
+  }
 
   return ''
 }
@@ -88,9 +98,14 @@ function copyAnswer(lineIndex, withLines) {
 
   const line = cm.getLine(lineIndex).trim()
   const answer = getLineCopyableAnswer(dom.el(`[data-index="${lineIndex}"]`))
-  if (!answer) return copyToClipboard()
 
-  const copiedText = withLines ? `${line} = ${answer}` : `${answer}`
+  if (!answer) {
+    return copyToClipboard()
+  }
+
+  const expr = stripComments(line).trim()
+  const lineWithAnswer = !expr || answer === line || answer === expr ? line : `${expr} = ${answer}`
+  const copiedText = withLines ? lineWithAnswer : `${answer}`
   const safeText = escapeHTML(copiedText)
 
   copyToClipboard(
@@ -124,7 +139,9 @@ function getAnswersMap() {
  * Copy all answers.
  */
 function copyAllAnswers() {
-  if (cm.getValue() === '') return copyToClipboard()
+  if (cm.getValue() === '') {
+    return copyToClipboard()
+  }
 
   const copiedOutputs = []
   const answersMap = getAnswersMap()
@@ -159,7 +176,9 @@ export function outputContext(event) {
  * Copy page.
  */
 export function copyAll() {
-  if (cm.getValue() === '') return copyToClipboard()
+  if (cm.getValue() === '') {
+    return copyToClipboard()
+  }
 
   const copiedCalc = []
   const answersMap = getAnswersMap()
@@ -168,7 +187,16 @@ export function copyAll() {
   cm.eachLine((line) => {
     const text = line.text.trim()
 
-    copiedCalc.push(!text ? '' : text.match(/^(#|\/\/)/) ? text : `${text} = ${answersMap[lineIdx] ?? ''}`)
+    if (!text) {
+      copiedCalc.push('')
+    } else if (/^(#|\/\/)/.test(text)) {
+      copiedCalc.push(text)
+    } else {
+      const ans = answersMap[lineIdx] ?? ''
+      const expr = stripComments(text).trim()
+
+      copiedCalc.push(!ans || !expr || ans === text || ans === expr ? text : `${expr} = ${ans}`)
+    }
 
     lineIdx++
   })
