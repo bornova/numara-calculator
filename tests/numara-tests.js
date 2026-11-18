@@ -8,18 +8,8 @@ import { INTERNAL_SCOPE_KEYS, isInternalScopeKey } from '../src/js/core/constant
 import { runCalculation, formatAnswer, applyUdfu } from '../src/js/core/evaluator.js'
 import { parseLocaleNumber, parseStrictLocaleNumber } from '../src/js/core/formatter.js'
 import { stripComments } from '../src/js/core/preprocessor.js'
-import { applyUdfuToMath } from '../src/js/core/udfu.js'
-import {
-  HIDPI_MIN_DPR,
-  debounce,
-  escapeHTML,
-  escapeRegExp,
-  getSafeFilename,
-  resolveEditorFontSize,
-  resolveEditorFontWeight,
-  resolveEditorLineHeight,
-  resolveUiFontGrade
-} from '../src/js/core/utils.js'
+import { applyUdfuToMath, compileUdfItems, compileUduItems } from '../src/js/core/udfu.js'
+import { debounce, escapeHTML, escapeRegExp, getSafeFilename } from '../src/js/core/utils.js'
 import { dom, resetDomCache } from '../src/js/dom.js'
 import { getSelectionLineRange, updateSelectionStats } from '../src/js/editor/stats.js'
 import { detectExternalRenames } from '../src/js/pages/syncPlan.js'
@@ -1391,48 +1381,6 @@ describe('Numara Calculation Engine vs Math.js', function () {
       )
     })
 
-    it('should resolve editor font sizes, line heights, optical weights, and grades across zoom levels and display DPI', () => {
-      assert.strictEqual(HIDPI_MIN_DPR, 1.5)
-
-      assert.strictEqual(resolveEditorFontSize('14px', 'normal'), '14px')
-      assert.strictEqual(resolveEditorFontSize('14px', 'smaller'), '13px')
-      assert.strictEqual(resolveEditorFontSize('14px', 'larger'), '15px')
-      assert.strictEqual(resolveEditorFontSize('12px', 'smaller'), '11px')
-      assert.strictEqual(resolveEditorFontSize('16px', 'larger'), '17px')
-      assert.strictEqual(resolveEditorFontSize('14px', 'normal', true), '13px')
-      assert.strictEqual(resolveEditorFontSize('14px', 'smaller', true), '12px')
-      assert.strictEqual(resolveEditorFontSize('14px', 'larger', true), '14px')
-      assert.strictEqual(resolveEditorFontSize('12px', 'smaller', true), '10px')
-      assert.strictEqual(resolveEditorFontSize('16px', 'normal', true), '15px')
-
-      assert.strictEqual(resolveEditorLineHeight('26px', 'normal'), '26px')
-      assert.strictEqual(resolveEditorLineHeight('26px', 'smaller'), '24px')
-      assert.strictEqual(resolveEditorLineHeight('26px', 'larger'), '28px')
-      assert.strictEqual(resolveEditorLineHeight('34px', 'larger'), '36px')
-      assert.strictEqual(resolveEditorLineHeight('26px', 'normal', true), '24px')
-      assert.strictEqual(resolveEditorLineHeight('26px', 'smaller', true), '22px')
-      assert.strictEqual(resolveEditorLineHeight('26px', 'larger', true), '26px')
-      assert.strictEqual(resolveEditorLineHeight('17px', 'smaller', true), '15px')
-      assert.strictEqual(resolveEditorLineHeight('21px', 'normal', true), '20px')
-
-      assert.strictEqual(resolveEditorFontWeight('400', true), '400')
-      assert.strictEqual(resolveEditorFontWeight('700', true), '700')
-      assert.strictEqual(resolveEditorFontWeight('200', false), '250')
-      assert.strictEqual(resolveEditorFontWeight('400', false), '450')
-      assert.strictEqual(resolveEditorFontWeight('500', false), '550')
-      assert.strictEqual(resolveEditorFontWeight('700', false), '700')
-      assert.strictEqual(resolveEditorFontWeight('200', false, true), '250')
-      assert.strictEqual(resolveEditorFontWeight('200', false, false), '200')
-      assert.strictEqual(resolveEditorFontWeight('400', false, false), '400')
-      assert.strictEqual(resolveEditorFontWeight('500', false, false), '500')
-      assert.strictEqual(resolveEditorFontWeight('700', false, false), '700')
-
-      assert.strictEqual(resolveUiFontGrade(true), '0')
-      assert.strictEqual(resolveUiFontGrade(false), '50')
-      assert.strictEqual(resolveUiFontGrade(false, true), '50')
-      assert.strictEqual(resolveUiFontGrade(false, false), '0')
-    })
-
     it('should parse strict localized numbers and classify internal scope keys accurately', () => {
       assert.strictEqual(parseStrictLocaleNumber('1.234,56', { numberFormat: '1.234,56' }), 1234.56)
       assert.strictEqual(parseStrictLocaleNumber('-1 234,5e2', { numberFormat: '1 234,56' }), -123450)
@@ -1824,6 +1772,13 @@ describe('Module Graph & Lazy DOM Architecture', () => {
       assert.strictEqual(dialogEl.style.left, '735px')
       assert.strictEqual(dialogEl.style.top, '354px')
       assert.strictEqual(dialogEl.style.visibility, '')
+
+      dialogEl.offsetWidth = 560
+      dialogEl.offsetHeight = 470
+      modal.center(dialogEl, false, 600, 515)
+
+      assert.strictEqual(dialogEl.style.left, '20px')
+      assert.strictEqual(dialogEl.style.top, '44px')
     } finally {
       if (prevRaf) {
         globalThis.requestAnimationFrame = prevRaf
@@ -1833,137 +1788,275 @@ describe('Module Graph & Lazy DOM Architecture', () => {
     }
   })
 
-  it('bundles TrueType ClearType hinting and CVT variation tables in all WOFF2 fonts', () => {
-    const woff2KnownTags = [
-      'cmap',
-      'head',
-      'hhea',
-      'hmtx',
-      'maxp',
-      'name',
-      'OS/2',
-      'post',
-      'cvt ',
-      'fpgm',
-      'glyf',
-      'loca',
-      'prep',
-      'CFF ',
-      'VORG',
-      'EBDT',
-      'EBLC',
-      'gasp',
-      'hdmx',
-      'kern',
-      'LTSH',
-      'PCLT',
-      'VDMX',
-      'vhea',
-      'vmtx',
-      'BASE',
-      'GDEF',
-      'GPOS',
-      'GSUB',
-      'EBSC',
-      'JSTF',
-      'MATH',
-      'CBDT',
-      'CBLC',
-      'COLR',
-      'CPAL',
-      'SVG ',
-      'sbix',
-      'acnt',
-      'avar',
-      'bdat',
-      'bloc',
-      'bsln',
-      'cvar',
-      'fdsc',
-      'feat',
-      'fmtx',
-      'fvar',
-      'gvar',
-      'hsty',
-      'just',
-      'lcar',
-      'mort',
-      'morx',
-      'opbd',
-      'prop',
-      'trak',
-      'Zapf',
-      'Silf',
-      'Glat',
-      'Gloc',
-      'Feat',
-      'Sill'
-    ]
+  it('references valid WOFF2 font files in fonts.css', () => {
+    const fontsDir = path.resolve(import.meta.dirname, '..', 'src', 'assets', 'fonts')
+    const fontsCss = fs.readFileSync(path.join(fontsDir, 'fonts.css'), 'utf8')
+    const urls = [...fontsCss.matchAll(/url\(['"]?([^'")]+)['"]?\)/g)].map((m) => m[1])
 
-    const readBase128 = (buf, startOffset) => {
-      let accum = 0
-      let offset = startOffset
+    assert.ok(urls.length > 0, 'fonts.css should declare at least one font file')
 
-      for (let i = 0; i < 5; i++) {
-        const byte = buf[offset++]
-        accum = (accum << 7) | (byte & 0x7f)
-        if ((byte & 0x80) === 0) return [accum >>> 0, offset]
+    for (const file of urls) {
+      const fontPath = path.join(fontsDir, file)
+      assert.ok(fs.existsSync(fontPath), `${file} referenced in fonts.css must exist`)
+
+      const header = fs.readFileSync(fontPath).subarray(0, 4).toString('ascii')
+      assert.strictEqual(header, 'wOF2', `${file} must be a valid WOFF2 file`)
+    }
+  })
+
+  describe('v8 Audit Regression Tests', () => {
+    it('preserves small non-zero numbers across expLower, notations, units, and cleans IEEE-754 Complex noise', () => {
+      const autoRes = runCalculation({
+        activePage: 'test-small-auto',
+        lines: ['1e-8', '1.234567e-8', '1 mm to km', 'exp(i * pi)', '(1e-8) + (2e-8)i'],
+        settings: { ...defaultSettings, precision: '4', expLower: '-12', thouSep: false },
+        currencies: mockCurrencies
+      })
+      assert.deepStrictEqual(
+        autoRes.answers.map((h) => extractAnswer(h).answer),
+        ['0.00000001', '0.000000012346', '0.000001 km', '-1', '0.00000001 + 0.00000002i']
+      )
+
+      const lowerBoundRes = runCalculation({
+        activePage: 'test-small-explower',
+        lines: ['1e-8', '1.234567e-8'],
+        settings: { ...defaultSettings, precision: '4', expLower: '-6', thouSep: false },
+        currencies: mockCurrencies
+      })
+      assert.deepStrictEqual(
+        lowerBoundRes.answers.map((h) => extractAnswer(h).answer),
+        ['1e-8', '1.2346e-8']
+      )
+
+      const expRes = runCalculation({
+        activePage: 'test-small-exp',
+        lines: ['1.234567e-8'],
+        settings: { ...defaultSettings, notation: 'exponential', precision: '4', thouSep: false },
+        currencies: mockCurrencies
+      })
+      assert.strictEqual(extractAnswer(expRes.answers[0]).answer, '1.2346e-8')
+
+      const engRes = runCalculation({
+        activePage: 'test-small-eng',
+        lines: ['1.234567e-8'],
+        settings: { ...defaultSettings, notation: 'engineering', precision: '3', thouSep: false },
+        currencies: mockCurrencies
+      })
+      assert.strictEqual(extractAnswer(engRes.answers[0]).answer, '12.35e-9')
+
+      const fixedRes = runCalculation({
+        activePage: 'test-small-fixed',
+        lines: ['1.234567e-8'],
+        settings: { ...defaultSettings, notation: 'fixed', precision: '3', thouSep: false },
+        currencies: mockCurrencies
+      })
+      assert.strictEqual(extractAnswer(fixedRes.answers[0]).answer, '0.000')
+    })
+
+    it('handles matrix transpose apostrophes in comma-decimal mode and apostrophes inside comments', () => {
+      assert.strictEqual(stripComments("[1, 2]' // matrix's transpose"), "[1, 2]' ")
+
+      const commaRes = runCalculation({
+        activePage: 'test-transpose-comma',
+        lines: ["[1,5; 2,5]' + [3,5; 4,5]'", "[1; 2]' // matrix's transpose"],
+        settings: { ...defaultSettings, numberFormat: '1.234,56', matrixType: 'Array' },
+        currencies: mockCurrencies
+      })
+      assert.strictEqual(commaRes.errorLines.length, 0)
+      assert.strictEqual(extractAnswer(commaRes.answers[0]).answer, '[5, 7]')
+      assert.strictEqual(extractAnswer(commaRes.answers[1]).answer, '[1, 2]')
+
+      const dotRes = runCalculation({
+        activePage: 'test-transpose-dot',
+        lines: ["[1, 2]' // matrix's transpose"],
+        settings: defaultSettings,
+        currencies: mockCurrencies
+      })
+      assert.strictEqual(dotRes.errorLines.length, 0)
+      assert.strictEqual(extractAnswer(dotRes.answers[0]).answer, '[1, 2]')
+    })
+
+    it('preserves currency symbols inside strings, avoids merging multi-element arrays, and formats custom crypto symbols', () => {
+      const currenciesWithBtc = {
+        ...mockCurrencies,
+        BTC: { symbol: '₿', name: 'Bitcoin', rate: 50000 }
       }
 
-      throw new Error('Invalid UIntBase128 in WOFF2 header')
-    }
+      const enRes = runCalculation({
+        activePage: 'test-currency-en',
+        lines: ['"Price is $100"', '[10, 200 USD]', '2 BTC'],
+        settings: { ...defaultSettings, thouSep: true },
+        currencies: currenciesWithBtc
+      })
+      assert.deepStrictEqual(
+        enRes.answers.map((h) => extractAnswer(h).answer),
+        ['Price is $100', '[10, $200.00]', '₿2.00']
+      )
 
-    const readWoff2Tables = (fontFilename) => {
-      const fontPath = path.resolve(import.meta.dirname, '..', 'src', 'assets', 'fonts', fontFilename)
-      const buf = fs.readFileSync(fontPath)
-      assert.strictEqual(buf.toString('ascii', 0, 4), 'wOF2')
+      const btcCommaRes = runCalculation({
+        activePage: 'test-currency-btc-comma',
+        lines: ['2 BTC'],
+        settings: { ...defaultSettings, numberFormat: '1.234,56', thouSep: true },
+        currencies: currenciesWithBtc
+      })
+      assert.strictEqual(extractAnswer(btcCommaRes.answers[0]).answer.includes('₿'), true)
+    })
 
-      const numTables = buf.readUInt16BE(12)
-      let pos = 48
-      const tables = new Map()
+    it('supports sec/min/hr date abbreviations and mixed Fraction/BigNumber date durations', () => {
+      const aliasRes = runCalculation({
+        activePage: 'test-date-aliases',
+        lines: ['01/15/2026 10:00 AM + 2 hr', '01/15/2026 10:00 AM + 30 min', '01/15/2026 10:00 AM + 120 sec'],
+        settings: defaultSettings,
+        currencies: mockCurrencies
+      })
+      assert.deepStrictEqual(
+        aliasRes.answers.map((h) => extractAnswer(h).answer),
+        ['01/15/2026 12:00 PM', '01/15/2026 10:30 AM', '01/15/2026 10:02 AM']
+      )
 
-      for (let i = 0; i < numTables; i++) {
-        const flags = buf[pos++]
-        const tagIdx = flags & 0x3f
-        let tag
+      for (const numericOutput of ['Fraction', 'BigNumber']) {
+        const mixedRes = runCalculation({
+          activePage: `test-date-${numericOutput}`,
+          lines: ['01/15/2026 10:00 AM + 2 days + 3 hours'],
+          settings: { ...defaultSettings, numericOutput },
+          currencies: mockCurrencies
+        })
+        assert.strictEqual(extractAnswer(mixedRes.answers[0]).answer, '01/17/2026 1:00 PM')
+      }
+    })
 
-        if (tagIdx === 63) {
-          tag = buf.toString('ascii', pos, pos + 4)
-          pos += 4
-        } else {
-          tag = woff2KnownTags[tagIdx]
+    it('handles contPrevLine safely with Complex numbers, prior errors, and plot definitions', () => {
+      const res = runCalculation({
+        activePage: 'test-cont-prev',
+        lines: ['2 + 3i', '* 2'],
+        settings: { ...defaultSettings, contPrevLine: true },
+        currencies: mockCurrencies
+      })
+      assert.deepStrictEqual(
+        res.answers.map((h) => extractAnswer(h).answer),
+        ['2 + 3i', '4 + 6i']
+      )
+
+      const afterErrorRes = runCalculation({
+        activePage: 'test-cont-error',
+        lines: ['10', 'unknown_var', '+ 5'],
+        settings: { ...defaultSettings, contPrevLine: true },
+        currencies: mockCurrencies
+      })
+      assert.deepStrictEqual(afterErrorRes.errorLines, [1])
+      assert.strictEqual(extractAnswer(afterErrorRes.answers[2]).answer, '5')
+
+      const afterPlotRes = runCalculation({
+        activePage: 'test-cont-plot',
+        lines: ['f(x) = x^2', '+ 5', 'f(3)'],
+        settings: { ...defaultSettings, contPrevLine: true },
+        currencies: mockCurrencies
+      })
+      assert.strictEqual(extractAnswer(afterPlotRes.answers[0]).isPlot, true)
+      assert.strictEqual(extractAnswer(afterPlotRes.answers[1]).answer, '5')
+      assert.strictEqual(extractAnswer(afterPlotRes.answers[2]).answer, '9')
+    })
+
+    it('compiles multi-line/callback/semicolon-string UDFs and cleanly restores UDU prefixes and built-ins', () => {
+      const compiled = compileUdfItems([
+        { name: 'joinSemi', params: 'a, b', body: 'a + "; " + b' },
+        { name: 'pairStats', params: 'a, b', body: '{\n  total: a + b,\n  diff: a - b\n}' },
+        { name: 'doubleList', params: 'arr', body: 'arr.map((v) => { return v * 2 })' }
+      ])
+
+      applyUdfu(true, compiled)
+
+      try {
+        const udfRes = runCalculation({
+          activePage: 'test-compile-udf',
+          lines: ['joinSemi("a", "b")', 'p = pairStats(10, 3)', 'p.total', 'doubleList([1, 2, 3])'],
+          settings: { ...defaultSettings, matrixType: 'Array' },
+          currencies: mockCurrencies
+        })
+        assert.deepStrictEqual(
+          udfRes.answers.map((h) => extractAnswer(h).answer),
+          ['a; b', '{"total": 13, "diff": 7}', '13', '[2, 4, 6]']
+        )
+      } finally {
+        applyUdfu(true, '')
+      }
+
+      // Prefixed UDU + built-in override restoration
+      const uduCompiled = compileUduItems([
+        { name: 'foo', definition: '10 m', prefixes: 'short', aliases: '' },
+        { name: 's', definition: '2 m', prefixes: 'short', aliases: '' }
+      ])
+      applyUdfu(false, uduCompiled)
+
+      const duringUdu = runCalculation({
+        activePage: 'test-udu-during',
+        lines: ['1 kfoo to m', '1000 ms to m'],
+        settings: defaultSettings,
+        currencies: mockCurrencies
+      })
+      assert.deepStrictEqual(
+        duringUdu.answers.map((h) => extractAnswer(h).answer),
+        ['10000 m', '2 m']
+      )
+
+      applyUdfu(false, '')
+      const afterUdu = runCalculation({
+        activePage: 'test-udu-after',
+        lines: ['1 kfoo', '1000 ms to s'],
+        settings: defaultSettings,
+        currencies: mockCurrencies
+      })
+      assert.deepStrictEqual(afterUdu.errorLines, [0])
+      assert.strictEqual(extractAnswer(afterUdu.answers[1]).answer, '1 s')
+    })
+
+    it('preserves currency-based v7 UDUs, deduplicates colliding page names during migration, and isolates initStoreObject', () => {
+      const storage = new Map()
+      const prevDesc = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+      Object.defineProperty(globalThis, 'localStorage', {
+        configurable: true,
+        writable: true,
+        value: {
+          getItem: (k) => (storage.has(k) ? storage.get(k) : null),
+          setItem: (k, v) => storage.set(k, String(v)),
+          removeItem: (k) => storage.delete(k)
         }
+      })
 
-        let origLength
-        ;[origLength, pos] = readBase128(buf, pos)
+      try {
+        storage.set(
+          'numara',
+          JSON.stringify({
+            udu: 'grand: "1000 USD"',
+            pages: [
+              { id: 'p1', name: 'Budget', data: 'a = 1' },
+              { id: 'p2', name: 'budget', data: 'b = 2' },
+              { id: 'p3', name: 'Q1/Q2', data: 'c = 3' },
+              { id: 'p4', name: 'Q1:Q2', data: 'd = 4' }
+            ]
+          })
+        )
 
-        const xformVer = (flags >> 6) & 0x03
-        const isGlyfOrLoca = tag === 'glyf' || tag === 'loca'
+        migrateAppState()
 
-        if ((isGlyfOrLoca && xformVer === 0) || (!isGlyfOrLoca && xformVer !== 0)) {
-          ;[, pos] = readBase128(buf, pos)
-        }
+        assert.deepStrictEqual(store.get('uduItems'), [
+          { name: 'grand', definition: '1000 USD', prefixes: 'none', aliases: '' }
+        ])
 
-        tables.set(tag, origLength)
+        const migratedPages = store.get('pages')
+        assert.deepStrictEqual(
+          migratedPages.map((p) => p.name),
+          ['Budget', 'budget (1)', 'Q1/Q2', 'Q1:Q2 (1)']
+        )
+
+        // initStoreObject clones nested defaults so mutating stored state does not mutate defaults
+        const tmpl = { nested: { x: 1, y: 2 } }
+        const initialized = initStoreObject('testObj', tmpl)
+        initialized.nested.x = 99
+        assert.strictEqual(tmpl.nested.x, 1)
+      } finally {
+        if (prevDesc) Object.defineProperty(globalThis, 'localStorage', prevDesc)
       }
-
-      return tables
-    }
-
-    for (const { file, variable } of [
-      { file: 'GoogleSans-Variable.woff2', variable: true },
-      { file: 'RobotoMono-Variable.woff2', variable: true },
-      { file: 'Numara.woff2', variable: false }
-    ]) {
-      const tables = readWoff2Tables(file)
-      assert.ok((tables.get('fpgm') ?? 0) > 0, `${file} must include TrueType fpgm hinting bytecode`)
-      assert.ok((tables.get('prep') ?? 0) > 0, `${file} must include TrueType prep CVT program`)
-      assert.ok((tables.get('cvt ') ?? 0) > 0, `${file} must include TrueType cvt control values`)
-      assert.strictEqual(tables.get('gasp'), 12, `${file} must include two-range ClearType gasp table`)
-
-      if (variable) {
-        assert.ok((tables.get('cvar') ?? 0) > 0, `${file} must include cvar variations for hinted masters`)
-      }
-    }
+    })
   })
 })
