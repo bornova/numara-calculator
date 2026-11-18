@@ -12,7 +12,9 @@ const HTML_ESCAPES = {
  * @returns {string} The escaped string.
  */
 export function escapeHTML(str) {
-  if (str === null || str === undefined) return ''
+  if (str === null || str === undefined) {
+    return ''
+  }
 
   return String(str).replace(/[&<>'"]/g, (tag) => HTML_ESCAPES[tag])
 }
@@ -44,14 +46,18 @@ export function sanitizePageName(name, fallback = '') {
  * @returns {object|null} Matching page object or null.
  */
 export function findPageByRef(pages, rawPageName, excludePageId = null) {
-  if (!Array.isArray(pages) || !rawPageName) return null
+  if (!Array.isArray(pages) || !rawPageName) {
+    return null
+  }
 
   const trimmedRef = String(rawPageName).trim()
   const query = trimmedRef.toLowerCase().replace(/\.num$/, '')
 
   return (
     pages.find((p) => {
-      if (!p || p.id === excludePageId) return false
+      if (!p || p.id === excludePageId) {
+        return false
+      }
 
       const name = (p.name || '')
         .trim()
@@ -78,12 +84,23 @@ export function getSafeFilename(name) {
 }
 
 /**
+ * Computes a normalized case-insensitive sync key for a page or file name.
+ * @param {string} name Page or file name.
+ * @returns {string}
+ */
+export function getSyncKey(name) {
+  return getSafeFilename(name).toLowerCase()
+}
+
+/**
  * Get standard BCP 47 locale tag based on system preference.
  * @param {object} settings The application settings.
  * @returns {string} The system locale.
  */
 export function getSystemLocale(settings) {
-  if (settings?.systemLocale) return settings.systemLocale.split('-u-')[0]
+  if (settings?.systemLocale) {
+    return settings.systemLocale.split('-u-')[0]
+  }
 
   const nav =
     typeof navigator !== 'undefined' ? navigator : typeof self !== 'undefined' && self.navigator ? self.navigator : null
@@ -163,72 +180,4 @@ export function debounce(func, wait) {
   }
 
   return debounced
-}
-
-export const HIDPI_MIN_DPR = 1.5
-
-const ZOOM_STEP_OFFSETS = { smaller: -1, normal: 0, larger: 1 }
-const EDITOR_FONT_SIZE_STEPS = { '12px': 1, '13px': 1, '14px': 1, '15px': 1, '16px': 1 }
-const EDITOR_LINE_HEIGHT_STEPS = { '17px': 1, '21px': 1, '26px': 2, '30px': 2, '34px': 2 }
-
-function resolveSteppedPx(value, stepMap, zoomLevel = 'normal', isLowDpiDesktop = false) {
-  const perStep = stepMap[value]
-  if (!perStep) return value
-
-  const zoomStep = (ZOOM_STEP_OFFSETS[zoomLevel] ?? 0) + (isLowDpiDesktop ? -1 : 0)
-  return `${Number.parseInt(value, 10) + zoomStep * perStep}px`
-}
-
-/**
- * Resolves the effective editor font size for a semantic size tier, zoom level, and display density.
- * Low-DPI desktop displays (`1x`, DPR < 1.5) step down 1 tier so 13px/14px does not render oversized.
- * @param {string} fontSize Stored font size tier (`'12px'`..`'16px'`).
- * @param {string} [zoomLevel='normal'] Active UI zoom level (`'smaller'`, `'normal'`, `'larger'`).
- * @param {boolean} [isLowDpiDesktop=false] True on non-macOS, non-mobile displays with DPR < 1.5.
- * @returns {string} Effective CSS font-size string.
- */
-export function resolveEditorFontSize(fontSize, zoomLevel = 'normal', isLowDpiDesktop = false) {
-  return resolveSteppedPx(fontSize, EDITOR_FONT_SIZE_STEPS, zoomLevel, isLowDpiDesktop)
-}
-
-/**
- * Resolves the effective editor line height for a tier, zoom level, and display density.
- * @param {string} lineHeight Stored line height tier (`'17px'`, `'21px'`, `'26px'`, `'30px'`, `'34px'`).
- * @param {string} [zoomLevel='normal'] Active UI zoom level (`'smaller'`, `'normal'`, `'larger'`).
- * @param {boolean} [isLowDpiDesktop=false] True on non-macOS, non-mobile displays with DPR < 1.5.
- * @returns {string} Effective CSS line-height string.
- */
-export function resolveEditorLineHeight(lineHeight, zoomLevel = 'normal', isLowDpiDesktop = false) {
-  return resolveSteppedPx(lineHeight, EDITOR_LINE_HEIGHT_STEPS, zoomLevel, isLowDpiDesktop)
-}
-
-/**
- * Resolves the optically matched editor font weight for a platform and display density.
- * HiDPI non-macOS desktop displays lack CoreText stem dilation, so variable weights below 700
- * step up by +50 (e.g. `'400'` -> `'450'`) to match macOS stroke weight. Low-DPI `1x` displays
- * stay on the hinted master weight so DirectWrite ClearType stays crisp.
- * @param {string} fontWeight Stored font weight (`'200'`, `'300'`, `'400'`, `'500'`, `'700'`).
- * @param {boolean} [useMacScale=true] True on macOS or mobile devices; false on Windows/Linux desktop.
- * @param {boolean} [isHiDpi=true] True when `devicePixelRatio >= 1.5`.
- * @returns {string} Effective CSS font-weight string.
- */
-export function resolveEditorFontWeight(fontWeight, useMacScale = true, isHiDpi = true) {
-  if (useMacScale || !isHiDpi) return fontWeight
-
-  const numeric = Number.parseInt(fontWeight, 10)
-  if (!Number.isFinite(numeric)) return fontWeight
-
-  return String(Math.min(700, numeric + 50))
-}
-
-/**
- * Resolves the Google Sans variable `GRAD` axis value for a platform and display density.
- * HiDPI non-macOS desktop displays apply `+50` grade to match macOS CoreText stem dilation;
- * Low-DPI `1x` displays stay at `'0'` so ClearType hinting remains sharp.
- * @param {boolean} [useMacScale=true] True on macOS or mobile devices; false on Windows/Linux desktop.
- * @param {boolean} [isHiDpi=true] True when `devicePixelRatio >= 1.5`.
- * @returns {string} CSS `GRAD` axis value (`'0'` or `'50'`).
- */
-export function resolveUiFontGrade(useMacScale = true, isHiDpi = true) {
-  return useMacScale || !isHiDpi ? '0' : '50'
 }
