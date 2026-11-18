@@ -25,7 +25,8 @@
   margin-bottom: 10px;
 }
 
-#settingsTabs::before {
+#settingsTabs::before,
+#dialogUdfu .uk-tab::before {
   right: 15px;
   left: 15px;
   border-bottom: 1px solid light-dark(#e5e5e5, #333333);
@@ -278,7 +279,8 @@
   background-color: light-dark(#ffffff, #1f1f1f);
   height: calc(100vh - 230px);
   max-height: 420px;
-  overflow: scroll;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .colorPickerContainer > div {
@@ -316,7 +318,6 @@
 .dialog-about-header {
   display: inline-block;
   margin: 0 auto;
-  font-weight: 600;
 }
 
 .dialog-about-header img {
