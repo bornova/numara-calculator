@@ -2,6 +2,7 @@ import { DateTime } from 'luxon'
 
 import { math, refreshCurrencyState } from '../core/mathInstance.js'
 import {
+  applyUdfuToMath,
   compileUdfItems,
   compileUduItems,
   defaultProxy,
@@ -11,29 +12,18 @@ import {
   skipStringOrComment,
   VALID_IDENTIFIER
 } from '../core/udfu.js'
-import { getSyncKey, getSystemLocale, sanitizePageName } from '../core/utils.js'
-import { app } from './appState.js'
+import { getSyncKey, getSystemLocale, resolveUniquePageName, sanitizePageName } from '../core/utils.js'
+import { app, SETTING_SELECT_OPTIONS } from './appState.js'
 import { store } from './store.js'
 
-const VALID_NUMBER_FORMATS = new Set(['1,234.56', '1.234,56', '1 234.56', '1 234,56'])
-const VALID_DATE_FORMATS = new Set(['MM/dd/yyyy', 'dd/MM/yyyy', 'yyyy-MM-dd'])
-
-const VALID_SELECT_OPTIONS = {
-  zoomLevel: new Set(['smaller', 'normal', 'larger']),
-  pageListPosition: new Set(['auto', 'float', 'dock', 'tabs']),
-  notifyLocation: new Set(['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right']),
-  notifyDuration: new Set(['1000', '3000', '5000', '10000', '30000', '0']),
-  fontSize: new Set(['12px', '13px', '14px', '15px', '16px']),
-  fontWeight: new Set(['200', '300', '400', '500', '700']),
-  lineHeight: new Set(['17px', '21px', '26px', '30px', '34px']),
-  answerPosition: new Set(['left', 'right', 'bottom']),
-  numericOutput: new Set(['number', 'BigNumber', 'Fraction']),
-  matrixType: new Set(['Matrix', 'Array']),
-  notation: new Set(['auto', 'engineering', 'exponential', 'fixed', 'bin', 'hex', 'oct']),
-  numberFormat: VALID_NUMBER_FORMATS,
-  dateFormat: VALID_DATE_FORMATS,
-  currencyInterval: new Set(['0', '3600000', '10800000', '21600000', '43200000', 'manual'])
-}
+const VALID_SELECT_OPTIONS = Object.fromEntries(
+  Object.entries(SETTING_SELECT_OPTIONS).map(([key, opts]) => [
+    key,
+    new Set(opts.filter(([val]) => val !== null).map(([val]) => val))
+  ])
+)
+const VALID_NUMBER_FORMATS = VALID_SELECT_OPTIONS.numberFormat
+const VALID_DATE_FORMATS = VALID_SELECT_OPTIONS.dateFormat
 
 const OBSOLETE_STORE_KEYS = ['sideBarWidth', 'rateInterval']
 
@@ -603,14 +593,7 @@ export function migrateStorageAndPages() {
       const initialKey = getSyncKey(page.name)
 
       if (seenSyncKeys.has(initialKey)) {
-        let count = 1
-        let candidate = `${safeBaseName} (${count++})`
-
-        while (seenSyncKeys.has(getSyncKey(candidate))) {
-          candidate = `${safeBaseName} (${count++})`
-        }
-
-        page.name = candidate
+        page.name = resolveUniquePageName(safeBaseName, seenSyncKeys)
         pagesModified = true
       }
 
@@ -755,37 +738,54 @@ export function migrateFromV7(targetSettings) {
  * Migrates v7 raw `udf` and `udu` strings into structured `udfItems` and `uduItems` arrays if not yet present.
  */
 function migrateUdfu() {
-  if (store.get('udfItems') === null && store.get('udf') !== null) {
-    refreshCurrencyState(store.get('currencies') || {})
+  let refreshedCurrencies = false
 
-    const trimmedUdf = String(store.get('udf')).trim()
+  for (const [rawKey, itemsKey, parseLegacy, compileItems] of [
+    ['udf', 'udfItems', parseLegacyUdf, compileUdfItems],
+    ['udu', 'uduItems', parseLegacyUdu, compileUduItems]
+  ]) {
+    if (store.get(itemsKey) !== null || store.get(rawKey) === null) continue
 
-    if (!trimmedUdf) {
-      store.set('udfItems', [])
-    } else {
-      const parsedUdf = parseLegacyUdf(trimmedUdf, math, { luxon: DateTime })
+    if (!refreshedCurrencies) {
+      refreshCurrencyState(store.get('currencies') || {})
+      refreshedCurrencies = true
+    }
 
-      if (parsedUdf.length > 0) {
-        store.set('udfItems', parsedUdf)
-        store.set('udf', compileUdfItems(parsedUdf))
+    const trimmed = String(store.get(rawKey)).trim()
+
+    if (!trimJsComments(trimmed)) {
+      store.set(itemsKey, [])
+      store.set(rawKey, '')
+      continue
+    }
+
+    let parsed
+    const tempUdfState = rawKey === 'udu' ? { previouslyImportedUDFs: [], previouslyCreatedUnits: [] } : null
+    const activeUdf = rawKey === 'udu' ? String(store.get('udf') ?? '').trim() : ''
+
+    try {
+      if (tempUdfState && activeUdf) {
+        try {
+          applyUdfuToMath(math, activeUdf, true, tempUdfState, { luxon: DateTime })
+        } catch {
+          // Ignore invalid legacy UDF definitions during UDU migration
+        }
+      }
+
+      parsed = parseLegacy(trimmed, math, { luxon: DateTime })
+    } finally {
+      if (tempUdfState && tempUdfState.previouslyImportedUDFs.length > 0) {
+        try {
+          applyUdfuToMath(math, '', true, tempUdfState)
+        } catch {
+          // Ignore cleanup error
+        }
       }
     }
-  }
 
-  if (store.get('uduItems') === null && store.get('udu') !== null) {
-    refreshCurrencyState(store.get('currencies') || {})
-
-    const trimmedUdu = String(store.get('udu')).trim()
-
-    if (!trimmedUdu) {
-      store.set('uduItems', [])
-    } else {
-      const parsedUdu = parseLegacyUdu(trimmedUdu, math, { luxon: DateTime })
-
-      if (parsedUdu.length > 0) {
-        store.set('uduItems', parsedUdu)
-        store.set('udu', compileUduItems(parsedUdu))
-      }
+    if (parsed.length > 0) {
+      store.set(itemsKey, parsed)
+      store.set(rawKey, compileItems(parsed))
     }
   }
 }
