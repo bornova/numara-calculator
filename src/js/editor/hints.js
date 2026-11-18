@@ -214,12 +214,7 @@ export function registerEditorHints() {
                     : `.<span class="cm-variable">${escapeHTML(prop)}</span>`
                 }
               }))
-          } else if (
-            baseVarLower === 'today' ||
-            baseVarLower === 'now' ||
-            app.scopeTypes?.[baseVar] === 'datetime' ||
-            prefix.toLowerCase().startsWith('datetime.')
-          ) {
+          } else if (app.scopeTypes?.[baseVar] === 'datetime' || prefix.toLowerCase().startsWith('datetime.')) {
             matches = dateTimeInstanceMethods
               .filter((m) => m.toLowerCase().startsWith(suffix))
               .map((m) => ({
