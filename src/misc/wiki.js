@@ -1,9 +1,15 @@
-import fs from 'fs-extra'
+import fs from 'node:fs'
+import path from 'node:path'
 import { create, all } from 'mathjs'
 
 const math = create(all)
 
 const WIKI_BASE_URL = 'https://github.com/bornova/numara-calculator/wiki'
+
+function writeWikiFile(filePath, content) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true })
+  fs.writeFileSync(filePath, content, 'utf8')
+}
 
 const categorize = (obj) =>
   obj.reduce((catList, key) => {
@@ -29,7 +35,7 @@ Numara is a sleek, minimal-but-powerful notepad calculator that evaluates expres
 * [Known issues](${WIKI_BASE_URL}/Known-issues) — Known platform and third-party issues
 `
 
-  fs.outputFileSync('wiki/Home.md', homeWiki)
+  writeWikiFile('wiki/Home.md', homeWiki)
 }
 
 /** Generate Features wiki page */
@@ -214,7 +220,7 @@ Click **Search** in the menu or press \`Cmd/Ctrl+F\` to open the search panel, o
   \`\`\`
 `
 
-  fs.outputFileSync('wiki/Features.md', featuresWiki)
+  writeWikiFile('wiki/Features.md', featuresWiki)
 }
 
 /** Generate Settings wiki page */
@@ -240,7 +246,7 @@ function generateSettingsWiki() {
 \`Always on top\` On | Off (Default) *(Desktop only)*
 - Keep the Numara window floating on top of all other application windows on the screen.
 
-\`Start at login\` On | Off (Default) *(Desktop only)*
+\`Start at login\` On | Off (Default) *(macOS and Windows only)*
 - Start Numara automatically when logging into your computer.
 
 \`Start with blank page\` On | Off (Default)
@@ -403,7 +409,7 @@ function generateSettingsWiki() {
 - **Reset window size** *(Desktop only)*: Restore the application window to its default dimensions when resized.
 `
 
-  fs.outputFileSync('wiki/Settings.md', settingsWiki)
+  writeWikiFile('wiki/Settings.md', settingsWiki)
 }
 
 /** Generate Keyboard shortcuts wiki page */
@@ -415,7 +421,7 @@ function generateShortcutsWiki() {
 | \`Cmd+N\` | \`Ctrl+N\` | Create a new page |
 | \`Cmd+D\` | \`Ctrl+D\` | Clear the current page |
 | \`Cmd+P\` | \`Ctrl+P\` | Print the current page |
-| \`Cmd+,\` | \`Ctrl+,\` *(Linux)* | Open Settings *(Desktop)* |
+| \`Cmd+,\` | \`Ctrl+,\` | Open Settings |
 | \`Shift+Tab\` | \`Shift+Tab\` | Open or close the page list (when not docked or in Tabs mode) |
 | \`Esc\` | \`Esc\` | Close open modal, dropdown, search panel, or app window (when **Close app on Esc key** is enabled) |
 
@@ -453,7 +459,7 @@ function generateShortcutsWiki() {
 | **Right-click input / output panel** *(Desktop)* | Copy line, answer, line with answer, or all lines/answers |
 `
 
-  fs.outputFileSync('wiki/Keyboard-shortcuts.md', shortcutsWiki)
+  writeWikiFile('wiki/Keyboard-shortcuts.md', shortcutsWiki)
 }
 
 /** Generate Known issues wiki page */
@@ -462,7 +468,7 @@ function generateKnownIssuesWiki() {
 - Microsoft SwiftKey backspace button does not move cursor to previous line when cursor reaches the beginning of a line ([#183](https://github.com/bornova/numara-calculator/issues/183))
 `
 
-  fs.outputFileSync('wiki/Known-issues.md', knownIssuesWiki)
+  writeWikiFile('wiki/Known-issues.md', knownIssuesWiki)
 }
 
 /** Generate function references page */
@@ -477,7 +483,7 @@ function generateFunctionsWiki() {
     return help
   }, [])
 
-  const functionsByCat = Object.entries(categorize(functions)).sort()
+  const functionsByCat = Object.entries(categorize(functions)).sort(([a], [b]) => a.localeCompare(b))
 
   const exclusions = ['Core', 'Expression']
 
@@ -519,7 +525,7 @@ function generateFunctionsWiki() {
     })
   }
 
-  fs.outputFileSync('wiki/Function-references.md', functionsWiki.replace(/^ +/gm, ''))
+  writeWikiFile('wiki/Function-references.md', functionsWiki.replace(/^ +/gm, ''))
 }
 
 /** Generate unit references page */
@@ -534,7 +540,7 @@ function generateUnitsWiki() {
     return units
   }, [])
 
-  const unitsByCategory = Object.entries(categorize(units)).sort()
+  const unitsByCategory = Object.entries(categorize(units)).sort(([a], [b]) => a.localeCompare(b))
 
   let unitsWiki = ``
 
@@ -558,7 +564,7 @@ function generateUnitsWiki() {
     })
   }
 
-  fs.outputFileSync('wiki/Unit-references.md', unitsWiki.replace(/^ +/gm, ''))
+  writeWikiFile('wiki/Unit-references.md', unitsWiki.replace(/^ +/gm, ''))
 }
 
 generateHomeWiki()
