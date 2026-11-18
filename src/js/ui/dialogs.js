@@ -55,6 +55,7 @@ const modal = {
       const height = targetHeight ?? window.innerHeight
 
       Object.assign(element.style, {
+        position: 'absolute',
         left: `${Math.max(MODAL_MIN_MARGIN, Math.round((width - element.offsetWidth) / 2))}px`,
         top: `${Math.max(MODAL_MIN_TOP, Math.round((height - element.offsetHeight) / 2))}px`,
         visibility: ''
@@ -123,9 +124,8 @@ function resetConfirmDialog() {
  */
 function makeModalDraggable(modalElement) {
   const dialog = modalElement.querySelector('.uk-modal-dialog')
-  const header = dialog?.querySelector('.uk-modal-title')
 
-  if (!dialog || !header) return
+  if (!dialog) return
 
   UIkit.util.on(
     modalElement,
@@ -139,6 +139,10 @@ function makeModalDraggable(modalElement) {
     },
     { self: true }
   )
+
+  const header = dialog.querySelector('.uk-modal-title')
+
+  if (!header) return
 
   let dragging = false
   let offsetX = 0
