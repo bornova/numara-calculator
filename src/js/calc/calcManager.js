@@ -263,6 +263,7 @@ function showTimeoutDialog() {
   isDialogVisible = true
   clearAutoCloseTimeout()
 
+  const timedOutPageId = currentTaskPageId
   const stuckLineIndex = sharedArray && sharedArray[0] !== -1 ? sharedArray[0] : lastActiveLineIndex
   const lineNo = stuckLineIndex !== -1 ? stuckLineIndex + 1 : null
 
@@ -301,20 +302,20 @@ function showTimeoutDialog() {
 
     isCalculating = false
 
-    if (stuckLineIndex !== -1 && stuckLineIndex < cm.lineCount()) {
+    if (app.activePage === timedOutPageId && stuckLineIndex !== -1 && stuckLineIndex < cm.lineCount()) {
       const lineText = cm.getLine(stuckLineIndex)
 
       if (lineText !== null && !lineText.trim().startsWith('//') && !lineText.trim().startsWith('#')) {
         cm.replaceRange('// ', { line: stuckLineIndex, ch: 0 })
       }
-
-      if (debouncedCalculate) {
-        debouncedCalculate.flush()
-      } else {
-        calculate()
-      }
     } else {
       notify('Calculations took too long and were cancelled.', 'danger')
+    }
+
+    if (debouncedCalculate) {
+      debouncedCalculate.flush()
+    } else {
+      calculate()
     }
   }
 }
@@ -408,7 +409,7 @@ export function calculate() {
   }, timeoutDuration)
 
   const w = getWorker()
-  const needsPages = cmValue.includes('page')
+  const needsPages = cmValue.includes('page') || (store.get('udf') ?? '').includes('page')
   const allPages = needsPages
     ? (store.get('pages') ?? []).map((p) => ({
         id: p.id,
