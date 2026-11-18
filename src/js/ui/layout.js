@@ -8,14 +8,13 @@ import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
 import { showSearchPanel } from '../editor/searchPanel.js'
 import { loadPage } from '../pages/pageManager.js'
-import { app } from '../state/appState.js'
+import { app, DEFAULT_INPUT_WIDTH } from '../state/appState.js'
 import { isElectron, isMac } from '../state/env.js'
 import { store } from '../state/store.js'
 import { copyAll, copyToClipboard } from './contextMenu.js'
 import { hideFloatingPageList, isModalOpen, modal, showError } from './dialogs.js'
 import { resetPlotSelection } from './plot.js'
 import { printPage } from './print.js'
-import { settings } from './settings.js'
 
 /**
  * Configures the application title headers based on OS (Windows vs. macOS).
@@ -72,13 +71,15 @@ export function setupAppButtons() {
   Object.entries(buttons).forEach(([btn, action]) => dom[btn].addEventListener('click', action))
 
   if (isElectron) {
+    const hasOpenDialog = () => Boolean(dom.el('.modal.uk-open, .dialogConfirm.uk-open'))
+
     numara.menuAction((action) => {
       switch (action) {
         case 'newPage':
-          if (!isModalOpen()) dom.newPageButton.click()
+          if (!hasOpenDialog()) dom.newPageButton.click()
           break
         case 'clearPage':
-          if (!isModalOpen()) dom.clearButton.click()
+          if (!hasOpenDialog()) dom.clearButton.click()
           break
         case 'togglePageList':
           if (app.settings.pageListPosition === 'tabs') break
@@ -172,7 +173,7 @@ export function setupResultActions() {
     if (plotEl) {
       const func = plotEl.getAttribute('data-plot')
 
-      app.plotFunction = func.startsWith('line') ? app.mathScope.get(func) : func
+      app.plotFunction = /^line\d+$/.test(func) ? app.mathScope.get(func) : func
 
       try {
         dom.plotCrossModal.checked = app.plotSettings.showCross
@@ -215,7 +216,7 @@ export function setupResultActions() {
  * Initializes resizer interactions for adjusting the width ratio of input and output panels.
  */
 export function setupPanelResizer() {
-  const defaultWidth = settings.defaults.inputWidth
+  const defaultWidth = DEFAULT_INPUT_WIDTH
   const transitionMs = 180
 
   let resizeRaf
@@ -258,7 +259,7 @@ export function setupPanelResizer() {
       resizeRaf = requestAnimationFrame(() => {
         const offset = 10
         const pointerRelativeXpos = moveEvent.clientX - dom.mainPanel.getBoundingClientRect().left - offset
-        const inputWidth = Math.max(0, Math.min(100, (pointerRelativeXpos / dom.mainPanel.clientWidth) * 100))
+        const inputWidth = Math.max(15, Math.min(85, (pointerRelativeXpos / dom.mainPanel.clientWidth) * 100))
 
         dom.input.style.width = inputWidth + '%'
         syncOutputHeights()
