@@ -4,27 +4,12 @@ import { calculate, clearEvaluationCache } from '../calc/calcManager.js'
 import { getRates } from '../calc/currencies.js'
 import { syncOutputHeights } from '../calc/outputRenderer.js'
 import { app as coreApp } from '../core/mathInstance.js'
-import {
-  HIDPI_MIN_DPR,
-  isCommaDecimal,
-  resolveEditorFontSize,
-  resolveEditorFontWeight,
-  resolveEditorLineHeight,
-  resolveUiFontGrade
-} from '../core/utils.js'
+import { isCommaDecimal } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
 import { clearSyncCache, triggerFolderSync, updateSyncUiState } from '../pages/sync.js'
 import { app } from '../state/appState.js'
-import {
-  checkSize,
-  DEFAULT_APP_HEIGHT,
-  DEFAULT_APP_WIDTH,
-  getTheme,
-  isElectron,
-  isMac,
-  isMobile
-} from '../state/env.js'
+import { checkSize, DEFAULT_APP_HEIGHT, DEFAULT_APP_WIDTH, getTheme, isElectron, isLinux, isMac } from '../state/env.js'
 import { initStoreObject, store } from '../state/store.js'
 import { confirm, modal, showError } from './dialogs.js'
 import { getDockedPageListWidth, setupPageList } from './pageList.js'
@@ -34,6 +19,18 @@ let updateInterval
 let eventsInitialized = false
 
 const RANGE_KEYS = ['precision', 'expUpper', 'expLower', 'calcTimeout']
+
+const FONT_SIZE_ZOOM_MAP = {
+  smaller: { '12px': '11px', '13px': '12px', '14px': '13px', '15px': '14px', '16px': '15px' },
+  normal: { '12px': '12px', '13px': '13px', '14px': '14px', '15px': '15px', '16px': '16px' },
+  larger: { '12px': '13px', '13px': '14px', '14px': '15px', '15px': '16px', '16px': '17px' }
+}
+
+const LINE_HEIGHT_ZOOM_MAP = {
+  smaller: { '17px': '16px', '21px': '20px', '26px': '24px', '30px': '28px', '34px': '32px' },
+  normal: { '17px': '17px', '21px': '21px', '26px': '26px', '30px': '30px', '34px': '34px' },
+  larger: { '17px': '18px', '21px': '22px', '26px': '28px', '30px': '32px', '34px': '36px' }
+}
 
 /**
  * Check if a setting is modified from its default value and toggle its indicator dot.
@@ -80,12 +77,6 @@ function setupSettingsEvents() {
 
   if (isElectron) {
     numara.themeUpdate(() => settings.setTheme())
-  }
-
-  if (!isMac && !isMobile && window.matchMedia) {
-    window.matchMedia(`(min-resolution: ${HIDPI_MIN_DPR}dppx)`).addEventListener('change', () => {
-      settings.apply()
-    })
   }
 
   dom.defaultSettingsButton.addEventListener('click', () => {
@@ -380,11 +371,13 @@ export const settings = {
     )
     populateSelect(dom.matrixType, { Matrix: 'Matrix', Array: 'Array' })
 
-    dom
-      .els('#alwaysOnTopContainer, #showTrayContainer, #openAtLoginContainer, #escToCloseContainer, #syncTab')
-      .forEach((el) => {
-        el.style.display = isElectron ? '' : 'none'
-      })
+    dom.els('#alwaysOnTopContainer, #showTrayContainer, #escToCloseContainer, #syncTab').forEach((el) => {
+      el.style.display = isElectron ? '' : 'none'
+    })
+
+    if (dom.openAtLoginContainer) {
+      dom.openAtLoginContainer.style.display = isElectron && !isLinux ? '' : 'none'
+    }
 
     const showTrayLabel = dom.el('#showTrayContainer [data-help="showTray"]')
     if (showTrayLabel) {
@@ -459,28 +452,14 @@ export const settings = {
     }
 
     const zoomLevel = app.settings.zoomLevel || 'normal'
-    const useMacScale = isMac || isMobile
-    const isHiDpi = (window.devicePixelRatio || 1) >= HIDPI_MIN_DPR
-    const isLowDpiDesktop = !useMacScale && !isHiDpi
-
     document.documentElement.dataset.zoom = zoomLevel
 
-    if (isLowDpiDesktop) {
-      document.documentElement.dataset.lowDpi = 'true'
-    } else {
-      delete document.documentElement.dataset.lowDpi
-    }
-
-    document.documentElement.style.setProperty('--ui-font-grad', resolveUiFontGrade(useMacScale, isHiDpi))
-    document.documentElement.style.setProperty('--mono-weight', resolveEditorFontWeight('400', useMacScale, isHiDpi))
-
-    const effectiveFontSize = resolveEditorFontSize(app.settings.fontSize, zoomLevel, isLowDpiDesktop)
-    const effectiveFontWeight = resolveEditorFontWeight(app.settings.fontWeight, useMacScale, isHiDpi)
-    const effectiveLineHeight = resolveEditorLineHeight(app.settings.lineHeight, zoomLevel, isLowDpiDesktop)
+    const effectiveFontSize = FONT_SIZE_ZOOM_MAP[zoomLevel]?.[app.settings.fontSize] || app.settings.fontSize
+    const effectiveLineHeight = LINE_HEIGHT_ZOOM_MAP[zoomLevel]?.[app.settings.lineHeight] || app.settings.lineHeight
 
     dom.els('.panelFont, .input .CodeMirror').forEach((el) => {
       el.style.fontSize = effectiveFontSize
-      el.style.fontWeight = effectiveFontWeight
+      el.style.fontWeight = app.settings.fontWeight
       el.style.setProperty('line-height', effectiveLineHeight, 'important')
     })
 
