@@ -6,10 +6,11 @@ import { renderAnswersToHTML, syncOutputHeights } from '../calc/outputRenderer.j
 import { escapeHTML, getSyncKey, resolveUniquePageName, sanitizePageName } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
+import { isSearchPanelOpen } from '../editor/searchPanel.js'
 import { app } from '../state/appState.js'
 import { events } from '../state/events.js'
 import { store } from '../state/store.js'
-import { confirm, hideFloatingPageList, hideOpenDropdowns, notify } from '../ui/dialogs.js'
+import { confirm, hideFloatingPageList, hideOpenDropdowns, isModalOpen, notify } from '../ui/dialogs.js'
 import { isPageDragging, setupPageListSort, setupPageTabsSort } from './pageSort.js'
 import {
   hideTabContextMenu,
@@ -26,6 +27,15 @@ Settings.defaultOutputCalendar = 'iso8601'
 let isScrolling = false
 let lastGeneratedPageId = ''
 let pageNameFlashTimer = null
+let loadPageFocusTimer = null
+
+function canFocusEditor() {
+  return (
+    !isModalOpen() &&
+    !isSearchPanelOpen() &&
+    (typeof document === 'undefined' || !document.activeElement?.matches?.('.pageListRenameInput, .pageTabRenameInput'))
+  )
+}
 
 /**
  * Triggers a subtle highlight flash on the active page name or tab when a page is created.
@@ -177,12 +187,17 @@ function deletePage(pageId) {
  * @param {string} originalName Original page name.
  * @param {string} rawInput Raw user input string.
  * @param {boolean} save Whether to commit or cancel.
+ * @param {(finalName?: string) => void} [restoreDom] Optional in-place DOM restoration callback.
  */
-function commitPageRename(pageId, originalName, rawInput, save) {
+function commitPageRename(pageId, originalName, rawInput, save, restoreDom) {
   const newName = sanitizePageName(rawInput)
 
   if (!save || !newName || newName === originalName) {
-    populatePages()
+    if (restoreDom) {
+      restoreDom(originalName)
+    } else {
+      populatePages()
+    }
     return
   }
 
@@ -201,16 +216,38 @@ function commitPageRename(pageId, originalName, rawInput, save) {
       `"${escapeHTML(newName)}" (or a page with a conflicting file name) already exists. Please choose a different page name.`,
       'danger'
     )
-    populatePages()
+    if (restoreDom) {
+      restoreDom(originalName)
+    } else {
+      populatePages()
+    }
     return
   }
 
   const oldName = targetPage.name
+  const pageDate = formatPageDate(pageId)
 
   targetPage.name = newName
   store.set('pages', currentPages)
 
-  populatePages()
+  if (restoreDom) {
+    restoreDom(newName)
+
+    const listTitleEl = document.getElementById(pageId)?.querySelector('.pageListItemTitle')
+    if (listTitleEl) {
+      listTitleEl.textContent = newName
+      listTitleEl.title = `${newName} - ${pageDate}`
+    }
+
+    const tabEl = dom.pageTabs?.querySelector(`.pageTab[data-page="${pageId}"]`)
+    if (tabEl) {
+      tabEl.title = `${newName} - ${pageDate}`
+      const tabTitleEl = tabEl.querySelector('.pageTabTitle')
+      if (tabTitleEl) tabTitleEl.textContent = newName
+    }
+  } else {
+    populatePages()
+  }
 
   if (pageId === app.activePage) {
     updatePageName(targetPage.name, pageId)
@@ -241,7 +278,7 @@ function renamePage(pageId) {
   session.input.style.height = `${session.titleHeight}px`
 
   const saveBtn = document.createElement('span')
-  saveBtn.className = 'savePageButton uk-flex-right uk-margin-small-right'
+  saveBtn.className = 'savePageButton uk-margin-small-right'
   saveBtn.title = 'Save page name'
   saveBtn.innerHTML = dom.icons.Save
 
@@ -393,8 +430,8 @@ function updatePageName(name, pageId) {
   const pageDate = formatPageDate(pageId)
 
   dom.pageName.textContent = name
-  dom.pageName.title = `${name} - ${pageDate}`
-  dom.pageName.setAttribute('uk-tooltip', 'delay: 1000')
+  dom.pageName.removeAttribute('title')
+  UIkit.tooltip(dom.pageName, { title: escapeHTML(`${name} - ${pageDate}`), delay: 1000 })
 }
 
 /**
@@ -494,18 +531,27 @@ function loadPage(pageId) {
 
   calculate()
   populatePages()
-  cm.focus()
+
+  if (canFocusEditor()) {
+    cm.focus()
+  }
 
   const targetCursor = cm.getCursor()
 
-  setTimeout(() => {
+  clearTimeout(loadPageFocusTimer)
+  loadPageFocusTimer = setTimeout(() => {
+    loadPageFocusTimer = null
+    if (app.activePage !== pageId) return
+
     try {
       cm.scrollIntoView({ ch: targetCursor.ch, line: targetCursor.line + 1 })
     } catch {
       cm.scrollIntoView(targetCursor)
     }
 
-    cm.focus()
+    if (canFocusEditor()) {
+      cm.focus()
+    }
   }, 100)
 }
 
@@ -586,7 +632,6 @@ function initializePages() {
       const blankPage = pages.find((page) => page.data === '')
 
       if (blankPage) {
-        app.activePage = blankPage.id
         loadPage(blankPage.id)
       } else {
         newPage()
@@ -594,11 +639,10 @@ function initializePages() {
     } else {
       const lastPageId = store.get('lastPage')
       const pageExists = pages.some((p) => p.id === lastPageId)
+      const initialPageId = pageExists ? lastPageId : pages[0]?.id || null
 
-      app.activePage = pageExists ? lastPageId : pages[0]?.id || null
-
-      if (app.activePage) {
-        loadPage(app.activePage)
+      if (initialPageId) {
+        loadPage(initialPageId)
       } else {
         defaultPage()
       }
