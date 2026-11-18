@@ -1,5 +1,5 @@
 import { REGEX_STRING_LITERAL } from './constants.js'
-import { app } from './mathInstance.js'
+import { calcState } from './mathInstance.js'
 import { isCommaDecimal, isSpaceGrouping } from './utils.js'
 
 /**
@@ -21,9 +21,9 @@ export function transformOutsideStrings(line, fn) {
  * @returns {string} The normalized expression line for Math.js evaluation.
  */
 export function normalizeNumberInput(line) {
-  const spaceGrp = isSpaceGrouping(app.settings)
+  const spaceGrp = isSpaceGrouping(calcState.settings)
 
-  if (isCommaDecimal(app.settings)) {
+  if (isCommaDecimal(calcState.settings)) {
     // 1.234,56 or 1 234,56 format: period or space thousands separator, comma decimal separator, semicolon argument separator
     const tokenRegex = spaceGrp
       ? /(?<![\w\p{L}.,])(?:\d+(?:[ \u00A0\u202F]\d{3})+(?:[.,][\d.,]*\d)?|\d+[.,][\d.,]*\d|\.\d+)(?![\d.,])/gu
