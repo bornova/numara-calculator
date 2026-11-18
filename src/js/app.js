@@ -83,17 +83,18 @@ async function initializeApp() {
     numara.rendererReady()
   }
 
-  window.addEventListener('focus', () => {
-    if (!isModalOpen() && !isSearchPanelOpen()) {
+  const focusEditorIfIdle = () => {
+    if (
+      !isModalOpen() &&
+      !isSearchPanelOpen() &&
+      !document.activeElement?.matches?.('.pageListRenameInput, .pageTabRenameInput')
+    ) {
       cm.focus()
     }
-  })
+  }
 
-  setTimeout(() => {
-    if (!isModalOpen() && !isSearchPanelOpen()) {
-      cm.focus()
-    }
-  }, 500)
+  window.addEventListener('focus', focusEditorIfIdle)
+  setTimeout(focusEditorIfIdle, 500)
 }
 
 initializeApp().catch((error) => console.error('Failed to initialize app:', error))
