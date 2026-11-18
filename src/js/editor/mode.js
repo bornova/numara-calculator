@@ -25,8 +25,13 @@ export function registerEditorModes() {
       state.lastToken = null
     },
     token: (stream, state) => {
-      if (stream.sol()) state.lastToken = null
-      if (stream.eatSpace()) return null
+      if (stream.sol()) {
+        state.lastToken = null
+      }
+
+      if (stream.eatSpace()) {
+        return null
+      }
 
       if (stream.match(/\/\/.*/) || stream.match(/#.*/)) {
         state.lastToken = 'comment'
