@@ -141,7 +141,10 @@ function handleUnitTooltip(target) {
 
   if (!hint) {
     hint = numaraHints.find((h) => h.text === text)
-    if (hint) hintMap.set(text, hint)
+
+    if (hint) {
+      hintMap.set(text, hint)
+    }
   }
 
   showTooltip(target, escapeHTML(hint?.desc || 'Unit description not available'))
@@ -230,7 +233,9 @@ export function initTooltips(cmInstance) {
     if (app.settings.keywordTips && className?.startsWith('cm-')) {
       const handler = TOOLTIP_HANDLERS[className]
 
-      if (handler) handler(event.target)
+      if (handler) {
+        handler(event.target)
+      }
     }
 
     if (className !== 'CodeMirror-linenumber') return
