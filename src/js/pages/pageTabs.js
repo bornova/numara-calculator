@@ -195,7 +195,9 @@ export function startInlinePageRename({ pageId, containerEl, titleSelector, inpu
   const page = (store.get('pages') || []).find((p) => p.id === pageId)
   const titleEl = containerEl?.querySelector(titleSelector)
 
-  if (!page || !containerEl || !titleEl || containerEl.classList.contains('is-renaming')) return null
+  if (!page || !containerEl || !titleEl || containerEl.classList.contains('is-renaming')) {
+    return null
+  }
 
   const containerHeight = containerEl.offsetHeight
   const titleHeight = titleEl.offsetHeight
@@ -291,9 +293,11 @@ export function setupPageTabsEvents({ onRename, onRenamePage, onDuplicate, onDel
     event.preventDefault()
     event.stopPropagation()
 
+    const rect = tabEl.getBoundingClientRect()
+
     openPageContextMenu(tabEl.dataset.page, 'tab', (menuRect) => ({
       left: event.clientX,
-      top: tabEl.getBoundingClientRect().top - menuRect.height - 6
+      top: rect.top - menuRect.height - 6
     }))
   })
 
