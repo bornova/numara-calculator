@@ -65,12 +65,14 @@ function formatNumericString(numStr, decSep, grpSep, useGrp) {
 }
 
 /**
- * Strips surrounding double quotes from a formatted string answer.
+ * Strips a balanced pair of surrounding double quotes from a formatted string answer.
  * @param {*} answer Raw or formatted answer.
  * @returns {*}
  */
 export function stripAnswer(answer) {
-  return typeof answer === 'string' ? answer.replace(/^"|"$/g, '') : answer
+  return typeof answer === 'string' && answer.length >= 2 && answer.startsWith('"') && answer.endsWith('"')
+    ? answer.slice(1, -1)
+    : answer
 }
 
 /**
@@ -136,7 +138,8 @@ function formatCurrency(str, useGrouping, settings = calcState.settings, currenc
   const maximumFractionDigits = clampPrecision(settings?.precision ?? 4)
 
   return transformOutsideStrings(str, (segment) =>
-    segment.replace(currencyFormatRegex, (match, amount, code) => {
+    segment.replace(currencyFormatRegex, (match, fracIntAmount, stdAmount, code) => {
+      const amount = fracIntAmount ?? stdAmount
       const upperCode = code.toUpperCase()
       const info = currencies?.[upperCode]
 
@@ -148,6 +151,17 @@ function formatCurrency(str, useGrouping, settings = calcState.settings, currenc
       const eIndex = trimmed.search(/e[+-]?\d+$/i)
       const baseStr = eIndex >= 0 ? trimmed.slice(0, eIndex) : trimmed
       const expStr = eIndex >= 0 ? trimmed.slice(eIndex) : ''
+      const sigDigits = baseStr.replace(/\D/g, '').replace(/^0+/, '')
+
+      if (sigDigits.length > 15) {
+        const isNeg = trimmed.startsWith('-')
+        const absTrimmed = isNeg ? trimmed.slice(1) : trimmed
+        const sym = info.symbol ?? upperCode
+        const sep = /^[a-zA-Z]+$/.test(sym) ? ' ' : ''
+
+        return `${isNeg ? '-' : ''}${sym}${sep}${absTrimmed}`
+      }
+
       const value = parseLocaleNumber(baseStr, settings)
 
       if (!Number.isFinite(value)) {
@@ -163,11 +177,16 @@ function formatCurrency(str, useGrouping, settings = calcState.settings, currenc
           maximumFractionDigits
         })
 
-        const customSymbol = info.symbol && info.symbol !== '$' && info.symbol !== upperCode ? info.symbol : null
+        const customSymbol =
+          info.symbol &&
+          info.symbol !== '$' &&
+          (info.symbol !== upperCode || upperCode === 'NOK' || upperCode === 'ISK')
+            ? info.symbol
+            : null
 
         if ((effectiveGrouping && group === ' ') || customSymbol) {
           const parts = formatter.formatToParts(value)
-          const nonLetterSymbol = customSymbol && !/[\p{L}\p{M}]$/u.test(customSymbol)
+          const nonLetterSymbol = customSymbol && (!/[\p{L}\p{M}]/u.test(customSymbol) || customSymbol.endsWith('$'))
           let skipSpace = false
 
           return (
@@ -183,10 +202,12 @@ function formatCurrency(str, useGrouping, settings = calcState.settings, currenc
                 if (
                   customSymbol &&
                   part.type === 'currency' &&
-                  (part.value === '$' || part.value.toUpperCase() === upperCode)
+                  (part.value === '$' || part.value === 'kr' || part.value.toUpperCase() === upperCode)
                 ) {
                   const isPrefix = !parts.slice(0, idx).some((p) => p.type === 'integer' || p.type === 'fraction')
-                  skipSpace = Boolean(isPrefix && nonLetterSymbol && part.value.toUpperCase() === upperCode)
+                  skipSpace = Boolean(
+                    isPrefix && nonLetterSymbol && (part.value === 'kr' || part.value.toUpperCase() === upperCode)
+                  )
                   return customSymbol
                 }
 
@@ -204,13 +225,26 @@ function formatCurrency(str, useGrouping, settings = calcState.settings, currenc
   )
 }
 
+function isExactZero(val) {
+  if (math.isBigNumber(val)) {
+    return val.isZero()
+  }
+
+  return Number(val) === 0
+}
+
 function roundScalar(value, digits, notation) {
   if (math.isFraction(value)) return value
 
   try {
     const rounded = math.round(value, digits)
 
-    if (notation === 'fixed' || Number(rounded) !== 0 || Number(value) === 0 || !Number.isFinite(Number(value))) {
+    if (
+      notation === 'fixed' ||
+      !isExactZero(rounded) ||
+      isExactZero(value) ||
+      (typeof value === 'number' && !Number.isFinite(value))
+    ) {
       return rounded
     }
 
@@ -249,7 +283,7 @@ function cleanComplexValue(val, digits, notation) {
  */
 export function formatAnswer(answer, useGrouping, settings = calcState.settings, currencies = calcState.currencies) {
   if (typeof answer === 'string') {
-    return stripAnswer(answer)
+    return answer
   }
 
   if (answer && typeof answer === 'object' && answer[PAGE_OBJECT_SYMBOL] && typeof answer.format === 'function') {
@@ -269,15 +303,31 @@ export function formatAnswer(answer, useGrouping, settings = calcState.settings,
   const maximumFractionDigits = clampPrecision(settings?.precision ?? 4)
 
   if (['bin', 'hex', 'oct'].includes(notation)) {
-    if (typeof answer === 'bigint') {
+    const formatBigIntBase = (val) => {
       const [base, prefix] = { bin: [2, '0b'], oct: [8, '0o'], hex: [16, '0x'] }[notation]
 
-      return `${answer < 0n ? '-' : ''}${prefix}${(answer < 0n ? -answer : answer).toString(base)}`
+      return `${val < 0n ? '-' : ''}${prefix}${(val < 0n ? -val : val).toString(base)}`
     }
 
-    answer = math.format(answer, { notation })
+    if (typeof answer === 'bigint') {
+      return formatBigIntBase(answer)
+    }
 
-    return stripAnswer(answer)
+    const formattedBase = math.format(answer, (value) => {
+      if (typeof value === 'bigint') {
+        return formatBigIntBase(value)
+      }
+
+      if (math.isFraction(value)) {
+        const numVal = value.d === 1n ? math.bignumber((value.s * value.n).toString()) : Number(value.valueOf())
+
+        return math.format(numVal, { notation })
+      }
+
+      return math.format(value, { notation })
+    })
+
+    return stripAnswer(formattedBase)
   }
 
   const formatOptions = {
@@ -289,18 +339,16 @@ export function formatAnswer(answer, useGrouping, settings = calcState.settings,
   const localeOptions = { maximumFractionDigits, useGrouping: effectiveGrouping }
   const formatter = getNumberFormatter(locale, localeOptions)
 
-  let processedAnswer = answer
+  let processedAnswer = cleanComplexValue(answer, maximumFractionDigits, notation)
   let wasRounded = false
 
   if (notation === 'fixed' && !answer?.isUnit && !math.isFraction(answer)) {
     try {
-      processedAnswer = math.round(answer, maximumFractionDigits)
+      processedAnswer = math.round(processedAnswer, maximumFractionDigits)
       wasRounded = true
     } catch {
       // ignore
     }
-  } else {
-    processedAnswer = cleanComplexValue(answer, maximumFractionDigits, notation)
   }
 
   let formattedAnswer = math.format(processedAnswer, (value) => {
@@ -370,7 +418,7 @@ export function formatPageLinkHtml(answer, answerCopy, answerOut) {
         class="pageLink ${CLASS_ANSWER}"
         data-page-id="${escapeHTML(pageId)}"
         data-answer="${escapeHTML(answerCopy)}"
-        title="${escapeHTML(tooltipText)}"
+        title="${escapeHTML(escapeHTML(tooltipText))}"
         uk-tooltip>
           ${escapeHTML(answerOut)}
         </a>`
