@@ -59,7 +59,7 @@ export const colors = {
     currency: { title: 'Currencies', class: '.cm-currency', dark: '#009688', light: '#009688' },
     error: {
       title: 'Errors',
-      class: '.lineError, .lineError:hover, .lineError > div, .lineNoError > div',
+      class: '.lineError, .lineError:hover, .lineNoError > div',
       dark: '#d41111',
       light: '#b10e0e'
     },
@@ -104,6 +104,18 @@ export const colors = {
       picker.addEventListener('click', (event) => {
         activePicker = event.target
         checkColorChange()
+      })
+
+      picker.addEventListener('close', () => {
+        clearTimeout(colorChangeTimeout)
+
+        if (!picker.value.trim()) {
+          picker.value = colors.defaults[picker.dataset.class][picker.dataset.theme]
+          picker.dispatchEvent(new Event('input', { bubbles: true }))
+        }
+
+        checkColorChange()
+        colors.save()
       })
     })
 
@@ -184,7 +196,15 @@ export const colors = {
    */
   save: () => {
     colorInputs.forEach((picker) => {
-      app.colors[picker.dataset.class][picker.dataset.theme] = picker.value
+      const cls = picker.dataset.class
+      const theme = picker.dataset.theme
+      const nextVal = picker.value.trim() || colors.defaults[cls][theme]
+
+      if (picker.value !== nextVal) {
+        picker.value = nextVal
+      }
+
+      app.colors[cls][theme] = nextVal
     })
 
     store.set('colors', app.colors)
