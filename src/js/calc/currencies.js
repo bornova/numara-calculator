@@ -1,4 +1,4 @@
-import { BUILTIN_MATH_KEYS, BUILTIN_UNIT_KEYS, refreshCurrencyState } from '../core/mathInstance.js'
+import { hasBuiltinConflict, refreshCurrencyState } from '../core/mathInstance.js'
 import { escapeHTML } from '../core/utils.js'
 import { dom } from '../dom.js'
 import { CLASS_NAMES, refreshCurrencyTokens } from '../editor/constants.js'
@@ -8,6 +8,7 @@ import { app } from '../state/appState.js'
 import { store } from '../state/store.js'
 import { notify } from '../ui/dialogs.js'
 import { calculate, clearEvaluationCache } from './calcManager.js'
+import { reapplyMainThreadUdu } from './userDefined.js'
 
 const RATES_URL = 'https://api.frankfurter.dev/v2/rates?base=USD'
 const SYMBOLS_URL = 'https://api.frankfurter.dev/v2/currencies'
@@ -78,18 +79,7 @@ const DEFAULTS = {
 }
 
 const registeredCurrencyHints = new Set()
-
-function hasBuiltinConflict(token) {
-  if (typeof token !== 'string' || !token) {
-    return false
-  }
-
-  return (
-    BUILTIN_UNIT_KEYS.has(token) ||
-    BUILTIN_UNIT_KEYS.has(token.toLowerCase()) ||
-    BUILTIN_MATH_KEYS.has(token.toLowerCase())
-  )
-}
+let inFlightRatesPromise = null
 
 /**
  * Return true if the currency symbol conflicts with a built-in mathjs unit, function, or constant.
@@ -125,7 +115,10 @@ function applyCurrenciesState(currencies) {
     }
   }
 
-  refreshCurrencyState(currencies, app.settings?.currency ?? true)
+  if (refreshCurrencyState(currencies, app.settings?.currency ?? true)) {
+    reapplyMainThreadUdu()
+  }
+
   refreshCurrencyTokens()
 }
 
@@ -245,6 +238,7 @@ export function initCurrencies() {
  */
 export async function getRates(isManual = false) {
   if (app.settings && !app.settings.currency) return
+  if (inFlightRatesPromise) return inFlightRatesPromise
 
   if (!navigator.onLine) {
     if (isManual || !store.get('rateDate')) {
@@ -258,39 +252,44 @@ export async function getRates(isManual = false) {
 
   if (dom.updateRatesLink) dom.updateRatesLink.classList.add('spin')
 
-  try {
-    const [symbols, rates] = await Promise.all([fetchJSON(SYMBOLS_URL).catch(() => null), fetchJSON(RATES_URL)])
-    const { currencies, lastDate } = buildCurrencies(symbols, rates)
+  inFlightRatesPromise = (async () => {
+    try {
+      const [symbols, rates] = await Promise.all([fetchJSON(SYMBOLS_URL).catch(() => null), fetchJSON(RATES_URL)])
+      const { currencies, lastDate } = buildCurrencies(symbols, rates)
 
-    applyCurrenciesState(currencies)
-    store.set('currencies', currencies)
+      applyCurrenciesState(currencies)
+      store.set('currencies', currencies)
 
-    if (lastDate) {
-      store.set('rateDate', lastDate)
-    }
+      if (lastDate) {
+        store.set('rateDate', lastDate)
+      }
 
-    cm.setOption('mode', app.settings?.syntax ? 'numara' : 'plain')
+      cm.setOption('mode', app.settings?.syntax ? 'numara' : 'plain')
 
-    clearEvaluationCache()
-    calculate()
-  } catch (error) {
-    if (isManual || !store.get('rateDate')) {
-      notify('Failed to get exchange rates (' + escapeHTML(String(error)) + ')', 'warning')
-    }
-  } finally {
-    const elapsed = Date.now() - startTime
-    const minDuration = 1000 // 1s matches CSS animation speed for 1 full rotation
+      clearEvaluationCache()
+      calculate()
+    } catch (error) {
+      if (isManual || !store.get('rateDate')) {
+        notify('Failed to get exchange rates (' + escapeHTML(String(error)) + ')', 'warning')
+      }
+    } finally {
+      inFlightRatesPromise = null
+      const elapsed = Date.now() - startTime
+      const minDuration = 1000 // 1s matches CSS animation speed for 1 full rotation
 
-    if (elapsed < minDuration) {
-      setTimeout(() => {
+      if (elapsed < minDuration) {
+        setTimeout(() => {
+          if (dom.updateRatesLink) {
+            dom.updateRatesLink.classList.remove('spin')
+          }
+        }, minDuration - elapsed)
+      } else {
         if (dom.updateRatesLink) {
           dom.updateRatesLink.classList.remove('spin')
         }
-      }, minDuration - elapsed)
-    } else {
-      if (dom.updateRatesLink) {
-        dom.updateRatesLink.classList.remove('spin')
       }
     }
-  }
+  })()
+
+  return inFlightRatesPromise
 }
