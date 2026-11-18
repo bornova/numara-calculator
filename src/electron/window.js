@@ -11,6 +11,8 @@ let isQuitting = false
 let isOverlayTrans = false
 let displayListenersBound = false
 
+const TITLEBAR_OVERLAY_HEIGHT = 38
+
 const defaultSizeOptions = {
   defaultWidth: schema.appWidth.default,
   defaultHeight: schema.appHeight.default,
@@ -19,11 +21,11 @@ const defaultSizeOptions = {
 }
 
 /**
- * Returns the active BrowserWindow instance if available.
+ * Returns the active BrowserWindow instance if available and not destroyed.
  * @returns {BrowserWindow|null}
  */
 export function getWindow() {
-  return win
+  return win && !win.isDestroyed() ? win : null
 }
 
 /**
@@ -32,8 +34,10 @@ export function getWindow() {
  * @param {...any} args Payload arguments.
  */
 export function sendToWindow(channel, ...args) {
-  if (win && !win.isDestroyed() && win.webContents) {
-    win.webContents.send(channel, ...args)
+  const activeWin = getWindow()
+
+  if (activeWin?.webContents) {
+    activeWin.webContents.send(channel, ...args)
   }
 }
 
@@ -41,12 +45,14 @@ export function sendToWindow(channel, ...args) {
  * Hides the window when tray mode is enabled, or minimizes it otherwise.
  */
 export function hideOrMinimizeWindow() {
-  if (!win || win.isDestroyed()) return
+  const activeWin = getWindow()
+
+  if (!activeWin) return
 
   if (config.get('showTray')) {
-    win.hide()
+    activeWin.hide()
   } else {
-    win.minimize()
+    activeWin.minimize()
   }
 }
 
@@ -77,13 +83,62 @@ export function setAppQuitting(value) {
  * Records the current unmaximized, unminimized, non-fullscreen window bounds.
  */
 function updateNormalBounds() {
-  if (!win || win.isDestroyed() || win.isMaximized() || win.isMinimized() || win.isFullScreen()) return
+  const activeWin = getWindow()
+
+  if (!activeWin || activeWin.isMaximized() || activeWin.isMinimized() || activeWin.isFullScreen()) return
 
   try {
-    normalBounds = win.getBounds()
+    normalBounds = activeWin.getBounds()
   } catch {
     // Ignore
   }
+}
+
+/**
+ * Ensures the active window (and tracked normalBounds) remains visible on a connected display.
+ */
+function ensureWindowOnScreen() {
+  const activeWin = getWindow()
+
+  if (!activeWin || activeWin.isFullScreen() || activeWin.isMinimized()) return
+
+  const displays = screen.getAllDisplays()
+  const primaryDisplay = screen.getPrimaryDisplay()
+
+  if (activeWin.isMaximized()) {
+    if (normalBounds) {
+      normalBounds = resolveWindowBounds(normalBounds, displays, primaryDisplay, defaultSizeOptions)
+    }
+
+    if (!isBoundsOnScreen(activeWin.getBounds(), displays)) {
+      activeWin.unmaximize()
+
+      const targetBounds = resolveWindowBounds(
+        normalBounds || activeWin.getBounds(),
+        displays,
+        primaryDisplay,
+        defaultSizeOptions
+      )
+
+      if (Number.isFinite(targetBounds.x) && Number.isFinite(targetBounds.y)) {
+        activeWin.setBounds(targetBounds)
+        normalBounds = targetBounds
+      }
+
+      activeWin.maximize()
+    }
+
+    return
+  }
+
+  const currentBounds = activeWin.getBounds()
+  const nextBounds = resolveWindowBounds(currentBounds, displays, primaryDisplay, defaultSizeOptions)
+
+  if (Number.isFinite(nextBounds.x) && Number.isFinite(nextBounds.y) && !areBoundsEqual(currentBounds, nextBounds)) {
+    activeWin.setBounds(nextBounds)
+  }
+
+  updateNormalBounds()
 }
 
 /**
@@ -108,71 +163,26 @@ function bindDisplayListeners() {
 }
 
 /**
- * Ensures the active window (and tracked normalBounds) remains visible on a connected display.
- */
-function ensureWindowOnScreen() {
-  if (!win || win.isDestroyed() || win.isFullScreen() || win.isMinimized()) return
-
-  const displays = screen.getAllDisplays()
-  const primaryDisplay = screen.getPrimaryDisplay()
-
-  if (win.isMaximized()) {
-    if (normalBounds) {
-      normalBounds = resolveWindowBounds(normalBounds, displays, primaryDisplay, defaultSizeOptions)
-    }
-
-    if (!isBoundsOnScreen(win.getBounds(), displays)) {
-      win.unmaximize()
-
-      const targetBounds = resolveWindowBounds(
-        normalBounds || win.getBounds(),
-        displays,
-        primaryDisplay,
-        defaultSizeOptions
-      )
-
-      if (Number.isFinite(targetBounds.x) && Number.isFinite(targetBounds.y)) {
-        win.setBounds(targetBounds)
-        normalBounds = targetBounds
-      }
-
-      win.maximize()
-    }
-
-    return
-  }
-
-  const currentBounds = win.getBounds()
-  const nextBounds = resolveWindowBounds(currentBounds, displays, primaryDisplay, defaultSizeOptions)
-
-  if (Number.isFinite(nextBounds.x) && Number.isFinite(nextBounds.y) && !areBoundsEqual(currentBounds, nextBounds)) {
-    win.setBounds(nextBounds)
-  }
-
-  updateNormalBounds()
-}
-
-/**
  * Restores (if minimized), ensures on-screen bounds, shows, and focuses the main window.
  * @returns {BrowserWindow|null}
  */
 export function showAndFocusWindow() {
-  if (!win || win.isDestroyed()) {
+  const activeWin = getWindow()
+
+  if (!activeWin) {
     return null
   }
 
-  if (win.isMinimized()) {
-    win.restore()
+  if (activeWin.isMinimized()) {
+    activeWin.restore()
   }
 
   ensureWindowOnScreen()
-  win.show()
-  win.focus()
+  activeWin.show()
+  activeWin.focus()
 
-  return win
+  return activeWin
 }
-
-const TITLEBAR_OVERLAY_HEIGHT = 38
 
 /**
  * Builds the native window controls overlay configuration.
@@ -194,10 +204,12 @@ function getTitleBarOverlayConfig(isTrans = isOverlayTrans) {
 function setTitleBarOverlay(isTrans = isOverlayTrans) {
   isOverlayTrans = Boolean(isTrans)
 
-  if (isMac || !win || win.isDestroyed()) return
+  const activeWin = getWindow()
+
+  if (isMac || !activeWin) return
 
   try {
-    win.setTitleBarOverlay(getTitleBarOverlayConfig(isTrans))
+    activeWin.setTitleBarOverlay(getTitleBarOverlayConfig(isTrans))
   } catch {
     // Ignore on platforms/WMs without titleBarOverlay support
   }
@@ -214,22 +226,24 @@ export function resetSize(
   appWrapperHeight = schema.appHeight.default,
   pageListWidth = 0
 ) {
-  if (!win || win.isDestroyed()) return
+  const activeWin = getWindow()
 
-  if (win.isFullScreen()) {
-    win.setFullScreen(false)
+  if (!activeWin) return
+
+  if (activeWin.isFullScreen()) {
+    activeWin.setFullScreen(false)
   }
 
-  if (win.isMaximized()) {
-    win.unmaximize()
+  if (activeWin.isMaximized()) {
+    activeWin.unmaximize()
   }
 
-  const [minWidth, minHeight] = win.getMinimumSize()
+  const [minWidth, minHeight] = activeWin.getMinimumSize()
   const width = Math.round(Number(appWrapperWidth) || schema.appWidth.default)
   const height = Math.round(Number(appWrapperHeight) || schema.appHeight.default)
   const pageList = Math.max(0, Math.round(Number(pageListWidth) || 0))
 
-  win.setContentSize(Math.max(minWidth, width + pageList), Math.max(minHeight, height))
+  activeWin.setContentSize(Math.max(minWidth, width + pageList), Math.max(minHeight, height))
   ensureWindowOnScreen()
 }
 
@@ -400,7 +414,7 @@ export function createAppWindow({ onWindowCreated, onWindowClosed } = {}) {
  */
 export function setupWindowHandlers({ onTrayChanged } = {}) {
   nativeTheme.on('updated', () => {
-    if (win && !win.isDestroyed() && win.webContents) {
+    if (getWindow()?.webContents) {
       sendToWindow('themeUpdate', nativeTheme.shouldUseDarkColors)
       setTitleBarOverlay(isOverlayTrans)
     }
@@ -416,7 +430,7 @@ export function setupWindowHandlers({ onTrayChanged } = {}) {
   ipcMain.on('transControls', (event, isTrans) => setTitleBarOverlay(isTrans))
 
   ipcMain.on('setOnTop', (event, bool) => {
-    if (win && !win.isDestroyed()) win.setAlwaysOnTop(Boolean(bool))
+    getWindow()?.setAlwaysOnTop(Boolean(bool))
   })
 
   ipcMain.on('close-window', hideOrMinimizeWindow)
@@ -440,7 +454,7 @@ export function setupWindowHandlers({ onTrayChanged } = {}) {
     })
   })
 
-  ipcMain.handle('isMaximized', () => (win && !win.isDestroyed() ? win.isMaximized() : false))
+  ipcMain.handle('isMaximized', () => getWindow()?.isMaximized() ?? false)
 
   ipcMain.handle('resetSize', (event, appWrapperWidth, appWrapperHeight, pageListWidth) => {
     resetSize(appWrapperWidth, appWrapperHeight, pageListWidth)
@@ -464,9 +478,7 @@ export function setupWindowHandlers({ onTrayChanged } = {}) {
   })
 
   ipcMain.on('openDevTools', () => {
-    if (win && !win.isDestroyed() && win.webContents) {
-      win.webContents.openDevTools()
-    }
+    getWindow()?.webContents?.openDevTools()
   })
 
   ipcMain.on('openLogs', openMainLog)
