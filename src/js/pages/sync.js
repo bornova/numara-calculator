@@ -38,12 +38,12 @@ export function updateSyncUiState(enabled, dirPath = '') {
 
   if (dom.selectSyncDirButton) {
     if (dirPath) {
-      const safePath = escapeHTML(dirPath).replaceAll(';', '&#59;')
-
       dom.selectSyncDirButton.textContent = dirPath
-      dom.selectSyncDirButton.setAttribute('uk-tooltip', `title: ${safePath}; pos: bottom`)
+      dom.selectSyncDirButton.title = dirPath
+      dom.selectSyncDirButton.setAttribute('uk-tooltip', 'pos: bottom')
     } else {
       dom.selectSyncDirButton.textContent = 'Choose Folder'
+      dom.selectSyncDirButton.removeAttribute('title')
       dom.selectSyncDirButton.removeAttribute('uk-tooltip')
     }
   }
@@ -135,7 +135,9 @@ export function clearSyncCache() {
  * @returns {Promise<boolean>} Resolves to true if the directory exists, otherwise false.
  */
 export async function checkSyncDir() {
-  if (!isSyncActive()) return false
+  if (!isSyncActive()) {
+    return false
+  }
 
   try {
     const exists = await numara.checkSyncDirectory(app.settings.syncDir)
@@ -268,7 +270,11 @@ export async function triggerFolderSync() {
 
       const localPage = pages.find((p) => getSyncKey(p.name) === syncKey)
 
-      if (localPage && localPage.name !== sanitizedName) {
+      if (
+        localPage &&
+        localPage.name !== sanitizedName &&
+        getSafeFilename(localPage.name) !== getSafeFilename(sanitizedName)
+      ) {
         localPage.name = sanitizedName
         renamedPageNames.set(localPage.id, sanitizedName)
         modified = true
@@ -406,7 +412,9 @@ export async function triggerFolderSync() {
 
       store.set('pages', mergedPages)
 
-      if (mergedPages.length === 0) {
+      if (!app.activePage && !activePageDeleted) {
+        // Pre-initializePages startup sync: initializePages() will load and calculate the initial page.
+      } else if (mergedPages.length === 0) {
         app.activePage = null
         defaultPage()
       } else if (activePageDeleted) {
@@ -503,12 +511,11 @@ export async function syncPageRename(oldName, newName) {
       lastSyncContent.delete(oldSyncKey)
       lastSyncContent.set(newSyncKey, content)
 
-      await numara.renameSyncFile(dirPath, getSafeFilename(oldName), getSafeFilename(newName))
-
+      const renamed = await numara.renameSyncFile(dirPath, getSafeFilename(oldName), getSafeFilename(newName))
       const page = (store.get('pages') || []).find((p) => getSyncKey(p.name) === newSyncKey)
 
-      if (page && (page.data || '') !== content) {
-        await syncPageSave(newName, page.data)
+      if (!renamed || (page && (page.data || '') !== content)) {
+        await syncPageSave(newName, page?.data ?? content)
       }
     },
     () => lastSyncContent.delete(newSyncKey)
