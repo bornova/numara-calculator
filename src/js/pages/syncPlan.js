@@ -12,14 +12,15 @@ import { getSyncKey, sanitizePageName } from '../core/utils.js'
  * @returns {Array<{ page: object, file: object, oldSyncKey: string, newSyncKey: string, sanitizedName: string }>}
  */
 export function detectExternalRenames({ pages, files, lastSyncContent, activePageId = null }) {
-  const diskSyncKeys = new Set(files.map((f) => getSyncKey(f.name)))
+  const getFileSyncKey = (f) => getSyncKey(sanitizePageName(f.name, 'Untitled'))
+  const diskSyncKeys = new Set(files.map(getFileSyncKey))
   const existingSyncKeys = new Set(pages.map((p) => getSyncKey(p.name)))
   const missingSyncedPages = pages.filter((p) => {
     const key = getSyncKey(p.name)
 
     return lastSyncContent.has(key) && !diskSyncKeys.has(key)
   })
-  const unmatchedNewFiles = files.filter((f) => !existingSyncKeys.has(getSyncKey(f.name)))
+  const unmatchedNewFiles = files.filter((f) => !existingSyncKeys.has(getFileSyncKey(f)))
   const matchedMissingIds = new Set()
   const matchedNewFileSyncKeys = new Set()
   const detectedRenames = []
@@ -49,7 +50,7 @@ export function detectExternalRenames({ pages, files, lastSyncContent, activePag
   }
 
   const remainingMissing = missingSyncedPages.filter((p) => !matchedMissingIds.has(p.id))
-  const remainingNewFiles = unmatchedNewFiles.filter((f) => !matchedNewFileSyncKeys.has(getSyncKey(f.name)))
+  const remainingNewFiles = unmatchedNewFiles.filter((f) => !matchedNewFileSyncKeys.has(getFileSyncKey(f)))
 
   if (remainingMissing.length === 1 && remainingNewFiles.length === 1) {
     recordRename(remainingMissing[0], remainingNewFiles[0])
