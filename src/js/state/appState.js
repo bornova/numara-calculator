@@ -1,3 +1,5 @@
+export const DEFAULT_INPUT_WIDTH = 60
+
 /**
  * Default application settings.
  */
@@ -18,7 +20,6 @@ export const DEFAULT_SETTINGS = {
   expUpper: '12',
   fontSize: '14px',
   fontWeight: '400',
-  inputWidth: 60,
   keywordTips: true,
   lineErrors: false,
   lineHeight: '26px',
