@@ -41,17 +41,23 @@ let lastProcessedCurrencies = null
  * @returns {boolean}
  */
 function isSameCurrencies(a, b) {
-  if (!a || !b) return false
+  if (!a || !b) {
+    return false
+  }
 
   const keysA = Object.keys(a)
   const keysB = Object.keys(b)
 
-  if (keysA.length !== keysB.length) return false
+  if (keysA.length !== keysB.length) {
+    return false
+  }
 
   for (let i = 0; i < keysA.length; i++) {
     const key = keysA[i]
 
-    if (!b[key] || a[key].rate !== b[key].rate || a[key].symbol !== b[key].symbol) return false
+    if (!b[key] || a[key].rate !== b[key].rate || a[key].symbol !== b[key].symbol) {
+      return false
+    }
   }
 
   return true
@@ -91,7 +97,9 @@ export function refreshCurrencyState(currencies) {
     app.currencies = currencies
   }
 
-  if (app.currencies === lastProcessedCurrencies) return false
+  if (app.currencies === lastProcessedCurrencies) {
+    return false
+  }
 
   if (lastProcessedCurrencies && isSameCurrencies(app.currencies, lastProcessedCurrencies)) {
     lastProcessedCurrencies = app.currencies
@@ -156,12 +164,13 @@ export function refreshCurrencyState(currencies) {
       return `${prefix}${escapeRegExp(symbol)}${suffix}`
     })
 
+  const escapedCodes = codes.map(escapeRegExp).join('|')
+  const formattedNumPattern = "-?(?:\\d{1,3}(?:[.,'\\u00A0\\u202F\\u2009 ]\\d{3})+|\\d+)(?:[.,]\\d+)?(?:e[+-]?\\d+)?"
+
   currencySymbolsRegex = symbolPatterns.length
     ? new RegExp(`(${numPattern})|(${symbolPatterns.join('|')})`, 'gu')
     : null
-  currencyFormatRegex = codes.length
-    ? new RegExp(`(-?\\d[\\d.,'\\u00A0\\u202F\\u2009 ]*(?:e[+-]?\\d+)?)\\s*\\b(${codes.join('|')})\\b`, 'gi')
-    : null
+  currencyFormatRegex = codes.length ? new RegExp(`(${formattedNumPattern})\\s*\\b(${escapedCodes})\\b`, 'gi') : null
 
   return true
 }
