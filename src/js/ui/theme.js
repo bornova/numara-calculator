@@ -8,9 +8,22 @@ import { initStoreObject, store } from '../state/store.js'
 import { confirm, modal } from './dialogs.js'
 
 const COLOR_INPUT_SELECTOR = '.colorInput'
+const HEX_COLOR_REGEX = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/
 
 let colorInputs = []
 let activePicker = null
+
+/**
+ * Validates a hex color string and falls back to `fallback` if invalid.
+ * @param {unknown} value Candidate color string.
+ * @param {string} fallback Default hex color.
+ * @returns {string}
+ */
+function sanitizeHexColor(value, fallback) {
+  const trimmed = typeof value === 'string' ? value.trim() : ''
+
+  return HEX_COLOR_REGEX.test(trimmed) ? trimmed : fallback
+}
 
 /**
  * Renders a single light/dark color-picker row for a syntax token category.
@@ -99,7 +112,12 @@ export const colors = {
     colorInputs = dom.els(COLOR_INPUT_SELECTOR)
 
     colorInputs.forEach((picker) => {
-      picker.value = app.colors[picker.dataset.class][picker.dataset.theme]
+      const cls = picker.dataset.class
+      const theme = picker.dataset.theme
+      const safeVal = sanitizeHexColor(app.colors[cls]?.[theme], colors.defaults[cls][theme])
+
+      app.colors[cls][theme] = safeVal
+      picker.value = safeVal
 
       picker.addEventListener('click', (event) => {
         activePicker = event.target
@@ -109,8 +127,8 @@ export const colors = {
       picker.addEventListener('close', () => {
         clearTimeout(colorChangeTimeout)
 
-        if (!picker.value.trim()) {
-          picker.value = colors.defaults[picker.dataset.class][picker.dataset.theme]
+        if (!HEX_COLOR_REGEX.test(picker.value.trim())) {
+          picker.value = colors.defaults[cls][theme]
           picker.dispatchEvent(new Event('input', { bubbles: true }))
         }
 
@@ -181,12 +199,18 @@ export const colors = {
   apply: () => {
     if (!app.colors) return
 
+    const getSafePair = (key, c) => {
+      const def = colors.defaults[key]
+
+      return `${c.class} { color: light-dark(${sanitizeHexColor(c.light, def.light)}, ${sanitizeHexColor(c.dark, def.dark)}); }`
+    }
+
     const sheet = app.settings.syntax
-      ? Object.values(app.colors)
-          .filter((c) => c.title !== 'Plain')
-          .map((c) => `${c.class} { color: light-dark(${c.light}, ${c.dark}); }`)
+      ? Object.entries(app.colors)
+          .filter(([key]) => key !== 'plain' && colors.defaults[key])
+          .map(([key, c]) => getSafePair(key, c))
           .join('\n')
-      : `${app.colors.plain.class} { color: light-dark(${app.colors.plain.light}, ${app.colors.plain.dark}); }`
+      : getSafePair('plain', app.colors.plain)
 
     dom.colorSheet.textContent = sheet
   },
@@ -198,7 +222,7 @@ export const colors = {
     colorInputs.forEach((picker) => {
       const cls = picker.dataset.class
       const theme = picker.dataset.theme
-      const nextVal = picker.value.trim() || colors.defaults[cls][theme]
+      const nextVal = sanitizeHexColor(picker.value, colors.defaults[cls][theme])
 
       if (picker.value !== nextVal) {
         picker.value = nextVal
