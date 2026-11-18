@@ -22,10 +22,16 @@ files:
   - build
   - src/electron/**/*
   - '!**/*.map'
+  - '!build/sw.js'
+  - '!build/numara.webmanifest'
+  - '!build/assets/background.png'
+  - '!build/assets/icon.icns'
+  - '!build/assets/numara.png'
 
 # Linux configuration
 linux:
   category: Utility
+  syncDesktopName: true
   target:
     - AppImage
     - deb
@@ -57,3 +63,4 @@ fileAssociations:
     name: Numara Document
     role: Editor
     description: Numara calculation file
+    mimeType: application/x-numara
