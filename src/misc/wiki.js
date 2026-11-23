@@ -327,7 +327,7 @@ function generateSettingsWiki() {
   For example, \`'2+3'\`, \`parse('2+3')\`, \`range('1:10')\`, and \`unit('5cm')\` use the numeric output setting, whereas \`sqrt(4)\` will always return the number \`2\` regardless of the setting because the input is a number.
 
   - \`Number\` (Default): Standard JavaScript double-precision (\`64-bit\` floating-point) numbers.
-  - \`BigNumber\`: Arbitrary-precision decimal numbers with higher precision than standard JavaScript numbers. *(Caution: Using \`BigNumber\` is not compatible with function plotting or some Math.js functions and may affect performance.)*
+  - \`BigNumber\`: Arbitrary-precision decimal numbers with higher precision than standard JavaScript numbers. *(Caution: Using \`BigNumber\` may break function plotting for some expressions, is not compatible with some Math.js functions, and may affect performance.)*
   - \`Fraction\`: Exact rational numbers stored in terms of a numerator and denominator (e.g. \`1/3 + 1/6\` outputs \`1/2\`).
 
 \`Matrix type\` Matrix (Default) | Array
@@ -464,7 +464,7 @@ function generateShortcutsWiki() {
 
 /** Generate Known issues wiki page */
 function generateKnownIssuesWiki() {
-  const knownIssuesWiki = `#### Known issues as of 2026-05-14
+  const knownIssuesWiki = `#### Known issues as of 2026-11-23
 - Microsoft SwiftKey backspace button does not move cursor to previous line when cursor reaches the beginning of a line ([#183](https://github.com/bornova/numara-calculator/issues/183))
 `
 
