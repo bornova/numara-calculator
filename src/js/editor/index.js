@@ -17,6 +17,23 @@ let previousActiveLine = -1
 /** Main calculator CodeMirror instance. */
 export let cm = null
 
+/** User-defined function body CodeMirror instance. */
+export let udfEditor = null
+
+/** User-defined functions raw JS CodeMirror instance. */
+export let udfCodeEditor = null
+
+/** User-defined units raw JS CodeMirror instance. */
+export let uduCodeEditor = null
+
+/**
+ * Returns all initialized JavaScript CodeMirror instances in the UDF/UDU modal.
+ * @returns {Array<CodeMirror>}
+ */
+export function getJsEditors() {
+  return [udfEditor, udfCodeEditor, uduCodeEditor].filter(Boolean)
+}
+
 /**
  * Forces CodeMirror editor scroll to focus line alignment at the bottom of the visible screen.
  */
@@ -93,6 +110,21 @@ function toggleComment(cmInstance) {
 }
 
 /**
+ * Highlights a JavaScript source string into `containerEl` using CodeMirror `runMode`.
+ * @param {string} code Source code to highlight.
+ * @param {HTMLElement|null} containerEl Target container element.
+ */
+export function highlightJsCode(code, containerEl) {
+  if (!containerEl) return
+
+  if (app.settings?.syntax !== false && typeof CodeMirror.runMode === 'function') {
+    CodeMirror.runMode(code, 'javascript', containerEl, { tabSize: 2 })
+  } else {
+    containerEl.textContent = code
+  }
+}
+
+/**
  * Refreshes the CodeMirror editor layout and syntax mode.
  */
 export function refreshEditor() {
@@ -100,6 +132,37 @@ export function refreshEditor() {
     cm.refresh()
     cm.setOption('mode', cm.getOption('mode'))
   })
+}
+
+function createJsEditor(textareaEl, id, onSave, extraOptions = {}) {
+  const editor = CodeMirror.fromTextArea(textareaEl, {
+    autoCloseBrackets: true,
+    extraKeys: {
+      Tab: (cmEditor) => cmEditor.replaceSelection('  '),
+      'Shift-Tab': 'indentLess',
+      'Cmd-Enter': onSave,
+      'Ctrl-Enter': onSave,
+      'Cmd-/': toggleComment,
+      'Ctrl-/': toggleComment
+    },
+    indentUnit: 2,
+    lineWrapping: true,
+    matchBrackets: { maxScanLines: 10 },
+    mode: 'javascript',
+    smartIndent: true,
+    tabSize: 2,
+    theme: 'udfu',
+    ...extraOptions
+  })
+
+  const inputField = editor.getInputField()
+  inputField.setAttribute('id', id)
+  inputField.setAttribute('name', id)
+  inputField.setAttribute('autocorrect', 'off')
+  inputField.setAttribute('autocapitalize', 'off')
+  inputField.setAttribute('spellcheck', 'false')
+
+  return editor
 }
 
 /**
@@ -240,4 +303,18 @@ export function setupEditor() {
 
   initStats(cm)
   initTooltips(cm)
+
+  if (dom.udfBodyInput) {
+    udfEditor = createJsEditor(dom.udfBodyInput, 'udfBodyCodeMirror', () => events.emit('udf:save'), {
+      viewportMargin: Infinity
+    })
+  }
+
+  if (dom.udfCodeInput) {
+    udfCodeEditor = createJsEditor(dom.udfCodeInput, 'udfCodeCodeMirror', () => events.emit('udfCode:save'))
+  }
+
+  if (dom.uduCodeInput) {
+    uduCodeEditor = createJsEditor(dom.uduCodeInput, 'uduCodeCodeMirror', () => events.emit('uduCode:save'))
+  }
 }
