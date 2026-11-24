@@ -44,6 +44,10 @@ linux:
     - deb
     - rpm
 
+# AppImage configuration
+appImage:
+  compression: gzip
+
 # macOS configuration
 mac:
   category: public.app-category.utilities
