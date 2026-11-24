@@ -994,6 +994,43 @@ export function applyUdfu(isFunc, input, force = false) {
 }
 
 /**
+ * Validates and applies user-defined functions inside the evaluation engine, rolling back on error.
+ * @param {string} input Raw compiled or legacy UDF object-body string.
+ * @returns {string[]} List of validated UDF keys.
+ */
+export function validateUdf(input) {
+  const prevInput = lastApplied.func ?? ''
+
+  clearEvaluationCache()
+
+  try {
+    const keys = applyUdfuToMath(math, input, true, udfuState, {
+      luxon: DateTime,
+      nerdamer,
+      formulajs: wrappedFormulajs
+    })
+
+    calcState.udfList = keys
+    lastApplied.func = input
+
+    return keys
+  } catch (error) {
+    try {
+      calcState.udfList = applyUdfuToMath(math, prevInput, true, udfuState, {
+        luxon: DateTime,
+        nerdamer,
+        formulajs: wrappedFormulajs
+      })
+    } catch {
+      calcState.udfList = []
+    }
+
+    lastApplied.func = prevInput
+    throw error
+  }
+}
+
+/**
  * Perform all calculation operations line-by-line.
  * @param {object} params Calculation parameters.
  * @param {string} params.activePage The active page ID.
