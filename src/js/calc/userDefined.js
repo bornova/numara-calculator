@@ -1,19 +1,24 @@
 import UIkit from 'uikit'
-import { DateTime } from 'luxon'
 
 import { math } from '../core/mathInstance.js'
-import { applyUdfuToMath, compileUdfItems, compileUduItems, RESERVED_KEYS, VALID_IDENTIFIER } from '../core/udfu.js'
+import {
+  applyUdfuToMath,
+  compileUdfItems,
+  compileUduItems,
+  formatUdfPreview,
+  RESERVED_KEYS,
+  VALID_IDENTIFIER,
+  validateUdfParams
+} from '../core/udfu.js'
 import { escapeHTML } from '../core/utils.js'
 import { dom } from '../dom.js'
-import { refreshEditor } from '../editor/index.js'
+import { highlightJsCode, refreshEditor, udfCodeEditor, udfEditor, uduCodeEditor } from '../editor/index.js'
 import { app } from '../state/appState.js'
+import { events } from '../state/events.js'
+import { parseLegacyUdf, parseLegacyUdu } from '../state/migration.js'
 import { store } from '../state/store.js'
 import { confirm, notify } from '../ui/dialogs.js'
-import { calculate, clearEvaluationCache } from './calcManager.js'
-
-if (!('DateTime' in math)) {
-  math.import({ DateTime }, { override: true })
-}
+import { calculate, clearEvaluationCache, validateUdfInWorker } from './calcManager.js'
 
 const udfuState = {
   previouslyImportedUDFs: [],
@@ -23,6 +28,84 @@ const udfuState = {
 const editingIndex = {
   func: null,
   unit: null
+}
+
+let udfuMode = 'form'
+let isSavingUdfu = false
+
+function getCodeEditor(type) {
+  return type === 'func' ? udfCodeEditor : uduCodeEditor
+}
+
+function getCodeTextarea(type) {
+  return type === 'func' ? dom.udfCodeInput : dom.uduCodeInput
+}
+
+function getCodeEditorValue(type) {
+  const editor = getCodeEditor(type)
+  const textarea = getCodeTextarea(type)
+
+  return editor ? editor.getValue() : (textarea?.value ?? '')
+}
+
+function setCodeEditorValue(type, value) {
+  const editor = getCodeEditor(type)
+  const textarea = getCodeTextarea(type)
+
+  if (editor) {
+    editor.setValue(value)
+    editor.clearHistory()
+  } else if (textarea) {
+    textarea.value = value
+  }
+}
+
+function getRawUdfuSource(type) {
+  const isFunc = type === 'func'
+  const raw = store.get(isFunc ? 'udf' : 'udu')
+
+  if (typeof raw === 'string') {
+    return raw
+  }
+
+  const items = store.get(isFunc ? 'udfItems' : 'uduItems') || []
+
+  return isFunc ? compileUdfItems(items) : compileUduItems(items)
+}
+
+function applyUdfuMode(mode, persist = false) {
+  udfuMode = mode === 'code' ? 'code' : 'form'
+
+  dom.dialogUdfu?.classList.toggle('is-code-mode', udfuMode === 'code')
+
+  dom.els('.udfuModeButton').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.udfuMode === udfuMode)
+  })
+
+  if (persist) {
+    store.set('udfuMode', udfuMode)
+  }
+}
+
+function getUdfBodyValue() {
+  return udfEditor ? udfEditor.getValue() : dom.udfBodyInput.value
+}
+
+function setUdfBodyValue(value) {
+  if (udfEditor) {
+    udfEditor.setValue(value)
+    udfEditor.clearHistory()
+  } else {
+    dom.udfBodyInput.value = value
+  }
+}
+
+function focusUdfBody() {
+  if (udfEditor) {
+    udfEditor.focus()
+  } else {
+    dom.udfBodyInput.focus()
+  }
 }
 
 /**
@@ -42,26 +125,51 @@ function getTabConfig(type) {
       clearInputs: () => {
         dom.udfNameInput.value = ''
         dom.udfParamsInput.value = ''
-        dom.udfBodyInput.value = ''
+        setUdfBodyValue('')
       },
       loadInputs: (item) => {
         dom.udfNameInput.value = item.name
         dom.udfParamsInput.value = item.params || ''
-        dom.udfBodyInput.value = item.body || ''
+        setUdfBodyValue(item.body || '')
+        requestAnimationFrame(() => udfEditor?.refresh())
       },
       renderContent: (item) => {
         const displayParams = item.params === '()' ? '' : item.params
         const signature = item.params
           ? `<strong>${escapeHTML(item.name)}</strong>(${escapeHTML(displayParams)})`
           : `<strong>${escapeHTML(item.name)}</strong>`
-        const compactBody = escapeHTML(item.body.replace(/\s+/g, ' ').trim())
+        const { isMultiline, previewCode, hiddenLineCount } = formatUdfPreview(item.body)
         const fullTitle = escapeHTML(`${item.name}${item.params ? `(${displayParams})` : ''} = ${item.body}`)
 
-        return `
-          <div class="udfuItemContent" title="${fullTitle}">
-            <span class="udfuItemSignature">${signature} = </span><span class="udfuItemCode">${compactBody}</span>
-          </div>
-        `
+        if (isMultiline) {
+          const headerSuffix = item.params ? '' : ' ='
+          const moreMarkup =
+            hiddenLineCount > 0
+              ? `<div class="udfuItemMore">+${hiddenLineCount} more ${hiddenLineCount === 1 ? 'line' : 'lines'}</div>`
+              : ''
+
+          return {
+            html: `
+              <div class="udfuItemContent udfuItemContentMultiline" title="${fullTitle}">
+                <div class="udfuItemHeader"><span class="udfuItemSignature">${signature}${headerSuffix}</span></div>
+                <div class="udfuItemCode udfuItemCodeBlock cm-s-udfu"></div>
+                ${moreMarkup}
+              </div>
+            `,
+            isMultiline: true,
+            highlightCode: previewCode
+          }
+        }
+
+        return {
+          html: `
+            <div class="udfuItemContent" title="${fullTitle}">
+              <span class="udfuItemSignature">${signature} = </span><span class="udfuItemCode cm-s-udfu"></span>
+            </div>
+          `,
+          isMultiline: false,
+          highlightCode: previewCode
+        }
       }
     }
   }
@@ -97,29 +205,41 @@ function getTabConfig(type) {
         badges.push(`<span class="udfuBadge">Prefixes: ${escapeHTML(item.prefixes)}</span>`)
       }
 
-      return `
-        <div class="udfuItemContent" title="${escapeHTML(`${item.name} = ${item.definition}`)}">
-          <span class="udfuItemSignature"><strong>${escapeHTML(item.name)}</strong> = </span><span class="udfuItemCode">${escapeHTML(item.definition)}</span>
-          ${badges.join('')}
-        </div>
-      `
+      return {
+        html: `
+          <div class="udfuItemContent" title="${escapeHTML(`${item.name} = ${item.definition}`)}">
+            <span class="udfuItemSignature"><strong>${escapeHTML(item.name)}</strong> = </span><span class="udfuItemCode">${escapeHTML(item.definition)}</span>
+            ${badges.join('')}
+          </div>
+        `,
+        isMultiline: false,
+        highlightCode: null
+      }
     }
   }
 }
 
 /**
- * Apply user defined functions or units to the main-thread Math.js instance and persist to storage.
- * @param {string} input User defined function or unit definition string.
- * @param {'func'|'unit'} type Definition type.
+ * Validates user-defined functions via Web Worker evaluation and persists to storage.
+ * @param {string} input User-defined function definition string.
+ * @returns {Promise<void>}
  */
-function applyUdfu(input, type) {
-  const isFunc = type === 'func'
-  const keys = applyUdfuToMath(math, input, isFunc, udfuState, {
-    luxon: DateTime
-  })
+async function applyUdf(input) {
+  const keys = await validateUdfInWorker(input)
 
-  app[isFunc ? 'udfList' : 'uduList'] = keys
-  store.set(isFunc ? 'udf' : 'udu', input)
+  app.udfList = keys
+  store.set('udf', input)
+}
+
+/**
+ * Applies user-defined units declaratively to the main-thread Math.js instance and persists to storage.
+ * @param {string} input User-defined unit definition string.
+ */
+function applyUdu(input) {
+  const keys = applyUdfuToMath(math, input, false, udfuState)
+
+  app.uduList = keys
+  store.set('udu', input)
 }
 
 /**
@@ -130,19 +250,19 @@ export function reapplyMainThreadUdu() {
   if (!uduSource) return
 
   try {
-    app.uduList = applyUdfuToMath(math, uduSource, false, udfuState, { luxon: DateTime })
+    app.uduList = applyUdfuToMath(math, uduSource, false, udfuState)
   } catch {
     // Ignore main-thread re-apply error
   }
 }
 
 /**
- * Updates the Add/Save button icon, label, and Cancel button visibility for a UDF/UDU form.
+ * Updates the Add/Save button icon visibility, label, and Cancel button visibility for a UDF/UDU form.
  * @param {object} cfg Tab configuration from `getTabConfig`.
  * @param {boolean} isEditing Whether the form is currently in edit mode.
  */
 function setFormEditMode({ saveIcon, saveLabel, cancelBtn }, isEditing) {
-  saveIcon.innerHTML = isEditing ? dom.icons.Save : dom.icons.Plus
+  saveIcon.style.display = isEditing ? 'none' : ''
   saveLabel.textContent = isEditing ? 'Save' : 'Add'
   cancelBtn.style.display = isEditing ? '' : 'none'
 }
@@ -184,16 +304,22 @@ function renderList(type) {
 
   items.forEach((item, index) => {
     const row = document.createElement('div')
+    const { html, isMultiline, highlightCode } = renderContent(item)
 
-    row.className = `udfuItem${activeEdit === index ? ' is-editing' : ''}`
+    row.className = `udfuItem${isMultiline ? ' is-multiline' : ''}${activeEdit === index ? ' is-editing' : ''}`
     row.dataset.udfuIndex = String(index)
     row.innerHTML = `
-      ${renderContent(item)}
+      ${html}
       <div class="udfuItemActions">
         <span class="editUdfuButton" data-action="udfu-edit" data-udfu-index="${index}" title="Edit">${dom.icons.Pencil}</span>
         <span class="deleteUdfuButton" data-action="udfu-delete" data-udfu-index="${index}" title="Delete">${dom.icons.Trash2}</span>
       </div>
     `
+
+    if (highlightCode !== null) {
+      highlightJsCode(highlightCode, row.querySelector('.udfuItemCode'))
+    }
+
     fragment.appendChild(row)
   })
 
@@ -201,42 +327,173 @@ function renderList(type) {
 }
 
 /**
- * Refreshes the User Defined Functions & Units dialog lists and resets form state.
+ * Refreshes the User Defined Functions & Units dialog lists, code editors, and active view mode.
  */
 function prepareUdfuDialog() {
+  const savedMode = store.get('udfuMode') === 'code' ? 'code' : 'form'
+
   resetForm('func')
   resetForm('unit')
   renderList('func')
   renderList('unit')
+  setCodeEditorValue('func', getRawUdfuSource('func'))
+  setCodeEditorValue('unit', getRawUdfuSource('unit'))
+  applyUdfuMode(savedMode, false)
+}
+
+/**
+ * Validates, applies, and persists raw JS UDF/declarative UDU code and syncs structured items for Form view.
+ * @param {string} rawInput Raw definition object-body string.
+ * @param {'func'|'unit'} type Definition type.
+ * @param {{ showSuccess?: boolean }} [options] Notification options.
+ * @returns {Promise<boolean>} True if applied and saved successfully.
+ */
+async function commitRawUdfu(rawInput, type, { showSuccess = true } = {}) {
+  if (isSavingUdfu) return false
+
+  isSavingUdfu = true
+
+  const isFunc = type === 'func'
+  const trimmed = rawInput.trim()
+  const prevRaw = store.get(isFunc ? 'udf' : 'udu') ?? ''
+
+  try {
+    if (isFunc) {
+      await applyUdf(trimmed)
+    } else {
+      applyUdu(trimmed)
+    }
+
+    const parsedItems = isFunc ? parseLegacyUdf(trimmed) : parseLegacyUdu(trimmed, math)
+
+    store.set(isFunc ? 'udfItems' : 'uduItems', parsedItems)
+    clearEvaluationCache()
+    refreshEditor()
+    calculate()
+    renderList(type)
+
+    if (showSuccess) {
+      notify(isFunc ? 'User-defined functions saved.' : 'User-defined units saved.')
+    }
+
+    return true
+  } catch (error) {
+    if (!isFunc) {
+      try {
+        applyUdu(prevRaw)
+      } catch {
+        // Ignore fallback error
+      }
+    }
+
+    notify(escapeHTML(error.message || 'Invalid definition.'), 'danger')
+    return false
+  } finally {
+    isSavingUdfu = false
+  }
+}
+
+async function handleSaveRawUdfu(type) {
+  await commitRawUdfu(getCodeEditorValue(type), type, { showSuccess: true })
+}
+
+function syncActiveTabFocus(udTab) {
+  const type = udTab === 1 ? 'func' : 'unit'
+
+  if (udfuMode === 'code') {
+    const codeEditor = getCodeEditor(type)
+
+    codeEditor?.refresh()
+    codeEditor?.focus()
+    return
+  }
+
+  if (udTab === 1) {
+    udfEditor?.refresh()
+  }
+
+  const focusEl = udTab === 1 ? dom.udfNameInput : dom.uduNameInput
+  focusEl?.focus()
+}
+
+async function switchUdfuMode(nextMode, udTab) {
+  if (nextMode === udfuMode || isSavingUdfu) return
+
+  if (nextMode === 'code') {
+    resetForm('func')
+    resetForm('unit')
+    renderList('func')
+    renderList('unit')
+    setCodeEditorValue('func', getRawUdfuSource('func'))
+    setCodeEditorValue('unit', getRawUdfuSource('unit'))
+    applyUdfuMode('code', true)
+    requestAnimationFrame(() => syncActiveTabFocus(udTab))
+    return
+  }
+
+  for (const type of ['func', 'unit']) {
+    const draft = getCodeEditorValue(type)
+
+    if (draft.trim() !== getRawUdfuSource(type).trim()) {
+      if (!(await commitRawUdfu(draft, type, { showSuccess: false }))) {
+        return
+      }
+    }
+  }
+
+  applyUdfuMode('form', true)
+  resetForm('func')
+  resetForm('unit')
+  renderList('func')
+  renderList('unit')
+  requestAnimationFrame(() => syncActiveTabFocus(udTab))
 }
 
 /**
  * Validates, applies, and persists an updated `udfItems` or `uduItems` array.
  * @param {Array} nextItems Updated item array.
  * @param {'func'|'unit'} type Definition type.
- * @returns {boolean} True if applied and saved successfully.
+ * @returns {Promise<boolean>} True if applied and saved successfully.
  */
-function commitUdfuItems(nextItems, type) {
+async function commitUdfuItems(nextItems, type) {
+  if (isSavingUdfu) return false
+
+  isSavingUdfu = true
+
   const isFunc = type === 'func'
-  const compiled = isFunc ? compileUdfItems(nextItems) : compileUduItems(nextItems)
-  const prevCompiled = store.get(isFunc ? 'udf' : 'udu') ?? ''
 
   try {
-    applyUdfu(compiled, type)
-    store.set(isFunc ? 'udfItems' : 'uduItems', nextItems)
-    clearEvaluationCache()
-    refreshEditor()
-    calculate()
-    return true
-  } catch (error) {
-    try {
-      applyUdfu(prevCompiled, type)
-    } catch {
-      // Ignore fallback error
-    }
+    const compiled = isFunc ? compileUdfItems(nextItems) : compileUduItems(nextItems)
+    const prevCompiled = store.get(isFunc ? 'udf' : 'udu') ?? ''
 
+    try {
+      if (isFunc) {
+        await applyUdf(compiled)
+      } else {
+        applyUdu(compiled)
+      }
+
+      store.set(isFunc ? 'udfItems' : 'uduItems', nextItems)
+      clearEvaluationCache()
+      refreshEditor()
+      calculate()
+      return true
+    } catch (error) {
+      if (!isFunc) {
+        try {
+          applyUdu(prevCompiled)
+        } catch {
+          // Ignore fallback error
+        }
+      }
+
+      throw error
+    }
+  } catch (error) {
     notify(escapeHTML(error.message || 'Invalid definition.'), 'danger')
     return false
+  } finally {
+    isSavingUdfu = false
   }
 }
 
@@ -245,7 +502,7 @@ function commitUdfuItems(nextItems, type) {
  * @param {'func'|'unit'} type Definition type.
  * @param {object} entry Entry payload to save.
  */
-function saveUdfuEntry(type, entry) {
+async function saveUdfuEntry(type, entry) {
   const { storeKey, nameInput } = getTabConfig(type)
   const items = [...(store.get(storeKey) || [])]
   const activeEdit = editingIndex[type]
@@ -262,7 +519,7 @@ function saveUdfuEntry(type, entry) {
     items.push(entry)
   }
 
-  if (commitUdfuItems(items, type)) {
+  if (await commitUdfuItems(items, type)) {
     resetForm(type)
     renderList(type)
     nameInput.focus()
@@ -272,10 +529,10 @@ function saveUdfuEntry(type, entry) {
 /**
  * Handles adding or saving a user-defined function/constant.
  */
-function handleSaveUdf() {
+async function handleSaveUdf() {
   const name = dom.udfNameInput.value.trim()
   const params = dom.udfParamsInput.value.trim()
-  const body = dom.udfBodyInput.value.trim()
+  const body = getUdfBodyValue().trim()
 
   if (!isValidUdfuIdentifier(name)) {
     notify('Please enter a valid function or constant name (letters, numbers, _, $).', 'danger')
@@ -283,19 +540,27 @@ function handleSaveUdf() {
     return
   }
 
-  if (!body) {
-    notify('Please enter an expression or function body.', 'danger')
-    dom.udfBodyInput.focus()
+  try {
+    validateUdfParams(params)
+  } catch (error) {
+    notify(escapeHTML(error.message || 'Invalid parameters.'), 'danger')
+    dom.udfParamsInput.focus()
     return
   }
 
-  saveUdfuEntry('func', { name, params, body })
+  if (!body) {
+    notify('Please enter an expression or function body.', 'danger')
+    focusUdfBody()
+    return
+  }
+
+  await saveUdfuEntry('func', { name, params, body })
 }
 
 /**
  * Handles adding or saving a user-defined unit.
  */
-function handleSaveUdu() {
+async function handleSaveUdu() {
   const name = dom.uduNameInput.value.trim()
   const definition = dom.uduDefInput.value.trim().replace(/^["']|["']$/g, '')
   const aliases = dom.uduAliasesInput.value.trim()
@@ -333,7 +598,7 @@ function handleSaveUdu() {
   if (existingItem?.offset !== undefined) extraFields.offset = existingItem.offset
   if (existingItem?.baseName) extraFields.baseName = existingItem.baseName
 
-  saveUdfuEntry('unit', { name, definition, prefixes, aliases: aliasList.join(', '), ...extraFields })
+  await saveUdfuEntry('unit', { name, definition, prefixes, aliases: aliasList.join(', '), ...extraFields })
 }
 
 /**
@@ -366,7 +631,7 @@ function deleteUdfuAt(type, index) {
 
   if (!target) return
 
-  confirm(`"${target.name}" will be deleted.`, () => {
+  confirm(`"${target.name}" will be deleted.`, async () => {
     const items = [...(store.get(storeKey) || [])]
     const targetIdx = items[index]?.name === target.name ? index : items.findIndex((item) => item.name === target.name)
 
@@ -374,7 +639,7 @@ function deleteUdfuAt(type, index) {
 
     items.splice(targetIdx, 1)
 
-    if (commitUdfuItems(items, type)) {
+    if (await commitUdfuItems(items, type)) {
       const currentEdit = editingIndex[type]
 
       if (currentEdit === targetIdx) {
@@ -425,19 +690,23 @@ function bindUdfuListEvents(listEl, type) {
  * Loads user-defined functions and units from storage and binds dialog UI events.
  */
 export function setupUserDefined() {
+  const storedUdf = store.get('udf')
+  const storedUdu = store.get('udu')
   const storedUdfItems = store.get('udfItems')
   const storedUduItems = store.get('uduItems')
-  const udfSource = Array.isArray(storedUdfItems) ? compileUdfItems(storedUdfItems) : (store.get('udf') ?? '')
-  const uduSource = Array.isArray(storedUduItems) ? compileUduItems(storedUduItems) : (store.get('udu') ?? '')
+  const udfSource =
+    typeof storedUdf === 'string' ? storedUdf : Array.isArray(storedUdfItems) ? compileUdfItems(storedUdfItems) : ''
+  const uduSource =
+    typeof storedUdu === 'string' ? storedUdu : Array.isArray(storedUduItems) ? compileUduItems(storedUduItems) : ''
 
-  try {
-    applyUdfu(udfSource, 'func')
-  } catch (error) {
-    console.error('Error loading user-defined functions:', error)
+  app.udfList = Array.isArray(storedUdfItems) ? storedUdfItems.map((item) => item?.name).filter(Boolean) : []
+
+  if (typeof storedUdf !== 'string' && udfSource) {
+    store.set('udf', udfSource)
   }
 
   try {
-    applyUdfu(uduSource, 'unit')
+    applyUdu(uduSource)
   } catch (error) {
     console.error('Error loading user-defined units:', error)
   }
@@ -468,42 +737,32 @@ export function setupUserDefined() {
   bindEnterToSave([dom.udfNameInput, dom.udfParamsInput], handleSaveUdf)
   bindEnterToSave([dom.uduNameInput, dom.uduDefInput, dom.uduAliasesInput], handleSaveUdu)
 
-  dom.udfBodyInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Tab') {
-      event.preventDefault()
+  events.on('udf:save', handleSaveUdf)
+  events.on('udfCode:save', () => handleSaveRawUdfu('func'))
+  events.on('uduCode:save', () => handleSaveRawUdfu('unit'))
 
-      const start = dom.udfBodyInput.selectionStart
-      const end = dom.udfBodyInput.selectionEnd
-
-      dom.udfBodyInput.setRangeText('  ', start, end, 'end')
-    } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-      event.preventDefault()
-      handleSaveUdf()
-    }
-  })
+  dom.udfCodeSaveButton?.addEventListener('click', () => handleSaveRawUdfu('func'))
+  dom.uduCodeSaveButton?.addEventListener('click', () => handleSaveRawUdfu('unit'))
 
   bindUdfuListEvents(dom.udfList, 'func')
   bindUdfuListEvents(dom.uduList, 'unit')
 
   let udTab = 1
 
+  dom.els('.udfuModeButton').forEach((btn) => {
+    btn.addEventListener('click', () => switchUdfuMode(btn.dataset.udfuMode, udTab))
+  })
+
   UIkit.util.on('#dialogUdfu', 'beforeshow', prepareUdfuDialog, { self: true })
 
-  UIkit.util.on(
-    '#dialogUdfu',
-    'shown',
-    () => {
-      ;(udTab === 1 ? dom.udfNameInput : dom.uduNameInput)?.focus()
-    },
-    { self: true }
-  )
+  UIkit.util.on('#dialogUdfu', 'shown', () => syncActiveTabFocus(udTab), { self: true })
 
   UIkit.util.on(
     '#udfTab, #uduTab',
     'shown',
     (event) => {
       udTab = event.target.id === 'udfTab' ? 1 : 2
-      ;(udTab === 1 ? dom.udfNameInput : dom.uduNameInput)?.focus()
+      syncActiveTabFocus(udTab)
     },
     { self: true }
   )
