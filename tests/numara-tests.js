@@ -9,7 +9,13 @@ import { INTERNAL_SCOPE_KEYS, isInternalScopeKey } from '../src/js/core/constant
 import { runCalculation, applyUdfu } from '../src/js/core/evaluator.js'
 import { formatAnswer, parseLocaleNumber, parseStrictLocaleNumber } from '../src/js/core/formatter.js'
 import { stripComments } from '../src/js/core/preprocessor.js'
-import { applyUdfuToMath, compileUdfItems, compileUduItems } from '../src/js/core/udfu.js'
+import {
+  applyUdfuToMath,
+  compileUdfItems,
+  compileUduItems,
+  formatUdfPreview,
+  validateUdfParams
+} from '../src/js/core/udfu.js'
 import { debounce, escapeHTML, escapeRegExp, getSafeFilename, isCommaDecimal } from '../src/js/core/utils.js'
 import { dom, resetDomCache } from '../src/js/dom.js'
 import { currencyCodeTokens, refreshCurrencyTokens } from '../src/js/editor/constants.js'
@@ -2271,6 +2277,125 @@ describe('Module Graph & Lazy DOM Architecture', () => {
       assert.strictEqual(renames.length, 1)
       assert.strictEqual(renames[0].sanitizedName, 'Budget')
       assert.strictEqual(renames[0].newSyncKey, 'budget')
+    })
+
+    it('formats single-line and dedented multi-line UDF previews cleanly', () => {
+      assert.deepStrictEqual(formatUdfPreview('  x * 2  '), {
+        isMultiline: false,
+        previewCode: 'x * 2',
+        hiddenLineCount: 0
+      })
+
+      assert.deepStrictEqual(formatUdfPreview('\n\n   return a + b   \r\n\n'), {
+        isMultiline: false,
+        previewCode: 'return a + b',
+        hiddenLineCount: 0
+      })
+
+      assert.deepStrictEqual(formatUdfPreview(null), {
+        isMultiline: false,
+        previewCode: '',
+        hiddenLineCount: 0
+      })
+
+      const indentedBody = [
+        '',
+        '    // Check positive input',
+        '    if (x > 0) {',
+        '      const scaled = x * 3  ',
+        '',
+        '      return scaled',
+        '    }',
+        '    return 0',
+        ''
+      ].join('\r\n')
+
+      assert.deepStrictEqual(formatUdfPreview(indentedBody), {
+        isMultiline: true,
+        previewCode: ['// Check positive input', 'if (x > 0) {', '  const scaled = x * 3', ''].join('\n'),
+        hiddenLineCount: 3
+      })
+
+      assert.deepStrictEqual(formatUdfPreview('  if (x) {\n    return 1\n  }\n  return 0', 4), {
+        isMultiline: true,
+        previewCode: 'if (x) {\n  return 1\n}\nreturn 0',
+        hiddenLineCount: 0
+      })
+    })
+
+    it('keeps Linux AppImage startup fast by avoiding xz compression', () => {
+      const builderConfig = fs.readFileSync(path.join(process.cwd(), 'electron-builder.yml'), 'utf8')
+      const hasMaxCompression = /^compression:\s*maximum\s*$/m.test(builderConfig)
+      const hasStaticAppImageToolset = /^toolsets:\s*[\r\n]+(?:[ \t]+.+\r?\n)*?[ \t]+appimage:/m.test(builderConfig)
+
+      if (hasMaxCompression && !hasStaticAppImageToolset) {
+        assert.match(
+          builderConfig,
+          /^appImage:\s*\r?\n(?:[ \t]+(?:#.*|[^:\s]+:.*)\r?\n)*?[ \t]+compression:\s*gzip\s*$/m
+        )
+      }
+    })
+
+    it('blocks UDF param injection and removes main-thread UDF evaluation', () => {
+      assert.deepStrictEqual(validateUdfParams(''), { isZeroArg: false, cleanParams: '' })
+      assert.deepStrictEqual(validateUdfParams('()'), { isZeroArg: true, cleanParams: '' })
+      assert.deepStrictEqual(validateUdfParams('(a, b)'), { isZeroArg: false, cleanParams: 'a, b' })
+      assert.deepStrictEqual(validateUdfParams('x, ...rest'), { isZeroArg: false, cleanParams: 'x, ...rest' })
+
+      for (const badParams of ['x) => 1, evil: (', 'x = 1', 'a, a', 'constructor', '{a}', '...a, b']) {
+        assert.throws(() => validateUdfParams(badParams))
+        assert.throws(() => compileUdfItems([{ name: 'fn', params: badParams, body: '1' }]))
+      }
+
+      const userDefinedSrc = fs.readFileSync(path.join(process.cwd(), 'src/js/calc/userDefined.js'), 'utf8')
+      assert.strictEqual(/\bevalUdfuObject\b/.test(userDefinedSrc), false)
+      assert.strictEqual(/applyUdfuToMath\([^)]*,\s*true\b/.test(userDefinedSrc), false)
+    })
+
+    it('migrates legacy shorthand UDF methods with non-simple parameters without throwing', () => {
+      const sourceParsed = parseLegacyUdf('f(x = 1) { return x * 2 }')
+      assert.strictEqual(sourceParsed.length, 1)
+      assert.strictEqual(sourceParsed[0].params, '')
+      const sourceCompiled = compileUdfItems(sourceParsed)
+
+      applyUdfu(true, sourceCompiled)
+      const sourceCalc = runCalculation({
+        activePage: 'test-legacy-default-param-source',
+        lines: ['f()', 'f(5)'],
+        settings: defaultSettings,
+        currencies: mockCurrencies
+      })
+      assert.deepStrictEqual(
+        sourceCalc.answers.map((h) => extractAnswer(h).answer),
+        ['2', '10']
+      )
+
+      const fallbackParsed = parseLegacyUdf('get _k() { return 1 }, f(x = 1) { return x * 2 }')
+      const fallbackItem = fallbackParsed.find((item) => item.name === 'f')
+      assert.ok(fallbackItem)
+      assert.strictEqual(fallbackItem.params, '')
+      const fallbackCompiled = compileUdfItems(fallbackParsed)
+
+      applyUdfu(true, fallbackCompiled)
+      const fallbackCalc = runCalculation({
+        activePage: 'test-legacy-default-param-fallback',
+        lines: ['f()', 'f(5)'],
+        settings: defaultSettings,
+        currencies: mockCurrencies
+      })
+      assert.deepStrictEqual(
+        fallbackCalc.answers.map((h) => extractAnswer(h).answer),
+        ['2', '10']
+      )
+      applyUdfu(true, '')
+
+      withMockLocalStorage((storage) => {
+        storage.set('numara', JSON.stringify({ udf: 'f(x = 1) { return x * 2 }' }))
+        assert.doesNotThrow(() => migrateAppState())
+        assert.strictEqual(store.get('udfItems')?.[0]?.name, 'f')
+        assert.strictEqual(store.get('udfItems')?.[0]?.params, '')
+        assert.match(store.get('udf') || '', /function f\(x = 1\)/)
+      })
     })
   })
 })
