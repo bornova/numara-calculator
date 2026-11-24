@@ -225,7 +225,7 @@ export function initializeContextMenus() {
   document.addEventListener('contextmenu', (event) => {
     if (
       event.target.closest?.(
-        '.domainTextBox, .udfuInput, .udfuTextarea, .search-input, .pageListRenameInput, .pageTabRenameInput, .clr-color'
+        '.domainTextBox, .udfuInput, .udfuTextarea, .cm-s-udfu, .search-input, .pageListRenameInput, .pageTabRenameInput, .clr-color'
       )
     ) {
       textboxContext()
