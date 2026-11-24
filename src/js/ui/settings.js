@@ -7,10 +7,10 @@ import { reapplyMainThreadUdu } from '../calc/userDefined.js'
 import { refreshCurrencyState } from '../core/mathInstance.js'
 import { isCommaDecimal } from '../core/utils.js'
 import { dom } from '../dom.js'
-import { cm } from '../editor/index.js'
+import { cm, getJsEditors } from '../editor/index.js'
 import { clearSyncCache, triggerFolderSync, updateSyncUiState } from '../pages/sync.js'
 import { app, DEFAULT_INPUT_WIDTH, DEFAULT_SETTINGS, SETTING_SELECT_OPTIONS } from '../state/appState.js'
-import { DEFAULT_APP_HEIGHT, DEFAULT_APP_WIDTH, isElectron, isLinux, isMac } from '../state/env.js'
+import { DEFAULT_APP_HEIGHT, DEFAULT_APP_WIDTH, isElectron, isLinux, isMac, isMobile } from '../state/env.js'
 import { initStoreObject, store } from '../state/store.js'
 import { confirm, modal, showError } from './dialogs.js'
 import { checkSize, getDockedPageListWidth, setupPageList } from './pageList.js'
@@ -268,13 +268,18 @@ function applyAnswerPositionLayout() {
 
 export const settings = {
   /** Default settings. */
-  defaults: DEFAULT_SETTINGS,
+  defaults: isMobile ? { ...DEFAULT_SETTINGS, pageListPosition: 'float' } : DEFAULT_SETTINGS,
 
   /** Initialize settings. */
   initialize: async () => {
     setupSettingsEvents()
 
     app.settings = initStoreObject('settings', settings.defaults)
+
+    if (isMobile && (app.settings.pageListPosition === 'dock' || app.settings.pageListPosition === 'auto')) {
+      app.settings.pageListPosition = 'float'
+      store.set('settings', app.settings)
+    }
 
     dom.els('.settingItem').forEach((item) => {
       const id = item.getAttribute('id')
@@ -308,7 +313,9 @@ export const settings = {
     })
 
     for (const [id, options] of Object.entries(SETTING_SELECT_OPTIONS)) {
-      populateSelect(dom[id], options)
+      const selectOptions =
+        isMobile && id === 'pageListPosition' ? options.filter(([val]) => val !== 'auto' && val !== 'dock') : options
+      populateSelect(dom[id], selectOptions)
     }
 
     dom.els('#alwaysOnTopContainer, #showTrayContainer, #escToCloseContainer, #syncTab').forEach((el) => {
@@ -427,6 +434,15 @@ export const settings = {
     cm.setOption('lineWrapping', app.settings.lineWrap)
     cm.setOption('matchBrackets', app.settings.syntax && app.settings.matchBrackets ? { maxScanLines: 1 } : false)
     cm.setOption('autoCloseBrackets', app.settings.closeBrackets)
+
+    for (const editor of getJsEditors()) {
+      editor.setOption('mode', app.settings.syntax ? 'javascript' : 'plain')
+      editor.setOption(
+        'matchBrackets',
+        app.settings.syntax && app.settings.matchBrackets ? { maxScanLines: 10 } : false
+      )
+      editor.setOption('autoCloseBrackets', app.settings.closeBrackets)
+    }
 
     clearInterval(updateInterval)
 
