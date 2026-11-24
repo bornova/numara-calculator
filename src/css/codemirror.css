@@ -32,7 +32,7 @@
   background: light-dark(#c9e0f7, #193552) !important;
 }
 
-body.numara-search-panel-open .CodeMirror-selected {
+body.numara-search-panel-open .cm-s-numara .CodeMirror-selected {
   background: light-dark(#ffb74d, #f2a104) !important;
 }
 
@@ -235,8 +235,8 @@ body.numara-search-panel-open .CodeMirror-selected {
   color: light-dark(#444444, #e6e6e6);
   font-weight: 500;
   font-size: inherit;
-  font-family: inherit;
   line-height: 1;
+  font-family: inherit;
 }
 
 .search-action-btn:hover {
@@ -282,10 +282,81 @@ li.CodeMirror-hint-active {
 }
 
 /* Inline operator spacing */
-.cm-operator::before {
+.cm-s-numara .cm-operator::before {
   display: inline-block;
   width: 0;
   content: ' ';
+}
+
+/* UDF dialog JavaScript syntax theme */
+.cm-s-udfu .CodeMirror-selected,
+.cm-s-udfu.CodeMirror-focused .CodeMirror-selected {
+  background: light-dark(#c9e0f7, #193552) !important;
+}
+
+.cm-s-udfu .CodeMirror-scrollbar-filler,
+.cm-s-udfu .CodeMirror-gutter-filler {
+  background-color: light-dark(#ffffff, #1a1a1a);
+}
+
+div.CodeMirror.cm-s-udfu span.CodeMirror-matchingbracket {
+  color: light-dark(#1e87f0, #58a6ff);
+  font-weight: 600;
+}
+
+div.CodeMirror.cm-s-udfu span.CodeMirror-nonmatchingbracket {
+  color: light-dark(#b10e0e, #d41111);
+}
+
+.cm-s-udfu .cm-keyword {
+  color: light-dark(#6f42c1, #cb82f5);
+}
+
+.cm-s-udfu .cm-atom {
+  color: light-dark(#be6317, #e78c3f);
+}
+
+.cm-s-udfu .cm-number {
+  color: light-dark(#be6317, #f78c6c);
+}
+
+.cm-s-udfu .cm-def,
+.cm-s-udfu .cm-variable-2 {
+  color: light-dark(#005cc5, #7cc0ff);
+}
+
+.cm-s-udfu .cm-variable {
+  color: light-dark(#244061, #96b4c4);
+}
+
+.cm-s-udfu .cm-variable-3,
+.cm-s-udfu .cm-type,
+.cm-s-udfu .cm-property,
+.cm-s-udfu .cm-builtin,
+.cm-s-udfu .cm-meta {
+  color: light-dark(#1f7a68, #39baa0);
+}
+
+.cm-s-udfu .cm-operator {
+  color: light-dark(#777777, #bbbbbb);
+}
+
+.cm-s-udfu .cm-comment {
+  color: light-dark(#8c8c8c, #727272);
+  font-style: italic;
+}
+
+.cm-s-udfu .cm-string,
+.cm-s-udfu .cm-string-2 {
+  color: light-dark(#197b43, #3cc383);
+}
+
+.cm-s-udfu .cm-error {
+  color: light-dark(#b10e0e, #d41111);
+}
+
+.cm-s-udfu .cm-plain {
+  color: light-dark(#333333, #e6e6e6);
 }
 
 /* CodeMirror Fold Gutter styling */
