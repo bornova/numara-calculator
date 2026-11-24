@@ -5,7 +5,14 @@ import { dom } from '../dom.js'
 import { cm } from '../editor/index.js'
 import { updatePageTabsScroll } from '../pages/pageTabs.js'
 import { app } from '../state/appState.js'
-import { DEFAULT_APP_HEIGHT, DEFAULT_APP_WIDTH, isElectron, MIN_APP_HEIGHT, MIN_APP_WIDTH } from '../state/env.js'
+import {
+  DEFAULT_APP_HEIGHT,
+  DEFAULT_APP_WIDTH,
+  isElectron,
+  isMobile,
+  MIN_APP_HEIGHT,
+  MIN_APP_WIDTH
+} from '../state/env.js'
 import { events } from '../state/events.js'
 import { store } from '../state/store.js'
 import { hideFloatingPageList, modal, syncModalOpenState } from './dialogs.js'
@@ -209,7 +216,7 @@ function setupPageList(show = false, fromResize = false) {
   const viewportWidth = window.visualViewport?.width ?? window.innerWidth
   const isWide = viewportWidth > 900
   const isTabs = pageListPosition === 'tabs'
-  const dock = pageListPosition === 'dock' || (pageListPosition === 'auto' && isWide)
+  const dock = !isMobile && (pageListPosition === 'dock' || (pageListPosition === 'auto' && isWide))
   const dockChanged = dock !== lastDockState
   const shouldAnimateDockChange = lastDockState !== null && dockChanged
   const shouldResizeWindow = shouldAnimateDockChange && !fromResize
@@ -234,7 +241,7 @@ function setupPageList(show = false, fromResize = false) {
   dom.newPageButton.style.display = dock ? 'none' : ''
 
   if (dom.dockPageListButton) {
-    const showDockButton = !isWide && (pageListPosition === 'auto' || pageListPosition === 'dock')
+    const showDockButton = !isMobile && !isWide && (pageListPosition === 'auto' || pageListPosition === 'dock')
 
     dom.dockPageListButton.style.display = showDockButton ? '' : 'none'
     dom.dockPageListButton.innerHTML = dock ? dom.icons.PanelLeftClose : dom.icons.PanelLeft
@@ -345,6 +352,8 @@ function initializePageList() {
   events.on('pages:populated', updatePageListScroll)
 
   dom.dockPageListButton?.addEventListener('click', () => {
+    if (isMobile) return
+
     app.settings.pageListPosition = app.pageListDocked ? 'auto' : 'dock'
     store.set('settings', app.settings)
     setupPageList(true)
