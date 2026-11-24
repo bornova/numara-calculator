@@ -442,6 +442,90 @@ app.whenReady().then(async () => {
           throw new Error('Expected pageListPanel to undock automatically when viewport <= 900px')
         }
         await webWin.setSize(1080, 760)
+
+        // Mobile: verify docked mode and toggle are disabled even on wide viewports
+        const mobileSession = session.fromPartition('numara-mobile-e2e')
+        mockExternalHttps(mobileSession)
+
+        const mobileWin = new BrowserWindow({
+          width: 1000,
+          height: 700,
+          show: false,
+          webPreferences: {
+            session: mobileSession,
+            contextIsolation: true,
+            nodeIntegration: false,
+            sandbox: true
+          }
+        })
+
+        mobileWin.webContents.setUserAgent(
+          'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+        )
+
+        try {
+          await mobileWin.loadURL(`${serverOrigin}/index.html`)
+
+          await evalIn(mobileWin, async () => {
+            const start = Date.now()
+            while (!document.querySelector('.pageListItem') && Date.now() - start < 8000) {
+              await new Promise((r) => setTimeout(r, 40))
+            }
+            localStorage.setItem('numara', JSON.stringify({ settings: { pageListPosition: 'dock' } }))
+          })
+
+          await mobileWin.loadURL(`${serverOrigin}/index.html`)
+
+          const mobileChecks = await evalIn(mobileWin, async () => {
+            const start = Date.now()
+            while (
+              !(document.querySelector('#pageListPosition option') && document.querySelector('.pageListItem')) &&
+              Date.now() - start < 8000
+            ) {
+              await new Promise((r) => setTimeout(r, 40))
+            }
+
+            const raw = JSON.parse(localStorage.getItem('numara') || '{}')
+            const select = document.getElementById('pageListPosition')
+
+            return {
+              isDocked: document.getElementById('pageListPanel').classList.contains('page-list-docked'),
+              dockButtonDisplay: document.getElementById('dockPageListButton').style.display,
+              optionValues: [...select.options].map((o) => o.value),
+              selectValue: select.value,
+              modDisplay: document.getElementById('pageListPositionMod').style.display,
+              storedPosition: raw.settings?.pageListPosition
+            }
+          })
+
+          if (
+            mobileChecks.isDocked ||
+            mobileChecks.dockButtonDisplay !== 'none' ||
+            JSON.stringify(mobileChecks.optionValues) !== JSON.stringify(['float', 'tabs']) ||
+            mobileChecks.selectValue !== 'float' ||
+            mobileChecks.modDisplay !== 'none' ||
+            mobileChecks.storedPosition !== 'float'
+          ) {
+            throw new Error(`Mobile pageListPosition checks failed: ${JSON.stringify(mobileChecks)}`)
+          }
+
+          await mobileWin.setSize(420, 700)
+
+          const mobileNarrowChecks = await evalIn(mobileWin, async () => {
+            await new Promise((r) => setTimeout(r, 200))
+
+            return {
+              isDocked: document.getElementById('pageListPanel').classList.contains('page-list-docked'),
+              dockButtonDisplay: document.getElementById('dockPageListButton').style.display
+            }
+          })
+
+          if (mobileNarrowChecks.isDocked || mobileNarrowChecks.dockButtonDisplay !== 'none') {
+            throw new Error(`Mobile narrow viewport checks failed: ${JSON.stringify(mobileNarrowChecks)}`)
+          }
+        } finally {
+          mobileWin.destroy()
+        }
       }
     )
 
@@ -677,12 +761,28 @@ app.whenReady().then(async () => {
         document.getElementById('udfuButton').click()
         await waitFor(() => document.getElementById('dialogUdfu').classList.contains('uk-open'))
 
-        // Add control-flow UDF
+        // Add multi-line control-flow UDF via CodeMirror editor
+        const udfCm = document.querySelector('#udfTab .CodeMirror')?.CodeMirror
         document.getElementById('udfNameInput').value = 'clampPos'
         document.getElementById('udfParamsInput').value = 'x'
-        document.getElementById('udfBodyInput').value = 'if (x > 0) {\n  return x * 3\n}\nreturn 0'
+        udfCm?.setValue('// Clamp positive values\nif (x > 0) {\n  const scaled = x * 3\n  return scaled\n}\nreturn 0')
+        await wait(60)
+        const hasEditorSyntax = Boolean(
+          document.querySelector('#udfTab .CodeMirror .cm-comment') &&
+          document.querySelector('#udfTab .CodeMirror .cm-keyword') &&
+          document.querySelector('#udfTab .CodeMirror .cm-number')
+        )
         document.getElementById('udfSaveButton').click()
         await waitFor(() => document.querySelectorAll('#udfList .udfuItem').length === 1)
+
+        const clampItem = document.querySelector('#udfList .udfuItem')
+        const clampIsMultiline = Boolean(clampItem?.classList.contains('is-multiline'))
+        const clampBlock = clampItem?.querySelector('.udfuItemCodeBlock')
+        const clampPreviewText = clampBlock?.textContent || ''
+        const clampPreviewHasTokens = Boolean(
+          clampBlock?.querySelector('.cm-comment') && clampBlock?.querySelector('.cm-keyword')
+        )
+        const clampMoreText = clampItem?.querySelector('.udfuItemMore')?.textContent?.trim() || ''
 
         // Switch to Units tab and add UDU
         document.querySelectorAll('#dialogUdfu [uk-tab] a')[1].click()
@@ -716,12 +816,20 @@ app.whenReady().then(async () => {
         // Add a second UDF and begin editing it so index-shift & active-edit reset on delete are exercised
         document.getElementById('udfNameInput').value = 'doubleIt'
         document.getElementById('udfParamsInput').value = 'x'
-        document.getElementById('udfBodyInput').value = 'x * 2'
+        udfCm?.setValue('x * 2')
         document.getElementById('udfSaveButton').click()
         await waitFor(() => document.querySelectorAll('#udfList .udfuItem').length === 2)
 
+        const doubleItItem = document.querySelectorAll('#udfList .udfuItem')[1]
+        const singleLineNotMultiline = Boolean(doubleItItem && !doubleItItem.classList.contains('is-multiline'))
+        const singleLineHasTokens = Boolean(
+          doubleItItem?.querySelector('.udfuItemCode.cm-s-udfu .cm-variable') &&
+          doubleItItem?.querySelector('.udfuItemCode.cm-s-udfu .cm-number')
+        )
+
         document.querySelectorAll('#udfList .editUdfuButton')[1].click()
         await waitFor(() => document.getElementById('udfSaveLabel').textContent === 'Save')
+        const editLoadedBody = udfCm?.getValue() === 'x * 2'
 
         // 1. Click Delete on clampPos (index 0) and choose No -> item remains, dialog stays open
         document.querySelectorAll('#udfList .deleteUdfuButton')[0].click()
@@ -749,7 +857,8 @@ app.whenReady().then(async () => {
         document.getElementById('confirmYes').click()
         await waitFor(() => !document.getElementById('dialogConfirm').classList.contains('uk-open'))
         await waitFor(() => Boolean(document.querySelector('#udfList .udfuEmpty')))
-        const formResetAfterDelete = document.getElementById('udfSaveLabel').textContent === 'Add'
+        const formResetAfterDelete =
+          document.getElementById('udfSaveLabel').textContent === 'Add' && udfCm?.getValue() === ''
 
         // 4. Switch to Units tab -> test Cancel then Confirm delete on custom unit xunit
         document.querySelectorAll('#dialogUdfu [uk-tab] a')[1].click()
@@ -768,10 +877,114 @@ app.whenReady().then(async () => {
         await waitFor(() => Boolean(document.querySelector('#uduList .udfuEmpty')))
 
         document.querySelector('#dialogUdfu .uk-modal-close-default').click()
-        await wait(150)
+        await waitFor(() => !document.getElementById('dialogUdfu').classList.contains('uk-open'))
+
+        // 5. Switch to Code mode (v7 syntax) for both Functions and Units, save, test error rollback & persistence
+        document.getElementById('udfuButton').click()
+        await waitFor(() => document.getElementById('dialogUdfu').classList.contains('uk-open'))
+        document.querySelectorAll('#dialogUdfu [uk-tab] a')[0].click()
+        await wait(80)
+
+        document.querySelector('[data-udfu-mode="code"]').click()
+        await waitFor(() => document.getElementById('dialogUdfu').classList.contains('is-code-mode'))
+        await wait(80)
+
+        const udfCodeEl = document.querySelector('#udfTab .udfuCodeView .CodeMirror')
+        const udfCodeCm = udfCodeEl?.CodeMirror
+        const codeEditorHeight = udfCodeEl?.getBoundingClientRect().height || 0
+        udfCodeCm?.setValue('triple: (x) => x * 3,\nbonus: 10')
+        await wait(60)
+        const hasCodeEditorSyntax = Boolean(
+          udfCodeEl?.querySelector('.cm-variable') && udfCodeEl?.querySelector('.cm-number')
+        )
+        document.querySelectorAll('.uk-notification-message').forEach((n) => n.remove())
+        document.getElementById('udfCodeSaveButton').click()
+        await waitFor(() =>
+          [...document.querySelectorAll('.uk-notification-message')].some((n) =>
+            n.textContent.includes('User-defined functions saved.')
+          )
+        )
+
+        document.querySelectorAll('#dialogUdfu [uk-tab] a')[1].click()
+        await wait(80)
+        const uduCodeCm = document.querySelector('#uduTab .udfuCodeView .CodeMirror')?.CodeMirror
+        uduCodeCm?.setValue('yunit: { definition: "6 foot", aliases: ["yunits"], prefixes: "short" }')
+        document.getElementById('uduCodeSaveButton').click()
+        await wait(80)
+
+        // Verify invalid raw UDF syntax reports an error and preserves prior valid definitions
+        document.querySelectorAll('#dialogUdfu [uk-tab] a')[0].click()
+        await wait(80)
+        document.querySelectorAll('.uk-notification-message').forEach((n) => n.remove())
+        udfCodeCm?.setValue('broken: (')
+        document.getElementById('udfCodeSaveButton').click()
+        const codeErrorMsg = await waitFor(
+          () => document.querySelector('.uk-notification-message-danger')?.textContent?.trim() || null
+        )
+
+        document.querySelector('#dialogUdfu .uk-modal-close-default').click()
+        await waitFor(() => !document.getElementById('dialogUdfu').classList.contains('uk-open'))
+
+        cm.setValue('triple(5) + bonus\n3 yunit to ft')
+        const codeModeAnswers = await waitFor(() => {
+          const els = [...document.querySelectorAll('#output [data-index] .answer')]
+          if (els.length < 2) return null
+          const texts = els.map((e) => e.textContent.trim())
+          return texts[0] === '25' && texts[1] === '18 ft' ? texts : null
+        })
+
+        // Re-open dialog -> Code mode must persist and valid code must reload instead of broken draft
+        document.getElementById('udfuButton').click()
+        await waitFor(() => document.getElementById('dialogUdfu').classList.contains('uk-open'))
+        const persistedCodeMode = document.getElementById('dialogUdfu').classList.contains('is-code-mode')
+        const reloadedCodeValue = udfCodeCm?.getValue() || ''
+
+        // Switch back to Form mode -> synced items appear in both structured lists
+        document.querySelector('[data-udfu-mode="form"]').click()
+        await waitFor(() => !document.getElementById('dialogUdfu').classList.contains('is-code-mode'))
+        const syncedUdfCount = document.querySelectorAll('#udfList .udfuItem').length
+        const syncedUduCount = document.querySelectorAll('#uduList .udfuItem').length
+
+        // Verify invalid Form params injection is rejected without mutating saved list
+        document.querySelectorAll('.uk-notification-message').forEach((n) => n.remove())
+        document.getElementById('udfNameInput').value = 'injFunc'
+        document.getElementById('udfParamsInput').value = 'x) => 1, evil: ('
+        udfCm?.setValue('x')
+        document.getElementById('udfSaveButton').click()
+        const formParamErrorMsg = await waitFor(
+          () => document.querySelector('.uk-notification-message-danger')?.textContent?.trim() || null
+        )
+        const udfCountAfterInvalidParams = document.querySelectorAll('#udfList .udfuItem').length
+
+        // Verify worker sandbox lockdown via an evaluated UDF checking blocked globals & prototype methods
+        document.querySelectorAll('.uk-notification-message').forEach((n) => n.remove())
+        document.getElementById('udfNameInput').value = 'sandboxProbe'
+        document.getElementById('udfParamsInput').value = '()'
+        udfCm?.setValue(
+          '[typeof fetch, typeof Worker, typeof postMessage, typeof BroadcastChannel, typeof caches, typeof indexedDB, typeof WorkerGlobalScope?.prototype?.fetch].join(",")'
+        )
+        document.getElementById('udfSaveButton').click()
+        await waitFor(() => document.querySelectorAll('#udfList .udfuItem').length === 3)
+
+        document.querySelector('#dialogUdfu .uk-modal-close-default').click()
+        await waitFor(() => !document.getElementById('dialogUdfu').classList.contains('uk-open'))
+
+        cm.setValue('sandboxProbe()')
+        const sandboxProbeAnswer = await waitFor(() => {
+          const text = document.querySelector('#output [data-index="0"] .answer')?.textContent?.trim()
+          return text && text.includes('undefined') ? text : null
+        })
 
         return {
+          hasEditorSyntax,
+          clampIsMultiline,
+          clampPreviewText,
+          clampPreviewHasTokens,
+          clampMoreText,
           answers,
+          singleLineNotMultiline,
+          singleLineHasTokens,
+          editLoadedBody,
           udfConfirmMsg,
           countAfterUdfCancel,
           udfuOpenAfterCancel,
@@ -779,12 +992,31 @@ app.whenReady().then(async () => {
           udfSecondConfirmMsg,
           formResetAfterDelete,
           uduConfirmMsg,
-          countAfterUduCancel
+          countAfterUduCancel,
+          codeEditorHeight,
+          hasCodeEditorSyntax,
+          codeErrorMsg,
+          codeModeAnswers,
+          persistedCodeMode,
+          reloadedCodeValue,
+          syncedUdfCount,
+          syncedUduCount,
+          formParamErrorMsg,
+          udfCountAfterInvalidParams,
+          sandboxProbeAnswer
         }
       })
 
       if (
+        !udfuRes.hasEditorSyntax ||
+        !udfuRes.clampIsMultiline ||
+        !udfuRes.clampPreviewText.includes('\n') ||
+        !udfuRes.clampPreviewHasTokens ||
+        udfuRes.clampMoreText !== '+2 more lines' ||
         JSON.stringify(udfuRes.answers) !== JSON.stringify(['12', '0', '24 ft']) ||
+        !udfuRes.singleLineNotMultiline ||
+        !udfuRes.singleLineHasTokens ||
+        !udfuRes.editLoadedBody ||
         udfuRes.udfConfirmMsg !== '"clampPos" will be deleted.' ||
         udfuRes.countAfterUdfCancel !== 2 ||
         !udfuRes.udfuOpenAfterCancel ||
@@ -792,7 +1024,19 @@ app.whenReady().then(async () => {
         udfuRes.udfSecondConfirmMsg !== '"doubleIt" will be deleted.' ||
         !udfuRes.formResetAfterDelete ||
         udfuRes.uduConfirmMsg !== '"xunit" will be deleted.' ||
-        udfuRes.countAfterUduCancel !== 1
+        udfuRes.countAfterUduCancel !== 1 ||
+        udfuRes.codeEditorHeight < 120 ||
+        !udfuRes.hasCodeEditorSyntax ||
+        !udfuRes.codeErrorMsg ||
+        JSON.stringify(udfuRes.codeModeAnswers) !== JSON.stringify(['25', '18 ft']) ||
+        !udfuRes.persistedCodeMode ||
+        !udfuRes.reloadedCodeValue.includes('triple') ||
+        udfuRes.reloadedCodeValue.includes('broken') ||
+        udfuRes.syncedUdfCount !== 2 ||
+        udfuRes.syncedUduCount !== 1 ||
+        !udfuRes.formParamErrorMsg ||
+        udfuRes.udfCountAfterInvalidParams !== 2 ||
+        udfuRes.sandboxProbeAnswer !== 'undefined,undefined,undefined,undefined,undefined,undefined,undefined'
       ) {
         throw new Error(`UDFU evaluation or delete-confirmation mismatch: ${JSON.stringify(udfuRes)}`)
       }

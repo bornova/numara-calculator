@@ -21,7 +21,7 @@ export function setupKeyboardShortcuts() {
   const isEditableNonEditorTarget = (event) => {
     const target = event.target
 
-    if (!target || typeof target.closest !== 'function' || target.closest('.CodeMirror')) {
+    if (!target || typeof target.closest !== 'function' || target.closest('.cm-s-numara')) {
       return false
     }
 

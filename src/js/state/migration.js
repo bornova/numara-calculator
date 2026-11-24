@@ -8,6 +8,7 @@ import {
   defaultProxy,
   evalUdfuObject,
   findMatchingClose,
+  isValidUdfParams,
   RESERVED_KEYS,
   skipStringOrComment,
   VALID_IDENTIFIER
@@ -262,7 +263,11 @@ function parseSourceKeyValue(key, rawValue) {
           return null
         }
 
-        return { name: key, params: rawParams || '()', body: normalizeArrowBody(rhs) }
+        if (isValidUdfParams(rawParams)) {
+          return { name: key, params: rawParams || '()', body: normalizeArrowBody(rhs) }
+        }
+
+        return { name: key, params: '', body: rawValue }
       }
     }
   }
@@ -280,7 +285,11 @@ function parseSourceKeyValue(key, rawValue) {
         return null
       }
 
-      return { name: key, params: param, body: normalizeArrowBody(rhs) }
+      if (isValidUdfParams(param)) {
+        return { name: key, params: param, body: normalizeArrowBody(rhs) }
+      }
+
+      return { name: key, params: '', body: rawValue }
     }
   }
 
@@ -298,7 +307,11 @@ function parseSourceKeyValue(key, rawValue) {
         const innerBody = trimJsComments(rawValue.slice(bracePos + 1, -1))
         const selfRefPattern = fnName && fnName !== key ? new RegExp(`\\b${fnName}\\b`) : null
 
-        if (!/\b(?:arguments|this)\b/.test(innerBody) && (!selfRefPattern || !selfRefPattern.test(innerBody))) {
+        if (
+          isValidUdfParams(rawParams) &&
+          !/\b(?:arguments|this)\b/.test(innerBody) &&
+          (!selfRefPattern || !selfRefPattern.test(innerBody))
+        ) {
           return { name: key, params: rawParams || '()', body: innerBody || 'undefined' }
         }
       }
@@ -374,6 +387,12 @@ function parseSourceUdfEntries(rawUdf) {
       }
 
       const rawParams = entry.slice(afterKeyPos + 1, closeParen).trim()
+      if (!isValidUdfParams(rawParams)) {
+        const fnName = VALID_IDENTIFIER.test(key) ? ` ${key}` : ''
+        items.push({ name: key, params: '', body: `function${fnName}${entry.slice(afterKeyPos)}` })
+        continue
+      }
+
       const innerBody = trimJsComments(entry.slice(bracePos + 1, -1))
       items.push({ name: key, params: rawParams || '()', body: innerBody || 'undefined' })
     } else {
@@ -438,16 +457,19 @@ function extractFunctionParts(fn) {
 
       if (arrowMatch) {
         const rawParams = src.slice(1, closeIdx).trim()
-        const params = rawParams.length > 0 ? rawParams : '()'
 
-        return { params, body: normalizeArrowBody(arrowMatch[1].trim()) }
+        if (isValidUdfParams(rawParams)) {
+          const params = rawParams.length > 0 ? rawParams : '()'
+
+          return { params, body: normalizeArrowBody(arrowMatch[1].trim()) }
+        }
       }
     }
   }
 
   const singleArrow = src.match(/^([a-zA-Z_$][\w$]*)\s*=>\s*([\s\S]*)$/)
 
-  if (singleArrow) {
+  if (singleArrow && isValidUdfParams(singleArrow[1].trim())) {
     return { params: singleArrow[1].trim(), body: normalizeArrowBody(singleArrow[2].trim()) }
   }
 
@@ -464,10 +486,20 @@ function extractFunctionParts(fn) {
 
       if (afterParams.startsWith('{') && findMatchingClose(afterParams, 0) === afterParams.length - 1) {
         const rawParams = src.slice(openIdx + 1, closeIdx).trim()
-        const params = rawParams.length > 0 ? rawParams : '()'
-        const body = afterParams.slice(1, -1).trim()
 
-        return { params, body }
+        if (isValidUdfParams(rawParams)) {
+          const params = rawParams.length > 0 ? rawParams : '()'
+          const body = afterParams.slice(1, -1).trim()
+
+          return { params, body }
+        }
+
+        if (!/^(?:async\s+)?function\b/.test(src)) {
+          return {
+            params: '',
+            body: /^async\s+/.test(src) ? src.replace(/^async\s+/, 'async function ') : `function ${src}`
+          }
+        }
       }
     }
   }
@@ -877,9 +909,8 @@ function migrateUdfu() {
     }
 
     if (parsed.length > 0) {
-      const compiled = compileItems(parsed)
-
       try {
+        const compiled = compileItems(parsed)
         evalUdfuObject(compiled)
         store.set(itemsKey, parsed)
         store.set(rawKey, compiled)

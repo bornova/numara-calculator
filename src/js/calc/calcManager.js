@@ -31,6 +31,8 @@ let lastDialogShowTime = 0
 let autoCloseTimeout = null
 let lastScopeKeysSignature = ''
 let pendingPageSave = null
+let udfValidationRequestId = 0
+const pendingUdfValidations = new Map()
 
 /**
  * Clears active slow/hard calculation timeout timers.
@@ -257,6 +259,18 @@ function queueFoldStateSave() {
   debouncedSavePageState()
 }
 
+function rejectPendingUdfValidations(message) {
+  if (pendingUdfValidations.size === 0) return
+
+  const pending = [...pendingUdfValidations.values()]
+  pendingUdfValidations.clear()
+
+  for (const { timeoutId, reject } of pending) {
+    clearTimeout(timeoutId)
+    reject(new Error(message))
+  }
+}
+
 /**
  * Lazily spawns or retrieves the background Web Worker for calculation execution.
  * @returns {Worker} The spawned web worker instance.
@@ -306,11 +320,26 @@ function getWorker() {
           finishCalcState()
         }
         console.error('Calculation worker returned error:', payload?.error)
+      } else if (type === 'validateUdfResult') {
+        const { requestId, ok, keys, error } = payload || {}
+        const pending = pendingUdfValidations.get(requestId)
+
+        if (pending) {
+          pendingUdfValidations.delete(requestId)
+          clearTimeout(pending.timeoutId)
+
+          if (ok) {
+            pending.resolve(keys)
+          } else {
+            pending.reject(new Error(error || 'Invalid definition.'))
+          }
+        }
       }
     }
 
     worker.onerror = (error) => {
       finishCalcState()
+      rejectPendingUdfValidations('Calculation worker failed while validating user-defined functions.')
       worker = null
       console.error('Calculation worker error:', error)
     }
@@ -441,6 +470,7 @@ function showTimeoutDialog() {
     if (worker) {
       worker.terminate()
       worker = null
+      rejectPendingUdfValidations('Calculation worker was terminated.')
     }
 
     isCalculating = false
@@ -457,6 +487,40 @@ function showTimeoutDialog() {
 
     calculate()
   }
+}
+
+/**
+ * Validates and applies user-defined functions inside the background calculation worker.
+ * @param {string} udfSource Compiled or raw UDF object-body string.
+ * @returns {Promise<string[]>} Resolves with validated UDF key names.
+ */
+function validateUdfInWorker(udfSource) {
+  const w = getWorker()
+  const requestId = ++udfValidationRequestId
+  const timeoutDuration = Math.max(3000, (parseInt(app.settings.calcTimeout) || 10) * 1000)
+
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      if (!pendingUdfValidations.has(requestId)) return
+
+      if (worker) {
+        worker.terminate()
+        worker = null
+      }
+
+      finishCalcState()
+      rejectPendingUdfValidations('User-defined function validation timed out.')
+    }, timeoutDuration)
+
+    pendingUdfValidations.set(requestId, { resolve, reject, timeoutId })
+    w.postMessage({
+      type: 'validateUdf',
+      payload: {
+        requestId,
+        udf: udfSource
+      }
+    })
+  })
 }
 
 /**
@@ -502,4 +566,4 @@ function setupCalcManager() {
   })
 }
 
-export { calculate, clearEvaluationCache, debouncedSavePageState, setupCalcManager }
+export { calculate, clearEvaluationCache, debouncedSavePageState, setupCalcManager, validateUdfInWorker }

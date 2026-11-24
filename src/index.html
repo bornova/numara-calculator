@@ -184,10 +184,22 @@
       <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical">
         <button class="uk-modal-close-default" type="button"><i data-lucide="x"></i></button>
         <h2 class="uk-modal-title uk-text-center">User Defined Functions & Units</h2>
-        <ul uk-tab>
-          <li><a href="#">Functions</a></li>
-          <li><a href="#">Units</a></li>
-        </ul>
+        <div class="udfuHeaderBar">
+          <ul uk-tab="connect: #udfuSwitcher">
+            <li><a href="#">Functions</a></li>
+            <li><a href="#">Units</a></li>
+          </ul>
+          <div class="udfuModeGroup" role="group" aria-label="Editor view">
+            <button type="button" class="udfuModeButton active" data-udfu-mode="form" title="Form view">
+              <i data-lucide="layout-list"></i>
+              <span>Form</span>
+            </button>
+            <button type="button" class="udfuModeButton" data-udfu-mode="code" title="Code view">
+              <i data-lucide="code"></i>
+              <span>Code</span>
+            </button>
+          </div>
+        </div>
         <ul id="udfuSwitcher" class="uk-switcher uk-margin-small-top">
           <li id="udfTab">
             <div class="udfuForm">
@@ -237,6 +249,31 @@
               ></textarea>
             </div>
             <div id="udfList" class="udfuList"></div>
+            <div class="udfuCodeView">
+              <textarea
+                id="udfCodeInput"
+                class="udfuCodeTextarea"
+                spellcheck="false"
+                placeholder="xyz: (x, y, z) => {&#10;  return x + y + z&#10;},&#10;&#10;myConstant: 123"
+              ></textarea>
+              <div class="udfuCodeFooter">
+                <a
+                  href="https://github.com/bornova/numara-calculator/wiki/Features#user-defined-functions-and-units"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="udfuCodeHint"
+                >
+                  Syntax help
+                </a>
+                <button
+                  id="udfCodeSaveButton"
+                  type="button"
+                  class="uk-button uk-button-primary uk-button-small udfuSaveBtn"
+                >
+                  <span>Save</span>
+                </button>
+              </div>
+            </div>
           </li>
           <li id="uduTab">
             <div class="udfuForm">
@@ -301,6 +338,31 @@
               </div>
             </div>
             <div id="uduList" class="udfuList"></div>
+            <div class="udfuCodeView">
+              <textarea
+                id="uduCodeInput"
+                class="udfuCodeTextarea"
+                spellcheck="false"
+                placeholder='foo: "18 foot",&#10;bar: { definition: "40 foo", aliases: ["bars"], prefixes: "short" }'
+              ></textarea>
+              <div class="udfuCodeFooter">
+                <a
+                  href="https://mathjs.org/docs/datatypes/units.html#userdefined-units"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="udfuCodeHint"
+                >
+                  Syntax help
+                </a>
+                <button
+                  id="uduCodeSaveButton"
+                  type="button"
+                  class="uk-button uk-button-primary uk-button-small udfuSaveBtn"
+                >
+                  <span>Save</span>
+                </button>
+              </div>
+            </div>
           </li>
         </ul>
       </div>

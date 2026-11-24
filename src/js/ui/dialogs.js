@@ -15,20 +15,42 @@ let pendingCancelHandler = null
 let suppressConfirmReset = false
 let confirmRequestId = 0
 
+const modalShowRequests = new WeakMap()
+
 const modal = {
   /**
    * Show modal dialog for given id, deferring safely if UIkit is still finishing a hide transition.
    * @param {string|HTMLElement} id Modal selector or element.
    */
   show: (id) => {
-    const instance = UIkit.modal(id, { bgClose: false, stack: true })
+    const el = typeof id === 'string' ? document.querySelector(id) : id
 
-    if (instance?.$el?.classList?.contains('uk-togglable-leave')) {
-      UIkit.util.once(instance.$el, 'hidden', () => queueMicrotask(() => instance.show()), { self: true })
+    if (el?.classList?.contains('uk-togglable-leave')) {
+      const requestId = (modalShowRequests.get(el) || 0) + 1
+
+      modalShowRequests.set(el, requestId)
+
+      UIkit.util.once(
+        el,
+        'hidden',
+        () => {
+          queueMicrotask(() => {
+            if (modalShowRequests.get(el) === requestId) {
+              UIkit.modal(el, { bgClose: false, stack: true })?.show()
+            }
+          })
+        },
+        { self: true }
+      )
+
       return
     }
 
-    return instance?.show()
+    if (el) {
+      modalShowRequests.set(el, (modalShowRequests.get(el) || 0) + 1)
+    }
+
+    return UIkit.modal(id, { bgClose: false, stack: true })?.show()
   },
 
   /**

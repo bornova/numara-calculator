@@ -1,7 +1,7 @@
 import UIkit from 'uikit'
 
 import { dom } from '../dom.js'
-import { isMac } from '../state/env.js'
+import { isMac, isMobile } from '../state/env.js'
 
 // Settings tooltips for settings in the application
 const settingsTooltips = {
@@ -37,7 +37,9 @@ const settingsTooltips = {
   notifyLocation: 'Set the position on the screen where notifications appear. (Default: Bottom Center)',
   numberFormat: 'Set the number and decimal separator format. (Default: 1,234.56)',
   numericOutput: 'Set the format for numeric output display. (Default: Number)',
-  pageListPosition: 'Position of the page list. (Default: Auto)',
+  pageListPosition: isMobile
+    ? 'Position of the page list. (Default: Floating)'
+    : 'Position of the page list. (Default: Auto)',
   precision: 'Set the maximum number of decimal places for displayed answers. (Default: 4)',
   predictable: 'Enable predictable mode for consistent results across different platforms. (Default: Disabled)',
   rulers: 'Show rulers in the calculator display for better alignment. (Default: Disabled)',

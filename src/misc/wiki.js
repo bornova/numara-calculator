@@ -163,7 +163,7 @@ Clicking the page name in the output panel opens that page directly, and hoverin
 
 #### Functions
 
-Custom functions, constants, and objects can be added and managed in the **User Defined Functions & Units** dialog under the **Functions** tab:
+Custom functions, constants, and objects can be added and managed in the **User Defined Functions & Units** dialog under the **Functions** tab (or switched to **Code** view to write definitions in v7-style JavaScript object syntax, which is synced with **Form** view and remembered across sessions):
 
 - **Name**: Identifier for the function, constant, or object (e.g. \`xyz\`, \`myConstant\`, or \`rates\`).
 - **Parameters** *(optional)*: Comma-separated parameter names for functions (e.g. \`x, y, z\`). Leave blank for constants or objects (or enter \`()\` for zero-argument functions).
@@ -173,7 +173,7 @@ For example, with \`xyz(x, y, z) = x + y + z\`, \`myConstant = 123\`, and \`rate
 
 #### Units
 
-Custom units can be added and managed under the **Units** tab:
+Custom units can be added and managed under the **Units** tab (in either **Form** or **Code** view):
 
 - **Unit name**: Identifier for the unit (e.g. \`xunit\`).
 - **Definition**: Base unit definition (e.g. \`12 foot\`).
@@ -236,11 +236,11 @@ function generateSettingsWiki() {
 \`Zoom level\` Smaller | Normal (Default) | Larger
 - Set the overall UI zoom level across typography, icons, controls, and panels.
 
-\`Page list position\` Auto (Default) | Floating | Docked | Tabs
+\`Page list position\` Auto (Default) | Floating | Docked | Tabs *(Auto and Docked are desktop-only; Floating is default on mobile)*
 - Set the position and display mode of the page list:
-  - \`Auto\` (Default): Automatically docks the page list side panel when the window is wider than \`900px\` and switches to a floating slide-out drawer on narrower windows.
-  - \`Floating\`: Always displays the page list as a slide-out overlay drawer when clicking the page name in the bottom bar (or pressing \`Shift+Tab\`).
-  - \`Docked\`: Keeps the page list permanently docked on the left side of the window. Drag the page list border to resize its width (\`210px\` – \`510px\`), or double-click the border to reset it to the default width (\`265px\`). On narrower windows, a toggle button in the page list header switches between \`Docked\` and \`Auto\`.
+  - \`Auto\` (Default on desktop): Automatically docks the page list side panel when the window is wider than \`900px\` and switches to a floating slide-out drawer on narrower windows. Not available on mobile.
+  - \`Floating\` (Default on mobile): Always displays the page list as a slide-out overlay drawer when clicking the page name in the bottom bar (or pressing \`Shift+Tab\`).
+  - \`Docked\` *(Desktop only)*: Keeps the page list permanently docked on the left side of the window. Drag the page list border to resize its width (\`210px\` – \`510px\`), or double-click the border to reset it to the default width (\`265px\`). On narrower windows, a toggle button in the page list header switches between \`Docked\` and \`Auto\`. Not available on mobile.
   - \`Tabs\`: Displays pages as horizontal scrollable tabs directly in the bottom bar instead of a side panel, with left/right scroll arrows when tabs overflow.
 
 \`Always on top\` On | Off (Default) *(Desktop only)*

@@ -25,8 +25,7 @@
   margin-bottom: 10px;
 }
 
-#settingsTabs::before,
-#dialogUdfu .uk-tab::before {
+#settingsTabs::before {
   right: 15px;
   left: 15px;
   border-bottom: 1px solid light-dark(#e5e5e5, #333333);
@@ -508,9 +507,123 @@ div:has(> #logsLink) {
   width: var(--modal-udfu);
 }
 
+.udfuHeaderBar {
+  display: flex;
+  position: relative;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 1px solid light-dark(#e5e5e5, #333333);
+}
+
+.udfuHeaderBar > .uk-tab {
+  margin: 0 0 -1px -15px;
+}
+
+.udfuHeaderBar > .uk-tab::before {
+  display: none;
+}
+
+.udfuModeGroup {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 5px;
+  border: 1px solid light-dark(#eaeaea, #3b3b3b);
+  border-radius: 6px;
+  background-color: light-dark(#f5f5f5, #2b2b2b);
+  padding: 2px;
+}
+
+.udfuModeButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  outline: none;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  padding: 3px 8px;
+  color: light-dark(#777777, #999999);
+  font-size: 0.9em;
+  line-height: 1.2;
+}
+
+.udfuModeButton:hover {
+  color: light-dark(#111111, #ffffff);
+}
+
+.udfuModeButton.active {
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+  background-color: light-dark(#ffffff, #1f1f1f);
+  color: #1e87f0;
+}
+
+.udfuModeButton svg {
+  width: var(--icon-xs);
+  height: var(--icon-xs);
+  pointer-events: none;
+}
+
+#dialogUdfu.is-code-mode .udfuForm,
+#dialogUdfu.is-code-mode .udfuList,
+#dialogUdfu:not(.is-code-mode) .udfuCodeView {
+  display: none;
+}
+
+.udfuCodeView {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.udfuCodeTextarea {
+  box-sizing: border-box;
+  border: 1px solid light-dark(#d8d8d8, #3b3b3b);
+  border-radius: 4px;
+  background-color: light-dark(#ffffff, #1a1a1a);
+  padding: 6px 8px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  color: light-dark(#333333, #eaeaea);
+  line-height: 1.4;
+  font-family: 'Roboto Mono', monospace;
+  user-select: text;
+}
+
+#dialogUdfu .udfuCodeView .CodeMirror {
+  flex: 1 1 0%;
+  height: 100%;
+  min-height: 0;
+}
+
+#dialogUdfu .udfuCodeView .CodeMirror-scroll {
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+}
+
+.udfuCodeFooter {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.udfuCodeHint {
+  color: light-dark(#777777, #999999);
+  font-size: 0.92em;
+}
+
 #udfuSwitcher {
-  height: calc(100vh - 198px);
-  max-height: 452px;
+  height: calc(100vh - 176px);
+  max-height: 700px;
 }
 
 #udfuSwitcher > li.uk-active {
@@ -567,11 +680,48 @@ div:has(> #logsLink) {
 
 .udfuTextarea {
   width: 100%;
-  min-height: 50px;
-  max-height: 130px;
+  min-height: 84px;
+  max-height: clamp(120px, 28vh, 260px);
   resize: vertical;
   line-height: 1.4;
   font-family: 'Roboto Mono', monospace;
+}
+
+#dialogUdfu .CodeMirror {
+  box-sizing: border-box;
+  border: 1px solid light-dark(#d8d8d8, #3b3b3b);
+  border-radius: 4px;
+  background-color: light-dark(#ffffff, #1a1a1a);
+  width: 100%;
+  height: auto;
+  color: light-dark(#333333, #eaeaea);
+  font-size: inherit;
+  line-height: 1.4;
+  font-family: 'Roboto Mono', monospace;
+}
+
+#dialogUdfu .CodeMirror.CodeMirror-focused {
+  border-color: #1e87f0;
+}
+
+#dialogUdfu .CodeMirror-scroll {
+  background-color: light-dark(#ffffff, #1a1a1a);
+  min-height: 84px;
+  max-height: clamp(120px, 28vh, 260px);
+}
+
+#dialogUdfu .CodeMirror-lines {
+  padding: 5px 0;
+}
+
+#dialogUdfu .CodeMirror pre.CodeMirror-line,
+#dialogUdfu .CodeMirror pre.CodeMirror-line-like,
+#dialogUdfu .CodeMirror pre.CodeMirror-placeholder {
+  padding: 0 8px;
+}
+
+#dialogUdfu .CodeMirror pre.CodeMirror-placeholder {
+  color: rgba(148, 156, 160, 0.65);
 }
 
 .udfuSelect {
@@ -656,9 +806,25 @@ div:has(> #logsLink) {
   background-color: light-dark(#eef4fa, #25303d);
 }
 
+.udfuItem.is-multiline {
+  align-items: flex-start;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
 .udfuItemContent {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.udfuItemContentMultiline {
+  white-space: normal;
+}
+
+.udfuItemHeader {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -672,6 +838,23 @@ div:has(> #logsLink) {
   color: light-dark(#555555, #cccccc);
   font-size: 0.92em;
   font-family: 'Roboto Mono', monospace;
+}
+
+.udfuItemCodeBlock {
+  display: block;
+  margin-top: 4px;
+  border-left: 2px solid light-dark(#dcdcdc, #3d3d3d);
+  padding-left: 8px;
+  overflow: hidden;
+  line-height: 1.4;
+  white-space: pre;
+}
+
+.udfuItemMore {
+  margin-top: 2px;
+  padding-left: 10px;
+  color: light-dark(#888888, #888888);
+  font-size: 0.85em;
 }
 
 .udfuBadge {

@@ -222,6 +222,85 @@ function isStatementBody(cleanBody, isBlock, allowSemicolon = false) {
 }
 
 /**
+ * Validates and normalizes a Form-mode UDF parameter list string.
+ * Allows empty, `()`, or comma-separated valid JS identifiers (with optional trailing `...rest`).
+ * @param {string} rawParams Raw parameter string.
+ * @returns {{ isZeroArg: boolean, cleanParams: string }}
+ */
+export function validateUdfParams(rawParams) {
+  const trimmed = String(rawParams ?? '').trim()
+
+  if (!trimmed) {
+    return { isZeroArg: false, cleanParams: '' }
+  }
+
+  if (trimmed === '()') {
+    return { isZeroArg: true, cleanParams: '' }
+  }
+
+  let inner = trimmed
+
+  if (trimmed.startsWith('(') && findMatchingClose(trimmed, 0) === trimmed.length - 1) {
+    inner = trimmed.slice(1, -1).trim()
+
+    if (!inner) {
+      return { isZeroArg: true, cleanParams: '' }
+    }
+  }
+
+  const parts = inner.split(',')
+  const seen = new Set()
+  const normalized = []
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i].trim()
+
+    if (!part) {
+      throw new Error('Invalid empty parameter in parameter list.')
+    }
+
+    const isRest = part.startsWith('...')
+
+    if (isRest && i !== parts.length - 1) {
+      throw new Error('Rest parameter must be the last parameter.')
+    }
+
+    const ident = isRest ? part.slice(3).trim() : part
+
+    if (RESERVED_KEYS.has(ident)) {
+      throw new Error(`Reserved parameter name not allowed: "${ident}"`)
+    }
+
+    if (!VALID_IDENTIFIER.test(ident)) {
+      throw new Error(`Invalid parameter: "${part}"`)
+    }
+
+    if (seen.has(ident)) {
+      throw new Error(`Duplicate parameter: "${ident}"`)
+    }
+
+    seen.add(ident)
+    normalized.push(isRest ? `...${ident}` : ident)
+  }
+
+  return { isZeroArg: normalized.length === 0, cleanParams: normalized.join(', ') }
+}
+
+/**
+ * Checks whether a parameter string conforms to simple UDF identifier-list rules.
+ * @param {string} rawParams Raw parameter string.
+ * @returns {boolean}
+ */
+export function isValidUdfParams(rawParams) {
+  try {
+    validateUdfParams(rawParams)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
  * Evaluates a compiled UDF/UDU object-body string inside a `with (math)` scope.
  * @param {string} body Object-literal interior string.
  * @param {object} [math=defaultProxy] Math.js instance or fallback proxy.
@@ -249,10 +328,17 @@ export function evalUdfuObject(body, math = defaultProxy, externalLibs = {}) {
 export function compileUdfItems(items) {
   return items
     .map(({ name, params, body }) => {
-      const cleanName = name.trim()
-      const rawParams = (params ?? '').trim()
-      const isZeroArgFunc = rawParams === '()'
-      const cleanParams = rawParams.replace(/^\(|\)$/g, '').trim()
+      const cleanName = String(name ?? '').trim()
+
+      if (RESERVED_KEYS.has(cleanName)) {
+        throw new Error(`Reserved key not allowed: "${cleanName}"`)
+      }
+
+      if (!VALID_IDENTIFIER.test(cleanName)) {
+        throw new Error(`Invalid identifier: "${cleanName}"`)
+      }
+
+      const { isZeroArg: isZeroArgFunc, cleanParams } = validateUdfParams(params)
       const cleanBody = (body ?? '').trim()
       const isBlock = cleanBody.startsWith('{') && findMatchingClose(cleanBody, 0) === cleanBody.length - 1
       const isMultiStmt = isStatementBody(cleanBody, isBlock, true)
@@ -290,13 +376,29 @@ export function compileUdfItems(items) {
 export function compileUduItems(items) {
   return items
     .map(({ name, definition, prefixes, aliases, offset, baseName }) => {
-      const cleanName = name.trim()
+      const cleanName = String(name ?? '').trim()
+
+      if (RESERVED_KEYS.has(cleanName)) {
+        throw new Error(`Reserved key not allowed: "${cleanName}"`)
+      }
+
+      if (!VALID_IDENTIFIER.test(cleanName)) {
+        throw new Error(`Invalid identifier: "${cleanName}"`)
+      }
+
       const cleanDef = (definition ?? '').trim().replace(/^["']|["']$/g, '')
       const cleanPrefixes = (prefixes ?? 'none').trim()
       const aliasList = (aliases ?? '')
         .split(',')
         .map((a) => a.trim())
         .filter(Boolean)
+
+      for (const alias of aliasList) {
+        if (RESERVED_KEYS.has(alias) || !VALID_IDENTIFIER.test(alias)) {
+          throw new Error(`Invalid unit alias: "${alias}"`)
+        }
+      }
+
       const hasExtra = offset !== undefined || Boolean(baseName)
 
       if ((!cleanPrefixes || cleanPrefixes === 'none') && aliasList.length === 0 && !hasExtra) {
@@ -524,6 +626,7 @@ export function applyUdfuToMath(math, input, isFunc, state = {}, externalLibs = 
   }
 
   state.savedBuiltinUnits ??= new Map()
+  state.previouslyCreatedUnits ??= []
 
   state.previouslyCreatedUnits.forEach((unitName) => restoreBuiltinKey(math, unitName, state.savedBuiltinUnits, true))
   state.previouslyCreatedUnits = []
@@ -571,4 +674,48 @@ export function applyUdfuToMath(math, input, isFunc, state = {}, externalLibs = 
   state.previouslyCreatedUnits = createdUnitNames
 
   return createdUnitNames
+}
+
+/**
+ * Formats a user-defined function/constant body for compact list preview rendering.
+ * Preserves multi-line structure, normalizes shared indentation, and caps visible lines.
+ * @param {string} body Raw UDF body source.
+ * @param {number} [maxLines=4] Maximum lines shown in multi-line previews.
+ * @returns {{ isMultiline: boolean, previewCode: string, hiddenLineCount: number }}
+ */
+export function formatUdfPreview(body, maxLines = 4) {
+  const lines = String(body ?? '')
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+
+  while (lines.length > 0 && lines[0].trim() === '') {
+    lines.shift()
+  }
+
+  while (lines.length > 0 && lines[lines.length - 1].trim() === '') {
+    lines.pop()
+  }
+
+  if (lines.length <= 1) {
+    return {
+      isMultiline: false,
+      previewCode: (lines[0] || '').trim(),
+      hiddenLineCount: 0
+    }
+  }
+
+  const nonEmpty = lines.filter((line) => line.trim() !== '')
+  const minIndent = nonEmpty.reduce((min, line) => {
+    const indentLen = line.match(/^[ \t]*/)[0].length
+    return Math.min(min, indentLen)
+  }, Infinity)
+
+  const dedented = lines.map((line) => (line.trim() === '' ? '' : line.slice(minIndent).trimEnd()))
+  const visible = dedented.slice(0, maxLines)
+
+  return {
+    isMultiline: true,
+    previewCode: visible.join('\n'),
+    hiddenLineCount: Math.max(0, dedented.length - maxLines)
+  }
 }
