@@ -5,7 +5,7 @@ import { calculate } from '../calc/calcManager.js'
 import { syncOutputHeights } from '../calc/outputRenderer.js'
 import { escapeHTML } from '../core/utils.js'
 import { dom } from '../dom.js'
-import { cm } from '../editor/index.js'
+import { cm, getJsEditors } from '../editor/index.js'
 import { showSearchPanel } from '../editor/searchPanel.js'
 import { loadPage } from '../pages/pageManager.js'
 import { app, DEFAULT_INPUT_WIDTH } from '../state/appState.js'
@@ -110,8 +110,12 @@ export function setupAppButtons() {
           const activeEl = document.activeElement
           const inNonEditorInput = activeEl?.matches?.('input, textarea') && !activeEl.closest?.('.CodeMirror')
 
+          const focusedJsEditor = getJsEditors().find((editor) => editor.hasFocus())
+
           if (inNonEditorInput) {
             document.execCommand?.(action)
+          } else if (focusedJsEditor) {
+            focusedJsEditor[action]()
           } else if (cm?.hasFocus() || !isModalOpen()) {
             cm?.[action]()
           }
